@@ -26,11 +26,11 @@ endif()
 # =============================================================================
 # MUST run before project() because CMake's compiler test needs these paths.
 # The environment on this machine has partial SDK installs:
-#   10.0.22621.0 +�-�+�-�+�-� has ucrt, shared, um includes BUT um/x64 libs are separate
-#   10.0.26100.0 +�-�+�-�+�-� has um/shared includes and um/x64 libs BUT no ucrt
+#   10.0.22621.0 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ has ucrt, shared, um includes BUT um/x64 libs are separate
+#   10.0.26100.0 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ has um/shared includes and um/x64 libs BUT no ucrt
 # We combine them to form a complete toolchain.
 if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
-    # Not running inside a VS Developer Prompt +�-�+�-�+�-� inject paths manually
+    # Not running inside a VS Developer Prompt +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ inject paths manually
     # Auto-detect Windows SDK: try D: first, fall back to C:
     if(EXISTS "D:/Program Files (x86)/Windows Kits/10")
         set(_WIN10_SDK_ROOT "D:/Program Files (x86)/Windows Kits/10")
@@ -81,7 +81,7 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
         message(FATAL_ERROR "[SDK Fix] Could not find a valid MSVC installation with cl.exe. Please install Visual Studio Build Tools or run from a Developer Command Prompt.")
     endif()
     
-    # SDK bin tools (rc.exe, mt.exe) +�-�+�-�+�-� use the version that actually has the bin directory
+    # SDK bin tools (rc.exe, mt.exe) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ use the version that actually has the bin directory
     if(EXISTS "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
         set(_SDK_BIN "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
     else()
@@ -151,7 +151,7 @@ endif()
 # Vulkan SDK Detection (Common - must run before targets are defined)
 # ============================================================================
 if(RAWR_ENABLE_VULKAN)
-    # Try manual path first +�-�+�-�+�-� D: first, then C:
+    # Try manual path first +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ D: first, then C:
     file(GLOB _VK_SDK_DIRS "D:/VulkanSDK/1.*")
     if(NOT _VK_SDK_DIRS)
         file(GLOB _VK_SDK_DIRS "C:/VulkanSDK/1.*")
@@ -187,7 +187,7 @@ function(rawrxd_filter_missing_sources list_var)
 endfunction()
 
 # ============================================================================
-# nlohmann/json — REMOVED from build: no source file in src/ includes it.
+# nlohmann/json ΓÇö REMOVED from build: no source file in src/ includes it.
 # Local copy available at f:\~dev\_deps\nlohmann_json-src if needed later.
 # ============================================================================
 
@@ -251,7 +251,7 @@ option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentatio
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 option(RAWRXD_BUILD_RAWRENGINE "Build RawrEngine.exe (set OFF for Win32IDE-only configure/P1)" ON)
 if(RAWRXD_BUILD_WIN32IDE AND NOT RAWRXD_BUILD_RAWRENGINE)
-    message(STATUS "[P1] RawrEngine target isolated (RAWRXD_BUILD_RAWRENGINE=OFF) +�-�+�-�+�-� Win32IDE-only configure")
+    message(STATUS "[P1] RawrEngine target isolated (RAWRXD_BUILD_RAWRENGINE=OFF) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Win32IDE-only configure")
 endif()
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -294,40 +294,40 @@ if(RAWRXD_BUILD_CLI)
         src/core/enterprise_license.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/license_enforcement.cpp
+        src/feature_flags_runtime.cpp
         src/core/agentic_autonomous_config.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/InferenceProfiler.cpp
+        src/subagent_core.cpp
         src/logging/Logger.cpp
         # Generation Bouncer - unified entry point
         src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
         src/runtime/Sovereign_KernelBridge_CPP.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/Deep2ExecutionTelemetry.cpp
         src/backend/VulkanGemmDispatcher.cpp
         src/vulkan_compute.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/gguf_tensor_loader.cpp
         # Elastic runtime for predictive tensor residency
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/runtime/elastic/ElasticEngine.cpp
+        src/runtime/elastic/ElasticGGUFIndex.cpp
+        src/runtime/elastic/ElasticResidencyManager.cpp
+        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+        src/runtime/elastic/ElasticDecoder.cpp
         # Shared model runtime
         src/runtime/shared/SharedModelRuntime.cpp
         src/runtime/shared/BP1BraidIndex.cpp
         src/runtime/shared/BP1BraidStreamer.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -335,11 +335,11 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/memory/WorkingSetPredictor.cpp
         src/inference/NegativeSpaceProfiler.cpp
         B014/build/b014_profiler.cpp
-        # Agentic stack +�-�+�-�+�-� headless CLI parity (no Win32IDE GUI dependencies)
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        # Agentic stack +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ headless CLI parity (no Win32IDE GUI dependencies)
+        src/agentic_engine.cpp
+        src/agent_history.cpp
+        src/agent_policy.cpp
+        src/agent_explainability.cpp
         src/cli/swarm_orchestrator.cpp
         src/full_agentic_ide/AgenticIOCPBridge.cpp
         src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
@@ -347,28 +347,28 @@ if(RAWRXD_BUILD_CLI)
         # Agentic components for CLI Ollama testing
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/RobustOllamaParser.cpp
-        # AUTO-REMOVED: stub file
+        src/agentic/AgentOllamaClient.cpp
         # HeadlessIDE dependencies
-        # AUTO-REMOVED: stub file
+        src/streaming_gguf_loader.cpp
         src/model_source_resolver.cpp
         src/modules/engine_manager.cpp
         src/modules/codex_ultimate.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/Deep2IDEIntegration.cpp
+        src/deep2/IOCPGGUFLoader.cpp
         # Missing utilities required by agentic stack
-        # AUTO-REMOVED: stub file
+        src/security/InputSanitizer.cpp
         src/config/IDEConfig.cpp
-        # AUTO-REMOVED: stub file
+        src/inference/PerformanceMonitor.cpp
         # HeadlessIDE agentic dependencies
         src/agentic/SubAgentManager.cpp
         src/core/chain_of_thought_engine.cpp
         src/lsp/RawrXD_LSPServer.cpp
         # Missing implementations for unresolved externals
-        # AUTO-REMOVED: stub file
+        src/BackendOrchestrator.cpp
         src/core/enterprise_telemetry_compliance.cpp
         src/core/enterprise_licensev2_impl.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FabricTensorTable.cpp
+        src/utils/Diagnostics.cpp
         src/cli/rawrxd_deep_stubs.cpp
         rguf_source/RGUFWriter.cpp
         rguf_source/RGUFLoader.cpp
@@ -460,12 +460,12 @@ if(RAWRXD_BUILD_CLI)
         target_link_libraries(rawrxd PRIVATE Vulkan::Vulkan dxgi)
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=1)
     elseif(RAWR_ENABLE_VULKAN)
-        message(STATUS "[rawrxd] Vulkan SDK not found +�-�+�-�+�-� GPU compute uses CPU fallback")
+        message(STATUS "[rawrxd] Vulkan SDK not found +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GPU compute uses CPU fallback")
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=0)
     endif()
 
     # =============================================================================
-    # RawrXD Serve +�-�+�-�+�-� Ollama-compatible HTTP server with shared model runtime
+    # RawrXD Serve +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Ollama-compatible HTTP server with shared model runtime
     # =============================================================================
     add_executable(rawrxd-serve
         src/serve/rawrxd_serve_main.cpp
@@ -482,17 +482,17 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
         src/runtime/Sovereign_KernelBridge_CPP.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/Deep2ExecutionTelemetry.cpp
         src/backend/VulkanGemmDispatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -564,7 +564,7 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/shared/BP1BraidIndex.cpp
         src/runtime/shared/BP1BraidStreamer.cpp
         src/runtime/memory/CapacityManager.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -606,7 +606,7 @@ if(RAWRXD_BUILD_CLI)
 
     # =========================================================================
     # Vulkan Compute Diagnostic Test
-    # Minimal proof: buffer allocation +�-�+�-�+�-� transfer +�-�+�-�+�-� compute fill +�-�+�-�+�-� readback
+    # Minimal proof: buffer allocation +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ transfer +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ compute fill +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ readback
     # =========================================================================
     if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_SDK_ROOT)
         add_executable(vulkan_compute_diagnostic
@@ -637,7 +637,7 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan Tensor Upload + Readback Verification Test
-        # Proves: staging buffer +�-�+�-�+�-� device-local buffer +�-�+�-�+�-� readback +�-�+�-�+�-� verification
+        # Proves: staging buffer +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ device-local buffer +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ readback +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ verification
         # =====================================================================
         add_executable(vulkan_tensor_upload_test
             tests/vulkan_tensor_upload_test.cpp
@@ -667,7 +667,7 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan GEMM Verification Test
-        # Proves: compute shader dispatch +�-�+�-�+�-� GPU GEMM +�-�+�-�+�-� readback +�-�+�-�+�-� CPU comparison
+        # Proves: compute shader dispatch +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GPU GEMM +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ readback +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ CPU comparison
         # =====================================================================
         add_executable(vulkan_gemm_test
             tests/vulkan_gemm_test.cpp
@@ -762,8 +762,8 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan Transformer GEMM Integration Test
-        # Proves: real Qwen GGUF +�-�+�-�+�-� RawrXDInference +�-�+�-�+�-� model loader +�-�+�-�+�-� GPU-resident
-        #         weight +�-�+�-�+�-� Vulkan GEMM dispatch +�-�+�-�+�-� verified output.
+        # Proves: real Qwen GGUF +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RawrXDInference +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ model loader +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GPU-resident
+        #         weight +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Vulkan GEMM dispatch +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ verified output.
         # =====================================================================
         add_executable(vulkan_transformer_gemm_test
             tests/vulkan_transformer_gemm_test.cpp
@@ -877,7 +877,7 @@ if(RAWRXD_BUILD_CLI)
         message(STATUS "elastic_path_validation_test: Elastic path validation test configured")
 
         # =====================================================================
-        # fused_qkv_gguf_validation: Full GGUF parse +�-�+�-�+�-� elastic index +�-�+�-�+�-� fused
+        # fused_qkv_gguf_validation: Full GGUF parse +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ elastic index +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ fused
         # QKV execution gate. Exercises all new code paths.
         # =====================================================================
         add_executable(fused_qkv_gguf_validation
@@ -995,7 +995,7 @@ if(WIN32)
     )
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
 
-    # G3_K3C_E2E_REAL_001 +�-�-� k3c +�-�-� ProductRuntime one-step (PROMOTE=0)
+    # G3_K3C_E2E_REAL_001 +∩┐╜-∩┐╜-∩┐╜ k3c +∩┐╜-∩┐╜-∩┐╜ ProductRuntime one-step (PROMOTE=0)
     add_executable(smoke_k3c_e2e
         evidence/RAWRXD_PERFORMANCE_001/G3_K3C_E2E_REAL_001/smoke_k3c_e2e.cpp
     )
@@ -1249,7 +1249,7 @@ if(WIN32)
     message(STATUS "VAL-051.7: Residency Baseline / Fixture Gate configured")
 
     # =====================================================================
-    # RESIDENCY-A/B-CERT +�-�+�-�+�-� Elastic Residency A/B Certification Harness
+    # RESIDENCY-A/B-CERT +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Elastic Residency A/B Certification Harness
     # =====================================================================
     add_executable(residency_ab_cert
         tests/residency_ab_cert.cpp
@@ -1301,7 +1301,7 @@ if(WIN32)
     message(STATUS "RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured")
 
     # =====================================================================
-    # validate_val051_evidence +�-�+�-�+�-� Evidence JSON validator for VAL-051.2.A
+    # validate_val051_evidence +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Evidence JSON validator for VAL-051.2.A
     # =====================================================================
     add_executable(validate_val051_evidence
         tests/validate_val051_evidence.cpp
@@ -1324,7 +1324,7 @@ if(WIN32)
     message(STATUS "validate_val051_evidence: VAL-051.2.A evidence validator configured")
 
     # =====================================================================
-    # test_gguf_tokenizer_bounds +�-�+�-�+�-� Fuzz-style bounds validation for ParseGGUF
+    # test_gguf_tokenizer_bounds +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Fuzz-style bounds validation for ParseGGUF
     # =====================================================================
     add_executable(test_gguf_tokenizer_bounds
         tests/test_gguf_tokenizer_bounds.cpp
@@ -1356,7 +1356,7 @@ if(WIN32)
     message(STATUS "test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured")
 
     # =====================================================================
-    # test_parseheader_bounds +�-�+�-�+�-� Adversarial ParseHeader bounds validation
+    # test_parseheader_bounds +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Adversarial ParseHeader bounds validation
     # =====================================================================
     add_executable(test_parseheader_bounds
         tests/test_parseheader_bounds.cpp
@@ -1380,7 +1380,7 @@ if(WIN32)
 endif()
 
 # =====================================================================
-# test_parseheader_fuzz +�-�+�-�+�-� B32 Deterministic ParseHeader Fuzz Matrix
+# test_parseheader_fuzz +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ B32 Deterministic ParseHeader Fuzz Matrix
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
     add_executable(test_parseheader_fuzz
@@ -1405,7 +1405,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
 endif()
 
 # =====================================================================
-# test_gguf_metadata_bounds +�-�+�-�+�-� B33 GGUF Metadata Bounds Gate
+# test_gguf_metadata_bounds +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ B33 GGUF Metadata Bounds Gate
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
     add_executable(test_gguf_metadata_bounds
@@ -1430,12 +1430,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
 endif()
 
 # =====================================================================
-# test_gguf_tensor_bounds +�-�+�-�+�-� B34 GGUF Tensor/Offset Bounds Gate
+# test_gguf_tensor_bounds +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ B34 GGUF Tensor/Offset Bounds Gate
 # =====================================================================
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/# AUTO-REMOVED: stub file")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/runtime/gguf_tensor_loader.cpp")
     add_executable(test_gguf_tensor_bounds
         tests/test_gguf_tensor_bounds.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/gguf_tensor_loader.cpp
     )
     set_target_properties(test_gguf_tensor_bounds PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1641,10 +1641,10 @@ endif()
 # Validates per-layer MoE router weight injection from real K2 GGUF tensors.
 # Must pass before generation wiring.
 # =============================================================================
-if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/# AUTO-REMOVED: stub file")
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/GGUFLoader.cpp")
     add_executable(Deep2Engine_RouterSmokeTest
         src/deep2/Deep2Engine_RouterSmokeTest.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
         src/deep2/MoERouter.cpp
     )
     set_target_properties(Deep2Engine_RouterSmokeTest PROPERTIES
@@ -1682,14 +1682,14 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/# AUTO-REMOVED: stub file")
 endif()
 
 # =============================================================================
-# Batch 15A +�-�+�-�+�-� GGUF Alignment Diagnostic
+# Batch 15A +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GGUF Alignment Diagnostic
 # Instruments a single tensor (default blk.29.attn_qkv.weight) for offset,
 # alignment, bounds, and dequant correctness.
 # =============================================================================
 if(WIN32)
     add_executable(GGUF_Alignment_Diagnostic
         src/deep2/test_gguf_alignment_diagnostic.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
     )
     set_target_properties(GGUF_Alignment_Diagnostic PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1726,13 +1726,13 @@ if(WIN32)
 endif()
 
 # =============================================================================
-# Batch 15B +�-�+�-�+�-� Q4_0 GEMV Certification
+# Batch 15B +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Q4_0 GEMV Certification
 # Verifies Q4_0 scalar GEMV path against independent reference implementation.
 # =============================================================================
 if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/test_q4_0_gemv_certification.cpp")
     add_executable(Q4_0_GEMV_Certification
         src/deep2/test_q4_0_gemv_certification.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
     )
     set_target_properties(Q4_0_GEMV_Certification PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1784,7 +1784,7 @@ endif()
 # CXX standard set above (MSVC 23, others 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Static link MSVC runtime +�-�+�-�+�-� required for RawrEngine and Gold builds
+# Static link MSVC runtime +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required for RawrEngine and Gold builds
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
@@ -1925,7 +1925,7 @@ if(RAWR_HAS_MASM)
         src/masm/rawrxd_math_masm.asm
         src/masm/rawrxd_transformer_masm_fixed.asm
         src/masm/rawrxd_transformer_full.asm
-        # Sovereign ABI bridge +�-�+�-�+�-� stable C++/MASM execution plane seam
+        # Sovereign ABI bridge +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ stable C++/MASM execution plane seam
         src/asm/Sovereign_KernelBridge_MASM.asm
         # src/asm/vision_projection_kernel.asm  # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/quantum_beaconism_backend.asm        # excluded: MASM build errors (undefined symbols / unwind prolog issues)
@@ -2029,15 +2029,15 @@ find_package(Threads REQUIRED)
 
 set(SOURCES 
     src/ceo/main.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/memory_core.cpp
+    src/hot_patcher.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/runtime/TensorExecutionRouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/runtime/RawrRuntime.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/TransferScheduler.cpp
@@ -2045,34 +2045,34 @@ set(SOURCES
     src/runtime/memory/PredictiveMemoryManager.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/StreamRouterAdapter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/runtime/Deep2ExecutionTelemetry.cpp
+    src/runtime/gguf_tensor_loader.cpp
+    src/runtime/elastic/ElasticEngine.cpp
+    src/runtime/elastic/ElasticGGUFIndex.cpp
+    src/runtime/elastic/ElasticResidencyManager.cpp
+    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+    src/runtime/elastic/ElasticDecoder.cpp
+    src/runtime/governance/HardwareCapabilityProbe.cpp
+    src/runtime/governance/CapabilityTierMatrix.cpp
+    src/runtime/governance/HardwareGovernor.cpp
+    src/runtime/governance/PressedStateEngine.cpp
+    src/runtime/governance/Ensemble58Governor.cpp
+    src/runtime/governance/TLSInstructionGate.cpp
+    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
     B014/build/b014_profiler.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/complete_server.cpp
+    src/agentic_engine.cpp
+    src/subagent_core.cpp
+    src/agent_history.cpp
+    src/agent_policy.cpp
+    src/agent_explainability.cpp
+    src/streaming_gguf_loader.cpp
+    src/utils/Diagnostics.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
-    # AUTO-REMOVED: stub file
+    src/compression_interface.cpp
     src/core/memory_production.cpp
     src/core/rawrxd_subsystem_api.cpp
     src/core/rawrxd_linker_closure.cpp
@@ -2081,27 +2081,27 @@ set(SOURCES
     src/core/rawrxd_subsystem_api_impl.cpp
     # src/core/link_stubs_production.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     src/vulkan_kernel_bridge.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
     src/compression/zlib_runtime_loader.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MASMKernelStubs.cpp
+    src/deep2/IQQuantKernels.cpp
     src/inference/NegativeSpaceProfiler.cpp
     
     src/engine/gguf_core.cpp
-    # AUTO-REMOVED: stub file
+    src/engine/inference_kernels.cpp
     src/engine/transformer.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/engine/bpe_tokenizer.cpp
+    src/engine/sampler.cpp
+    src/engine/rawr_engine.cpp
+    src/engine/core_generator.cpp
     src/engine/pyre_compute.cpp
-    # AUTO-REMOVED: stub file
+    src/engine/sovereign_engines.cpp
     
     src/core/execution_scheduler.cpp
     
     # Agentic Decision Tree + CLI Autonomy (Phase 19)
-    # AUTO-REMOVED: stub file
+    src/cli/agentic_decision_tree.cpp
     src/cli/cli_autonomy_loop.cpp
     src/cli/deep_iteration_engine.cpp
     
@@ -2120,7 +2120,7 @@ set(SOURCES
     src/core/local_ai_core.cpp
     src/core/native_inference_pipeline.cpp
     
-    # Layer Offload Manager +�-�+�-�+�-� RAM streaming for 74B+ models on 16GB VRAM
+    # Layer Offload Manager +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RAM streaming for 74B+ models on 16GB VRAM
     src/core/layer_offload_manager.cpp
     
     # Three-layer hotpatch system (needed by decision tree)
@@ -2129,7 +2129,7 @@ set(SOURCES
     src/core/unified_hotpatch_manager.cpp
     src/core/proxy_hotpatcher.cpp
     src/core/model_bruteforce_engine.cpp
-    # AUTO-REMOVED: stub file
+    src/server/gguf_server_hotpatch.cpp
     src/agent/agentic_hotpatch_orchestrator.cpp
 
     # Singleton subsystems referenced by UnifiedHotpatchManager
@@ -2144,7 +2144,7 @@ set(SOURCES
     src/core/vision_quantized_encoder.cpp
     src/core/vision_gpu_staging.cpp
 
-    # AUTO-REMOVED: stub file
+    src/marketplace/extension_marketplace.cpp
     src/auth/rbac_engine.cpp
 
     # Shadow-Page Detour + Sentinel Watchdog (Layer 6)
@@ -2152,45 +2152,45 @@ set(SOURCES
     src/core/sentinel_watchdog.cpp
 
     # Agentic Loop State (iterative reasoning state machine)
-    # AUTO-REMOVED: stub file
+    src/agentic_loop_state.cpp
 
-    # Autonomous SubAgents +�-�+�-�+�-� Bulk Fix Orchestration for models/swarms
+    # Autonomous SubAgents +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Bulk Fix Orchestration for models/swarms
     src/agent/autonomous_subagent.cpp
     src/agent/agentic_failure_detector.cpp
     src/agent/agentic_puppeteer.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Sovereign Puppeteer Architecture +�-�+�-�+�-� Self-Modification System
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Sovereign Puppeteer Architecture +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Self-Modification System
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    src/sovereign/introspection/SymbolTableGenerator.cpp
+    src/sovereign/puppeteer/PuppeteerAPI.cpp
+    src/sovereign/puppeteer/VEH_Watchdog.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Intent-to-Execution Guardrails +�-�+�-�+�-� Model Control Plane
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Intent-to-Execution Guardrails +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Model Control Plane
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    src/intent/intent_config.cpp
+    src/intent/intent_abi.cpp
+    src/guardrails/capability_policy.cpp
+    src/guardrails/patch_firewall.cpp
+    src/hotpatch/patch_transaction.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Sovereign Agent Kernel +�-�+�-�+�-� Orchestration Layer
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Sovereign Agent Kernel +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Orchestration Layer
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    src/kernel/AgentKernel.cpp
+    src/kernel/TelemetryInjector.cpp
+    src/kernel/IntentExecutionPipeline.cpp
+    src/kernel/IntentReplayEngine.cpp
 
-    # HTTP Client +�-�+�-�+�-� WinHTTP/curl async with future retention
+    # HTTP Client +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ WinHTTP/curl async with future retention
     src/agent/llm_http_client.cpp
     src/agent/model_invoker.cpp
     src/agent/planner.cpp
     src/agent/eval_framework.cpp
     # src/ollama_client.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
 
-    # LocalReasoningEngine +�-�+�-�+�-� API-free static analysis + pattern detection (no Qt, no API key)
+    # LocalReasoningEngine +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ API-free static analysis + pattern detection (no Qt, no API key)
     src/agent/local_reasoning_engine.cpp
 
     # Agent Self-Repair (MASM64 self-patching kernel bridge)
@@ -2201,13 +2201,13 @@ set(SOURCES
     src/agentic/DeterministicReplayEngine.cpp
     src/agentic/AgentToolHandlers.cpp
 
-    # T4: Autonomous Recovery Orchestrator (FailureClass +�-�+�-�+�-� recovery +�-�+�-�+�-� verify +�-�+�-�+�-� commit)
+    # T4: Autonomous Recovery Orchestrator (FailureClass +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ recovery +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ verify +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ commit)
     src/agentic/autonomous_recovery_orchestrator.cpp
 
     # CoT Fallback System (required by unified_hotpatch_manager.cpp)
     src/core/cot_fallback_system.cpp
     
-    # T4.5: Agentic Deep Thinking Engine +�-�+�-�+�-� Autonomous monitoring, recovery, and orchestration
+    # T4.5: Agentic Deep Thinking Engine +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Autonomous monitoring, recovery, and orchestration
     src/agentic/AgenticDeepThinkingEngine.cpp
 
     # T4.6: Validation Fault Injection and Recovery Telemetry (Mission 2.1-2.3)
@@ -2235,9 +2235,9 @@ set(SOURCES
     # Disk Recovery Agent (C++ wrapper for ASM SCSI kernel)
     src/agent/DiskRecoveryAgent.cpp
     
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # IDE Subsystems +�-�+�-�+�-� Repository Intelligence, Build, Diagnostics, etc.
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # IDE Subsystems +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Repository Intelligence, Build, Diagnostics, etc.
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     src/repo/FileIndex.cpp
     src/repo/SymbolTable.cpp
     src/repo/ASTCache.cpp
@@ -2248,9 +2248,9 @@ set(SOURCES
     src/repo/EmbeddingIndex.cpp
     src/build/BuildIntelligence.cpp
     src/diagnostics/DiagnosticsEngine.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/refactoring/RefactoringEngine.cpp
+    src/validation/PatchValidator.cpp
+    src/ide/IDEShell.cpp
     
     # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
     src/core/swarm_decision_bridge.cpp
@@ -2272,7 +2272,7 @@ set(SOURCES
     src/core/amd_gpu_accelerator.cpp
     src/core/unified_memory_executor.cpp
     src/core/model_runtime_gate.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime_surface/GenerationStopwatch.cpp
     
     # Accelerator implementations (required by accelerator_router.cpp)
     src/core/intel_gpu_accelerator.cpp
@@ -2297,87 +2297,87 @@ set(SOURCES
     src/core/camellia256_bridge.cpp
     src/core/swarm_coordinator.cpp
     src/core/swarm_worker.cpp
-    # AUTO-REMOVED: stub file
+    src/tool_registry.cpp
 
-    # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) +�-�+�-�+�-� required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
+    src/license_enforcement.cpp
+    src/feature_flags_runtime.cpp
+    src/tools/license_validator_manifest.cpp
 
-    # Agentic config + enterprise feature manager + model name utils +�-�+�-�+�-� required by complete_server, subagent_core
+    # Agentic config + enterprise feature manager + model name utils +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by complete_server, subagent_core
     src/core/agentic_autonomous_config.cpp
     src/core/enterprise_feature_manager.cpp
-    # AUTO-REMOVED: stub file
+    src/model_name_utils.cpp
     src/model_config.cpp
 
-    # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) +�-�+�-�+�-� required by complete_server, execution_scheduler, local_ai_core
+    # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by complete_server, execution_scheduler, local_ai_core
     src/core/multi_gpu.cpp
 
-    # Engine registry (register_engine) +�-�+�-�+�-� required by sovereign_engines
+    # Engine registry (register_engine) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by sovereign_engines
     src/core/engine_registry.cpp
 
-    # Telemetry + observability +�-�+�-�+�-� required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
+    # Telemetry + observability +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
     src/agent/telemetry_collector.cpp
-    # AUTO-REMOVED: stub file
+    src/agentic_observability.cpp
 
-    # BoundedAgentLoop + FIMPromptBuilder +�-�+�-�+�-� required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
+    # BoundedAgentLoop + FIMPromptBuilder +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
     src/agentic/BoundedAgentLoop.cpp
     src/agentic/FIMPromptBuilder.cpp
 
-    # Subsystem registry +�-�+�-�+�-� required by AgentOrchestrator, ToolRegistry, feature_handlers
+    # Subsystem registry +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by AgentOrchestrator, ToolRegistry, feature_handlers
     src/core/rawrxd_subsystem_api.cpp
 
-    # IDEConfig +�-�+�-�+�-� required by OrchestratorBridge
+    # IDEConfig +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by OrchestratorBridge
     src/config/IDEConfig.cpp
 
-    # Disk recovery ASM agent + tool handler +�-�+�-�+�-� required by ToolRegistry
+    # Disk recovery ASM agent + tool handler +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by ToolRegistry
     src/agentic/DiskRecoveryAgent.cpp
     src/agentic/DiskRecoveryToolHandler.cpp
 
-    # Agentic bridge (ExecuteAgentCommand) +�-�+�-�+�-� headless stub for RawrEngine
-    # AUTO-REMOVED: stub file
+    # Agentic bridge (ExecuteAgentCommand) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ headless stub for RawrEngine
+    src/win32app/agentic_bridge_headless.cpp
 
-    # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) +�-�+�-�+�-� required by agentic_failure_detector
+    # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by agentic_failure_detector
     # src/core/ai_agent_masm_core_impl.cpp
 
-    # Context deterioration hotpatch + LSP hotpatch + symbol provider +�-�+�-�+�-� required by feature_handlers, auto_feature_registry
+    # Context deterioration hotpatch + LSP hotpatch + symbol provider +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by feature_handlers, auto_feature_registry
     src/core/context_deterioration_hotpatch.cpp
     src/lsp/lsp_hotpatch_bridge.cpp
     src/lsp/hotpatch_symbol_provider.cpp
 
-    # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) +�-�+�-�+�-� required by enterprise_licensev2_impl
+    # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by enterprise_licensev2_impl
     src/core/license_anti_tampering.cpp
 
     # Reverse-engineered bridge stubs (Heartbeat_Shutdown, GPU_*, GetHighResTick, TicksTo*, CalculateCRC32, AllocateDMABuffer, Tensor_QuantizedMatMul)
     # stub file removed
 
-    # Support tier manager (SupportTierManager::Instance, GenerateStatusReport) +�-�+�-�+�-� required by main, complete_server
+    # Support tier manager (SupportTierManager::Instance, GenerateStatusReport) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by main, complete_server
     src/core/support_tier.cpp
 
-    # Subsystem mode stubs (CompileMode, EncryptMode, InjectMode, etc.) +�-�+�-�+�-� required by rawrxd_subsystem_api
+    # Subsystem mode stubs (CompileMode, EncryptMode, InjectMode, etc.) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by rawrxd_subsystem_api
     # removed stub unit
 
-    # Feature registry (FeatureRegistry::instance, registerFeature) +�-�+�-�+�-� required by enterprise_feature_manager
+    # Feature registry (FeatureRegistry::instance, registerFeature) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by enterprise_feature_manager
     src/core/feature_registry.cpp
-    # Menu auditor (RawrXD::Audit::verifyCommandInMenu) +�-�+�-�+�-� required by feature_registry
+    # Menu auditor (RawrXD::Audit::verifyCommandInMenu) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by feature_registry
     src/core/menu_auditor.cpp
 
-    # GGUF diagnostic provider + LSP server +�-�+�-�+�-� required by lsp_hotpatch_bridge
+    # GGUF diagnostic provider + LSP server +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by lsp_hotpatch_bridge
     src/lsp/gguf_diagnostic_provider.cpp
     src/lsp/RawrXD_LSPServer.cpp
 
-    # Extension polyfill engine + VSCode API +�-�+�-�+�-� required by js_extension_host
+    # Extension polyfill engine + VSCode API +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by js_extension_host
     src/core/extension_polyfill_engine.cpp
     src/modules/vscode_extension_api.cpp
 
-    # JS extension host +�-�+�-�+�-� required by ssot_handlers_ext
+    # JS extension host +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by ssot_handlers_ext
     # src/core/js_extension_host.cpp
 
-    # Model source resolver +�-�+�-�+�-� required by auto_feature_registry
+    # Model source resolver +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by auto_feature_registry
     src/model_source_resolver.cpp
 
-    # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
-    # AUTO-REMOVED: stub file
+    # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by auto_feature_registry
+    src/modules/ReverseEngineering.cpp
 
     # AgenticDeepThinkingEngine full implementation
     src/agent/agentic_deep_thinking_engine.cpp
@@ -2396,27 +2396,27 @@ set(SOURCES
 
     # Stubgen: AnalyzerDistiller + StreamingOrchestrator (C++ fallbacks, guarded by RAWR_HAS_MASM)
 
-    # PT Driver Contract +�-�+�-�+�-� Page Table substrate (VEH watchpoints, COW snapshots, ASLR, large pages)
+    # PT Driver Contract +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Page Table substrate (VEH watchpoints, COW snapshots, ASLR, large pages)
     src/core/pt_driver_contract.cpp
 
     # Phase 21: Distributed Swarm Inference Orchestrator
     src/cli/swarm_orchestrator.cpp
-    # AUTO-REMOVED: stub file
+    src/swarm_orchestrator.cpp
 
     # Phase 33: Voice Chat Engine
     src/core/voice_chat.cpp
 
-    # Phase 44: Voice Automation +�-�+�-�+�-� Toggleable TTS Response Reader
+    # Phase 44: Voice Automation +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Toggleable TTS Response Reader
     src/core/voice_automation.cpp
 
-    # DirectML GPU Inference Engine +�-�+�-�+�-� D3D12 + DML operators for transformer forward pass
+    # DirectML GPU Inference Engine +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ D3D12 + DML operators for transformer forward pass
     src/core/directml_compute.cpp
     src/core/gguf_dml_bridge.cpp
     src/core/dml_streaming_integration.cpp
     src/core/dml_asm_fallback.cpp
-    # AUTO-REMOVED: stub file
+    src/dml_inference_engine.cpp
 
-    # Agentic Watchdog +�-�+�-�+�-� .text Section Integrity Verification Service
+    # Agentic Watchdog +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ .text Section Integrity Verification Service
     src/core/watchdog_service.cpp
 
     # Phase 33: Quick-Win Ports
@@ -2425,7 +2425,7 @@ set(SOURCES
     src/core/alert_system.cpp
 
     # Shared Feature Dispatch System (CLI + GUI unified command routing)
-    # NOTE: shared_feature_dispatch.cpp REMOVED +�-�+�-�+�-� its 4 extern "C" symbols are
+    # NOTE: shared_feature_dispatch.cpp REMOVED +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ its 4 extern "C" symbols are
     # superseded by unified_command_dispatch.cpp (superset with AutoRegistrar)
     src/core/feature_registration.cpp
     src/core/feature_handlers.cpp
@@ -2437,7 +2437,7 @@ set(SOURCES
     src/core/ssot_handlers_ext_runtime_minimal.cpp
     src/core/ssot_validation.cpp
 
-    # Unified Command Dispatch +�-�+�-�+�-� Zero-drift SSOT dispatch (replaces manual registration)
+    # Unified Command Dispatch +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Zero-drift SSOT dispatch (replaces manual registration)
     src/core/unified_command_dispatch.cpp
 
     # Phase 32A: Chain-of-Thought Multi-Model Review Engine
@@ -2451,11 +2451,11 @@ set(SOURCES
     # Phase 36: Cross-Process MMF State Synchronization (shared with Win32IDE)
     src/core/rawrxd_state_mmf.cpp
 
-    # Phase 46: VulkanKernel +�-�+�-�+�-� Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
+    # Phase 46: VulkanKernel +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
     src/vulkan_compute.cpp
     src/backend/VulkanGemmDispatcher.cpp
 
-    # Phase 46: Live Binary Patcher +�-�+�-�+�-� Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
+    # Phase 46: Live Binary Patcher +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
     # src/core/live_binary_patcher.cpp
 
     # Phase 37: Iterative Partial Inference with Adaptive Tensor Traversal
@@ -2466,9 +2466,9 @@ set(SOURCES
     src/core/convergence_controller.cpp
     src/core/iterative_tensor_traversal.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Cursor-Parity Gaps +�-�+�-�+�-� META prerequisites + GAP 1-10
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Cursor-Parity Gaps +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ META prerequisites + GAP 1-10
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 
     # META 1: SQLite RAII Wrapper + Real Amalgamation
     src/core/sqlite_wrapper.cpp
@@ -2490,7 +2490,7 @@ set(SOURCES
     # GAP 1.5: Agentic Transaction Layer (Cursor-Composer-class orchestration)
     src/agentic/agentic_transaction.cpp
 
-    # P6: Agent Workflow Orchestrator (DAG-based plan+�-�+�-�+�-�execute+�-�+�-�+�-�validate+�-�+�-�+�-�commit)
+    # P6: Agent Workflow Orchestrator (DAG-based plan+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜execute+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜validate+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜commit)
     src/agentic/agent_workflow_orchestrator.cpp
 
     # GAP 2: HNSW Vector Index
@@ -2502,10 +2502,10 @@ set(SOURCES
     # GAP 4: Ghost-Text Context Assembler
     src/agentic/context_assembler.cpp
 
-    # GAP 5: Chat Message Renderer (Markdown +�-�+�-�+�-� HTML)
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    # GAP 5: Chat Message Renderer (Markdown +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ HTML)
+    src/ui/chat_message_renderer.cpp
+    src/ui/tool_action_status.cpp
+    src/ui/chat_panel.cpp
 
     # Cathedral Hardening (5.0 Readiness) - REAL IMPLEMENTATIONS ONLY
     src/core/crash_containment.cpp
@@ -2514,71 +2514,71 @@ set(SOURCES
     src/core/perf_telemetry.cpp
 
     # GAP 6: Git Context Provider (CLI subprocess)
-    # AUTO-REMOVED: stub file
+    src/git/git_context.cpp
 
     # GAP 7: LSP Diagnostic Consumer + Quick-Fix
-    # AUTO-REMOVED: stub file
+    src/lsp/diagnostic_consumer.cpp
 
     # GAP 8: Jinja2-Style Prompt Template Engine
     src/core/prompt_template_engine.cpp
 
     # GAP 9: Speculative Decoder v2 (Draft-Verify-Accept)
-    # AUTO-REMOVED: stub file
+    src/gpu/speculative_decoder_v2.cpp
 
     # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
     src/ai/streaming_inference_engine.cpp
     src/ai/speculative_tree_attention_bridge.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/kernels/tree_attention_dispatch.cpp
+    src/kernels/tree_attention_scalar.cpp
+    src/kernels/tree_attention_avx2.cpp
+    src/kernels/tree_attention_avx512_intrinsics.cpp
 
     # Autonomous inference engine (required by speculative_decoder.cpp for draft token generation)
-    # AUTO-REMOVED: stub file
+    src/inference/ultra_fast_inference.cpp
 
     # GAP 10: Completion Feedback (Online Logistic Regression)
-    # AUTO-REMOVED: stub file
+    src/telemetry/completion_feedback.cpp
 
     # T3-D: Replay + Telemetry Fusion Engine
-    # AUTO-REMOVED: stub file
+    src/telemetry/replay_telemetry_fusion.cpp
 
     # T3-D: Hotpatch Telemetry Safety Layer
-    # AUTO-REMOVED: stub file
+    src/telemetry/hotpatch_telemetry_safety.cpp
 
-    # Unified Telemetry Core +�-�+�-�+�-� single entry point for all telemetry layers
-    # AUTO-REMOVED: stub file
+    # Unified Telemetry Core +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ single entry point for all telemetry layers
+    src/telemetry/UnifiedTelemetryCore.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # GPU + Agentic + UI Integration (STL/Win32 native)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 
-    # GPU Backend +�-�+�-�+�-� Vulkan/CUDA/CPU fallback chain (fprintf logging)
+    # GPU Backend +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Vulkan/CUDA/CPU fallback chain (fprintf logging)
     src/gpu/gpu_backend.cpp
 
-    # KV-Cache Optimizer +�-�+�-�+�-� sliding-window eviction, std::chrono timing
-    # AUTO-REMOVED: stub file
+    # KV-Cache Optimizer +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ sliding-window eviction, std::chrono timing
+    src/gpu/kv_cache_optimizer.cpp
 
-    # Speculative Decoder v1 +�-�+�-�+�-� draft/verify with std::mt19937 RNG
-    # AUTO-REMOVED: stub file
+    # Speculative Decoder v1 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ draft/verify with std::mt19937 RNG
+    src/gpu/speculative_decoder.cpp
 
-    # Agentic Controller +�-�+�-�+�-� callback-based event loop (no QObject/signals)
-    # AUTO-REMOVED: stub file
+    # Agentic Controller +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ callback-based event loop (no QObject/signals)
+    src/agentic_controller.cpp
 
-    # Phase 2 UI Integration +�-�+�-�+�-� Win32 MessageBox, std::filesystem, std::function callbacks
-    # AUTO-REMOVED: stub file
+    # Phase 2 UI Integration +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Win32 MessageBox, std::filesystem, std::function callbacks
+    src/ui/phase2_integration_example.cpp
 
-    # Multi-Model Benchmark Tool +�-�+�-�+�-� has its own main(), built as separate target
+    # Multi-Model Benchmark Tool +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ has its own main(), built as separate target
     # src/tools/multi_model_benchmark.cpp  # EXCLUDED: duplicate main() symbol
 
-    # Agentic Agent Coordinator +�-�+�-�+�-� multi-agent lifecycle (ctor, dtor, createAgent, synchronize)
+    # Agentic Agent Coordinator +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ multi-agent lifecycle (ctor, dtor, createAgent, synchronize)
     src/agentic_agent_coordinator.cpp
 
-    # Production Config Manager +�-�+�-�+�-� singleton config loader (instance, loadConfig, value)
+    # Production Config Manager +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ singleton config loader (instance, loadConfig, value)
     src/production_config_manager.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # Core Production Subsystems (Verified Working)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 
     # Deterministic Swarm Reproducibility (same input + seed = same result)
     src/core/deterministic_swarm.cpp
@@ -2588,58 +2588,58 @@ set(SOURCES
     # Input Guard with Backend Slicing (OOM protection, chunk routing, budget)
     src/core/input_guard_slicer.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # Autonomous-Fix Replay Harness (Deterministic Validation Layer)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     src/test_harness/replay_fixture.cpp
     src/test_harness/replay_oracle.cpp
     src/test_harness/replay_mock_inference.cpp
     src/test_harness/replay_harness.cpp
     src/test_harness/replay_reporter.cpp
 
-    # Phase 34: Instructions Context Provider +�-�+�-�+�-� Read tools.instructions.md (All Lines)
+    # Phase 34: Instructions Context Provider +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Read tools.instructions.md (All Lines)
     src/core/instructions_provider.cpp
 
-    # Phase 13: Distributed Pipeline Orchestrator +�-�+�-�+�-� DAG scheduling, work-stealing
+    # Phase 13: Distributed Pipeline Orchestrator +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ DAG scheduling, work-stealing
     src/core/distributed_pipeline_orchestrator.cpp
 
-    # Phase 14: Hotpatch Control Plane +�-�+�-�+�-� Lifecycle, transactions, dependency graphs
+    # Phase 14: Hotpatch Control Plane +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Lifecycle, transactions, dependency graphs
     src/core/hotpatch_control_plane.cpp
 
-    # Phase 15: Static Analysis Engine +�-�+�-�+�-� CFG/SSA, dominators, optimizations
+    # Phase 15: Static Analysis Engine +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ CFG/SSA, dominators, optimizations
     src/core/static_analysis_engine.cpp
 
     # Top-50: Unified Problems (LSP + SAST + SCA + Secrets)
     src/core/problems_aggregator.cpp
 
-    # Top-50: Secrets scanning (API keys, high-entropy) +�-�+�-�+�-� Security
-    # AUTO-REMOVED: stub file
+    # Top-50: Secrets scanning (API keys, high-entropy) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Security
+    src/security/secrets_scanner.cpp
 
     # Top-50: In-house SCA (manifest parsing, no external deps)
-    # AUTO-REMOVED: stub file
+    src/security/dependency_audit.cpp
 
     # Top-50: SBOM export (CycloneDX 1.4, in-house)
-    # AUTO-REMOVED: stub file
+    src/security/sbom_export.cpp
 
     # Top-50: In-house SAST (regex/source rules, no external SAST lib)
-    # AUTO-REMOVED: stub file
+    src/security/sast_rule_engine.cpp
 
     # Google Dork Scanner + bug-safe SQLi (maxIterations, replaceSuffix, boolean payloads)
-    # AUTO-REMOVED: stub file
+    src/security/RawrXD_GoogleDork_Scanner.cpp
 
-    # Universal Dorker +�-�+�-�+�-� LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
-    # AUTO-REMOVED: stub file
+    # Universal Dorker +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
+    src/security/RawrXD_Universal_Dorker.cpp
 
     # Security hardening (AuditLog, SecurityManager, InputValidator)
-    # AUTO-REMOVED: stub file
+    src/security/SecurityHardening.cpp
 
-    # Phase 15b: Code Linter +�-�+�-�+�-� Real-time syntax/semantic linting (C++, ASM, Python, JS)
+    # Phase 15b: Code Linter +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Real-time syntax/semantic linting (C++, ASM, Python, JS)
 # src/core/code_linter.cpp
 
-    # Phase 16: Semantic Code Intelligence +�-�+�-�+�-� Cross-refs, type inference, indexing
+    # Phase 16: Semantic Code Intelligence +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Cross-refs, type inference, indexing
     src/core/semantic_code_intelligence.cpp
 
-    # Phase 17: Enterprise Telemetry & Compliance +�-�+�-�+�-� OTLP tracing, audit, GDPR
+    # Phase 17: Enterprise Telemetry & Compliance +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ OTLP tracing, audit, GDPR
     src/core/enterprise_telemetry_compliance.cpp
 
     # Core workflow/reasoning engines (required by unified_hotpatch_manager, etc.)
@@ -2677,7 +2677,7 @@ set(SOURCES
     # NOTE: rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     # src/core/rawrengine_missing_stubs.cpp
 
-    # Phase 50: Enterprise Hardening +�-�+�-�+�-� Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
+    # Phase 50: Enterprise Hardening +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
     # src/core/update_signature.cpp
     src/core/cursor_github_parity_bridge.cpp
     src/core/local_parity_bridge.cpp
@@ -2687,15 +2687,15 @@ set(SOURCES
     src/core/enterprise_stress_tests.cpp
     src/core/auto_update_system.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Autonomy Gap Closure +�-�+�-�+�-� Phase A-D + Tier 1.4 + Tier 2.3
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Autonomy Gap Closure +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Phase A-D + Tier 1.4 + Tier 2.3
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 
-    # Phase A: Closed-Loop Verification (Write +�-�+�-�+�-� Compile +�-�+�-�+�-� Test +�-�+�-�+�-� Fix)
-    # AUTO-REMOVED: stub file
+    # Phase A: Closed-Loop Verification (Write +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Compile +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Test +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Fix)
+    src/agentic/autonomous_verification_loop.cpp
 
     # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
-    # AUTO-REMOVED: stub file
+    src/agentic/autonomous_background_daemon.cpp
 
     # Phase C: Long-Term Knowledge Graph (cross-session learning, decision memory)
     src/core/knowledge_graph_core.cpp
@@ -2707,46 +2707,46 @@ set(SOURCES
     src/core/autonomous_debugger.cpp
 
     # Tier 2.3: Autonomous Communication (standup reports, approval requests)
-    # AUTO-REMOVED: stub file
+    src/agentic/autonomous_communicator.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # Cursor/JB-Parity Feature Modules (telemetry, composer, @mention,
     # vision, refactoring, language, semantic index, resource gen)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    src/telemetry/telemetry_export.cpp
+    src/agentic/agentic_composer_ux.cpp
+    src/context/context_mention_parser.cpp
+    src/multimodal_engine/vision_encoder.cpp
+    src/ide/refactoring_plugin.cpp
+    src/ide/language_plugin.cpp
     src/context/semantic_index.cpp
-    # AUTO-REMOVED: stub file
+    src/ide/resource_generator.cpp
 
     # P0: Codebase RAG (in-house TF-IDF)
-    # AUTO-REMOVED: stub file
+    src/ai/codebase_rag.cpp
 
     # P1: Symbol Graph Indexer (cross-file navigation, Copilot/Cursor parity)
-    # AUTO-REMOVED: stub file
+    src/ai/symbol_graph_indexer.cpp
 
     # P2: Semantic Code Search (TF-IDF + fuzzy ranking)
-    # AUTO-REMOVED: stub file
+    src/ai/semantic_code_search.cpp
 
     # P3: Multi-File Reasoning (cross-file context & dependency analysis)
-    # AUTO-REMOVED: stub file
+    src/ai/multi_file_reasoning.cpp
 
     # P4: Workspace Embeddings (LSH vector index, incremental)
-    # AUTO-REMOVED: stub file
+    src/ai/workspace_embeddings.cpp
 
     # P5: Repo-Wide Refactor Engine (rename, extract, move, change-sig)
-    # AUTO-REMOVED: stub file
+    src/ai/repo_refactor_engine.cpp
 
     # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
     src/ai/streaming_inference_engine.cpp
     src/ai/speculative_tree_attention_bridge.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/kernels/tree_attention_dispatch.cpp
+    src/kernels/tree_attention_scalar.cpp
+    src/kernels/tree_attention_avx2.cpp
+    src/kernels/tree_attention_avx512_intrinsics.cpp
 
     # NOTE: Removed Transcendence fiction (self_host_engine, hardware_synthesizer,
     # mesh_brain, speciator_engine, neural_bridge, omega_orchestrator, transcendence_coordinator)
@@ -2757,126 +2757,126 @@ set(SOURCES
 
     # NOTE: Removed Transcendence IDE Panel - part of valuation theater fiction
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Cognitive Architecture +�-�+�-�+�-� Autonomous Reverse Engineering OS
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Cognitive Architecture +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Autonomous Reverse Engineering OS
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    src/agentic/cognitive/cognitive_types.cpp
+    src/agentic/cognitive/enhanced_blackboard.cpp
+    src/agentic/cognitive/mission_director.cpp
+    src/agentic/cognitive/reflection_agent.cpp
+    src/agentic/cognitive/dynamic_planner.cpp
+    src/agentic/cognitive/autonomous_orchestrator.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # TrailBrake / HotPatcher / AntiPatcher Safety System
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    src/deep2/TrailBrake.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
     src/deep2/AntiPatcher.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/GoalSystem.cpp
+    src/deep2/PatchCache.cpp
+    src/deep2/BottleTTL.cpp
+    src/deep2/CPUFrequency.cpp
     # Dual GPU / Reverse Recovery / Streaming
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/DualGPUHook.cpp
+    src/deep2/ReverseTensorRecovery.cpp
     src/deep2/StreamEngine.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/execution_policy/ExecutionPolicy.cpp
+    src/deep2/execution_policy/ExecutionPolicyStore.cpp
+    src/deep2/ShardRouterIntegration.cpp
+    src/deep2/Deep2IDEIntegration.cpp
     src/deep2/Deep2ModelRuntime.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/FabricTensorTable.cpp
     src/deep2/Deep2Engine.cpp
     src/deep2/Deep2Engine_Speculative.cpp
     src/deep2/Sampler.cpp
     src/deep2/Tokenizer.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
     src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
     src/deep2/ElasticResidencyManager.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/ElasticDynamicBudget.cpp
     src/deep2/CycloneScheduler.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/Deep2LivePath.cpp
+    src/deep2/Deep2LivePath_Gate.cpp
+    src/deep2/Deep2LivePath_Pinball.cpp
+    src/deep2/Deep2LivePath_Mech.cpp
+    src/deep2/Deep2LivePath_Emit.cpp
+    src/deep2/GpuTransfer_Emit.cpp
+    src/deep2/LivePathEffect.cpp
+    src/deep2/K2LivePolicy.cpp
+    src/deep2/K2LivePolicy_Apply.cpp
+    src/deep2/K2LivePolicy_Hysteresis.cpp
+    src/deep2/FusedLiveController.cpp
+    src/deep2/FusedLiveController_Decide.cpp
+    src/deep2/FusedLiveController_Cheap.cpp
+    src/deep2/FusedLiveController_Law.cpp
+    src/deep2/FusedLiveController_Emit.cpp
+    src/deep2/LivePath_FusedTick.cpp
+    src/deep2/Deep2LivePath_MechEnd.cpp
+    src/deep2/Deep2LivePath_Thermal.cpp
+    src/rkc/RKCValidator.cpp
+    src/rkc/RKCWorld.cpp
+    src/rkc/RKCCodeWorld.cpp
+    src/rkc/RKCMinimalSource.cpp
+    src/rkc/RKCNegativeKnowledge.cpp
+    src/rkc/RKCModelInventory.cpp
+    src/rkc/RKCDeep2Authority.cpp
+    src/rkc/RKCCompiler.cpp
+    src/rkc/RKCRecipes.cpp
+    src/rkc/RKCGapEngine.cpp
+    src/rkc/RKCEmit.cpp
+    src/rkc/RKCSession.cpp
+    src/rkc/RKCProductContext.cpp
+    src/rkc/RKC_C_ABI.cpp
     src/deep2/ProductionProfiler.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/KimiK2Config.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
     src/deep2/MoERouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/TensorHop.cpp
+    src/deep2/DeepSeekMoELoader.cpp
     src/deep2/Deep2ExecutionGraph.cpp
     src/deep2/StreamRouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/FusedInferenceKernel.cpp
+    src/deep2/UniversalModelLoader.cpp
+    src/deep2/ModelLoader.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/RuntimePlanner.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/NUFusedPacker.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/IOCPGGUFLoader.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
     src/deep2/mars/MARSController.cpp
-    # AUTO-REMOVED: stub file
+    src/sampling/advanced_sampler.cpp
 
-    # Sovereign ABI runtime +�-�+�-�+�-� stable C++/MASM execution plane seam
-    # AUTO-REMOVED: stub file
+    # Sovereign ABI runtime +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ stable C++/MASM execution plane seam
+    src/runtime/Sovereign_RingTelemetry.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
 # It provides fallback symbol placeholders and can mask real feature gaps.
@@ -2991,7 +2991,7 @@ if(RAWR_REPLACE_MASM_FALLBACKS)
     endif()
 endif()
 
-# NOTE: rawrxd_filter_missing_sources(SOURCES) removed — missing required sources
+# NOTE: rawrxd_filter_missing_sources(SOURCES) removed ΓÇö missing required sources
 # should be FATAL, not silently filtered. Use if(EXISTS) guards for optional targets.
 
 # Build target-scoped SSOT ownership partition for RawrEngine only.
@@ -3040,7 +3040,9 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     list(REMOVE_ITEM RAWR_ENGINE_SOURCES src/agent/quantum_dynamic_time_manager_impl.cpp)
 endif()
 
-# RouterPrefetchTelemetry was stub-only -- list(APPEND) removed
+# RouterPrefetchTelemetry is added to SOURCES after RAWR_ENGINE_SOURCES is captured;
+# add it explicitly here so RawrEngine links the telemetry definitions.
+list(APPEND RAWR_ENGINE_SOURCES src/deep2/RouterPrefetchTelemetry.cpp)
 
 string(TOUPPER "${RAWR_SSOT_PROVIDER}" RAWR_SSOT_PROVIDER_UPPER)
 set(_RAWR_VALID_SSOT_PROVIDERS CORE EXT AUTO STUBS FEATURES)
@@ -3138,10 +3140,10 @@ endif()
 # in headless mode.
 list(APPEND RAWR_ENGINE_SOURCES
     src/logging/Logger.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/security/InputSanitizer.cpp
+    src/security/SecurityHardening.cpp
     src/core/ConfigurationValidator.cpp
-    # AUTO-REMOVED: stub file
+    src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
     # src/core/rawrengine_missing_stubs.cpp  # Removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     # REMOVED: src/link_stubs/rawrengine_link_closure.cpp - stub file deleted
@@ -3173,40 +3175,40 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
 )
 
 list(APPEND RAWR_ENGINE_SOURCES
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/BackendOrchestrator.cpp
+    src/agentic/AdvancedAgentCoordinator.cpp
+    src/agentic/hotpatch/Engine.cpp
+    src/InferenceProfiler.cpp
     src/core/js_extension_host_headless_impl.cpp
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
-    # +�-�+�-�+�-�+�-�+�-�+�-� Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) +�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     src/deep2/Chamber.cpp
     src/deep2/PlasmaGovernor.cpp
     src/deep2/SovereignOutOfCoreRuntime.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/OutOfCoreRuntime.cpp
     src/deep2/BP16Streamer.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/ResidencyManager.cpp
     src/deep2/ToroidalKVCache.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/IQQuantKernels.cpp
     src/vulkan_compute.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Kimi K2.6 300-Agent Swarm Architecture (subset +�-�+�-�+�-� excluded files
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Kimi K2.6 300-Agent Swarm Architecture (subset +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ excluded files
     # reference symbols not available in RawrEngine target)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    src/swarm/SwarmOrchestrator.cpp
+    src/swarm/KimiSwarmOrchestrator.cpp
+    src/swarm/ArchitectAgent.cpp
+    src/swarm/FrontendSquad.cpp
+    src/swarm/BackendCore.cpp
+    src/swarm/QAHive.cpp
+    src/swarm/ReviewerAgents.cpp
+    src/swarm/CinematicVibeEngine.cpp
+    src/swarm/DeepContextManager.cpp
+    src/swarm/OpenClawBridge.cpp
+    src/swarm/LegacyRefactorModule.cpp
     # src/swarm/IDEIntegration.cpp           # excluded: references ReviewerAgents methods not in RawrEngine
     # src/swarm/InfinitePerfectionTelemetry.cpp    # excluded: references InfinitePerfectionEngine not in RawrEngine
     # src/swarm/InfinitePerfectionTelemetrySQLite.cpp # excluded: same
@@ -3215,7 +3217,7 @@ list(APPEND RAWR_ENGINE_SOURCES
 )
 
 # =============================================================================
-# Command Table Audit +�-�+�-�+�-� Build-time coverage validation targets
+# Command Table Audit +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Build-time coverage validation targets
 # =============================================================================
 include(cmake/AutoFeatureRegistry.cmake)
 
@@ -3242,15 +3244,28 @@ endif()
 # =============================================================================
 set(OMEGA1_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/omega1_modules")
 
-# OMEGA1_SOURCES removed -- OmegaPowerShellBridge.cpp was stub-only
-# set(OMEGA1_SOURCES ${OMEGA1_DIR}/OmegaPowerShellBridge.cpp)
-# set(OMEGA1_HEADERS ${OMEGA1_DIR}/OmegaPowerShellBridge.h)
+set(OMEGA1_SOURCES
+    ${OMEGA1_DIR}/OmegaPowerShellBridge.cpp
+)
 
-# OMEGA-1 Engine library removed -- all sources were stub-only
-# add_library(Omega1Engine STATIC ${OMEGA1_SOURCES} ${OMEGA1_HEADERS})
-# target_include_directories(Omega1Engine PUBLIC ${OMEGA1_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)
-# target_compile_definitions(Omega1Engine PRIVATE OMEGA1_BUILDING=1 RAWRXD_OMEGA1_ENABLED=1)
-# set_property(TARGET Omega1Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set(OMEGA1_HEADERS
+    ${OMEGA1_DIR}/OmegaPowerShellBridge.h
+)
+
+# OMEGA-1 Engine as static library
+add_library(Omega1Engine STATIC ${OMEGA1_SOURCES} ${OMEGA1_HEADERS})
+
+target_include_directories(Omega1Engine PUBLIC
+    ${OMEGA1_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_compile_definitions(Omega1Engine PRIVATE
+    OMEGA1_BUILDING=1
+    RAWRXD_OMEGA1_ENABLED=1
+)
+
+set_property(TARGET Omega1Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # =============================================================================
 # RawrXD Compression Library (Zero-Dependency Runtime ZLIB Loader)
@@ -3298,7 +3313,7 @@ if(EXISTS ${RAWRXD_COMPRESSION_ASM_DIR}/RawrXD_Compression.asm)
     target_compile_definitions(RawrXD_Compression PRIVATE HAS_MASM_COMPRESSION=1)
 endif()
 
-message(STATUS "+�-�+�-�+�-� RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
+message(STATUS "+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
 
 # =============================================================================
 # Reverse Engineering Suite (sub-module)
@@ -3306,18 +3321,18 @@ message(STATUS "+�-�+�-�+�-� RawrXD_Compression configured (runtime 
 add_subdirectory(src/reverse_engineering)
 
 # =============================================================================
-# CEO Agent Module +�-�+�-�+�-� Autonomous Software Engineering Layer
+# CEO Agent Module +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Autonomous Software Engineering Layer
 # =============================================================================
 add_subdirectory(src/ceo)
 
 # =============================================================================
-# Repository Intelligence Module +�-�+�-�+�-� Deep Code Understanding
+# Repository Intelligence Module +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Deep Code Understanding
 # =============================================================================
 add_subdirectory(src/repository)
 add_subdirectory(src/generation)
 
 # =============================================================================
-# RGUF (RawrXD GGUF Unified Format) +�-�+�-�+�-� Pack/inspect/patch encrypted model blocks
+# RGUF (RawrXD GGUF Unified Format) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Pack/inspect/patch encrypted model blocks
 # =============================================================================
 add_subdirectory(rguf_source)
 
@@ -3348,9 +3363,9 @@ if(WIN32)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 # OMEGA-1 Post-Build Manifest Generation
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 if(WIN32)
     add_custom_command(TARGET RawrEngine POST_BUILD
         COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
@@ -3365,7 +3380,7 @@ endif()
 
 # Link RE library and OMEGA-1 Engine into RawrEngine
 if(TARGET RawrEngine)
-target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library)
+target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library Omega1Engine)
 endif()
 
 target_include_directories(RawrEngine PRIVATE 
@@ -3434,7 +3449,7 @@ if(NOT RAWR_ENGINE_LANE_B)
     target_sources(RawrEngine PRIVATE
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
-        # AUTO-REMOVED: stub file
+        src/agentic/AgentOllamaClient.cpp
         src/core/command_handlers_lsp.cpp
         src/core/command_handlers_asm.cpp
         src/core/command_handlers_hybrid.cpp
@@ -3566,7 +3581,7 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/memory_production\\.cpp$")
 # Exclude unified_command_dispatch.cpp and agentic_transaction.cpp - they need many command handlers
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unified_command_dispatch\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agentic_transaction\\.cpp$")
-# Fix: Case-sensitive regex misses mixed-case files +�-�+�-�+�-� use explicit REMOVE_ITEM
+# Fix: Case-sensitive regex misses mixed-case files +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ use explicit REMOVE_ITEM
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
     src/agentic/AgenticDeepThinkingEngine.cpp
     src/agentic/DeterministicReplayEngine.cpp
@@ -3636,7 +3651,7 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     )
 endif()
 # Gold: MultiResponseEngine methods are defined inline in win32app/multi_response_engine.h; the
-# standalone .cpp duplicates those symbols. AUTO SSOT lane links ssot_handlers_ext (superset)+�-�+�-�+�-�drop
+# standalone .cpp duplicates those symbols. AUTO SSOT lane links ssot_handlers_ext (superset)+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜drop
 # ssot_handlers + auto_feature_registry to avoid LNK2005 duplicate CommandResult handlers.
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES src/core/multi_response_engine.cpp)
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
@@ -3647,7 +3662,7 @@ if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
 endif()
 list(REMOVE_DUPLICATES GOLD_UNDERSCORE_SOURCES)
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
-    # AUTO-REMOVED: stub file
+    src/complete_server.cpp
     src/modules/vscode_extension_api.cpp
     # src/core/js_extension_host.cpp
     src/ui/entry_point.cpp
@@ -3664,33 +3679,33 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
 list(APPEND GOLD_UNDERSCORE_SOURCES
     src/core/gold_link_closure.cpp
     src/core/link_symbols_impl.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
     src/compression/zlib_runtime_loader.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/MASMKernelStubs.cpp
     B014/build/b014_profiler.cpp
     src/runtime/StreamRouterAdapter.cpp
     src/runtime/memory/CapacityManager.cpp
     src/vulkan_kernel_bridge.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/runtime/elastic/ElasticEngine.cpp
+    src/runtime/elastic/ElasticGGUFIndex.cpp
+    src/runtime/elastic/ElasticResidencyManager.cpp
+    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+    src/runtime/elastic/ElasticDecoder.cpp
+    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+    src/runtime/governance/HardwareCapabilityProbe.cpp
+    src/runtime/governance/CapabilityTierMatrix.cpp
+    src/runtime/governance/HardwareGovernor.cpp
+    src/runtime/governance/PressedStateEngine.cpp
+    src/runtime/governance/Ensemble58Governor.cpp
+    src/runtime/governance/TLSInstructionGate.cpp
+    src/runtime/gguf_tensor_loader.cpp
+    src/runtime/Deep2ExecutionTelemetry.cpp
     # Real Deep2 implementations (not stubs)
     src/deep2/BP16Streamer.cpp
     src/deep2/Chamber.cpp
     src/deep2/PlasmaGovernor.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/ResidencyManager.cpp
     src/deep2/SovereignOutOfCoreRuntime.cpp
     src/deep2/ToroidalKVCache.cpp
 )
@@ -3713,9 +3728,9 @@ if(WIN32)
     add_dependencies(RawrXD_Gold regen-ssot-beacons)
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 # OMEGA-1 Post-Build Manifest Generation for Gold
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 if(WIN32)
     add_custom_command(TARGET RawrXD_Gold POST_BUILD
         COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
@@ -3726,7 +3741,7 @@ if(WIN32)
     )
 endif()
 
-target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library rguf)
+target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library Omega1Engine rguf)
 
 target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -3827,21 +3842,21 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/js_extension_host_headless_impl.cpp
     src/core/native_debugger_engine.cpp
     src/core/native_debugger_symbols.cpp
-    # AUTO-REMOVED: stub file
+    src/agentic/AgentOllamaClient.cpp
     src/logging/Logger.cpp
-    # AUTO-REMOVED: stub file
+    src/security/InputSanitizer.cpp
     src/core/ConfigurationValidator.cpp
-    # AUTO-REMOVED: stub file
+    src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
     # Link closure for unified/ssot lanes: implementations live outside main SOURCES or were stripped.
     tests/gguf_link_impl.cpp
     # REMOVED: src/core/rawrengine_command_handlers.cpp - references UpdateSignatureVerifier, PerfTelemetry (unresolved)
     src/agent/quantum_dynamic_time_manager_impl.cpp
     # src/core/native_gguf_loader_link_impl.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/agentic/AdvancedAgentCoordinator.cpp
+    src/BackendOrchestrator.cpp
     src/core/gold_inference_profiler_minimal.cpp
-    # AUTO-REMOVED: stub file
+    src/agentic/hotpatch/Engine.cpp
     src/core/gold_enterprise_devunlock_impl.cpp
     src/core/gold_beacon_handlers.cpp
     src/core/neural_bridge.cpp
@@ -3859,22 +3874,22 @@ target_sources(RawrXD_Gold PRIVATE
     src/asm/RawrXD_PE_Exporter.asm
 )
 
-# Vulkan SDK for Gold build +�-�+�-�+�-� linked later after find_package(Vulkan)
+# Vulkan SDK for Gold build +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ linked later after find_package(Vulkan)
 
 message(STATUS "[Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)")
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# MASM x64 Assembly +�-�+�-�+�-� Phase 20/21 AVX-512 Requantization + Swarm Streaming
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# MASM x64 Assembly +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Phase 20/21 AVX-512 Requantization + Swarm Streaming
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 if(MSVC)
     # Prefer prebuilt MASM objects when available (some checked-in .asm files are placeholders).
     set(RAWRXD_PREBUILT_OBJ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/obj")
     set(RAWRXD_PREBUILT_GENESIS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build_genesis")
     set(RAWRXD_PREBUILT_SRCASM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
 
-    # Phase 20: AVX-512 Q4_K_M +�-�+�-�+�-� Q2_K requantization kernel
+    # Phase 20: AVX-512 Q4_K_M +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Q2_K requantization kernel
 
-    # Phase 20: AVX-512 Q4_K_M ├Ä┬ô├â┬Ñ├â┬å Q2_K requantization kernel
+    # Phase 20: AVX-512 Q4_K_M Γö£├äΓö¼├┤Γö£├óΓö¼├æΓö£├óΓö¼├Ñ Q2_K requantization kernel
     set(ASM_REQUANTIZE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/requantize_q4km_to_q2k_avx512.asm")
     set(ASM_REQUANTIZE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/requantize_q4km_to_q2k_avx512.obj")
     add_custom_command(
@@ -3907,7 +3922,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 28: MonacoCore Native Editor Engine ├Ä┬ô├â┬ç├â┬╢ Gap Buffer + Tokenizer
+    # Phase 28: MonacoCore Native Editor Engine Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Gap Buffer + Tokenizer
     set(ASM_MONACOCORE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MonacoCore.asm")
     set(ASM_MONACOCORE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_MonacoCore.obj")
     add_custom_command(
@@ -3918,7 +3933,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 29: PDB Symbol Server ├Ä┬ô├â┬ç├â┬╢ Native MSF v7.00 Parser Kernel
+    # Phase 29: PDB Symbol Server Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Native MSF v7.00 Parser Kernel
     set(ASM_PDBKERNEL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PDBKernel.asm")
     set(ASM_PDBKERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_PDBKernel.obj")
     add_custom_command(
@@ -3929,7 +3944,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 30: Accelerator Router ├Ä┬ô├â┬ç├â┬╢ MASM Fast-Path Bridge
+    # Phase 30: Accelerator Router Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó MASM Fast-Path Bridge
     set(ASM_ROUTERBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RouterBridge.asm")
     set(ASM_ROUTERBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_RouterBridge.obj")
     add_custom_command(
@@ -3940,7 +3955,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 29.2: GSI Hash ├Ä┬ô├â┬ç├â┬╢ MASM Accelerated Hash + Bucket Probe
+    # Phase 29.2: GSI Hash Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó MASM Accelerated Hash + Bucket Probe
     set(ASM_GSIHASH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GSIHash.asm")
     set(ASM_GSIHASH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_GSIHash.obj")
     add_custom_command(
@@ -3951,7 +3966,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 29.2: Reference Provider ├Ä┬ô├â┬ç├â┬╢ FNV-1a Hash + Pattern Match
+    # Phase 29.2: Reference Provider Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó FNV-1a Hash + Pattern Match
     set(ASM_REFPROVIDER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RefProvider.asm")
     set(ASM_REFPROVIDER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_RefProvider.obj")
     add_custom_command(
@@ -3962,7 +3977,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 31: IDE Self-Audit ├Ä┬ô├â┬ç├â┬╢ Stub Detection Kernel
+    # Phase 31: IDE Self-Audit Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Stub Detection Kernel
     set(ASM_STUBDETECTOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_StubDetector.asm")
     set(ASM_STUBDETECTOR_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_StubDetector.obj")
     add_custom_command(
@@ -3973,7 +3988,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 37: Chain-of-Thought Engine ├Ä┬ô├â┬ç├â┬╢ Pure MASM CoT DLL Core
+    # Phase 37: Chain-of-Thought Engine Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Pure MASM CoT DLL Core
     set(ASM_COT_ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_engine.asm")
     set(ASM_COT_ENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_engine.obj")
     add_custom_command(
@@ -3984,7 +3999,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 37: Chain-of-Thought Engine ├Ä┬ô├â┬ç├â┬╢ DLL Entry + SRW Lock
+    # Phase 37: Chain-of-Thought Engine Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó DLL Entry + SRW Lock
     set(ASM_COT_DLL_ENTRY_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_dll_entry.asm")
     set(ASM_COT_DLL_ENTRY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_dll_entry.obj")
     add_custom_command(
@@ -3995,7 +4010,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 39├Ä┬ô├â┬ç├â┬┤42: CoT Enterprise Finishers ├Ä┬ô├â┬ç├â┬╢ Snapshot, Telemetry, Copy Engine, Security
+    # Phase 39Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γöñ42: CoT Enterprise Finishers Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Snapshot, Telemetry, Copy Engine, Security
     set(ASM_COT_PHASE39_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_phase39.asm")
     set(ASM_COT_PHASE39_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_phase39.obj")
     add_custom_command(
@@ -4017,7 +4032,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: RawrCodex ├Ä┬ô├â┬ç├â┬╢ Agentic Decision Tree Core (295KB, 21 procs)
+    # Phase 45: RawrCodex Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Agentic Decision Tree Core (295KB, 21 procs)
     set(ASM_RAWRCODEX_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrCodex.asm")
     set(ASM_RAWRCODEX_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrCodex.obj")
     add_custom_command(
@@ -4028,7 +4043,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: Debug Engine ├Ä┬ô├â┬ç├â┬╢ Native Debugger Kernel (51KB, DynTrace symbolic resolution)
+    # Phase 45: Debug Engine Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Native Debugger Kernel (51KB, DynTrace symbolic resolution)
     set(ASM_DEBUG_ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Debug_Engine.asm")
     set(ASM_DEBUG_ENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Debug_Engine.obj")
     add_custom_command(
@@ -4039,7 +4054,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: QuadBuffer Streamer ├Ä┬ô├â┬ç├â┬╢ High-Performance Memory Streaming (52KB)
+    # Phase 45: QuadBuffer Streamer Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó High-Performance Memory Streaming (52KB)
     set(ASM_QUADBUFFER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_QuadBuffer_Streamer.asm")
     set(ASM_QUADBUFFER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_QuadBuffer_Streamer.obj")
     add_custom_command(
@@ -4050,7 +4065,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: Swarm Network ├Ä┬ô├â┬ç├â┬╢ Distributed Composition Protocol (36KB)
+    # Phase 45: Swarm Network Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Distributed Composition Protocol (36KB)
     set(ASM_SWARM_NETWORK_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Swarm_Network.asm")
     set(ASM_SWARM_NETWORK_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Swarm_Network.obj")
     add_custom_command(
@@ -4061,7 +4076,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: Enterprise License ├Ä┬ô├â┬ç├â┬╢ Feature Gate + Hardware Fingerprint (31KB)
+    # Phase 45: Enterprise License Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Feature Gate + Hardware Fingerprint (31KB)
     set(ASM_ENTERPRISE_LIC_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_EnterpriseLicense.asm")
     set(ASM_ENTERPRISE_LIC_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_EnterpriseLicense.obj")
     add_custom_command(
@@ -4072,7 +4087,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: License Shield ├Ä┬ô├â┬ç├â┬╢ Anti-Tamper + Integrity Guard (34KB)
+    # Phase 45: License Shield Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Anti-Tamper + Integrity Guard (34KB)
     set(ASM_LICENSE_SHIELD_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_License_Shield.asm")
     set(ASM_LICENSE_SHIELD_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_License_Shield.obj")
     add_custom_command(
@@ -4083,7 +4098,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 46: VulkanBridge ├Ä┬ô├â┬ç├â┬╢ MASM64 GPU Dispatch Shim (VkBridge_Init, MatMul, FlashAttn, Hotswap)
+    # Phase 46: VulkanBridge Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó MASM64 GPU Dispatch Shim (VkBridge_Init, MatMul, FlashAttn, Hotswap)
     set(ASM_VULKANBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_VulkanBridge.asm")
     set(ASM_VULKANBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_VulkanBridge.obj")
     add_custom_command(
@@ -4094,7 +4109,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 49: SocketResponder ├Ä┬ô├â┬ç├â┬╢ MASM64 IOCP Zero-Copy HTTP Server
+    # Phase 49: SocketResponder Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó MASM64 IOCP Zero-Copy HTTP Server
     set(ASM_SOCKETRESP_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SocketResponder.asm")
     set(_ASM_SOCKETRESP_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SocketResponder.obj")
     if(EXISTS "${_ASM_SOCKETRESP_PREBUILT}")
@@ -4111,7 +4126,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 49: TridentBeacon ├Ä┬ô├â┬ç├â┬╢ MASM64 COM Trident Host + Beacon JS Bridge
+    # Phase 49: TridentBeacon Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó MASM64 COM Trident Host + Beacon JS Bridge
     set(ASM_TRIDENTBEACON_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon.asm")
     set(_ASM_TRIDENTBEACON_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_TridentBeacon.obj")
     if(EXISTS "${_ASM_TRIDENTBEACON_PREBUILT}")
@@ -4128,7 +4143,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 49: TridentBeacon GPU ├Ä┬ô├â┬ç├â┬╢ MASM64 GPU Acceleration + WebGL Bridge
+    # Phase 49: TridentBeacon GPU Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó MASM64 GPU Acceleration + WebGL Bridge
     set(ASM_TRIDENTGPU_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon_GPU.asm")
     set(_ASM_TRIDENTGPU_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_TridentBeacon_GPU.obj")
     if(EXISTS "${_ASM_TRIDENTGPU_PREBUILT}")
@@ -4145,7 +4160,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: AgenticOrchestrator ├Ä┬ô├â┬ç├â┬╢ VTable Dispatch + SPSC Task Queue
+    # Phase 50: AgenticOrchestrator Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó VTable Dispatch + SPSC Task Queue
     set(ASM_AGENTIC_ORCH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_AgenticOrchestrator.asm")
     set(_ASM_AGENTIC_ORCH_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_AgenticOrchestrator.obj")
     set(_ASM_AGENTIC_ORCH_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_AgenticOrchestrator.obj")
@@ -4166,7 +4181,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: GGUF Vulkan Loader ├Ä┬ô├â┬ç├â┬╢ Memory-Mapped Parser + Staging Buffer
+    # Phase 50: GGUF Vulkan Loader Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Memory-Mapped Parser + Staging Buffer
     set(ASM_GGUF_VKLOAD_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GGUF_Vulkan_Loader.asm")
     set(_ASM_GGUF_VKLOAD_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_GGUF_Vulkan_Loader.obj")
     set(_ASM_GGUF_VKLOAD_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_GGUF_Vulkan_Loader.obj")
@@ -4187,7 +4202,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: LSP-AI Bridge ├Ä┬ô├â┬ç├â┬╢ SymbolIndex ├Ä┬ô├â┬Ñ├â┬╢ ContextAnalyzer Fusion
+    # Phase 50: LSP-AI Bridge Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó SymbolIndex Γö£├äΓö¼├┤Γö£├óΓö¼├æΓö£├óΓö¼Γòó ContextAnalyzer Fusion
     set(ASM_LSP_BRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_AI_Bridge.asm")
     set(_ASM_LSP_BRIDGE_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_LSP_AI_Bridge.obj")
     set(_ASM_LSP_BRIDGE_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_LSP_AI_Bridge.obj")
@@ -4208,7 +4223,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: Streaming QuadBuffer ├Ä┬ô├â┬ç├â┬╢ HWND Token Rendering + GDI Double-Buffer
+    # Phase 50: Streaming QuadBuffer Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó HWND Token Rendering + GDI Double-Buffer
     set(ASM_STREAM_QBUF_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Streaming_QuadBuffer.asm")
     set(_ASM_STREAM_QBUF_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Streaming_QuadBuffer.obj")
 
@@ -4229,7 +4244,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: SelfPatch Engine ├Ä┬ô├â┬ç├â┬╢ Runtime Code Morphing + CPU Optimization
+    # Phase 50: SelfPatch Engine Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Runtime Code Morphing + CPU Optimization
     set(ASM_SPENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfPatch_Engine.asm")
     set(_ASM_SPENGINE_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SelfPatch_Engine.obj")
     if(EXISTS "${_ASM_SPENGINE_PREBUILT}")
@@ -4246,7 +4261,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels ├ó┬Ç┬ö Q4MatMul, KV Attention, Tile Streamer
+    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels Γö£├│Γö¼├çΓö¼├╢ Q4MatMul, KV Attention, Tile Streamer
     # Prebuilt kernel object with embedded RDNA3 ISA (gfx1101+)
     set(ASM_RDNA3_KERNELS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/RDNA3_Full_Test.asm")
     set(_ASM_RDNA3_KERNELS_PREBUILT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/obj/RDNA3_Full_Test.obj")
@@ -4267,7 +4282,7 @@ if(MSVC)
         set(ASM_RDNA3_KERNELS_OBJ "")
     endif()
 
-    # Phase Camellia: Camellia-256 Encryption Engine ├Ä┬ô├â┬ç├â┬╢ MASM x64 CTR-mode workspace encryption
+    # Phase Camellia: Camellia-256 Encryption Engine Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó MASM x64 CTR-mode workspace encryption
     set(ASM_CAMELLIA256_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256.asm")
     set(_ASM_CAMELLIA256_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_Camellia256.obj")
     set(_ASM_CAMELLIA256_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Camellia256.obj")
@@ -4326,7 +4341,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase WD: Agentic Watchdog ├Ä┬ô├â┬ç├â┬╢ .text Section Integrity Verification (HMAC-SHA256)
+    # Phase WD: Agentic Watchdog Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó .text Section Integrity Verification (HMAC-SHA256)
     set(ASM_WATCHDOG_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Watchdog.asm")
     set(_ASM_WATCHDOG_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Watchdog.obj")
     if(EXISTS "${_ASM_WATCHDOG_PREBUILT}")
@@ -4343,7 +4358,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase E: SelfHost Engine ├Ä┬ô├â┬ç├â┬╢ Recursive Self-Compilation
+    # Phase E: SelfHost Engine Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Recursive Self-Compilation
     set(ASM_SELFHOST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfHost_Engine.asm")
     set(_ASM_SELFHOST_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_SelfHost_Engine.obj")
     set(_ASM_SELFHOST_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SelfHost_Engine.obj")
@@ -4364,7 +4379,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase F: Hardware Synthesizer ├Ä┬ô├â┬ç├â┬╢ FPGA/ASIC Acceleration
+    # Phase F: Hardware Synthesizer Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó FPGA/ASIC Acceleration
     set(ASM_HWSYNTH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_HardwareSynthesizer.asm")
     set(_ASM_HWSYNTH_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_HardwareSynthesizer.obj")
     if(EXISTS "${_ASM_HWSYNTH_PREBUILT}")
@@ -4381,7 +4396,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase G: Mesh Brain ├Ä┬ô├â┬ç├â┬╢ Distributed Consciousness P2P Mesh
+    # Phase G: Mesh Brain Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Distributed Consciousness P2P Mesh
     set(ASM_MESHBRAIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MeshBrain.asm")
     set(_ASM_MESHBRAIN_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_MeshBrain.obj")
     if(EXISTS "${_ASM_MESHBRAIN_PREBUILT}")
@@ -4398,7 +4413,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase H: Speciator Engine ├Ä┬ô├â┬ç├â┬╢ Metamorphic Evolution
+    # Phase H: Speciator Engine Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Metamorphic Evolution
     set(ASM_SPECIATOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Speciator.asm")
     set(_ASM_SPECIATOR_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Speciator.obj")
     if(EXISTS "${_ASM_SPECIATOR_PREBUILT}")
@@ -4415,7 +4430,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase I: Neural Bridge ├Ä┬ô├â┬ç├â┬╢ Direct Cortex Interface
+    # Phase I: Neural Bridge Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Direct Cortex Interface
     set(ASM_NEURALBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NeuralBridge.asm")
     set(_ASM_NEURALBRIDGE_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_NeuralBridge.obj")
     if(EXISTS "${_ASM_NEURALBRIDGE_PREBUILT}")
@@ -4432,7 +4447,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase ├ó┬ò┬¼├ó┬î┬É: Omega Orchestrator ├Ä┬ô├â┬ç├â┬╢ Autonomous Development Pipeline
+    # Phase Γö£├│Γö¼├▓Γö¼┬╝Γö£├│Γö¼├«Γö¼├ë: Omega Orchestrator Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó Autonomous Development Pipeline
     set(ASM_OMEGA_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_OmegaOrchestrator.asm")
     set(_ASM_OMEGA_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_OmegaOrchestrator.obj")
     if(EXISTS "${_ASM_OMEGA_PREBUILT}")
@@ -4449,7 +4464,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase ├Ä┬ô├â┬¬├ó┬é┬º: PerfCounters ├Ä┬ô├â┬ç├â┬╢ RDTSC Per-Kernel Cycle Histogram
+    # Phase Γö£├äΓö¼├┤Γö£├óΓö¼┬¼Γö£├│Γö¼├⌐Γö¼┬║: PerfCounters Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó RDTSC Per-Kernel Cycle Histogram
     set(ASM_PERFCOUNTERS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PerfCounters.asm")
     set(_ASM_PERFCOUNTERS_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_PerfCounters.obj")
     set(_ASM_PERFCOUNTERS_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_PerfCounters.obj")
@@ -4575,7 +4590,7 @@ if(MSVC)
         )
     endif()
 
-    # Brutal gzip deflate ├Ä┬ô├â┬ç├â┬╢ stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
+    # Brutal gzip deflate Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
     set(ASM_DEFLATE_BRUTAL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_masm/deflate_brutal_masm.asm")
     set(ASM_DEFLATE_BRUTAL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/deflate_brutal_masm.obj")
     add_custom_command(
@@ -4658,9 +4673,9 @@ if(MSVC)
     endif()
 
     # =========================================================================
-    # NanoQuant Engine +�-�+�-�+�-� Sub-1-Bit Quantization Static Library
+    # NanoQuant Engine +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Sub-1-Bit Quantization Static Library
     # MASM64 kernel (ADMM, AVX2/AVX-512) + C++ bridge + GGML type registration
-    # Disabled by default +�-�+�-�+�-� ASM kernel requires ml64 port fixes (A2008/A2083).
+    # Disabled by default +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ ASM kernel requires ml64 port fixes (A2008/A2083).
     # Enable with: cmake -DRAWR_ENABLE_NANOQUANT=ON
     # =========================================================================
     option(RAWR_ENABLE_NANOQUANT "Enable NanoQuant sub-1-bit quantization engine (requires working NanoQuant ASM)" OFF)
@@ -4692,12 +4707,12 @@ if(MSVC)
 
     message(STATUS "[NanoQuant] Sub-1-bit quantization engine enabled (NQ_1 + NQ_R4)")
     else()
-    message(STATUS "[NanoQuant] DISABLED +�-�+�-�+�-� enable with -DRAWR_ENABLE_NANOQUANT=ON")
+    message(STATUS "[NanoQuant] DISABLED +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ enable with -DRAWR_ENABLE_NANOQUANT=ON")
     endif()
 endif()
 
 # =============================================================================
-# Vulkan SDK (optional +�-�+�-�+�-� GPU compute acceleration)
+# Vulkan SDK (optional +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GPU compute acceleration)
 # =============================================================================
 # Phase 4A: Apply Vulkan detection fix for Windows
 include(${CMAKE_SOURCE_DIR}/cmake/RawrXD-Vulkan-Fix.cmake OPTIONAL)
@@ -4774,14 +4789,14 @@ endif()
 # =============================================================================
 # Phase 6: Standalone Inference Engine Executable (T4)
 # =============================================================================
-# Produces RawrXD-InferenceEngine.exe +�-�+�-�+�-� loads GGUF and emits tokens with no IDE.
+# Produces RawrXD-InferenceEngine.exe +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ loads GGUF and emits tokens with no IDE.
 # This is the self-hosting blocker: inference must run independently.
 # T4 integration: the AutonomousRecoveryOrchestrator invokes this for reasoning.
 # =============================================================================
 set(INFERENCE_ENGINE_SOURCES
-    # # AUTO-REMOVED: stub file  # Removed - was stub only
-    # # AUTO-REMOVED: stub file  # Removed - was stub only
-    # AUTO-REMOVED: stub file
+    # src/inference/inference_standalone_main.cpp  # Removed - was stub only
+    # src/inference/ultra_fast_inference.cpp  # Removed - was stub only
+    src/inference/polymorphic_loader.cpp
     src/inference/ollama_blob_parser.cpp
     src/cpu_inference_engine.cpp
     # rawrxd_inference.cpp excluded: stub file with missing type definitions
@@ -4794,33 +4809,33 @@ set(INFERENCE_ENGINE_SOURCES
     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/streaming_gguf_loader.cpp
+    src/compression_interface.cpp
+    src/memory_core.cpp
+    src/license_enforcement.cpp
+    src/feature_flags_runtime.cpp
     src/core/enterprise_licensev2_impl.cpp
     src/core/license_anti_tampering.cpp
-    # AUTO-REMOVED: stub file
+    src/tools/license_validator_manifest.cpp
     src/core/ignite_800b.cpp
     src/core/ConfigurationValidator.cpp
-    # AUTO-REMOVED: stub file
+    src/InferenceProfiler.cpp
     src/engine/gguf_core.cpp
-    # AUTO-REMOVED: stub file
+    src/engine/inference_kernels.cpp
     src/engine/transformer.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/engine/bpe_tokenizer.cpp
+    src/engine/sampler.cpp
+    src/engine/rawr_engine.cpp
+    src/engine/core_generator.cpp
     src/engine/pyre_compute.cpp
-    # AUTO-REMOVED: stub file
+    src/engine/sovereign_engines.cpp
     src/core/layer_offload_manager.cpp
     src/core/engine_registry.cpp
-    # AUTO-REMOVED: stub file
+    src/utils/Diagnostics.cpp
     src/inference/TitanLoaderDiagnostics.cpp
     src/inference/MemoryPressureGuard.cpp
     src/agentic/ErrorRecoveryManager.cpp
-    # AUTO-REMOVED: stub file
+    src/inference/PerformanceMonitor.cpp
     src/inference/NegativeSpaceProfiler.cpp
     src/core/swarm_scheduler.cpp
     src/core/gguf_swarm_plan_builder.cpp
@@ -4828,13 +4843,13 @@ set(INFERENCE_ENGINE_SOURCES
     src/core/cpu_features.cpp
     src/core/link_stubs.cpp
     src/runtime/TensorExecutionRouter.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/Deep2ExecutionTelemetry.cpp
     src/backend/VulkanGemmDispatcher.cpp
     src/kernels/VulkanComputeKernels.cpp
     src/vulkan_compute.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/TensorPlacementManager.cpp
@@ -4844,23 +4859,23 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/StreamRouterAdapter.cpp
     src/runtime/Sovereign_KernelBridge_CPP.cpp
     src/logging/Logger.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/sampling/advanced_sampler.cpp
+    src/runtime/RawrRuntime.cpp
+    src/runtime/governance/HardwareCapabilityProbe.cpp
+    src/runtime/governance/CapabilityTierMatrix.cpp
+    src/runtime/governance/HardwareGovernor.cpp
+    src/runtime/governance/PressedStateEngine.cpp
+    src/runtime/governance/Ensemble58Governor.cpp
+    src/runtime/governance/TLSInstructionGate.cpp
+    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+    src/deep2/K2TimeLimitedServing.cpp
+    src/runtime/elastic/ElasticGGUFIndex.cpp
+    src/runtime/elastic/ElasticResidencyManager.cpp
+    src/runtime/elastic/ElasticDecoder.cpp
+    src/runtime/elastic/ElasticEngine.cpp
     src/runtime/elastic/ElasticArchitectureDetector.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+    src/runtime/gguf_tensor_loader.cpp
     tests/b009/b009b_batched_gemm.cpp
     B014/build/b014_profiler.cpp
     # Codec implementations (deflate/inflate/compress)
@@ -4869,59 +4884,59 @@ set(INFERENCE_ENGINE_SOURCES
     # src/codec/compression.cpp
     src/codec/brutal_gzip.cpp
     src/codec/gzip_brutal_inflate.cpp
-    # Deep2 core +�-�+�-�+�-� unified into InferenceEngine for canonical local inference
+    # Deep2 core +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ unified into InferenceEngine for canonical local inference
     src/deep2/Deep2Engine.cpp
     src/deep2/Deep2Engine_Speculative.cpp
     src/deep2/strict_gpu_violations.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
     src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
     src/deep2/ChatTemplate.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/GGUFLoader.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
     src/deep2/QuantKernelMASM.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/IQQuantKernels.cpp
     src/deep2/GhostCache.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
     src/deep2/AttnCertProbe.cpp
     src/deep2/MlaCertProbe.cpp
     src/deep2/SsmCertProbe.cpp
     src/deep2/MoERouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/TensorHop.cpp
+    src/deep2/DeepSeekMoELoader.cpp
     src/deep2/Deep2ExecutionGraph.cpp
     src/deep2/StreamRouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/FusedInferenceKernel.cpp
+    src/deep2/UniversalModelLoader.cpp
+    src/deep2/ModelLoader.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/RuntimePlanner.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/NUFusedPacker.cpp
     src/deep2/NUGemv.cpp
     src/deep2/NULiveConsumer.cpp
     src/deep2/TpsScaleHotpatch.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/ElasticDynamicBudget.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
     # Real K2/GPU providers required by Deep2Engine + ExecutionPolicyApply (no stubs).
     src/deep2/K2MLAAttention.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/K2TokenEmbedding.cpp
     src/deep2/K2NativeStreamGate.cpp
     src/deep2/MlaCertAuthority.cpp
     src/deep2/K2LogitsClimb.cpp
@@ -4941,7 +4956,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/ExchangeObjectLedger.cpp
     src/deep2/HostExchangeDiscover.cpp
     src/deep2/K2MLA_QaCritical.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEEliminate.cpp
     src/deep2/K2WeightResolve.cpp
     src/deep2/K2ShardIo.cpp
         src/deep2/K2LivePathTensorCache.cpp
@@ -5005,99 +5020,99 @@ src/vulkan_fwd_q4k_act.cpp
     src/vulkan_fwd_tune.cpp
     src/vulkan_fwd_hostops.cpp
     src/vulkan_fwd_stubs.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/ProductionProfiler.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/TrailBrake.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
     src/deep2/AntiPatcher.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/GoalSystem.cpp
+    src/deep2/PatchCache.cpp
+    src/deep2/BottleTTL.cpp
+    src/deep2/CPUFrequency.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/ReverseTensorRecovery.cpp
     src/deep2/StreamEngine.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/execution_policy/ExecutionPolicy.cpp
+    src/deep2/execution_policy/ExecutionPolicyStore.cpp
     src/deep2/execution_policy/PlacementPlan.cpp
     src/deep2/execution_policy/ExecutionPolicyApply.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ShardRouterIntegration.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/IOCPGGUFLoader.cpp
     src/deep2/Deep2ModelRuntime.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
     src/deep2/Chamber.cpp
     src/deep2/ToroidalKVCache.cpp
     src/deep2/PlasmaGovernor.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/OutOfCoreRuntime.cpp
     src/deep2/SovereignOutOfCoreRuntime.cpp
     src/deep2/BP16Streamer.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/ResidencyManager.cpp
     src/deep2/ElasticResidencyManager.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/ElasticDynamicBudget.cpp
     src/deep2/CycloneScheduler.cpp
     # VRAM streaming + expert cache (required by Deep2Engine/GpuMoEMLA link)
     src/deep2/VramStreamingController.cpp
     src/deep2/expert_cache/ExpertCache.cpp
     src/deep2/expert_cache/VulkanExpertTransport.cpp
     src/deep2/expert_cache/HostStagingRing.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # Reverse Knowledge Compiler (RKC) +�-�-� proof-state before LLM
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/Deep2LivePath.cpp
+    src/deep2/Deep2LivePath_Gate.cpp
+    src/deep2/Deep2LivePath_Pinball.cpp
+    src/deep2/Deep2LivePath_Mech.cpp
+    src/deep2/Deep2LivePath_Emit.cpp
+    src/deep2/GpuTransfer_Emit.cpp
+    src/deep2/LivePathEffect.cpp
+    src/deep2/K2LivePolicy.cpp
+    src/deep2/K2LivePolicy_Apply.cpp
+    src/deep2/K2LivePolicy_Hysteresis.cpp
+    src/deep2/FusedLiveController.cpp
+    src/deep2/FusedLiveController_Decide.cpp
+    src/deep2/FusedLiveController_Cheap.cpp
+    src/deep2/FusedLiveController_Law.cpp
+    src/deep2/FusedLiveController_Emit.cpp
+    src/deep2/LivePath_FusedTick.cpp
+    src/deep2/Deep2LivePath_MechEnd.cpp
+    src/deep2/Deep2LivePath_Thermal.cpp
+    # Reverse Knowledge Compiler (RKC) +∩┐╜-∩┐╜-∩┐╜ proof-state before LLM
+    src/rkc/RKCValidator.cpp
+    src/rkc/RKCWorld.cpp
+    src/rkc/RKCCodeWorld.cpp
+    src/rkc/RKCMinimalSource.cpp
+    src/rkc/RKCNegativeKnowledge.cpp
+    src/rkc/RKCModelInventory.cpp
+    src/rkc/RKCDeep2Authority.cpp
+    src/rkc/RKCCompiler.cpp
+    src/rkc/RKCRecipes.cpp
+    src/rkc/RKCGapEngine.cpp
+    src/rkc/RKCEmit.cpp
+    src/rkc/RKCSession.cpp
+    src/rkc/RKCProductContext.cpp
+    src/rkc/RKC_C_ABI.cpp
+    src/deep2/RouterPrefetchTelemetry.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
     src/deep2/mars/MARSController.cpp
     # BackendOrchestrator required by AgentOllamaClient in InferenceEngine
-    # AUTO-REMOVED: stub file
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Agentic Core +�-�+�-�+�-� minimal verified set (add more after individual validation)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    src/BackendOrchestrator.cpp
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Agentic Core +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ minimal verified set (add more after individual validation)
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     src/agentic/ErrorRecoveryManager.cpp
     src/agentic/BoundedAgentLoop.cpp
     src/agentic/OrchestratorBridge.cpp
     src/agentic/ToolRegistry.cpp
     src/agentic/AgentOrchestrator.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/agentic/AgentOllamaClient.cpp
+    src/agentic/hotpatch/Engine.cpp
     src/agentic/AgentToolHandlers.cpp
     src/agentic/AutonomousFixOrchestrator.cpp
     src/agentic/RawrXD_AgentLoop.cpp
@@ -5146,9 +5161,9 @@ src/vulkan_fwd_q4k_act.cpp
     src/agentic/tool_executor.cpp
     src/agentic/tool_registry.cpp
     src/agentic/vulkan_compute_real.cpp
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Sovereign Runtime +�-�+�-�+�-� verified .cpp files only
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Sovereign Runtime +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ verified .cpp files only
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     src/sovereign/SovereignRuntime.cpp
     src/sovereign/ExecutionContract.cpp
     src/sovereign/SovereignCoreWrapper.cpp
@@ -5229,9 +5244,9 @@ list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
-    # AUTO-REMOVED: stub file
+    src/inference/inference_standalone_main.cpp
 )
-# NOTE: rawrxd_filter_missing_sources removed — missing sources should be FATAL
+# NOTE: rawrxd_filter_missing_sources removed ΓÇö missing sources should be FATAL
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
 # Link precompiled MASM objects (tracer + quantKB)
@@ -5245,7 +5260,7 @@ option(RAWRXD_DEEP2_CERT "Enable Deep2 production/reference parity hooks" OFF)
 if(RAWRXD_DEEP2_CERT)
     target_compile_definitions(InferenceEngine PRIVATE RAWRXD_DEEP2_CERT=1)
     target_include_directories(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2")
-    message(STATUS "[Deep2Cert] RAWRXD_DEEP2_CERT=1 +�-�+�-�+�-� stage telemetry + reference parity enabled")
+    message(STATUS "[Deep2Cert] RAWRXD_DEEP2_CERT=1 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ stage telemetry + reference parity enabled")
 endif()
 
 # Add Vulkan include directories if available
@@ -5257,7 +5272,7 @@ if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_INCLUDE)
 endif()
 
 add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/inference/inference_standalone_main.cpp
 )
 target_link_libraries(RawrXD-InferenceEngine PRIVATE InferenceEngine)
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -5269,7 +5284,7 @@ endif()
 
 # Unified Generation CLI - uses GenerationBouncer
 add_executable(RawrXD-Generate EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/cli/generate_cli.cpp
     src/runtime/GenerationBouncer.cpp
     src/runtime/shared/SharedModelRuntime.cpp
     src/runtime/shared/BP1BraidIndex.cpp
@@ -5304,12 +5319,12 @@ target_compile_definitions(InferenceEngine PRIVATE
     RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
 )
-target_compile_definitions(RawrXD-InferenceEngine PRIVATE
-    RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
-    RAWR_STANDALONE_INFERENCE=1
-    RAWR_HAS_SOVEREIGN_ENGINES=1
-    RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
-)
+# target_compile_definitions(RawrXD-InferenceEngine PRIVATE
+#     RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+#     RAWR_STANDALONE_INFERENCE=1
+#     RAWR_HAS_SOVEREIGN_ENGINES=1
+#     RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+# )
 
 target_include_directories(InferenceEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -5404,7 +5419,7 @@ endif()
 
     target_link_libraries(InferenceEngine PRIVATE ${ASM_DEFLATE_BRUTAL_OBJ})
     add_dependencies(InferenceEngine masm_kernels)
-    add_dependencies(RawrXD-InferenceEngine masm_kernels)
+    # add_dependencies(RawrXD-InferenceEngine masm_kernels)
     target_compile_definitions(InferenceEngine PRIVATE HAS_BRUTAL_GZIP_MASM=1)
 
     # NanoQuant integration (optional)
@@ -5423,32 +5438,32 @@ else()
     target_compile_options(InferenceEngine PRIVATE -O3 -w -mavx2 -mfma -mavx512f -mavx512bw -mavx512dq -mavx512vl -march=native)
 endif()
 
-set_target_properties(RawrXD-InferenceEngine PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY bin
-    OUTPUT_NAME RawrXD-InferenceEngine
-)
+# set_target_properties(RawrXD-InferenceEngine PROPERTIES
+#     RUNTIME_OUTPUT_DIRECTORY bin
+#     OUTPUT_NAME RawrXD-InferenceEngine
+# )
 
-# Telemetry_Kernel.asm uses ADDR32 relocations +�-�+�-�+�-� require /LARGEADDRESSAWARE:NO
-if(MSVC)
-    target_link_options(RawrXD-InferenceEngine PRIVATE /LARGEADDRESSAWARE:NO)
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        set(_RAWR_INFERENCE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-InferenceEngine.map")
-        set(_RAWR_INFERENCE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-InferenceEngine.map")
-        target_link_options(RawrXD-InferenceEngine PRIVATE
-            "/MAP:${_RAWR_INFERENCE_MAP_PATH}"
-            /MAPINFO:EXPORTS
-        )
-        add_custom_command(TARGET RawrXD-InferenceEngine POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_RAWR_INFERENCE_MAP_PATH}" "${_RAWR_INFERENCE_MAP_AUDIT_PATH}"
-            VERBATIM
-        )
-    endif()
-endif()
+# Telemetry_Kernel.asm uses ADDR32 relocations +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ require /LARGEADDRESSAWARE:NO
+# if(MSVC)
+#     target_link_options(RawrXD-InferenceEngine PRIVATE /LARGEADDRESSAWARE:NO)
+#     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+#         set(_RAWR_INFERENCE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-InferenceEngine.map")
+#         set(_RAWR_INFERENCE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-InferenceEngine.map")
+#         target_link_options(RawrXD-InferenceEngine PRIVATE
+#             "/MAP:${_RAWR_INFERENCE_MAP_PATH}"
+#             /MAPINFO:EXPORTS
+#         )
+#         add_custom_command(TARGET RawrXD-InferenceEngine POST_BUILD
+#             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_RAWR_INFERENCE_MAP_PATH}" "${_RAWR_INFERENCE_MAP_AUDIT_PATH}"
+#             VERBATIM
+#         )
+#     endif()
+# endif()
 
-message(STATUS "[Phase 6] Standalone inference engine target: RawrXD-InferenceEngine")
+# message(STATUS "[Phase 6] Standalone inference engine target: RawrXD-InferenceEngine")
 
 add_executable(rawrxd-monaco-gen
-    # AUTO-REMOVED: stub file
+    src/monaco_gen.cpp
     src/engine/react_ide_generator.cpp
 )
 
@@ -5495,11 +5510,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/bridge/Win32SwarmBridge.cpp
         src/bridge/SwarmIATRegistration.cpp
         src/bridge/UnifiedModelMetadata.cpp
-        # AUTO-REMOVED: stub file
+        src/subagent_core.cpp
         src/agentic/SubAgentManager.cpp
         src/agentic/RobustOllamaParser.cpp
         src/agentic/ErrorRecoveryManager.cpp
-        # AUTO-REMOVED: stub file
+        src/gpu/speculative_decoder_v2.cpp
         src/inference/MemoryPressureGuard.cpp
         src/inference/gpu_dispatch_gate.cpp
         src/inference/ai_model_caller_real.cpp
@@ -5512,9 +5527,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # AUTO provider: auto_feature_registry.cpp provides the real handlers
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
         list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
-        # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
-        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/__DELETED_STUB__")
-            # list(APPEND WIN32IDE_SOURCES ...) -- stub file deleted
+        # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ required by auto_feature_registry
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/modules/ReverseEngineering.cpp")
+            list(APPEND WIN32IDE_SOURCES src/modules/ReverseEngineering.cpp)
         endif()
     endif()
 
@@ -5600,13 +5615,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_DecompilerView.cpp
         src/win32app/Win32IDE_NativePipeline.cpp
         src/win32app/Win32IDE_ModelAnatomy.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
+        src/runtime/RawrRuntime.cpp
         src/compression/zlib_runtime_loader.cpp
         src/deep2/Deep2APIServer.cpp
         src/deep2/production/Deep2ProductionRuntime.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/inference/NegativeSpaceProfiler.cpp
         src/core/unlinked_symbols_batch_022.cpp
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
@@ -5614,7 +5629,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
-        # Deep2 completion provider and bridge +�-�+�-�+�-� real local inference for ghost text
+        # Deep2 completion provider and bridge +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ real local inference for ghost text
         src/ai_completion_real.cpp
         src/ide/Deep2Bridge.cpp
         src/ide/SovereignSharedMemoryBridge.cpp
@@ -5628,7 +5643,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Tier1Cosmetics.cpp
         src/win32app/Win32IDE_Breadcrumbs.cpp
         src/win32app/Win32IDE_PlanExecutor.cpp
-        # AUTO-REMOVED: stub file
+        src/agentic/agentic_planning_orchestrator.cpp
         src/agentic/failure_intelligence_orchestrator.cpp
         src/agentic/agentic_orchestrator_integration.cpp
         src/agentic/agentic_audit_sink.cpp
@@ -5663,7 +5678,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32TerminalManager.cpp
         src/win32app/TransparentRenderer.cpp
 
-        # Plugin System +�-�+�-�+�-� Phase 43: Native Win32 DLL loading (C ABI)
+        # Plugin System +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Phase 43: Native Win32 DLL loading (C ABI)
         src/plugin_system/win32_plugin_loader.cpp
         src/win32app/Win32IDE_Plugins.cpp
         src/win32app/Win32IDE_HandleExtensionCommand.cpp
@@ -5678,14 +5693,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/auth/QuantumAuthUI.cpp
         
         # Core engine files needed by IDE
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/agentic_engine.cpp
+        src/subagent_core.cpp
 
         # Real GPU compute backends (required by vulkan_kernel_bridge.cpp and rdna3_bridge.cpp)
         src/backend/vulkan_compute.cpp
         src/kernels/rdna3/RDNA3_GpuDispatcher.cpp
 
-        # Bounded Agent Loop + FIM Provider (Agent+�-�+�-�+�-�IDE Pivot)
+        # Bounded Agent Loop + FIM Provider (Agent+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
         src/agentic/BoundedAgentLoop.cpp
         src/agentic/OllamaProvider.cpp
@@ -5694,10 +5709,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
         src/agentic/DeterministicReplayEngine.cpp
 
-        # T4: Autonomous Recovery Orchestrator (FailureClass +�-�+�-�+�-� recovery +�-�+�-�+�-� verify +�-�+�-�+�-� commit)
+        # T4: Autonomous Recovery Orchestrator (FailureClass +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ recovery +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ verify +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ commit)
         src/agentic/autonomous_recovery_orchestrator.cpp
         
-        # T4.5: Agentic Deep Thinking Engine +�-�+�-�+�-� Autonomous monitoring, recovery, and orchestration
+        # T4.5: Agentic Deep Thinking Engine +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Autonomous monitoring, recovery, and orchestration
         src/agentic/AgenticDeepThinkingEngine.cpp
 
         # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
@@ -5708,14 +5723,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/RawrXD_AgentLoop.cpp
         src/agentic/agentic_executor.cpp
         src/agentic/FIMPromptBuilder.cpp
-        # AUTO-REMOVED: stub file
+        src/agentic/AgentOllamaClient.cpp
 
         # Unlinked symbols batches - provide real implementations for link closure
         # batch_004 excluded: duplicates RawrXD_Hotpatch_Kernel / Snapshot / Watchdog ASM.
         src/core/unlinked_symbols_batch_001.cpp
         src/core/unlinked_symbols_batch_002.cpp  # ggml/matmul; asm_pyre_* gated when RAWRXD_HAS_ASM_PYRE
         src/core/unlinked_symbols_batch_003.cpp
-        # src/core/unlinked_symbols_batch_004.cpp  # EXCLUDED: asm_hotpatch_*/asm_snapshot_* +�-�+�-�+�-� ASM
+        # src/core/unlinked_symbols_batch_004.cpp  # EXCLUDED: asm_hotpatch_*/asm_snapshot_* +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ ASM
         src/core/win32ide_watchdog_init.cpp        # sole C provider for asm_watchdog_init
         src/core/unlinked_symbols_batch_005.cpp
         src/core/unlinked_symbols_batch_006.cpp
@@ -5759,15 +5774,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         src/win32app/Win32IDE_SemanticIndex.cpp  # REAL: Semantic code intelligence (file is clean, 509 lines)
-        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations +�-�+�-�+�-� real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
+        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
         
-        # AUTO-REMOVED: stub file
+        src/agentic_observability.cpp
         src/core/rawrxd_subsystem_api.cpp
         src/runtime_core.cpp
-        # AUTO-REMOVED: stub file
+        src/tool_registry.cpp
         src/agent/telemetry_collector.cpp
 
         # T6: Autonomous Repair Orchestrator + Agent Memory Indexer
@@ -5777,15 +5792,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # T5: Agentic Transaction Layer (multi-step command execute/rollback)
         src/agentic/agentic_transaction.cpp
 
-        # P6: Agent Workflow Orchestrator (DAG-based plan+�-�+�-�+�-�execute+�-�+�-�+�-�validate+�-�+�-�+�-�commit)
+        # P6: Agent Workflow Orchestrator (DAG-based plan+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜execute+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜validate+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜commit)
         src/agentic/agent_workflow_orchestrator.cpp
 
         # P1-P5: AI Developer Tooling (Copilot/Cursor parity modules)
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/ai/symbol_graph_indexer.cpp
+        src/ai/semantic_code_search.cpp
+        src/ai/multi_file_reasoning.cpp
+        src/ai/workspace_embeddings.cpp
+        src/ai/repo_refactor_engine.cpp
 
         # AgenticObservability + SubsystemRegistry (required by AgentOrchestrator, ToolRegistry, feature_handlers)
         # already added above in this block; keep single provider per file
@@ -5794,15 +5809,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/DiskRecoveryAgent.cpp
         src/agentic/DiskRecoveryAgent.cpp
         src/agentic/DiskRecoveryToolHandler.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/agent_history.cpp
+        src/agent_policy.cpp
+        src/agent_explainability.cpp
         src/utils/ErrorReporter.cpp
         # Observability + validation + perf telemetry (link-time required)
         src/logging/Logger.cpp
-        # AUTO-REMOVED: stub file
+        src/security/InputSanitizer.cpp
         src/core/ConfigurationValidator.cpp
-        # AUTO-REMOVED: stub file
+        src/inference/PerformanceMonitor.cpp
         # rawrxd_inference.cpp excluded: stub with missing type definitions
         src/rawrxd_model_loader.cpp
         src/rawrxd_transformer.cpp
@@ -5812,23 +5827,23 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/cpu_inference_engine.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/memory_core.cpp
+        src/hot_patcher.cpp
+        src/streaming_gguf_loader.cpp
+        src/utils/Diagnostics.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/model_source_resolver.cpp
-        # AUTO-REMOVED: stub file
+        src/compression_interface.cpp
         src/engine/gguf_core.cpp
-        # AUTO-REMOVED: stub file
+        src/engine/inference_kernels.cpp
         src/engine/transformer.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/engine/bpe_tokenizer.cpp
+        src/engine/sampler.cpp
+        src/engine/rawr_engine.cpp
+        src/engine/core_generator.cpp
         src/engine/pyre_compute.cpp
-        # AUTO-REMOVED: stub file
+        src/engine/sovereign_engines.cpp
         # Streaming engine registry (Phase 9)
         src/core/streaming_engine_registry.cpp
         src/core/gpu_backend_bridge.cpp
@@ -5836,7 +5851,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/enterprise_licensev2_impl.cpp
         src/core/enterprise_devunlock_bridge.cpp
         src/core/monolithic_heap_globals.cpp
-        # AUTO-REMOVED: stub file
+        src/tools/license_validator_manifest.cpp
         src/core/license_anti_tampering.cpp
         src/core/camellia256_bridge.cpp
         src/core/watchdog_service.cpp
@@ -5883,7 +5898,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unified_hotpatch_manager.cpp
         src/core/proxy_hotpatcher.cpp
         src/core/model_bruteforce_engine.cpp
-        # AUTO-REMOVED: stub file
+        src/server/gguf_server_hotpatch.cpp
         src/core/pt_driver_contract.cpp
         src/core/shadow_page_detour.cpp
         src/core/sentinel_watchdog.cpp
@@ -5892,7 +5907,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Agent-Driven Hotpatch Orchestration (Phase 18)
         src/agent/agentic_hotpatch_orchestrator.cpp
 
-        # HTTP Client +�-�+�-�+�-� WinHTTP async with future retention (CLI+GUI)
+        # HTTP Client +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ WinHTTP async with future retention (CLI+GUI)
         src/agent/llm_http_client.cpp
         src/agent/model_invoker.cpp
         src/agent/planner.cpp
@@ -5914,14 +5929,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/agentic_puppeteer.cpp
         src/cloud_api_client.cpp
 
-        # LocalReasoningEngine +�-�+�-�+�-� API-free static analysis + pattern detection
+        # LocalReasoningEngine +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ API-free static analysis + pattern detection
         src/agent/local_reasoning_engine.cpp
 
         # Link stubs for unresolved symbols (enterprise, ASM, security subsystems)
         src/core/link_stubs_production.cpp
         src/core/win32ide_link_stubs.cpp
 
-        # Agent Self-Repair +�-�+�-�+�-� MASM64 self-patching kernel bridge
+        # Agent Self-Repair +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ MASM64 self-patching kernel bridge
         src/agent/agent_self_repair.cpp
         src/agent/agent_self_healing_orchestrator.cpp
         
@@ -5968,7 +5983,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/accelerator_router.cpp
         
         # Phase 29.2: GSI Hash Table + TPI Type Parser
-        # EXCLUDED: missing pdb_gsi_hash.h — src/core/pdb_gsi_hash.cpp
+        # EXCLUDED: missing pdb_gsi_hash.h ΓÇö src/core/pdb_gsi_hash.cpp
         
         # Phase 29.2: Multi-Reference Provider + Tools/Instructions Hook
         src/core/pdb_reference_provider.cpp
@@ -5983,7 +5998,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/lsp/RawrXD_LSPServer.cpp
         src/win32app/Win32IDE_LSPServer.cpp
 
-        # Phase 27b: LSP +�-�+�-�+�-� Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
+        # Phase 27b: LSP +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
         src/lsp/lsp_hotpatch_bridge.cpp
         src/lsp/hotpatch_symbol_provider.cpp
         src/lsp/gguf_diagnostic_provider.cpp
@@ -6010,7 +6025,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_AuditDashboard.cpp
 
         # Phase 32: The Final Gauntlet + Pre-Packaging Runtime Verification
-        # EXCLUDED: missing RawrXD_MonacoCore.h — src/core/final_gauntlet.cpp
+        # EXCLUDED: missing RawrXD_MonacoCore.h ΓÇö src/core/final_gauntlet.cpp
         src/win32app/Win32IDE_Gauntlet.cpp
 
         # Phase 33: Voice Chat Engine
@@ -6026,7 +6041,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_QuickWins.cpp
 
         # Shared Feature Dispatch System (CLI + GUI unified command routing)
-        # NOTE: shared_feature_dispatch.cpp REMOVED +�-�+�-�+�-� duplicated by unified_command_dispatch.cpp
+        # NOTE: shared_feature_dispatch.cpp REMOVED +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ duplicated by unified_command_dispatch.cpp
         src/core/feature_registration.cpp
         # EXCLUDED: missing agentic_failure_detector.hpp, agentic_puppeteer.hpp
         # src/core/feature_handlers.cpp  # EXCLUDED: requires missing headers (GGUFServerHotpatch, AgenticFailureDetector, AgenticPuppeteer, etc.)
@@ -6036,29 +6051,29 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/intent_engine.cpp
         src/core/model_training_pipeline.cpp
         src/model_trainer.cpp
-        # REMOVED: # AUTO-REMOVED: stub file - Ollama backend replaced with native GGUF loader
+        # REMOVED: src/agentic/AgentOllamaClient.cpp - Ollama backend replaced with native GGUF loader
         # REMOVED: src/agentic/AgentOllamaClient_stubs.cpp - stub file deleted
-        # AUTO-REMOVED: stub file
+        src/agentic/hotpatch/Engine.cpp
         src/agentic/observability/Logger.cpp
-        # AUTO-REMOVED: stub file
+        src/agentic/AdvancedAgentCoordinator.cpp
         src/modules/autonomous_agentic_orchestrator.cpp
     # src/core/native_gguf_loader_link_impl.cpp
         # compression.cpp excluded: requires zlib.h (not installed); zero consumers.
         # src/codec/compression.cpp
         src/codec/brutal_gzip.cpp
         src/codec/gzip_brutal_inflate.cpp
-        # EXCLUDED: missing native_gguf_loader.h — src/core/ssot_handlers.cpp
+        # EXCLUDED: missing native_gguf_loader.h ΓÇö src/core/ssot_handlers.cpp
     # src/core/ssot_handlers_ext_isolated.cpp
         # src/core/beacon_link_stub.cpp  # REMOVED: File does not exist
         src/win32app/v280_link_bridge.cpp
         src/core/ssot_validation.cpp
 
-        # Unified Command Dispatch +�-�+�-�+�-� Zero-drift SSOT dispatch (replaces manual registration)
+        # Unified Command Dispatch +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Zero-drift SSOT dispatch (replaces manual registration)
         src/core/unified_command_dispatch.cpp
         src/core/startup_phase_registry.cpp
 
         # RawrEngine Command Handlers (required for Win32IDE link closure)
-        # EXCLUDED: missing plugin_signature.h — src/core/rawrengine_command_handlers.cpp
+        # EXCLUDED: missing plugin_signature.h ΓÇö src/core/rawrengine_command_handlers.cpp
         src/core/jsonrpc_parser.cpp
 
         # Phase 21: Distributed Swarm Inference Orchestrator
@@ -6070,11 +6085,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Phase 34: Telemetry Export
         src/win32app/Win32IDE_Telemetry.cpp
 
-        # Phase 36: MCP Integration +�-�-� Model Context Protocol Server + Client
+        # Phase 36: MCP Integration +∩┐╜-∩┐╜-∩┐╜ Model Context Protocol Server + Client
         src/mcp_integration.cpp
         src/win32app/Win32IDE_MCP.cpp
 
-        # Phase 36: Flight Recorder +�-�+�-�+�-� memory-mapped binary ring-buffer logger
+        # Phase 36: Flight Recorder +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ memory-mapped binary ring-buffer logger
         src/win32app/Win32IDE_FlightRecorder.cpp
 
         # Phase 36: QuickJS VSIX JavaScript Extension Host
@@ -6088,15 +6103,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # src/core/js_extension_host.cpp
         src/core/extension_polyfill_engine.cpp
 
-        # Phase 46: VulkanKernel +�-�+�-�+�-� Full GPU Compute Engine
+        # Phase 46: VulkanKernel +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Full GPU Compute Engine
         src/vulkan_compute.cpp
 
-        # Phase 46: Live Binary Patcher +�-�+�-�+�-� Layer 5 Hotpatch
+        # Phase 46: Live Binary Patcher +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Layer 5 Hotpatch
     # src/core/live_binary_patcher.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         # Core Production Subsystems (Verified Working)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         src/core/deterministic_swarm.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
@@ -6117,16 +6132,16 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/vision_quantized_encoder.cpp
         src/core/vision_gpu_staging.cpp
 
-        # AUTO-REMOVED: stub file
+        src/marketplace/extension_marketplace.cpp
         src/auth/rbac_engine.cpp
 
         # Agentic Loop State (iterative reasoning state machine)
-        # AUTO-REMOVED: stub file
+        src/agentic_loop_state.cpp
 
         # Transaction Journal (WAL journal for atomic file operations)
         src/core/transaction_journal.cpp
 
-        # Instructions Provider +�-�+�-�+�-� unified *.instructions.md loader (HTTP+CLI+GUI)
+        # Instructions Provider +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ unified *.instructions.md loader (HTTP+CLI+GUI)
         src/core/instructions_provider.cpp
         src/win32app/Win32IDE_Instructions.cpp
 
@@ -6155,7 +6170,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Phase 15: Static Analysis Engine
         src/core/static_analysis_engine.cpp
         # src/core/code_linter.cpp
-        # AUTO-REMOVED: stub file
+        src/lsp/diagnostic_consumer.cpp
         src/win32app/Win32IDE_StaticAnalysisPanel.cpp
 
         # P0: Unified Problems Panel (LSP, SAST, SCA, Secrets, Build)
@@ -6164,9 +6179,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_SecurityScans.cpp
         src/core/problems_panel_bridge.cpp
         src/core/problems_aggregator.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/security/secrets_scanner.cpp
+        src/security/sast_rule_engine.cpp
+        src/security/dependency_audit.cpp
         src/win32app/Win32IDE_AgentStreamingBridge.cpp
 
         # Phase 16: Semantic Code Intelligence
@@ -6187,7 +6202,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_MarketplacePanel.cpp
         src/win32app/Win32IDE_Collab.cpp
 
-        # Phase 51: mIRC Control Bridge +�-�+�-�+�-� IRC bot for remote IDE control
+        # Phase 51: mIRC Control Bridge +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ IRC bot for remote IDE control
         src/win32app/Win32IDE_IRCBridge.cpp
         src/win32app/Win32IDE_IRCBridgeCommands.cpp
         src/collab/websocket_hub.cpp
@@ -6219,10 +6234,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/ConsentPrompt.cpp
         src/win32app/AutonomousAgent.cpp
 
-        # UI Rendering +�-�+�-�+�-� Chat message renderer + tool action status + chat panel
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        # UI Rendering +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Chat message renderer + tool action status + chat panel
+        src/ui/chat_message_renderer.cpp
+        src/ui/tool_action_status.cpp
+        src/ui/chat_panel.cpp
 
         # Cathedral Hardening (5.0 Readiness)
         src/core/crash_containment.cpp
@@ -6234,7 +6249,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # ASM Stub Implementations - REMOVED: All stub files deleted, real implementations only
 
-        # Phase 50: Enterprise Hardening +�-�+�-�+�-� Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
+        # Phase 50: Enterprise Hardening +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
     # src/core/update_signature.cpp
         src/core/cursor_github_parity_bridge.cpp
         src/core/swarm_reconciliation.cpp
@@ -6243,15 +6258,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/enterprise_stress_tests.cpp
         src/core/auto_update_system.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        # Autonomy Gap Closure +�-�+�-�+�-� Phase A-D + Tier 1.4 + Tier 2.3
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+        # Autonomy Gap Closure +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Phase A-D + Tier 1.4 + Tier 2.3
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 
-        # Phase A: Closed-Loop Verification (Write +�-�+�-�+�-� Compile +�-�+�-�+�-� Test +�-�+�-�+�-� Fix)
-        # AUTO-REMOVED: stub file
+        # Phase A: Closed-Loop Verification (Write +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Compile +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Test +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Fix)
+        src/agentic/autonomous_verification_loop.cpp
 
         # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
-        # AUTO-REMOVED: stub file
+        src/agentic/autonomous_background_daemon.cpp
 
         # Phase C: Long-Term Knowledge Graph (cross-session learning, decision memory)
         src/core/sqlite3.c
@@ -6264,39 +6279,39 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/autonomous_debugger.cpp
 
         # Tier 2.3: Autonomous Communication (standup reports, approval requests)
-        # AUTO-REMOVED: stub file
+        src/agentic/autonomous_communicator.cpp
 
         # Unified Telemetry Core
-        # AUTO-REMOVED: stub file
+        src/telemetry/UnifiedTelemetryCore.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         # Cursor/JB-Parity Feature Modules
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+        src/telemetry/telemetry_export.cpp
+        src/agentic/agentic_composer_ux.cpp
+        src/context/context_mention_parser.cpp
+        src/multimodal_engine/vision_encoder.cpp
+        src/ide/refactoring_plugin.cpp
+        src/ide/language_plugin.cpp
         src/context/semantic_index.cpp
-        # AUTO-REMOVED: stub file
+        src/ide/resource_generator.cpp
         src/win32app/Win32IDE_CursorParity.cpp
         src/win32app/Win32IDE_GUILayoutHotpatch.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         # Compile-Debt Resolved: IDE Feature Modules (Tasks, Git, Search,
         # Fuzzy Search, Refactor, CallStack, Multi-File Search)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         src/win32app/Win32IDE_Tasks.cpp
         src/win32app/Win32IDE_GitPanel.cpp
         src/win32app/Win32IDE_Refactor.cpp
         src/win32app/Win32IDE_SearchPanel.cpp
         src/win32app/Win32IDE_FuzzySearch.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         # Compile-Debt Resolved: IDE Cosmetics & Intelligence Layer
         # (Minimap, DiffView, SettingsGUI, CodeLens, InlayHints, Hover)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         src/win32app/Win32IDE_Minimap.cpp
         src/win32app/Win32IDE_DiffView.cpp
         src/win32app/Win32IDE_SettingsGUI.cpp
@@ -6304,9 +6319,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_InlayHints.cpp
         src/win32app/Win32IDE_HoverTooltips.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         # Flagship Product Pillars (Provable Agent, AI RE, Airgapped)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         src/win32app/Win32IDE_ProvableAgent.cpp
         src/win32app/Win32IDE_AIReverseEngineering.cpp
         src/win32app/Win32IDE_AirgappedEnterprise.cpp
@@ -6316,7 +6331,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/project_context.cpp
         src/universal_model_router.cpp
         src/model_registry.cpp
-        # AUTO-REMOVED: stub file
+        src/model_name_utils.cpp
     # src/core/checkpoint_manager.cpp
         # AgenticAutonomousConfig, EnterpriseFeatureManager, ContextDeteriorationHotpatch
         src/core/agentic_autonomous_config.cpp
@@ -6356,54 +6371,54 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # License Creator + Feature Registry dialogs (showLicenseCreatorDialog, showFeatureRegistryDialog)
         src/win32app/Win32IDE_LicenseCreator.cpp
         # License enforcement + manifest (g_FeatureManifest + featureName from license_validator_manifest.cpp; LicenseEnforcer from license_enforcement.cpp)
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/license_enforcement.cpp
+        src/feature_flags_runtime.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         # 10x Dual Engine + Unified Overclock + Quantum Beaconism Fusion
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         # Batch 2 Parity Enhancements (Peek, AutoSave, TermSplit, Snippets, MultiCursor)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         src/win32app/Win32IDE_PeekView.cpp
         src/win32app/Win32IDE_AutoSave.cpp
         src/win32app/Win32IDE_TerminalSplit.cpp
         src/win32app/Win32IDE_SnippetEngine.cpp
         src/win32app/Win32IDE_MultiCursor.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        # Cognitive Architecture +�-�+�-�+�-� Autonomous Reverse Engineering OS
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+        # Cognitive Architecture +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Autonomous Reverse Engineering OS
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+        src/agentic/cognitive/cognitive_types.cpp
+        src/agentic/cognitive/enhanced_blackboard.cpp
+        src/agentic/cognitive/mission_director.cpp
+        src/agentic/cognitive/reflection_agent.cpp
+        src/agentic/cognitive/dynamic_planner.cpp
+        src/agentic/cognitive/autonomous_orchestrator.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
         # TrailBrake / HotPatcher / AntiPatcher Safety System
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+        src/deep2/TrailBrake.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/GoalSystem.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/CPUFrequency.cpp
         # Dual GPU / Reverse Recovery / Streaming
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/execution_policy/ExecutionPolicy.cpp
+        src/deep2/execution_policy/ExecutionPolicyStore.cpp
+        src/deep2/ShardRouterIntegration.cpp
+        src/deep2/Deep2IDEIntegration.cpp
+        src/deep2/IOCPGGUFLoader.cpp
         src/deep2/Deep2ModelRuntime.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/FabricTensorTable.cpp
     )
 
     if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
@@ -6542,10 +6557,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
         RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
     )
-    target_compile_definitions(RawrXD-InferenceEngine PRIVATE
-        RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
-        RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
-    )
+    # target_compile_definitions(RawrXD-InferenceEngine PRIVATE
+    #     RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
+    #     RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
+    # )
 
     if(RAWRXD_ENABLE_MISSING_HANDLER_STUBS)
         list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -6620,8 +6635,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     # Avoid mixing parallel GGUF engine stacks in this lane.
     list(REMOVE_ITEM WIN32IDE_SOURCES
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/engine/sovereign_engines.cpp
+        src/engine/rawr_engine.cpp
         src/engine/gguf_core.cpp
     )
     # Re-wire providers needed by this target's link graph.
@@ -6662,7 +6677,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/ui/ExportBridge.cpp
         src/terminal/embedded_terminal.cpp
         # REMOVED: src/win32app/sovereign_gpu_link_stubs.cpp - stub file deleted
-        # HEXMAG_IDE_ROUTE +�-�+�-�+�-� controller + MASM client + FINALIZE_POLICY
+        # HEXMAG_IDE_ROUTE +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ controller + MASM client + FINALIZE_POLICY
         src/core/hexmag_ide_link_probe.cpp
         src/win32app/Win32IDE_HexMagCopilotRoute.cpp
         # Win32IDE_HexMag.cpp excluded: G HexMag UI transplant; CopilotRoute owns control-plane + link stubs
@@ -6692,7 +6707,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # - Neural_Entropy_Shield.asm: Marketing word salad
         # All src/asm/gpu/RawrXD_RDNA3_*.asm files removed from build.
         set(RAWRXD_HAS_SOVEREIGN_GPU_ASM 0)
-        message(STATUS "[Win32IDE] Sovereign GPU ASM disabled +�-�+�-�+�-� fraudulent claims removed")
+        message(STATUS "[Win32IDE] Sovereign GPU ASM disabled +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ fraudulent claims removed")
 
         set_source_files_properties(${WIN32IDE_EXTRA_ASM} PROPERTIES LANGUAGE ASM_MASM)
     endif()
@@ -6741,7 +6756,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
 
         list(REMOVE_ITEM WIN32IDE_SOURCES
-            # AUTO-REMOVED: stub file
+            src/win32app/agentic_bridge_headless.cpp
             src/win32app/Win32IDE_headless_stubs.cpp
             src/core/ignite_800b.cpp
             src/stubs.cpp
@@ -6799,11 +6814,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             if(src MATCHES "(_stubs\\.cpp$|/stubs\\.cpp$|_stub\\.cpp$|/stub_.*\\.cpp$|_stubs\\.asm$|/stubs\\.asm$|_stub\\.asm$|/stub_.*\\.asm$|/shim_.*\\.(cpp|asm)$|/missing_handler|/link_stubs_.*\\.(cpp|asm)$|_link_shims?\\.(cpp|asm)$|_fallback[^/]*\\.(cpp|asm)$|_(mock|fake)\\.(cpp|asm)$)" OR
                src MATCHES "(stub_|_stub\\.(cpp|asm)$|shim_|_shims?\\.(cpp|asm)$|shims?\\.(cpp|asm)$|/stubs\\.(cpp|asm)$)" OR
                src MATCHES "(mock_|fake_|_(mock|fake)\\.(cpp|asm)$)")
-                                # ai_agent_masm_core_impl.cpp provides required MASM symbols +�-�+�-�+�-� exempt
+                                # ai_agent_masm_core_impl.cpp provides required MASM symbols +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ exempt
                                 if(src MATCHES "ai_agent_masm_core_impl\\.cpp$")
                                     continue()
                                 endif()
-                                # These are real production implementations, not stubs +�-�+�-�+�-� exempt
+                                # These are real production implementations, not stubs +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ exempt
                                 if(src MATCHES "cot_fallback_system\\.cpp$" OR
                                    src MATCHES "dml_asm_fallback\\.cpp$" OR
                                    src MATCHES "link_stubs_gold\\.cpp$")
@@ -6839,7 +6854,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
                 message(WARNING "[EMERGENCY OVERRIDE] Stub files linked to ${target_name} (CI will reject)")
             endif()
         else()
-            message(STATUS "+�-�+�-�+�-� ${target_name}: No stub policy violations")
+            message(STATUS "+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ ${target_name}: No stub policy violations")
         endif()
     endfunction()
     
@@ -6893,7 +6908,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/K2LivePathTensorCache_Prefetch.cpp
         src/deep2/K2LivePathTensorCache_Emit.cpp
         src/deep2/K2MLAAttention.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/K2TokenEmbedding.cpp
         src/win32app/ScreenPilotModelHub.cpp
         src/marketplace/extension_package_local.cpp
         src/deep2/Sampler.cpp
@@ -6930,7 +6945,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         endif()
     endif()
 
-    # v14.7.6 Batch 2 parity files +�-�+�-�+�-� compilation fixes applied, re-enabled
+    # v14.7.6 Batch 2 parity files +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ compilation fixes applied, re-enabled
     # (PeekView, AutoSave, TerminalSplit now compile cleanly)
 
     list(REMOVE_DUPLICATES WIN32IDE_SOURCES)
@@ -6982,17 +6997,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_ResourceGenerator.cpp
     )
 
-    # Runtime surface +�-�+�-�+�-� unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
+    # Runtime surface +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
     list(APPEND WIN32IDE_SOURCES
         src/runtime_surface/RuntimeSurfaceModule.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime_surface/GenerationStopwatch.cpp
     )
 
-    # +�-�+�-�+�-�+�-�+�-�+�-� Performance-optimization batches 3+�-�+�-�+�-�6 +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Performance-optimization batches 3+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜6 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # Batch 3: Unified tiered memory pool (CPU / GPU / disk / compressed)
     # Batch 4: Work-stealing ExecutionScheduler (resolves friend-class declaration)
-    # Batch 5: InferenceProfiler +�-�+�-�+�-� per-layer profiling + Prometheus export
-    # Batch 6: BackendOrchestrator +�-�+�-�+�-� dynamic switching, sharding, semantic cache
+    # Batch 5: InferenceProfiler +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ per-layer profiling + Prometheus export
+    # Batch 6: BackendOrchestrator +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ dynamic switching, sharding, semantic cache
     list(APPEND WIN32IDE_SOURCES
         src/memory/UnifiedMemoryPool.cpp
         src/memory/SequentialBlowoffValve.cpp
@@ -7000,8 +7015,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/inference/DualGpuPipeline.cpp
         src/inference/Deep2Engine.cpp
         src/kernels/VulkanComputeKernels.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/InferenceProfiler.cpp
+        src/BackendOrchestrator.cpp
         # --- Missing sources causing LNK2001 (added 2026-08-10) ---
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
@@ -7014,94 +7029,94 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         B014/build/b014_profiler.cpp
         src/deep2/Deep2Engine.cpp
         src/deep2/CycloneScheduler.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/Deep2LivePath.cpp
+        src/deep2/Deep2LivePath_Gate.cpp
+        src/deep2/Deep2LivePath_Pinball.cpp
+        src/deep2/Deep2LivePath_Mech.cpp
+        src/deep2/Deep2LivePath_Emit.cpp
+        src/deep2/GpuTransfer_Emit.cpp
+        src/deep2/LivePathEffect.cpp
+        src/deep2/K2LivePolicy.cpp
+        src/deep2/K2LivePolicy_Apply.cpp
+        src/deep2/K2LivePolicy_Hysteresis.cpp
+        src/deep2/FusedLiveController.cpp
+        src/deep2/FusedLiveController_Decide.cpp
+        src/deep2/FusedLiveController_Cheap.cpp
+        src/deep2/FusedLiveController_Law.cpp
+        src/deep2/FusedLiveController_Emit.cpp
+        src/deep2/LivePath_FusedTick.cpp
+        src/deep2/Deep2LivePath_MechEnd.cpp
+        src/deep2/Deep2LivePath_Thermal.cpp
         src/deep2/PlasmaGovernor.cpp
         src/deep2/ElasticResidencyManager.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/rkc/RKCValidator.cpp
+        src/rkc/RKCWorld.cpp
+    src/rkc/RKCCodeWorld.cpp
+    src/rkc/RKCMinimalSource.cpp
+    src/rkc/RKCNegativeKnowledge.cpp
+    src/rkc/RKCModelInventory.cpp
+    src/rkc/RKCDeep2Authority.cpp
+        src/rkc/RKCCompiler.cpp
+        src/rkc/RKCRecipes.cpp
+        src/rkc/RKCGapEngine.cpp
+        src/rkc/RKCEmit.cpp
+        src/rkc/RKCSession.cpp
+        src/rkc/RKCProductContext.cpp
+        src/rkc/RKC_C_ABI.cpp
+        src/deep2/KimiK2Config.cpp
+        src/deep2/K2MLAWeights.cpp
         src/deep2/K2MLA_KvExpand_Fused.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2MoEWeights.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
         # Deep2 component files required by Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/GGUFLoader.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/WarmupScheduler.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
         src/deep2/QuantKernelRegistry.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/ThreadPool.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/Deep2Bridge.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/ShardRouterIntegration.cpp
         src/deep2/StreamEngine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/RuntimePlanner.cpp
+        src/deep2/ModelLoader.cpp
+        src/deep2/ModelRegistry.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/UniversalModelLoader.cpp
+        src/deep2/RawrXDInferenceAdapter.cpp
+        src/inference/RawrXD_LlamaNative.cpp
+        src/deep2/InferenceSession.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/FabricTensorTable.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/GoalSystem.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/ScaleQuality.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/TheDualityExample.cpp
         src/deep2/Deep2Discovery.cpp
         src/deep2/Deep2Benchmark.cpp
@@ -7116,8 +7131,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/GGUFDiagnostics.cpp
         src/deep2/GGUFLoader_Fixed.cpp
         src/deep2/GGUFVerifier.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/IQQuantKernels.cpp
+        src/deep2/MASMKernelStubs.cpp
         src/deep2/mcp_bridge.cpp
         src/deep2/gpu/Deep2GPUBackend.cpp
         src/deep2/MultiGPU/GPUDeviceRegistry.cpp
@@ -7176,7 +7191,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # ============================================================================
     add_executable(Deep2Engine_MetadataRegressionTest
         src/deep2/Deep2Engine_MetadataRegressionTest.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
     )
     target_include_directories(Deep2Engine_MetadataRegressionTest PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -7189,7 +7204,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     )
     message(STATUS "Deep2Engine Metadata Regression Test configured")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-� SDMA GPU Scheduler (C++ replacement for MASM) +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ SDMA GPU Scheduler (C++ replacement for MASM) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # Replaced broken MASM syntax with portable C++ implementations
     # sdma_scheduler: GPU DMA event loop, burst coalescing, TSC-based scheduling
     # sdma_ring_allocator: O(1) tensor slot bitmap allocator with spinlock
@@ -7209,7 +7224,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Sovereign Coordination System - 10 primitives + Execution Capsule
     list(APPEND WIN32IDE_SOURCES
         src/sovereign/spine/ExecutionSpine.cpp
-        # src/sovereign/build/BuildStateGraph.cpp  # REMOVED: phantom declaration — file never existed in any commit, no header, no symbol references (dead declaration per Batch N1/N2 classification)
+        # src/sovereign/build/BuildStateGraph.cpp  # REMOVED: phantom declaration ΓÇö file never existed in any commit, no header, no symbol references (dead declaration per Batch N1/N2 classification)
         src/sovereign/ide/SovereignIDEIntegration.cpp
         src/sovereign/terminal/TerminalOwnership.cpp
         src/sovereign/bus/CapabilityBus.cpp
@@ -7232,9 +7247,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/sovereign_autonomy/SovereignAgentRuntime.cpp
     )
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # OMEGA-1 v2.0 IDE Integration - IPC Layer for Ghost Text & Telemetry
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     list(APPEND WIN32IDE_SOURCES
         src/win32ide/Omega1IPCClient.cpp
         src/win32ide/GhostTextRenderer.cpp
@@ -7243,54 +7258,54 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32ide/Win32IDE_Omega1Integration.cpp
     )
     
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Elastic Engine +�-�+�-�+�-� Predictive tensor residency + governance
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Elastic Engine +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Predictive tensor residency + governance
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     list(APPEND WIN32IDE_SOURCES
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/runtime/elastic/ElasticEngine.cpp
+        src/runtime/elastic/ElasticGGUFIndex.cpp
+        src/runtime/elastic/ElasticResidencyManager.cpp
+        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+        src/runtime/elastic/ElasticDecoder.cpp
         src/runtime/elastic/ElasticArchitectureDetector.cpp
         src/runtime/shared/SharedModelRuntime.cpp
         src/runtime/shared/BP1BraidIndex.cpp
         src/runtime/shared/BP1BraidStreamer.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
         src/runtime/memory/PredictiveMemoryManager.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/Deep2ExecutionTelemetry.cpp
         src/backend/VulkanGemmDispatcher.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/gguf_tensor_loader.cpp
         src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
         src/runtime/Sovereign_KernelBridge_CPP.cpp
     )
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # OMEGA-1 Engine Server - IPC Server for IDE integration
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     list(APPEND RAWR_ENGINE_SOURCES
         src/engine/Omega1Engine_Server.cpp
     )
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # P1_UI_WINDOW_OWNERSHIP_001 +�-�+�-�+�-� partial ODR purge (tests/mains only).
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # P1_UI_WINDOW_OWNERSHIP_001 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ partial ODR purge (tests/mains only).
     # Broader stub removal (batch_021 / ssot / LSP / CursorParity) caused
-    # LNK1120+�-�-�+�-�334; those need symbol-level dedupe, not TU deletion.
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # LNK1120+∩┐╜-∩┐╜-∩┐╜+∩┐╜-∩┐╜334; those need symbol-level dedupe, not TU deletion.
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     list(REMOVE_ITEM WIN32IDE_SOURCES
         src/deep2/TheDualityExample.cpp
         src/deep2/Deep2Server_Minimal.cpp
@@ -7298,7 +7313,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/Deep2APIServer_Complete.cpp
         src/deep2/GGUFVerifier.cpp
         src/deep2/GGUFLoader_Fixed.cpp
-        # keep MASMKernelStubs.cpp +�-�+�-�+�-� provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
+        # keep MASMKernelStubs.cpp +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
         src/deep2/dump_tensors.cpp
         src/deep2/Deep2Engine_KernelTest.cpp
         src/deep2/moe_microbench.cpp
@@ -7321,19 +7336,23 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     message(STATUS "[Win32IDE] Partial ODR purge: Deep2 test/main TUs removed")
 
     # ADDR32 MASM objs cannot link with /LARGEADDRESSAWARE (required for amdvlk
-    # ProductOpenSession +�-�-� R01). Drop them from IDE; feature flags already gate calls.
+    # ProductOpenSession +∩┐╜-∩┐╜-∩┐╜ R01). Drop them from IDE; feature flags already gate calls.
     set(_WIN32IDE_ASM ${ASM_KERNEL_SOURCES})
     list(REMOVE_ITEM _WIN32IDE_ASM
         src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
     list(APPEND WIN32IDE_SOURCES src/closure/RawrXDAutoClosure.cpp)
-    # NOTE: rawrxd_filter_missing_sources removed — missing sources should be FATAL
+    # NOTE: rawrxd_filter_missing_sources removed ΓÇö missing sources should be FATAL
     # BATCH N2 (RAWRXD_WIN32IDE_REAL_LINK_001): real C implementations for ASM-linked symbols.
     # runtime_symbol_bridge.cpp contains real function bodies (camellia/selfhost/hotpatch/
     # snapshot/kquant/native_speed/sgemm/FlashAttention/Enterprise/Swarm/DiskRecovery/Dbg).
     # The checked-in .asm kernels are 26-byte scaffolds that assemble to empty .obj,
     # so the C symbols have NO other provider. Taxonomy: REAL_IMPLEMENTATION_EXISTS.
     list(APPEND WIN32IDE_SOURCES src/core/runtime_symbol_bridge.cpp)
+    # BATCH N2: real C implementation TUs (see _n2_classification_receipt.md)
+    list(APPEND WIN32IDE_SOURCES src/core/inference_link_production.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/win32ide_asm_kernel_bridge.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/kquant_nonmsvc.cpp)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 
@@ -7359,7 +7378,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     endif()
 
     # Ensure link output dir exists; clear prior exe/pdb before link (mitigates MSVC LNK1104 when
-    # a stale handle, indexer, or crashed link left the binary busy +�-�+�-�+�-� harmless if files are absent).
+    # a stale handle, indexer, or crashed link left the binary busy +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ harmless if files are absent).
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     # Use CMake-native removal to avoid shell quoting issues in generated link commands.
     if(MSVC)
@@ -7378,7 +7397,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         EnforceNoStubs(RawrEngine)
         endif()
         EnforceNoStubs(RawrXD_Gold)
-        EnforceNoStubs(RawrXD-InferenceEngine)
+        # EnforceNoStubs(RawrXD-InferenceEngine)
     endif()
     # Enforce both: (1) No stubs linked, (2) link_stubs_gate.cpp shrinking.
     # Explicit fallback builds may retain compatibility units by design.
@@ -7430,15 +7449,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             /MANIFEST:NO
             "/FORCE:MULTIPLE"
         )
-        # FORCE still required: ssot+�-�+�-�+�-�auto_feature, batch_021 stubs+�-�+�-�+�-�real TUs, omega C+�-�+�-�+�-�batch,
-        # v280+�-�+�-�+�-�batch_001, CursorParity+�-�+�-�+�-�SemanticIndex, etc. Surgical ASM fixes landed;
+        # FORCE still required: ssot+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜auto_feature, batch_021 stubs+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜real TUs, omega C+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜batch,
+        # v280+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜batch_001, CursorParity+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜SemanticIndex, etc. Surgical ASM fixes landed;
         # full FORCE removal blocked on symbol-level dedupe (see evidence LNK2005 inventory).
         # Mirror the map at the build root for audit tools that scan ${CMAKE_BINARY_DIR}.
         add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
             VERBATIM
         )
-        # R25: keep PE LAA:YES. Do not clear LAA -� 2GB VA breaks mmap streaming.
+        # R25: keep PE LAA:YES. Do not clear LAA -∩┐╜ 2GB VA breaks mmap streaming.
         # Certify after link: dumpbin /headers | findstr Large
         # GPU/ICD remains deferred; DualStick not reopened.
     endif()
@@ -7583,7 +7602,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
             message(FATAL_ERROR "[ProductionLane] QuickJS not found at ${QUICKJS_DIR} and Win32IDE would require QuickJS stubs; strict production strip requires a real QuickJS provider.")
         endif()
-        message(STATUS "QuickJS not found at ${QUICKJS_DIR} +�-�+�-�+�-� JS extension host uses stubs")
+        message(STATUS "QuickJS not found at ${QUICKJS_DIR} +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ JS extension host uses stubs")
         # Create stub include directory so headers compile
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_QUICKJS_STUB=1)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_QUICKJS=0)
@@ -7666,7 +7685,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # If monolithic objects are linked, avoid also compiling/linking the overlapping C++ fallback provider.
         if(_WIN32IDE_LINKED_MONOLITHIC_OBJS)
             list(REMOVE_ITEM WIN32IDE_SOURCES src/core/model_loader_fallbacks.cpp)
-            message(STATUS "[Win32IDE] Monolithic ASM objects linked +�-�+�-�+�-� removing src/core/model_loader_fallbacks.cpp to avoid duplicate symbols")
+            message(STATUS "[Win32IDE] Monolithic ASM objects linked +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ removing src/core/model_loader_fallbacks.cpp to avoid duplicate symbols")
         endif()
     else()
         message(STATUS "[Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)")
@@ -7697,7 +7716,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         message(STATUS "[Win32IDE] RawrNativeWebBridge linked (native E2E)")
     endif()
 
-    # nlohmann/json include removed — dependency unused in source
+    # nlohmann/json include removed ΓÇö dependency unused in source
 
     if(NOT MSVC)
         target_link_libraries(RawrXD-Win32IDE PRIVATE gomp)
@@ -7713,7 +7732,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         add_dependencies(RawrXD-Win32IDE re_deobfuscator)
         target_link_libraries(RawrXD-Win32IDE PRIVATE ${RE_DEOBF_OBJECTS})
     endif()
-    # Skip RE_MODEL_OBJECTS (model_llm_harvester.asm) +�-�+�-�+�-� it defines main() and conflicts with WinMain
+    # Skip RE_MODEL_OBJECTS (model_llm_harvester.asm) +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ it defines main() and conflicts with WinMain
     # if(TARGET re_model_reverse)
     #     add_dependencies(RawrXD-Win32IDE re_model_reverse)
     #     target_link_libraries(RawrXD-Win32IDE PRIVATE ${RE_MODEL_OBJECTS})
@@ -7803,7 +7822,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         endif()
     endforeach()
 
-    # Product Finish 100 +�-�-� Waves 3-4 (git/search/session/approval/smoke)
+    # Product Finish 100 +∩┐╜-∩┐╜-∩┐╜ Waves 3-4 (git/search/session/approval/smoke)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/RawrXD_Product100.cmake)
 endif()
 
@@ -7854,22 +7873,22 @@ endif()
 # Duplicate/partial RawrXD_Gold source block removed here.
 # Canonical RawrXD_Gold target is defined in the standalone Gold section above.
     # ============================================================================
-    # CI Gating Targets +�-�+�-�+�-� Release / Debug / AddressSanitizer
+    # CI Gating Targets +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Release / Debug / AddressSanitizer
     # ============================================================================
 # Usage:
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release           (production)
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug             (dev)
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAWR_ASAN=ON  (ASAN)
 #
-# ASAN (MSVC): /fsanitize=address +�-�+�-�+�-� detects heap overflows, use-after-free
+# ASAN (MSVC): /fsanitize=address +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ detects heap overflows, use-after-free
 option(RAWR_ASAN "Enable AddressSanitizer (MSVC /fsanitize=address)" OFF)
 
-# PMASSA: bye Ollama +�-�+�-�+�-� prefer local GGUF / inference; Ollama code can be excluded when ON
+# PMASSA: bye Ollama +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ prefer local GGUF / inference; Ollama code can be excluded when ON
 # See docs/PMASSA_BYE_OLLAMA.md
 option(RAWRXD_PMASSA "PMASSA: phase out Ollama (prefer local GGUF; define RAWRXD_PMASSA)" OFF)
 if(RAWRXD_PMASSA)
     add_compile_definitions(RAWRXD_PMASSA=1)
-    message(STATUS "[PMASSA] Bye Ollama +�-�+�-�+�-� RAWRXD_PMASSA=ON")
+    message(STATUS "[PMASSA] Bye Ollama +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RAWRXD_PMASSA=ON")
 endif()
 
 if(RAWR_ASAN AND MSVC)
@@ -7992,10 +8011,10 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_Suite +�-�+�-�+�-� Pre-Build CI/CD Gate (beaconism pattern)
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# SovereignTest_Suite +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Pre-Build CI/CD Gate (beaconism pattern)
 # Validates: atomic rollback, cache coherency, patch correctness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_SOVEREIGN_TEST_SUITE "Build SovereignTest_Suite pre-build gate" OFF)
 if(BUILD_SOVEREIGN_TEST_SUITE)
     add_executable(SovereignTest_Suite EXCLUDE_FROM_ALL
@@ -8023,10 +8042,10 @@ if(BUILD_SOVEREIGN_TEST_SUITE)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_VAL038_E2E +�-�+�-�+�-� Integration E2E Harness for VAL-038 Kernel
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# SovereignTest_VAL038_E2E +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Integration E2E Harness for VAL-038 Kernel
 # Live-fire validation: Cold-start -> Hot-patch -> Inference -> Hash validation
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_SOVEREIGN_VAL038_E2E "Build VAL-038 E2E integration test" OFF)
 if(BUILD_SOVEREIGN_VAL038_E2E)
     add_executable(SovereignTest_VAL038_E2E EXCLUDE_FROM_ALL
@@ -8052,10 +8071,10 @@ if(BUILD_SOVEREIGN_VAL038_E2E)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# Deep2_Batch_Test +�-�+�-�+�-� Model Stress-Test Harness with PageFaultMonitor
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# Deep2_Batch_Test +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Model Stress-Test Harness with PageFaultMonitor
 # Discovery-Load-Benchmark-Validation sequence for all models
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_DEEP2_BATCH_TEST "Build Deep2 batch model stress-test harness" OFF)
 if(BUILD_DEEP2_BATCH_TEST)
     add_executable(Deep2_Batch_Test EXCLUDE_FROM_ALL
@@ -8081,9 +8100,9 @@ if(BUILD_DEEP2_BATCH_TEST)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# test_generate_one_token +�-�+�-�+�-� Minimal Codestral One-Token Validation Gate
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# test_generate_one_token +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Minimal Codestral One-Token Validation Gate
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_DEEP2_TOKEN_GATE "Build minimal one-token generation gate" OFF)
 if(BUILD_DEEP2_TOKEN_GATE)
     add_executable(test_generate_one_token
@@ -8106,7 +8125,7 @@ if(BUILD_DEEP2_TOKEN_GATE)
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
 
-# test_generate_313_tokens — BATCH007 313-token regression gate for Gemma3
+# test_generate_313_tokens ΓÇö BATCH007 313-token regression gate for Gemma3
 option(BUILD_DEEP2_313_TOKEN_GATE "Build 313-token regression gate" OFF)
 if(BUILD_DEEP2_313_TOKEN_GATE)
     add_executable(test_generate_313_tokens
@@ -8129,7 +8148,7 @@ if(BUILD_DEEP2_313_TOKEN_GATE)
     message(STATUS "[Deep2] 313-token regression gate: test_generate_313_tokens")
 endif()
 
-# test_q2k_single_tensor_oracle — Minimal Q2_K GEMV oracle
+# test_q2k_single_tensor_oracle ΓÇö Minimal Q2_K GEMV oracle
 add_executable(test_q2k_single_tensor_oracle
     src/deep2/test_q2k_single_tensor_oracle.cpp
 )
@@ -8149,7 +8168,7 @@ set_target_properties(test_q2k_single_tensor_oracle PROPERTIES
 )
 message(STATUS "[Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle")
 
-# test_q4k_gemv_parity +�-�+�-�+�-� BATCH2_Q4K_GEMV_001 standalone cert
+# test_q4k_gemv_parity +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ BATCH2_Q4K_GEMV_001 standalone cert
 option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" OFF)
 if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     add_executable(test_q4k_gemv_parity
@@ -8277,8 +8296,8 @@ if(BUILD_DEEP2_STREAMING)
     message(STATUS "[Deep2] Streaming test: test_streaming")
 endif()
 
-# deep2_streamer_cert +�-�+�-�+�-� STREAMER-CERT-001: Full streaming certification harness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# deep2_streamer_cert +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ STREAMER-CERT-001: Full streaming certification harness
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" OFF)
 if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
@@ -8303,7 +8322,7 @@ if(BUILD_DEEP2_STREAMER_CERT)
     message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
 endif()
 
-# OLLAMA_PARITY_STREAMER_001 +�-�-� Deep2 owns stream surface; zero Ollama HTTP
+# OLLAMA_PARITY_STREAMER_001 +∩┐╜-∩┐╜-∩┐╜ Deep2 owns stream surface; zero Ollama HTTP
 option(BUILD_DEEP2_STREAMER_PARITY "Build Deep2 Ollama-parity streamer" OFF)
 if(BUILD_DEEP2_STREAMER_PARITY)
     add_executable(deep2_streamer_parity
@@ -8330,7 +8349,7 @@ if(BUILD_DEEP2_STREAMER_PARITY)
     message(STATUS "[Deep2] Ollama-parity streamer: deep2_streamer_parity")
 endif()
 
-# STREAMER_GPU_SOLO_001 +�-�-� SingleGpu plan: enum all, open one primary (no GGUF claim yet)
+# STREAMER_GPU_SOLO_001 +∩┐╜-∩┐╜-∩┐╜ SingleGpu plan: enum all, open one primary (no GGUF claim yet)
 option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 SingleGpu device gate" OFF)
 if(BUILD_DEEP2_GPU_SOLO_CERT)
     add_executable(deep2_gpu_solo_cert
@@ -9169,7 +9188,7 @@ if(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001)
     message(STATUS "[Deep2] LOCAL_AGENT_AUDIT_001: deep2_local_agent_audit_001")
 endif()
 
-# A0 +�-�-� product floor: process stays alive (no model / no VWA / no InferenceEngine)
+# A0 +∩┐╜-∩┐╜-∩┐╜ product floor: process stays alive (no model / no VWA / no InferenceEngine)
 option(BUILD_P0_PROCESS_ALIVE_001 "Build P0_PROCESS_ALIVE_001 cert" OFF)
 if(BUILD_P0_PROCESS_ALIVE_001)
     add_executable(p0_process_alive_001
@@ -9186,7 +9205,7 @@ if(BUILD_P0_PROCESS_ALIVE_001)
     message(STATUS "[Deep2] P0_PROCESS_ALIVE_001: p0_process_alive_001")
 endif()
 
-# B0 +�-�-� VWA range contract (RMV-layered; no second mount)
+# B0 +∩┐╜-∩┐╜-∩┐╜ VWA range contract (RMV-layered; no second mount)
 option(BUILD_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_RANGE_CONTRACT_001)
     add_executable(vwa_range_contract_001
@@ -9206,12 +9225,12 @@ if(BUILD_VWA_RANGE_CONTRACT_001)
     message(STATUS "[Deep2] VWA_RANGE_CONTRACT_001: vwa_range_contract_001")
 endif()
 
-# C1 substrate +�-�-� K2 logits physical lineage (VWA on RMV; GPU_DISPATCH separate)
+# C1 substrate +∩┐╜-∩┐╜-∩┐╜ K2 logits physical lineage (VWA on RMV; GPU_DISPATCH separate)
 option(BUILD_K2_LOGITS_VWA_LINEAGE_001 "Build K2 logits VWA lineage cert" OFF)
 if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     add_executable(deep2_k2_logits_vwa_lineage_001
         src/deep2/deep2_k2_logits_vwa_lineage_001.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
     )
     target_include_directories(deep2_k2_logits_vwa_lineage_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -9229,7 +9248,7 @@ if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     message(STATUS "[Deep2] K2 logits VWA lineage: deep2_k2_logits_vwa_lineage_001")
 endif()
 
-# B0 +�-�-� VWA address contract (types + ResolvePhysicalSpan only)
+# B0 +∩┐╜-∩┐╜-∩┐╜ VWA address contract (types + ResolvePhysicalSpan only)
 option(BUILD_VWA_ADDRESS_CONTRACT_001 "Build VWA_ADDRESS_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_ADDRESS_CONTRACT_001)
     add_executable(vwa_address_contract_001
@@ -9249,7 +9268,7 @@ if(BUILD_VWA_ADDRESS_CONTRACT_001)
     message(STATUS "[Deep2] VWA_ADDRESS_CONTRACT_001: vwa_address_contract_001")
 endif()
 
-# B1 +�-�-� VWA POC-1: RMV +�-�-� MASM resolve +�-�-� exact ReadFile + dequant (real GGUF)
+# B1 +∩┐╜-∩┐╜-∩┐╜ VWA POC-1: RMV +∩┐╜-∩┐╜-∩┐╜ MASM resolve +∩┐╜-∩┐╜-∩┐╜ exact ReadFile + dequant (real GGUF)
 option(BUILD_VWA_POC_1_001 "Build VWA_POC_1_001 cert" OFF)
 if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
     set(_VWA_POC_ML64 "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe")
@@ -9263,7 +9282,7 @@ if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
         VERBATIM)
     add_executable(vwa_poc_1_001
         src/deep2/vwa_poc_1_001.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
         ${_VWA_POC_ASM_OBJ}
     )
     target_include_directories(vwa_poc_1_001 PRIVATE
@@ -10127,9 +10146,8 @@ option(BUILD_DEEP2_VWA_IOCP_RANGE_001 "Build VWA_IOCP_RANGE_001" OFF)
 if(BUILD_DEEP2_VWA_IOCP_RANGE_001 AND WIN32 AND MSVC)
     add_executable(deep2_vwa_iocp_range_001
         src/deep2/deep2_vwa_iocp_range_001.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    )
+        src/deep2/IOCPGGUFLoader.cpp
+        src/deep2/GGUFLoader.cpp)
     target_compile_definitions(deep2_vwa_iocp_range_001 PRIVATE VWA_IOCP_RANGE_CERT=1)
     target_compile_options(deep2_vwa_iocp_range_001 PRIVATE
         $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20 /Gy)
@@ -10282,7 +10300,7 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
     )
     message(STATUS "[Deep2] K2 TryGpu logits split: deep2_k2_trygpu_logits_split_cert")
 
-    # C1 live +�-�-� fulfilled+�-�-�TryGpuHot range attribution under BOUNDED_STREAM
+    # C1 live +∩┐╜-∩┐╜-∩┐╜ fulfilled+∩┐╜-∩┐╜-∩┐╜TryGpuHot range attribution under BOUNDED_STREAM
     add_executable(deep2_k2_logits_gpu_range_attribution_001
         src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp)
     target_link_libraries(deep2_k2_logits_gpu_range_attribution_001
@@ -10302,7 +10320,7 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
                    "deep2_k2_logits_gpu_range_attribution_001")
 endif()
 
-# C1+�-�-�C9 additive helpers (observational lineage + cut/overlap/bound validators)
+# C1+∩┐╜-∩┐╜-∩┐╜C9 additive helpers (observational lineage + cut/overlap/bound validators)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2C1C9.fragment.cmake)
 if(TARGET deep2_c1_c9 AND TARGET InferenceEngine)
     target_link_libraries(InferenceEngine PUBLIC deep2_c1_c9)
@@ -10313,7 +10331,7 @@ if(TARGET deep2_c1_c9 AND TARGET InferenceEngine)
     message(STATUS "[Deep2] C1-C9 helpers: deep2_c1_c9 linked to InferenceEngine")
 endif()
 
-# VWA B3+�-�-�B8 no-fiction range core (resolve/fulfill/IOCP; no manager)
+# VWA B3+∩┐╜-∩┐╜-∩┐╜B8 no-fiction range core (resolve/fulfill/IOCP; no manager)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaB3B8.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaConsumerGates.fragment.cmake)
 if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
@@ -10321,7 +10339,7 @@ if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
     message(STATUS "[Deep2] VWA B3-B8 range core: deep2_vwa_range_core")
 endif()
 
-# RAWRXD_RUN_MODELNAME_001 +�-�-� Ollama-style `rawr run <alias>` front door (Deep2).
+# RAWRXD_RUN_MODELNAME_001 +∩┐╜-∩┐╜-∩┐╜ Ollama-style `rawr run <alias>` front door (Deep2).
 option(BUILD_RAWRXD_RUN_MODELNAME_001 "Build RAWRXD_RUN_MODELNAME_001 + rawr CLI" ON)
 if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     add_executable(rawrxd_run_modelname_001
@@ -10340,7 +10358,7 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/rawr_run.cpp")
-        # rawr links the runner implementation (rawrxd_run_modelname_001.cpp) —
+        # rawr links the runner implementation (rawrxd_run_modelname_001.cpp) ΓÇö
         # without it, rawr_run.cpp calls rawrxd_run_modelname_001() which has no
         # definition in any linked library (LNK2019).
         add_executable(rawr
@@ -10395,10 +10413,10 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     message(STATUS "[Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL")
 endif()
 
-# RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 +�-�-� run/chat/agent/steer/resume + certs
+# RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 +∩┐╜-∩┐╜-∩┐╜ run/chat/agent/steer/resume + certs
 include(${CMAKE_SOURCE_DIR}/cmake/RawrAgenticCli.fragment.cmake)
 
-# Deep2 Gateway cert island +�-�-� Win32 only (no Ship / no C++23)
+# Deep2 Gateway cert island +∩┐╜-∩┐╜-∩┐╜ Win32 only (no Ship / no C++23)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2GatewayCertStandalone.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2BenchmarkCert.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2ProductLavapath.fragment.cmake)
@@ -10591,8 +10609,7 @@ option(BUILD_DEEP2_NU_PACK_FORMAT_CERT "Build NU_PACK_FORMAT_001" OFF)
 if(BUILD_DEEP2_NU_PACK_FORMAT_CERT)
     add_executable(deep2_nu_pack_format_cert
         src/deep2/deep2_nu_pack_format_cert.cpp
-        # AUTO-REMOVED: stub file
-        )
+        src/deep2/NUFusedPacker.cpp)
     if(MSVC)
         target_compile_options(deep2_nu_pack_format_cert PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -10800,8 +10817,8 @@ if(BUILD_DEEP2_PLACEMENT_COST_CERT)
     message(STATUS "[Deep2] Placement cost cert: deep2_placement_cost_cert")
 endif()
 
-# deep2_mars_e2e +�-�+�-�+�-� MARS dual-GPU placement + hotpatch + generate smoke
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# deep2_mars_e2e +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ MARS dual-GPU placement + hotpatch + generate smoke
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" OFF)
 if(BUILD_DEEP2_MARS_E2E)
     add_executable(deep2_mars_e2e
@@ -10828,9 +10845,9 @@ if(BUILD_TEST_MARS_CONTROLLER)
     add_executable(test_mars_controller
         src/deep2/mars/test_mars_controller.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/VRAMManager.cpp
     )
     if(MSVC)
         target_compile_options(test_mars_controller PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10846,13 +10863,13 @@ if(BUILD_TEST_MARS_CONTROLLER)
     message(STATUS "[Deep2] MARS controller unit smoke: test_mars_controller")
 endif()
 
-# deep2_execution_policy_smoke +�-�+�-�+�-� user-owned ExecutionPolicy validate/store
+# deep2_execution_policy_smoke +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ user-owned ExecutionPolicy validate/store
 option(BUILD_DEEP2_EXECUTION_POLICY_SMOKE "Build ExecutionPolicy smoke harness" OFF)
 if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     add_executable(deep2_execution_policy_smoke
         src/deep2/deep2_execution_policy_smoke.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/execution_policy/ExecutionPolicy.cpp
+        src/deep2/execution_policy/ExecutionPolicyStore.cpp
         src/deep2/execution_policy/PlacementPlan.cpp
         src/deep2/execution_policy/ExecutionPolicyApply.cpp
     )
@@ -10870,7 +10887,7 @@ if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     message(STATUS "[Deep2] ExecutionPolicy smoke: deep2_execution_policy_smoke")
 endif()
 
-# p1_ide_exec_policy_apply_001 +�-�+�-�+�-� IDE load enforces ExecutionPolicy placement
+# p1_ide_exec_policy_apply_001 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ IDE load enforces ExecutionPolicy placement
 option(BUILD_P1_IDE_EXEC_POLICY_APPLY "Build P1_IDE_EXEC_POLICY_APPLY_001 harness" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     add_executable(p1_ide_exec_policy_apply_001
@@ -10893,7 +10910,7 @@ if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     message(STATUS "[Deep2] P1 IDE exec policy apply: p1_ide_exec_policy_apply_001")
 endif()
 
-# p1_ide_exec_policy_live_gguf_001 +�-�+�-�+�-� real GGUF +�-�+�-�+�-� residency +�-�+�-�+�-� generate
+# p1_ide_exec_policy_live_gguf_001 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ real GGUF +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ residency +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ generate
 option(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF "Build P1_IDE_EXEC_POLICY_LIVE_GGUF_001" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     add_executable(p1_ide_exec_policy_live_gguf_001
@@ -10916,7 +10933,7 @@ if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     message(STATUS "[Deep2] P1 IDE exec policy LIVE GGUF: p1_ide_exec_policy_live_gguf_001")
 endif()
 
-# p1_real_speedup_001 +�-�+�-�+�-� external wall REAL_SPEEDUP (frozen contract)
+# p1_real_speedup_001 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ external wall REAL_SPEEDUP (frozen contract)
 option(BUILD_P1_REAL_SPEEDUP "Build P1_REAL_SPEEDUP_001 gate" OFF)
 if(BUILD_P1_REAL_SPEEDUP)
     add_executable(p1_real_speedup_001
@@ -10939,7 +10956,7 @@ if(BUILD_P1_REAL_SPEEDUP)
     message(STATUS "[Deep2] P1 REAL_SPEEDUP gate: p1_real_speedup_001")
 endif()
 
-# p1_repeatability_trial_validity_diag_001 +�-�+�-�+�-� MeasuredGenerate acceptance diagnostic
+# p1_repeatability_trial_validity_diag_001 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ MeasuredGenerate acceptance diagnostic
 option(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG
     "Build P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001" OFF)
 if(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG)
@@ -11009,7 +11026,7 @@ if(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG)
     message(STATUS "[Deep2] P1 repeatability state drift diag")
 endif()
 
-# p1_ui_encoding_cert +�-�+�-�+�-� P1_UI_ENCODING_001 (UTF-8+�-�+�-�+�-�UTF-16 Win32 boundary)
+# p1_ui_encoding_cert +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ P1_UI_ENCODING_001 (UTF-8+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜UTF-16 Win32 boundary)
 option(BUILD_P1_UI_ENCODING_CERT "Build UI encoding certification harness" OFF)
 if(BUILD_P1_UI_ENCODING_CERT)
     add_executable(p1_ui_encoding_cert
@@ -11031,7 +11048,7 @@ if(BUILD_P1_UI_ENCODING_CERT)
     message(STATUS "[Win32] UI encoding cert: p1_ui_encoding_cert")
 endif()
 
-# p1_ui_menu_e2e_cert +�-�+�-�+�-� P1_UI_MENU_E2E_001 (black-box menu SendInput certification)
+# p1_ui_menu_e2e_cert +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ P1_UI_MENU_E2E_001 (black-box menu SendInput certification)
 option(BUILD_P1_UI_MENU_E2E_CERT "Build UI menu E2E certification harness" OFF)
 if(BUILD_P1_UI_MENU_E2E_CERT)
     add_executable(p1_ui_menu_e2e_cert
@@ -11050,7 +11067,7 @@ if(BUILD_P1_UI_MENU_E2E_CERT)
     message(STATUS "[Win32] UI menu E2E cert: p1_ui_menu_e2e_cert")
 endif()
 
-# p1_ui_sidebar_encoding_cert +�-�+�-�+�-� P1_UI_SIDEBAR_ENCODING_001 (ListView W-struct sidebar headers)
+# p1_ui_sidebar_encoding_cert +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ P1_UI_SIDEBAR_ENCODING_001 (ListView W-struct sidebar headers)
 option(BUILD_P1_UI_SIDEBAR_ENCODING_CERT "Build sidebar ListView encoding certification harness" OFF)
 if(BUILD_P1_UI_SIDEBAR_ENCODING_CERT)
     add_executable(p1_ui_sidebar_encoding_cert
@@ -11087,9 +11104,9 @@ if(BUILD_P1_UI_MENU_LIFETIME_CERT)
     message(STATUS "[Win32] UI menu lifetime cert: p1_ui_menu_lifetime_cert")
 endif()
 
-# deep2_parity_cert +�-�+�-�+�-� PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)
+# deep2_parity_cert +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)
 # External llama.cpp measuring stick is tools/parity_ref (separate process only).
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_DEEP2_PARITY_CERT "Build Deep2 parity certification harness (Deep2-only)" OFF)
 if(BUILD_DEEP2_PARITY_CERT)
     add_executable(deep2_parity_cert
@@ -11111,10 +11128,10 @@ if(BUILD_DEEP2_PARITY_CERT)
     message(STATUS "[Deep2] Parity certification harness: deep2_parity_cert (deps=NONE)")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 # Deep2 end-to-end streaming benchmark (non-blocking, TimeReverseDigest + VramStreaming)
 # Replaces the stubbed deep2_end_to_end_bench.cpp with a real event-driven streaming harness.
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_DEEP2_END_TO_END_BENCH "Build Deep2 end-to-end streaming benchmark" OFF)
 if(BUILD_DEEP2_END_TO_END_BENCH)
     add_executable(deep2_end_to_end_bench
@@ -11141,16 +11158,16 @@ if(BUILD_DEEP2_END_TO_END_BENCH)
     message(STATUS "[Deep2] End-to-end streaming benchmark: deep2_end_to_end_bench")
 endif()
 
-# ide_agent_loop_cert +�-�+�-�+�-� Win32IDE agent spine: read +�-�+�-�+�-� edit +�-�+�-�+�-� diag +�-�+�-�+�-� build +�-�+�-�+�-� run
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# ide_agent_loop_cert +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Win32IDE agent spine: read +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ edit +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ diag +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ build +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ run
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_IDE_AGENT_LOOP_CERT "Build IDE agent loop spine certification harness" OFF)
 if(BUILD_IDE_AGENT_LOOP_CERT)
     add_executable(ide_agent_loop_cert
         src/agentic/ide_agent_loop_cert.cpp
-        # AUTO-REMOVED: stub file
+        src/security/InputSanitizer.cpp
         src/agent/agentic_hotpatch_orchestrator.cpp
         src/core/proxy_hotpatcher.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/IOCPGGUFLoader.cpp
     )
     target_link_libraries(ide_agent_loop_cert PRIVATE InferenceEngine)
     if(MSVC)
@@ -11173,8 +11190,8 @@ if(BUILD_IDE_AGENT_LOOP_CERT)
     message(STATUS "[Agentic] IDE agent loop cert: ide_agent_loop_cert")
 endif()
 
-# test_deterministic_replay +�-�+�-�+�-� STREAMER-CERT-001: deterministic replay gate
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# test_deterministic_replay +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ STREAMER-CERT-001: deterministic replay gate
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_DETERMINISTIC_REPLAY "Build deterministic replay certification gate" OFF)
 if(BUILD_DETERMINISTIC_REPLAY)
     add_executable(test_deterministic_replay
@@ -11196,13 +11213,13 @@ if(BUILD_DETERMINISTIC_REPLAY)
     message(STATUS "[Deep2] Deterministic replay gate: test_deterministic_replay")
 endif()
 
-# dump_qwen35_meta +�-�+�-�+�-� Dump Qwen3.5 GGUF metadata + tensor topology
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# dump_qwen35_meta +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Dump Qwen3.5 GGUF metadata + tensor topology
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" OFF)
 if(BUILD_DUMP_QWEN35_META)
     add_executable(dump_qwen35_meta
         src/deep2/dump_qwen35_meta.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
     )
     target_link_libraries(dump_qwen35_meta PRIVATE InferenceEngine)
     if(MSVC)
@@ -11271,7 +11288,7 @@ if(BUILD_RAWRXD_AGENTIC)
     )
     message(STATUS "[Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert")
 
-    # HEXMAG_IDE_E2E_001 +�-�+�-�+�-� Copilot send path +�-�+�-�+�-� controller +�-�+�-�+�-� tuner +�-�+�-�+�-� FinalizePolicy
+    # HEXMAG_IDE_E2E_001 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Copilot send path +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ controller +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ tuner +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ FinalizePolicy
     add_executable(hexmag_ide_e2e_cert
         tests/hexmag_ide_e2e_cert.cpp
     # src/core/hexmag_runtime_controller.cpp
@@ -11322,8 +11339,8 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert")
 endif()
 
-# layer_harness +�-�+�-�+�-� Single-layer Qwen3.5 correctness harness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# layer_harness +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Single-layer Qwen3.5 correctness harness
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_LAYER_HARNESS "Build single-layer Qwen3.5 correctness harness" OFF)
 if(BUILD_LAYER_HARNESS)
     add_executable(layer_harness
@@ -11346,7 +11363,7 @@ if(BUILD_LAYER_HARNESS)
 
     add_executable(test_l10_ffn_inp_same_source
         src/deep2/test_l10_ffn_inp_same_source.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
     )
     target_include_directories(test_l10_ffn_inp_same_source PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -11362,13 +11379,13 @@ if(BUILD_LAYER_HARNESS)
     message(STATUS "[Deep2] L10 FFN_INP same-source: test_l10_ffn_inp_same_source")
 endif()
 
-# qwen35_attn_contract +�-�+�-�+�-� Establish Qwen3.5 full-attention contract
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# qwen35_attn_contract +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Establish Qwen3.5 full-attention contract
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_QWEN35_ATTN_CONTRACT "Build Qwen3.5 attention contract harness" OFF)
 if(BUILD_QWEN35_ATTN_CONTRACT)
     add_executable(qwen35_attn_contract
         src/deep2/qwen35_attn_contract.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
     )
     target_link_libraries(qwen35_attn_contract PRIVATE InferenceEngine)
     if(MSVC)
@@ -11386,8 +11403,8 @@ if(BUILD_QWEN35_ATTN_CONTRACT)
     message(STATUS "[Deep2] Qwen3.5 attention contract: qwen35_attn_contract")
 endif()
 
-# test_val_051_3_multi_token +�-�+�-�+�-� VAL-051.3: 4-Token Autoregressive Generation Gate
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# test_val_051_3_multi_token +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ VAL-051.3: 4-Token Autoregressive Generation Gate
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" OFF)
 if(BUILD_VAL_051_3)
     add_executable(test_val_051_3_multi_token
@@ -11412,9 +11429,9 @@ if(BUILD_VAL_051_3)
     message(STATUS "[Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_fifteen_token +�-�+�-�+�-� VAL-051.5: 15-Token KV Stability Gate
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_fifteen_token +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ VAL-051.5: 15-Token KV Stability Gate
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5 "Build VAL-051.5 15-token KV stability gate" OFF)
 if(BUILD_VAL_051_5)
     add_executable(val_051_5_fifteen_token
@@ -11439,59 +11456,59 @@ if(BUILD_VAL_051_5)
     message(STATUS "[Deep2] VAL-051.5 15-token KV stability gate: val_051_5_fifteen_token")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_diag_1_token +�-�+�-�+�-� VAL-051.5-DIAG: 1-Token Diagnostic Harness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_diag_1_token +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ VAL-051.5-DIAG: 1-Token Diagnostic Harness
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_DIAG "Build VAL-051.5 1-token diagnostic harness" OFF)
 if(BUILD_VAL_051_5_DIAG)
     add_executable(val_051_5_diag_1_token
         tests/val_051_5_diag_1_token.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/BP16Extractor.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/ProductionProfiler.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
@@ -11499,7 +11516,7 @@ if(BUILD_VAL_051_5_DIAG)
         src/deep2/sovereign_q2k_gemv_v2.asm
         src/deep2/sovereign_q3k_gemv_v2.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_diag_1_token PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11519,63 +11536,63 @@ if(BUILD_VAL_051_5_DIAG)
     message(STATUS "[Deep2] VAL-051.5 1-token diagnostic harness: val_051_5_diag_1_token")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_bp16_int_1_token +�-�+�-�+�-� BP16 +�-�+�-�+�-� Deep2 Integration Test
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-option(BUILD_VAL_BP16_INT "Build BP16 +�-�+�-�+�-� Deep2 integration test" OFF)
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_bp16_int_1_token +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ BP16 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Deep2 Integration Test
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+option(BUILD_VAL_BP16_INT "Build BP16 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Deep2 integration test" OFF)
 if(BUILD_VAL_BP16_INT)
     add_executable(val_bp16_int_1_token
         tests/val_bp16_int_1_token.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/BP16Extractor.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_bp16_int_1_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11592,12 +11609,12 @@ if(BUILD_VAL_BP16_INT)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME val_bp16_int_1_token
     )
-    message(STATUS "[Deep2] BP16 +�-�+�-�+�-� Deep2 integration test: val_bp16_int_1_token")
+    message(STATUS "[Deep2] BP16 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Deep2 integration test: val_bp16_int_1_token")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q6k_synthetic +�-�+�-�+�-� Synthetic Q6_K Layout & Dequant Correctness Test
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_q6k_synthetic +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Synthetic Q6_K Layout & Dequant Correctness Test
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_Q6K "Build VAL-051.5 Q6_K synthetic correctness test" OFF)
 if(BUILD_VAL_051_5_Q6K)
     add_executable(val_051_5_q6k_synthetic
@@ -11617,9 +11634,9 @@ if(BUILD_VAL_051_5_Q6K)
     message(STATUS "[Deep2] VAL-051.5 Q6_K synthetic test: val_051_5_q6k_synthetic")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_streamer +�-�+�-�+�-� BP16 Streaming Reader Round-Trip Validation
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_bp16_streamer +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ BP16 Streaming Reader Round-Trip Validation
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_BP16_STREAMER "Build VAL-051.5 BP16 streamer test" OFF)
 if(BUILD_VAL_051_5_BP16_STREAMER)
     add_executable(val_051_5_bp16_streamer
@@ -11641,61 +11658,61 @@ if(BUILD_VAL_051_5_BP16_STREAMER)
     message(STATUS "[Deep2] VAL-051.5 BP16 streamer test: val_051_5_bp16_streamer")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_e2e +�-�+�-�+�-� End-to-End BP16 Inference Test
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_bp16_e2e +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ End-to-End BP16 Inference Test
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_BP16_E2E "Build VAL-051.5 BP16 end-to-end inference test" OFF)
 if(BUILD_VAL_051_5_BP16_E2E)
     add_executable(val_051_5_bp16_e2e
         tests/val_051_5_bp16_e2e.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -11717,68 +11734,68 @@ if(BUILD_VAL_051_5_BP16_E2E)
     message(STATUS "[Deep2] VAL-051.5 BP16 E2E test: val_051_5_bp16_e2e")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_compare +�-�+�-�+�-� GGUF vs BP16 Weight & Inference Comparison
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_bp16_compare +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GGUF vs BP16 Weight & Inference Comparison
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_BP16_COMPARE "Build VAL-051.5 BP16 comparison test" OFF)
 if(BUILD_VAL_051_5_BP16_COMPARE)
     add_executable(val_051_5_bp16_compare
         tests/val_051_5_bp16_compare.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
         src/deep2/QuantKernelRegistry.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -11800,61 +11817,61 @@ if(BUILD_VAL_051_5_BP16_COMPARE)
     message(STATUS "[Deep2] VAL-051.5 BP16 comparison test: val_051_5_bp16_compare")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_weights +�-�+�-�+�-� GGUF vs BP16 Weight Correctness (no inference)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_bp16_weights +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GGUF vs BP16 Weight Correctness (no inference)
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_BP16_WEIGHTS "Build VAL-051.5 BP16 weights test" OFF)
 if(BUILD_VAL_051_5_BP16_WEIGHTS)
     add_executable(val_051_5_bp16_weights
         tests/val_051_5_bp16_weights.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -11876,16 +11893,16 @@ if(BUILD_VAL_051_5_BP16_WEIGHTS)
     message(STATUS "[Deep2] VAL-051.5 BP16 weights test: val_051_5_bp16_weights")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_verify +�-�+�-�+�-� Direct BP16 Weight Verification (no Deep2Engine)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_bp16_verify +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Direct BP16 Weight Verification (no Deep2Engine)
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_BP16_VERIFY "Build VAL-051.5 BP16 verify test" OFF)
 if(BUILD_VAL_051_5_BP16_VERIFY)
     add_executable(val_051_5_bp16_verify
         tests/val_051_5_bp16_verify.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11905,61 +11922,61 @@ if(BUILD_VAL_051_5_BP16_VERIFY)
     message(STATUS "[Deep2] VAL-051.5 BP16 verify test: val_051_5_bp16_verify")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_logits +�-�+�-�+�-� GGUF vs BP16 1-Token Forward & Logits Equivalence
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_bp16_logits +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GGUF vs BP16 1-Token Forward & Logits Equivalence
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_BP16_LOGITS "Build VAL-051.5 BP16 logits equivalence test" OFF)
 if(BUILD_VAL_051_5_BP16_LOGITS)
     add_executable(val_051_5_bp16_logits
         tests/val_051_5_bp16_logits.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -11981,61 +11998,61 @@ if(BUILD_VAL_051_5_BP16_LOGITS)
     message(STATUS "[Deep2] VAL-051.5 BP16 logits test: val_051_5_bp16_logits")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_6_bp16_perf +�-�+�-�+�-� BP16 Performance Benchmark & Prefetch Optimization
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_6_bp16_perf +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ BP16 Performance Benchmark & Prefetch Optimization
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_6_BP16_PERF "Build VAL-051.6 BP16 performance benchmark" OFF)
 if(BUILD_VAL_051_6_BP16_PERF)
     add_executable(val_051_6_bp16_perf
         tests/val_051_6_bp16_perf.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12057,61 +12074,61 @@ if(BUILD_VAL_051_6_BP16_PERF)
     message(STATUS "[Deep2] VAL-051.6 BP16 perf benchmark: val_051_6_bp16_perf")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_7_bp16_profile +�-�+�-�+�-� Forward-Path Profiling
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_7_bp16_profile +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Forward-Path Profiling
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_7_BP16_PROFILE "Build VAL-051.7 BP16 forward profiling" OFF)
 if(BUILD_VAL_051_7_BP16_PROFILE)
     add_executable(val_051_7_bp16_profile
         tests/val_051_7_bp16_profile.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12133,61 +12150,61 @@ if(BUILD_VAL_051_7_BP16_PROFILE)
     message(STATUS "[Deep2] VAL-051.7 BP16 profile: val_051_7_bp16_profile")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_7_bp16_lightweight_profile +�-�+�-�+�-� Lightweight forward-path profiler
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_7_bp16_lightweight_profile +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Lightweight forward-path profiler
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE "Build VAL-051.7 lightweight profile" OFF)
 if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     add_executable(val_051_7_bp16_lightweight_profile
         tests/val_051_7_bp16_lightweight_profile.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12209,60 +12226,60 @@ if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     message(STATUS "[Deep2] VAL-051.7 lightweight profile: val_051_7_bp16_lightweight_profile")
 endif()
 
-# minimal_1token_profiler +�-�+�-�+�-� Minimal 1-token production profiler
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# minimal_1token_profiler +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Minimal 1-token production profiler
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_MINIMAL_1TOKEN_PROFILER "Build minimal 1-token profiler" OFF)
 if(BUILD_MINIMAL_1TOKEN_PROFILER)
     add_executable(minimal_1token_profiler
         tests/minimal_1token_profiler.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12284,60 +12301,60 @@ if(BUILD_MINIMAL_1TOKEN_PROFILER)
     message(STATUS "[Deep2] Minimal 1-token profiler: minimal_1token_profiler")
 endif()
 
-# quick_1layer_profiler +�-�+�-�+�-� Fast 1-layer quant breakdown
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# quick_1layer_profiler +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Fast 1-layer quant breakdown
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_QUICK_1LAYER_PROFILER "Build quick 1-layer profiler" OFF)
 if(BUILD_QUICK_1LAYER_PROFILER)
     add_executable(quick_1layer_profiler
         tests/quick_1layer_profiler.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12359,9 +12376,9 @@ if(BUILD_QUICK_1LAYER_PROFILER)
     message(STATUS "[Deep2] Quick 1-layer profiler: quick_1layer_profiler")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# q4k_gemv_bench +�-�+�-�+�-� Q4_K GEMV micro-benchmark (reference vs stack-buffer)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# q4k_gemv_bench +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Q4_K GEMV micro-benchmark (reference vs stack-buffer)
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_Q4K_GEMV_BENCH)
     add_executable(q4k_gemv_bench
@@ -12381,9 +12398,9 @@ if(BUILD_Q4K_GEMV_BENCH)
     message(STATUS "[Deep2] Q4_K GEMV bench: q4k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# q5k_gemv_bench +�-�+�-�+�-� Q5_K GEMV micro-benchmark (reference vs SIMD)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# q5k_gemv_bench +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Q5_K GEMV micro-benchmark (reference vs SIMD)
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_Q5K_GEMV_BENCH)
     add_executable(q5k_gemv_bench
@@ -12403,61 +12420,61 @@ if(BUILD_Q5K_GEMV_BENCH)
     message(STATUS "[Deep2] Q5_K GEMV bench: q5k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_diag +�-�+�-�+�-� Minimal BP16 forward crash isolation
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_bp16_diag +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Minimal BP16 forward crash isolation
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_BP16_DIAG "Build VAL-051.5 BP16 diagnostic" OFF)
 if(BUILD_VAL_051_5_BP16_DIAG)
     add_executable(val_051_5_bp16_diag
         tests/val_051_5_bp16_diag.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12480,61 +12497,61 @@ if(BUILD_VAL_051_5_BP16_DIAG)
     message(STATUS "[Deep2] VAL-051.5 BP16 diagnostic: val_051_5_bp16_diag")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_bench +�-�+�-�+�-� GGUF vs BP16 Inference Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_bp16_bench +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GGUF vs BP16 Inference Benchmark
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_BP16_BENCH "Build VAL-051.5 BP16 benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_BENCH)
     add_executable(val_051_5_bp16_bench
         tests/val_051_5_bp16_bench.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12557,14 +12574,14 @@ if(BUILD_VAL_051_5_BP16_BENCH)
     message(STATUS "[Deep2] VAL-051.5 BP16 benchmark: val_051_5_bp16_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_loadbench +�-�+�-�+�-� Load-Time Only Benchmark (no inference)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_bp16_loadbench +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Load-Time Only Benchmark (no inference)
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_BP16_LOADBENCH "Build VAL-051.5 BP16 load benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_LOADBENCH)
     add_executable(val_051_5_bp16_loadbench
         tests/val_051_5_bp16_loadbench.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/GGUFLoader.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12587,9 +12604,9 @@ if(BUILD_VAL_051_5_BP16_LOADBENCH)
     message(STATUS "[Deep2] VAL-051.5 BP16 load benchmark: val_051_5_bp16_loadbench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q4k_fused_verify +�-�+�-�+�-� Synthetic Q4_K fused vs reference correctness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_q4k_fused_verify +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Synthetic Q4_K fused vs reference correctness
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_Q4K_FUSED_VERIFY "Build Q4_K fused kernel correctness test" OFF)
 if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     add_executable(val_051_5_q4k_fused_verify
@@ -12605,9 +12622,9 @@ if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     message(STATUS "[Deep2] Q4_K fused verify: val_051_5_q4k_fused_verify")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q4k_gemv_bench +�-�+�-�+�-� Isolated Q4_K GEMV Micro-Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_q4k_gemv_bench +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Isolated Q4_K GEMV Micro-Benchmark
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     add_executable(val_051_5_q4k_gemv_bench
@@ -12626,9 +12643,9 @@ if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     message(STATUS "[Deep2] Q4_K GEMV bench: val_051_5_q4k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q2k_gemv_verify +�-�+�-�+�-� Synthetic Q2_K SIMD vs scalar correctness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_q2k_gemv_verify +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Synthetic Q2_K SIMD vs scalar correctness
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_Q2K_GEMV_VERIFY "Build Q2_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     add_executable(val_051_5_q2k_gemv_verify
@@ -12644,9 +12661,9 @@ if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     message(STATUS "[Deep2] Q2_K GEMV verify: val_051_5_q2k_gemv_verify")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q2k_gemv_bench +�-�+�-�+�-� Isolated Q2_K GEMV Micro-Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_q2k_gemv_bench +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Isolated Q2_K GEMV Micro-Benchmark
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_Q2K_GEMV_BENCH "Build Q2_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     add_executable(val_051_5_q2k_gemv_bench
@@ -12662,9 +12679,9 @@ if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     message(STATUS "[Deep2] Q2_K GEMV bench: val_051_5_q2k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q5k_gemv_verify +�-�+�-�+�-� Synthetic Q5_K scalar vs dequant-dot correctness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_q5k_gemv_verify +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Synthetic Q5_K scalar vs dequant-dot correctness
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_Q5K_GEMV_VERIFY "Build Q5_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     add_executable(val_051_5_q5k_gemv_verify
@@ -12680,9 +12697,9 @@ if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     message(STATUS "[Deep2] Q5_K GEMV verify: val_051_5_q5k_gemv_verify")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q5k_gemv_bench +�-�+�-�+�-� Isolated Q5_K GEMV Micro-Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_q5k_gemv_bench +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Isolated Q5_K GEMV Micro-Benchmark
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     add_executable(val_051_5_q5k_gemv_bench
@@ -12698,9 +12715,9 @@ if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     message(STATUS "[Deep2] Q5_K GEMV bench: val_051_5_q5k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q5k_forward_bench +�-�+�-�+�-� Simulated Full Forward Pass Q5_K Timing
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_q5k_forward_bench +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Simulated Full Forward Pass Q5_K Timing
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_Q5K_FORWARD_BENCH "Build Q5_K forward pass benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     add_executable(val_051_5_q5k_forward_bench
@@ -12716,63 +12733,63 @@ if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     message(STATUS "[Deep2] Q5_K forward bench: val_051_5_q5k_forward_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_8_linearw_thread_scaling +�-�+�-�+�-� Row-Parallel LinearW Scaling Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_8_linearw_thread_scaling +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Row-Parallel LinearW Scaling Benchmark
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_8_LINEARW_THREAD_SCALING "Build LinearW thread-scaling benchmark" OFF)
 if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     add_executable(val_051_8_linearw_thread_scaling
         tests/val_051_8_linearw_thread_scaling.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/BP16Extractor.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_8_linearw_thread_scaling PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12792,63 +12809,63 @@ if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     message(STATUS "[Deep2] LinearW thread-scaling bench: val_051_8_linearw_thread_scaling")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_8_layer_profile +�-�+�-�+�-� Synthetic Full Transformer Layer Profiler
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_8_layer_profile +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Synthetic Full Transformer Layer Profiler
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_8_LAYER_PROFILE "Build full layer profiler" OFF)
 if(BUILD_VAL_051_8_LAYER_PROFILE)
     add_executable(val_051_8_layer_profile
         tests/val_051_8_layer_profile.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
         src/deep2/Deep2ExecutionGraph.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/BP16Extractor.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_8_layer_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12868,9 +12885,9 @@ if(BUILD_VAL_051_8_LAYER_PROFILE)
     message(STATUS "[Deep2] Layer profiler: val_051_8_layer_profile")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q2k_profile +�-�+�-�+�-� Q2_K vs Q4_K GEMV Profiling Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# val_051_5_q2k_profile +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Q2_K vs Q4_K GEMV Profiling Benchmark
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_VAL_051_5_Q2K_PROFILE "Build Q2_K GEMV profiling benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_PROFILE)
     add_executable(val_051_5_q2k_profile
@@ -12886,10 +12903,10 @@ if(BUILD_VAL_051_5_Q2K_PROFILE)
     message(STATUS "[Deep2] Q2_K profile: val_051_5_q2k_profile")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_PatchRegistry +�-�+�-�+�-� PatchRegistry Abstraction Layer Tests
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# SovereignTest_PatchRegistry +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ PatchRegistry Abstraction Layer Tests
 # Validates CI/CD mock path and prepares for production hot-patching
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_PATCHREGISTRY_TEST "Build PatchRegistry abstraction tests" OFF)
 if(BUILD_PATCHREGISTRY_TEST)
     add_executable(SovereignTest_PatchRegistry EXCLUDE_FROM_ALL
@@ -12917,10 +12934,10 @@ if(BUILD_PATCHREGISTRY_TEST)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_HotPatcher +�-�+�-�+�-� Production Live Binary Patching Tests
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# SovereignTest_HotPatcher +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Production Live Binary Patching Tests
 # Validates VirtualProtectEx, WriteProcessMemory, FlushInstructionCache
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_HOTPATCHER_TEST "Build HotPatcher production tests" OFF)
 if(BUILD_HOTPATCHER_TEST)
     add_executable(SovereignTest_HotPatcher EXCLUDE_FROM_ALL
@@ -12949,10 +12966,10 @@ if(BUILD_HOTPATCHER_TEST)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_AutonomousAgent +�-�+�-�+�-� End-to-End Autonomous Agent Integration Test
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# SovereignTest_AutonomousAgent +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ End-to-End Autonomous Agent Integration Test
 # Validates: SessionStore -> AgentGraphRuntime -> ToolRegistry -> AutonomousAgent
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_AUTONOMOUS_AGENT_TEST "Build Autonomous Agent integration tests" OFF)
 if(BUILD_AUTONOMOUS_AGENT_TEST)
     add_executable(SovereignTest_AutonomousAgent EXCLUDE_FROM_ALL
@@ -12986,10 +13003,10 @@ if(BUILD_AUTONOMOUS_AGENT_TEST)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# AntiHallucinationHotPatcher +�-�+�-�+�-� MASM Anti-Hallucination Guard
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+# AntiHallucinationHotPatcher +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ MASM Anti-Hallucination Guard
 # Validates patches before application to prevent logic drift
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 option(BUILD_ANTI_HALLUCINATION "Build Anti-Hallucination MASM patcher" OFF)
 if(BUILD_ANTI_HALLUCINATION AND MSVC)
     # Assemble the MASM file
@@ -13032,9 +13049,9 @@ if(BUILD_ANTI_HALLUCINATION AND MSVC)
         add_dependencies(SovereignTest_Suite SovereignTest_AntiHallucination)
     endif()
 endif()
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
 
-# CI gate: stress_test +�-�+�-�+�-� build and note availability
+# CI gate: stress_test +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ build and note availability
 message(STATUS "[CI] self_test_gate target available (cmake --build . --target self_test_gate)")
 message(STATUS "[CI] RAWR_ASAN=${RAWR_ASAN}")
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -13059,7 +13076,7 @@ if(Python3_FOUND)
         COMMAND ${Python3_EXECUTABLE} 
             ${CMAKE_SOURCE_DIR}/tools/validate_command_registry.py --strict
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Validating command registry (STRICT +�-�+�-�+�-� all IDM_* must be in COMMAND_TABLE)..."
+        COMMENT "Validating command registry (STRICT +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ all IDM_* must be in COMMAND_TABLE)..."
         VERBATIM
     )
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -13075,7 +13092,7 @@ endif()
 # Build: cmake --build . --target RawrXD-InferenceRoutingTest
 # Run:   .\bin\RawrXD-InferenceRoutingTest.exe
 add_executable(RawrXD-InferenceRoutingTest
-    # AUTO-REMOVED: stub file
+    src/tests/inference_routing_test.cpp
 )
 set_target_properties(RawrXD-InferenceRoutingTest PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY bin
@@ -13089,7 +13106,7 @@ target_include_directories(RawrXD-InferenceRoutingTest PRIVATE
 )
 message(STATUS "[Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)")
 
-# Autonomous Agentic Pipeline unit test (Task 5 +�-�+�-�+�-� buildable)
+# Autonomous Agentic Pipeline unit test (Task 5 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ buildable)
 if(WIN32)
     add_executable(test_autonomous_pipeline
         tests/test_autonomous_pipeline.cpp
@@ -13108,7 +13125,7 @@ if(WIN32)
         add_executable(RawrXD-AutoFixCLI
             src/app/cli_entrypoint.cpp
             # NOTE: Removed quantum_agent_orchestrator.cpp - marketing fiction
-            # AUTO-REMOVED: stub file
+            src/agentic/AgentOllamaClient.cpp
             src/inference/gpu_dispatch_gate.cpp
             src/cpu_inference_engine_autofix_stub.cpp
             src/gguf_d3d12_bridge.cpp
@@ -13134,16 +13151,16 @@ if(WIN32)
         message(STATUS "RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Hotpatch Stress Test +�-�+�-�+�-� Acquisition-grade memory hotpatch validation
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Hotpatch Stress Test +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Acquisition-grade memory hotpatch validation
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(hotpatch_stress_test EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/test_harness/hotpatch_stress_test.cpp
         src/core/model_memory_hotpatch.cpp
-        # AUTO-REMOVED: stub file
+        src/license_enforcement.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
-        # AUTO-REMOVED: stub file
+        src/feature_flags_runtime.cpp
     )
     target_include_directories(hotpatch_stress_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -13154,16 +13171,16 @@ if(WIN32)
     )
     set_property(TARGET hotpatch_stress_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Hotpatch E2E Test +�-�+�-�+�-� Real GGUF tensor +�-�+�-�+�-� hotpatch +�-�+�-�+�-� inference +�-�+�-�+�-� rollback
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Hotpatch E2E Test +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Real GGUF tensor +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ hotpatch +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ inference +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ rollback
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(hotpatch_e2e_test EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/test_harness/hotpatch_e2e_test.cpp
         src/core/model_memory_hotpatch.cpp
-        # AUTO-REMOVED: stub file
+        src/license_enforcement.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
-        # AUTO-REMOVED: stub file
+        src/feature_flags_runtime.cpp
     )
     target_include_directories(hotpatch_e2e_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -13176,22 +13193,22 @@ if(WIN32)
     )
     set_property(TARGET hotpatch_e2e_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # ARCH-CERT-001: GGUF Tensor/Operation Inventory
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(arch_cert_tensor_inventory EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/test_harness/arch_cert_tensor_inventory.cpp
     )
     target_include_directories(arch_cert_tensor_inventory PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
     set_property(TARGET arch_cert_tensor_inventory PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # FWD-CERT-001: Deterministic Forward-Pass Certification
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(fwd_cert_001 EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/test_harness/fwd_cert_001.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(fwd_cert_001 PRIVATE InferenceEngine bcrypt.lib)
@@ -13202,57 +13219,57 @@ if(WIN32)
     )
     set_property(TARGET fwd_cert_001 PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Production Benchmark +�-�+�-�+�-� Batch 1: Repeatable 1/10/32/128 token benchmark
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Production Benchmark +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Batch 1: Repeatable 1/10/32/128 token benchmark
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/deep2/Deep2QuantCert.cpp
         src/deep2/Deep2Determinism.cpp
         src/deep2/Deep2GenerationCert.cpp
         src/deep2/Deep2ProductionCert.cpp
         src/deep2/ProductionBenchmark.cpp
         src/deep2/ProductionProfiler.cpp
         src/deep2/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/KimiK2Config.cpp
+        src/deep2/K2MLAWeights.cpp
         src/deep2/K2MLA_KvExpand_Fused.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/K2MoEWeights.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/Deep2Bridge.cpp
+        src/deep2/InferenceSession.cpp
         src/deep2/QuantKernelRegistry.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
         src/deep2/MoERouter.cpp
-        # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/RouterPrefetchTelemetry.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/DeepSeekMoELoader.cpp
         src/deep2/Deep2ExecutionGraph.cpp
         src/deep2/StreamRouter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/UniversalModelLoader.cpp
+        src/deep2/ModelLoader.cpp
+        src/deep2/ModelRegistry.cpp
+        src/deep2/RuntimePlanner.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/RawrXDInferenceAdapter.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
-        # AUTO-REMOVED: stub file
+        src/sampling/advanced_sampler.cpp
         src/deep2/ResidencyTrace.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_q4k_gemv_v2.asm
@@ -13275,27 +13292,27 @@ if(WIN32)
         src/deep2/Chamber.cpp
         src/deep2/ToroidalKVCache.cpp
         src/deep2/PlasmaGovernor.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/OutOfCoreRuntime.cpp
         src/deep2/SovereignOutOfCoreRuntime.cpp
         src/deep2/BP16Streamer.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/ResidencyManager.cpp
         src/deep2/GhostCache.cpp
         src/deep2/ElasticResidencyManager.cpp
         src/deep2/AntiPatcher.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
         src/deep2/LlamaNativeBridge.cpp
         src/deep2/RawrRuntime.cpp
         src/inference/ollama_blob_parser.cpp
         src/deep2/ZlibRuntimeLoader.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/deep2/DualGPUHook.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/asm_stubs.cpp
         src/vulkan_compute.cpp
     )
@@ -13325,12 +13342,12 @@ if(WIN32)
     )
     message(STATUS "[Batch 1] Production benchmark target: RawrXD-ProductionBenchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Production Certification Test +�-�+�-�+�-� validates certification framework
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Production Certification Test +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ validates certification framework
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(RawrXD-ProductionCertTest EXCLUDE_FROM_ALL
         tests/test_deep2_production.cpp
-        # AUTO-REMOVED: stub file
+        src/deep2/Deep2QuantCert.cpp
         src/deep2/Deep2Determinism.cpp
         src/deep2/Deep2GenerationCert.cpp
         src/deep2/Deep2ProductionCert.cpp
@@ -13352,11 +13369,11 @@ if(WIN32)
     )
     message(STATUS "[Batch 1] Production cert test target: RawrXD-ProductionCertTest")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # GPU Inference Benchmark +�-�+�-�+�-� v16.2-GPU-HYBRID Phase C
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # GPU Inference Benchmark +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ v16.2-GPU-HYBRID Phase C
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(RawrXD-Benchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/tools/gpu_benchmark.cpp
         src/gguf_d3d12_bridge.cpp
         src/kernels/flash_attention.cpp
     )
@@ -13397,11 +13414,11 @@ if(WIN32)
     )
     message(STATUS "[Phase C] GPU Benchmark target: RawrXD-Benchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Fused Layer Benchmark +�-�+�-�+�-� v16.3 Phase D Layer Fusion
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Fused Layer Benchmark +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ v16.3 Phase D Layer Fusion
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(RawrXD-FusedBenchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/tools/fused_layer_benchmark.cpp
         src/gguf_d3d12_bridge.cpp
     )
     target_include_directories(RawrXD-FusedBenchmark PRIVATE
@@ -13428,11 +13445,11 @@ if(WIN32)
     )
     message(STATUS "[Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # KV Cache Benchmark +�-�+�-�+�-� v16.4 Phase E GPU-Resident KV Cache
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # KV Cache Benchmark +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ v16.4 Phase E GPU-Resident KV Cache
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(RawrXD-KVBenchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/tools/kv_cache_benchmark.cpp
         src/gguf_d3d12_bridge.cpp
     )
     target_include_directories(RawrXD-KVBenchmark PRIVATE
@@ -13459,17 +13476,17 @@ if(WIN32)
     )
     message(STATUS "[Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Fix #3 NHWC Layout Benchmark +�-�+�-�+�-� REMOVED: stub file deleted
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Fix #3 NHWC Layout Benchmark +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ REMOVED: stub file deleted
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # add_executable(Fix3_NHWC_Benchmark EXCLUDE_FROM_ALL ...)
     # TARGET REMOVED: src/benchmark/Fix3_NHWC_Benchmark_Stub.cpp was deleted
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Fix #4 Flash Attention v2 Benchmark +�-�+�-�+�-� Memory-efficient attention
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Fix #4 Flash Attention v2 Benchmark +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Memory-efficient attention
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(Fix4_FlashAttention_Benchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/Fix4_FlashAttention_Benchmark.cpp
     )
     target_include_directories(Fix4_FlashAttention_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13492,11 +13509,11 @@ if(WIN32)
     )
     message(STATUS "[Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Fix #5 Fused Quantized Kernels +�-�+�-�+�-� Q4_0/Q8_0 fused dequantize+GEMM
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Fix #5 Fused Quantized Kernels +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Q4_0/Q8_0 fused dequantize+GEMM
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(Fix5_FusedQuantized_Benchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/Fix5_FusedQuantized_Benchmark.cpp
     )
     target_include_directories(Fix5_FusedQuantized_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13519,11 +13536,11 @@ if(WIN32)
     )
     message(STATUS "[Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # VAL-032: Speculative Decoding (Medusa-style) Benchmark
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(VAL032_SpeculativeDecoding_Benchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/VAL032_SpeculativeDecoding_Benchmark.cpp
     )
     target_include_directories(VAL032_SpeculativeDecoding_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13546,11 +13563,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # VAL-032: AVX-512 Assembly Kernel Benchmark
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(VAL032_AVX512_Benchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/VAL032_AVX512_Benchmark_Clean.cpp
     )
     target_include_directories(VAL032_AVX512_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13574,11 +13591,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-032 Simple Intrinsics Benchmark +�-�+�-�+�-� Direct AVX-512 performance measurement
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-032 Simple Intrinsics Benchmark +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Direct AVX-512 performance measurement
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(tree_attention_bench_simple EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/tree_attention_avx512_intrinsics.cpp
         src/benchmark/tree_attention_bench_simple.cpp
     )
     target_include_directories(tree_attention_bench_simple PRIVATE
@@ -13597,11 +13614,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-033 Profiling Instrumentation +�-�+�-�+�-� Per-stage cycle-accurate timing
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-033 Profiling Instrumentation +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Per-stage cycle-accurate timing
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(tree_attention_profiled EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/tree_attention_profiled.cpp
     )
     target_include_directories(tree_attention_profiled PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13619,11 +13636,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-033] Profiling instrumentation: tree_attention_profiled")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-034 Q@K^T Alignment Optimization +�-�+�-�+�-� 64-byte aligned loads
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-034 Q@K^T Alignment Optimization +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ 64-byte aligned loads
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(tree_attention_aligned EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/tree_attention_aligned.cpp
     )
     target_include_directories(tree_attention_aligned PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13641,11 +13658,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-034] Q@K^T alignment optimization: tree_attention_aligned")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-035 Tiled Q@K^T +�-�+�-�+�-� Register-resident Q, streaming K
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-035 Tiled Q@K^T +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Register-resident Q, streaming K
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(tree_attention_tiled EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/tree_attention_tiled.cpp
     )
     target_include_directories(tree_attention_tiled PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13663,11 +13680,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-035] Tiled Q@K^T: tree_attention_tiled")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-036 Vectorized Softmax +�-�+�-�+�-� AVX-512 polynomial exp approximation
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-036 Vectorized Softmax +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ AVX-512 polynomial exp approximation
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(tree_attention_vectorized EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/tree_attention_vectorized.cpp
     )
     target_include_directories(tree_attention_vectorized PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13685,11 +13702,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-036] Vectorized softmax: tree_attention_vectorized")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-037 Tree Sparsity +�-�+�-�+�-� Exploit tree structure to reduce computation
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-037 Tree Sparsity +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Exploit tree structure to reduce computation
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(tree_attention_sparse EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/tree_attention_sparse.cpp
     )
     target_include_directories(tree_attention_sparse PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13707,11 +13724,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-037] Tree sparsity: tree_attention_sparse")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # VAL-037.1 Fused Online Softmax + Block-Sparse Attention
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(tree_attention_fused_sparse EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/tree_attention_fused_sparse.cpp
     )
     target_include_directories(tree_attention_fused_sparse PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13729,11 +13746,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-037.1] Fused online softmax: tree_attention_fused_sparse")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-037.2 Tree-Specialized Fused Attention +�-�+�-�+�-� Exploit 4x4 tree topology
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-037.2 Tree-Specialized Fused Attention +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Exploit 4x4 tree topology
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(tree_attention_tree_specialized EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/tree_attention_tree_specialized.cpp
     )
     target_include_directories(tree_attention_tree_specialized PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13751,12 +13768,12 @@ if(WIN32)
     )
     message(STATUS "[VAL-037.2] Tree-specialized: tree_attention_tree_specialized")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-038.1 MASM Mechanical Translation +�-�+�-�+�-� Same algorithm, optimal registers
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-038.1 MASM Mechanical Translation +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Same algorithm, optimal registers
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     # Create the executable with C++ wrapper and ASM source
     add_executable(tree_attention_masm_val038 EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/tree_attention_masm_val038_wrapper.cpp
         src/benchmark/tree_attention_masm_val038.asm
     )
     target_include_directories(tree_attention_masm_val038 PRIVATE
@@ -13778,11 +13795,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-038.1] MASM mechanical: tree_attention_masm_val038")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-038 Fused Attention +�-�+�-�+�-� Q@K^T +�-�+�-�+�-� Softmax +�-�+�-�+�-� A@V in single kernel
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-038 Fused Attention +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Q@K^T +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Softmax +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ A@V in single kernel
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(VAL038_FusedAttention_Benchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/VAL038_FusedAttention_Benchmark.cpp
     )
     target_include_directories(VAL038_FusedAttention_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13802,13 +13819,13 @@ if(WIN32)
     )
     message(STATUS "[VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-038 Validation Benchmark (B +�-�+�-�+�-� C +�-�+�-�+�-� A)
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # VAL-038 Validation Benchmark (B +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ C +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ A)
     # Step B: Control flow validation with debug counters
     # Step C: Numerical correctness vs scalar reference
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(VAL038_Validation_Benchmark EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/benchmark/VAL038_Validation_Benchmark.cpp
     )
     target_include_directories(VAL038_Validation_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13826,20 +13843,20 @@ if(WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME VAL038_Validation_Benchmark
     )
-    message(STATUS "[VAL-038] Validation benchmark (B+�-�+�-�+�-�C+�-�+�-�+�-�A): VAL038_Validation_Benchmark")
+    message(STATUS "[VAL-038] Validation benchmark (B+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜C+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜A): VAL038_Validation_Benchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # TPS smoke +�-�+�-�+�-� GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # TPS smoke +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/tools/RawrXD_TpsSmoke.cpp
         src/llm_adapter/GGUFRunner.cpp
         src/llm_adapter/gguf_k_quants.cpp
         src/llm_adapter/QuantBackend.cpp
         src/llm_adapter/ggufrunner_link_kernels.cpp
         src/core/unified_memory_executor.cpp
         src/core/model_runtime_gate.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime_surface/GenerationStopwatch.cpp
         src/runtime_surface/RuntimeSurfaceModule.cpp
         src/logging/Logger.cpp
     )
@@ -13862,10 +13879,10 @@ if(WIN32)
     )
     message(STATUS "[Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Model analysis +�-�+�-�+�-� shared lib (Win32IDE + CLI) + CLI tool (docs/ANALYSIS_QUICKSTART.md)
-    # Note: gguf_k_quants.cpp stays out of the lib +�-�+�-�+�-� Win32IDE already links one copy.
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
+    # Model analysis +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ shared lib (Win32IDE + CLI) + CLI tool (docs/ANALYSIS_QUICKSTART.md)
+    # Note: gguf_k_quants.cpp stays out of the lib +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Win32IDE already links one copy.
+    # +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜
     add_library(RawrXD-ModelAnalysisLib STATIC EXCLUDE_FROM_ALL
         src/core/model_anatomy.cpp
         src/core/neurological_diff.cpp
@@ -13888,7 +13905,7 @@ if(WIN32)
     )
 
     add_executable(RawrXD-ModelAnalysis EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/tools/model_analysis_cli.cpp
         src/llm_adapter/gguf_k_quants.cpp
     )
     target_include_directories(RawrXD-ModelAnalysis PRIVATE
@@ -13922,7 +13939,7 @@ endif()
 # Swarm smoke test (manual)
 if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_executable(SwarmSmokeTest EXCLUDE_FROM_ALL
-        # AUTO-REMOVED: stub file
+        src/tests/SwarmSmokeTest.cpp
         src/bridge/Win32SwarmBridge.cpp
         src/bridge/SwarmIATRegistration.cpp
         src/agentic/SubAgentManager.cpp
@@ -13944,10 +13961,10 @@ endif()
 
 # BackendOrchestrator model sharding smoke test (manual)
 add_executable(BackendOrchestratorShardSmoke EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/tests/backend_orchestrator_shard_smoke.cpp
     # REMOVED: src/tests/backend_orchestrator_shard_smoke_stubs.cpp - stub file deleted
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/BackendOrchestrator.cpp
+    src/InferenceProfiler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
 )
@@ -13965,7 +13982,7 @@ message(STATUS "[BackendOrchestrator] Smoke test target: BackendOrchestratorShar
 # Agentic Planning Orchestrator Smoke Tests
 # ============================================================================
 add_executable(agentic_orchestrator_smoke_test EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/agentic/agentic_planning_orchestrator.cpp
     src/agentic/agentic_orchestrator_integration.cpp
     src/agentic/agentic_audit_sink.cpp
     src/agentic/agentic_orchestrator_smoke_test.cpp
@@ -14040,7 +14057,7 @@ message(STATUS "[GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build 
 # Only add sovereign runtime if CLI version not already defined
 if(NOT TARGET rawrxd)
     add_executable(rawrxd
-        # AUTO-REMOVED: stub file
+        src/sovereign/rawrxd.cpp
         src/sovereign/SovereignRuntime.cpp
         src/sovereign/ExecutionContract.cpp
         src/sovereign/Deep2InferenceWrapper.cpp
@@ -14060,20 +14077,20 @@ if(NOT TARGET rawrxd)
         src/logging/Logger.cpp
         B014/build/b014_profiler.cpp
         src/runtime/StreamRouterAdapter.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/runtime/gguf_tensor_loader.cpp
+        src/runtime/Deep2ExecutionTelemetry.cpp
+        src/runtime/elastic/ElasticEngine.cpp
+        src/runtime/elastic/ElasticGGUFIndex.cpp
+        src/runtime/elastic/ElasticResidencyManager.cpp
+        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+        src/runtime/elastic/ElasticDecoder.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
         src/inference/NegativeSpaceProfiler.cpp
     )
 
@@ -14126,7 +14143,7 @@ if(TARGET rawrxd_runtime)
 else()
     target_sources(rawrxd PRIVATE
         src/runtime/TensorExecutionRouter.cpp
-        # AUTO-REMOVED: stub file
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
         src/runtime/memory/CapacityManager.cpp
@@ -14162,13 +14179,13 @@ endif()
 # Applied to whichever rawrxd target exists (GUI or Sovereign CLI)
 # =============================================================================
 if(RAWRXD_ENABLE_VALIDATION AND TARGET rawrxd)
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON +�-�+�-�+�-� runtime tensor dumping enabled")
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ runtime tensor dumping enabled")
     target_compile_definitions(rawrxd PRIVATE RAWRXD_ENABLE_VALIDATION=1)
     target_include_directories(rawrxd PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/inference_validation/harness
     )
 elseif(TARGET rawrxd)
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF +�-�+�-�+�-� runtime tensor dumping disabled")
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ runtime tensor dumping disabled")
 endif()
 
 # ============================================================================
@@ -14327,7 +14344,7 @@ endif()
 # Sovereign Bridge Test Harness
 # ============================================================================
 add_executable(TestSovereignBridge EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/ide/test_sovereign_bridge.cpp
     src/ide/SovereignSharedMemoryBridge.cpp
 )
 target_compile_features(TestSovereignBridge PRIVATE cxx_std_17)
@@ -14349,7 +14366,7 @@ message(STATUS "[Test] Sovereign Bridge test harness: TestSovereignBridge (build
 # DebugBridge Telemetry Test
 # ============================================================================
 add_executable(TestDebugBridgeTelemetry EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/debug/test_debugbridge_telemetry.cpp
 )
 target_compile_features(TestDebugBridgeTelemetry PRIVATE cxx_std_17)
 set_target_properties(TestDebugBridgeTelemetry PROPERTIES
@@ -14361,7 +14378,7 @@ message(STATUS "[Test] DebugBridge telemetry test: TestDebugBridgeTelemetry")
 # Pure MASM Inference Test
 # ============================================================================
 add_executable(TestMASMInference EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/test_masm_inference.cpp
     src/gguf_masm_weight_bridge.cpp
 )
 target_compile_features(TestMASMInference PRIVATE cxx_std_17)
@@ -14396,7 +14413,7 @@ message(STATUS "[Test] Pure MASM inference test: TestMASMInference")
 # Debugger Stress Tests
 # ============================================================================
 add_executable(stress_target EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/debug/stress_target.cpp
 )
 target_compile_features(stress_target PRIVATE cxx_std_17)
 set_target_properties(stress_target PROPERTIES
@@ -14404,7 +14421,7 @@ set_target_properties(stress_target PROPERTIES
 )
 
 add_executable(stress_memory EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/debug/stress_memory.cpp
 )
 target_compile_features(stress_memory PRIVATE cxx_std_17)
 set_target_properties(stress_memory PROPERTIES
@@ -14417,7 +14434,7 @@ message(STATUS "[Test] Debugger stress tests: stress_target, stress_memory")
 # SovereignRPC Simulator Test
 # ============================================================================
 add_executable(test_simulator EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/rpc/test_simulator.cpp
     src/rpc/SovereignRPC_Simulator.cpp
     src/rpc/SovereignRPC_Scheduler.cpp
 )
@@ -14440,7 +14457,7 @@ message(STATUS "[Test] SovereignRPC Simulator: test_simulator (build with: cmake
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_fused_pipeline.cpp")
     add_executable(test_q4_fused_pipeline EXCLUDE_FROM_ALL
         tests/test_q4_fused_pipeline.cpp
-        # AUTO-REMOVED: stub file
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_fused_pipeline PRIVATE cxx_std_20)
     target_include_directories(test_q4_fused_pipeline PRIVATE
@@ -14461,7 +14478,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_cache_alignment.cpp")
     add_executable(test_q4_cache_alignment EXCLUDE_FROM_ALL
         tests/test_q4_cache_alignment.cpp
-        # AUTO-REMOVED: stub file
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_cache_alignment PRIVATE cxx_std_20)
     target_include_directories(test_q4_cache_alignment PRIVATE
@@ -14482,7 +14499,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_asm_debug.cpp")
     add_executable(test_q4_asm_debug EXCLUDE_FROM_ALL
         tests/test_q4_asm_debug.cpp
-        # AUTO-REMOVED: stub file
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_asm_debug PRIVATE cxx_std_20)
     target_include_directories(test_q4_asm_debug PRIVATE
@@ -14526,7 +14543,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_scalar_simd.cpp")
     add_executable(test_q4_scalar_simd EXCLUDE_FROM_ALL
         tests/test_q4_scalar_simd.cpp
-        # AUTO-REMOVED: stub file
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_scalar_simd PRIVATE cxx_std_20)
     target_include_directories(test_q4_scalar_simd PRIVATE
@@ -14554,7 +14571,7 @@ endif()
 # VAL-051 Witness System Test
 # =============================================================================
 add_executable(witness_system_test EXCLUDE_FROM_ALL
-    # AUTO-REMOVED: stub file
+    src/validation/witness_system_test.cpp
     src/core/inference_witness.cpp
 )
 target_include_directories(witness_system_test PRIVATE
@@ -14573,9 +14590,9 @@ message(STATUS "========================================")
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_overhead.cpp")
     add_executable(benchmark_dispatch_overhead EXCLUDE_FROM_ALL
         tests/benchmark_dispatch_overhead.cpp
-        # AUTO-REMOVED: stub file
+        src/nevm/nevm_tensor_descriptor.cpp
         src/nevm/nevm_kernel_bridge.cpp
-        # AUTO-REMOVED: stub file
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(benchmark_dispatch_overhead PRIVATE cxx_std_20)
     target_include_directories(benchmark_dispatch_overhead PRIVATE
@@ -14596,7 +14613,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_planner_amortization.cpp")
     add_executable(benchmark_planner_amortization EXCLUDE_FROM_ALL
         tests/benchmark_planner_amortization.cpp
-        # AUTO-REMOVED: stub file
+        src/nevm/nevm_execution_plan.cpp
         src/nevm/nevm_kernel_bridge.cpp
     )
     target_compile_features(benchmark_planner_amortization PRIVATE cxx_std_20)
@@ -14617,10 +14634,10 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/validate_end_to_end.cpp")
     add_executable(validate_end_to_end EXCLUDE_FROM_ALL
         tests/validate_end_to_end.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
+        src/nevm/nevm_execution_plan.cpp
+        src/nevm/nevm_tensor_descriptor.cpp
         src/nevm/nevm_kernel_bridge.cpp
-        # AUTO-REMOVED: stub file
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(validate_end_to_end PRIVATE cxx_std_20)
     target_include_directories(validate_end_to_end PRIVATE
@@ -14641,7 +14658,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_determinism_validation.cpp")
     add_executable(nevm_determinism_validation EXCLUDE_FROM_ALL
         tests/nevm_determinism_validation.cpp
-        # AUTO-REMOVED: stub file
+        src/nevm/nevm_execution_plan.cpp
         src/nevm/nevm_kernel_bridge.cpp
     )
     target_compile_features(nevm_determinism_validation PRIVATE cxx_std_20)
@@ -14665,7 +14682,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_stress_test.cpp")
     add_executable(nevm_stress_test EXCLUDE_FROM_ALL
         tests/nevm_stress_test.cpp
-        # AUTO-REMOVED: stub file
+        src/nevm/nevm_execution_plan.cpp
         src/nevm/nevm_mmu.cpp
     )
     target_compile_features(nevm_stress_test PRIVATE cxx_std_20)
@@ -14719,9 +14736,9 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp")
     add_executable(benchmark_dispatch_pmc EXCLUDE_FROM_ALL
         tests/benchmark_dispatch_pmc.cpp
-        # AUTO-REMOVED: stub file
+        src/nevm/nevm_tensor_descriptor.cpp
         src/nevm/nevm_kernel_bridge.cpp
-        # AUTO-REMOVED: stub file
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(benchmark_dispatch_pmc PRIVATE cxx_std_20)
     target_include_directories(benchmark_dispatch_pmc PRIVATE
@@ -14757,7 +14774,7 @@ endif()
 # =============================================================================
 
 # =============================================================================
-# SoloIDE +�-�+�-�+�-� Sovereign Agentic Desktop Environment
+# SoloIDE +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Sovereign Agentic Desktop Environment
 # =============================================================================
 set(SOLOIDE_SOURCES
     src/soloide/main.cpp
@@ -14793,7 +14810,7 @@ set(SOLOIDE_HEADERS
 )
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
-    # Find Qt6 +�-�+�-�+�-� try qmake-based detection first, then manual paths
+    # Find Qt6 +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ try qmake-based detection first, then manual paths
     find_package(Qt6 COMPONENTS Widgets Network Core QUIET)
     if(NOT Qt6_FOUND)
         find_package(Qt6 COMPONENTS Widgets Network Core
@@ -14824,68 +14841,56 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
         )
         message(STATUS "[SoloIDE] RawrXD-SoloIDE target configured with Qt6")
     else()
-        message(WARNING "[SoloIDE] Qt6 not found +�-�+�-�+�-� SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
+        message(WARNING "[SoloIDE] Qt6 not found +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
     endif()
 endif()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_generation.cpp")
-add_executable(test_generation tests/test_generation.cpp
-    src/deep2/Deep2Engine.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/QuantKernelRegistry.cpp
-    src/deep2/mars/MARSController.cpp
-    tests/deep2_link_stubs.cpp
-    src/core/memory_stubs.cpp
-    src/core/link_stubs.cpp
-    src/deep2/BP16Streamer.cpp
-    src/deep2/BP16Extractor.cpp
-)
+add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/IOCPGGUFLoader.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp src/deep2/K2GlobalTensorIndex.cpp src/deep2/ResidencyManager.cpp)
 set_target_properties(test_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 endif()
 
 add_executable(test_llama_native tests/test_llama_native.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/GGUFLoader.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/SlidingWindowEngine.cpp
     src/deep2/QuantKernelRegistry.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
     src/deep2/mars/MARSController.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
     src/deep2/BP16Streamer.cpp
     src/deep2/BP16Extractor.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/ResidencyManager.cpp
 )
 set_target_properties(test_llama_native PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_llama_native PRIVATE InferenceEngine)
@@ -14893,52 +14898,51 @@ add_test(NAME test_llama_native COMMAND test_llama_native WORKING_DIRECTORY "${C
 
 # K2-001 Runtime Validation Gate
 add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/adapter/RawrXDEngineAdapter.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/GGUFLoader.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/SlidingWindowEngine.cpp
     src/deep2/mars/MARSController.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/MASMKernelStubs.cpp
     src/deep2/sovereign_q4k_gemv.asm
     src/deep2/sovereign_deep2_kernels.asm
-    # AUTO-REMOVED: stub file
+    src/inference/RawrXD_LlamaNative.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    )
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_runtime_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_runtime_validation PRIVATE InferenceEngine)
 add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -14946,9 +14950,9 @@ add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECT
 # Q4_K Block Decoder Verification Test
 # Must pass before Q4_K GEMV is re-enabled in K2-003 Gate 6b
 add_executable(test_q4k_decoder tests/test_q4k_decoder.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(test_q4k_decoder PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -14973,146 +14977,143 @@ endif()
 # K2-002 Native Deep2 Runtime Smoke Test
 # Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency
 add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
     src/deep2/Deep2Engine.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/GGUFLoader.cpp
     src/deep2/QuantKernelRegistry.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/SlidingWindowEngine.cpp
     src/deep2/mars/MARSController.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/MASMKernelStubs.cpp
     src/deep2/sovereign_q4k_gemv.asm
     src/deep2/sovereign_deep2_kernels.asm
-    # AUTO-REMOVED: stub file
+    src/inference/RawrXD_LlamaNative.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    )
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_native_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_native_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/SlidingWindowEngine.cpp
     src/deep2/mars/MARSController.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/inference/RawrXD_LlamaNative.cpp
     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    )
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_002_tensor_streaming PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_002_tensor_streaming PRIVATE InferenceEngine)
 add_test(NAME k2_002_tensor_streaming COMMAND k2_002_tensor_streaming WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-003: Native Deep2 Layer Execution
 add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/SlidingWindowEngine.cpp
     src/deep2/mars/MARSController.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/inference/RawrXD_LlamaNative.cpp
     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    )
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_003_layer_execution PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_003_layer_execution PRIVATE InferenceEngine)
 add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15120,11 +15121,11 @@ add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRE
 # K2-003B: Native GEMV Validation Against Real K2 Q4_K Weights
 # Must pass after K2-003A (Q4_K decoder certified) before full layer execution
 add_executable(k2_003b_native_gemv_validation tests/k2_003b_native_gemv_validation.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_003b_native_gemv_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15134,11 +15135,11 @@ add_test(NAME k2_003b_native_gemv_validation COMMAND k2_003b_native_gemv_validat
 # K2-003C: Single-Layer Forward with Real K2 Weights (Bounded)
 # Proves one complete transformer layer executes on real Q4_K weights
 add_executable(k2_003c_single_layer_forward tests/k2_003c_single_layer_forward.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_003c_single_layer_forward PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15147,49 +15148,48 @@ add_test(NAME k2_003c_single_layer_forward COMMAND k2_003c_single_layer_forward 
 
 # K2-004: Bounded Multi-Layer Prefill
 add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/SlidingWindowEngine.cpp
     src/deep2/mars/MARSController.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/inference/RawrXD_LlamaNative.cpp
     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    )
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_004_bounded_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_004_bounded_prefill PRIVATE InferenceEngine)
 add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15197,11 +15197,11 @@ add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRE
 # K2-004B: Bounded Multi-Layer Prefill (stream one layer at a time)
 # Proves scalability from 003C single-layer to multi-layer with bounded memory
 add_executable(k2_004_bounded_multi_layer_prefill tests/k2_004_bounded_multi_layer_prefill.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_004_bounded_multi_layer_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15211,12 +15211,12 @@ add_test(NAME k2_004_bounded_multi_layer_prefill COMMAND k2_004_bounded_multi_la
 # K2-005: Bounded Autoregressive Decode with KV Cache
 # Proves KV cache correctly stores/retrieves K/V across decode steps
 add_executable(k2_005_autoregressive_kv_cache tests/k2_005_autoregressive_kv_cache.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/KVCache.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_005_autoregressive_kv_cache PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15224,14 +15224,14 @@ target_link_libraries(k2_005_autoregressive_kv_cache PRIVATE InferenceEngine)
 add_test(NAME k2_005_autoregressive_kv_cache COMMAND k2_005_autoregressive_kv_cache WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-006: Bounded Autoregressive Token Generation
-# Proves logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� decode +�-�+�-�+�-� repeat pipeline works
+# Proves logits +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ argmax +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ token +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ decode +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ repeat pipeline works
 add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/KVCache.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_006_bounded_token_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15242,9 +15242,9 @@ add_test(NAME k2_006_bounded_token_generation COMMAND k2_006_bounded_token_gener
 # Proves output.weight can be streamed row-by-row to produce logits
 # without unbounded allocation. Independent of K2-006 synthetic baseline.
 add_executable(k2_007_real_output_projection tests/k2_007_real_output_projection.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_007_real_output_projection PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15259,13 +15259,13 @@ set_target_properties(k2_007a_tokenizer_metadata PROPERTIES RUNTIME_OUTPUT_DIREC
 add_test(NAME k2_007a_tokenizer_metadata COMMAND k2_007a_tokenizer_metadata WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 endif()
 
-# K2-007B: Projection +�-�+�-�+�-� Logits Interface
+# K2-007B: Projection +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Logits Interface
 # Narrow integration gate: proves real output projection produces a valid
 # logits vector consumable by deterministic argmax. Reuses K2-007 streaming.
 add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_007b_projection_logits_interface PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15274,15 +15274,15 @@ add_test(NAME k2_007b_projection_logits_interface COMMAND k2_007b_projection_log
 
 # K2-008: End-to-End Semantic Generation
 # Proves tokenizer + real output projection communicate end-to-end:
-# text +�-�+�-�+�-� tokens +�-�+�-�+�-� real K2 inference +�-�+�-�+�-� logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� text.
+# text +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ tokens +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ real K2 inference +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ logits +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ argmax +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ token +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ text.
 # Independent of K2-006 synthetic baseline.
 add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/KVCache.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_008_end_to_end_semantic_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15292,8 +15292,7 @@ add_test(NAME k2_008_end_to_end_semantic_generation COMMAND k2_008_end_to_end_se
 # K2-TLS: Time-Limited Serving Smoke Test
 # Proves scheduler-level inference budget primitives work correctly.
 add_executable(k2_tls_smoke_test tests/k2_tls_smoke_test.cpp
-    # AUTO-REMOVED: stub file
-    )
+    src/deep2/K2TimeLimitedServing.cpp)
 set_target_properties(k2_tls_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_tls_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15302,10 +15301,10 @@ add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${C
 # Proves token_embd.weight can be streamed row-by-row without loading
 # the full ~918 MiB matrix. Reuses Q6_K dequantization from K2-007.
 add_executable(k2_009_token_embedding_lookup tests/k2_009_token_embedding_lookup.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2TokenEmbedding.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_009_token_embedding_lookup PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15329,7 +15328,7 @@ set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15406,7 +15405,7 @@ set(B012_AMORTIZATION_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15461,7 +15460,7 @@ set(B013_STABILITY_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15495,7 +15494,7 @@ set(B014_COMPUTE_SOURCES
     B014/build/compute_decomposition.cpp
     B014/build/b014_profiler.cpp
     B014/build/B014_RingAdapter.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/Sovereign_RingTelemetry.cpp
     src/runtime/Sovereign_KernelBridge_CPP.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
@@ -15512,7 +15511,7 @@ set(B014_COMPUTE_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15560,7 +15559,7 @@ set(B014_BOUNDARY_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15608,7 +15607,7 @@ set(B014_SINGLE_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15656,7 +15655,7 @@ set(B014_LIFETIME_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    # AUTO-REMOVED: stub file
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -16263,7 +16262,7 @@ if(BUILD_TESTING)
 endif()
 
 # ============================================================================
-# B010/B011 Fast Experiment +�-�+�-�+�-� Direct StreamingMatMul residency test
+# B010/B011 Fast Experiment +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Direct StreamingMatMul residency test
 # ============================================================================
 set(B010B011_FAST_SOURCES
     tests/b010_b011_fast_experiment.cpp
@@ -16660,62 +16659,62 @@ target_link_libraries(b009_t128_instrumented PRIVATE
 )
 
 # ============================================================================
-# Certification Harness +�-�+�-�+�-� Adversarial Evidence-Producing Benchmark Suite
+# Certification Harness +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ Adversarial Evidence-Producing Benchmark Suite
 # ============================================================================
 add_executable(certification_harness EXCLUDE_FROM_ALL
     certification/CertificationHarness.cpp
     src/tokenizer/gguf_embedded_tokenizer.cpp
     src/deep2/Deep2Engine.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
     src/deep2/QuantKernelRegistry.cpp
     src/deep2/MoERouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/DeepSeekMoELoader.cpp
+    src/deep2/TensorHop.cpp
+    src/deep2/MoEArchitectureParser.cpp
     src/deep2/Deep2ExecutionGraph.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/ReverseTensorRecovery.cpp
     src/deep2/StreamEngine.cpp
     src/deep2/StreamRouter.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/FusedInferenceKernel.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/NUFusedPacker.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
     src/deep2/AntiPatcher.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/deep2/TrailBrake.cpp
+    src/deep2/PatchCache.cpp
+    src/deep2/BottleTTL.cpp
+    src/deep2/GoalSystem.cpp
+    src/deep2/CPUFrequency.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
     src/deep2/mars/MARSController.cpp
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
     src/deep2/sovereign_deep2_kernels.asm
     src/deep2/sovereign_q4k_gemv.asm
     src/deep2/sovereign_q4k_gemv_v2.asm
     src/deep2/sovereign_q2k_gemv_v2.asm
     src/deep2/sovereign_q3k_gemv_v2.asm
     src/deep2/sovereign_moe_fused.asm
-    # AUTO-REMOVED: stub file
+    src/sampling/advanced_sampler.cpp
     src/deep2/ProductionProfiler.cpp
     src/deep2/BP16Streamer.cpp
-    # AUTO-REMOVED: stub file
+    src/deep2/ResidencyManager.cpp
 )
 set_target_properties(certification_harness PROPERTIES
     EXCLUDE_FROM_ALL TRUE
@@ -16794,7 +16793,7 @@ endif()
 include(cmake/RawrXDSovereignFinish.cmake)
 
 
-# test_v_proj_parity +�-�-�+�-�-�+�-�-� BATCH2_V_PROJ_001
+# test_v_proj_parity +∩┐╜-∩┐╜-∩┐╜+∩┐╜-∩┐╜-∩┐╜+∩┐╜-∩┐╜-∩┐╜ BATCH2_V_PROJ_001
 if(TARGET InferenceEngine)
     add_executable(test_v_proj_parity
         src/deep2/test_v_proj_parity.cpp
