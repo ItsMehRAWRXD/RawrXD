@@ -553,6 +553,7 @@ static void handleConnection(SOCKET clientSock,
 
             if (chatReq.stream) {
                 // ---- SSE STREAMING ----
+                // Send headers first (SSE requirement)
                 std::string headers =
                     "HTTP/1.1 200 OK\r\n"
                     "Content-Type: text/event-stream\r\n"
@@ -582,7 +583,6 @@ static void handleConnection(SOCKET clientSock,
 
                 std::string accumulated;
                 size_t tokenCount = 0;
-                size_t promptTokenCount = 0; // Would need tokenizer count
 
                 Deep2::GenerationResult result = engine->generateStream(
                     prompt, opts,
@@ -600,12 +600,24 @@ static void handleConnection(SOCKET clientSock,
                     }
                 );
 
+                // Check result status - if failure, we can only signal via finish_reason
+                // because HTTP 200 headers were already sent.
+                const char* finishReason = "stop";
+                if (result.status == Deep2::GenerationStatus::Cancelled) {
+                    finishReason = "cancelled";
+                } else if (result.status == Deep2::GenerationStatus::EndOfSequence) {
+                    finishReason = "length";
+                } else if (result.status == Deep2::GenerationStatus::ForwardFailure ||
+                           result.status == Deep2::GenerationStatus::InternalError) {
+                    finishReason = "error";
+                }
+
                 // Finish chunk
                 ChatCompletionStreamChunk finishChunk{};
                 finishChunk.id = responseId;
                 finishChunk.created = created;
                 finishChunk.model = modelId;
-                finishChunk.choices.push_back({0, {"", ""}, "stop"});
+                finishChunk.choices.push_back({0, {"", ""}, finishReason});
                 std::string finishSse = buildSseEvent(serializeStreamChunk(finishChunk));
                 send(clientSock, finishSse.c_str(), static_cast<int>(finishSse.size()), 0);
 
@@ -647,32 +659,41 @@ static void handleConnection(SOCKET clientSock,
                 resp.usage.promptTokens = result.promptTokens;
                 resp.usage.completionTokens = result.generatedTokens;
                 resp.usage.totalTokens = result.promptTokens + result.generatedTokens;
-                // P0.2 checkpoint: authority-bearing state at REQUEST_END.
-                std::fprintf(stderr, "CHECKPOINT REQUEST_END generated=%zu kv_len=%zu\n",
-                             result.generatedTokens, engine->kvCacheLength());
-                std::fflush(stderr);
-
                 // DEEP2_HTTP_FAILURE_SEMANTICS_001: intentional status mapping.
                 const char* finish = "stop";
-                if (result.status == Deep2::GenerationStatus::Cancelled)
-                    finish = "cancelled";
-                else if (result.status == Deep2::GenerationStatus::EndOfSequence)
-                    finish = "length";
-                resp.choices.clear();
-                resp.choices.push_back({0, "assistant", accumulated, finish});
-
-                std::string body = serializeChatCompletion(resp);
                 int httpCode = 200;
-                std::string bodyOut = body;
-                if (result.status == Deep2::GenerationStatus::ForwardFailure ||
-                    result.status == Deep2::GenerationStatus::InternalError) {
+                std::string bodyOut;
+                if (result.status == Deep2::GenerationStatus::Cancelled) {
+                    finish = "cancelled";
+                    bodyOut = serializeChatCompletion(resp);
+                } else if (result.status == Deep2::GenerationStatus::EndOfSequence) {
+                    finish = "length";
+                    bodyOut = serializeChatCompletion(resp);
+                } else if (result.status == Deep2::GenerationStatus::InvalidInput) {
+                    httpCode = 400;
+                    bodyOut = buildJsonError(400, "invalid_request_error",
+                        result.failureDetail.empty()
+                            ? "invalid input"
+                            : result.failureDetail);
+                } else if (result.status == Deep2::GenerationStatus::ForwardFailure ||
+                           result.status == Deep2::GenerationStatus::InternalError) {
                     httpCode = 500;
                     bodyOut = buildJsonError(500, "inference_error",
                         result.failureDetail.empty()
                             ? "generation failed"
                             : result.failureDetail);
+                } else {
+                    // Completed
+                    bodyOut = serializeChatCompletion(resp);
                 }
-                std::string httpResp = buildHttpResponse(httpCode, httpCode == 200 ? "OK" : "Internal Server Error", "application/json", bodyOut);
+
+                if (httpCode == 200) {
+                    resp.choices.clear();
+                    resp.choices.push_back({0, "assistant", accumulated, finish});
+                    bodyOut = serializeChatCompletion(resp);
+                }
+
+                std::string httpResp = buildHttpResponse(httpCode, httpCode == 200 ? "OK" : (httpCode == 400 ? "Bad Request" : "Internal Server Error"), "application/json", bodyOut);
                 statusCode = httpCode;
                 send(clientSock, httpResp.c_str(), static_cast<int>(httpResp.size()), 0);
                 goto done;
