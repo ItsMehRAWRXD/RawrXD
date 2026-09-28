@@ -131,8 +131,8 @@ static bool initChatEngine(const std::string& modelPath) {
     g_chatEngine = std::make_unique<Deep2::Deep2Engine>();
 
     Deep2::EngineConfig config;
-    config.maxContextTokens = 4096;
-    config.cpuThreads = 0;  // auto
+    config.maxSeqLen = 4096;
+    config.numThreads = 0;  // auto
 
     if (!g_chatEngine->initialize(config)) return false;
     if (!g_chatEngine->loadModel(modelPath)) return false;
@@ -237,7 +237,7 @@ static void redirectStderrToFile()
 // ---------------------------------------------------------------------------
 // Window state
 // ---------------------------------------------------------------------------
-static HWND g_hMainWnd = NULL;
+// g_hMainWnd is defined above with the chat engine code
 static HWND g_hOutput  = NULL;
 
 // Menu IDs (must match Win32IDE_Commands.cpp)

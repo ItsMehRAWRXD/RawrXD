@@ -264,8 +264,8 @@ if(RAWRXD_BUILD_CLI)
         # Headless entry point (replaces GUI entry_point.cpp + RawrXD_MainLoop.cpp)
         src/win32app/cli_main_headless.cpp
         # AUTO-REMOVED: stub file
-        src/win32app/HeadlessIDE_ToolRoutes.cpp
-        src/win32app/HeadlessIDE_GuiRoutes.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/win32app/HeadlessIDE_FileAliases.cpp
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
@@ -4399,88 +4399,88 @@ set(INFERENCE_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/MlaCertAuthority.cpp
-    # AUTO-REMOVED: stub file
-    src/deep2/K2LogitsSplit.cpp
-    src/deep2/K2LogitsLineage.cpp
-    # AUTO-REMOVED: stub file
-    src/deep2/K2GpuStreamCopy_Overlap.cpp
-    src/deep2/K2MLA_GpuGemv.cpp
-    src/deep2/K2BraidExecutionPolicy.cpp
-    src/deep2/K2MLA_FusedQ4KT.cpp
-    src/deep2/K2MLA_QPathDevice.cpp
-    src/deep2/K2MLA_QPathDevice_Emit.cpp
-    src/deep2/K2MLA_PathB.cpp
-    src/deep2/K2MLA_PathB_Attn.cpp
-    src/deep2/K2QbHostShrinkD2h.cpp
-    src/runtime/QbHostReadbackWindow.cpp
-    src/runtime/ExchangeObjectLedger.cpp
-    src/deep2/HostExchangeDiscover.cpp
-    src/deep2/K2MLA_QaCritical.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/K2ShardIo.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/core/AmdGpuPowerBackend.cpp
     src/core/GpuDecodeEfficiency.cpp
     src/deep2/Deep2DeviceManager.cpp
-    src/deep2/DualLaneChoreographer.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2MultiGpuLayerPlan.cpp
     src/deep2/GpuScheduler.cpp
-    src/deep2/Deep2MultiGpu_CostCut.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/vulkan_compute.cpp
     src/deep2/Deep2Engine_VulkanRuntime.cpp
     src/deep2/Deep2DualGpuRowSplit.cpp
     src/deep2/Deep2Engine_GpuMoEMLA.cpp
     src/deep2/Deep2Engine_GpuForward.cpp
-    src/deep2/Deep2Engine_GpuToken.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2Engine_SsVkDecodeBind.cpp
     src/deep2/d2_engine_ssvk_decode_bind.c
     src/deep2/lavapath/DualStickStreamWindow.cpp
     src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
     src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
     src/deep2/lavapath/DualStickEnvSnap.cpp
-    src/deep2/lavapath/FutureConsumer_Space.cpp
-    src/deep2/lavapath/FutureConsumer_Emit.cpp
-    src/deep2/lavapath/FutureConsumer_EmitExec.cpp
-    src/deep2/lavapath/FutureConsumer_Advance.cpp
-    src/deep2/lavapath/FutureConsumer_Chair.cpp
-    src/deep2/lavapath/FutureConsumer_Register.cpp
-    src/deep2/lavapath/FutureConsumer_Notes.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_Move.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_Worker.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_Nvme.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_Seal.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_KnO3.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/lavapath/KN_O3KKEN.asm
     src/deep2/lavapath/r25_productopen_masm.asm
-    src/deep2/lavapath/k3c_token.cpp
-    src/deep2/lavapath/FreeTokenMicroZone.cpp
-    src/deep2/lavapath/FreeTokenMicroZone_Query.cpp
-    src/vulkan_fwd_resident.cpp
-    src/vulkan_fwd_fused.cpp
-    src/vulkan_weight_window.cpp
-    src/vulkan_weight_policy.cpp
-    src/vulkan_weight_prefetch.cpp
-    src/vulkan_fwd_q4k.cpp
-    src/vulkan_fwd_q4k_host.cpp
-    src/vulkan_fwd_q4k_fused.cpp
-src/vulkan_fwd_q4k_climb.cpp
-src/vulkan_fwd_q8_kva_climb.cpp
-src/vulkan_fwd_q4k_act.cpp
-    src/vulkan_fwd_attn_mla.cpp
-    src/vulkan_fwd_q6k.cpp
-    src/vulkan_fwd_q6k_host.cpp
-    src/vulkan_fwd_quant_pipe.cpp
-    src/vulkan_fwd_quant.cpp
-    src/vulkan_fwd_quant_host.cpp
-    src/vulkan_fwd_cmdpool.cpp
-    src/vulkan_fwd_tune.cpp
-    src/vulkan_fwd_hostops.cpp
-    src/vulkan_fwd_stubs.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+# AUTO-REMOVED: stub file
+# AUTO-REMOVED: stub file
+# AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -4498,8 +4498,8 @@ src/vulkan_fwd_q4k_act.cpp
     src/deep2/StreamEngine.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/execution_policy/PlacementPlan.cpp
-    src/deep2/execution_policy/ExecutionPolicyApply.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -4570,79 +4570,79 @@ src/vulkan_fwd_q4k_act.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/agentic/AgentToolHandlers.cpp
-    src/agentic/AutonomousFixOrchestrator.cpp
+    # AUTO-REMOVED: stub file
     src/agentic/RawrXD_AgentLoop.cpp
     # src/agentic/RawrXD_AutonomousFlow.cpp  # excluded: defines main() - standalone executable only
     # src/agentic/RawrXD_AutonomousCoordinator_Final.cpp  # excluded: defines main() - standalone executable only
-    src/agentic/RawrXD_AgentHost.cpp
-    src/agentic/RawrXD_RewardModel.cpp
-    src/agentic/RawrXD_SymbolHealer.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/agentic/RawrXD_ToolRegistry.cpp
     src/agentic/DeterministicReplayEngine.cpp
-    src/agentic/DiffEngine.cpp
-    src/agentic/DirectFIM.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/agentic/FIMPromptBuilder.cpp
-    src/agentic/GGMLAgenticEngine.cpp
-    src/agentic/GgmlEngine.cpp
-    src/agentic/gguf_types.cpp
-    src/agentic/GGUFLoader.cpp
-    src/agentic/KnowledgeGraph.cpp
-    src/agentic/chain_of_thought.cpp
-    src/agentic/change_impact_analyzer.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/agentic/context_assembler.cpp
-    src/agentic/context_mention_parser.cpp
-    src/agentic/RepositoryIndexer.cpp
     # AUTO-REMOVED: stub file
-    src/agentic/SelfImprovement.cpp
-    src/agentic/slash_command_parser.cpp
     # AUTO-REMOVED: stub file
-    src/agentic/task_executor.cpp
-    src/agentic/task_graph.cpp
-    src/agentic/task_scheduler.cpp
-    src/agentic/NativeInferenceClient.cpp
-    src/agentic/Deep2SovereignInferenceGateway.cpp
-    src/agentic/SovereignStandaloneClient.cpp
-    src/agentic/SovereignAssembler.cpp
-    src/agentic/SovereignAssembler_HotPatch.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     # src/agentic/SovereignCodeGenerator.cpp  # excluded: defines main() - standalone executable only
-    src/agentic/Titan_Sovereign_Bridge.cpp
-    src/agentic/Phase3_Agent_Kernel_Bridge.cpp
-    src/agentic/BackendEmissionService.cpp
-    src/agentic/ExecPipeline.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/agentic/StreamingResultChannel.cpp
     src/agentic/streaming_command_handler.cpp
-    src/agentic/ToolDispatcher.cpp
-    src/agentic/ToolDispatchTable.cpp
-    src/agentic/tool_call_parser.cpp
-    src/agentic/tool_executor.cpp
-    src/agentic/tool_registry.cpp
-    src/agentic/vulkan_compute_real.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Sovereign Runtime +�-�+�-�+�-� verified .cpp files only
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/sovereign/SovereignCoreWrapper.cpp
-    src/sovereign/SovereignDenseEngine.cpp
-    src/sovereign/SovereignEventBus.cpp
-    src/sovereign/SovereignCheckpoint.cpp
-    src/sovereign/SovereignVCS.cpp
-    src/sovereign/SovereignWatchdog.cpp
     # AUTO-REMOVED: stub file
-    src/sovereign/AgenticEngineSovereignHook.cpp
-    src/sovereign/IDE_Lifecycle_Hook.cpp
-    src/sovereign/RawrXD_SovereignStatusPanel.cpp
-    src/sovereign/IntegrityChecker.cpp
-    src/sovereign/HealthReport.cpp
-    src/sovereign/AutoRepair.cpp
-    src/sovereign/AutoRepairEngine.cpp
-    src/sovereign/CrashRecovery.cpp
-    src/sovereign/StressTester.cpp
-    src/sovereign/Profiler.cpp
-    src/sovereign/DistributedKV.cpp
-    src/sovereign/ExpertSharding.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Beaconism.cpp
-    src/sovereign/rawr_transport_strict.cpp
+    # AUTO-REMOVED: stub file
     # src/sovereign/verify_integration.cpp  # excluded: C++20 format header conflicts with MSVC 14.44
     # MASM GEMV kernels
     src/deep2/sovereign_deep2_kernels.asm
@@ -4930,8 +4930,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/gold_command_providers.cpp
         src/sovereign/puppeteer/JITAssembler.cpp
         # AUTO-REMOVED: stub file
-        src/win32app/HeadlessIDE_ToolRoutes.cpp
-        src/win32app/HeadlessIDE_GuiRoutes.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/win32app/HeadlessIDE_FileAliases.cpp
         src/agent/quantum_agent_orchestrator.cpp
         src/agent/quantum_autonomous_todo_system.cpp
@@ -5086,7 +5086,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/failure_intelligence_orchestrator.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/agentic/change_impact_analyzer.cpp
+        # AUTO-REMOVED: stub file
 
         src/win32app/Win32IDE_AgenticPlanningPanel.cpp
         src/win32app/Win32IDE_FailureDetector.cpp
@@ -5143,7 +5143,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/AgentToolHandlers.cpp
         src/agentic/BoundedAgentLoop.cpp
         src/agentic/OllamaProvider.cpp
-        src/agentic/DiffEngine.cpp
+        # AUTO-REMOVED: stub file
 
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
         src/agentic/DeterministicReplayEngine.cpp
@@ -5991,10 +5991,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
         RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
     )
-    target_compile_definitions(RawrXD-InferenceEngine PRIVATE
-        RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
-        RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
-    )
+    # target_compile_definitions(RawrXD-InferenceEngine ...) -- target removed (stub-only)
 
     if(RAWRXD_ENABLE_MISSING_HANDLER_STUBS)
         list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -6444,10 +6441,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Batch 6: BackendOrchestrator +�-�+�-�+�-� dynamic switching, sharding, semantic cache
     list(APPEND WIN32IDE_SOURCES
         src/memory/UnifiedMemoryPool.cpp
-        src/memory/SequentialBlowoffValve.cpp
-        src/inference/OutOfCoreScheduler.cpp
-        src/inference/DualGpuPipeline.cpp
-        src/inference/Deep2Engine.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -6561,7 +6558,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/Deep2Server_Minimal.cpp
         src/deep2/Deep2Server_Sovereign.cpp
         src/deep2/Deep2APIServer.cpp
-        src/deep2/Deep2APIServer_Complete.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/GGUFDiagnostics.cpp
         src/deep2/GGUFLoader_Fixed.cpp
         src/deep2/GGUFVerifier.cpp
@@ -6590,53 +6587,28 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/VAL038_Benchmark_Harness.cpp
         src/deep2/deep2_end_to_end_bench.cpp
         src/deep2/deep2_moe_bench_standalone.cpp
-        src/deep2/deep2_benchmark_main.cpp
-        src/deep2/deep2_server_main.cpp
-        src/deep2/Deep2APIServer_Complete.cpp
-        src/deep2/ModelRegistry/GGUFModelRegistry.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
     )
 
-    # Deep2Engine Integration Test
-    add_executable(Deep2Engine_IntegrationTest
-        # AUTO-REMOVED: stub file
-        src/memory/SequentialBlowoffValve.cpp
-        src/inference/OutOfCoreScheduler.cpp
-        src/inference/DualGpuPipeline.cpp
-        src/inference/Deep2Engine.cpp
-        # AUTO-REMOVED: stub file
-    )
-    target_include_directories(Deep2Engine_IntegrationTest PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-    )
-    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
-        target_include_directories(Deep2Engine_IntegrationTest PRIVATE ${RAWR_VULKAN_SDK_ROOT}/Include)
-        target_link_directories(Deep2Engine_IntegrationTest PRIVATE ${RAWR_VULKAN_SDK_ROOT}/Lib)
-        target_link_libraries(Deep2Engine_IntegrationTest PRIVATE vulkan-1)
-    endif()
+    # Deep2Engine Integration Test + AUTO-REMOVED: all sources were stubs; target disabled.
+    # if(TARGET Deep2Engine_IntegrationTest) ... endif()
+    # add_executable(Deep2Engine_IntegrationTest ...)
+    # target_include_directories(Deep2Engine_IntegrationTest PRIVATE ...)
+    # if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT) ... endif()
 
     # ============================================================================
-    # DeepSeek2 Metadata Regression Test (K2-001)
+    # DeepSeek2 Metadata Regression Test (K2-001) + AUTO-REMOVED: sources were stubs.
     # Loads real K2 GGUF metadata-only and asserts ground-truth values.
     # Must pass before K2-002 bounded tensor execution.
     # ============================================================================
-    add_executable(Deep2Engine_MetadataRegressionTest
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    )
-    target_include_directories(Deep2Engine_MetadataRegressionTest PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-    )
-    target_compile_features(Deep2Engine_MetadataRegressionTest PRIVATE cxx_std_17)
-    set_target_properties(Deep2Engine_MetadataRegressionTest PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
-    message(STATUS "Deep2Engine Metadata Regression Test configured")
+    # add_executable(Deep2Engine_MetadataRegressionTest ...)
+    # target_include_directories(Deep2Engine_MetadataRegressionTest PRIVATE ...)
+    # target_compile_features(Deep2Engine_MetadataRegressionTest PRIVATE cxx_std_17)
+    # set_target_properties(Deep2Engine_MetadataRegressionTest PROPERTIES ...)
+    # message(STATUS "Deep2Engine Metadata Regression Test configured")
 
     # +�-�+�-�+�-�+�-�+�-�+�-� SDMA GPU Scheduler (C++ replacement for MASM) +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Replaced broken MASM syntax with portable C++ implementations
@@ -6744,7 +6716,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/TheDualityExample.cpp
         src/deep2/Deep2Server_Minimal.cpp
         src/deep2/Deep2Server_Sovereign.cpp
-        src/deep2/Deep2APIServer_Complete.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/GGUFVerifier.cpp
         src/deep2/GGUFLoader_Fixed.cpp
         # keep MASMKernelStubs.cpp +�-�+�-�+�-� provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
@@ -6764,8 +6736,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/VAL038_Benchmark_Harness.cpp
         src/deep2/deep2_end_to_end_bench.cpp
         src/deep2/deep2_moe_bench_standalone.cpp
-        src/deep2/deep2_benchmark_main.cpp
-        src/deep2/deep2_server_main.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
     )
     message(STATUS "[Win32IDE] Partial ODR purge: Deep2 test/main TUs removed")
 
@@ -6776,6 +6748,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
     list(APPEND WIN32IDE_SOURCES src/closure/RawrXDAutoClosure.cpp)
+    rawrxd_filter_missing_sources(WIN32IDE_SOURCES)
+    rawrxd_filter_missing_sources(_WIN32IDE_ASM)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 
@@ -7780,7 +7754,7 @@ if(BUILD_DEEP2_GPU_SOLO_CERT)
         src/deep2/StreamerGpuSoloGate.cpp
         src/deep2/StreamerGpuSoloVk.cpp
         src/deep2/Deep2DeviceManager.cpp
-    src/deep2/DualLaneChoreographer.cpp
+    # AUTO-REMOVED: stub file
         src/asm/Deep2Device_Score.asm
         src/asm/Deep2Device_Pick.asm
     )
@@ -10293,8 +10267,8 @@ if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
         src/deep2/deep2_execution_policy_smoke.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/execution_policy/PlacementPlan.cpp
-        src/deep2/execution_policy/ExecutionPolicyApply.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
     )
     if(MSVC)
         target_compile_options(deep2_execution_policy_smoke PRIVATE /O2 /EHsc /W3 /std:c++20)

@@ -1,0 +1,6 @@
+CMake Error at CMakeLists.txt:3259:
+  Parse error.  Expected a command name, got unquoted argument with text
+  "${OMEGA1_DIR}".
+
+
+-- Configuring incomplete, errors occurred!
