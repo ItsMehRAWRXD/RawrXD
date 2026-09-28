@@ -55,6 +55,8 @@ int main(int argc, char** argv) {
     uint16_t    port = 11435;
     bool        vulkan = false;
     int         numThreads = 0;
+    std::string listenAddr = "127.0.0.1"; // DEEP2_SERVER_BIND_AUTHORITY_001
+    std::string authToken;                // required for non-loopback binds
 
     // Environment defaults
     if (const char* envModel = std::getenv("DEEP2_MODEL_PATH")) {
@@ -70,10 +72,23 @@ int main(int argc, char** argv) {
             modelPath = argv[++i];
         } else if (std::strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
             port = static_cast<uint16_t>(std::atoi(argv[++i]));
+        } else if (std::strcmp(argv[i], "--listen") == 0 && i + 1 < argc) {
+            listenAddr = argv[++i];
+        } else if (std::strcmp(argv[i], "--auth") == 0 && i + 1 < argc) {
+            authToken = argv[++i];
         } else if (std::strcmp(argv[i], "--threads") == 0 && i + 1 < argc) {
             numThreads = std::atoi(argv[++i]);
         } else if (std::strcmp(argv[i], "--vulkan") == 0) {
             vulkan = true;
+        } else if (std::strcmp(argv[i], "--build-info") == 0) {
+#ifdef RAWRXD_BUILD_SHA
+            std::printf("build_git_sha=%s\nsource_dirty=%d\nbuild_timestamp=%s\nbuild_config=%s\n",
+                        RAWRXD_BUILD_SHA, RAWRXD_BUILD_DIRTY,
+                        RAWRXD_BUILD_TS, RAWRXD_BUILD_CONFIG);
+#else
+            std::printf("build_git_sha=unknown\n");
+#endif
+            return 0;
         } else if (std::strcmp(argv[i], "--help") == 0 || std::strcmp(argv[i], "-h") == 0) {
             printUsage(prog);
             return 0;
@@ -87,6 +102,15 @@ int main(int argc, char** argv) {
     if (modelPath.empty()) {
         std::fprintf(stderr, "[server] ERROR: --model is required\n");
         printUsage(prog);
+        return 1;
+    }
+
+    // DEEP2_SERVER_BIND_AUTHORITY_001: non-loopback bind requires auth.
+    if (listenAddr != "127.0.0.1" && listenAddr != "localhost" && authToken.empty()) {
+        std::fprintf(stderr,
+            "[server] ERROR: non-loopback bind (--listen %s) requires --auth <token>\n"
+            "[server] Loopback-only is the default. Use --listen 0.0.0.0 --auth <token> for LAN.\n",
+            listenAddr.c_str());
         return 1;
     }
 
@@ -130,16 +154,16 @@ int main(int argc, char** argv) {
                      method.c_str(), path.c_str(), statusCode, elapsedMs);
     });
 
-    // Start server
-    if (!server.run(port)) {
-        std::fprintf(stderr, "[server] FATAL: Could not start server on port %d\n", port);
+    // Run (blocks until SIGINT/SIGTERM). Non-loopback requires auth (checked above).
+    if (!server.run(port, listenAddr, authToken)) {
+        std::fprintf(stderr, "[server] FATAL: server failed to start.\n");
         return 1;
     }
 
     std::fprintf(stderr,
-        "[server] Ready.   Endpoint: http://127.0.0.1:%d/v1/chat/completions\n"
+        "[server] Ready.   Endpoint: http://%s:%d/v1/chat/completions\n"
         "[server] Press Ctrl+C to stop.\n",
-        port);
+        listenAddr.c_str(), port);
 
     // Block until stopped
     while (server.isRunning()) {

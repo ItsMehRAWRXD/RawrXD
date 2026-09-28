@@ -88,7 +88,12 @@ public:
 
     // Start the HTTP server on the given port.
     // Blocks until stop() is called.
-    bool run(uint16_t port);
+    // bindAddress: "127.0.0.1" (default, loopback only) or "0.0.0.0" (explicit
+    // LAN opt-in). When bound non-loopback, requireAuth optionally enforces a
+    // Bearer token on /v1/* routes (health stays unauthenticated).
+    bool run(uint16_t port,
+             const std::string& bindAddress = "127.0.0.1",
+             const std::string& authToken = "");
 
     // Graceful shutdown.
     void stop();

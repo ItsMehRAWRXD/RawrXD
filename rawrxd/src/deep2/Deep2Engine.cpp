@@ -207,6 +207,7 @@ struct Deep2Engine::ParityProbe {
     bool emitted[kCpCount] = {};
     int  step = 0;            // current generation step (position)
     bool stepMode = false;    // true: re-arm checkpoints each parityBeginStep
+    int  fullVecLayer = -1;   // >=0: dump full vectors for this layer
     static const char* name(ParityCheckpoint cp) {
         switch (cp) {
             case ParityCheckpoint::Embed:        return "EMBED";
@@ -384,6 +385,10 @@ void Deep2Engine::parityEmitLogitsTop10(const float* logits, size_t n) {
     std::fflush(parityProbe_->f);
 }
 
+void Deep2Engine::enableParityProbeFullVectors(int layer) {
+    if (parityProbe_) parityProbe_->fullVecLayer = layer;
+}
+
 void Deep2Engine::parityEmitLayer(int layer, const char* cpName,
                                    const float* v, size_t n) {
     if (!parityProbe_ || !parityProbe_->f) return;
@@ -420,6 +425,19 @@ void Deep2Engine::parityEmitLayer(int layer, const char* cpName,
         first[0], first[1], first[2], first[3],
         first[4], first[5], first[6], first[7],
         static_cast<unsigned long long>(hash));
+    // DEEP2_QWEN2_CPU_CORRECTNESS_001: full-vector dump for the target layer.
+    if (parityProbe_->fullVecLayer >= 0 && layer == parityProbe_->fullVecLayer) {
+        std::fprintf(parityProbe_->f,
+            "STEP=%d VEC=LAYER_%d_%s N=%zu\n",
+            parityProbe_->step, layer, cpName, n);
+        for (size_t i = 0; i < n; i += 16) {
+            const size_t cnt = std::min<size_t>(16, n - i);
+            for (size_t k = 0; k < cnt; ++k) {
+                std::fprintf(parityProbe_->f, "%s%.9g", k ? "," : "", v[i + k]);
+            }
+            std::fputc('\n', parityProbe_->f);
+        }
+    }
     std::fflush(parityProbe_->f);
 }
 void Deep2Engine::disableParityProbe() {
@@ -643,6 +661,11 @@ void Deep2Engine::reset() {
 
     gpuFwdCommitted_ = false;
     gpuFwd_ = {};
+}
+
+// DEEP2_UPSTREAM_REPEAT_REQUEST_001: authority-bearing KV state accessor.
+size_t Deep2Engine::kvCacheLength() const {
+    return kvCache ? kvCache->currentLength() : 0;
 }
 
 // Gemma3-style per-layer RoPE theta (global vs local)
@@ -2695,6 +2718,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         throw std::runtime_error("attention: KV position exceeds context");
     }
     if (seqLen != pos + 1) {
+        // DIAG-N2KV: emit exact positions to identify which caller passes a
+        // stale sequence length (prefill expects pos==seqLen-1).
+        std::fprintf(stderr,
+            "[Deep2Engine] KV mismatch: pos=%zu seqLen=%zu layer=%zu\n",
+            pos, seqLen, layer);
+        std::fflush(stderr);
         throw std::runtime_error("attention: sequence/KV position mismatch");
     }
 

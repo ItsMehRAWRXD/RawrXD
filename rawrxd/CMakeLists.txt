@@ -1301,6 +1301,58 @@ if(WIN32)
     message(STATUS "RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured")
 
     # =====================================================================
+    # RAWRXD_LOCAL_AGENT_FLEET_001 — per-model Deep2-only fleet gate
+    # =====================================================================
+    add_executable(fleet_gate
+        tests/fleet_gate.cpp
+    )
+    target_link_libraries(fleet_gate PRIVATE InferenceEngine)
+    set_target_properties(fleet_gate PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(fleet_gate PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include/core
+    )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(fleet_gate PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_libraries(fleet_gate PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(fleet_gate PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(fleet_gate PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(fleet_gate PRIVATE dxgi)
+        target_compile_definitions(fleet_gate PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(fleet_gate PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(fleet_gate PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(fleet_gate PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN)
+        target_compile_definitions(fleet_gate PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(fleet_gate PRIVATE dxgi)
+    else()
+        target_link_libraries(fleet_gate PRIVATE dxgi)
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET fleet_gate APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET fleet_gate APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET fleet_gate APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(fleet_gate PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "RAWRXD_LOCAL_AGENT_FLEET_001: per-model fleet gate configured")
+
+    # =====================================================================
     # validate_val051_evidence +�-�+�-�+�-� Evidence JSON validator for VAL-051.2.A
     # =====================================================================
     add_executable(validate_val051_evidence
@@ -6750,7 +6802,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(APPEND WIN32IDE_SOURCES src/closure/RawrXDAutoClosure.cpp)
     rawrxd_filter_missing_sources(WIN32IDE_SOURCES)
     rawrxd_filter_missing_sources(_WIN32IDE_ASM)
+    # BATCH N2: real C implementation TUs (see _n2_final_classification_receipt.md)
+    list(APPEND WIN32IDE_SOURCES src/core/runtime_symbol_bridge.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/inference_link_production.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/win32ide_asm_kernel_bridge.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/kquant_nonmsvc.cpp)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
+    # BATCH N2: /FS prevents C1041 PDB contention under parallel builds
+    target_compile_options(RawrXD-Win32IDE PRIVATE "/FS")
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
@@ -9787,6 +9846,27 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME rawr-server
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    # RAWRXD_BINARY_PROVENANCE_001: bake build provenance into the binary so
+    # GET /health can self-report exactly what source produced the running exe.
+    find_package(Git QUIET)
+    set(RAWRXD_BUILD_SHA "unknown")
+    set(RAWRXD_BUILD_DIRTY "1")
+    if(Git_FOUND)
+        execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --short=12 HEAD
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            OUTPUT_VARIABLE RAWRXD_BUILD_SHA
+            OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+        execute_process(COMMAND "${GIT_EXECUTABLE}" diff --quiet
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            RESULT_VARIABLE RAWRXD_DIRTY_RC ERROR_QUIET)
+        set(RAWRXD_BUILD_DIRTY "${RAWRXD_DIRTY_RC}")
+    endif()
+    string(TIMESTAMP RAWRXD_BUILD_TS "%Y-%m-%dT%H:%M:%S" UTC)
+    target_compile_definitions(rawr-server PRIVATE
+        RAWRXD_BUILD_SHA="${RAWRXD_BUILD_SHA}"
+        RAWRXD_BUILD_DIRTY=${RAWRXD_BUILD_DIRTY}
+        RAWRXD_BUILD_TS="${RAWRXD_BUILD_TS}"
+        RAWRXD_BUILD_CONFIG="$<CONFIG>")
     if(MSVC)
         target_compile_options(rawr-server PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -16283,6 +16363,25 @@ if(TARGET InferenceEngine)
     set_target_properties(test_v_proj_parity PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME test_v_proj_parity
+    )
+endif()
+
+# rawrxd_real_gguf_parity +─── RAWRXD_REAL_GGUF_PARITY_001 (CPU-reference vs engine, position-0 ladder)
+if(TARGET InferenceEngine)
+    add_executable(rawrxd_real_gguf_parity
+        src/deep2/RealGGUFParity.cpp
+    )
+    target_link_libraries(rawrxd_real_gguf_parity PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(rawrxd_real_gguf_parity PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rawrxd_real_gguf_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(rawrxd_real_gguf_parity PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rawrxd_real_gguf_parity
     )
 endif()
 

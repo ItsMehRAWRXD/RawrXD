@@ -395,6 +395,10 @@ public:
     }
     // Reset state for new conversation
     void reset();
+
+    // DEEP2_UPSTREAM_REPEAT_REQUEST_001: authority-bearing KV state accessor
+    // for per-request checkpoint receipts (expected 0 immediately after reset).
+    size_t kvCacheLength() const;
     
     // Unload model and free weight memory
     void unloadModel();
@@ -954,6 +958,12 @@ public:
         LayerResidual = 17, FinalNorm = 18, Logits = 19
     };
     void enableParityProbe(const char* filePath, int maxSteps);
+
+    // DEEP2_QWEN2_CPU_CORRECTNESS_001: full-vector dump for one target layer.
+    // When layer >= 0, parityEmitLayer ALSO writes the complete vector as
+    // VEC record lines (16 values per line, %.9g) so an external oracle can
+    // compare exact values against an independent implementation.
+    void enableParityProbeFullVectors(int layer);
 
     // Multi-position mode: starts a new generation step. All checkpoint
     // emissions are re-armed and tagged with the current step; the trace then

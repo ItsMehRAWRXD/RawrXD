@@ -319,6 +319,9 @@ struct OpenAIServer::Impl {
     std::string loadedModelPath;
     std::string modelId; // Exposed in /v1/models
     Deep2::ChatTemplate chatTemplate;
+    // DEEP2_SERVER_BIND_AUTHORITY_001: bearer auth for non-loopback binds.
+    std::string authToken;
+    bool authRequired = false;
 
     ~Impl() {
         shouldStop.store(true);
@@ -387,7 +390,9 @@ static void handleConnection(SOCKET clientSock,
                               const std::string& modelId,
                               const Deep2::ChatTemplate& chatTemplate,
                               std::atomic<bool>& shouldStop,
-                              OpenAIServer::RequestLogCallback& logCb) {
+                              OpenAIServer::RequestLogCallback& logCb,
+                              const std::string& authToken,
+                              bool authRequired) {
     auto t0 = steady_clock::now();
     int statusCode = 200;
     std::string method, path;
@@ -470,10 +475,21 @@ static void handleConnection(SOCKET clientSock,
         }
 
         if (path == "/health" && req.method == "GET") {
+#ifndef RAWRXD_BUILD_SHA
+#define RAWRXD_BUILD_SHA "unknown"
+#define RAWRXD_BUILD_DIRTY 1
+#define RAWRXD_BUILD_TS "unknown"
+#define RAWRXD_BUILD_CONFIG "unknown"
+#endif
             json j = {
                 {"status", "ok"},
                 {"model_loaded", !modelId.empty()},
-                {"model_id", modelId}
+                {"model_id", modelId},
+                {"build_git_sha", RAWRXD_BUILD_SHA},
+                {"source_dirty", (RAWRXD_BUILD_DIRTY != 0)},
+                {"build_timestamp", RAWRXD_BUILD_TS},
+                {"build_config", RAWRXD_BUILD_CONFIG},
+                {"bind_mode", authRequired ? "all_interfaces" : "loopback"}
             };
             std::string resp = buildJsonResponse(j);
             send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
@@ -481,6 +497,24 @@ static void handleConnection(SOCKET clientSock,
         }
 
         if (path == "/v1/chat/completions" && req.method == "POST") {
+            // DEEP2_SERVER_BIND_AUTHORITY_001: enforce bearer token when the
+            // server was started with auth (non-loopback hardening path).
+            if (authRequired) {
+                std::string provided;
+                for (const auto& [hk, hv] : req.headers) {
+                    if (_strnicmp(hk.c_str(), "authorization", hk.size()) == 0) {
+                        provided = hv;
+                        break;
+                    }
+                }
+                const std::string expected = "Bearer " + authToken;
+                if (provided != expected) {
+                    std::string resp = buildJsonError(401, "auth_error", "unauthorized");
+                    send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+                    statusCode = 401;
+                    goto done;
+                }
+            }
             auto reqBodyOpt = parseChatCompletionRequest(req.body);
             if (!reqBodyOpt) {
                 std::string resp = buildJsonError(400, "invalid_request_error", "Invalid JSON body");
@@ -503,7 +537,15 @@ static void handleConnection(SOCKET clientSock,
             // throws "sequence/KV position mismatch" and the request returns 0
             // tokens. Deep2Engine::reset() clears KV, hidden buffers, SSM state
             // and GPU MLA caches.
+            // P0.2 checkpoint: authority-bearing state at REQUEST_BEGIN.
+            std::fprintf(stderr, "CHECKPOINT REQUEST_BEGIN kv_len=%zu\n",
+                         engine->kvCacheLength());
+            std::fflush(stderr);
             engine->reset();
+            // P0.2 checkpoint: reset must produce kv_len=0 deterministically.
+            std::fprintf(stderr, "CHECKPOINT POST_RESET kv_len=%zu\n",
+                         engine->kvCacheLength());
+            std::fflush(stderr);
 
             std::string prompt = assembleChatPrompt(chatReq, chatTemplate);
             std::string responseId = generateId("chatcmpl-");
@@ -605,6 +647,10 @@ static void handleConnection(SOCKET clientSock,
                 resp.usage.promptTokens = result.promptTokens;
                 resp.usage.completionTokens = result.generatedTokens;
                 resp.usage.totalTokens = result.promptTokens + result.generatedTokens;
+                // P0.2 checkpoint: authority-bearing state at REQUEST_END.
+                std::fprintf(stderr, "CHECKPOINT REQUEST_END generated=%zu kv_len=%zu\n",
+                             result.generatedTokens, engine->kvCacheLength());
+                std::fflush(stderr);
 
                 std::string body = serializeChatCompletion(resp);
                 std::string httpResp = buildHttpResponse(200, "OK", "application/json", body);
@@ -631,7 +677,9 @@ done:
 // ---------------------------------------------------------------------------
 // Server lifecycle
 // ---------------------------------------------------------------------------
-bool OpenAIServer::run(uint16_t port) {
+bool OpenAIServer::run(uint16_t port,
+                       const std::string& bindAddress,
+                       const std::string& authToken) {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         std::fprintf(stderr, "[OpenAI] WSAStartup failed\n");
@@ -652,7 +700,22 @@ bool OpenAIServer::run(uint16_t port) {
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
+    // DEEP2_SERVER_BIND_AUTHORITY_001: default loopback; 0.0.0.0 requires
+    // explicit opt-in from the caller (server main --listen flag).
+    if (bindAddress == "0.0.0.0") {
+        addr.sin_addr.s_addr = INADDR_ANY;
+        std::fprintf(stderr, "[OpenAI] BIND_MODE=ALL_INTERFACES (explicit opt-in)\n");
+        if (!authToken.empty()) {
+            pImpl->authToken = authToken;
+            pImpl->authRequired = true;
+            std::fprintf(stderr, "[OpenAI] AUTH_REQUIRED=1 (bearer token enforced on /v1/*)\n");
+        } else {
+            std::fprintf(stderr, "[OpenAI] AUTH_REQUIRED=0 WARNING: LAN-exposed without authentication\n");
+        }
+    } else {
+        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        std::fprintf(stderr, "[OpenAI] BIND_MODE=LOOPBACK_ONLY\n");
+    }
     addr.sin_port = htons(port);
 
     if (bind(pImpl->listenSocket, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == SOCKET_ERROR) {
@@ -672,7 +735,8 @@ bool OpenAIServer::run(uint16_t port) {
     }
 
     running_.store(true);
-    std::fprintf(stderr, "[OpenAI] Server listening on http://127.0.0.1:%d\n", port);
+    std::fprintf(stderr, "[OpenAI] Server listening on http://%s:%d\n",
+                 bindAddress.c_str(), port);
 
     listenerThread_ = std::thread([&]() {
         while (!pImpl->shouldStop.load()) {
@@ -698,7 +762,8 @@ bool OpenAIServer::run(uint16_t port) {
             std::thread t([&](SOCKET sock) {
                 handleConnection(sock, engine_.get(), pImpl->modelId,
                                  std::ref(pImpl->chatTemplate),
-                                 std::ref(pImpl->shouldStop), std::ref(pImpl->logCallback));
+                                 std::ref(pImpl->shouldStop), std::ref(pImpl->logCallback),
+                                 std::cref(pImpl->authToken), pImpl->authRequired);
             }, client);
 
             {
