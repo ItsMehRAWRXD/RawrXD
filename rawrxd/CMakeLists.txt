@@ -7624,6 +7624,26 @@ set_target_properties(test_q2k_single_tensor_oracle PROPERTIES
 )
 message(STATUS "[Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle")
 
+# test_tokenizer — Tokenizer encode/decode verification
+add_executable(test_tokenizer
+    src/deep2/test_tokenizer.cpp
+)
+target_link_libraries(test_tokenizer PRIVATE InferenceEngine)
+if(MSVC)
+    target_compile_options(test_tokenizer PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+endif()
+target_include_directories(test_tokenizer PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src/tokenizer
+    ${CMAKE_SOURCE_DIR}/include
+)
+set_target_properties(test_tokenizer PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_tokenizer
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+message(STATUS "[Deep2] Tokenizer test: test_tokenizer")
+
 # test_q4k_gemv_parity +�-�+�-�+�-� BATCH2_Q4K_GEMV_001 standalone cert
 option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" OFF)
 if(BUILD_DEEP2_Q4K_GEMV_PARITY)
@@ -9833,47 +9853,6 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         OUTPUT_NAME rawr
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # OpenAI-compatible Deep2 server (for Cursor/tunnel integration)
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_openai_server_main.cpp")
-    add_executable(rawr-server
-        src/deep2/deep2_openai_server_main.cpp
-        src/deep2/deep2_openai_server.cpp)
-    target_link_libraries(rawr-server PRIVATE InferenceEngine dxgi)
-    target_include_directories(rawr-server PRIVATE
-        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
-        ${CMAKE_SOURCE_DIR}/include)
-    set_target_properties(rawr-server PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        OUTPUT_NAME rawr-server
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    # RAWRXD_BINARY_PROVENANCE_001: bake build provenance into the binary so
-    # GET /health can self-report exactly what source produced the running exe.
-    find_package(Git QUIET)
-    set(RAWRXD_BUILD_SHA "unknown")
-    set(RAWRXD_BUILD_DIRTY "1")
-    if(Git_FOUND)
-        execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --short=12 HEAD
-            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-            OUTPUT_VARIABLE RAWRXD_BUILD_SHA
-            OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-        execute_process(COMMAND "${GIT_EXECUTABLE}" diff --quiet --ignore-submodules=dirty
-            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-            RESULT_VARIABLE RAWRXD_DIRTY_RC ERROR_QUIET)
-        set(RAWRXD_BUILD_DIRTY "${RAWRXD_DIRTY_RC}")
-    endif()
-    string(TIMESTAMP RAWRXD_BUILD_TS "%Y-%m-%dT%H:%M:%S" UTC)
-    target_compile_definitions(rawr-server PRIVATE
-        RAWRXD_BUILD_SHA="${RAWRXD_BUILD_SHA}"
-        RAWRXD_BUILD_DIRTY=${RAWRXD_BUILD_DIRTY}
-        RAWRXD_BUILD_TS="${RAWRXD_BUILD_TS}"
-        RAWRXD_BUILD_CONFIG="$<CONFIG>")
-    if(MSVC)
-        target_compile_options(rawr-server PRIVATE
-            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
-    endif()
-    message(STATUS "[Deep2] OpenAI-compatible server target: rawr-server (port 11435)")
-    endif()
-
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_k2_useful_tps_001.cpp")
     add_executable(deep2_k2_useful_tps_001 src/deep2/deep2_k2_useful_tps_001.cpp)
     target_link_libraries(deep2_k2_useful_tps_001 PRIVATE InferenceEngine dxgi)
@@ -9907,6 +9886,48 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     #     OUTPUT_NAME rawrxd_normal_gguf_final_001
     #     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     message(STATUS "[Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL")
+endif()
+
+# OpenAI-compatible Deep2 server (for Cursor/tunnel integration) - DEEP2_SERVER_BIND_AUTHORITY_001
+option(BUILD_RAW_SERVER "Build rawr-server (OpenAI-compatible Deep2 server)" ON)
+if(BUILD_RAW_SERVER AND TARGET InferenceEngine AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_openai_server_main.cpp")
+add_executable(rawr-server
+    src/deep2/deep2_openai_server_main.cpp
+    src/deep2/deep2_openai_server.cpp)
+target_link_libraries(rawr-server PRIVATE InferenceEngine dxgi)
+target_include_directories(rawr-server PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/include)
+set_target_properties(rawr-server PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME rawr-server
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# RAWRXD_BINARY_PROVENANCE_001: bake build provenance into the binary so
+# GET /health can self-report exactly what source produced the running exe.
+find_package(Git QUIET)
+set(RAWRXD_BUILD_SHA "unknown")
+set(RAWRXD_BUILD_DIRTY "1")
+if(Git_FOUND)
+    execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --short=12 HEAD
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        OUTPUT_VARIABLE RAWRXD_BUILD_SHA
+        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+    execute_process(COMMAND "${GIT_EXECUTABLE}" diff --quiet --ignore-submodules=dirty
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        RESULT_VARIABLE RAWRXD_DIRTY_RC ERROR_QUIET)
+    set(RAWRXD_BUILD_DIRTY "${RAWRXD_DIRTY_RC}")
+endif()
+string(TIMESTAMP RAWRXD_BUILD_TS "%Y-%m-%dT%H:%M:%S" UTC)
+target_compile_definitions(rawr-server PRIVATE
+    RAWRXD_BUILD_SHA="${RAWRXD_BUILD_SHA}"
+    RAWRXD_BUILD_DIRTY=${RAWRXD_BUILD_DIRTY}
+    RAWRXD_BUILD_TS="${RAWRXD_BUILD_TS}"
+    RAWRXD_BUILD_CONFIG="$<CONFIG>")
+if(MSVC)
+    target_compile_options(rawr-server PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+endif()
+message(STATUS "[Deep2] OpenAI-compatible server target: rawr-server (port 11435)")
 endif()
 
 # RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 +�-�-� run/chat/agent/steer/resume + certs
