@@ -2,12 +2,12 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
+#include <random>
+#include <future>
 #include <mutex>
 #include <thread>
 #include <condition_variable>
 #include <queue>
-#include <future>
-#include <random>
 
 namespace rawrxd {
 
