@@ -1,0 +1,2 @@
+CMake Error at CMakeLists.txt:6652 (target_compile_features):   Cannot specify compile features for target
+CMake Error at CMakeLists.txt:6653 (set_target_properties):   set_target_properties Can not find target to add properties to:

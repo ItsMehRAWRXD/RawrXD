@@ -1,0 +1,3 @@
+CCleaner_service ID=4308
+SERVICE: CCleaner7 STATUS=Running STOPPED
+PROCS_AFTER=1

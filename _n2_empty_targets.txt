@@ -1,0 +1,14 @@
+Q4_0_GEMV_Certification
+RawrXD-InferenceEngine
+Deep2Engine_IntegrationTest
+Deep2Engine_MetadataRegressionTest
+RawrXD-InferenceRoutingTest
+arch_cert_tensor_inventory
+RawrXD-ModelAnalysis
+RawrXD_LSPServer
+RawrXDScriptDAPAdapter
+TestSovereignBridge
+TestDebugBridgeTelemetry
+test_simulator
+pmc_profiler
+flame_graph_profiler

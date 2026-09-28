@@ -1,0 +1,7 @@
+R=0
+add_executable(k2_tls_smoke_test tests/k2_tls_smoke_test.cpp
+    src/deep2/K2TimeLimitedServing.cpp)
+set_target_properties(k2_tls_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_tls_smoke_test PRIVATE InferenceEngine)
+add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+

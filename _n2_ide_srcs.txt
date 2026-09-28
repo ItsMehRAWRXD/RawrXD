@@ -1,0 +1,45 @@
+    set(WIN32IDE_SOURCES
+        src/win32app/main_win32.cpp
+        src/win32app/ide_inference_gate.cpp
+        src/win32app/ide_agentic_gate.cpp
+        src/win32app/ide_toolchain_gate.cpp
+        src/agentic/RawrXDAgenticE2E.cpp
+        src/core/gold_command_providers.cpp
+        src/sovereign/puppeteer/JITAssembler.cpp
+        src/win32app/HeadlessIDE.cpp
+        src/win32app/HeadlessIDE_ToolRoutes.cpp
+        src/win32app/HeadlessIDE_GuiRoutes.cpp
+        src/win32app/HeadlessIDE_FileAliases.cpp
+        src/agent/quantum_agent_orchestrator.cpp
+        src/agent/quantum_autonomous_todo_system.cpp
+        src/agent/quantum_multi_model_agent_cycling.cpp
+        src/agent/quantum_dynamic_time_manager.cpp
+        src/agent/quantum_missing_impl.cpp
+        src/agent/quantum_production_orchestrator.cpp
+        src/agent/autonomous_orchestrator.cpp
+        src/agent/orchestrator_cli_handler.cpp
+        src/ui/RawrXD_MainLoop.cpp
+        src/ui/webview2_bridge.cpp
+        src/ui/debugger_core.cpp
+        src/ui/agentic_bridge.cpp
+        src/win32app/RawrXD-Win32IDE.rc
+        src/bridge/Win32SwarmBridge.cpp
+        src/bridge/SwarmIATRegistration.cpp
+        src/bridge/UnifiedModelMetadata.cpp
+        src/subagent_core.cpp
+        src/agentic/SubAgentManager.cpp
+        src/agentic/RobustOllamaParser.cpp
+        src/agentic/ErrorRecoveryManager.cpp
+        src/gpu/speculative_decoder_v2.cpp
+        src/inference/MemoryPressureGuard.cpp
+        src/inference/gpu_dispatch_gate.cpp
+        src/inference/ai_model_caller_real.cpp
+        src/inference/inference_engine_real.cpp
+        src/gguf_masm_weight_bridge.cpp
+        src/codec/brutal_gzip.cpp
+        src/codec/gzip_brutal_inflate.cpp
+    )
+
+    # AUTO provider: auto_feature_registry.cpp provides the real handlers
+    if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
+        list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)

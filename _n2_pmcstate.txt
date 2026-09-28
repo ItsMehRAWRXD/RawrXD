@@ -1,0 +1,12 @@
+PMC_SIZE=41
+
+# 6. PMC Profiler Library
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/pmc_profiler.cpp")
+    add_library(pmc_profiler STATIC
+# AUTO-REMOVED: file does not exist
+    )
+    target_compile_features(pmc_profiler PRIVATE cxx_std_20)
+    target_include_directories(pmc_profiler PUBLIC
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src

@@ -1,0 +1,11 @@
+
+# 6b. Flame Graph Profiler Library
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/flame_graph.cpp")
+    add_library(flame_graph_profiler STATIC
+# AUTO-REMOVED: file does not exist
+    )
+    target_compile_features(flame_graph_profiler PRIVATE cxx_std_20)
+    target_include_directories(flame_graph_profiler PUBLIC
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src

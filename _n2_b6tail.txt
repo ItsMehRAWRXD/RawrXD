@@ -1,0 +1,52 @@
+nt optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Hotpatch_Kernel.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Snapshot.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Pyre_Compute.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_CopilotGapCloser.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/native_speed_kernels.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/gpu_masm/deflate_brutal_masm.asm
+-- [NanoQuant] DISABLED +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix ΓÇö Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [RawrXD] Γ£à Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+-- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
+-- MultiWindow Kernel DLL target enabled
+-- DynamicPromptEngine DLL target enabled (Unity/Unreal compatible)
+-- Win32IDE: Real lane - using isolated handlers + runtime handlers
+-- [Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)
+-- [Win32IDE] Sovereign GPU ASM disabled +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ fraudulent claims removed
+CMake Warning at CMakeLists.txt:6194 (message):
+  [Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips fallback/shim TUs
+  (strict lane).  The IDE usually will not link unless every ASM symbol is
+  provided elsewhere.  For a normal dev link:
+  -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON or remove that cache entry.
+
+
+-- [Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)
+-- Deep2Engine Metadata Regression Test configured
+-- [Win32IDE] Partial ODR purge: Deep2 test/main TUs removed
+-- [Win32IDE] ATL static lib: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/atlmfc/lib/x64
+-- +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RawrXD-Win32IDE: No stub policy violations
+-- QuickJS found: JS extension host enabled
+-- [Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/RawrXD_Product100.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wire.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave3.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave4.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/asm/RawrXD_Product100_x64.asm
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/product/gateway/product_deep2_infer.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 overlay skipped: no sources or target
+-- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
+-- [Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_c1_c9: missing src/deep2/K2C1C9.cpp
+CMake Error at CMakeLists.txt:9807 (target_link_libraries):
+  Cannot specify link libraries for target "rawrxd_normal_gguf_final_001"
+  which is not built by this project.
+
+
+-- Configuring incomplete, errors occurred!
+CMake Configure step failed.  Build files cannot be regenerated correctly.
+

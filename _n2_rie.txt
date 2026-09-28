@@ -1,0 +1,23 @@
+    target_include_directories(InferenceEngine PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_directories(InferenceEngine PRIVATE "${RAWR_VULKAN_SDK_ROOT}/Lib")
+    target_link_libraries(InferenceEngine PRIVATE "${RAWR_VULKAN_LIB}")
+    target_compile_definitions(InferenceEngine PRIVATE RAWR_HAS_VULKAN=1 RAWR_VULKAN_AVAILABLE=1)
+endif()
+
+# RawrXD-InferenceEngine executable removed -- all sources were stub-only
+# add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL ...)
+# target_link_libraries(RawrXD-InferenceEngine PRIVATE InferenceEngine)
+# if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+#     set_target_properties(RawrXD-InferenceEngine PROPERTIES
+#         EXCLUDE_FROM_ALL FALSE
+#         EXCLUDE_FROM_DEFAULT_BUILD FALSE
+#     )
+# endif()
+
+# Unified Generation CLI - uses GenerationBouncer
+add_executable(RawrXD-Generate EXCLUDE_FROM_ALL
+    src/cli/generate_cli.cpp
+    # src/runtime/GenerationBouncer.cpp  # Removed - was stub only
+    # src/runtime/shared/SharedModelRuntime.cpp  # Removed - was stub only
+    # src/runtime/shared/BP1BraidIndex.cpp  # Removed - was stub only
+    src/runtime/shared/BP1BraidStreamer.cpp

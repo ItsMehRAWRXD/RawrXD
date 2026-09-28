@@ -69,11 +69,11 @@ extern "C" int rawrxd_agentic_deep_think_loop(const char* prompt) {
     std::string reasoning;
     reasoning.reserve(2048);
     reasoning += "Reasoning trace (internal):\n";
-    reasoning += "• Prompt: ";
+    reasoning += " Prompt: ";
     reasoning += seed;
-    reasoning += "\n• Clarify the goal and constraints implied by the prompt.\n";
-    reasoning += "• List unknowns, dependencies, and risks that affect the answer.\n";
-    reasoning += "• Outline a short plan, then produce the user-facing answer in the main channel.\n";
+    reasoning += "\n Clarify the goal and constraints implied by the prompt.\n";
+    reasoning += " List unknowns, dependencies, and risks that affect the answer.\n";
+    reasoning += " Outline a short plan, then produce the user-facing answer in the main channel.\n";
 
     std::lock_guard<std::mutex> lock(g_deepThinkingState.mutex);
     g_deepThinkingState.initialized = true;

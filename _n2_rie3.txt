@@ -1,0 +1,44 @@
+            # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
+            # src/asm/RawrXD_Pyre_Compute.asm
+        )
+    rawrxd_filter_missing_sources(INFERENCE_ASM_SOURCES)
+    set_source_files_properties(${INFERENCE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+    target_sources(InferenceEngine PRIVATE ${INFERENCE_ASM_SOURCES})
+
+    target_link_libraries(InferenceEngine PRIVATE ${ASM_DEFLATE_BRUTAL_OBJ})
+    add_dependencies(InferenceEngine masm_kernels)
+    add_dependencies(RawrXD-InferenceEngine masm_kernels)
+    target_compile_definitions(InferenceEngine PRIVATE HAS_BRUTAL_GZIP_MASM=1)
+
+    # NanoQuant integration (optional)
+    if(TARGET RawrXD_NanoQuant)
+        target_link_libraries(InferenceEngine PRIVATE RawrXD_NanoQuant)
+        target_compile_definitions(InferenceEngine PRIVATE RAWR_HAS_NANOQUANT=1)
+    endif()
+endif()
+
+if(MSVC)
+    target_compile_options(InferenceEngine PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W0 /arch:AVX512>
+        $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CONFIG:Debug>>>:/O2>
+    )
+else()
+    target_compile_options(InferenceEngine PRIVATE -O3 -w -mavx2 -mfma -mavx512f -mavx512bw -mavx512dq -mavx512vl -march=native)
+endif()
+
+set_target_properties(RawrXD-InferenceEngine PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    OUTPUT_NAME RawrXD-InferenceEngine
+)
+
+# Telemetry_Kernel.asm uses ADDR32 relocations +�-�+�-�+�-� require /LARGEADDRESSAWARE:NO
+if(MSVC)
+    target_link_options(RawrXD-InferenceEngine PRIVATE /LARGEADDRESSAWARE:NO)
+    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+        set(_RAWR_INFERENCE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-InferenceEngine.map")
+        set(_RAWR_INFERENCE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-InferenceEngine.map")
+        target_link_options(RawrXD-InferenceEngine PRIVATE
+            "/MAP:${_RAWR_INFERENCE_MAP_PATH}"
+            /MAPINFO:EXPORTS
+        )
+        add_custom_command(TARGET RawrXD-InferenceEngine POST_BUILD

@@ -1,5 +1,3 @@
-#if !defined(_MSC_VER)
-
 #include <cstdint>
 #include <cstring>
 

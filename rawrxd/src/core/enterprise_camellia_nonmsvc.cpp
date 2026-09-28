@@ -1,5 +1,3 @@
-#if !defined(_MSC_VER)
-
 #include "enterprise_license.h"
 #include "camellia256_bridge.hpp"
 #include "flash_attention.h"

@@ -1,0 +1,2 @@
+F:/~dev/rawrxd/src/compression/zlib_runtime_loader.cpp
+F:/~dev/rawrxd/src/omega1_modules/OmegaPowerShellBridge.cpp

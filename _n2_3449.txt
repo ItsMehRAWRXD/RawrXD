@@ -1,0 +1,9 @@
+    )
+    endif()
+    # rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
+    if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "EXT" OR RAWR_SSOT_PROVIDER_UPPER STREQUAL "STUBS")
+        if(TARGET RawrEngine)
+        # target_sources(RawrEngine PRIVATE ...) -- stub file deleted
+        endif()
+    endif()
+endif()

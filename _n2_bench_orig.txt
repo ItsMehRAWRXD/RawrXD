@@ -1,0 +1,8 @@
+    add_executable(RawrXD-Benchmark EXCLUDE_FROM_ALL
+        src/tools/gpu_benchmark.cpp
+        src/gguf_d3d12_bridge.cpp
+        src/kernels/flash_attention.cpp
+    )
+    target_include_directories(RawrXD-Benchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include

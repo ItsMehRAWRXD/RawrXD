@@ -1,5 +1,5 @@
 // ============================================================================
-// hexmag_control_plane.cpp — Policy gate + MASM HexMag swarm integration
+// hexmag_control_plane.cpp  Policy gate + MASM HexMag swarm integration
 // ============================================================================
 #include "core/hexmag_control_plane.hpp"
 #include "core/hexmag_oracle_binder.hpp"
@@ -56,7 +56,7 @@ DrainOutcome drainEvents(std::string* eventLog) {
         }
         if (ev.kind == HX_EVT_NEED_INPUT) {
             o.needInput = true;
-            // Latch ASK_USER — later FINAL must not overwrite (constitution D2)
+            // Latch ASK_USER  later FINAL must not overwrite (constitution D2)
             o.answer = std::string("INSUFFICIENT_INFORMATION: ") + ev.payload;
         }
         if (ev.kind == HX_EVT_ANSWER_FINAL) {
@@ -112,7 +112,7 @@ Claim claimFromSwarmAnswer(const std::string& ans, bool satisfied) {
         c.state = ClaimState::MissingInput;
         return c;
     }
-    // MASM verify path emits #OK / goal.satisfied — treat as verifier evidence
+    // MASM verify path emits #OK / goal.satisfied  treat as verifier evidence
     Evidence e;
     e.kind = "hexmag_verify";
     e.tool = "masm_control_plane";
@@ -214,14 +214,14 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
         goal += context.substr(0, 800);
     }
 
-    // Strategy hash for repeat tuner / constitution §7
+    // Strategy hash for repeat tuner / constitution 7
     Attempt att;
     att.problemStateHash = fnv1a64(goal);
     att.strategyHash = fnv1a64(std::to_string(HexMag_Tuner_Strategy()) + "|ask");
     att.evidenceHash = fnv1a64(context);
     att.role = HexMagRole::Generalist;
     if (!noteAttempt(att)) {
-        out.error = "REJECT_REPEAT: same strategy without new evidence (constitution §7)";
+        out.error = "REJECT_REPEAT: same strategy without new evidence (constitution 7)";
         out.claimState = ClaimState::FinalRejected;
         return out;
     }
@@ -260,7 +260,7 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
         return out;
     }
 
-    // Optional Oracle/Deep2 binder — candidates only; FINAL via existing gates
+    // Optional Oracle/Deep2 binder  candidates only; FINAL via existing gates
     {
         auto gens = oracleBinderGenerators();
         if (!gens.empty()) {
@@ -288,7 +288,7 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
                 return out;
             }
 
-            // Binder active ⇒ MASM stub FINAL cannot override candidate rejection
+            // Binder active  MASM stub FINAL cannot override candidate rejection
             out.success = false;
             out.goalSatisfied = false;
             out.emittedFinal = false;
@@ -310,7 +310,7 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
     if (drained.needInput)
         claim.state = ClaimState::MissingInput;
 
-    // FINAL GATE — single P0D surface (evaluateFinalize); confidence irrelevant
+    // FINAL GATE  single P0D surface (evaluateFinalize); confidence irrelevant
     const FinalizeDecision finDecision = evaluateFinalize(claim);
     if (drained.needInput || !finDecision.allowed) {
         if (drained.needInput || claim.state == ClaimState::MissingInput
@@ -324,7 +324,7 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
             out.emittedFinal = drained.emittedFinal;
             return out;
         }
-        // Candidate without verifier evidence — do not fake success
+        // Candidate without verifier evidence  do not fake success
         out.success = false;
         out.error = "FINAL_GATE: claim not verified (unsupported_claim_emission=FORBIDDEN)";
         out.answer = ans;

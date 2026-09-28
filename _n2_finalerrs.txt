@@ -1,0 +1,2 @@
+CMake Error at CMakeLists.txt:6821 (add_executable):   Cannot find source file:
+CMake Error at CMakeLists.txt:6821 (add_executable):   No SOURCES given to target: RawrXD-Win32IDE
