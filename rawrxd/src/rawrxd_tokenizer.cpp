@@ -1,4 +1,4 @@
-﻿#include "rawrxd_tokenizer.hpp"
+#include "rawrxd_tokenizer.hpp"
 #include <fstream>
 #include <sstream>
 #include <algorithm>

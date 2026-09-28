@@ -1,5 +1,5 @@
 // ============================================================================
-// enterprise_licensev2_impl.cpp — Minimal EnterpriseLicenseV2 Implementation
+// enterprise_licensev2_impl.cpp ??? Minimal EnterpriseLicenseV2 Implementation
 // ============================================================================
 // Purpose: Provide minimal implementation for Phase 4 test executables
 // Status: Stubbed for testing only, minimal functionality
@@ -19,7 +19,7 @@
 #include <cpuid.h>
 #include <cstdio>
 
-// Enterprise license v2 implementation — Phase 33 complete
+// Enterprise license v2 implementation ??? Phase 33 complete
 
 #endif
 

@@ -1,4 +1,4 @@
-﻿// DualStickStreamWindow_Acquire.cpp — acquire + resolve + residency + bind; no external deps.
+// DualStickStreamWindow_Acquire.cpp ? acquire + resolve + residency + bind; no external deps.
 #include "DualStickStreamWindow.hpp"
 #include <cstdlib>
 #include <cstdio>

@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// StreamingResultChannel.cpp — Ordered, thread-safe event transport
+// ============================================================================
+// StreamingResultChannel.cpp ? Ordered, thread-safe event transport
 // ============================================================================
 #include "StreamingResultChannel.h"
 

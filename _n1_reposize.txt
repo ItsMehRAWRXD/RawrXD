@@ -1,0 +1,8 @@
+IncludeGraph GIT=11367
+repo/FileIndex.cpp GIT=13969 DISK=0
+repo/SymbolTable.cpp GIT=6265 DISK=0
+repo/ASTCache.cpp GIT=17172 DISK=0
+repo/TypeDatabase.cpp GIT=10353 DISK=0
+repo/CallGraph.cpp GIT=12749 DISK=0
+repo/SearchIndex.cpp GIT=9698 DISK=0
+repo/EmbeddingIndex.cpp GIT=5478 DISK=0

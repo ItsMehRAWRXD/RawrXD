@@ -1,4 +1,4 @@
-﻿#include "unified_model_loader.hpp"
+#include "unified_model_loader.hpp"
 #include <fstream>
 #include <sstream>
 #include <iomanip>

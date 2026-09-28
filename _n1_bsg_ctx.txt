@@ -1,0 +1,17 @@
+        src/core/reasoning_schema_versioning.cpp
+        src/core/safe_refactor_engine.cpp
+    )
+
+    # Sovereign Coordination System - 10 primitives + Execution Capsule
+    list(APPEND WIN32IDE_SOURCES
+        src/sovereign/spine/ExecutionSpine.cpp
+        src/sovereign/build/BuildStateGraph.cpp
+        src/sovereign/ide/SovereignIDEIntegration.cpp
+        src/sovereign/terminal/TerminalOwnership.cpp
+        src/sovereign/bus/CapabilityBus.cpp
+        src/sovereign/bus/BeaconBus.cpp
+        src/sovereign/awareness/SystemAwareness.cpp
+        src/sovereign/validator/RealityValidator.cpp
+        src/sovereign/recovery/AutonomousRecovery.cpp
+        src/sovereign/control/SovereignControlPlane.cpp
+        src/sovereign/compression/IntentCompression.cpp

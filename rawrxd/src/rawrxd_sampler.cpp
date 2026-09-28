@@ -1,4 +1,4 @@
-﻿#include "rawrxd_sampler.hpp"
+#include "rawrxd_sampler.hpp"
 #include <cmath>
 #include <numeric>
 #include <algorithm>

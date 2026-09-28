@@ -1,4 +1,4 @@
-﻿#include "rawrxd_transformer_forwardbatch.hpp"
+#include "rawrxd_transformer_forwardbatch.hpp"
 #include <cmath>
 #include <numeric>
 #include <algorithm>

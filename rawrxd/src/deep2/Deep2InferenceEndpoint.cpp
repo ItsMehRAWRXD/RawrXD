@@ -1,4 +1,4 @@
-﻿#include "Deep2InferenceEndpoint.hpp"
+#include "Deep2InferenceEndpoint.hpp"
 #include <map>
 #include <stdexcept>
 #include <chrono>

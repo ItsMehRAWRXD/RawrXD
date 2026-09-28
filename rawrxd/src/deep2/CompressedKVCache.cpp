@@ -1,4 +1,4 @@
-﻿#include "CompressedKVCache.h"
+#include "CompressedKVCache.h"
 #include <cmath>
 #include <algorithm>
 #include <chrono>

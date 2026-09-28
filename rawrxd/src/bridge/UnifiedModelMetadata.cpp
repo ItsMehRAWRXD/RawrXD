@@ -1,4 +1,4 @@
-﻿#include "UnifiedModelMetadata.hpp"
+#include "UnifiedModelMetadata.hpp"
 #include <fstream>
 #include <mutex>
 #include <map>

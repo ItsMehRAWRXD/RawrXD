@@ -1,0 +1,19 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\InferenceEngine.lib
+  rawrxd_inference.cpp
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(242,18): error C2143: syntax error: missing ';' before '*' [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]
+  (compiling source file '../src/rawrxd_inference.cpp')
+  
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(242,5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]
+  (compiling source file '../src/rawrxd_inference.cpp')
+  
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(242,25): error C2238: unexpected token(s) preceding ';' [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]
+  (compiling source file '../src/rawrxd_inference.cpp')
+  
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(309,16): error C3646: 'rng': unknown override specifier [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]
+  (compiling source file '../src/rawrxd_inference.cpp')
+  
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(309,5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]
+  (compiling source file '../src/rawrxd_inference.cpp')
+  

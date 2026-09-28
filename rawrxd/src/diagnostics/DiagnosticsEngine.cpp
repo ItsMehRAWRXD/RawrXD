@@ -1,4 +1,4 @@
-﻿#include "DiagnosticsEngine.hpp"
+#include "DiagnosticsEngine.hpp"
 #include <fstream>
 #include <sstream>
 #include <iomanip>

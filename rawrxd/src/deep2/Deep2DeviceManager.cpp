@@ -1,4 +1,4 @@
-﻿#include "Deep2DeviceManager.hpp"
+#include "Deep2DeviceManager.hpp"
 #include <map>
 #include <stdexcept>
 

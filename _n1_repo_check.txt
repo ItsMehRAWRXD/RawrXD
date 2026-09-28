@@ -1,0 +1,17 @@
+repo/FileIndex.cpp GIT_SIZE=
+repo/SymbolTable.cpp GIT_SIZE=
+repo/ASTCache.cpp GIT_SIZE=
+repo/TypeDatabase.cpp GIT_SIZE=
+repo/CallGraph.cpp GIT_SIZE=
+repo/IncludeGraph.cpp GIT_SIZE=
+repo/SearchIndex.cpp GIT_SIZE=
+repo/EmbeddingIndex.cpp GIT_SIZE=
+9dc52741f1cead682030a4f4448629e71ca659be
+PARENT repo/FileIndex.cpp SIZE=
+PARENT repo/SymbolTable.cpp SIZE=
+PARENT repo/ASTCache.cpp SIZE=
+PARENT repo/TypeDatabase.cpp SIZE=
+PARENT repo/CallGraph.cpp SIZE=
+PARENT repo/IncludeGraph.cpp SIZE=
+PARENT repo/SearchIndex.cpp SIZE=
+PARENT repo/EmbeddingIndex.cpp SIZE=

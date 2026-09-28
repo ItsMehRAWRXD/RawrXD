@@ -1,0 +1,3 @@
+RawrRuntime=False polymorphic=False
+eb2dcf22b Delete 817 one-line STUB placeholder files + fix Win32IDE compilation + Parallels compatibility
+93ef24fd0 Fix PE64 linker import table: Name RVA now points to DLL string, not first hint/name entry. Also fix OptionalHeader size (240) and Subsystem (3 CUI). HELLO_EXE_RUN=PASS, exit=0.

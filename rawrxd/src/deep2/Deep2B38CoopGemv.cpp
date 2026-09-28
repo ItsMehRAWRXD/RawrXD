@@ -1,4 +1,4 @@
-﻿#include "Deep2B38CoopGemv.hpp"
+#include "Deep2B38CoopGemv.hpp"
 
 namespace Deep2 {
 

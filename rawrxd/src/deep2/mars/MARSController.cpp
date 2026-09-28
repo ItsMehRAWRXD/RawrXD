@@ -1,4 +1,4 @@
-﻿#include "MARSController.hpp"
+#include "MARSController.hpp"
 #include <algorithm>
 #include <chrono>
 

@@ -1,4 +1,4 @@
-﻿#include "rawrxd_transformer.hpp"
+#include "rawrxd_transformer.hpp"
 #include <cmath>
 #include <numeric>
 #include <algorithm>

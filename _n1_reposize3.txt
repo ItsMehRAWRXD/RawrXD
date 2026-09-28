@@ -1,0 +1,8 @@
+repo/FileIndex.cpp DISK=14425
+repo/SymbolTable.cpp DISK=6428
+repo/ASTCache.cpp DISK=17657
+repo/TypeDatabase.cpp DISK=10666
+repo/CallGraph.cpp DISK=13124
+repo/IncludeGraph.cpp DISK=11721
+repo/SearchIndex.cpp DISK=9995
+repo/EmbeddingIndex.cpp DISK=5646

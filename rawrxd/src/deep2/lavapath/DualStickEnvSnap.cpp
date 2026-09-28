@@ -1,4 +1,4 @@
-﻿// DualStickEnvSnap.cpp — environment snaps; no external deps.
+// DualStickEnvSnap.cpp ? environment snaps; no external deps.
 #include "DualStickStreamWindow.hpp"
 #include <cstdio>
 

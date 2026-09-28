@@ -1,4 +1,4 @@
-﻿#include "cli_headless_systems.hpp"
+#include "cli_headless_systems.hpp"
 #include <thread>
 #include <mutex>
 #include <map>

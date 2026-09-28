@@ -1,4 +1,4 @@
-﻿#include "CommandEventJournal.hpp"
+#include "CommandEventJournal.hpp"
 #include <fstream>
 #include <sstream>
 #include <map>

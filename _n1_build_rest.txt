@@ -1,0 +1,23 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\InferenceEngine.lib
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  rawr_run.cpp
+  rawrxd_run_modelname_001.cpp
+  Generating Code...
+  LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+  rawr.vcxproj -> F:\~dev\rawrxd\build_clean_n1\bin\Release\rawr.exe
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\InferenceEngine.lib
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  rawrxd_run_modelname_001.cpp
+  LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+  rawrxd_run_modelname_001.vcxproj -> F:\~dev\rawrxd\build_clean_n1\bin\Release\rawrxd_run_modelname_001.exe
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\InferenceEngine.lib
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  inference_standalone_main.cpp
+  LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+  RawrXD-InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_clean_n1\bin\Release\RawrXD-InferenceEngine.exe

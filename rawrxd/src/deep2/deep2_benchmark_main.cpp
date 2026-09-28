@@ -1,5 +1,5 @@
-﻿// deep2_benchmark_main.cpp
-// DEEP2_NATIVE_BENCHMARK_001 — native Deep2 benchmark through Deep2Engine
+// deep2_benchmark_main.cpp
+// DEEP2_NATIVE_BENCHMARK_001 ? native Deep2 benchmark through Deep2Engine
 // Correct benchmark: instantiates production Deep2Engine, not rawr_monolith
 
 #include "Deep2Engine.h"

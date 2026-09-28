@@ -1,4 +1,4 @@
-﻿#include "masm_kernels.h"
+#include "masm_kernels.h"
 #include <vector>
 #include <immintrin.h>
 #include <intrin.h>

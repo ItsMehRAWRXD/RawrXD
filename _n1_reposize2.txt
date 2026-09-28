@@ -1,0 +1,8 @@
+repo/FileIndex.cpp DISK=0
+repo/SymbolTable.cpp DISK=0
+repo/ASTCache.cpp DISK=0
+repo/TypeDatabase.cpp DISK=0
+repo/CallGraph.cpp DISK=0
+repo/IncludeGraph.cpp DISK=0
+repo/SearchIndex.cpp DISK=0
+repo/EmbeddingIndex.cpp DISK=0

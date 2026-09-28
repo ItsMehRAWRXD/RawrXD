@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// agentic_model_streamer_bridge.cpp — Model↔Agent boundary
+// ============================================================================
+// agentic_model_streamer_bridge.cpp ? Model?Agent boundary
 // ============================================================================
 #include "agentic_model_streamer_bridge.h"
 #include "StreamingResultChannel.h"

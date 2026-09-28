@@ -1,4 +1,4 @@
-﻿/* ToroidalKVCache — infinite-context ring buffer KV cache implementation */
+/* ToroidalKVCache ? infinite-context ring buffer KV cache implementation */
 #include "ToroidalKVCache.hpp"
 #include <algorithm>
 #include <cstring>

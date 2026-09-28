@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// StreamRouter.cpp — Per-layer streaming router with prefetch / eviction
+// ============================================================================
+// StreamRouter.cpp ? Per-layer streaming router with prefetch / eviction
 // ============================================================================
 #include "StreamRouter.h"
 #include "VramStreamingController.hpp"

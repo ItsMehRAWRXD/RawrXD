@@ -1,0 +1,5 @@
+src/lsp/RawrXD_LSPServer.cpp GIT=41 FIRST40=[???// STUB: src/lsp/RawrXD_LSPServer.cpp]
+src/profiling/flame_graph.cpp GIT=42 FIRST40=[???// STUB: src/profiling/flame_graph.cp]
+src/profiling/pmc_profiler.cpp GIT=43 FIRST40=[???// STUB: src/profiling/pmc_profiler.c]
+src/script/debug/minimal_dap_server.cpp GIT=52 FIRST40=[???// STUB: src/script/debug/minimal_dap]
+src/security/uac_bypass_impl_stub.cpp GIT=50 FIRST40=[???// STUB: src/security/uac_bypass_impl]

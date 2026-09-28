@@ -1,4 +1,4 @@
-﻿#include "agent_hot_patcher.hpp"
+#include "agent_hot_patcher.hpp"
 #include <QDebug>
 #include <QDateTime>
 #include <QJsonArray>

@@ -1,0 +1,9 @@
+RawrXD-AutoFixCLI OLD_EXE=NO
+RawrXD-InferenceRoutingTest OLD_EXE=NO
+k2_007a_tokenizer_metadata OLD_EXE=NO
+test_autonomous_pipeline OLD_EXE=NO
+test_quant_dequant_crosscheck OLD_EXE=NO
+test_q6k_asm_certification OLD_EXE=NO
+RawrXD_LSPServer OLD_EXE=NO
+RawrXDScriptDAPAdapter OLD_EXE=NO
+rawrxd-monaco-gen OLD_EXE=NO

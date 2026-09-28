@@ -1432,7 +1432,7 @@ endif()
 # =====================================================================
 # test_gguf_tensor_bounds +�-�+�-�+�-� B34 GGUF Tensor/Offset Bounds Gate
 # =====================================================================
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/runtime/gguf_tensor_loader.cpp")
     add_executable(test_gguf_tensor_bounds
         tests/test_gguf_tensor_bounds.cpp
         src/runtime/gguf_tensor_loader.cpp
@@ -1583,7 +1583,7 @@ endif()
 # OMEGA-1 Bridge Test Harness
 # Validates IAT slots 64-75 for self-mutating engine integration
 # =============================================================================
-if(WIN32)
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/omega1_modules/OmegaPowerShellBridge.cpp")
     add_executable(test_omega1_bridge
         tests/test_omega1_bridge.cpp
         src/omega1_modules/OmegaPowerShellBridge.cpp
@@ -1641,7 +1641,7 @@ endif()
 # Validates per-layer MoE router weight injection from real K2 GGUF tensors.
 # Must pass before generation wiring.
 # =============================================================================
-if(WIN32)
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/GGUFLoader.cpp")
     add_executable(Deep2Engine_RouterSmokeTest
         src/deep2/Deep2Engine_RouterSmokeTest.cpp
         src/deep2/GGUFLoader.cpp
@@ -1729,7 +1729,7 @@ endif()
 # Batch 15B +�-�+�-�+�-� Q4_0 GEMV Certification
 # Verifies Q4_0 scalar GEMV path against independent reference implementation.
 # =============================================================================
-if(WIN32)
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/test_q4_0_gemv_certification.cpp")
     add_executable(Q4_0_GEMV_Certification
         src/deep2/test_q4_0_gemv_certification.cpp
         src/deep2/GGUFLoader.cpp
@@ -2991,8 +2991,8 @@ if(RAWR_REPLACE_MASM_FALLBACKS)
     endif()
 endif()
 
-# Filter missing sources from all major source lists
-rawrxd_filter_missing_sources(SOURCES)
+# NOTE: rawrxd_filter_missing_sources(SOURCES) removed — missing required sources
+# should be FATAL, not silently filtered. Use if(EXISTS) guards for optional targets.
 
 # Build target-scoped SSOT ownership partition for RawrEngine only.
 set(RAWR_ENGINE_SOURCES ${SOURCES})
@@ -4721,7 +4721,7 @@ list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
     src/inference/inference_standalone_main.cpp
 )
-rawrxd_filter_missing_sources(INFERENCE_ENGINE_LIBRARY_SOURCES)
+# NOTE: rawrxd_filter_missing_sources removed — missing sources should be FATAL
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
 # Link precompiled MASM objects (tracer + quantKB)
@@ -6699,7 +6699,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Sovereign Coordination System - 10 primitives + Execution Capsule
     list(APPEND WIN32IDE_SOURCES
         src/sovereign/spine/ExecutionSpine.cpp
-        src/sovereign/build/BuildStateGraph.cpp
+        # src/sovereign/build/BuildStateGraph.cpp  # REMOVED: phantom declaration — file never existed in any commit, no header, no symbol references (dead declaration per Batch N1/N2 classification)
         src/sovereign/ide/SovereignIDEIntegration.cpp
         src/sovereign/terminal/TerminalOwnership.cpp
         src/sovereign/bus/CapabilityBus.cpp
@@ -6817,8 +6817,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
     list(APPEND WIN32IDE_SOURCES src/closure/RawrXDAutoClosure.cpp)
-    rawrxd_filter_missing_sources(WIN32IDE_SOURCES)
-    rawrxd_filter_missing_sources(_WIN32IDE_ASM)
+    # NOTE: rawrxd_filter_missing_sources removed — missing sources should be FATAL
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 

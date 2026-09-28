@@ -1,4 +1,4 @@
-﻿#include "AttnCertProbe.hpp"
+#include "AttnCertProbe.hpp"
 #include <algorithm>
 #include <numeric>
 #include <cmath>

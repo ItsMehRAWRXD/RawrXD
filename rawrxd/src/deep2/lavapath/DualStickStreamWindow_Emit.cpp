@@ -1,4 +1,4 @@
-﻿// DualStickStreamWindow_Emit.cpp — diagnostics + receipts; no external deps.
+// DualStickStreamWindow_Emit.cpp ? diagnostics + receipts; no external deps.
 #include "DualStickStreamWindow.hpp"
 #include <cstdio>
 

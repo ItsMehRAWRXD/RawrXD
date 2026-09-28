@@ -1,0 +1,17 @@
+rawrxd/src/repo/ASTCache.cpp
+rawrxd/src/repo/ASTCache.hpp
+rawrxd/src/repo/CallGraph.cpp
+rawrxd/src/repo/CallGraph.hpp
+rawrxd/src/repo/EmbeddingIndex.cpp
+rawrxd/src/repo/EmbeddingIndex.hpp
+rawrxd/src/repo/FileIndex.cpp
+rawrxd/src/repo/FileIndex.hpp
+rawrxd/src/repo/IncludeGraph.cpp
+rawrxd/src/repo/IncludeGraph.hpp
+rawrxd/src/repo/RepositoryIntelligence.hpp
+rawrxd/src/repo/SearchIndex.cpp
+rawrxd/src/repo/SearchIndex.hpp
+rawrxd/src/repo/SymbolTable.cpp
+rawrxd/src/repo/SymbolTable.hpp
+rawrxd/src/repo/TypeDatabase.cpp
+rawrxd/src/repo/TypeDatabase.hpp

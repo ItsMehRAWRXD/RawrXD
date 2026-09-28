@@ -1,4 +1,4 @@
-﻿#include "AntiPatcher.hpp"
+#include "AntiPatcher.hpp"
 #include <sstream>
 #include <map>
 #include <algorithm>

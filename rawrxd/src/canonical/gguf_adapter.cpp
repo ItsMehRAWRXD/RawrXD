@@ -1,4 +1,4 @@
-﻿#include "gguf_adapter.hpp"
+#include "gguf_adapter.hpp"
 #include <fstream>
 #include <sstream>
 #include <iomanip>

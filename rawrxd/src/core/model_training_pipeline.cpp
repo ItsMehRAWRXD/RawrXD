@@ -1,5 +1,5 @@
 // ============================================================================
-// model_training_pipeline.cpp — Full Implementation
+// model_training_pipeline.cpp ??? Full Implementation
 // ============================================================================
 // Architecture: C++20, Win32, no Qt, no exceptions
 // Links with: quant_avx2.asm, RawrXD_KQuant_Kernel.asm, RawrXD_KQuant_Dequant.asm
@@ -471,7 +471,7 @@ TrainingResult DatasetPipeline::buildTokenizer(uint32_t vocabSize) {
         m_tokenStrings[i] = std::string(1, (char)i);
     }
 
-    // Step 3: BPE merge algorithm — find most frequent pair, merge, repeat
+    // Step 3: BPE merge algorithm ??? find most frequent pair, merge, repeat
     m_merges.clear();
     uint32_t currentVocab = 256;
 
@@ -1503,7 +1503,7 @@ bool QuantizationEngine::hasMASMKernel(QuantType type) const {
 }
 
 // ============================================================================
-// Quantize functions — real numerical computation, no hardcoded results
+// Quantize functions ??? real numerical computation, no hardcoded results
 // ============================================================================
 
 TrainingResult QuantizationEngine::quantize_Q4_0(const float* src, void* dst, uint64_t n, uint64_t* outBytes) {
@@ -1533,7 +1533,7 @@ TrainingResult QuantizationEngine::quantize_Q4_0(const float* src, void* dst, ui
             __m128i vh = _mm_cvtps_ph(vs, _MM_FROUND_TO_NEAREST_INT);
             fp16_scale = (uint16_t)_mm_extract_epi16(vh, 0);
         } else {
-            // Software fp32→fp16
+            // Software fp32???fp16
             uint32_t fi;
             memcpy(&fi, &scale, 4);
             uint32_t sign = (fi >> 16) & 0x8000;
@@ -2002,7 +2002,7 @@ QuantType QuantizationEngine::selectAdaptiveQuant(const float* data, uint64_t n,
         return (kurtosis > 5.0) ? QuantType::Q3_K_L : QuantType::Q3_K_M;
     }
     if (targetBPW <= 4.5) {
-        if (outlierRatio > 0.01) return QuantType::Q4_K_M; // More outliers → use K-quants
+        if (outlierRatio > 0.01) return QuantType::Q4_K_M; // More outliers ??? use K-quants
         return QuantType::Q4_K_S;
     }
     if (targetBPW <= 5.5) return QuantType::Q5_K_M;
@@ -2271,8 +2271,8 @@ TrainingResult QuantizationEngine::loadIMatrix(const char* path) {
 TrainingResult QuantizationEngine::computeIMatrix(const char* modelPath, const DatasetPipeline& calibData) {
     // Compute importance matrix by running calibration data through the model
     // and measuring per-weight activation magnitudes
-    // This requires the model to be loaded — delegate to PyTorch
-    return TrainingResult::error("IMatrix computation requires PyTorch — use CLI: python compute_imatrix.py");
+    // This requires the model to be loaded ??? delegate to PyTorch
+    return TrainingResult::error("IMatrix computation requires PyTorch ??? use CLI: python compute_imatrix.py");
 }
 
 void QuantizationEngine::resetMetrics() {
@@ -2378,7 +2378,7 @@ TrainingResult TrainingPipelineOrchestrator::runFullPipeline(const char* dataDir
     r = stepTrain(arch, train);
     if (!r.success) return r;
 
-    // Note: Training is asynchronous — caller must poll m_pytorch.isTraining()
+    // Note: Training is asynchronous ??? caller must poll m_pytorch.isTraining()
     // and then call stepQuantize() when training completes
     return TrainingResult::ok("Pipeline started (training in progress)");
 }

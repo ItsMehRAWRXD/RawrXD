@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// Win32IDE_MCPHooks.cpp — Live MCP transport interceptor with JSON-RPC dispatch
+// ============================================================================
+// Win32IDE_MCPHooks.cpp ? Live MCP transport interceptor with JSON-RPC dispatch
 // Production: WebSocket frame parsing, JSON-RPC method routing, tool call
 //             interception, and real-time message ring buffer.
 // ============================================================================

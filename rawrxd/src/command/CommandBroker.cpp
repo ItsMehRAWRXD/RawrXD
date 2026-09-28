@@ -1,4 +1,4 @@
-﻿#include "CommandBroker.hpp"
+#include "CommandBroker.hpp"
 #include <queue>
 #include <condition_variable>
 #include <thread>

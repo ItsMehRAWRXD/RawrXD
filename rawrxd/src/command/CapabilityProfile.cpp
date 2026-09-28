@@ -1,4 +1,4 @@
-﻿#include "CapabilityProfile.hpp"
+#include "CapabilityProfile.hpp"
 #include <sstream>
 #include <mutex>
 

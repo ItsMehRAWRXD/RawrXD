@@ -35,6 +35,51 @@ typedef struct rawrxd_strmap rawrxd_strmap;
 typedef struct rawrxd_thread rawrxd_thread;
 typedef struct rawrxd_mutex  rawrxd_mutex;
 
+/* Unified result/status code used by the rawrxd_* inference API
+   (rawrxd_inference.h, rawrxd_model_stream.h). Defined in the core header so
+   every consumer of the rawrxd C API gets it transitively. */
+typedef enum rawrxd_result {
+    RAWRXD_OK = 0,
+    RAWRXD_ERROR_INVALID = 1,
+    RAWRXD_ERROR_NOMEM = 2,
+    RAWRXD_ERROR_IO = 3,
+    RAWRXD_ERROR_BUSY = 4,
+    RAWRXD_ERROR_TIMEOUT = 5
+} rawrxd_result;
+
+/* Vocabulary string entry: pointer + length (no NUL scan required). */
+typedef struct rawrxd_string {
+    char*   data;
+    u32     length;
+} rawrxd_string;
+
+/* Deterministic xorshift64* RNG — real implementation used by sampling.
+   rawrxd_rng_init seeds it; rawrxd_rng_f32 produces [0,1) floats. */
+typedef struct rawrxd_rng {
+    u64 state;
+} rawrxd_rng;
+
+static inline void rawrxd_rng_init(rawrxd_rng* rng, u64 seed) {
+    if (!rng) return;
+    /* xorshift64* requires a non-zero state */
+    rng->state = seed ? seed : 0x9E3779B97F4A7C15ULL;
+}
+
+static inline u64 rawrxd_rng_next(rawrxd_rng* rng) {
+    /* xorshift64* generator */
+    u64 x = rng->state;
+    x ^= x >> 12;
+    x ^= x << 25;
+    x ^= x >> 27;
+    rng->state = x;
+    return x * 0x2545F4914F6CDD1DULL;
+}
+
+static inline f32 rawrxd_rng_f32(rawrxd_rng* rng) {
+    /* 24-bit mantissa float in [0,1) */
+    return (f32)(rawrxd_rng_next(rng) >> 40) * (1.0f / 16777216.0f);
+}
+
 #ifdef _WIN32
 #include <windows.h>
 #else

@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// Win32IDE_Commands.cpp — Full menu command router wired to EditorEngine + TabManager + FileOps
+// ============================================================================
+// Win32IDE_Commands.cpp ? Full menu command router wired to EditorEngine + TabManager + FileOps
 // Production: Open/Save/Close using real APIs, multi-document tab tracking, find/replace.
 // ============================================================================
 #include <windows.h>
@@ -279,9 +279,9 @@ static void DoEditFind() {
     // Use a simple dialog via PromptForInput or just find "TODO" for now
     if (g_findString.empty()) g_findString = "TODO";
     if (!EditorEngine_Find(g_findString, g_findMatchCase)) {
-        SetWindowTextW(g_hwndMain, L"RawrXD Win32IDE — Not found");
+        SetWindowTextW(g_hwndMain, L"RawrXD Win32IDE ? Not found");
     } else {
-        SetWindowTextW(g_hwndMain, L"RawrXD Win32IDE — Found");
+        SetWindowTextW(g_hwndMain, L"RawrXD Win32IDE ? Found");
     }
 }
 
@@ -290,7 +290,7 @@ static void DoEditReplace() {
     if (g_findString.empty()) return;
     if (g_replaceString.empty()) g_replaceString = "";
     if (!EditorEngine_Replace(g_findString, g_replaceString, g_findMatchCase)) {
-        SetWindowTextW(g_hwndMain, L"RawrXD Win32IDE — Nothing to replace");
+        SetWindowTextW(g_hwndMain, L"RawrXD Win32IDE ? Nothing to replace");
     } else {
         UpdateTitle();
     }

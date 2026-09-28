@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// Win32IDE_Sidebar.cpp — Full VS Code-style File Explorer Sidebar
+// ============================================================================
+// Win32IDE_Sidebar.cpp ? Full VS Code-style File Explorer Sidebar
 // Production: TreeView with real filesystem enumeration, icons, context menus.
 // ============================================================================
 #include <windows.h>
@@ -203,7 +203,7 @@ extern "C" void Win32IDE_Sidebar_SetVisibility(bool visible) {
 
 extern "C" bool Win32IDE_Sidebar_IsVisible() { return g_sidebarVisible; }
 
-// ── ShellLayout compatibility wrappers ────────────────────────────────────────
+// ?? ShellLayout compatibility wrappers ????????????????????????????????????????
 extern "C" void Sidebar_Register(HINSTANCE) {
     // Sidebar uses standard STATIC / WC_TREEVIEW classes; no custom registration needed.
 }

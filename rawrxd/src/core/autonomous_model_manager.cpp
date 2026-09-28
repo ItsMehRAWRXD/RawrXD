@@ -1,4 +1,4 @@
-﻿#include "autonomous_model_manager.h"
+#include "autonomous_model_manager.h"
 #include <QDebug>
 #include <QFileInfo>
 #include <QDir>

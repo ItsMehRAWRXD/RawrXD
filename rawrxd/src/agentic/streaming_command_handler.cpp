@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// streaming_command_handler.cpp — Parsed request → Tool Authority → result
+// ============================================================================
+// streaming_command_handler.cpp ? Parsed request ? Tool Authority ? result
 // ============================================================================
 #include "streaming_command_handler.h"
 #include "StreamingResultChannel.h"
@@ -45,7 +45,7 @@ void StreamingCommandHandler::setToolRegistry(AgentToolRegistry* registry) {
 bool StreamingCommandHandler::handleCommand(const std::string& jsonPayload) {
     if (!impl_->registry_ || !impl_->channel_) return false;
 
-    // Build ToolRequest from JSON payload (naïve: whole payload is tool_id for now)
+    // Build ToolRequest from JSON payload (na?ve: whole payload is tool_id for now)
     ToolRequest req;
     req.run_id    = 0;
     req.action_id = impl_->requestsBuilt_.fetch_add(1, std::memory_order_acq_rel);

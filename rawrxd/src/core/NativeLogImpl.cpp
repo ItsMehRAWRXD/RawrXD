@@ -1,4 +1,4 @@
-﻿#include "NativeLogImpl.hpp"
+#include "NativeLogImpl.hpp"
 #include <chrono>
 #include <sstream>
 #include <iomanip>

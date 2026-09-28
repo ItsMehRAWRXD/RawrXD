@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// CycloneScheduler.cpp — Layer 0.2 real implementation
+// ============================================================================
+// CycloneScheduler.cpp ? Layer 0.2 real implementation
 // ============================================================================
 #include "CycloneScheduler.hpp"
 #include <algorithm>
@@ -135,7 +135,7 @@ CyclonePrefetchDecision CycloneScheduler::decidePrefetch(uint32_t nextLayer, uin
     const uint32_t prefetchLayer = nextLayer + 1;
     auto it = perLayer_.find(prefetchLayer);
     if (it == perLayer_.end() || it->second.emaNs == 0.0) {
-        // No timing history — conservatively prefetch
+        // No timing history ? conservatively prefetch
         d.shouldPrefetch = true;
         d.leadDistance = 1;
         d.deadlineEpoch = epoch_ + 1;

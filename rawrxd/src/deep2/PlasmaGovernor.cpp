@@ -1,4 +1,4 @@
-﻿/* PlasmaGovernor — R9700 thermal safety governor implementation */
+/* PlasmaGovernor ? R9700 thermal safety governor implementation */
 #include "PlasmaGovernor.hpp"
 #include <algorithm>
 #include <numeric>

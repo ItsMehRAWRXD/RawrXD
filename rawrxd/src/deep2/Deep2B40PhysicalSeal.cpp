@@ -1,4 +1,4 @@
-﻿#include "Deep2B40PhysicalSeal.hpp"
+#include "Deep2B40PhysicalSeal.hpp"
 #include <algorithm>
 #include <cmath>
 

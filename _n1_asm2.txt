@@ -1,0 +1,4 @@
+DISK=[; Auto-generated stub: src/asm/inference_kernels.asm
+; RAWRXD SOURCE AUTHORITY ]
+GIT=[; Auto-generated stub: src/asm/inference_kernels.asm
+; RAWRXD SOURCE AUTHORITY ]

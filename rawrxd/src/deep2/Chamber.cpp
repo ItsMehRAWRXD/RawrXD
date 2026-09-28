@@ -1,4 +1,4 @@
-﻿/* Chamber — SM0-DSP anomaly detector implementation */
+/* Chamber ? SM0-DSP anomaly detector implementation */
 #include "Chamber.hpp"
 #include <algorithm>
 #include <numeric>
@@ -130,7 +130,7 @@ ChamberResult Chamber::evaluate(const float* hidden_state, size_t dim) {
 
 FormulaRoute Chamber::routePrimitive(uint64_t context_hash) const {
     FormulaRoute r;
-    // Simple hash-based deterministic routing: low 3 bits select route 0–7
+    // Simple hash-based deterministic routing: low 3 bits select route 0?7
     r.route = static_cast<int>(context_hash & 0x07ULL);
     r.confidence = 0.5f + 0.5f * (static_cast<float>(r.route) / 7.0f);
     return r;

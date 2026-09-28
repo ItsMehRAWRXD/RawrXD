@@ -1,6 +1,6 @@
-﻿// ============================================================================
+// ============================================================================
 // deep2_end_to_end_bench.cpp
-// DEEP2_E2E_STREAMING_BENCHMARK_001 — End-to-end streaming benchmark
+// DEEP2_E2E_STREAMING_BENCHMARK_001 ? End-to-end streaming benchmark
 // Non-blocking, event-driven, time-agnostic streaming generation.
 // Integrates TimeReverseDigest, VramStreamingController, Beaconism.
 // Never freezes regardless of materialization timing.

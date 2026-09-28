@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// streaming_inference_engine.cpp — Adapt Deep2Engine → StreamingResultChannel
+// ============================================================================
+// streaming_inference_engine.cpp ? Adapt Deep2Engine ? StreamingResultChannel
 // ============================================================================
 #include "streaming_inference_engine.h"
 #include "StreamingResultChannel.h"

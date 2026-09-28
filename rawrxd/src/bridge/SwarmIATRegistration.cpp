@@ -1,4 +1,4 @@
-﻿#include "SwarmIATRegistration.hpp"
+#include "SwarmIATRegistration.hpp"
 #include <mutex>
 #include <map>
 #include <set>

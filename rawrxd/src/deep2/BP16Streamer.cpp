@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// BP16Streamer.cpp — Real block/weight streaming with bfloat16 conversion
+// ============================================================================
+// BP16Streamer.cpp ? Real block/weight streaming with bfloat16 conversion
 // ============================================================================
 #include "BP16Streamer.hpp"
 #include <cstdio>

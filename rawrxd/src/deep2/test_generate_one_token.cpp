@@ -1,4 +1,4 @@
-﻿// test_generate_one_token.cpp — Minimal one-token generation gate for Gemma3
+// test_generate_one_token.cpp ? Minimal one-token generation gate for Gemma3
 // Usage: test_generate_one_token <path-to-gemma3.gguf>
 #include "Deep2Engine.h"
 #include <cstdio>

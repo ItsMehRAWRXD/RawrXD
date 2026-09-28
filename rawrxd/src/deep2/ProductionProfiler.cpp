@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// ProductionProfiler.cpp — Real Runtime Profiling Provider
+// ============================================================================
+// ProductionProfiler.cpp ? Real Runtime Profiling Provider
 // ============================================================================
 #include "ProductionProfiler.hpp"
 #include <chrono>

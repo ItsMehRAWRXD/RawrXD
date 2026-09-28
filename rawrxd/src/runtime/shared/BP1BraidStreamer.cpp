@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// BP1BraidStreamer.cpp — Orchestration / backpressure / multiplexing
+// ============================================================================
+// BP1BraidStreamer.cpp ? Orchestration / backpressure / multiplexing
 // ============================================================================
 #include "BP1BraidStreamer.h"
 #include "StreamingResultChannel.h"

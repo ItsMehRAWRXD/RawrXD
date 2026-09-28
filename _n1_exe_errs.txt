@@ -1,0 +1,12 @@
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(228,15): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(228,29): error C2146: syntax error: missing ';' before identifier 'rawrxd_model_load_tensor' [F:\~dev\rawrx
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(242,18): error C2143: syntax error: missing ';' before '*' [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(242,5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev\
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(242,25): error C2238: unexpected token(s) preceding ';' [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(309,16): error C3646: 'rng': unknown override specifier [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(309,5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev\
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(330,15): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(330,15): error C2086: 'int rawrxd_result': redefinition [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(330,29): error C2146: syntax error: missing ';' before identifier 'rawrxd_forward' [F:\~dev\rawrxd\build_cl
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(335,15): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev
+F:\~dev\rawrxd\src\core\rawrxd_inference.h(335,15): error C2086: 'int rawrxd_result': redefinition [F:\~dev\rawrxd\build_clean_n1\rawrxd.vcxproj]

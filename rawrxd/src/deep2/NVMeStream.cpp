@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// NVMeStream.cpp — Real async file-backed streaming implementation
+// ============================================================================
+// NVMeStream.cpp ? Real async file-backed streaming implementation
 // ============================================================================
 #include "NVMeStream.h"
 #include <cstdio>

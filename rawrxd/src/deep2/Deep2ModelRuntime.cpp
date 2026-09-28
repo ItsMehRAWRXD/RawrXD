@@ -1,4 +1,4 @@
-﻿#include "Deep2ModelRuntime.hpp"
+#include "Deep2ModelRuntime.hpp"
 #include <map>
 #include <stdexcept>
 #include <chrono>

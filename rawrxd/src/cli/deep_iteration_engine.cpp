@@ -1,4 +1,4 @@
-﻿#include "deep_iteration_engine.hpp"
+#include "deep_iteration_engine.hpp"
 #include <thread>
 #include <mutex>
 #include <queue>

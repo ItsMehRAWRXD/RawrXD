@@ -1,4 +1,4 @@
-﻿#include "SemanticIndex.hpp"
+#include "SemanticIndex.hpp"
 #include <cmath>
 #include <numeric>
 #include <algorithm>

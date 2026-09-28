@@ -1,4 +1,4 @@
-﻿#include "shared_feature_dispatch.h"
+#include "shared_feature_dispatch.h"
 
 CommandResult handleAgentAuditDrive(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAgentBoundedLoop(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }

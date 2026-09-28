@@ -1,4 +1,4 @@
-﻿// flash_attn_asm_fallback.cpp ΓÇö fallback path for MASM build
+// flash_attn_asm_fallback.cpp ??? fallback path for MASM build
 #include <cstdint>
 #include <vector>
 #include <cmath>

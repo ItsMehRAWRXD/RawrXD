@@ -1,4 +1,4 @@
-﻿// rawrxd_model_loader.cpp — Real RawrXDModelLoader implementation
+// rawrxd_model_loader.cpp ? Real RawrXDModelLoader implementation
 // Used by: gguf_swarm_plan_builder.cpp, swarm_scheduler.cpp
 
 #include "rawrxd_model_loader.h"

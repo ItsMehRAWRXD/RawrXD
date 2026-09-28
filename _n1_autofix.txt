@@ -1,0 +1,15 @@
+        add_executable(RawrXD-AutoFixCLI
+            src/app/cli_entrypoint.cpp
+            # NOTE: Removed quantum_agent_orchestrator.cpp - marketing fiction
+            src/agentic/AgentOllamaClient.cpp
+            src/inference/gpu_dispatch_gate.cpp
+            src/cpu_inference_engine_autofix_stub.cpp
+            src/gguf_d3d12_bridge.cpp
+        )
+        target_include_directories(RawrXD-AutoFixCLI PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(RawrXD-AutoFixCLI PRIVATE
+            kernel32
+            user32

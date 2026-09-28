@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// ElasticResidencyManager.cpp — Layer 0.1 real implementation
+// ============================================================================
+// ElasticResidencyManager.cpp ? Layer 0.1 real implementation
 // ============================================================================
 #include "ElasticResidencyManager.hpp"
 #include <algorithm>

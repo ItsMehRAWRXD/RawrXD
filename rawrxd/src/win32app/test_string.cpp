@@ -1,3 +1,3 @@
-﻿#include <string>
+#include <string>
 std::string s;
 

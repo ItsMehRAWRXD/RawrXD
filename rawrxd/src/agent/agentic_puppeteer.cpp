@@ -1,4 +1,4 @@
-﻿// agentic_puppeteer.cpp - Implementation of response correction (Qt-free)
+// agentic_puppeteer.cpp - Implementation of response correction (Qt-free)
 #include "agentic_puppeteer.hpp"
 #include <algorithm>
 #include <cctype>

@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// StreamEngine.cpp — Real async streaming engine with VramStreamingController
+// ============================================================================
+// StreamEngine.cpp ? Real async streaming engine with VramStreamingController
 // ============================================================================
 #include "StreamEngine.h"
 #include "VramStreamingController.hpp"

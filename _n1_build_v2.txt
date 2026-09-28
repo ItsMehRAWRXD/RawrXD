@@ -1,0 +1,81 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Assembling F:\~dev\rawrxd\src\asm\k2_real_attention\RawrXD_K2_RealAttention_x64.asm...
+  RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_clean_n1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
+  RawrXD_Compression.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\RawrXD_Compression.lib
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  gpu_dispatch_gate.cpp
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  Sync + regenerate SSOT beacon ownership artifacts
+F:\~dev\rawrxd\src\inference\gpu_dispatch_gate.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\RawrXD-AutoFixCLI.vcxproj]
+  Verify SSOT EXT ownership artifacts are consistent
+  inference_routing_test.cpp
+  OmegaPowerShellBridge.cpp
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+F:\~dev\rawrxd\src\omega1_modules\OmegaPowerShellBridge.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\Omega1Engine.vcxproj]
+  Assembling F:\~dev\rawrxd\src\crypto_masm.asm...
+  q4_preprocessed_avx512.vcxproj -> F:\~dev\rawrxd\build_clean_n1\lib\Release\q4_preprocessed_avx512.lib
+F:\~dev\rawrxd\src\tests\inference_routing_test.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\RawrXD-InferenceRoutingTest.vcxproj]
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  rguf.vcxproj -> F:\~dev\rawrxd\build_clean_n1\rguf_source\Release\rguf.lib
+  react_ide_generator.cpp
+  ContextEngine.cpp
+  minimal_dap_server.cpp
+F:\~dev\rawrxd\src\engine\react_ide_generator.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\rawrxd-monaco-gen.vcxproj]
+  Assembling F:\~dev\rawrxd\src\deep2\lavapath\KN_O3KKEN.asm...
+  The argument 'F:/~dev/rawrxd/tools/verify_ssot_ext_ownership.ps1' to the -File parameter does not exist. Provide the path to an existing '.ps1' file as an argument to the -File parameter.
+  Windows PowerShell
+  Copyright (C) Microsoft Corporation. All rights reserved.
+  
+F:\~dev\rawrxd\src\script\debug\minimal_dap_server.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\RawrXDScriptDAPAdapter.vcxproj]
+  The argument 'F:/~dev/rawrxd/tools/sync_ssot_beacon_symbols.ps1' to the -File parameter does not exist. Provide the path to an existing '.ps1' file as an argument to the -File parameter.
+  Windows PowerShell
+  Copyright (C) Microsoft Corporation. All rights reserved.
+  
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(254,5): error MSB8066: Custom build for 'F:\~dev\rawrxd\build_clean_n1\CMakeFiles\5b9b37a060031f7342b9d9476e0ae9d5\verify-ssot-ext-ownership.rule' exited with code -196608. [F:\~dev\rawrxd\build_clean_n1\verify-ssot-ext-ownership.vcxproj]
+LIBCMT.lib(exe_main.obj) : error LNK2001: unresolved external symbol main [F:\~dev\rawrxd\build_clean_n1\k2_007a_tokenizer_metadata.vcxproj]
+F:\~dev\rawrxd\build_clean_n1\tests\Release\k2_007a_tokenizer_metadata.exe : fatal error LNK1120: 1 unresolved externals [F:\~dev\rawrxd\build_clean_n1\k2_007a_tokenizer_metadata.vcxproj]
+  ASTCache.cpp
+  RawrXD_LSPServer.cpp
+  Assembling F:\~dev\rawrxd\src\deep2\lavapath\r25_productopen_masm.asm...
+LIBCMT.lib(exe_main.obj) : error LNK2001: unresolved external symbol main [F:\~dev\rawrxd\build_clean_n1\test_autonomous_pipeline.vcxproj]
+F:\~dev\rawrxd\build_clean_n1\bin\Release\test_autonomous_pipeline.exe : fatal error LNK1120: 1 unresolved externals [F:\~dev\rawrxd\build_clean_n1\test_autonomous_pipeline.vcxproj]
+F:\~dev\rawrxd\src\lsp\RawrXD_LSPServer.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\RawrXD_LSPServer.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(254,5): error MSB8066: Custom build for 'F:\~dev\rawrxd\build_clean_n1\CMakeFiles\5b9b37a060031f7342b9d9476e0ae9d5\regen-ssot-beacons.rule' exited with code -196608. [F:\~dev\rawrxd\build_clean_n1\regen-ssot-beacons.vcxproj]
+  flame_graph.cpp
+  pmc_profiler.cpp
+F:\~dev\rawrxd\src\profiling\pmc_profiler.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\pmc_profiler.vcxproj]
+F:\~dev\rawrxd\src\profiling\flame_graph.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\flame_graph_profiler.vcxproj]
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_deep2_kernels.asm...
+LIBCMT.lib(exe_main.obj) : error LNK2001: unresolved external symbol main [F:\~dev\rawrxd\build_clean_n1\test_quant_dequant_crosscheck.vcxproj]
+F:\~dev\rawrxd\build_clean_n1\tests\Release\test_quant_dequant_crosscheck.exe : fatal error LNK1120: 1 unresolved externals [F:\~dev\rawrxd\build_clean_n1\test_quant_dequant_crosscheck.vcxproj]
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q4k_gemv.asm...
+LIBCMT.lib(exe_main.obj) : error LNK2001: unresolved external symbol main [F:\~dev\rawrxd\build_clean_n1\test_q6k_asm_certification.vcxproj]
+F:\~dev\rawrxd\build_clean_n1\tests\Release\test_q6k_asm_certification.exe : fatal error LNK1120: 1 unresolved externals [F:\~dev\rawrxd\build_clean_n1\test_q6k_asm_certification.vcxproj]
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q4_1_gemv.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q5_k_gemv.asm...
+  uac_bypass_impl_stub.cpp
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q6_k_gemv.asm...
+F:\~dev\rawrxd\src\security\uac_bypass_impl_stub.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\RawrXD-Crypto.vcxproj]
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q8_0_gemv.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_fp16_gemv.asm...
+  Assembling F:\~dev\rawrxd\src\asm\rawr_globals.asm...
+  Assembling F:\~dev\rawrxd\src\asm\rawr_cpu_features.asm...
+  Assembling F:\~dev\rawrxd\src\asm\inference_core.asm...
+  Assembling F:\~dev\rawrxd\src\asm\inference_kernels.asm...
+F:\~dev\rawrxd\src\asm\inference_kernels.asm(1): fatal error A1000: cannot open file : InferenceEngine.dir\Release\src/asm/inference_kernels.asm.obj [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\BuildCustomizations\masm.targets(70,5): error MSB3721: The command "ml64.exe /c /nologo /Zi /Fo"InferenceEngine.dir\Release\src/asm/inference_kernels.asm.obj" /D"WIN32" /D"_WINDOWS" /D"NDEBUG" /D"RAWR_HAS_VULKAN=1" /D"RAWR_VULKAN_AVAILABLE=1" /D"RAWRXD_STRICT_PRODUCTION_PROFILE=0" /D"RAWR_STANDALONE_INFERENCE=1" /D"RAWR_HAS_SOVEREIGN_ENGINES=1" /D"RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0" /D"RAWR_HAS_MASM=1" /D"RAWRXD_LINK_QUADBUFFER_ASM=1" /D"RAWRXD_LINK_INFERENCE_KERNELS_ASM=1" /D"RAWRXD_LINK_ANALYZER_DISTILLER_ASM=0" /D"RAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0" /D"RAWRXD_LINK_TELEMETRY_KERNEL_ASM=1" /D"RAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1" /D"RAWRXD_LINK_SELFPATCH_AGENT_ASM=1" /D"RAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1" /D"RAWRXD_LINK_VISION_PROJECTION_ASM=0" /D"RAWRXD_LINK_REVERSE_ENGINEERED_ASM=1" /D"RAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0" /D"RAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0" /D"RAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0" /D"RAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1" /D"RAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1" /D"HAS_BRUTAL_GZIP_MASM=1" /D"_CRT_SECURE_NO_WARNINGS" /D"NOMINMAX" /D"WIN32_LEAN_AND_MEAN" /D"RAWR_INTENT_GUARD_ENABLED=1" /D"RAWR_INTENT_VALIDATION_ENABLED=1" /D"RAWR_PATCH_TRANSACTION_ENABLED=1" /D"RAWR_CAPABILITY_TOKENS_ENABLED=1" /D"RAWR_HOTPATCH_JOURNAL_ENABLED=1" /D"RAWR_PATCH_FIREWALL_ENABLED=1" /D"RAWR_REFLECTOR_AGENT_ENABLED=1" /D"RAWR_ATOMIC_ACTIVATION_ENABLED=1" /D"RAWR_ROLLBACK_FIRST_CLASS_ENABLED=1" /D"RAWR_MODEL_ADAPTER_ENABLED=1" /D"RAWR_INTENT_EMERGENCY_BYPASS=0" /D"RAWR_ENABLE_VULKAN=1" /D"VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1" /D"CMAKE_INTDIR="Release"" /I "F:\~dev\rawrxd\src\asm" /I "F:\~dev\rawrxd\src\deep2\lavapath" /I "F:\~dev\rawrxd\include" /I "C:\VulkanSDK\1.4.357.0\Include" /I "F:\~dev\rawrxd\src" /I "F:\~dev\rawrxd\src\deep2" /I "F:\~dev\rawrxd\src\inference" /I "F:\~dev\rawrxd\src\engine" /I "F:\~dev\rawrxd\src\core" /I "F:\~dev\rawrxd\src\codec" /I "F:\~dev\rawrxd\src\masm" /I "F:\~dev\rawrxd\src\runtime\governance" /I "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" /I "C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" /I "C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" /I "C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" /I "C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" /I "D:\rawrxd\Ship\webview2\build\native\include" /W3 /errorReport:prompt  /c /Zd /Ta"F:\~dev\rawrxd\src\asm\inference_kernels.asm"" exited with code 1. [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]
+  rguf_tool.vcxproj -> F:\~dev\rawrxd\build_clean_n1\bin\Release\rguf_tool.exe
+  CallGraph.cpp
+  EmbeddingIndex.cpp
+  FileIndex.cpp
+  rawrxd_ceo.vcxproj -> F:\~dev\rawrxd\build_clean_n1\src\ceo\Release\rawrxd_ceo.lib
+  LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+  rawrxd_ceo_cli.vcxproj -> F:\~dev\rawrxd\build_clean_n1\bin\Release\rawrxd-ceo.exe
+  IncludeGraph.cpp
+  SearchIndex.cpp
+  SymbolTable.cpp
+  TypeDatabase.cpp
+  Generating Code...
+  rawrxd_repository.vcxproj -> F:\~dev\rawrxd\build_clean_n1\src\repository\Release\rawrxd_repository.lib

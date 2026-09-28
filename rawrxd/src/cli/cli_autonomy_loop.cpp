@@ -1,4 +1,4 @@
-﻿#include "cli_autonomy_loop.hpp"
+#include "cli_autonomy_loop.hpp"
 #include <thread>
 #include <mutex>
 #include <condition_variable>

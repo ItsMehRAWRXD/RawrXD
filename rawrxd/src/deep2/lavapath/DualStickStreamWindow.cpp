@@ -1,4 +1,4 @@
-﻿// DualStickStreamWindow.cpp — state + plan + arm; no external deps.
+// DualStickStreamWindow.cpp ? state + plan + arm; no external deps.
 #include "DualStickStreamWindow.hpp"
 #include <cstring>
 #include <cstdio>
