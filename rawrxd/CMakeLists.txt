@@ -169,6 +169,23 @@ endif()
 # RawrXD - Zero Bloat Horizon (Phase 14.7.3+)
 project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 
+function(rawrxd_filter_missing_sources list_var)
+    set(_kept)
+    foreach(_src IN LISTS ${list_var})
+        if(IS_ABSOLUTE "${_src}")
+            set(_path "${_src}")
+        else()
+            set(_path "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+        endif()
+        if(EXISTS "${_path}")
+            list(APPEND _kept "${_src}")
+        else()
+            message(WARNING "[rawrxd_filter_missing_sources] ${list_var}: missing ${_src}")
+        endif()
+    endforeach()
+    set(${list_var} "${_kept}" PARENT_SCOPE)
+endfunction()
+
 # ============================================================================
 # nlohmann/json — REMOVED from build: no source file in src/ includes it.
 # Local copy available at f:\~dev\_deps\nlohmann_json-src if needed later.
@@ -224,6 +241,7 @@ if(EXISTS "${RAWRXD_LOCAL_WIN32_SDK_DIR}")
 endif()
 
 option(RAWRXD_BUILD_WIN32IDE "Build the legacy Win32IDE target" OFF)
+option(RAWRXD_BUILD_LEGACY_CERTS "Build legacy certification and test targets" OFF)
 option(RAWRXD_BUILD_CLI "Build the rawrxd CLI console target" OFF)
 option(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES "Strip stub/shim/mock source units from production targets" OFF)
 option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness sources in production targets" OFF)
@@ -2010,7 +2028,7 @@ endif()
 find_package(Threads REQUIRED)
 
 set(SOURCES 
-    src/main.cpp
+    src/ceo/main.cpp
     src/memory_core.cpp
     src/hot_patcher.cpp
     src/cpu_inference_engine.cpp
@@ -3327,8 +3345,14 @@ set(RAWR_ENGINE_ASM_SOURCES
     src/deep2/sovereign_fp16_gemv.asm
 )
 set_source_files_properties(${RAWR_ENGINE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+rawrxd_filter_missing_sources(RAWR_ENGINE_SOURCES)
+rawrxd_filter_missing_sources(RAWR_ENGINE_ASM_SOURCES)
 
-add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
+if(RAWR_ENGINE_SOURCES OR RAWR_ENGINE_ASM_SOURCES)
+    add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
+else()
+    message(STATUS "[RAWRXD_BUILD_AUTHORITY_BASELINE_001] Skipping RawrEngine: no sources available")
+endif()
 
 if(WIN32)
     if(TARGET RawrEngine)
@@ -3688,7 +3712,14 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/deep2_link_stubs\\.cpp$")
 # VulkanKernel_DispatchRaw.asm references VulkanKernel_DispatchRaw_Impl
 # which is defined in vulkan_kernel_stubs.cpp. Do NOT exclude it.
 
-add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
+rawrxd_filter_missing_sources(GOLD_UNDERSCORE_SOURCES)
+rawrxd_filter_missing_sources(ASM_KERNEL_SOURCES)
+
+if(GOLD_UNDERSCORE_SOURCES OR ASM_KERNEL_SOURCES)
+    add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
+else()
+    message(STATUS "[RAWRXD_BUILD_AUTHORITY_BASELINE_001] Skipping RawrXD_Gold: no sources available")
+endif()
 
 if(WIN32)
     add_dependencies(RawrXD_Gold regen-ssot-beacons)
@@ -4240,7 +4271,9 @@ set(INFERENCE_ENGINE_SOURCES
     src/inference/polymorphic_loader.cpp
     src/inference/ollama_blob_parser.cpp
     src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
+    # rawrxd_inference.cpp excluded: stub file with missing type definitions
+    # in rawrxd_inference.h (rawrxd_result, rawrxd_string, rawrxd_strmap etc.)
+    # The Deep2Engine path does not use this legacy C-API.
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/rawrxd_transformer_forwardbatch.cpp
@@ -4318,7 +4351,9 @@ set(INFERENCE_ENGINE_SOURCES
     tests/b009/b009b_batched_gemm.cpp
     B014/build/b014_profiler.cpp
     # Codec implementations (deflate/inflate/compress)
-    src/codec/compression.cpp
+    # compression.cpp excluded: requires zlib.h which is not installed,
+    # and no source in the tree consumes rawrxd::codec (zero consumers verified).
+    # src/codec/compression.cpp
     src/codec/brutal_gzip.cpp
     src/codec/gzip_brutal_inflate.cpp
     # Deep2 core +�-�+�-�+�-� unified into InferenceEngine for canonical local inference
@@ -4495,6 +4530,11 @@ src/vulkan_fwd_q4k_act.cpp
     src/deep2/ElasticResidencyManager.cpp
     src/deep2/ElasticDynamicBudget.cpp
     src/deep2/CycloneScheduler.cpp
+    # VRAM streaming + expert cache (required by Deep2Engine/GpuMoEMLA link)
+    src/deep2/VramStreamingController.cpp
+    src/deep2/expert_cache/ExpertCache.cpp
+    src/deep2/expert_cache/VulkanExpertTransport.cpp
+    src/deep2/expert_cache/HostStagingRing.cpp
     src/deep2/Deep2LivePath.cpp
     src/deep2/Deep2LivePath_Gate.cpp
     src/deep2/Deep2LivePath_Pinball.cpp
@@ -4844,6 +4884,7 @@ endif()
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
+    rawrxd_filter_missing_sources(INFERENCE_ASM_SOURCES)
     set_source_files_properties(${INFERENCE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
     target_sources(InferenceEngine PRIVATE ${INFERENCE_ASM_SOURCES})
 
@@ -4956,7 +4997,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
         list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
         # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
-        list(APPEND WIN32IDE_SOURCES src/modules/ReverseEngineering.cpp)
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/modules/ReverseEngineering.cpp")
+            list(APPEND WIN32IDE_SOURCES src/modules/ReverseEngineering.cpp)
+        endif()
     endif()
 
     # MASM64 UI Dispatcher (MSVC/MASM-only).
@@ -5480,7 +5523,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/AdvancedAgentCoordinator.cpp
         src/modules/autonomous_agentic_orchestrator.cpp
     # src/core/native_gguf_loader_link_impl.cpp
-        src/codec/compression.cpp
+        # compression.cpp excluded: requires zlib.h (not installed); zero consumers.
+        # src/codec/compression.cpp
         src/codec/brutal_gzip.cpp
         src/codec/gzip_brutal_inflate.cpp
         # EXCLUDED: missing native_gguf_loader.h — src/core/ssot_handlers.cpp
@@ -9138,8 +9182,10 @@ endif()
 
 option(BUILD_MLA_CERT_001 "Build MLA-CERT-001 production seal" OFF)
 if(BUILD_MLA_CERT_001)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/certs/mla_cert_001.cpp")
     add_executable(mla_cert_001 certs/mla_cert_001.cpp)
     target_link_libraries(mla_cert_001 PRIVATE InferenceEngine dxgi)
+    endif()
     if(MSVC)
         target_compile_options(mla_cert_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9748,7 +9794,7 @@ if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
 endif()
 
 # RAWRXD_RUN_MODELNAME_001 +�-�-� Ollama-style `rawr run <alias>` front door (Deep2).
-option(BUILD_RAWRXD_RUN_MODELNAME_001 "Build RAWRXD_RUN_MODELNAME_001 + rawr CLI" OFF)
+option(BUILD_RAWRXD_RUN_MODELNAME_001 "Build RAWRXD_RUN_MODELNAME_001 + rawr CLI" ON)
 if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     add_executable(rawrxd_run_modelname_001
         src/deep2/rawrxd_run_modelname_001.cpp)
@@ -9765,48 +9811,59 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         OUTPUT_NAME rawrxd_run_modelname_001
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    add_executable(rawr src/deep2/rawr_run.cpp)
-    target_link_libraries(rawr PRIVATE InferenceEngine dxgi)
-    if(MSVC)
-        target_compile_options(rawr PRIVATE
-            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/rawr_run.cpp")
+        # rawr links the runner implementation (rawrxd_run_modelname_001.cpp) —
+        # without it, rawr_run.cpp calls rawrxd_run_modelname_001() which has no
+        # definition in any linked library (LNK2019).
+        add_executable(rawr
+            src/deep2/rawr_run.cpp
+            src/deep2/rawrxd_run_modelname_001.cpp)
+        target_link_libraries(rawr PRIVATE InferenceEngine dxgi)
+        if(MSVC)
+            target_compile_options(rawr PRIVATE
+                $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+        endif()
+        target_include_directories(rawr PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+            ${CMAKE_SOURCE_DIR}/include)
+        set_target_properties(rawr PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            OUTPUT_NAME rawr
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif()
-    target_include_directories(rawr PRIVATE
-        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
-        ${CMAKE_SOURCE_DIR}/include)
-    set_target_properties(rawr PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        OUTPUT_NAME rawr
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    add_executable(deep2_k2_useful_tps_001 src/deep2/deep2_k2_useful_tps_001.cpp)
-    target_link_libraries(deep2_k2_useful_tps_001 PRIVATE InferenceEngine dxgi)
-    if(MSVC)
-        target_compile_options(deep2_k2_useful_tps_001 PRIVATE
-            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_k2_useful_tps_001.cpp")
+        add_executable(deep2_k2_useful_tps_001 src/deep2/deep2_k2_useful_tps_001.cpp)
+        target_link_libraries(deep2_k2_useful_tps_001 PRIVATE InferenceEngine dxgi)
+        if(MSVC)
+            target_compile_options(deep2_k2_useful_tps_001 PRIVATE
+                $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+        endif()
+        target_include_directories(deep2_k2_useful_tps_001 PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+            ${CMAKE_SOURCE_DIR}/include)
+        set_target_properties(deep2_k2_useful_tps_001 PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            OUTPUT_NAME deep2_k2_useful_tps_001
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif()
-    target_include_directories(deep2_k2_useful_tps_001 PRIVATE
-        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
-        ${CMAKE_SOURCE_DIR}/include)
-    set_target_properties(deep2_k2_useful_tps_001 PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        OUTPUT_NAME deep2_k2_useful_tps_001
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    add_executable(rawrxd_normal_gguf_final_001
-        src/deep2/rawrxd_normal_gguf_final_001.cpp)
-    target_link_libraries(rawrxd_normal_gguf_final_001 PRIVATE InferenceEngine dxgi)
-    if(MSVC)
-        target_compile_options(rawrxd_normal_gguf_final_001 PRIVATE
-            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/rawrxd_normal_gguf_final_001.cpp")
+        add_executable(rawrxd_normal_gguf_final_001
+            src/deep2/rawrxd_normal_gguf_final_001.cpp)
+        target_link_libraries(rawrxd_normal_gguf_final_001 PRIVATE InferenceEngine dxgi)
+        if(MSVC)
+            target_compile_options(rawrxd_normal_gguf_final_001 PRIVATE
+                $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+        endif()
+        target_include_directories(rawrxd_normal_gguf_final_001 PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+            ${CMAKE_SOURCE_DIR}/include)
+        set_target_properties(rawrxd_normal_gguf_final_001 PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            OUTPUT_NAME rawrxd_normal_gguf_final_001
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif()
-    target_include_directories(rawrxd_normal_gguf_final_001 PRIVATE
-        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
-        ${CMAKE_SOURCE_DIR}/include)
-    set_target_properties(rawrxd_normal_gguf_final_001 PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        OUTPUT_NAME rawrxd_normal_gguf_final_001
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     message(STATUS "[Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL")
 endif()
 
@@ -9927,8 +9984,10 @@ endif()
 
 option(BUILD_DEEP2_NU_PERF_CERT "Build NU_PERF_001" OFF)
 if(BUILD_DEEP2_NU_PERF_CERT)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_nu_perf_cert.cpp")
     add_executable(deep2_nu_perf_cert src/deep2/deep2_nu_perf_cert.cpp)
     target_link_libraries(deep2_nu_perf_cert PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(deep2_nu_perf_cert PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -10040,8 +10099,10 @@ if(BUILD_RKC_DEEP2_MODEL_AUTHORITY_CERT)
 endif()
 option(BUILD_RKC_MODEL_INVENTORY_CERT "Build RKC_MODEL_INVENTORY_001" OFF)
 if(BUILD_RKC_MODEL_INVENTORY_CERT)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_model_inventory_cert.cpp")
     add_executable(rkc_model_inventory_cert src/rkc/rkc_model_inventory_cert.cpp)
     target_link_libraries(rkc_model_inventory_cert PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(rkc_model_inventory_cert PRIVATE /EHsc /W4 /std:c++20)
     endif()
@@ -10055,8 +10116,10 @@ if(BUILD_RKC_MODEL_INVENTORY_CERT)
 endif()
 option(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT "Build RKC_NEGATIVE_KNOWLEDGE_001" OFF)
 if(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_negative_knowledge_cert.cpp")
     add_executable(rkc_negative_knowledge_cert src/rkc/rkc_negative_knowledge_cert.cpp)
     target_link_libraries(rkc_negative_knowledge_cert PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(rkc_negative_knowledge_cert PRIVATE /EHsc /W4 /std:c++20)
     endif()
@@ -10070,8 +10133,10 @@ if(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT)
 endif()
 option(BUILD_RKC_MINIMAL_SOURCE_CERT "Build RKC_MINIMAL_SOURCE_001" OFF)
 if(BUILD_RKC_MINIMAL_SOURCE_CERT)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_minimal_source_cert.cpp")
     add_executable(rkc_minimal_source_cert src/rkc/rkc_minimal_source_cert.cpp)
     target_link_libraries(rkc_minimal_source_cert PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(rkc_minimal_source_cert PRIVATE /EHsc /W4 /std:c++20)
     endif()
@@ -10085,8 +10150,10 @@ if(BUILD_RKC_MINIMAL_SOURCE_CERT)
 endif()
 option(BUILD_RKC_CODE_WORLD_CERT "Build RKC_CODE_WORLD_001" OFF)
 if(BUILD_RKC_CODE_WORLD_CERT)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_code_world_cert.cpp")
     add_executable(rkc_code_world_cert src/rkc/rkc_code_world_cert.cpp)
     target_link_libraries(rkc_code_world_cert PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(rkc_code_world_cert PRIVATE /EHsc /W4 /std:c++20)
     endif()
@@ -10100,8 +10167,10 @@ if(BUILD_RKC_CODE_WORLD_CERT)
 endif()
 option(BUILD_RKC_SMOKE "Build Reverse Knowledge Compiler smoke" OFF)
 if(BUILD_RKC_SMOKE)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_smoke.cpp")
     add_executable(rkc_smoke src/rkc/rkc_smoke.cpp)
     target_link_libraries(rkc_smoke PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(rkc_smoke PRIVATE /O2 /EHsc /W4 /std:c++20)
     endif()
@@ -10114,8 +10183,10 @@ if(BUILD_RKC_SMOKE)
         OUTPUT_NAME rkc_smoke
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_product_context_smoke.cpp")
     add_executable(rkc_product_context_smoke src/rkc/rkc_product_context_smoke.cpp)
     target_link_libraries(rkc_product_context_smoke PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(rkc_product_context_smoke PRIVATE /O2 /EHsc /W4 /std:c++20)
     endif()
@@ -12668,7 +12739,7 @@ if(WIN32)
         src/deep2/sovereign_iq2_xxs_gemv.asm
         src/deep2/sovereign_iq3_xxs_gemv.asm
         src/deep2/sovereign_iq4_nl_gemv.asm
-        src/deep2/sovereign_q2_k_gemv.asm
+        # sovereign_q2_k_gemv.asm banned: 72-byte stride vs 84-byte GGUF block_q2_K.
         src/deep2/sovereign_q3_k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
         src/deep2/Sovereign_Attention_KV_AVX512.asm
@@ -14227,10 +14298,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
         message(WARNING "[SoloIDE] Qt6 not found +�-�+�-�+�-� SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
     endif()
 endif()
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_generation.cpp")
 add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/IOCPGGUFLoader.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp src/deep2/K2GlobalTensorIndex.cpp src/deep2/ResidencyManager.cpp)
 set_target_properties(test_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+endif()
 
 add_executable(test_llama_native tests/test_llama_native.cpp
     src/deep2/Deep2Bridge.cpp
@@ -14349,9 +14422,11 @@ add_test(NAME test_q6k_asm_certification COMMAND test_q6k_asm_certification WORK
 
 # Quant Dequantization Cross-Check
 # Validates all K-quant dequantizers against canonical GGML reference implementations
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_quant_dequant_crosscheck.cpp")
 add_executable(test_quant_dequant_crosscheck tests/test_quant_dequant_crosscheck.cpp)
 set_target_properties(test_quant_dequant_crosscheck PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 add_test(NAME test_quant_dequant_crosscheck COMMAND test_quant_dequant_crosscheck WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+endif()
 
 # K2-002 Native Deep2 Runtime Smoke Test
 # Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency
@@ -14632,9 +14707,11 @@ add_test(NAME k2_007_real_output_projection COMMAND k2_007_real_output_projectio
 
 # K2-007A: GGUF Tokenizer Metadata Extraction
 # Proves tokenizer.ggml.* arrays are readable from GGUF without external deps.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/k2_007a_tokenizer_metadata.cpp")
 add_executable(k2_007a_tokenizer_metadata tests/k2_007a_tokenizer_metadata.cpp)
 set_target_properties(k2_007a_tokenizer_metadata PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 add_test(NAME k2_007a_tokenizer_metadata COMMAND k2_007a_tokenizer_metadata WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+endif()
 
 # K2-007B: Projection +�-�+�-�+�-� Logits Interface
 # Narrow integration gate: proves real output projection produces a valid
@@ -16190,8 +16267,10 @@ if(TARGET InferenceEngine)
 endif()
 
 if(TARGET InferenceEngine)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/test_attn_out_bisect.cpp")
     add_executable(test_attn_out_bisect src/deep2/test_attn_out_bisect.cpp)
     target_link_libraries(test_attn_out_bisect PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(test_attn_out_bisect PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
     endif()
@@ -16200,8 +16279,10 @@ if(TARGET InferenceEngine)
 endif()
 
 if(TARGET InferenceEngine)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/test_o_proj_gemv.cpp")
     add_executable(test_o_proj_gemv src/deep2/test_o_proj_gemv.cpp)
     target_link_libraries(test_o_proj_gemv PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(test_o_proj_gemv PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
     endif()
@@ -16210,8 +16291,10 @@ if(TARGET InferenceEngine)
 endif()
 
 if(TARGET InferenceEngine)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/test_o_proj_mulmat_002.cpp")
     add_executable(test_o_proj_mulmat_002 src/deep2/test_o_proj_mulmat_002.cpp)
     target_link_libraries(test_o_proj_mulmat_002 PRIVATE InferenceEngine)
+    endif()
     if(MSVC)
         target_compile_options(test_o_proj_mulmat_002 PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
     endif()
@@ -16222,10 +16305,12 @@ endif()
 
 option(BUILD_PROBE_CHAT_QUALITY "probe" OFF)
 if(BUILD_PROBE_CHAT_QUALITY AND TARGET InferenceEngine)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/_probe_chat_quality.cpp")
   add_executable(_probe_chat_quality src/deep2/_probe_chat_quality.cpp)
   target_link_libraries(_probe_chat_quality PRIVATE InferenceEngine dxgi)
   target_include_directories(_probe_chat_quality PRIVATE ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
   set_target_properties(_probe_chat_quality PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  endif()
 endif()
 
 

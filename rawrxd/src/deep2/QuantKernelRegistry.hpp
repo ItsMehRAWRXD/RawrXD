@@ -73,6 +73,7 @@ struct block_q2_K {
     uint16_t d;           // fp16 super-scale
     uint16_t dmin;        // fp16 super-min
 };
+static_assert(sizeof(block_q2_K) == 84, "GGUF block_q2_K must be 84 bytes");
 
 // Q3_K: 256 weights, 12-byte scale packing, hmask — 110 bytes
 struct block_q3_K {

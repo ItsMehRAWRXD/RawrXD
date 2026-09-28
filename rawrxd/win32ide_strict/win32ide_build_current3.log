@@ -1,0 +1,56 @@
+CMake is re-running because F:/~dev/rawrxd/win32ide_strict/build_v4/CMakeFiles/generate.stamp is out-of-date.
+  the file 'F:/~dev/rawrxd/win32ide_strict/CMakeLists.txt'
+  is newer than 'F:/~dev/rawrxd/win32ide_strict/build_v4/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- RAWRXD_WIN32IDE_STRICT: source closure verified for RawrXD-Win32IDE
+-- [Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle
+-- Configuring done (0.0s)
+-- Generating done (0.2s)
+-- Build files have been written to: F:/~dev/rawrxd/win32ide_strict/build_v4
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  RawrXDAgenticE2E.cpp
+  agentic_model_streamer_bridge.cpp
+  streaming_inference_engine.cpp
+  RawrXDAutoClosure.cpp
+F:\~dev\rawrxd\src\ai\streaming_inference_engine.cpp(88,35): error C2248: 'Deep2::Deep2Engine::forwardTokenAllLayers': cannot access private member declared in class 'Deep2::Deep2Engine' [F:\~dev\rawrxd\win32ide_strict\build_v4\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(676,19):
+      see declaration of 'Deep2::Deep2Engine::forwardTokenAllLayers'
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(344,7):
+      see declaration of 'Deep2::Deep2Engine'
+  
+F:\~dev\rawrxd\src\closure\RawrXDAutoClosure.cpp(268,29): error C2248: 'Deep2::Deep2Engine::forwardTokenAllLayers': cannot access private member declared in class 'Deep2::Deep2Engine' [F:\~dev\rawrxd\win32ide_strict\build_v4\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(676,19):
+      see declaration of 'Deep2::Deep2Engine::forwardTokenAllLayers'
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(344,7):
+      see declaration of 'Deep2::Deep2Engine'
+  
+F:\~dev\rawrxd\src\closure\RawrXDAutoClosure.cpp(319,29): error C2248: 'Deep2::Deep2Engine::forwardTokenAllLayers': cannot access private member declared in class 'Deep2::Deep2Engine' [F:\~dev\rawrxd\win32ide_strict\build_v4\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(676,19):
+      see declaration of 'Deep2::Deep2Engine::forwardTokenAllLayers'
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(344,7):
+      see declaration of 'Deep2::Deep2Engine'
+  
+  Beaconism.cpp
+  Deep2DualGpuRowSplit.cpp
+  Deep2Engine.cpp
+  Deep2Engine_GpuForward.cpp
+  Deep2Engine_GpuMoEMLA.cpp
+  Deep2Engine_Speculative.cpp
+  Deep2Engine_VulkanRuntime.cpp
+  GpuScheduler.cpp
+  QuantKernelRegistry.cpp
+  TimeReverseDigest.cpp
+  EventLedger.cpp
+  vulkan_compute.cpp
+  ide_agentic_gate.cpp
+  ide_inference_gate.cpp
+F:\~dev\rawrxd\src\win32app\ide_inference_gate.cpp(476,26): error C2248: 'Deep2::Deep2Engine::forwardTokenAllLayers': cannot access private member declared in class 'Deep2::Deep2Engine' [F:\~dev\rawrxd\win32ide_strict\build_v4\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(676,19):
+      see declaration of 'Deep2::Deep2Engine::forwardTokenAllLayers'
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(344,7):
+      see declaration of 'Deep2::Deep2Engine'
+  
+  main_win32.cpp
+  Generating Code...

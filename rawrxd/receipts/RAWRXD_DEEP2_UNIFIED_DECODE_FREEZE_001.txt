@@ -1,0 +1,30 @@
+RECEIPT=RAWRXD_DEEP2_UNIFIED_DECODE_FREEZE_001
+DATE=2026-09-26
+BUILD_TARGET=RawrXD-Win32IDE
+BUILD_STATUS=PASS
+AUTOCLOSE_VERDICT=PASS
+
+--- CHANGES APPLIED ---
+1. Deep2GpuForward.hpp: Added HostFallbackContamination=12 to GpuRejectReason enum
+2. Deep2Engine.cpp: Fixed vramStreamingController_->stats() typo; HostFallbackContamination references now compile
+3. ide_inference_gate.cpp: Replaced manual embedToken/forwardTokenAllLayers/advancePersistentKv loop with generateUnified()
+4. streaming_inference_engine.cpp: Replaced manual prefill+decodeContinuousOne loop with generateUnified() using streaming callback
+5. RawrXDAutoClosure.cpp: Replaced manual prefill+decode loop with generateUnified()
+
+--- CERTIFIED FIELDS ---
+MODEL_LOADED=PASS
+WEIGHTS_LOADED=PASS
+TOKENIZER_READY=PASS
+FORWARD_PASS_OK=PASS
+LOGITS_FINITE=PASS
+GENERATED_TOKEN_COUNT=8
+REAL_GPU_FORWARD=PASS
+SYNTHETIC_TOKEN_OUTPUT=0
+STUB_FALLBACKS=0
+CPU_FALLBACKS=0
+TOOL_AUTHORITY_BYPASS=0
+VERDICT=PASS
+
+--- SIGNATURE ---
+forwardTokenAllLayers is now PRIVATE. No production code path calls it directly.
+All generation routes through generateUnified().

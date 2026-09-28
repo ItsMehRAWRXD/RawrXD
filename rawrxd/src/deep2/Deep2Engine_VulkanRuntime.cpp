@@ -506,6 +506,7 @@ uint64_t Deep2Engine::vulkanSlotQueueSubmits(unsigned slot) const {
 }
 
 bool Deep2Engine::tryGpuTokenForward(float* hidden) {
+    gpuFwdStateMutated_ = false;
     std::fprintf(stderr, "GPU_FORWARD_ENTER hidden=%p loaded=%u vulkanEnabled=%u init=%u devices=%u layers=%u\n",
         (void*)hidden,
         modelWeights.loaded?1u:0u,
@@ -533,6 +534,7 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
     std::vector<float> out(config.hiddenDim,0.0f);
     bool ok=false;
 
+    gpuFwdStateMutated_ = true;
     if (vulkanDevices_.size()>1 && multiGpuLayerPlan_.active) {
         std::fprintf(stderr, "GPU_FORWARD_STAGE=MULTIMAP\n");
         ok=forwardGpuMultiMap(hidden,out.data());

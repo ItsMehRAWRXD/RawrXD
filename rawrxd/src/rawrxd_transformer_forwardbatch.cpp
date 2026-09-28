@@ -1,11 +1,13 @@
 ﻿#include "rawrxd_transformer_forwardbatch.hpp"
-#include <math>
+#include <cmath>
 #include <numeric>
 #include <algorithm>
 #include <mutex>
 #include <thread>
 #include <condition_variable>
 #include <queue>
+#include <future>
+#include <random>
 
 namespace rawrxd {
 

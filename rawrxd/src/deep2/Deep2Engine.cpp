@@ -3293,12 +3293,27 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
         return ForwardResult{false, ExecutionRoute::Unset, false, "layer_count_mismatch"};
     }
 
+    // Once any lane has mutated per-token state (device KV/residency, or
+    // hidden rewritten layer-by-layer), no other lane may retry the token,
+    // in strict or non-strict mode.
+    auto blockCommittedFallback = [this](const char* stage, ExecutionRoute route) {
+        std::fprintf(stderr,
+            "COMMITTED_FALLBACK_BLOCKED=1 STRICT_NATIVE_ABORT=1 VERDICT=FAIL stage=%s\n",
+            stage);
+        std::fflush(stderr);
+        vulkanStrictViolation_ = true;
+        gpuFwdCommitted_ = false;
+        return ForwardResult{false, route, false, "committed_fallback_blocked"};
+    };
+
     // Batch10: MoE and MLA currently use host-orchestrated GPU-heavy execution.
     // It is a product execution lane, but NOT fully-resident GPU authority.
     if (vulkanEnabled_ && vulkanInitialized_ &&
         (modelWeights.isMoE || modelWeights.useMLA)) {
         if (forwardTokenGpuHybrid(hidden, seqLen))
             return ForwardResult{true, ExecutionRoute::VulkanMoeHybrid, true, nullptr};
+        if (gpuFwdStateMutated_)
+            return blockCommittedFallback("moe_hybrid", ExecutionRoute::VulkanMoeHybrid);
         if (vulkanStrictNoCpuFallback_) {
             vulkanStrictViolation_ = true;
             return ForwardResult{false, ExecutionRoute::VulkanMoeHybrid, false, "moe_hybrid_failed"};
@@ -3356,6 +3371,8 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
             }
             return ForwardResult{true, ExecutionRoute::VulkanResident, true, nullptr};
         }
+        if (gpuFwdStateMutated_)
+            return blockCommittedFallback("resident_first", ExecutionRoute::VulkanResident);
         std::fprintf(stderr,
             "[RESIDENT_FIRST] resident forward declined; "
             "falling back to dual-row lane\n");
@@ -3368,11 +3385,13 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
     }
 
     if(dualRowDense){
+        size_t dualRowLayersDone=0;
         try {
             for(size_t l=0;l<modelWeights.numLayers;++l){
                 forwardLayer(l,hidden,layerOut,seqLen);
                 std::memcpy(
                     hidden,layerOut,config.hiddenDim*sizeof(float));
+                ++dualRowLayersDone;
                 ++gpuFwd_.hostForwardLayerCalls; // planned orchestration
             }
             ++gpuFwd_.dualRowDenseTokens;
@@ -3400,6 +3419,8 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
             std::fprintf(stderr,
                 "[Deep2Engine] dual-row dense forward failed: %s\n",
                 ex.what());
+            if(dualRowLayersDone>0)
+                return blockCommittedFallback("dual_row", ExecutionRoute::VulkanDualRow);
             if(vulkanStrictNoCpuFallback_){
                 vulkanStrictViolation_=true;
                 return ForwardResult{false, ExecutionRoute::VulkanDualRow, false, "dual_row_exception"};
@@ -3418,6 +3439,8 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
 
         ++vulkanGemvFail_;
         gpuFwdCommitted_ = false;
+        if (gpuFwdStateMutated_)
+            return blockCommittedFallback("batch9", ExecutionRoute::VulkanResident);
         if (vulkanStrictNoCpuFallback_) {
             vulkanStrictViolation_ = true;
             return ForwardResult{false, ExecutionRoute::VulkanResident, false, "tryGpuTokenForward_failed"};

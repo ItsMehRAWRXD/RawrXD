@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "deep2_openai_server.h"
+#include "ChatTemplate.hpp"
 #include <nlohmann/json.hpp>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -270,23 +271,27 @@ static std::optional<ChatCompletionRequest> parseChatCompletionRequest(const std
 }
 
 // ---------------------------------------------------------------------------
-// Prompt assembly (chat template approximation)
+// Prompt assembly using model-aware ChatTemplate
 // ---------------------------------------------------------------------------
-static std::string assemblePrompt(const ChatCompletionRequest& req) {
+static std::string assemblePrompt(const ChatCompletionRequest& req, const Deep2::ChatTemplate& tmpl) {
+    if (tmpl.isInitialized()) {
+        std::vector<Deep2::ChatMessage> msgs;
+        if (!req.systemPrompt.empty()) {
+            msgs.push_back({"system", req.systemPrompt, ""});
+        }
+        for (const auto& [role, content] : req.messages) {
+            msgs.push_back({role, content, ""});
+        }
+        return tmpl.format(msgs);
+    }
+    // Fallback: raw prompt (no template)
     std::ostringstream oss;
     if (!req.systemPrompt.empty()) {
-        oss << "<system>\n" << req.systemPrompt << "\n</system>\n\n";
+        oss << req.systemPrompt << "\n\n";
     }
     for (const auto& [role, content] : req.messages) {
-        if (role == "user") {
-            oss << "<|user|\u003e\n" << content << "\n";
-        } else if (role == "assistant") {
-            oss << "<|assistant|\u003e\n" << content << "\n";
-        } else {
-            oss << role << ": " << content << "\n";
-        }
+        oss << role << ": " << content << "\n";
     }
-    oss << "<|assistant|\u003e\n";
     return oss.str();
 }
 
@@ -313,6 +318,7 @@ struct OpenAIServer::Impl {
     RequestLogCallback logCallback;
     std::string loadedModelPath;
     std::string modelId; // Exposed in /v1/models
+    Deep2::ChatTemplate chatTemplate;
 
     ~Impl() {
         shouldStop.store(true);
@@ -334,23 +340,15 @@ OpenAIServer::~OpenAIServer() = default;
 
 bool OpenAIServer::loadModel(const std::string& ggufPath) {
     pImpl->engine = engine_.get();
-    Deep2::EngineConfig cfg{};
-    cfg.maxSeqLen = 4096;
-    cfg.useKVCache = true;
-    cfg.useThreadPool = true;
-    cfg.numThreads = 0;
 
-    if (!engine_->initialize(cfg)) {
-        std::fprintf(stderr, "[OpenAI] ENGINE_INIT=FAIL\n");
+    fprintf(stderr, "D2LOAD_S04a_MODEL_ENTER\n"); fflush(stderr);
+    if (!engine_->loadModel(ggufPath)) {
+        fprintf(stderr, "D2LOAD_FAIL_STAGE=MODEL_LOAD\n"); fflush(stderr);
+        fprintf(stderr, "D2LOAD_FAIL_REASON=Deep2Engine::loadModel returned false\n"); fflush(stderr);
+        std::fprintf(stderr, "[OpenAI] MODEL_LOAD=FAIL\n");
         return false;
     }
-
-    Deep2::ModelLoadDiag diag{};
-    if (!engine_->loadModel(ggufPath, &diag)) {
-        std::fprintf(stderr, "[OpenAI] MODEL_LOAD=FAIL  stage=%s  msg=%s\n",
-                     diag.stageName.c_str(), diag.message.c_str());
-        return false;
-    }
+    fprintf(stderr, "D2LOAD_S04b_MODEL_PASS\n"); fflush(stderr);
 
     pImpl->loadedModelPath = ggufPath;
     // Derive a clean model id from the filename
@@ -358,6 +356,14 @@ bool OpenAIServer::loadModel(const std::string& ggufPath) {
     std::string filename = (pos != std::string::npos) ? ggufPath.substr(pos + 1) : ggufPath;
     size_t dot = filename.find_last_of('.');
     pImpl->modelId = (dot != std::string::npos) ? filename.substr(0, dot) : filename;
+
+    // Initialize chat template from GGUF metadata
+    pImpl->chatTemplate.initFromGGUF(ggufPath);
+    if (!pImpl->chatTemplate.isInitialized()) {
+        std::fprintf(stderr, "[OpenAI] WARNING: ChatTemplate init failed for %s, using raw fallback\n", pImpl->modelId.c_str());
+    } else {
+        std::fprintf(stderr, "[OpenAI] ChatTemplate=%s for model=%s\n", pImpl->chatTemplate.getTypeName(), pImpl->modelId.c_str());
+    }
 
     std::fprintf(stderr, "[OpenAI] MODEL_LOAD=PASS  model=%s\n", pImpl->modelId.c_str());
     return true;
@@ -490,7 +496,7 @@ static void handleConnection(SOCKET clientSock,
                 goto done;
             }
 
-            std::string prompt = assemblePrompt(chatReq);
+            std::string prompt = assemblePrompt(chatReq, pImpl->chatTemplate);
             std::string responseId = generateId("chatcmpl-");
             uint64_t created = unixTimestamp();
 

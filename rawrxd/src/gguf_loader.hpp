@@ -101,6 +101,7 @@ public:
     std::vector<std::string> ListMetadataKeys() const;
 
     std::optional<uint32_t> GetUint32Metadata(const std::string& key) const;
+    std::optional<float> GetFloat32Metadata(const std::string& key) const;
     std::optional<std::string> GetStringMetadata(const std::string& key) const;
     std::optional<uint64_t> GetUint64Metadata(const std::string& key) const;
 

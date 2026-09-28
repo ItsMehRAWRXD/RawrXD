@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <chrono>
+#include <span>
 
 namespace rawrxd::deep2 {
 

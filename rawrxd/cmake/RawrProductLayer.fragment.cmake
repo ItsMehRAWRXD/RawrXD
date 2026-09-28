@@ -6,30 +6,44 @@ endif()
 
 set(ML64 "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe")
 set(RAWR_PRODUCT_ASM_OBJ "${CMAKE_BINARY_DIR}/rawr_product_x64.obj")
-add_custom_command(
-  OUTPUT ${RAWR_PRODUCT_ASM_OBJ}
-  COMMAND "${ML64}" /c /Fo "${RAWR_PRODUCT_ASM_OBJ}"
-          "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_x64.asm"
-  DEPENDS "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_x64.asm"
-  COMMENT "Assemble rawr_product_x64.asm")
-add_custom_target(rawr_product_x64_asm DEPENDS ${RAWR_PRODUCT_ASM_OBJ})
-
 set(RAWR_PIPE_ASM_OBJ "${CMAKE_BINARY_DIR}/rawr_product_pipe_x64.obj")
-add_custom_command(
-  OUTPUT ${RAWR_PIPE_ASM_OBJ}
-  COMMAND "${ML64}" /c /Fo "${RAWR_PIPE_ASM_OBJ}"
-          "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_pipe_x64.asm"
-  DEPENDS "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_pipe_x64.asm"
-  COMMENT "Assemble rawr_product_pipe_x64.asm")
-add_custom_target(rawr_product_pipe_x64_asm DEPENDS ${RAWR_PIPE_ASM_OBJ})
+set(RAWR_PRODUCT_ASM_OBJS "")
 
-set(RAWR_PRODUCT_ASM_OBJS ${RAWR_PRODUCT_ASM_OBJ} ${RAWR_PIPE_ASM_OBJ})
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_x64.asm")
+  add_custom_command(
+    OUTPUT ${RAWR_PRODUCT_ASM_OBJ}
+    COMMAND "${ML64}" /c /Fo "${RAWR_PRODUCT_ASM_OBJ}"
+            "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_x64.asm"
+    DEPENDS "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_x64.asm"
+    COMMENT "Assemble rawr_product_x64.asm")
+  add_custom_target(rawr_product_x64_asm DEPENDS ${RAWR_PRODUCT_ASM_OBJ})
+  list(APPEND RAWR_PRODUCT_ASM_OBJS ${RAWR_PRODUCT_ASM_OBJ})
+else()
+  add_custom_target(rawr_product_x64_asm)
+  message(STATUS "[RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping MASM: src/masm/rawr_product_x64.asm not found")
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_pipe_x64.asm")
+  add_custom_command(
+    OUTPUT ${RAWR_PIPE_ASM_OBJ}
+    COMMAND "${ML64}" /c /Fo "${RAWR_PIPE_ASM_OBJ}"
+            "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_pipe_x64.asm"
+    DEPENDS "${CMAKE_SOURCE_DIR}/src/masm/rawr_product_pipe_x64.asm"
+    COMMENT "Assemble rawr_product_pipe_x64.asm")
+  add_custom_target(rawr_product_pipe_x64_asm DEPENDS ${RAWR_PIPE_ASM_OBJ})
+  list(APPEND RAWR_PRODUCT_ASM_OBJS ${RAWR_PIPE_ASM_OBJ})
+else()
+  add_custom_target(rawr_product_pipe_x64_asm)
+  message(STATUS "[RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping MASM: src/masm/rawr_product_pipe_x64.asm not found")
+endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/certs/rawrxd_product_layer_001.cpp")
   add_executable(rawrxd_product_layer_001
     certs/rawrxd_product_layer_001.cpp
     ${RAWR_PRODUCT_ASM_OBJS})
-  add_dependencies(rawrxd_product_layer_001 rawr_product_x64_asm rawr_product_pipe_x64_asm)
+  if(RAWR_PRODUCT_ASM_OBJS)
+    add_dependencies(rawrxd_product_layer_001 rawr_product_x64_asm rawr_product_pipe_x64_asm)
+  endif()
   target_include_directories(rawrxd_product_layer_001 PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/product)
@@ -47,7 +61,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/certs/rawrxd_product_layer_002.cpp")
   add_executable(rawrxd_product_layer_002
     certs/rawrxd_product_layer_002.cpp
     ${RAWR_PRODUCT_ASM_OBJS})
-  add_dependencies(rawrxd_product_layer_002 rawr_product_x64_asm rawr_product_pipe_x64_asm)
+  if(RAWR_PRODUCT_ASM_OBJS)
+    add_dependencies(rawrxd_product_layer_002 rawr_product_x64_asm rawr_product_pipe_x64_asm)
+  endif()
   target_include_directories(rawrxd_product_layer_002 PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/product
@@ -68,7 +84,9 @@ function(rawr_product_cert name src)
     add_executable(${name} ${src}
       ${CMAKE_SOURCE_DIR}/src/product/gateway/product_deep2_infer.cpp
       ${RAWR_PRODUCT_ASM_OBJS})
-    add_dependencies(${name} rawr_product_x64_asm rawr_product_pipe_x64_asm)
+    if(RAWR_PRODUCT_ASM_OBJS)
+      add_dependencies(${name} rawr_product_x64_asm rawr_product_pipe_x64_asm)
+    endif()
     target_include_directories(${name} PRIVATE
       ${CMAKE_SOURCE_DIR}/src
       ${CMAKE_SOURCE_DIR}/src/product
@@ -114,7 +132,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/certs/rawrxd_product_layer_003.cpp")
   add_executable(rawrxd_product_layer_003
     certs/rawrxd_product_layer_003.cpp
     ${RAWR_PRODUCT_ASM_OBJS})
-  add_dependencies(rawrxd_product_layer_003 rawr_product_x64_asm rawr_product_pipe_x64_asm)
+  if(RAWR_PRODUCT_ASM_OBJS)
+    add_dependencies(rawrxd_product_layer_003 rawr_product_x64_asm rawr_product_pipe_x64_asm)
+  endif()
   target_include_directories(rawrxd_product_layer_003 PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/product)
@@ -132,8 +152,10 @@ if(TARGET rawr)
   target_include_directories(rawr PRIVATE
     ${CMAKE_SOURCE_DIR}/src/product)
   # CmdRun/product_serve need framed-pipe + token/FNV ABI (MASM).
-  target_sources(rawr PRIVATE ${RAWR_PRODUCT_ASM_OBJS})
-  add_dependencies(rawr rawr_product_x64_asm rawr_product_pipe_x64_asm)
+  if(RAWR_PRODUCT_ASM_OBJS)
+    target_sources(rawr PRIVATE ${RAWR_PRODUCT_ASM_OBJS})
+    add_dependencies(rawr rawr_product_x64_asm rawr_product_pipe_x64_asm)
+  endif()
   target_link_libraries(rawr PRIVATE ws2_32)
 endif()
 

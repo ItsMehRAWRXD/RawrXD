@@ -1,0 +1,72 @@
+[1/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\inference_kernels.cpp.obj
+[2/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\bpe_tokenizer.cpp.obj
+[3/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sampler.cpp.obj
+[4/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\rawr_engine.cpp.obj
+[5/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\core_generator.cpp.obj
+[6/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\pyre_compute.cpp.obj
+[7/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sovereign_engines.cpp.obj
+[8/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\utils\Diagnostics.cpp.obj
+[9/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\TitanLoaderDiagnostics.cpp.obj
+[10/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\MemoryPressureGuard.cpp.obj
+[11/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\PerformanceMonitor.cpp.obj
+[12/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\NegativeSpaceProfiler.cpp.obj
+[13/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_inference.cpp.obj
+FAILED: [code=2] CMakeFiles/InferenceEngine.dir/src/rawrxd_inference.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_SOVEREIGN_ENGINES=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DRAWR_STANDALONE_INFERENCE=1 -DRAWR_VULKAN_AVAILABLE=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -IF:\~dev\rawrxd\include -IC:\VulkanSDK\1.4.357.0\Include -IF:\~dev\rawrxd\src -IF:\~dev\rawrxd\src\deep2 -IF:\~dev\rawrxd\src\inference -IF:\~dev\rawrxd\src\engine -IF:\~dev\rawrxd\src\core -IF:\~dev\rawrxd\src\codec -IF:\~dev\rawrxd\src\masm -IF:\~dev\rawrxd\src\runtime\governance -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /EHsc /W0 /arch:AVX512 /O2 /showIncludes /FoCMakeFiles\InferenceEngine.dir\src\rawrxd_inference.cpp.obj /FdCMakeFiles\InferenceEngine.dir\InferenceEngine.pdb /FS -c F:\~dev\rawrxd\src\rawrxd_inference.cpp
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(228): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(228): error C2146: syntax error: missing ';' before identifier 'rawrxd_model_load_tensor'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(242): error C2143: syntax error: missing ';' before '*'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(242): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(242): error C2238: unexpected token(s) preceding ';'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(309): error C3646: 'rng': unknown override specifier
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(309): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(330): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(330): error C2086: 'int rawrxd_result': redefinition
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(228): note: see declaration of 'rawrxd_result'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(330): error C2146: syntax error: missing ';' before identifier 'rawrxd_forward'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(335): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(335): error C2086: 'int rawrxd_result': redefinition
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(228): note: see declaration of 'rawrxd_result'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(335): error C2146: syntax error: missing ';' before identifier 'rawrxd_forward_batch'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(341): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(341): error C2086: 'int rawrxd_result': redefinition
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(228): note: see declaration of 'rawrxd_result'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(341): error C2146: syntax error: missing ';' before identifier 'rawrxd_prefill'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(374): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(374): error C2086: 'int rawrxd_result': redefinition
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(228): note: see declaration of 'rawrxd_result'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(374): error C2146: syntax error: missing ';' before identifier 'rawrxd_generate'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(379): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(379): error C2086: 'int rawrxd_result': redefinition
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(228): note: see declaration of 'rawrxd_result'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(379): error C2146: syntax error: missing ';' before identifier 'rawrxd_generate_tokens'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(387): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(387): error C2086: 'int rawrxd_result': redefinition
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(228): note: see declaration of 'rawrxd_result'
+F:\~dev\rawrxd\src\core/rawrxd_inference.h(387): error C2146: syntax error: missing ';' before identifier 'rawrxd_generate_stream'
+[14/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ErrorRecoveryManager.cpp.obj
+[15/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\engine_registry.cpp.obj
+[16/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer_forwardbatch.cpp.obj
+FAILED: [code=2] CMakeFiles/InferenceEngine.dir/src/rawrxd_transformer_forwardbatch.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_SOVEREIGN_ENGINES=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DRAWR_STANDALONE_INFERENCE=1 -DRAWR_VULKAN_AVAILABLE=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -IF:\~dev\rawrxd\include -IC:\VulkanSDK\1.4.357.0\Include -IF:\~dev\rawrxd\src -IF:\~dev\rawrxd\src\deep2 -IF:\~dev\rawrxd\src\inference -IF:\~dev\rawrxd\src\engine -IF:\~dev\rawrxd\src\core -IF:\~dev\rawrxd\src\codec -IF:\~dev\rawrxd\src\masm -IF:\~dev\rawrxd\src\runtime\governance -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /EHsc /W0 /arch:AVX512 /O2 /showIncludes /FoCMakeFiles\InferenceEngine.dir\src\rawrxd_transformer_forwardbatch.cpp.obj /FdCMakeFiles\InferenceEngine.dir\InferenceEngine.pdb /FS -c F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(108): error C2039: 'random_device': is not a member of 'std'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\future(36): note: see declaration of 'std'
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(108): error C2065: 'random_device': undeclared identifier
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(108): error C2146: syntax error: missing ';' before identifier 'rd'
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(108): error C2065: 'rd': undeclared identifier
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(109): error C2039: 'mt19937': is not a member of 'std'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\future(36): note: see declaration of 'std'
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(109): error C2065: 'mt19937': undeclared identifier
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(109): error C2146: syntax error: missing ';' before identifier 'gen'
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(109): error C3861: 'rd': identifier not found
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(109): error C3861: 'gen': identifier not found
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(110): error C2039: 'uniform_real_distribution': is not a member of 'std'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\future(36): note: see declaration of 'std'
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(110): error C2062: type 'float' unexpected
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(111): error C2065: 'gen': undeclared identifier
+F:\~dev\rawrxd\src\rawrxd_transformer_forwardbatch.cpp(111): error C3861: 'dist': identifier not found
+[17/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\transformer.cpp.obj
+[18/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\gguf_swarm_plan_builder.cpp.obj
+[19/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\layer_offload_manager.cpp.obj
+[20/406] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\swarm_scheduler.cpp.obj
+ninja: build stopped: subcommand failed.

@@ -1,5 +1,5 @@
 ﻿#include "rawrxd_transformer.hpp"
-#include <math>
+#include <cmath>
 #include <numeric>
 #include <algorithm>
 #include <mutex>

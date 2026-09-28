@@ -1,0 +1,10 @@
+GATE=RAWRXD_AUDIT_SESSION_2_START
+SOURCE_BRANCH=audit-session-2-cleanup
+BASE_BRANCH=master (455 uncommitted changes carried; nothing committed)
+BUILD_DIR=F:\~dev\rawrxd\build (Visual Studio 17 2022, Release)
+MODE=CLEANUP_ONLY
+TPS_OPTIMIZATION=0
+GPU_RMS_FIX=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+VERDICT=STARTED

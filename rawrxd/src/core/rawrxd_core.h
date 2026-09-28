@@ -16,6 +16,25 @@
 #include <math.h>
 #include <stdio.h>
 
+/* Short numeric type aliases used by the rawrxd_* headers (inference/tools).
+   Kept in the core header so every consumer gets them transitively. */
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef int8_t   i8;
+typedef int16_t  i16;
+typedef int32_t  i32;
+typedef int64_t  i64;
+typedef float    f32;
+typedef double   f64;
+typedef uint16_t f16; // FP16 storage type (bit pattern)
+
+// Forward declarations for opaque types used by rawrxd_inference.h
+typedef struct rawrxd_strmap rawrxd_strmap;
+typedef struct rawrxd_thread rawrxd_thread;
+typedef struct rawrxd_mutex  rawrxd_mutex;
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -325,7 +344,7 @@ static RXDQuant rxd_quant(const float* data, size_t count, GGMLType type) {
             RXDQuant r = {0}; r.size = count * sizeof(float);
             r.data = malloc(r.size); memcpy(r.data, data, r.size); return r;
         }
-        default: return (RXDQuant){0};
+        default: { RXDQuant z = {}; return z; }
     }
 }
 
@@ -359,11 +378,11 @@ static RXDModel rxd_model_load(const char* path) {
     m.file_size = map.size;
     const uint8_t* p = (const uint8_t*)m.file_view;
     m.magic = *(const uint32_t*)p; p += 4;
-    if (m.magic != GGUF_MAGIC) { rxd_mmap_destroy(&map); return (RXDModel){0}; }
+    if (m.magic != GGUF_MAGIC) { rxd_mmap_destroy(&map); RXDModel z = {}; return z; }
     m.version = *(const uint32_t*)p; p += 4;
     m.tensor_count = *(const uint64_t*)p; p += 8;
     uint64_t meta_kv = *(const uint64_t*)p; p += 8; (void)meta_kv;
-    if (m.tensor_count > RXD_MAX_TENSORS) { rxd_mmap_destroy(&map); return (RXDModel){0}; }
+    if (m.tensor_count > RXD_MAX_TENSORS) { rxd_mmap_destroy(&map); RXDModel z = {}; return z; }
     m.tensors = (RXDTensorInfo*)calloc(m.tensor_count, sizeof(RXDTensorInfo));
     for (uint64_t i = 0; i < m.tensor_count; i++) {
         uint64_t name_len = *(const uint64_t*)p; p += 8;
@@ -820,13 +839,13 @@ static uint32_t rxd_tool_count = 0;
 
 static void rxd_tools_init(void) {
     if (rxd_tool_count > 0) return;
-    rxd_tools[rxd_tool_count++] = (RXDToolDef){RXD_TOOL_FILE_READ, "file_read", "Read file contents", rxd_tool_file_read, NULL};
-    rxd_tools[rxd_tool_count++] = (RXDToolDef){RXD_TOOL_FILE_WRITE, "file_write", "Write file contents", rxd_tool_file_write, NULL};
-    rxd_tools[rxd_tool_count++] = (RXDToolDef){RXD_TOOL_FILE_DELETE, "file_delete", "Delete a file", rxd_tool_file_delete, NULL};
-    rxd_tools[rxd_tool_count++] = (RXDToolDef){RXD_TOOL_TERM_EXEC, "term_exec", "Execute terminal command", rxd_tool_term_exec, NULL};
-    rxd_tools[rxd_tool_count++] = (RXDToolDef){RXD_TOOL_GIT_CMD, "git_cmd", "Execute git command", rxd_tool_git_cmd, NULL};
-    rxd_tools[rxd_tool_count++] = (RXDToolDef){RXD_TOOL_MEMORY_STORE, "memory_store", "Store key-value in memory", rxd_tool_memory_store, NULL};
-    rxd_tools[rxd_tool_count++] = (RXDToolDef){RXD_TOOL_MEMORY_RECALL, "memory_recall", "Recall value from memory", rxd_tool_memory_recall, NULL};
+    rxd_tools[rxd_tool_count++] = {RXD_TOOL_FILE_READ, "file_read", "Read file contents", rxd_tool_file_read, NULL};
+    rxd_tools[rxd_tool_count++] = {RXD_TOOL_FILE_WRITE, "file_write", "Write file contents", rxd_tool_file_write, NULL};
+    rxd_tools[rxd_tool_count++] = {RXD_TOOL_FILE_DELETE, "file_delete", "Delete a file", rxd_tool_file_delete, NULL};
+    rxd_tools[rxd_tool_count++] = {RXD_TOOL_TERM_EXEC, "term_exec", "Execute terminal command", rxd_tool_term_exec, NULL};
+    rxd_tools[rxd_tool_count++] = {RXD_TOOL_GIT_CMD, "git_cmd", "Execute git command", rxd_tool_git_cmd, NULL};
+    rxd_tools[rxd_tool_count++] = {RXD_TOOL_MEMORY_STORE, "memory_store", "Store key-value in memory", rxd_tool_memory_store, NULL};
+    rxd_tools[rxd_tool_count++] = {RXD_TOOL_MEMORY_RECALL, "memory_recall", "Recall value from memory", rxd_tool_memory_recall, NULL};
 }
 
 static RXDToolDef* rxd_tool_find(const char* name) {

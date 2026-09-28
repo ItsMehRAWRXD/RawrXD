@@ -429,10 +429,12 @@ bool Deep2Engine::computeMLAAttentionGpu(
 
 bool Deep2Engine::forwardTokenGpuHybrid(float* hidden,size_t seqLen)
 {
+    gpuFwdStateMutated_=false;
     if(!hidden||!seqLen||!vulkanInitialized_||vulkanDevices_.empty()||
        modelWeights.layers.size()<modelWeights.numLayers)
         return false;
 
+    gpuFwdStateMutated_=true;
     try{
         for(size_t l=0;l<modelWeights.numLayers;++l){
             forwardLayer(l,hidden,layerTemp,seqLen);

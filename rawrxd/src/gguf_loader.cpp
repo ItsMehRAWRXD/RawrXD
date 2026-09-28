@@ -275,6 +275,18 @@ std::optional<uint32_t> GGUFLoader::GetUint32Metadata(const std::string& key) co
     return std::nullopt;
 }
 
+std::optional<float> GGUFLoader::GetFloat32Metadata(const std::string& key) const {
+    auto mv = GetMetadata(key);
+    if (!mv) return std::nullopt;
+    if (std::holds_alternative<float>(mv->value)) return std::get<float>(mv->value);
+    if (std::holds_alternative<double>(mv->value)) return static_cast<float>(std::get<double>(mv->value));
+    if (std::holds_alternative<uint32_t>(mv->value)) return static_cast<float>(std::get<uint32_t>(mv->value));
+    if (std::holds_alternative<int32_t>(mv->value)) return static_cast<float>(std::get<int32_t>(mv->value));
+    if (std::holds_alternative<uint64_t>(mv->value)) return static_cast<float>(std::get<uint64_t>(mv->value));
+    if (std::holds_alternative<int64_t>(mv->value)) return static_cast<float>(std::get<int64_t>(mv->value));
+    return std::nullopt;
+}
+
 std::optional<std::string> GGUFLoader::GetStringMetadata(const std::string& key) const {
     auto mv = GetMetadata(key);
     if (!mv) return std::nullopt;

@@ -1,0 +1,53 @@
+GATE=RAWRXD_AUDIT_SESSION_2A_CLEANUP_FLOOR
+SOURCE_BRANCH=audit-session-2-cleanup (uncommitted)
+BUILD_DIR=F:\~dev\rawrxd\build (VS 17 2022, Release)
+MODE=CLEANUP_ONLY
+TPS_OPTIMIZATION=0
+GPU_RMS_FIX=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+# Step 1 - committed fallback (A002, merged A015)
+STRICT_GPU_COMMITTED_FALLBACK=FATAL                      # source + compile
+NONSTRICT_GPU_COMMITTED_FALLBACK=FATAL                   # source + compile
+LANES_GUARDED=moe_hybrid,resident_first,dual_row,batch9
+FILES=Deep2Engine.h, Deep2Engine.cpp, Deep2Engine_VulkanRuntime.cpp, Deep2Engine_GpuMoEMLA.cpp
+EMIT=COMMITTED_FALLBACK_BLOCKED=1 STRICT_NATIVE_ABORT=1 VERDICT=FAIL stage=<lane>
+COMMITTED_FALLBACK_RUNTIME_CHECK=NOT_RUN                 # no linkable binary
+UNSAFE_FALLBACKS_REMAINING=6 sites unaudited (Deep2Engine.cpp ~2283 ~2870 ~3018; VulkanRuntime ~177 ~206; Speculative strict sites)
+
+# Step 2 - duplicates
+DUPLICATE_SOURCE_FILES_REMOVED=2 (QuantKernelRegistry_out.cpp, vulkan_compute_tmp.cpp)
+BUILD_REFERENCES=0
+STALE_COPIES_REMAINING=Q.txt, Deep2Engine*.bak, vulkan_compute*.h variants (ledger A025)
+
+# Step 3 - Q2_K MASM
+Q2K_KNOWN_WRONG_PRODUCT_PATH=COMPILE_TIME_BANNED        # sovereign_q2_k_gemv.asm out of CMake; wrapper + extern deleted
+BLOCK_Q2K_STATIC_ASSERT_84=PASS                          # QuantKernelRegistry.cpp compiled
+RUNTIME_Q2K_ESCAPE_REMOVED=PASS                          # flag kept as 84-byte route selector; cannot reach MASM
+Q2K_PRODUCT_SHADER=MISSING                               # gemv_q2k.spv absent
+
+# Step 4 - #if 0
+IF0_DEAD_BLOCKS_REDUCED=55 (832 lines; ssot_handlers_ext.cpp 54, link_stubs.cpp 1)
+IF0_BLOCKS_AFTER=0 non-vendored (sqlite3.c 52 vendored, untouched)
+SSOT_HANDLERS_EXT_COMPILE=NOT_RUN                        # IDE-only target, off
+
+# Baseline repairs (pre-existing breaks, needed to reach the Deep2 files)
+CMAKE_CONFIGURE=PASS (was FAIL: rawrxd_filter_missing_sources undefined)
+DEEP2_COMPILE_ERRORS=0 (baseline: 186 in deep2)
+REPAIRS=forwardTokenAllLayers decl; CPUInference::VulkanCompute alias clash (DualStickStreamWindow.hpp); vulkan_compute.h include (GpuForward); <math>-><cmath> x4; <span> x2; <chrono> x1
+
+# Step 5 - build
+BASELINE_BUILD=FAIL all 5 (InferenceEngine 384 errors)
+BUILD=FAIL all 5 (InferenceEngine 195 errors, all non-Deep2: rawrxd_inference.*, rawrxd_transformer*, rawrxd_core.h, cpu_inference_engine.* (untracked), compression.cpp (zlib), gguf_core.cpp)
+AUTHORITY_REGRESSION=NOT_RUN
+
+# Step 6 - docs
+AUDIT_LEDGER_UPDATED=PASS
+STUB_FALLBACK_REPORT_UPDATED=PASS
+CONFIG_FLAGS_UPDATED=PASS
+EXECUTABLE_MAP_UPDATED=PASS
+
+VERDICT=HOLD
+HOLD_REASON=InferenceEngine does not link (non-Deep2 sources); fallback block not exercised at runtime
+NEXT_GATE=SESSION_2B_AUTHORITY_COLLAPSE (decide repair vs remove for the non-Deep2 sources in InferenceEngine)

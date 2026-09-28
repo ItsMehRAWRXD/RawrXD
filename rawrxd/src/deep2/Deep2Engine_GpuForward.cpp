@@ -10,6 +10,7 @@
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "Deep2LivePath.hpp"
 #include "GPUForwardChildIgnoreHooks.hpp"
+#include "vulkan_compute.h"
 #include <chrono>
 #include <cmath>
 #include <cstdio>

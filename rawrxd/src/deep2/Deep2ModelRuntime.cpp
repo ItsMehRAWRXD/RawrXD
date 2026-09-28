@@ -2,7 +2,7 @@
 #include <map>
 #include <stdexcept>
 #include <chrono>
-#include <math>
+#include <cmath>
 
 namespace rawrxd::deep2 {
 

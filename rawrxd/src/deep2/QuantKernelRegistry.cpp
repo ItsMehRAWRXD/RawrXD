@@ -132,9 +132,9 @@ extern "C" {
     void Sovereign_Q4K_GEMV_AVX2_V2(const void* q4_weights, const float* input,
                                      float* output, unsigned int num_blocks, unsigned int rows);
 
-    // Q2_K / Q3_K MASM kernels (real implementations in sovereign_q2_k_gemv.asm / sovereign_q3_k_gemv.asm)
-    void Deep2_Q2_K_GEMV(const void* weights, const float* input, float* output,
-                         unsigned int numBlocks, unsigned int outputDim);
+    // Q3_K MASM kernel (sovereign_q3_k_gemv.asm). No Q2_K MASM symbol: the
+    // 72-byte-stride sovereign_q2_k_gemv.asm is excluded from every build;
+    // GGUF block_q2_K is 84 bytes.
     void Deep2_Q3_K_GEMV(const void* weights, const float* input, float* output,
                          unsigned int numBlocks, unsigned int outputDim);
 
@@ -169,29 +169,6 @@ static void gemv_q4_k_masm(
     size_t blocksPerRow = (cols + 255) / 256;
     Sovereign_Q4K_GEMV_AVX2_V2(w, x, y, static_cast<unsigned int>(blocksPerRow),
                                   static_cast<unsigned int>(rows));
-}
-
-// Q2_K wrapper: standard GEMV -> Deep2_Q2_K_GEMV
-// HARD BAN for product decode: sovereign_q2_k_gemv.asm advances by 72 bytes;
-// GGUF block_q2_K is 84. Never register this for RAWRXD_Q2K_PRODUCT_DECODE=1.
-static void gemv_q2_k_masm(
-    const uint8_t* RESTRICT w,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    const char* pd = std::getenv("RAWRXD_Q2K_PRODUCT_DECODE");
-    if (pd && pd[0] == '1') {
-        /* soft-fail: zero outputs; do not touch 72-byte MASM */
-        std::memset(y, 0, rows * sizeof(float));
-        std::fprintf(stderr,
-            "Q2K_72_BYTE_MASM_FORBIDDEN RAWRXD_Q2K_PRODUCT_DECODE=1 "
-            "use_84_byte_packed_DispatchGemvQuant\n");
-        return;
-    }
-    size_t blocksPerRow = (cols + 255) / 256;
-    Deep2_Q2_K_GEMV(w, x, y, static_cast<unsigned int>(blocksPerRow),
-                     static_cast<unsigned int>(rows));
 }
 
 // Q3_K wrapper: standard GEMV -> Deep2_Q3_K_GEMV
@@ -1906,12 +1883,10 @@ void QuantKernelRegistry::RegisterBuiltins() {
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
 
     // --- Q2_K ---
-    // LAW: block_q2_K = 84 bytes. Deep2_Q2_K_GEMV (72-byte MASM) is FORBIDDEN
-    // for product decode (RAWRXD_Q2K_PRODUCT_DECODE=1 soft-fails gemv_q2_k_masm).
+    // LAW: block_q2_K = 84 bytes. There is no Q2_K MASM kernel in the build.
     // Product path: Vulkan DispatchGemvQuant / packed dual 84-byte SsVk.
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q2_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q2_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q2_K, dequant_q2_k);
-    // Never register gemv_q2_k_masm here — scalar only; GPU packed owns product decode.
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
 
     // --- Q3_K ---

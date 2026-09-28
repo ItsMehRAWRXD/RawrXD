@@ -570,6 +570,7 @@ public:
         bool gpuCommitted = false;
         const char* failureStage = nullptr;
     };
+    ForwardResult forwardTokenAllLayers(float* hidden, size_t seqLen);
 
     // RAWRXD_CONTINUOUS_STREAM_REALITY_001 — the only live decode primitive.
     // There is no other generation path for chat, agentic, swarm, or tool-resume mode.
@@ -1166,6 +1167,10 @@ private:
     uint64_t plannedGpuGemvOps_ = 0;
     GpuForwardCounters gpuFwd_{};
     bool gpuFwdCommitted_ = false;
+    // Set once tryGpuTokenForward or forwardTokenGpuHybrid starts layer work
+    // for the current token; after that, device KV/residency or hidden may
+    // hold partial state and any host or alternate-lane retry is illegal.
+    bool gpuFwdStateMutated_ = false;
 
     // B5_SLOT1_RANGE_RESIDENCY_001: per-slot layer-range pin state.
     bool layerRangePinned_[2] = {false, false};

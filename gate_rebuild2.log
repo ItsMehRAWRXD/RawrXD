@@ -1,0 +1,14 @@
+
+  vulkan_compute.cpp
+F:\~dev\rawrxd\src\deep2\vulkan_compute.cpp(574,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\deep2_185in30_gate.vcxproj]
+F:\~dev\rawrxd\src\deep2\vulkan_compute.cpp(756,28): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\deep2_185in30_gate.vcxproj]
+F:\~dev\rawrxd\src\deep2\vulkan_compute.cpp(759,25): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\deep2_185in30_gate.vcxproj]
+F:\~dev\rawrxd\src\deep2\vulkan_compute.cpp(2135,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\deep2_185in30_gate.vcxproj]
+F:\~dev\rawrxd\src\deep2\vulkan_compute.cpp(2352,32): warning C4456: declaration of 'lane' hides previous local declaration [F:\~dev\build_streaming\deep2_185in30_gate.vcxproj]
+      F:\~dev\rawrxd\src\deep2\vulkan_compute.cpp(2333,22):
+      see declaration of 'lane'
+  
+F:\~dev\rawrxd\src\deep2\vulkan_compute.cpp(2673,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\deep2_185in30_gate.vcxproj]
+F:\~dev\rawrxd\src\deep2\vulkan_compute.cpp(3502,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\deep2_185in30_gate.vcxproj]
+F:\~dev\rawrxd\src\deep2\vulkan_compute.cpp(6511,43): warning C4100: 'epoch': unreferenced parameter [F:\~dev\build_streaming\deep2_185in30_gate.vcxproj]
+  deep2_185in30_gate.vcxproj -> F:\~dev\build_streaming\Release\deep2_185in30_gate.exe

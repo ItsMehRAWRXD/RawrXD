@@ -7,6 +7,7 @@
 #include <mutex>
 #include <chrono>
 #include <functional>
+#include <span>
 
 namespace rawrxd::deep2 {
 

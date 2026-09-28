@@ -1,0 +1,81 @@
+========================================
+  DEEP2_NATIVE_BENCHMARK_001
+========================================
+ENGINE=Deep2Engine
+VULKAN_REQUESTED=1
+STRICT_VULKAN=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=1 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+VULKAN_ENABLED=1
+STRICT_VULKAN_PASS=1
+MODEL_LOAD: loading F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf ...
+[Deep2Engine] ROPE_ARCH=qwen2 ROPE_THETA_GLOBAL=1000000.0 ROPE_THETA_LOCAL=1000000.0 SLIDING_WINDOW=0 SLIDING_WINDOW_PATTERN=0
+[Deep2Engine] GGUF mapped: arch=qwen2 shards=1 tensors=771 layers=64 hidden=5120 heads=40 kv_heads=8 vocab=152064
+ARCH=qwen2
+HIDDEN=5120
+LAYERS=64
+HEADS=40
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=5
+FFN_DIM=27648
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=present
+K_BIAS=present
+V_BIAS=present
+TIE_EMBED=0
+MODEL_LOAD=PASS 912 ms
+MODEL_ARCH=qwen2
+MODEL_LAYERS=64
+MODEL_HIDDEN=5120
+MODEL_HEADS=40
+MODEL_KV_HEADS=8
+GPU_FORWARD_ENTER hidden=00000160DDD49020 loaded=1 vulkanEnabled=1 init=1 devices=1 layers=64
+GPU_FORWARD_STAGE=CONTIGUOUS_RANGE
+[HOT_LANE_PREP_OK] slot=0 maxIn=27648 maxRows=152064
+UPLOAD_ENTER dstBuf=0000016056018090 src=00000160DDD49020 bytes=20480 dstSize=20480
+UPLOAD_STAGING bytes=20480
+UPLOAD_MEMCPY bytes=20480
+UPLOAD_BEGIN bytes=20480
+BEGIN_CMD_ALLOC
+BEGIN_CMD_ALLOC_OK cmd=00000160DAD4A040
+UPLOAD_COPY bytes=20480
+UPLOAD_ENDSUBMIT bytes=20480
+UPLOAD_ENDSUBMIT_FAIL bytes=20480
+GPU_FORWARD_FAIL_STAGE=RANGE_OR_MULTIMAP
+
+========================================
+  RECEIPT
+========================================
+GATE=DEEP2_NATIVE_BENCHMARK_001
+ENGINE=Deep2Engine
+EXECUTION_BACKEND=GPU
+VULKAN_REQUESTED=1
+VULKAN_INITIALIZED=1
+GPU_FORWARD=1
+CPU_FORWARD=0
+CPU_FALLBACK=0
+MODEL=F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+PROMPT_TOKENS=0
+GENERATED_TOKENS=0
+PREFILL_MS=0
+DECODE_MS=3.6
+DECODE_TPS_REAL=0.000
+VERDICT=FAIL

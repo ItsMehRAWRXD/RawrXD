@@ -1,0 +1,17 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Assemble rawr_product_x64.asm
+  Assemble rawr_product_pipe_x64.asm
+  Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+   Assembling: F:/~dev/rawrxd/src/masm/rawr_product_x64.asm
+   Assembling: F:/~dev/rawrxd/src/masm/rawr_product_pipe_x64.asm
+MASM : fatal error A1000: cannot open file : F:/~dev/rawrxd/src/masm/rawr_product_x64.asm [F:\~dev\rawrxd\build_ninja_release\rawr_product_x64_asm.vcxproj]
+MASM : fatal error A1000: cannot open file : F:/~dev/rawrxd/src/masm/rawr_product_pipe_x64.asm [F:\~dev\rawrxd\build_ninja_release\rawr_product_pipe_x64_asm.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(254,5): error MSB8066: Custom build for 'F:\~dev\rawrxd\build_ninja_release\CMakeFiles\02363ba53c9617e26bc996827f920e95\rawr_product_x64.obj.rule;F:\~dev\rawrxd\build_ninja_release\CMakeFiles\1f33cbf6ec76f253dae771bc75964b9b\rawr_product_x64_asm.rule;F:\~dev\rawrxd\CMakeLists.txt' exited with code 1. [F:\~dev\rawrxd\build_ninja_release\rawr_product_x64_asm.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(254,5): error MSB8066: Custom build for 'F:\~dev\rawrxd\build_ninja_release\CMakeFiles\02363ba53c9617e26bc996827f920e95\rawr_product_pipe_x64.obj.rule;F:\~dev\rawrxd\build_ninja_release\CMakeFiles\1f33cbf6ec76f253dae771bc75964b9b\rawr_product_pipe_x64_asm.rule;F:\~dev\rawrxd\CMakeLists.txt' exited with code 1. [F:\~dev\rawrxd\build_ninja_release\rawr_product_pipe_x64_asm.vcxproj]

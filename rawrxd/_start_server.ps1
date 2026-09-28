@@ -1,0 +1,1 @@
+$proc = Start-Process -FilePath "F:\~dev\rawrxd\build\bin\deep2_openai_server.exe" -ArgumentList "--model","D:\rawrxd\models\gemma3-1b-Q2_K.gguf","--port","11436" -RedirectStandardOutput "F:\~dev\rawrxd\_server_out.txt" -RedirectStandardError "F:\~dev\rawrxd\_server_err.txt" -PassThru -WindowStyle Hidden; Write-Output "PID=$($proc.Id)"

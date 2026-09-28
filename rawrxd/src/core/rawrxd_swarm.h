@@ -804,6 +804,7 @@ static bool rxd_token_budget_reserve(RXDAgent* agent, uint32_t tokens) {
             return false;
         }
     }
+    g_token_budget.used += tokens;
     g_token_budget.reserved += tokens;
     return true;
 }

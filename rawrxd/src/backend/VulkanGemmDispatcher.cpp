@@ -51,9 +51,10 @@ bool VulkanGemmDispatcher::Initialize(const DispatchConfig& config) {
 
     // Initialize compute queues
     // In production: query device for compute queue family indices
-    queues_.resize(config.num_queues);
+    queues_.clear();
     for (uint32_t i = 0; i < config.num_queues; ++i) {
-        auto& qs = queues_[i];
+        queues_.emplace_back(std::make_unique<QueueState>());
+        auto& qs = *queues_[i];
         
         // Create command pool
         VkCommandPoolCreateInfo pool_info{};
@@ -144,10 +145,10 @@ void VulkanGemmDispatcher::Shutdown() {
 
     // Clean up queues
     for (auto& qs : queues_) {
-        for (auto fence : qs.fences) {
+        for (auto fence : qs->fences) {
             if (fence) vkDestroyFence(vk_device_, fence, nullptr);
         }
-        if (qs.cmd_pool) vkDestroyCommandPool(vk_device_, qs.cmd_pool, nullptr);
+        if (qs->cmd_pool) vkDestroyCommandPool(vk_device_, qs->cmd_pool, nullptr);
     }
     queues_.clear();
 
@@ -382,9 +383,9 @@ std::future<bool> VulkanGemmDispatcher::DispatchGemmAsync(
 
 void VulkanGemmDispatcher::Synchronize() {
     for (auto& qs : queues_) {
-        std::lock_guard<std::mutex> lock(qs.mutex);
-        if (qs.queue) {
-            vkQueueWaitIdle(qs.queue);
+        std::lock_guard<std::mutex> lock(qs->mutex);
+        if (qs->queue) {
+            vkQueueWaitIdle(qs->queue);
         }
     }
 }
@@ -1045,7 +1046,7 @@ uint32_t VulkanGemmDispatcher::SelectQueue(const GemmShape& shape) {
 bool VulkanGemmDispatcher::AcquireCommandBuffer(uint32_t queue_idx, VkCommandBuffer& cmd, VkFence& fence) {
     if (queue_idx >= queues_.size()) return false;
     
-    auto& qs = queues_[queue_idx];
+    auto& qs = *queues_[queue_idx];
     std::lock_guard<std::mutex> lock(qs.mutex);
     
     uint32_t idx = qs.current_buffer;
@@ -1067,7 +1068,7 @@ bool VulkanGemmDispatcher::AcquireCommandBuffer(uint32_t queue_idx, VkCommandBuf
 bool VulkanGemmDispatcher::SubmitCommandBuffer(uint32_t queue_idx, VkCommandBuffer cmd, VkFence fence) {
     if (queue_idx >= queues_.size()) return false;
     
-    auto& qs = queues_[queue_idx];
+    auto& qs = *queues_[queue_idx];
     
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

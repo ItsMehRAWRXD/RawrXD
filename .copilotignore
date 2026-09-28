@@ -1,0 +1,38 @@
+# RawrXD non-authoritative internal trees
+rawrxd/history/**
+rawrxd/reconstructed/**
+rawrxd/release/**
+
+# Duplicate / obsolete RawrXD trees
+rawrxd_backup_*/**
+rawrxd-ci-bootstrap/**
+rawrxd_phase7a/**
+
+# Mirrored workspace / unrelated source universes
+~dev/**
+vsc0de/**
+Power/**
+.worktrees/**
+
+# Generated build products
+rawrxd/build/**
+rawrxd/build-*/**
+rawrxd/out/**
+rawrxd/bin/**
+rawrxd/.vs/**
+rawrxd/.vscode/.ropeproject/**
+rawrxd/CMakeFiles/**
+
+# Generated/log/evidence/cache material
+rawrxd/**/*.obj
+rawrxd/**/*.pdb
+rawrxd/**/*.ilk
+rawrxd/**/*.exe
+rawrxd/**/*.dll
+rawrxd/**/*.lib
+rawrxd/**/*.exp
+rawrxd/**/*.log
+rawrxd/**/*.tmp
+rawrxd/**/*.cache
+rawrxd/**/__pycache__/**
+rawrxd/evidence/**

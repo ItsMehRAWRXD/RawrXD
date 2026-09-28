@@ -135,7 +135,7 @@ bool GGUFCore::ParseFromBuffer(std::span<const uint8_t> data) {
     size_t aligned = (offset + 31) & ~31ULL;
     if (aligned > offset && aligned <= data.size()) ptr += (aligned - offset);
     impl_->model_.tensor_data_offset = ptr - data.data();
-    impl_->model_.tensor_data.assign(ptr, data.end());
+    impl_->model_.tensor_data.assign(ptr, end);
     impl_->parsed_ = true;
     return true;
 }

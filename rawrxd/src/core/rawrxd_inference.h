@@ -8,6 +8,13 @@
 
 #include "rawrxd_core.h"
 
+#ifndef RAWRXD_EXPORT
+#define RAWRXD_EXPORT
+#endif
+
+// Forward declaration for streaming model loader
+struct rawrxd_model_stream;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -213,7 +220,7 @@ typedef struct rawrxd_model {
 
 RAWRXD_EXPORT rawrxd_model* rawrxd_model_load(const char* path,
                                                const rawrxd_model_config* config);
-RAWRXD_EXPORT rawrxd_model* rawrxd_model_load_streaming(rawrxd_model_stream* stream,
+RAWRXD_EXPORT rawrxd_model* rawrxd_model_load_streaming(struct rawrxd_model_stream* stream,
                                                          const rawrxd_model_config* config);
 RAWRXD_EXPORT void rawrxd_model_unload(rawrxd_model* model);
 

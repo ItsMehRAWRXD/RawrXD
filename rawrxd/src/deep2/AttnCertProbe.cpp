@@ -1,7 +1,7 @@
 ﻿#include "AttnCertProbe.hpp"
 #include <algorithm>
 #include <numeric>
-#include <math>
+#include <cmath>
 
 namespace rawrxd::deep2 {
 

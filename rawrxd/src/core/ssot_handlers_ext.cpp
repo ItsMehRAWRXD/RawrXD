@@ -20213,22 +20213,6 @@ CommandResult handleConfidenceSetPolicy(const CommandContext& ctx)
 // SWARM HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleSwarmStatus(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 5132, 0);
-        return CommandResult::ok("swarm.status");
-    }
-    
-    // CLI mode: show swarm status
-    ctx.output("Swarm Status:\n");
-    ctx.output("  Nodes: 3 active\n");
-    ctx.output("  Leader: node-01\n");
-    ctx.output("  Tasks: 5 running\n");
-    return CommandResult::ok("swarm.status");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -20282,52 +20266,10 @@ CommandResult handleSwarmStartHybrid(const CommandContext& ctx)
 #endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleSwarmLeave(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 5136, 0);
-        return CommandResult::ok("swarm.stop");
-    }
-    
-    // CLI mode: leave swarm
-    ctx.output("Left swarm\n");
-    return CommandResult::ok("swarm.stop");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleSwarmNodes(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 5137, 0);
-        return CommandResult::ok("swarm.listNodes");
-    }
-    
-    // CLI mode: list nodes
-    ctx.output("Swarm Nodes:\n");
-    ctx.output("  node-01 (leader): active\n");
-    ctx.output("  node-02 (worker): active\n");
-    ctx.output("  node-03 (worker): active\n");
-    return CommandResult::ok("swarm.listNodes");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleSwarmJoin(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 5138, 0);
-        return CommandResult::ok("swarm.addNode");
-    }
-    
-    // CLI mode: join swarm
-    ctx.output("Joined swarm\n");
-    return CommandResult::ok("swarm.addNode");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -21135,37 +21077,8 @@ CommandResult handleDbgStatus(const CommandContext& ctx)
 // HOTPATCH HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleHotpatchStatus(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9001, 0);
-        return CommandResult::ok("hotpatch.status");
-    }
-    
-    // CLI mode: show hotpatch status
-    ctx.output("Hotpatch Status:\n");
-    ctx.output("  Active patches: 2\n");
-    ctx.output("  Memory patches: 1\n");
-    ctx.output("  Byte patches: 1\n");
-    return CommandResult::ok("hotpatch.status");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleHotpatchMemory(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9002, 0);
-        return CommandResult::ok("hotpatch.memApply");
-    }
-    
-    // CLI mode: apply memory hotpatch
-    ctx.output("Memory hotpatch applied\n");
-    return CommandResult::ok("hotpatch.memApply");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -21185,19 +21098,6 @@ CommandResult handleHotpatchMemRevert(const CommandContext& ctx)
 #endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleHotpatchByte(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9004, 0);
-        return CommandResult::ok("hotpatch.byteApply");
-    }
-    
-    // CLI mode: apply byte hotpatch
-    ctx.output("Byte hotpatch applied\n");
-    return CommandResult::ok("hotpatch.byteApply");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -21218,19 +21118,6 @@ CommandResult handleHotpatchByteSearch(const CommandContext& ctx)
 #endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleHotpatchServer(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9006, 0);
-        return CommandResult::ok("hotpatch.serverAdd");
-    }
-    
-    // CLI mode: add hotpatch server
-    ctx.output("Hotpatch server added\n");
-    return CommandResult::ok("hotpatch.serverAdd");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -22409,19 +22296,6 @@ CommandResult handleGauntletExport(const CommandContext& ctx)
 // VOICE HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleVoiceRecord(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9700, 0);
-        return CommandResult::ok("voice.record");
-    }
-    
-    // CLI mode: start recording
-    ctx.output("Voice recording started\n");
-    return CommandResult::ok("voice.record");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -22441,87 +22315,14 @@ CommandResult handleVoicePTT(const CommandContext& ctx)
 #endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleVoiceSpeak(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9702, 0);
-        return CommandResult::ok("voice.speak");
-    }
-    
-    // CLI mode: speak text
-    std::string text = extractStringParam(ctx.args, "text");
-    if (text.empty()) {
-        return CommandResult::error("No text specified");
-    }
-    ctx.output(("Speaking: " + text + "\n").c_str());
-    return CommandResult::ok("voice.speak");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleVoiceDevices(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9704, 0);
-        return CommandResult::ok("voice.devices");
-    }
-    
-    // CLI mode: list devices
-    ctx.output("Voice Devices:\n");
-    ctx.output("  Input: Microphone (Realtek)\n");
-    ctx.output("  Output: Speakers (Realtek)\n");
-    return CommandResult::ok("voice.devices");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleVoiceMetrics(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9705, 0);
-        return CommandResult::ok("voice.metrics");
-    }
-    
-    // CLI mode: show metrics
-    ctx.output("Voice Metrics:\n");
-    ctx.output("  Latency: 15ms\n");
-    ctx.output("  Quality: 95%\n");
-    return CommandResult::ok("voice.metrics");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleVoiceStatus(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9706, 0);
-        return CommandResult::ok("voice.togglePanel");
-    }
-    
-    // CLI mode: show status
-    ctx.output("Voice Status: enabled\n");
-    return CommandResult::ok("voice.togglePanel");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleVoiceMode(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9707, 0);
-        return CommandResult::ok("voice.modePtt");
-    }
-    
-    // CLI mode: set mode
-    ctx.output("Voice mode set to PTT\n");
-    return CommandResult::ok("voice.modePtt");
-}
-#endif
 
 
 // ============================================================================
@@ -25061,112 +24862,18 @@ CommandResult handleTelemetrySnapshot(const CommandContext& ctx)
 // FILE OPERATIONS HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileNew(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1001, 0);
-        return CommandResult::ok("file.new");
-    }
-    
-    // CLI mode: create new file
-    ctx.output("New file created\n");
-    return CommandResult::ok("file.new");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileOpen(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1002, 0);
-        return CommandResult::ok("file.open");
-    }
-    
-    // CLI mode: open file dialog
-    ctx.output("File open dialog shown\n");
-    return CommandResult::ok("file.open");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileSave(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1003, 0);
-        return CommandResult::ok("file.save");
-    }
-    
-    // CLI mode: save current file
-    ctx.output("File saved\n");
-    return CommandResult::ok("file.save");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileSaveAs(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1004, 0);
-        return CommandResult::ok("file.saveAs");
-    }
-    
-    // CLI mode: save as dialog
-    ctx.output("Save as dialog shown\n");
-    return CommandResult::ok("file.saveAs");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileSaveAll(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1005, 0);
-        return CommandResult::ok("file.saveAll");
-    }
-    
-    // CLI mode: save all files
-    ctx.output("All files saved\n");
-    return CommandResult::ok("file.saveAll");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileClose(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1006, 0);
-        return CommandResult::ok("file.close");
-    }
-    
-    // CLI mode: close current file
-    ctx.output("File closed\n");
-    return CommandResult::ok("file.close");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileRecentFiles(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1010, 0);
-        return CommandResult::ok("file.recentFiles");
-    }
-    
-    // CLI mode: show recent files
-    ctx.output("Recent Files:\n");
-    ctx.output("  1. main.cpp\n");
-    ctx.output("  2. config.h\n");
-    ctx.output("  3. utils.py\n");
-    return CommandResult::ok("file.recentFiles");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -25186,94 +24893,16 @@ CommandResult handleFileRecentClear(const CommandContext& ctx)
 #endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileLoadModel(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1030, 0);
-        return CommandResult::ok("file.loadModel");
-    }
-    
-    // CLI mode: load model
-    ctx.output("Model loaded\n");
-    return CommandResult::ok("file.loadModel");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileModelFromHF(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1031, 0);
-        return CommandResult::ok("file.modelFromHF");
-    }
-    
-    // CLI mode: load model from HuggingFace
-    ctx.output("Model loaded from HuggingFace\n");
-    return CommandResult::ok("file.modelFromHF");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileModelFromOllama(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1032, 0);
-        return CommandResult::ok("file.modelFromOllama");
-    }
-    
-    // CLI mode: load model from Ollama
-    ctx.output("Model loaded from Ollama\n");
-    return CommandResult::ok("file.modelFromOllama");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileModelFromURL(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1033, 0);
-        return CommandResult::ok("file.modelFromURL");
-    }
-    
-    // CLI mode: load model from URL
-    ctx.output("Model loaded from URL\n");
-    return CommandResult::ok("file.modelFromURL");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileUnifiedLoad(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1034, 0);
-        return CommandResult::ok("file.modelUnified");
-    }
-    
-    // CLI mode: unified model load
-    ctx.output("Model loaded via unified loader\n");
-    return CommandResult::ok("file.modelUnified");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleFileQuickLoad(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 1035, 0);
-        return CommandResult::ok("file.quickLoad");
-    }
-    
-    // CLI mode: quick load
-    ctx.output("Quick load completed\n");
-    return CommandResult::ok("file.quickLoad");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -25437,94 +25066,16 @@ CommandResult handleFileCloseTab(const CommandContext& ctx)
 // EDIT OPERATIONS HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleEditUndo(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 2001, 0);
-        return CommandResult::ok("edit.undo");
-    }
-    
-    // CLI mode: undo last action
-    ctx.output("Undo performed\n");
-    return CommandResult::ok("edit.undo");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleEditRedo(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 2002, 0);
-        return CommandResult::ok("edit.redo");
-    }
-    
-    // CLI mode: redo last action
-    ctx.output("Redo performed\n");
-    return CommandResult::ok("edit.redo");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleEditCut(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 2003, 0);
-        return CommandResult::ok("edit.cut");
-    }
-    
-    // CLI mode: cut selection
-    ctx.output("Selection cut\n");
-    return CommandResult::ok("edit.cut");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleEditCopy(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 2004, 0);
-        return CommandResult::ok("edit.copy");
-    }
-    
-    // CLI mode: copy selection
-    ctx.output("Selection copied\n");
-    return CommandResult::ok("edit.copy");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleEditPaste(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 2005, 0);
-        return CommandResult::ok("edit.paste");
-    }
-    
-    // CLI mode: paste clipboard
-    ctx.output("Clipboard pasted\n");
-    return CommandResult::ok("edit.paste");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleEditFind(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 2006, 0);
-        return CommandResult::ok("edit.find");
-    }
-    
-    // CLI mode: open find dialog
-    ctx.output("Find dialog opened\n");
-    return CommandResult::ok("edit.find");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -25561,34 +25112,8 @@ CommandResult handleEditFindPrev(const CommandContext& ctx)
 #endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleEditReplace(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 2009, 0);
-        return CommandResult::ok("edit.replace");
-    }
-    
-    // CLI mode: open replace dialog
-    ctx.output("Replace dialog opened\n");
-    return CommandResult::ok("edit.replace");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleEditSelectAll(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 2010, 0);
-        return CommandResult::ok("edit.selectAll");
-    }
-    
-    // CLI mode: select all text
-    ctx.output("All text selected\n");
-    return CommandResult::ok("edit.selectAll");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -25717,66 +25242,12 @@ CommandResult handleEditMulticursorRemove(const CommandContext& ctx)
 // TERMINAL HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleTerminalKill(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 3003, 0);
-        return CommandResult::ok("terminal.kill");
-    }
-    
-    // CLI mode: kill terminal
-    ctx.output("Terminal killed\n");
-    return CommandResult::ok("terminal.kill");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleTerminalSplitH(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 3004, 0);
-        return CommandResult::ok("terminal.splitH");
-    }
-    
-    // CLI mode: split terminal horizontally
-    ctx.output("Terminal split horizontally\n");
-    return CommandResult::ok("terminal.splitH");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleTerminalSplitV(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 3005, 0);
-        return CommandResult::ok("terminal.splitV");
-    }
-    
-    // CLI mode: split terminal vertically
-    ctx.output("Terminal split vertically\n");
-    return CommandResult::ok("terminal.splitV");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleTerminalList(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 3006, 0);
-        return CommandResult::ok("terminal.list");
-    }
-    
-    // CLI mode: list terminals
-    ctx.output("Active terminals:\n");
-    ctx.output("  1. PowerShell (PID 1234)\n");
-    ctx.output("  2. CMD (PID 1235)\n");
-    return CommandResult::ok("terminal.list");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -25800,165 +25271,22 @@ CommandResult handleTerminalSplitCode(const CommandContext& ctx)
 // GIT HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleGitStatus(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 6001, 0);
-        return CommandResult::ok("git.status");
-    }
-    
-    // CLI mode: git status
-    FILE* pipe = _popen("git status --porcelain", "r");
-    if (pipe) {
-        ctx.output("Git status:\n");
-        char buf[512];
-        while (fgets(buf, sizeof(buf), pipe)) {
-            ctx.output(buf);
-        }
-        _pclose(pipe);
-    } else {
-        ctx.output("Git status failed\n");
-    }
-    return CommandResult::ok("git.status");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleGitCommit(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 6002, 0);
-        return CommandResult::ok("git.commit");
-    }
-    
-    // CLI mode: git commit
-    std::string msg = extractStringParam(ctx.args, "message");
-    if (msg.empty()) msg = "Auto-commit";
-    
-    std::string cmd = "git add . && git commit -m \"" + msg + "\"";
-    FILE* pipe = _popen(cmd.c_str(), "r");
-    if (pipe) {
-        char buf[512];
-        while (fgets(buf, sizeof(buf), pipe)) {
-            ctx.output(buf);
-        }
-        _pclose(pipe);
-    }
-    return CommandResult::ok("git.commit");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleGitPull(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 6003, 0);
-        return CommandResult::ok("git.pull");
-    }
-    
-    // CLI mode: git pull
-    FILE* pipe = _popen("git pull", "r");
-    if (pipe) {
-        char buf[512];
-        while (fgets(buf, sizeof(buf), pipe)) {
-            ctx.output(buf);
-        }
-        _pclose(pipe);
-    }
-    return CommandResult::ok("git.pull");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleGitPush(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 6004, 0);
-        return CommandResult::ok("git.push");
-    }
-    
-    // CLI mode: git push
-    FILE* pipe = _popen("git push", "r");
-    if (pipe) {
-        char buf[512];
-        while (fgets(buf, sizeof(buf), pipe)) {
-            ctx.output(buf);
-        }
-        _pclose(pipe);
-    }
-    return CommandResult::ok("git.push");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleGitDiff(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 6005, 0);
-        return CommandResult::ok("git.diff");
-    }
-    
-    // CLI mode: git diff
-    FILE* pipe = _popen("git diff --stat", "r");
-    if (pipe) {
-        ctx.output("Git diff:\n");
-        char buf[512];
-        while (fgets(buf, sizeof(buf), pipe)) {
-            ctx.output(buf);
-        }
-        _pclose(pipe);
-    }
-    return CommandResult::ok("git.diff");
-}
-#endif
 
 
 // ============================================================================
 // HELP HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleHelp(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 7001, 0);
-        return CommandResult::ok("help");
-    }
-    
-    // CLI mode: show help
-    ctx.output("RawrXD IDE Help:\n");
-    ctx.output("  !help - Show this help\n");
-    ctx.output("  !file_* - File operations\n");
-    ctx.output("  !edit_* - Edit operations\n");
-    ctx.output("  !view_* - View operations\n");
-    ctx.output("  !ai_* - AI features\n");
-    ctx.output("  !git_* - Git operations\n");
-    ctx.output("  !lsp_* - LSP operations\n");
-    return CommandResult::ok("help");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleHelpAbout(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 7002, 0);
-        return CommandResult::ok("help.about");
-    }
-    
-    // CLI mode: show about
-    ctx.output("RawrXD IDE v1.0\n");
-    ctx.output("Advanced AI-powered code editor\n");
-    ctx.output("Built with C++20, Win32 API\n");
-    return CommandResult::ok("help.about");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -25983,19 +25311,6 @@ CommandResult handleHelpCmdRef(const CommandContext& ctx)
 #endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleHelpDocs(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 7004, 0);
-        return CommandResult::ok("help.docs");
-    }
-    
-    // CLI mode: open documentation
-    ctx.output("Opening documentation...\n");
-    return CommandResult::ok("help.docs");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -26020,24 +25335,6 @@ CommandResult handleHelpSearch(const CommandContext& ctx)
 #endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleHelpShortcuts(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 7006, 0);
-        return CommandResult::ok("help.shortcuts");
-    }
-    
-    // CLI mode: show keyboard shortcuts
-    ctx.output("Keyboard Shortcuts:\n");
-    ctx.output("  Ctrl+S - Save\n");
-    ctx.output("  Ctrl+Z - Undo\n");
-    ctx.output("  Ctrl+Y - Redo\n");
-    ctx.output("  Ctrl+F - Find\n");
-    ctx.output("  F1 - Help\n");
-    return CommandResult::ok("help.shortcuts");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -26147,43 +25444,8 @@ CommandResult handleModelQuantize(const CommandContext& ctx)
 // THEME HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleThemeSet(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9001, 0);
-        return CommandResult::ok("theme.set");
-    }
-    
-    // CLI mode: set theme
-    std::string theme = extractStringParam(ctx.args, "theme");
-    if (theme.empty()) {
-        return CommandResult::error("No theme specified");
-    }
-    ctx.output(("Theme set to: " + theme + "\n").c_str());
-    return CommandResult::ok("theme.set");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleThemeList(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 9002, 0);
-        return CommandResult::ok("theme.list");
-    }
-    
-    // CLI mode: list themes
-    ctx.output("Available themes:\n");
-    ctx.output("  1. Dark Modern\n");
-    ctx.output("  2. Light Classic\n");
-    ctx.output("  3. High Contrast\n");
-    ctx.output("  4. Solarized Dark\n");
-    ctx.output("  5. Monokai\n");
-    return CommandResult::ok("theme.list");
-}
-#endif
 
 
 #if 1  // Enabled for RawrXD_Gold real handler lane
@@ -26445,19 +25707,6 @@ CommandResult handleThemeSolLight(const CommandContext& ctx)
 // SETTINGS HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleSettingsOpen(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 10001, 0);
-        return CommandResult::ok("settings.open");
-    }
-    
-    // CLI mode: open settings
-    ctx.output("Opening settings...\n");
-    return CommandResult::ok("settings.open");
-}
-#endif
 
 
 CommandResult handleSettingsUser(const CommandContext& ctx)
@@ -26720,34 +25969,8 @@ CommandResult handleTasksShowLog(const CommandContext& ctx)
 // DEBUG HANDLERS
 // ============================================================================
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleDebugStart(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 13001, 0);
-        return CommandResult::ok("debug.start");
-    }
-    
-    // CLI mode: start debugging
-    ctx.output("Debugging started\n");
-    return CommandResult::ok("debug.start");
-}
-#endif
 
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleDebugStop(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 13002, 0);
-        return CommandResult::ok("debug.stop");
-    }
-    
-    // CLI mode: stop debugging
-    ctx.output("Debugging stopped\n");
-    return CommandResult::ok("debug.stop");
-}
-#endif
 
 
 CommandResult handleDebugRestart(const CommandContext& ctx)
@@ -26880,19 +26103,6 @@ CommandResult handleDebugStepOut(const CommandContext& ctx)
     return CommandResult::ok("debug.stepOut");
 }
 
-#if 0  // DUPLICATE REMOVED - defined elsewhere
-CommandResult handleDebugContinue(const CommandContext& ctx) {
-    if (ctx.isGui && ctx.idePtr) {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 13007, 0);
-        return CommandResult::ok("debug.continue");
-    }
-    
-    // CLI mode: continue debugging
-    ctx.output("Debugging continued\n");
-    return CommandResult::ok("debug.continue");
-}
-#endif
 
 
 CommandResult handleDebugPause(const CommandContext& ctx)

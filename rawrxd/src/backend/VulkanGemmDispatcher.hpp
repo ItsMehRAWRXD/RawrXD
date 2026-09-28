@@ -377,8 +377,9 @@ private:
     std::unordered_map<PipelineKey, PipelineState, PipelineKeyHash> pipelines_;
     mutable std::mutex pipeline_mutex_;
 
-    // Queues
-    std::vector<QueueState> queues_;
+    // Queues (unique_ptr: QueueState holds std::mutex which is non-movable,
+    // so the vector cannot own QueueState by value without C2672)
+    std::vector<std::unique_ptr<QueueState>> queues_;
     std::atomic<uint32_t> next_queue_{ 0 };
 
     // Descriptor pool
