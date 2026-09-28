@@ -457,6 +457,14 @@ static inline void unpack_q4_k_scales(
     mins[7] = (s[11] >> 4) | ((s[7] >> 6) << 4);
 }
 
+static inline void get_scale_min_k4_inline(
+    const uint8_t s[12],
+    uint8_t scales[8],
+    uint8_t mins[8])
+{
+    unpack_q4_k_scales(s, scales, mins);
+}
+
 static inline void get_scale_min_k4(
     int sb,
     const uint8_t s[12],
@@ -616,13 +624,46 @@ static void gemv_q4_k_scalar(
         return;
     }
 
-    // Hot path: match llama.cpp CPU mul_mat(Q4_K, Q8_K)
+    // Q4K_VEC_DOT_PARITY_001 FIX v2 (llama-verbatim nibble grouping):
+    // dequantize_row_q4_K in ggml-quants.c is: for each 64-value chunk,
+    // get_scale_min_k4(is+0)=32 LOW nibbles, get_scale_min_k4(is+1)=32 HIGH
+    // nibbles, q advancing 32 bytes. The prior hot path used 16lo+16hi
+    // sub-block grouping (self-consistent with the wrong gate reference but
+    // NOT llama) — that mismatch was the remaining 32B divergence source.
+    // The engine's own fallback path (unpack_q4_k_scales + 32/32) was already
+    // llama-correct; the hot path now matches it exactly.
     const size_t blocksPerRow = cols / 256;
-    std::vector<block_q8_K> xQ8(blocksPerRow);
-    quantize_row_q8_K(x, xQ8.data(), cols);
-    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
     for (size_t r = 0; r < rows; ++r) {
-        y[r] += vec_dot_q4_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
+        const uint8_t* rowBase = w + r * blocksPerRow * 144;
+        float acc = 0.0f;
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const uint8_t* blk = rowBase + b * 144;
+            const float d = f16_to_f32(
+                *reinterpret_cast<const uint16_t*>(blk));
+            const float dmin = f16_to_f32(
+                *reinterpret_cast<const uint16_t*>(blk + 2));
+            uint8_t scales[8], mins[8];
+            unpack_q4_k_scales(blk + 4, scales, mins);
+            const uint8_t* q = blk + 16;
+            for (int j = 0; j < 256; j += 64) {
+                const int is = j / 32;
+                const float d1 = d * static_cast<float>(scales[is]);
+                const float m1 = dmin * static_cast<float>(mins[is]);
+                const float d2 = d * static_cast<float>(scales[is + 1]);
+                const float m2 = dmin * static_cast<float>(mins[is + 1]);
+                const float* xb = x + b * 256 + j;
+                for (int l = 0; l < 32; ++l) {
+                    acc += (d1 * static_cast<float>(q[l] & 0xF) - m1)
+                         * xb[l];
+                }
+                for (int l = 0; l < 32; ++l) {
+                    acc += (d2 * static_cast<float>(q[l] >> 4) - m2)
+                         * xb[l + 32];
+                }
+                q += 32;
+            }
+        }
+        y[r] += acc;
     }
 }
 
