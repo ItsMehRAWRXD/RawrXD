@@ -5935,6 +5935,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Link stubs for unresolved symbols (enterprise, ASM, security subsystems)
         src/core/link_stubs_production.cpp
         src/core/win32ide_link_stubs.cpp
+        src/core/win32ide_real_impls.cpp
 
         # Agent Self-Repair +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ MASM64 self-patching kernel bridge
         src/agent/agent_self_repair.cpp
@@ -7358,6 +7359,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
     set_property(TARGET RawrXD-Win32IDE PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    target_compile_options(RawrXD-Win32IDE PRIVATE "/FS")  # BATCH N2: fix C1041 PDB contention
 
     # Static CRT (/MT) needs ATL static lib path for atls.lib (LNK1104 otherwise).
     if(MSVC AND CMAKE_CXX_COMPILER)
