@@ -9774,6 +9774,26 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         OUTPUT_NAME rawr
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+    # OpenAI-compatible Deep2 server (for Cursor/tunnel integration)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_openai_server_main.cpp")
+    add_executable(rawr-server
+        src/deep2/deep2_openai_server_main.cpp
+        src/deep2/deep2_openai_server.cpp)
+    target_link_libraries(rawr-server PRIVATE InferenceEngine dxgi)
+    target_include_directories(rawr-server PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(rawr-server PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rawr-server
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    if(MSVC)
+        target_compile_options(rawr-server PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    message(STATUS "[Deep2] OpenAI-compatible server target: rawr-server (port 11435)")
+    endif()
+
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_k2_useful_tps_001.cpp")
     add_executable(deep2_k2_useful_tps_001 src/deep2/deep2_k2_useful_tps_001.cpp)
     target_link_libraries(deep2_k2_useful_tps_001 PRIVATE InferenceEngine dxgi)

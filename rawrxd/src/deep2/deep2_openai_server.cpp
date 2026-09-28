@@ -273,7 +273,7 @@ static std::optional<ChatCompletionRequest> parseChatCompletionRequest(const std
 // ---------------------------------------------------------------------------
 // Prompt assembly using model-aware ChatTemplate
 // ---------------------------------------------------------------------------
-static std::string assemblePrompt(const ChatCompletionRequest& req, const Deep2::ChatTemplate& tmpl) {
+static std::string assembleChatPrompt(const ChatCompletionRequest& req, const Deep2::ChatTemplate& tmpl) {
     if (tmpl.isInitialized()) {
         std::vector<Deep2::ChatMessage> msgs;
         if (!req.systemPrompt.empty()) {
@@ -385,6 +385,7 @@ void OpenAIServer::setRequestLogCallback(RequestLogCallback cb) {
 static void handleConnection(SOCKET clientSock,
                               Deep2Engine* engine,
                               const std::string& modelId,
+                              const Deep2::ChatTemplate& chatTemplate,
                               std::atomic<bool>& shouldStop,
                               OpenAIServer::RequestLogCallback& logCb) {
     auto t0 = steady_clock::now();
@@ -496,7 +497,7 @@ static void handleConnection(SOCKET clientSock,
                 goto done;
             }
 
-            std::string prompt = assemblePrompt(chatReq, pImpl->chatTemplate);
+            std::string prompt = assembleChatPrompt(chatReq, chatTemplate);
             std::string responseId = generateId("chatcmpl-");
             uint64_t created = unixTimestamp();
 
@@ -688,6 +689,7 @@ bool OpenAIServer::run(uint16_t port) {
 
             std::thread t([&](SOCKET sock) {
                 handleConnection(sock, engine_.get(), pImpl->modelId,
+                                 std::ref(pImpl->chatTemplate),
                                  std::ref(pImpl->shouldStop), std::ref(pImpl->logCallback));
             }, client);
 
