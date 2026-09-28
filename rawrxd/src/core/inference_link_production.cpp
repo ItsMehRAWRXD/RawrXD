@@ -116,83 +116,13 @@ extern "C" {
 }
 
 // ============================================================================
-// Camellia256 ASM symbols (production C implementations)
+// Camellia256 ASM symbols — REMOVED: no-op stubs that silently won the
+// /FORCE:MULTIPLE link order over the REAL implementations in
+// runtime_symbol_bridge.cpp (key derivation + asm_camellia256_set_key).
+// The 12 empty bodies below were discarded by LNK4006 "second definition
+// ignored" while the fake `return 1`/`return 0` versions here won the link.
+// Deleting them lets runtime_symbol_bridge's real camellia bodies bind.
 // ============================================================================
-extern "C" {
-    void asm_camellia256_set_key(const uint8_t* key, size_t keyLen) {
-        (void)key;
-        (void)keyLen;
-        // Production: Set Camellia256 key
-    }
-
-    int asm_camellia256_self_test(void) {
-        // Production: Self-test would validate implementation
-        return 1; // Success
-    }
-
-    void asm_camellia256_init(void) {
-        // Production: Initialize Camellia256 state
-    }
-
-    void asm_camellia256_encrypt_block(uint8_t* block, const uint8_t* key) {
-        (void)block;
-        (void)key;
-        // Production: Encrypt single block
-    }
-
-    void asm_camellia256_decrypt_block(uint8_t* block, const uint8_t* key) {
-        (void)block;
-        (void)key;
-        // Production: Decrypt single block
-    }
-
-    void asm_camellia256_encrypt_ctr(uint8_t* data, size_t len, const uint8_t* key, uint8_t* iv) {
-        (void)data;
-        (void)len;
-        (void)key;
-        (void)iv;
-        // Production: CTR mode encryption
-    }
-
-    void asm_camellia256_decrypt_ctr(uint8_t* data, size_t len, const uint8_t* key, uint8_t* iv) {
-        (void)data;
-        (void)len;
-        (void)key;
-        (void)iv;
-        // Production: CTR mode decryption
-    }
-
-    int asm_camellia256_encrypt_file(const char* inPath, const char* outPath, const uint8_t* key) {
-        (void)inPath;
-        (void)outPath;
-        (void)key;
-        // Production: File encryption
-        return 1; // Success
-    }
-
-    int asm_camellia256_decrypt_file(const char* inPath, const char* outPath, const uint8_t* key) {
-        (void)inPath;
-        (void)outPath;
-        (void)key;
-        // Production: File decryption
-        return 1; // Success
-    }
-
-    int asm_camellia256_get_status(void) {
-        // Production: Return Camellia256 engine status
-        return 0; // Ready/OK
-    }
-
-    void asm_camellia256_shutdown(void) {
-        // Production: Shutdown Camellia256 engine
-    }
-
-    void asm_camellia256_get_hmac_key(uint8_t* keyOut, size_t* keyLen) {
-        (void)keyOut;
-        (void)keyLen;
-        // Production: Get HMAC key
-    }
-}
 
 // ============================================================================
 // Self-hosting engine ASM symbols (production C implementations)

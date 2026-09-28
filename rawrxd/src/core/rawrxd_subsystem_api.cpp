@@ -57,29 +57,21 @@ extern "C" {
     void DiskRecovery_Abort(void* ctx);
     void DiskRecovery_Cleanup(void* ctx);
     void DiskRecovery_GetStats(void* ctx, uint64_t* outGood, uint64_t* outBad, uint64_t* outCurrent, uint64_t* outTotal);
+
+    // AD_ProcessGGUF: real body in unlinked_symbols_batch_011.cpp (extern C).
+    // Forward-declared here so the internal call in handleAnalyzerDistiller
+    // resolves to the batch_011 definition at link time.
+    int  AD_ProcessGGUF(const char* inputPath, const char* outputExecPath);
 }
 
-// Stub implementations for modes not available in this build
-extern "C" {
-    void CompileMode(void) { }
-    void EncryptMode(void) { }
-    void InjectMode(void) { }
-    void UACBypassMode(void) { }
-    void PersistenceMode(void) { }
-    void SideloadMode(void) { }
-    void AVScanMode(void) { }
-    void EntropyMode(void) { }
-    void StubGenMode(void) { }
-    void TraceEngineMode(void) { }
-    void AgenticMode(void) { }
-    void BasicBlockCovMode(void) { }
-    void CovFusionMode(void) { }
-    void DynTraceMode(void) { }
-    void AgentTraceMode(void) { }
-    void GapFuzzMode(void) { }
-    void IntelPTMode(void) { }
-    void DiffCovMode(void) { }
-}
+// Mode stubs REMOVED — real implementations in unlinked_symbols_batch_009.cpp
+// and unlinked_symbols_batch_010.cpp (setModeBit/setMode with state tracking).
+// The empty no-op stubs that were here won /FORCE:MULTIPLE (LNK4006) and
+// silenced the real batch implementations — a fail-closed violation.
+// Removed: CompileMode, EncryptMode, InjectMode, UACBypassMode, PersistenceMode,
+// SideloadMode, AVScanMode, EntropyMode, StubGenMode, TraceEngineMode,
+// BasicBlockCovMode, CovFusionMode, DynTraceMode, GapFuzzMode, IntelPTMode,
+// DiffCovMode (16 stubs). AgenticMode and AgentTraceMode were already removed.
 
 // ---- Library Module Linkage (C ABI) ----
 // These resolve to MASM .obj when RAWR_HAS_MASM=1, else to stub .cpp
@@ -91,10 +83,8 @@ static constexpr uint32_t SO_DEFAULT_THREADS = 8;
 
 // Stub implementations for analyzer/streaming when not linked with MASM
 extern "C" {
-    int AD_ProcessGGUF(const char* inputPath, const char* outputExecPath) {
-        (void)inputPath; (void)outputExecPath;
-        return 0;
-    }
+    // AD_ProcessGGUF: REMOVED — real body in unlinked_symbols_batch_011.cpp;
+    //   the `return 0` stub here won /FORCE:MULTIPLE (LNK4006) and silenced it.
 
     int SO_LoadExecFile(const char* filePath) {
         (void)filePath;
