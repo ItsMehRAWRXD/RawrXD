@@ -5932,12 +5932,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # LocalReasoningEngine +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ API-free static analysis + pattern detection
         src/agent/local_reasoning_engine.cpp
 
-        # Link stubs for unresolved symbols (enterprise, ASM, security subsystems)
-        src/core/link_stubs_production.cpp
-        src/core/win32ide_link_stubs.cpp
-        src/core/win32ide_real_impls.cpp
+        # N2.1: link_stubs_production.cpp and win32ide_link_stubs.cpp removed
+        # from strict target. SYNTHETIC_DEFAULTS=0. Real implementations or
+        # feature-gating must replace these.
 
-        # Agent Self-Repair +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ MASM64 self-patching kernel bridge
+        # Agent Self-Repair MASM64 self-patching kernel bridge
         src/agent/agent_self_repair.cpp
         src/agent/agent_self_healing_orchestrator.cpp
         

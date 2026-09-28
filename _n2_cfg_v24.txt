@@ -42,7 +42,7 @@
 -- MASM64 enabled: ASM kernels will be compiled
 -- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
 -- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
--- +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- +Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
 -- [RE] Deobfuscator MASM64 targets registered
 -- [RE] Model reverse pipeline MASM64 target registered
 -- [RE] NASM not found ΓÇö Reverser compiler targets skipped
@@ -57,7 +57,7 @@
 --   Security Toolkit:  RawrXD_IDE_unified.asm
 --   RE Modules:        gpu_dma_complete_reverse_engineered.asm
 -- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
--- [NanoQuant] DISABLED +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [NanoQuant] DISABLED +Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£ enable with -DRAWR_ENABLE_NANOQUANT=ON
 -- [RawrXD] Vulkan detection fix ΓÇö Phase 4A
 -- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
 -- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
@@ -65,12 +65,11 @@
 -- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
 -- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
 -- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
--- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
 -- MultiWindow Kernel DLL target enabled
 -- DynamicPromptEngine DLL target enabled (Unity/Unreal compatible)
 -- Win32IDE: Real lane - using isolated handlers + runtime handlers
 -- [Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)
--- [Win32IDE] Sovereign GPU ASM disabled +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ fraudulent claims removed
+-- [Win32IDE] Sovereign GPU ASM disabled +Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£ fraudulent claims removed
 CMake Warning at CMakeLists.txt:6723 (message):
   [Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips fallback/shim TUs
   (strict lane).  The IDE usually will not link unless every ASM symbol is
@@ -82,7 +81,7 @@ CMake Warning at CMakeLists.txt:6723 (message):
 -- Deep2Engine Metadata Regression Test configured
 -- [Win32IDE] Partial ODR purge: Deep2 test/main TUs removed
 -- [Win32IDE] ATL static lib: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/atlmfc/lib/x64
--- +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RawrXD-Win32IDE: No stub policy violations
+-- +Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£ RawrXD-Win32IDE: No stub policy violations
 -- QuickJS found: JS extension host enabled
 -- [Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)
 -- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/RawrXD_Product100.cpp
@@ -181,7 +180,7 @@ CMake Warning at CMakeLists.txt:6723 (message):
 -- [VAL-037.2] Tree-specialized: tree_attention_tree_specialized
 -- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
 -- [VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark
--- [VAL-038] Validation benchmark (B+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜C+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜A): VAL038_Validation_Benchmark
+-- [VAL-038] Validation benchmark (B+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£C+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£A): VAL038_Validation_Benchmark
 -- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
 -- [Analysis] RawrXD-ModelAnalysis target (Implant_Model_Analysis.ps1 / ANALYSIS_QUICKSTART.md)
 -- [Analysis] Win32IDE linked to RawrXD-ModelAnalysisLib (RAWR_HAS_MODEL_ANATOMY)
@@ -192,7 +191,7 @@ CMake Warning at CMakeLists.txt:6723 (message):
 -- [SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004
 -- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
 -- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
--- [Validation] RAWRXD_ENABLE_VALIDATION=ON +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ runtime tensor dumping enabled
+-- [Validation] RAWRXD_ENABLE_VALIDATION=ON +Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£ runtime tensor dumping enabled
 -- [LSP] RawrXD-Script Language Server target enabled: RawrXD_LSPServer
 -- [DAP] RawrXD-Script Debug Adapter target enabled: RawrXDScriptDAPAdapter
 -- [Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)
@@ -218,13 +217,14 @@ CMake Warning at CMakeLists.txt:6723 (message):
 --   [MEASURE] benchmark_dispatch_pmc - PMC profiling
 -- ========================================
 -- Could NOT find Qt6 (missing: Qt6_DIR)
-CMake Warning at CMakeLists.txt:14840 (message):
-  [SoloIDE] Qt6 not found +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ SoloIDE target skipped.
-  Install Qt6 or set CMAKE_PREFIX_PATH.
+CMake Warning at CMakeLists.txt:14845 (message):
+  [SoloIDE] Qt6 not found
+  +Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£+Γê⌐ΓöÉΓò£-Γê⌐ΓöÉΓò£ SoloIDE target
+  skipped.  Install Qt6 or set CMAKE_PREFIX_PATH.
 
 
 -- certification_harness: Adversarial evidence-producing certification suite configured
 -- native_toolchain_cert: Native toolchain certification target configured
--- Configuring done (0.8s)
--- Generating done (3.4s)
+-- Configuring done (9.7s)
+-- Generating done (7.8s)
 -- Build files have been written to: F:/~dev/rawrxd/build_clean_n1

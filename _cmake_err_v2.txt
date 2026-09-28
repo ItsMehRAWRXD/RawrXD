@@ -15,14 +15,10 @@
 -- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
 -- test_parseheader_fuzz: B32 deterministic fuzz matrix configured
 -- test_gguf_metadata_bounds: B33 metadata bounds gate configured
--- test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured
 -- Dual GPU Smoke Test configured
 -- GGUF Inspector tool configured
 -- Comprehensive Dual GPU Test configured
--- OMEGA-1 Bridge Test Harness configured
--- K2 Router Injection Smoke Test configured
 -- Batch 15A GGUF Alignment Diagnostic configured
--- Batch 15B Q4_0 GEMV Certification configured
 -- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
 -- [Build Paths] MSVC CRT: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
 -- [Intent Guardrails] Configuring...
@@ -66,32 +62,7 @@
 -- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
 -- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
 -- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
--- MultiWindow Kernel DLL target enabled
--- DynamicPromptEngine DLL target enabled (Unity/Unreal compatible)
--- Win32IDE: Real lane - using isolated handlers + runtime handlers
--- [Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)
--- [Win32IDE] Sovereign GPU ASM disabled +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ fraudulent claims removed
-CMake Warning at CMakeLists.txt:6723 (message):
-  [Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips fallback/shim TUs
-  (strict lane).  The IDE usually will not link unless every ASM symbol is
-  provided elsewhere.  For a normal dev link:
-  -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON or remove that cache entry.
-
-
--- [Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)
--- Deep2Engine Metadata Regression Test configured
--- [Win32IDE] Partial ODR purge: Deep2 test/main TUs removed
--- [Win32IDE] ATL static lib: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/atlmfc/lib/x64
--- +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RawrXD-Win32IDE: No stub policy violations
--- QuickJS found: JS extension host enabled
--- [Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/RawrXD_Product100.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wire.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave3.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave4.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/asm/RawrXD_Product100_x64.asm
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/product/gateway/product_deep2_infer.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 overlay skipped: no sources or target
+-- RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)
 -- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
 -- [Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle
 -- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_c1_c9: missing src/deep2/K2C1C9.cpp
@@ -137,6 +108,7 @@ CMake Warning at CMakeLists.txt:6723 (message):
 -- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_actual_e2e_generation_001: missing certs/rawrxd_actual_e2e_generation_001.cpp
 -- [Deep2] RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 wired
 -- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping Deep2_Gateway_Runtime_Certification: missing source files
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_benchmark: missing source files
 -- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target k2_useful_tps_001: missing certs/k2_useful_tps_001.cpp
 -- [Deep2] Benchmark cert CLI: deep2_benchmark + k2_useful_tps_001 + mla_cert_001
 -- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_product_lavapath: missing source files
@@ -162,6 +134,7 @@ CMake Warning at CMakeLists.txt:6723 (message):
 -- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
 -- [CI] RAWR_ASAN=OFF
 -- [Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)
+-- RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)
 -- [Batch 1] Production benchmark target: RawrXD-ProductionBenchmark
 -- [Batch 1] Production cert test target: RawrXD-ProductionCertTest
 -- [Phase C] GPU Benchmark target: RawrXD-Benchmark
@@ -184,7 +157,6 @@ CMake Warning at CMakeLists.txt:6723 (message):
 -- [VAL-038] Validation benchmark (B+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜C+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜A): VAL038_Validation_Benchmark
 -- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
 -- [Analysis] RawrXD-ModelAnalysis target (Implant_Model_Analysis.ps1 / ANALYSIS_QUICKSTART.md)
--- [Analysis] Win32IDE linked to RawrXD-ModelAnalysisLib (RAWR_HAS_MODEL_ANATOMY)
 -- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
 -- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
 -- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
@@ -193,8 +165,6 @@ CMake Warning at CMakeLists.txt:6723 (message):
 -- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
 -- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
 -- [Validation] RAWRXD_ENABLE_VALIDATION=ON +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ runtime tensor dumping enabled
--- [LSP] RawrXD-Script Language Server target enabled: RawrXD_LSPServer
--- [DAP] RawrXD-Script Debug Adapter target enabled: RawrXDScriptDAPAdapter
 -- [Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)
 -- [Test] DebugBridge telemetry test: TestDebugBridgeTelemetry
 -- [Test] Pure MASM inference test: TestMASMInference
@@ -213,18 +183,394 @@ CMake Warning at CMakeLists.txt:6723 (message):
 --   [MEASURE] validate_end_to_end - Four independent gates
 --   [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a hashing
 --   [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring
---   [MEASURE] pmc_profiler - Performance Monitoring Counters
---   [MEASURE] flame_graph_profiler - Flame graph generation
 --   [MEASURE] benchmark_dispatch_pmc - PMC profiling
 -- ========================================
--- Could NOT find Qt6 (missing: Qt6_DIR)
-CMake Warning at CMakeLists.txt:14840 (message):
-  [SoloIDE] Qt6 not found +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ SoloIDE target skipped.
-  Install Qt6 or set CMAKE_PREFIX_PATH.
-
-
 -- certification_harness: Adversarial evidence-producing certification suite configured
 -- native_toolchain_cert: Native toolchain certification target configured
--- Configuring done (0.8s)
--- Generating done (3.4s)
--- Build files have been written to: F:/~dev/rawrxd/build_clean_n1
+-- Configuring done (0.5s)
+CMake Error at CMakeLists.txt:3256 (add_library):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/omega1_modules/OmegaPowerShellBridge.cpp
+
+
+CMake Error at CMakeLists.txt:3840 (target_sources):
+  Cannot find source file:
+
+    src/agent/quantum_dynamic_time_manager_impl.cpp
+
+
+CMake Error at CMakeLists.txt:5251 (add_library):
+  Cannot find source file:
+
+    src/inference/ollama_blob_parser.cpp
+
+
+CMake Error at CMakeLists.txt:5286 (add_executable):
+  Cannot find source file:
+
+    src/runtime/GenerationBouncer.cpp
+
+
+CMake Error at CMakeLists.txt:5465 (add_executable):
+  Cannot find source file:
+
+    src/engine/react_ide_generator.cpp
+
+
+CMake Error at CMakeLists.txt:13223 (add_executable):
+  Cannot find source file:
+
+    src/deep2/Deep2Determinism.cpp
+
+
+CMake Error at CMakeLists.txt:13373 (add_executable):
+  Cannot find source file:
+
+    src/gguf_d3d12_bridge.cpp
+
+
+CMake Error at CMakeLists.txt:13595 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_bench_simple.cpp
+
+
+CMake Error at CMakeLists.txt:13849 (add_executable):
+  Cannot find source file:
+
+    src/llm_adapter/GGUFRunner.cpp
+
+
+CMake Error at CMakeLists.txt:13905 (add_executable):
+  Cannot find source file:
+
+    src/llm_adapter/gguf_k_quants.cpp
+
+
+CMake Error at CMakeLists.txt:13939 (add_executable):
+  Cannot find source file:
+
+    src/agentic/SubAgentManager.cpp
+
+
+CMake Error at CMakeLists.txt:13982 (add_executable):
+  Cannot find source file:
+
+    src/agentic/agentic_orchestrator_integration.cpp
+
+
+CMake Error at CMakeLists.txt:14057 (add_executable):
+  Cannot find source file:
+
+    src/sovereign/SovereignRuntime.cpp
+
+
+CMake Error at CMakeLists.txt:14344 (add_executable):
+  Cannot find source file:
+
+    src/ide/SovereignSharedMemoryBridge.cpp
+
+
+CMake Error at CMakeLists.txt:14378 (add_executable):
+  Cannot find source file:
+
+    src/gguf_masm_weight_bridge.cpp
+
+
+CMake Error at CMakeLists.txt:14434 (add_executable):
+  Cannot find source file:
+
+    src/rpc/SovereignRPC_Simulator.cpp
+
+
+CMake Error at CMakeLists.txt:14589 (add_executable):
+  Cannot find source file:
+
+    src/nevm/nevm_kernel_bridge.cpp
+
+
+CMake Error at CMakeLists.txt:14681 (add_executable):
+  Cannot find source file:
+
+    src/nevm/nevm_mmu.cpp
+
+
+CMake Error at CMakeLists.txt:14853 (add_executable):
+  Cannot find source file:
+
+    src/deep2/BP16Extractor.cpp
+
+
+CMake Error at CMakeLists.txt:14899 (add_executable):
+  Cannot find source file:
+
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+
+
+CMake Error at CMakeLists.txt:15358 (add_executable):
+  Cannot find source file:
+
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+
+
+CMake Error at CMakeLists.txt:15528 (add_executable):
+  Cannot find source file:
+
+    src/runtime/Sovereign_KernelBridge_CPP.cpp
+
+
+CMake Error at CMakeLists.txt:3256 (add_library):
+  No SOURCES given to target: Omega1Engine
+
+
+CMake Error at CMakeLists.txt:5251 (add_library):
+  No SOURCES given to target: InferenceEngine
+
+
+CMake Error at CMakeLists.txt:5274 (add_executable):
+  No SOURCES given to target: RawrXD-InferenceEngine
+
+
+CMake Error at CMakeLists.txt:5286 (add_executable):
+  No SOURCES given to target: RawrXD-Generate
+
+
+CMake Error at CMakeLists.txt:5465 (add_executable):
+  No SOURCES given to target: rawrxd-monaco-gen
+
+
+CMake Error at CMakeLists.txt:13092 (add_executable):
+  No SOURCES given to target: RawrXD-InferenceRoutingTest
+
+
+CMake Error at CMakeLists.txt:13197 (add_executable):
+  No SOURCES given to target: arch_cert_tensor_inventory
+
+
+CMake Error at CMakeLists.txt:13223 (add_executable):
+  No SOURCES given to target: RawrXD-ProductionBenchmark
+
+
+CMake Error at CMakeLists.txt:13346 (add_executable):
+  No SOURCES given to target: RawrXD-ProductionCertTest
+
+
+CMake Error at CMakeLists.txt:13373 (add_executable):
+  No SOURCES given to target: RawrXD-Benchmark
+
+
+CMake Error at CMakeLists.txt:13418 (add_executable):
+  No SOURCES given to target: RawrXD-FusedBenchmark
+
+
+CMake Error at CMakeLists.txt:13449 (add_executable):
+  No SOURCES given to target: RawrXD-KVBenchmark
+
+
+CMake Error at CMakeLists.txt:13486 (add_executable):
+  No SOURCES given to target: Fix4_FlashAttention_Benchmark
+
+
+CMake Error at CMakeLists.txt:13513 (add_executable):
+  No SOURCES given to target: Fix5_FusedQuantized_Benchmark
+
+
+CMake Error at CMakeLists.txt:13540 (add_executable):
+  No SOURCES given to target: VAL032_SpeculativeDecoding_Benchmark
+
+
+CMake Error at CMakeLists.txt:13567 (add_executable):
+  No SOURCES given to target: VAL032_AVX512_Benchmark
+
+
+CMake Error at CMakeLists.txt:13595 (add_executable):
+  No SOURCES given to target: tree_attention_bench_simple
+
+
+CMake Error at CMakeLists.txt:13618 (add_executable):
+  No SOURCES given to target: tree_attention_profiled
+
+
+CMake Error at CMakeLists.txt:13640 (add_executable):
+  No SOURCES given to target: tree_attention_aligned
+
+
+CMake Error at CMakeLists.txt:13662 (add_executable):
+  No SOURCES given to target: tree_attention_tiled
+
+
+CMake Error at CMakeLists.txt:13684 (add_executable):
+  No SOURCES given to target: tree_attention_vectorized
+
+
+CMake Error at CMakeLists.txt:13706 (add_executable):
+  No SOURCES given to target: tree_attention_sparse
+
+
+CMake Error at CMakeLists.txt:13728 (add_executable):
+  No SOURCES given to target: tree_attention_fused_sparse
+
+
+CMake Error at CMakeLists.txt:13750 (add_executable):
+  No SOURCES given to target: tree_attention_tree_specialized
+
+
+CMake Error at CMakeLists.txt:13799 (add_executable):
+  No SOURCES given to target: VAL038_FusedAttention_Benchmark
+
+
+CMake Error at CMakeLists.txt:13825 (add_executable):
+  No SOURCES given to target: VAL038_Validation_Benchmark
+
+
+CMake Error at CMakeLists.txt:13849 (add_executable):
+  No SOURCES given to target: RawrXD-TpsSmoke
+
+
+CMake Error at CMakeLists.txt:13905 (add_executable):
+  No SOURCES given to target: RawrXD-ModelAnalysis
+
+
+CMake Error at CMakeLists.txt:13939 (add_executable):
+  No SOURCES given to target: SwarmSmokeTest
+
+
+CMake Error at CMakeLists.txt:13982 (add_executable):
+  No SOURCES given to target: agentic_orchestrator_smoke_test
+
+
+CMake Error at CMakeLists.txt:14057 (add_executable):
+  No SOURCES given to target: rawrxd
+
+
+CMake Error at CMakeLists.txt:14344 (add_executable):
+  No SOURCES given to target: TestSovereignBridge
+
+
+CMake Error at CMakeLists.txt:14366 (add_executable):
+  No SOURCES given to target: TestDebugBridgeTelemetry
+
+
+CMake Error at CMakeLists.txt:14378 (add_executable):
+  No SOURCES given to target: TestMASMInference
+
+
+CMake Error at CMakeLists.txt:14413 (add_executable):
+  No SOURCES given to target: stress_target
+
+
+CMake Error at CMakeLists.txt:14421 (add_executable):
+  No SOURCES given to target: stress_memory
+
+
+CMake Error at CMakeLists.txt:14434 (add_executable):
+  No SOURCES given to target: test_simulator
+
+
+CMake Error at CMakeLists.txt:14589 (add_executable):
+  No SOURCES given to target: benchmark_dispatch_overhead
+
+
+CMake Error at CMakeLists.txt:14612 (add_executable):
+  No SOURCES given to target: benchmark_planner_amortization
+
+
+CMake Error at CMakeLists.txt:14633 (add_executable):
+  No SOURCES given to target: validate_end_to_end
+
+
+CMake Error at CMakeLists.txt:14657 (add_executable):
+  No SOURCES given to target: nevm_determinism_validation
+
+
+CMake Error at CMakeLists.txt:14681 (add_executable):
+  No SOURCES given to target: nevm_stress_test
+
+
+CMake Error at CMakeLists.txt:14735 (add_executable):
+  No SOURCES given to target: benchmark_dispatch_pmc
+
+
+CMake Error at CMakeLists.txt:14853 (add_executable):
+  No SOURCES given to target: test_llama_native
+
+
+CMake Error at CMakeLists.txt:14899 (add_executable):
+  No SOURCES given to target: k2_runtime_validation
+
+
+CMake Error at CMakeLists.txt:14979 (add_executable):
+  No SOURCES given to target: k2_native_smoke_test
+
+
+CMake Error at CMakeLists.txt:15027 (add_executable):
+  No SOURCES given to target: k2_002_tensor_streaming
+
+
+CMake Error at CMakeLists.txt:15076 (add_executable):
+  No SOURCES given to target: k2_003_layer_execution
+
+
+CMake Error at CMakeLists.txt:15126 (add_executable):
+  No SOURCES given to target: k2_003b_native_gemv_validation
+
+
+CMake Error at CMakeLists.txt:15140 (add_executable):
+  No SOURCES given to target: k2_003c_single_layer_forward
+
+
+CMake Error at CMakeLists.txt:15153 (add_executable):
+  No SOURCES given to target: k2_004_bounded_prefill
+
+
+CMake Error at CMakeLists.txt:15203 (add_executable):
+  No SOURCES given to target: k2_004_bounded_multi_layer_prefill
+
+
+CMake Error at CMakeLists.txt:15217 (add_executable):
+  No SOURCES given to target: k2_005_autoregressive_kv_cache
+
+
+CMake Error at CMakeLists.txt:15232 (add_executable):
+  No SOURCES given to target: k2_006_bounded_token_generation
+
+
+CMake Error at CMakeLists.txt:15283 (add_executable):
+  No SOURCES given to target: k2_008_end_to_end_semantic_generation
+
+
+CMake Error at CMakeLists.txt:15358 (add_executable):
+  No SOURCES given to target: b004_transformer_router_streaming_integration
+
+
+CMake Error at CMakeLists.txt:15375 (add_executable):
+  No SOURCES given to target:
+  b004_transformer_router_streaming_integration_cpu
+
+
+CMake Error at CMakeLists.txt:15422 (add_executable):
+  No SOURCES given to target: b012_amortization_test
+
+
+CMake Error at CMakeLists.txt:15477 (add_executable):
+  No SOURCES given to target: b013_stability_test
+
+
+CMake Error at CMakeLists.txt:15528 (add_executable):
+  No SOURCES given to target: b014_compute_decomposition
+
+
+CMake Error at CMakeLists.txt:15576 (add_executable):
+  No SOURCES given to target: b014_boundary_probe
+
+
+CMake Error at CMakeLists.txt:15624 (add_executable):
+  No SOURCES given to target: b014_single_boundary
+
+
+CMake Error at CMakeLists.txt:15672 (add_executable):
+  No SOURCES given to target: b014_lifetime_probe
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.

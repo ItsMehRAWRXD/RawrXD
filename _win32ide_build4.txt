@@ -1,0 +1,15 @@
+[1/2] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\core\win32ide_real_impls.cpp.obj
+[2/2] RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked; Linking CXX executable bin\RawrXD-Win32IDE.exe
+FAILED: [code=4294967295] bin/RawrXD-Win32IDE.exe 
+C:\WINDOWS\system32\cmd.exe /C "C:\WINDOWS\system32\cmd.exe /C "cd /D F:\~dev\build_win32ide_strict && "C:\Program Files\CMake\bin\cmake.exe" -E rm -f F:/~dev/build_win32ide_strict/bin/RawrXD-Win32IDE.exe F:/~dev/build_win32ide_strict/bin/RawrXD-Win32IDE.pdb && cd F:\~dev\build_win32ide_strict" && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\RawrXD-Win32IDE.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo @CMakeFiles\RawrXD-Win32IDE.rsp  /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE /DEBUG:FULL /MAP:F:/~dev/build_win32ide_strict/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304 && C:\WINDOWS\system32\cmd.exe /C "cd /D F:\~dev\build_win32ide_strict && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different F:/~dev/build_win32ide_strict/bin/RawrXD-Win32IDE.map F:/~dev/build_win32ide_strict/RawrXD-Win32IDE.map""
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\RawrXD-Win32IDE.rsp /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE /DEBUG:FULL /MAP:F:/~dev/build_win32ide_strict/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304" failed (exit code 1120) with the following output:
+   Creating library RawrXD-Win32IDE.lib and object RawrXD-Win32IDE.exp
+
+win32ide_real_impls.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl RawrXD::PDB::PDBSymbolServer::PDBSymbolServer(void)" (??0PDBSymbolServer@PDB@RawrXD@@QEAA@XZ)
+
+win32ide_real_impls.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl RawrXD::PDB::PDBSymbolServer::~PDBSymbolServer(void)" (??1PDBSymbolServer@PDB@RawrXD@@QEAA@XZ)
+
+bin\RawrXD-Win32IDE.exe : fatal error LNK1120: 2 unresolved externals
+
+ninja: build stopped: subcommand failed.
+

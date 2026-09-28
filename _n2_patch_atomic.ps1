@@ -3,15 +3,12 @@
 $ErrorActionPreference = "Stop"
 Set-Location "F:\~dev\rawrxd"
 
-# 1. Revert to HEAD
-git checkout HEAD -- CMakeLists.txt
-$headBytes = (Get-Item "F:\~dev\rawrxd\CMakeLists.txt").Length
-Write-Host "REVERTED SIZE=$headBytes"
-
+# 1. Restore CMakeLists from the pre-mangle commit 964eed96f (clean, 0 AUTO-REMOVED)
+git show "964eed96f:rawrxd/CMakeLists.txt" | Out-File "F:\~dev\rawrxd\CMakeLists.txt" -Encoding UTF8
 $c = Get-Content "F:\~dev\rawrxd\CMakeLists.txt"
 $autoCount = @($c | Select-String -SimpleMatch 'AUTO-REMOVED').Count
-Write-Host "HEAD_AUTO_COUNT=$autoCount TOTAL=$($c.Count)"
-if ($autoCount -ne 0) { Write-Host "FATAL: HEAD itself has AUTO-REMOVED"; exit 1 }
+Write-Host "BASE_AUTO_COUNT=$autoCount TOTAL=$($c.Count)"
+if ($autoCount -ne 0) { Write-Host "FATAL: base commit has AUTO-REMOVED"; exit 1 }
 
 # 2. MASM population splice (lines 3891..4077 in 1-based = 3890..4076 in 0-idx)
 $dec = Get-Content "F:\~dev\_n2_dec_populate.txt"
@@ -32,11 +29,17 @@ $idx = ($new | Select-String -SimpleMatch "add_executable(RawrXD-Win32IDE").Line
 if (-not $idx) { Write-Host "FATAL: IDE target not found"; exit 1 }
 $insert = @(
 "    # BATCH N2 (RAWRXD_WIN32IDE_REAL_LINK_001): real C implementations for ASM-linked symbols.",
-"    # runtime_symbol_bridge.cpp contains real function bodies (camellia/selfhost/hotpatch/",
-"    # snapshot/kquant/native_speed/sgemm/FlashAttention/Enterprise/Swarm/DiskRecovery/Dbg).",
+"    # runtime_symbol_bridge.cpp contains real function bodies (camellia/kquant/native_speed/",
+"    # sgemm/FlashAttention/Enterprise/Swarm/DiskRecovery + Dbg_CaptureContext/Read/WriteMemory).",
 "    # The checked-in .asm kernels are 26-byte scaffolds that assemble to empty .obj,",
 "    # so the C symbols have NO other provider. Taxonomy: REAL_IMPLEMENTATION_EXISTS.",
-"    list(APPEND WIN32IDE_SOURCES src/core/runtime_symbol_bridge.cpp)"
+"    list(APPEND WIN32IDE_SOURCES src/core/runtime_symbol_bridge.cpp)",
+"    # Self-host engine ASM symbols: real C bodies (asm_selfhost_*).",
+"    list(APPEND WIN32IDE_SOURCES src/core/inference_link_production.cpp)",
+"    # Hotpatch/snapshot/GGUF-stats bridge: real bodies (asm_hotpatch_*, asm_snapshot_*).",
+"    list(APPEND WIN32IDE_SOURCES src/core/win32ide_asm_kernel_bridge.cpp)",
+"    # KQuant dequant + Quant_DequantQ4_0/Q8_0 real C++ bodies.",
+"    list(APPEND WIN32IDE_SOURCES src/core/kquant_nonmsvc.cpp)"
 )
 $before2 = $new[0..($idx-2)]
 $after2 = $new[($idx-1)..($new.Count-1)]

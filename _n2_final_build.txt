@@ -5,818 +5,834 @@ MSBuild version 17.14.51+25f168cee for .NET Framework
   RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_clean_n1\bin\Release\RawrXD_MultiWindow_Kernel.dll
   quickjs_static.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\quickjs_static.lib
   RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_clean_n1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
-  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\InferenceEngine.lib
-  main_win32.cpp
-  ide_inference_gate.cpp
-  ide_agentic_gate.cpp
-  ide_toolchain_gate.cpp
-  RawrXDAgenticE2E.cpp
-  gold_command_providers.cpp
-  JITAssembler.cpp
-  HeadlessIDE.cpp
-  HeadlessIDE_ToolRoutes.cpp
-  HeadlessIDE_GuiRoutes.cpp
-  HeadlessIDE_FileAliases.cpp
-  quantum_agent_orchestrator.cpp
-  quantum_autonomous_todo_system.cpp
-  quantum_multi_model_agent_cycling.cpp
-  quantum_dynamic_time_manager.cpp
-  quantum_missing_impl.cpp
-  quantum_production_orchestrator.cpp
-  orchestrator_cli_handler.cpp
-  RawrXD_MainLoop.cpp
-  webview2_bridge.cpp
+  BackendOrchestrator.cpp
+  InferenceProfiler.cpp
+  AgentOllamaClient.cpp
+  AutonomousFixOrchestrator.cpp
+  BackendEmissionService.cpp
+  Deep2SovereignInferenceGateway.cpp
+  DiffEngine.cpp
+  DirectFIM.cpp
+  ExecPipeline.cpp
+  GGMLAgenticEngine.cpp
+  GgmlEngine.cpp
+  KnowledgeGraph.cpp
+  NativeInferenceClient.cpp
+  Phase3_Agent_Kernel_Bridge.cpp
+  RawrXD_AgentHost.cpp
+  RawrXD_RewardModel.cpp
+  RawrXD_SymbolHealer.cpp
+  RepositoryIndexer.cpp
+  RobustOllamaParser.cpp
+  SelfImprovement.cpp
   Generating Code...
   Compiling...
-  debugger_core.cpp
-  agentic_bridge.cpp
-  Win32SwarmBridge.cpp
-  SwarmIATRegistration.cpp
-  UnifiedModelMetadata.cpp
-  subagent_core.cpp
+  SovereignAssembler.cpp
+  SovereignAssembler_HotPatch.cpp
+  SovereignStandaloneClient.cpp
   SubAgentManager.cpp
-  RobustOllamaParser.cpp
-  ErrorRecoveryManager.cpp
-  speculative_decoder_v2.cpp
-  MemoryPressureGuard.cpp
-  gpu_dispatch_gate.cpp
-  ai_model_caller_real.cpp
-  inference_engine_real.cpp
-  gguf_masm_weight_bridge.cpp
+  Titan_Sovereign_Bridge.cpp
+  ToolDispatchTable.cpp
+  ToolDispatcher.cpp
+  chain_of_thought.cpp
+  change_impact_analyzer.cpp
+  context_mention_parser.cpp
+  gguf_types.cpp
+  Engine.cpp
+  slash_command_parser.cpp
+  task_executor.cpp
+  task_graph.cpp
+  task_scheduler.cpp
+  tool_call_parser.cpp
+  tool_executor.cpp
+  tool_registry.cpp
+  vulkan_compute_real.cpp
+  Generating Code...
+  Compiling...
   brutal_gzip.cpp
   gzip_brutal_inflate.cpp
-  auto_feature_registry.cpp
-  ReverseEngineering.cpp
-  Win32IDE.cpp
-  Generating Code...
-  Compiling...
-  Win32IDE_Core.cpp
-  Win32IDE_CoreRuntimeSpine.cpp
-  Win32IDE_Commands.cpp
-  Win32IDE_CommandSurface.cpp
-  CommandBroker.cpp
-  CommandEventJournal.cpp
-  SessionBinder.cpp
-  CapabilityProfile.cpp
-  Win32IDE_VSCodeUI.cpp
-  Win32IDE_WindowOwnership.cpp
-  Win32IDE_Accelerators.cpp
-  IV280Bridge.cpp
-  IMultiFileSearchWidget.cpp
-  CICDSettings.cpp
-  BenchmarkMenu.cpp
-  WindowManager.cpp
-  EditorOperations.cpp
-  RouterOperations.cpp
-  Win32IDE_Watchdog.cpp
-  Win32IDE_SyntaxHighlight.cpp
-  Generating Code...
-  Compiling...
-  Win32IDE_VisionEncoder.cpp
-  Win32IDE_Themes.cpp
-  Win32IDE_StreamingUX.cpp
-  Win32IDE_Sidebar.cpp
-  Win32IDE_Debugger.cpp
-  Win32IDE_AutonomousDebugger.cpp
-  Win32IDE_Annotations.cpp
-  Win32IDE_ReverseEngineering.cpp
-  Win32IDE_Logger.cpp
-  Win32IDE_AgenticBridge.cpp
-  FullAgenticIDE.cpp
-  AgenticPlanningOrchestrator.cpp
-  AgenticIOCPBridge.cpp
-  Win32IDE_AgentCommands.cpp
-  Win32IDE_TabManager.cpp
-  Win32IDE_Settings.cpp
-  Win32IDE_AutonomousCommunicator.cpp
-  Win32IDE_AgenticComposerUX.cpp
-  Win32IDE_ContextMentionParser.cpp
-  Win32IDE_UnifiedTelemetry.cpp
-  Generating Code...
-  Compiling...
-  Win32IDE_Autonomy.cpp
-  Win32IDE_PowerShell.cpp
-  Win32IDE_PowerShellPanel.cpp
-  Win32IDE_CommandFlight.cpp
-  Win32IDE_ShellLayout.cpp
-  Win32IDE_MenuE2eProbe.cpp
-  Win32IDE_Session.cpp
-  Win32IDE_GGUFInspector.cpp
-  Win32IDE_FileOps.cpp
-  Win32IDE_DecompilerView.cpp
-  Win32IDE_NativePipeline.cpp
-  Win32IDE_ModelAnatomy.cpp
-  advanced_sampler.cpp
-  RawrRuntime.cpp
-  zlib_runtime_loader.cpp
-  Deep2APIServer.cpp
-  Deep2ProductionRuntime.cpp
-  ReverseEngine.cpp
-  ReverseModelLoader.cpp
-  NegativeSpaceProfiler.cpp
-  Generating Code...
-  Compiling...
-  unlinked_symbols_batch_022.cpp
-  RawrXD_AutonomousAgenticPipeline.cpp
-  RawrXD_AgentCoordinator.cpp
-  Win32IDE_FeatureManifest.cpp
-  Win32IDE_GhostText.cpp
-  ai_completion_real.cpp
-  SovereignSharedMemoryBridge.cpp
-  ANSIColorParser.cpp
-  FindReplaceDialog.cpp
-  GitCommitDialog.cpp
-  GitDiffViewer.cpp
-  Win32IDE_OutlinePanel.cpp
-  Win32IDE_RenamePreview.cpp
-  Win32IDE_Tier2Cosmetics.cpp
-  Win32IDE_Tier1Cosmetics.cpp
-  Win32IDE_Breadcrumbs.cpp
-  Win32IDE_PlanExecutor.cpp
-  agentic_planning_orchestrator.cpp
-  failure_intelligence_orchestrator.cpp
-  agentic_orchestrator_integration.cpp
-  Generating Code...
-  Compiling...
-  agentic_audit_sink.cpp
-  change_impact_analyzer.cpp
-  Win32IDE_AgenticPlanningPanel.cpp
-  Win32IDE_FailureDetector.cpp
-  Win32IDE_FailureIntelligence.cpp
-  Win32IDE_LocalServer.cpp
-  Win32IDE_BackendSwitcher.cpp
-  ProviderKeyStore.cpp
-  ProviderKeyStore_get.cpp
-  ProviderKeyStore_misc.cpp
-  Win32IDE_AIBackend.cpp
-  Win32IDE_LLMRouter.cpp
-  Win32IDE_LSPClient.cpp
-  Win32IDE_PeekOverlay.cpp
-  Win32IDE_CaretAnimation.cpp
-  Win32IDE_ModelDiscovery.cpp
-  Win32IDE_SwarmModelSelector.cpp
-  Win32IDE_AsmSemantic.cpp
-  Win32IDE_LSP_AI_Bridge.cpp
-  Win32IDE_MultiResponse.cpp
-  Generating Code...
-  Compiling...
-  Win32IDE_ExecutionGovernor.cpp
-  Win32IDE_LayerEviction.cpp
-  Win32IDE_SubAgent.cpp
-  Win32IDE_AgentHistory.cpp
-  Win32IDE_AgentPanel.cpp
-  Win32IDE_DiskRecovery.cpp
-  Win32TerminalManager.cpp
-  TransparentRenderer.cpp
-  win32_plugin_loader.cpp
-  Win32IDE_Plugins.cpp
-  Win32IDE_HandleExtensionCommand.cpp
-  IDEConfig.cpp
-  QuantBackend.cpp
-  GGUFRunner.cpp
-  gguf_k_quants.cpp
-  QuantumAuthUI.cpp
-  agentic_engine.cpp
-  RDNA3_GpuDispatcher.cpp
-  AgentToolHandlers.cpp
-  BoundedAgentLoop.cpp
-  Generating Code...
-  Compiling...
-  OllamaProvider.cpp
-  DiffEngine.cpp
-  DeterministicReplayEngine.cpp
-  autonomous_recovery_orchestrator.cpp
-  AgenticDeepThinkingEngine.cpp
-  AgentOrchestrator.cpp
-  OrchestratorBridge.cpp
-  AgenticNavigator.cpp
-  ToolRegistry.cpp
-  RawrXD_AgentLoop.cpp
-  agentic_executor.cpp
-  FIMPromptBuilder.cpp
-  AgentOllamaClient.cpp
-  unlinked_symbols_batch_001.cpp
-  unlinked_symbols_batch_002.cpp
-  unlinked_symbols_batch_003.cpp
-  win32ide_watchdog_init.cpp
-  unlinked_symbols_batch_005.cpp
-  unlinked_symbols_batch_006.cpp
-  unlinked_symbols_batch_007.cpp
-  Generating Code...
-  Compiling...
-  unlinked_symbols_batch_008.cpp
-  unlinked_symbols_batch_009.cpp
-  unlinked_symbols_batch_010.cpp
-  unlinked_symbols_batch_011.cpp
-  unlinked_symbols_batch_012.cpp
-  unlinked_symbols_batch_021.cpp
-  ANSIParser.cpp
-  vulkan_kernel_bridge.cpp
-  gguf_d3d12_bridge.cpp
-  rdna3_bridge.cpp
-  rawrxd_ggufrunner_signals.cpp
-  cursor_widget.cpp
-  crdt_buffer.cpp
-  spengine_bridge.cpp
-  Win32IDE_SemanticIndex.cpp
-  sdma_coordinator.cpp
-  agentic_observability.cpp
-  rawrxd_subsystem_api.cpp
-  runtime_core.cpp
-  tool_registry.cpp
-  Generating Code...
-  Compiling...
-  telemetry_collector.cpp
-  auto_repair_orchestrator.cpp
-  agent_memory_indexer.cpp
-  agentic_transaction.cpp
-  agent_workflow_orchestrator.cpp
-  symbol_graph_indexer.cpp
-  semantic_code_search.cpp
-  multi_file_reasoning.cpp
-  workspace_embeddings.cpp
-  repo_refactor_engine.cpp
-  DiskRecoveryToolHandler.cpp
-  agent_history.cpp
-  agent_policy.cpp
-  agent_explainability.cpp
-  ErrorReporter.cpp
-  InputSanitizer.cpp
-  ConfigurationValidator.cpp
-  PerformanceMonitor.cpp
-  rawrxd_model_loader.cpp
-  rawrxd_transformer.cpp
-  Generating Code...
-  Compiling...
-  rawrxd_tokenizer.cpp
-  rawrxd_sampler.cpp
-  engine_manager.cpp
-  cpu_inference_engine.cpp
-  swarm_scheduler.cpp
-  gguf_swarm_plan_builder.cpp
-  memory_core.cpp
-  hot_patcher.cpp
-  streaming_gguf_loader.cpp
-  Diagnostics.cpp
-  gguf_loader.cpp
-  gguf_vocab_resolver.cpp
-  model_source_resolver.cpp
   compression_interface.cpp
-  transformer.cpp
-  bpe_tokenizer.cpp
-  core_generator.cpp
-  pyre_compute.cpp
-  streaming_engine_registry.cpp
-  gpu_backend_bridge.cpp
-  Generating Code...
-  Compiling...
-  enterprise_license.cpp
-  enterprise_licensev2_impl.cpp
-  enterprise_devunlock_bridge.cpp
-  monolithic_heap_globals.cpp
-  license_validator_manifest.cpp
-  license_anti_tampering.cpp
-  camellia256_bridge.cpp
-  watchdog_service.cpp
-  flash_attention.cpp
-  execution_scheduler.cpp
-  execution_governor.cpp
-  multi_gpu.cpp
-  agent_safety_contract.cpp
-  deterministic_replay.cpp
-  confidence_gate.cpp
-  layer_offload_manager.cpp
-  native_speed_layer.cpp
-  local_ai_core.cpp
-  native_inference_pipeline.cpp
-  70b_gguf_hotpatch.cpp
-  Generating Code...
-  Compiling...
-  governor_throttling.cpp
-  swarm_coordinator.cpp
-  swarm_worker.cpp
-  Win32IDE_SwarmPanel.cpp
-  Win32IDE_DualAgentPanel.cpp
-  native_debugger_engine.cpp
-  native_debugger_symbols.cpp
-  Win32IDE_NativeDebugPanel.cpp
-  model_memory_hotpatch.cpp
-  byte_level_hotpatcher.cpp
-  unified_hotpatch_manager.cpp
-  proxy_hotpatcher.cpp
-  model_bruteforce_engine.cpp
-  gguf_server_hotpatch.cpp
-  pt_driver_contract.cpp
-  shadow_page_detour.cpp
-  sentinel_watchdog.cpp
-  Win32IDE_HotpatchPanel.cpp
-  agentic_hotpatch_orchestrator.cpp
-  llm_http_client.cpp
-  Generating Code...
-  Compiling...
-  model_invoker.cpp
-  planner.cpp
-  meta_planner.cpp
-  eval_framework.cpp
-  autonomous_subagent.cpp
-  agentic_failure_detector.cpp
-  agentic_deep_thinking_engine.cpp
-  agentic_puppeteer.cpp
-  cloud_api_client.cpp
-  local_reasoning_engine.cpp
-  agent_self_repair.cpp
-  agent_self_healing_orchestrator.cpp
-  vsix_loader_win32.cpp
-  codex_ultimate.cpp
-  vscode_extension_api.cpp
-  Win32IDE_VSCodeExtAPI.cpp
-  swarm_decision_bridge.cpp
-  universal_model_hotpatcher.cpp
-  production_release.cpp
-  quantum_safe_transport.cpp
-  Generating Code...
-  Compiling...
-  adaptive_pipeline_parallel.cpp
-  universal_model_merger.cpp
-  webrtc_signaling.cpp
-  gpu_kernel_autotuner.cpp
-  sandbox_integration.cpp
-  amd_gpu_accelerator.cpp
-  unified_memory_executor.cpp
-  model_runtime_gate.cpp
-  intel_gpu_accelerator.cpp
-  arm64_gpu_accelerator.cpp
-  cerebras_wse_accelerator.cpp
-  accelerator_router.cpp
-  pdb_reference_provider.cpp
-  Win32IDE_WebView2.cpp
-  AgenticBrowserLayer.cpp
-  Win32IDE_AgenticBrowser.cpp
-  Win32IDE_MonacoThemes.cpp
-  RawrXD_LSPServer.cpp
-  Win32IDE_LSPServer.cpp
-  lsp_hotpatch_bridge.cpp
-  Generating Code...
-  Compiling...
-  hotpatch_symbol_provider.cpp
-  gguf_diagnostic_provider.cpp
-  Win32IDE_EditorEngine.cpp
-  Win32IDE_PDBSymbols.cpp
-  feature_registry.cpp
-  menu_auditor.cpp
-  auto_discovery.cpp
-  Win32IDE_AuditDashboard.cpp
-  Win32IDE_Gauntlet.cpp
-  voice_chat.cpp
-  voice_automation.cpp
-  Win32IDE_VoiceChat.cpp
-  Win32IDE_VoiceAutomation.cpp
-  shortcut_manager.cpp
-  backup_manager.cpp
-  alert_system.cpp
-  Win32IDE_QuickWins.cpp
-  feature_registration.cpp
-  win32ide_handler_impls.cpp
-  intent_engine.cpp
-  Generating Code...
-  Compiling...
-  model_training_pipeline.cpp
-  model_trainer.cpp
-  Engine.cpp
-  AdvancedAgentCoordinator.cpp
-  autonomous_agentic_orchestrator.cpp
-  v280_link_bridge.cpp
-  ssot_validation.cpp
-  unified_command_dispatch.cpp
-  startup_phase_registry.cpp
-  jsonrpc_parser.cpp
-  swarm_orchestrator.cpp
-  chain_of_thought_engine.cpp
-  Win32IDE_Telemetry.cpp
-  mcp_integration.cpp
-  Win32IDE_MCP.cpp
-  Win32IDE_FlightRecorder.cpp
-  quickjs_extension_host.cpp
-  quickjs_vscode_bindings.cpp
-  rawrxd_state_mmf.cpp
-  extension_polyfill_engine.cpp
-  Generating Code...
-  Compiling...
-  deterministic_swarm.cpp
-  input_guard_slicer.cpp
-  agentic_agent_coordinator.cpp
-  production_config_manager.cpp
-  vector_index.cpp
-  vision_token_gate.cpp
-  vision_embedding_cache.cpp
-  vision_kv_isolation.cpp
-  vision_quantized_encoder.cpp
-  vision_gpu_staging.cpp
-  extension_marketplace.cpp
-  rbac_engine.cpp
-  agentic_loop_state.cpp
-  transaction_journal.cpp
-  instructions_provider.cpp
-  Win32IDE_Instructions.cpp
-  unity_engine_integration.cpp
-  unreal_engine_integration.cpp
-  game_engine_manager.cpp
-  Win32IDE_GameEnginePanel.cpp
-  Generating Code...
-  Compiling...
-  crucible_engine.cpp
-  Win32IDE_CruciblePanel.cpp
-  copilot_gap_closer.cpp
-  Win32IDE_CopilotGapPanel.cpp
-  distributed_pipeline_orchestrator.cpp
-  Win32IDE_PipelinePanel.cpp
-  hotpatch_control_plane.cpp
-  Win32IDE_HotpatchCtrlPanel.cpp
-  static_analysis_engine.cpp
-  diagnostic_consumer.cpp
-  Win32IDE_StaticAnalysisPanel.cpp
-  Win32IDE_ProblemsPanel.cpp
-  Win32IDE_BuildRunner.cpp
-  Win32IDE_SecurityScans.cpp
-  problems_panel_bridge.cpp
-  problems_aggregator.cpp
-  secrets_scanner.cpp
-  sast_rule_engine.cpp
-  dependency_audit.cpp
-  Win32IDE_AgentStreamingBridge.cpp
-  Generating Code...
-  Compiling...
-  semantic_code_intelligence.cpp
-  Win32IDE_SemanticPanel.cpp
-  enterprise_telemetry_compliance.cpp
-  Win32IDE_TelemetryPanel.cpp
-  Win32IDE_Tier3Polish.cpp
-  Win32IDE_Tier3Cosmetics.cpp
-  Win32IDE_Tier5Cosmetics.cpp
-  Win32IDE_CrashReporter.cpp
-  Win32IDE_ColorPicker.cpp
-  Win32IDE_EmojiSupport.cpp
-  Win32IDE_ShortcutEditor.cpp
-  Win32IDE_TelemetryDashboard.cpp
-  Win32IDE_MarketplacePanel.cpp
-  Win32IDE_Collab.cpp
-  Win32IDE_IRCBridge.cpp
-  Win32IDE_IRCBridgeCommands.cpp
-  websocket_hub.cpp
-  Win32IDE_TestExplorerTree.cpp
-  Win32IDE_NetworkPanel.cpp
-  omega_orchestrator.cpp
-  Generating Code...
-  Compiling...
-  omega_asm_native_kernel.cpp
-  mesh_brain.cpp
-  speciator_engine.cpp
-  neural_bridge.cpp
-  self_host_engine.cpp
-  hardware_synthesizer.cpp
-  transcendence_coordinator.cpp
-  integrated_runtime.cpp
-  reasoning_profile.cpp
-  VulkanRenderer.cpp
-  OSExplorerInterceptor.cpp
-  Win32IDE_MCPHooks.cpp
-  TodoManager.cpp
-  IocpFileWatcher.cpp
-  IDEDiagnosticAutoHealer.cpp
-  ConsentPrompt.cpp
-  AutonomousAgent.cpp
-  chat_message_renderer.cpp
-  tool_action_status.cpp
-  chat_panel.cpp
-  Generating Code...
-  Compiling...
-  crash_containment.cpp
-  patch_rollback_ledger.cpp
-  quant_hysteresis.cpp
-  perf_telemetry.cpp
-  cursor_github_parity_bridge.cpp
-  swarm_reconciliation.cpp
-  auto_update_system.cpp
-  autonomous_verification_loop.cpp
-  autonomous_background_daemon.cpp
-  knowledge_graph_core.cpp
-  swarm_conflict_resolver.cpp
-  autonomous_debugger.cpp
-  autonomous_communicator.cpp
-  UnifiedTelemetryCore.cpp
-  telemetry_export.cpp
-  agentic_composer_ux.cpp
-  context_mention_parser.cpp
-  vision_encoder.cpp
-  refactoring_plugin.cpp
-  language_plugin.cpp
-  Generating Code...
-  Compiling...
-  semantic_index.cpp
-  resource_generator.cpp
-  Win32IDE_CursorParity.cpp
-  Win32IDE_GUILayoutHotpatch.cpp
-  Win32IDE_Tasks.cpp
-  Win32IDE_GitPanel.cpp
-  Win32IDE_Refactor.cpp
-  Win32IDE_SearchPanel.cpp
-  Win32IDE_FuzzySearch.cpp
-  Win32IDE_Minimap.cpp
-  Win32IDE_DiffView.cpp
-  Win32IDE_SettingsGUI.cpp
-  Win32IDE_CodeLens.cpp
-  Win32IDE_InlayHints.cpp
-  Win32IDE_HoverTooltips.cpp
-  Win32IDE_ProvableAgent.cpp
-  Win32IDE_AIReverseEngineering.cpp
-  Win32IDE_AirgappedEnterprise.cpp
-  Win32IDE_FlagshipFeatures.cpp
-  project_context.cpp
-  Generating Code...
-  Compiling...
-  universal_model_router.cpp
-  model_registry.cpp
-  model_name_utils.cpp
-  agentic_autonomous_config.cpp
-  enterprise_feature_manager.cpp
-  context_deterioration_hotpatch.cpp
-  interpretability_panel.cpp
-  real_time_completion_engine.cpp
-  LanguageServerIntegration.cpp
-  interpretability_panel_enhanced.cpp
-  autonomous_feature_engine.cpp
-  autonomous_intelligence_orchestrator.cpp
-  plan_orchestrator.cpp
-  tool_registry_advanced.cpp
-  lsp_client.cpp
-  intelligent_codebase_engine.cpp
-  ai_model_caller.cpp
-  hybrid_cloud_manager.cpp
-  benchmark_menu_widget.cpp
-  benchmark_runner.cpp
-  Generating Code...
-  Compiling...
-  monaco_settings_dialog.cpp
-  RAWRXD_ThermalDashboard.cpp
-  VSCodeMarketplaceAPI.cpp
-  multi_file_search.cpp
-  Win32IDE_LicenseCreator.cpp
-  license_enforcement.cpp
-  feature_flags_runtime.cpp
-  Win32IDE_PeekView.cpp
-  Win32IDE_AutoSave.cpp
-  Win32IDE_TerminalSplit.cpp
-  Win32IDE_SnippetEngine.cpp
-  Win32IDE_MultiCursor.cpp
-  cognitive_types.cpp
-  enhanced_blackboard.cpp
-  mission_director.cpp
-  reflection_agent.cpp
-  dynamic_planner.cpp
-  TrailBrake.cpp
-  HotPatcher.cpp
-  HotPatcherSafety.cpp
-  Generating Code...
-  Compiling...
-  AntiPatcher.cpp
-  GoalSystem.cpp
-  PatchCache.cpp
   BottleTTL.cpp
   CPUFrequency.cpp
-  DualGPUHook.cpp
-  ReverseTensorRecovery.cpp
-  StreamEngine.cpp
-  ExecutionPolicy.cpp
-  ExecutionPolicyStore.cpp
-  ShardRouterIntegration.cpp
+  Deep2Bridge.cpp
+  Deep2Engine_GpuToken.cpp
   Deep2IDEIntegration.cpp
-  IOCPGGUFLoader.cpp
-  Deep2ModelRuntime.cpp
-  FabricTensorTable.cpp
-  local_parity_bridge.cpp
-  json_instantiations.cpp
-  ai_workers_queue.cpp
-  ImportBridge.cpp
-  ExportBridge.cpp
-  Generating Code...
-  Compiling...
-  embedded_terminal.cpp
-  hexmag_ide_link_probe.cpp
-  Win32IDE_HexMagCopilotRoute.cpp
-  hexmag_client.cpp
-  cot_fallback_system.cpp
-  agentic_model_streamer_bridge.cpp
-  GpuDecodeEfficiency.cpp
-  AmdGpuPowerBackend.cpp
-  K2NativeStreamGate.cpp
-  K2GpuStreamCopy.cpp
-  K2LivePathTensorCache.cpp
-  K2WeightResolve.cpp
-  K2LogitsClimb.cpp
-  K2LivePathTensorCache_Prefetch.cpp
-  K2LivePathTensorCache_Emit.cpp
-  K2MLAAttention.cpp
-  K2TokenEmbedding.cpp
-  ScreenPilotModelHub.cpp
-  extension_package_local.cpp
-  Tokenizer.cpp
-  Generating Code...
-  Compiling...
-  streaming_inference_engine.cpp
-  AgentToolAuthority.cpp
-  Win32IDE_TranscendencePanel.cpp
-  Win32IDE_AutonomousAgent.cpp
-  Win32IDE_ChatMessageRenderer.cpp
-  Win32IDE_ToolActionStatus.cpp
-  Win32IDE_ChatPanel.cpp
-  Win32IDE_ChatPanel_Ollama.cpp
-  Win32IDE_VulkanRenderer.cpp
-  Win32IDE_OSExplorerInterceptor.cpp
-  Win32IDE_IOCPFileWatcher.cpp
-  Win32IDE_IDEDiagnosticAutoHealer.cpp
-  Win32IDE_ConsentPrompt.cpp
-  Win32IDE_PerfTelemetry.cpp
-  Win32IDE_UpdateSignature.cpp
-  Win32IDE_PluginSignature.cpp
-  Win32IDE_EnterpriseStressTests.cpp
-  Win32IDE_SQLite3Core.cpp
-  Win32IDE_TelemetryExport.cpp
-  Win32IDE_RefactoringPlugin.cpp
-  Generating Code...
-  Compiling...
-  Win32IDE_LanguagePlugin.cpp
-  Win32IDE_ResourceGenerator.cpp
-  RuntimeSurfaceModule.cpp
-  GenerationStopwatch.cpp
-  UnifiedMemoryPool.cpp
-  SequentialBlowoffValve.cpp
-  OutOfCoreScheduler.cpp
-  DualGpuPipeline.cpp
-  VulkanComputeKernels.cpp
-  InferenceProfiler.cpp
-  BackendOrchestrator.cpp
-  TensorExecutionRouter.cpp
-  StreamRouterAdapter.cpp
-  TransferScheduler.cpp
-  PredictiveMemoryManager.cpp
-  ResidencyTracker.cpp
-  WorkingSetPredictor.cpp
-  CapacityManager.cpp
-  TensorPlacementManager.cpp
-  b014_profiler.cpp
-  Generating Code...
-  Compiling...
-  CycloneScheduler.cpp
   Deep2LivePath.cpp
-  Deep2LivePath_Gate.cpp
-  Deep2LivePath_Pinball.cpp
-  Deep2LivePath_Mech.cpp
   Deep2LivePath_Emit.cpp
+  Deep2LivePath_Gate.cpp
+  Deep2LivePath_Mech.cpp
+  Deep2LivePath_MechEnd.cpp
+  Deep2LivePath_Pinball.cpp
+  Deep2LivePath_Thermal.cpp
+  Deep2MultiGpu_CostCut.cpp
+  DeepSeekMoELoader.cpp
+  DualGPUHook.cpp
+  DualLaneChoreographer.cpp
+  ElasticDynamicBudget.cpp
+  Generating Code...
+  Compiling...
+  FabricTensorTable.cpp
+  FusedInferenceKernel.cpp
+  FusedLiveController.cpp
+  FusedLiveController_Cheap.cpp
+  FusedLiveController_Decide.cpp
+  FusedLiveController_Emit.cpp
+  FusedLiveController_Law.cpp
+  GhostCache.cpp
+  GoalSystem.cpp
   GpuTransfer_Emit.cpp
-  LivePathEffect.cpp
+  HostExchangeDiscover.cpp
+  HotPatcher.cpp
+  HotPatcherSafety.cpp
+  IOCPGGUFLoader.cpp
+  IQQuantKernels.cpp
+  InferenceSession.cpp
+  K2BraidExecutionPolicy.cpp
+  K2GlobalTensorIndex.cpp
+  K2GpuStreamCopy.cpp
+  K2GpuStreamCopy_Overlap.cpp
+  Generating Code...
+  Compiling...
+  K2LivePathTensorCache.cpp
+  K2LivePathTensorCache_Emit.cpp
+  K2LivePathTensorCache_Prefetch.cpp
   K2LivePolicy.cpp
   K2LivePolicy_Apply.cpp
   K2LivePolicy_Hysteresis.cpp
-  FusedLiveController.cpp
-  FusedLiveController_Decide.cpp
-  FusedLiveController_Cheap.cpp
-  FusedLiveController_Law.cpp
-  FusedLiveController_Emit.cpp
-  LivePath_FusedTick.cpp
-  Deep2LivePath_MechEnd.cpp
-  Deep2LivePath_Thermal.cpp
-  PlasmaGovernor.cpp
-  Generating Code...
-  Compiling...
-  RKCValidator.cpp
-  RKCWorld.cpp
-  RKCCodeWorld.cpp
-  RKCMinimalSource.cpp
-  RKCNegativeKnowledge.cpp
-  RKCModelInventory.cpp
-  RKCDeep2Authority.cpp
-  RKCCompiler.cpp
-  RKCRecipes.cpp
-  RKCGapEngine.cpp
-  RKCEmit.cpp
-  RKCSession.cpp
-  RKCProductContext.cpp
-  RKC_C_ABI.cpp
-  KimiK2Config.cpp
+  K2LogitsClimb.cpp
+  K2LogitsLineage.cpp
+  K2LogitsSplit.cpp
+  K2MLAAttention.cpp
   K2MLAWeights.cpp
+  K2MLA_FusedQ4KT.cpp
+  K2MLA_GpuGemv.cpp
   K2MLA_KvExpand_Fused.cpp
+  K2MLA_PathB.cpp
+  K2MLA_PathB_Attn.cpp
+  K2MLA_QPathDevice.cpp
+  K2MLA_QPathDevice_Emit.cpp
+  K2MLA_QaCritical.cpp
   K2MoEWeights.cpp
-  K2GlobalTensorIndex.cpp
-  ReverseIntegration.cpp
   Generating Code...
   Compiling...
-  ReverseHotpatchEngine.cpp
-  MARSController.cpp
-  TensorHotpatch.cpp
-  DualGPUBackend.cpp
-  VRAMManager.cpp
+  K2NativeStreamGate.cpp
+  K2QbHostShrinkD2h.cpp
+  K2ShardIo.cpp
+  K2TimeLimitedServing.cpp
+  K2TokenEmbedding.cpp
+  K2WeightResolve.cpp
   KVCache.cpp
-  GGUFLoader.cpp
-  MoERouter.cpp
-  MoEWeightProxy.cpp
-  MoEEliminate.cpp
-  MoEWeightsLoader.cpp
+  KimiK2Config.cpp
+  LivePathEffect.cpp
+  LivePath_FusedTick.cpp
   MedusaDecoder.cpp
-  NUFusedPacker.cpp
-  WarmupScheduler.cpp
-  CompressedKVCache.cpp
-  NVMeStream.cpp
-  SlidingWindowEngine.cpp
-  QuantKernelRegistry.cpp
-  ThreadPool.cpp
-  StreamRouter.cpp
-  Generating Code...
-  Compiling...
-  Deep2ExecutionGraph.cpp
-  FusedInferenceKernel.cpp
-  RuntimePlanner.cpp
+  MlaCertAuthority.cpp
+  MlaCertProbe.cpp
+  MoEArchitectureParser.cpp
+  MoEEliminate.cpp
+  MoEWeightProxy.cpp
+  MoEWeightsLoader.cpp
   ModelLoader.cpp
   ModelRegistry.cpp
-  DeepSeekMoELoader.cpp
-  UniversalModelLoader.cpp
+  NUFusedPacker.cpp
+  Generating Code...
+  Compiling...
+  NUGemv.cpp
+  NULiveConsumer.cpp
+  OutOfCoreRuntime.cpp
+  PatchCache.cpp
+  QuantKernelMASM.cpp
   RawrXDInferenceAdapter.cpp
-  RawrXD_LlamaNative.cpp
-  InferenceSession.cpp
+  ResidencyManager.cpp
+  ReverseHotpatchEngine.cpp
+  ReverseIntegration.cpp
+  ReverseTensorRecovery.cpp
+  RouterPrefetchTelemetry.cpp
+  RuntimePlanner.cpp
+  ShardRouterIntegration.cpp
+  SlidingWindowEngine.cpp
+  SsmCertProbe.cpp
   TensorHop.cpp
-  ScaleQuality.cpp
-  MoEArchitectureParser.cpp
-  Deep2Discovery.cpp
-  Deep2Benchmark.cpp
-  Deep2InferenceEndpoint.cpp
-  Deep2InferenceGateway.cpp
-  Deep2Integration.cpp
-  Deep2LocalServer.cpp
-  GGUFDiagnostics.cpp
+  ThreadPool.cpp
+  TpsScaleHotpatch.cpp
+  TrailBrake.cpp
+  UniversalModelLoader.cpp
   Generating Code...
   Compiling...
-  IQQuantKernels.cpp
-  MASMKernelStubs.cpp
-  mcp_bridge.cpp
-  Deep2GPUBackend.cpp
-  GPUDeviceRegistry.cpp
-  MultiGPUScheduler.cpp
-  VRAMAllocator.cpp
-  deep2_http_gateway.cpp
-  GGUFModelRegistry.cpp
-  sdma_scheduler.cpp
-  sdma_ring_allocator.cpp
-  workspace_reasoning_profiles.cpp
-  reasoning_schema_versioning.cpp
-  safe_refactor_engine.cpp
-  ExecutionSpine.cpp
-  SovereignIDEIntegration.cpp
-  TerminalOwnership.cpp
-  CapabilityBus.cpp
-  BeaconBus.cpp
-  SystemAwareness.cpp
+  WarmupScheduler.cpp
+  ExecutionPolicy.cpp
+  ExecutionPolicyApply.cpp
+  ExecutionPolicyStore.cpp
+  PlacementPlan.cpp
+  FreeTokenMicroZone.cpp
+  FreeTokenMicroZone_Query.cpp
+  FutureConsumer_Advance.cpp
+  FutureConsumer_Chair.cpp
+  FutureConsumer_Emit.cpp
+  FutureConsumer_EmitExec.cpp
+  FutureConsumer_Notes.cpp
+  FutureConsumer_Register.cpp
+  FutureConsumer_Space.cpp
+  GgufDynamicGeometry_arrays.cpp
+  GgufDynamicGeometry_finalize.cpp
+  GgufDynamicGeometry_io.cpp
+  GgufDynamicGeometry_keys.cpp
+  GgufDynamicGeometry_resolve.cpp
+  HostFutureConsumerPrefetch.cpp
   Generating Code...
   Compiling...
-  RealityValidator.cpp
-  AutonomousRecovery.cpp
-  SovereignControlPlane.cpp
-  IntentCompression.cpp
-  ExecutionCapsule.cpp
-  SovereignBlackboard.cpp
-  SovereignTaskGraph.cpp
-  SovereignMissionPlanner.cpp
-  SovereignReflectionEngine.cpp
-  SovereignCritic.cpp
-  SovereignAgentRuntime.cpp
-  Omega1IPCClient.cpp
-  GhostTextRenderer.cpp
-  StatusBarTelemetry.cpp
-  Omega1IDEIntegration.cpp
-  Win32IDE_Omega1Integration.cpp
+  HostFutureConsumerPrefetch_KnO3.cpp
+  HostFutureConsumerPrefetch_Move.cpp
+  HostFutureConsumerPrefetch_Nvme.cpp
+  HostFutureConsumerPrefetch_Seal.cpp
+  HostFutureConsumerPrefetch_Worker.cpp
+  k3c_token.cpp
+  DualGPUBackend.cpp
+  TensorHotpatch.cpp
+  VRAMManager.cpp
+  bpe_tokenizer.cpp
+  core_generator.cpp
+  pyre_compute.cpp
+  rawr_engine.cpp
+  sovereign_engines.cpp
+  feature_flags_runtime.cpp
+  MemoryPressureGuard.cpp
+  PerformanceMonitor.cpp
+  TitanLoaderDiagnostics.cpp
+  ollama_blob_parser.cpp
+  polymorphic_loader.cpp
+  Generating Code...
+  Compiling...
+  VulkanComputeKernels.cpp
+  license_enforcement.cpp
+  memory_core.cpp
+  ReverseEngine.cpp
+  ReverseModelLoader.cpp
+  RKCCodeWorld.cpp
+  RKCCompiler.cpp
+  RKCDeep2Authority.cpp
+  RKCEmit.cpp
+  RKCGapEngine.cpp
+  RKCMinimalSource.cpp
+  RKCModelInventory.cpp
+  RKCNegativeKnowledge.cpp
+  RKCProductContext.cpp
+  RKCRecipes.cpp
+  RKCSession.cpp
+  RKCValidator.cpp
+  RKCWorld.cpp
+  RKC_C_ABI.cpp
+  Deep2ExecutionTelemetry.cpp
+  Generating Code...
+  Compiling...
+  ExchangeObjectLedger.cpp
+  GenerationBouncer.cpp
+  QbHostReadbackWindow.cpp
+  RawrRuntime.cpp
+  Sovereign_KernelBridge_CPP.cpp
+  ElasticArchitectureDetector.cpp
+  ElasticDecoder.cpp
   ElasticEngine.cpp
   ElasticGGUFIndex.cpp
   VulkanTensorResidencyBackend.cpp
-  ElasticDecoder.cpp
-  Generating Code...
-  Compiling...
-  ElasticArchitectureDetector.cpp
-  SharedModelRuntime.cpp
-  BP1BraidIndex.cpp
-  BP1BraidStreamer.cpp
-  HardwareCapabilityProbe.cpp
+  gguf_tensor_loader.cpp
   CapabilityTierMatrix.cpp
+  Ensemble58Governor.cpp
+  HardwareCapabilityProbe.cpp
   HardwareGovernor.cpp
   PressedStateEngine.cpp
-  Ensemble58Governor.cpp
   TLSInstructionGate.cpp
   UnifiedTriggerOrchestrator.cpp
   PlacementPolicy.cpp
-  Deep2ExecutionTelemetry.cpp
-  VulkanGemmDispatcher.cpp
-  gguf_tensor_loader.cpp
-  GenerationBouncer.cpp
-  Sovereign_KernelBridge_CPP.cpp
-  RawrXDAutoClosure.cpp
+  RouterPredictiveMemoryBridge.cpp
   Generating Code...
+  Compiling...
+  advanced_sampler.cpp
+  AgenticEngineSovereignHook.cpp
+  AutoRepair.cpp
+  AutoRepairEngine.cpp
+  CrashRecovery.cpp
+  Deep2InferenceWrapper.cpp
+  DistributedKV.cpp
+  ExecutionContract.cpp
+  ExpertSharding.cpp
+  HealthReport.cpp
+  IDE_Lifecycle_Hook.cpp
+  IntegrityChecker.cpp
+  Profiler.cpp
+  RawrXD_SovereignStatusPanel.cpp
+  SovereignCheckpoint.cpp
+  SovereignCoreWrapper.cpp
+  SovereignDenseEngine.cpp
+  SovereignEventBus.cpp
+  SovereignRuntime.cpp
+  SovereignVCS.cpp
+  Generating Code...
+  Compiling...
+  SovereignWatchdog.cpp
+  StressTester.cpp
+  rawr_transport_strict.cpp
+  streaming_gguf_loader.cpp
+  license_validator_manifest.cpp
+  Diagnostics.cpp
+  vulkan_fwd_attn_mla.cpp
+  vulkan_fwd_cmdpool.cpp
+  vulkan_fwd_fused.cpp
+  vulkan_fwd_hostops.cpp
+  vulkan_fwd_q4k.cpp
+  vulkan_fwd_q4k_act.cpp
+  vulkan_fwd_q4k_climb.cpp
+  vulkan_fwd_q4k_fused.cpp
+  vulkan_fwd_q4k_host.cpp
+  vulkan_fwd_q6k.cpp
+  vulkan_fwd_q6k_host.cpp
+  vulkan_fwd_q8_kva_climb.cpp
+  vulkan_fwd_quant.cpp
+  vulkan_fwd_quant_host.cpp
+  Generating Code...
+  Compiling...
+  vulkan_fwd_quant_pipe.cpp
+  vulkan_fwd_resident.cpp
+  vulkan_fwd_stubs.cpp
+  vulkan_fwd_tune.cpp
+  vulkan_weight_policy.cpp
+  vulkan_weight_prefetch.cpp
+  vulkan_weight_window.cpp
+  Generating Code...
+  inference_kernels.cpp
+  sampler.cpp
+  ElasticResidencyManager.cpp
+  GGUFLoader.cpp
+  GGUFLoader.cpp
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\InferenceEngine.lib
+  BackendOrchestrator.cpp
+  InferenceProfiler.cpp
+  LanguageServerIntegration.cpp
+  hexmag_client.cpp
+  meta_planner.cpp
+  orchestrator_cli_handler.cpp
+  agent_explainability.cpp
+  agent_history.cpp
+  agent_policy.cpp
+  AdvancedAgentCoordinator.cpp
+  AgentOllamaClient.cpp
+  DiffEngine.cpp
+  OllamaProvider.cpp
+  RobustOllamaParser.cpp
+  SubAgentManager.cpp
+  agentic_audit_sink.cpp
+  agentic_composer_ux.cpp
+  agentic_orchestrator_integration.cpp
+  agentic_planning_orchestrator.cpp
+  autonomous_background_daemon.cpp
+  Generating Code...
+  Compiling...
+  autonomous_communicator.cpp
+  autonomous_verification_loop.cpp
+  change_impact_analyzer.cpp
+  cognitive_types.cpp
+  dynamic_planner.cpp
+  enhanced_blackboard.cpp
+  mission_director.cpp
+  reflection_agent.cpp
+  failure_intelligence_orchestrator.cpp
+  Engine.cpp
+  agentic_agent_coordinator.cpp
+  agentic_engine.cpp
+  agentic_loop_state.cpp
+  agentic_observability.cpp
+  multi_file_reasoning.cpp
+  repo_refactor_engine.cpp
+  semantic_code_search.cpp
+  symbol_graph_indexer.cpp
+  workspace_embeddings.cpp
+  ai_completion_real.cpp
+  Generating Code...
+  Compiling...
+  ai_model_caller.cpp
+  QuantumAuthUI.cpp
+  autonomous_feature_engine.cpp
+  autonomous_intelligence_orchestrator.cpp
+  benchmark_menu_widget.cpp
+  benchmark_runner.cpp
+  cloud_api_client.cpp
+  brutal_gzip.cpp
+  gzip_brutal_inflate.cpp
+  crdt_buffer.cpp
+  cursor_widget.cpp
+  websocket_hub.cpp
+  SessionBinder.cpp
+  compression_interface.cpp
+  context_mention_parser.cpp
+  BottleTTL.cpp
+  CPUFrequency.cpp
+  Deep2APIServer.cpp
+  Deep2Benchmark.cpp
+  Deep2Discovery.cpp
+  Generating Code...
+  Compiling...
+  Deep2IDEIntegration.cpp
+  Deep2InferenceGateway.cpp
+  Deep2Integration.cpp
+  Deep2LivePath.cpp
+  Deep2LivePath_Emit.cpp
+  Deep2LivePath_Gate.cpp
+  Deep2LivePath_Mech.cpp
+  Deep2LivePath_MechEnd.cpp
+  Deep2LivePath_Pinball.cpp
+  Deep2LivePath_Thermal.cpp
+  Deep2LocalServer.cpp
+  DeepSeekMoELoader.cpp
+  DualGPUHook.cpp
+  FabricTensorTable.cpp
+  FusedInferenceKernel.cpp
+  FusedLiveController.cpp
+  FusedLiveController_Cheap.cpp
+  FusedLiveController_Decide.cpp
+  FusedLiveController_Emit.cpp
+  FusedLiveController_Law.cpp
+  Generating Code...
+  Compiling...
+  GGUFDiagnostics.cpp
+  GGUFLoader.cpp
+  GoalSystem.cpp
+  GpuTransfer_Emit.cpp
+  HotPatcher.cpp
+  HotPatcherSafety.cpp
+  IOCPGGUFLoader.cpp
+  IQQuantKernels.cpp
+  InferenceSession.cpp
+  K2GlobalTensorIndex.cpp
+  K2GpuStreamCopy.cpp
+  K2LivePathTensorCache.cpp
+  K2LivePathTensorCache_Emit.cpp
+  K2LivePathTensorCache_Prefetch.cpp
+  K2LivePolicy.cpp
+  K2LivePolicy_Apply.cpp
+  K2LivePolicy_Hysteresis.cpp
+  K2LogitsClimb.cpp
+  K2MLAAttention.cpp
+  K2MLAWeights.cpp
+  Generating Code...
+  Compiling...
+  K2MLA_KvExpand_Fused.cpp
+  K2MoEWeights.cpp
+  K2NativeStreamGate.cpp
+  K2TokenEmbedding.cpp
+  K2WeightResolve.cpp
+  KVCache.cpp
+  KimiK2Config.cpp
+  LivePathEffect.cpp
+  LivePath_FusedTick.cpp
+  MASMKernelStubs.cpp
+  MedusaDecoder.cpp
+  MoEArchitectureParser.cpp
+  MoEEliminate.cpp
+  MoEWeightProxy.cpp
+  MoEWeightsLoader.cpp
+  ModelLoader.cpp
+  ModelRegistry.cpp
+  GGUFModelRegistry.cpp
+  GPUDeviceRegistry.cpp
+  MultiGPUScheduler.cpp
+  Generating Code...
+  Compiling...
+  VRAMAllocator.cpp
+  NUFusedPacker.cpp
+  PatchCache.cpp
+  RawrXDInferenceAdapter.cpp
+  ReverseHotpatchEngine.cpp
+  ReverseIntegration.cpp
+  ReverseTensorRecovery.cpp
+  RuntimePlanner.cpp
+  ScaleQuality.cpp
+  ShardRouterIntegration.cpp
+  SlidingWindowEngine.cpp
+  TensorHop.cpp
+  ThreadPool.cpp
+  TrailBrake.cpp
+  UniversalModelLoader.cpp
+  WarmupScheduler.cpp
+  deep2_http_gateway.cpp
+  ExecutionPolicy.cpp
+  ExecutionPolicyStore.cpp
+  Deep2GPUBackend.cpp
+  Generating Code...
+  Compiling...
+  DualGPUBackend.cpp
+  TensorHotpatch.cpp
+  VRAMManager.cpp
+  mcp_bridge.cpp
+  Deep2ProductionRuntime.cpp
+  bpe_tokenizer.cpp
+  core_generator.cpp
+  pyre_compute.cpp
+  feature_flags_runtime.cpp
+  AgenticIOCPBridge.cpp
+  AgenticPlanningOrchestrator.cpp
+  FullAgenticIDE.cpp
+  gguf_d3d12_bridge.cpp
+  gguf_masm_weight_bridge.cpp
+  speculative_decoder_v2.cpp
+  hot_patcher.cpp
+  hybrid_cloud_manager.cpp
+  ANSIColorParser.cpp
+  FindReplaceDialog.cpp
+  GitCommitDialog.cpp
+  Generating Code...
+  Compiling...
+  GitDiffViewer.cpp
+  SovereignSharedMemoryBridge.cpp
+  language_plugin.cpp
+  refactoring_plugin.cpp
+  resource_generator.cpp
+  DualGpuPipeline.cpp
+  MemoryPressureGuard.cpp
+  OutOfCoreScheduler.cpp
+  PerformanceMonitor.cpp
+  RawrXD_LlamaNative.cpp
+  ai_model_caller_real.cpp
+  gpu_dispatch_gate.cpp
+  inference_engine_real.cpp
+  intelligent_codebase_engine.cpp
+  interpretability_panel_enhanced.cpp
+  VulkanComputeKernels.cpp
+  RDNA3_GpuDispatcher.cpp
+  license_enforcement.cpp
+  GGUFRunner.cpp
+  QuantBackend.cpp
+  Generating Code...
+  Compiling...
+  gguf_k_quants.cpp
+  rawrxd_ggufrunner_signals.cpp
+  RawrXD_LSPServer.cpp
+  diagnostic_consumer.cpp
+  gguf_diagnostic_provider.cpp
+  hotpatch_symbol_provider.cpp
+  lsp_hotpatch_bridge.cpp
+  lsp_client.cpp
+  extension_marketplace.cpp
+  extension_package_local.cpp
+  mcp_integration.cpp
+  SequentialBlowoffValve.cpp
+  UnifiedMemoryPool.cpp
+  memory_core.cpp
+  model_name_utils.cpp
+  model_registry.cpp
+  model_trainer.cpp
+  ReverseEngineering.cpp
+  autonomous_agentic_orchestrator.cpp
+  codex_ultimate.cpp
+  Generating Code...
+  Compiling...
+  copilot_gap_closer.cpp
+  crucible_engine.cpp
+  engine_manager.cpp
+  game_engine_manager.cpp
+  quickjs_extension_host.cpp
+  quickjs_vscode_bindings.cpp
+  unity_engine_integration.cpp
+  unreal_engine_integration.cpp
+  vscode_extension_api.cpp
+  vsix_loader_win32.cpp
+  multi_file_search.cpp
+  vision_encoder.cpp
+  plan_orchestrator.cpp
+  win32_plugin_loader.cpp
+  project_context.cpp
+  rdna3_bridge.cpp
+  real_time_completion_engine.cpp
+  ReverseEngine.cpp
+  ReverseModelLoader.cpp
+  RKCCodeWorld.cpp
+  Generating Code...
+  Compiling...
+  RKCCompiler.cpp
+  RKCDeep2Authority.cpp
+  RKCEmit.cpp
+  RKCGapEngine.cpp
+  RKCMinimalSource.cpp
+  RKCModelInventory.cpp
+  RKCNegativeKnowledge.cpp
+  RKCProductContext.cpp
+  RKCRecipes.cpp
+  RKCSession.cpp
+  RKCValidator.cpp
+  RKCWorld.cpp
+  RKC_C_ABI.cpp
+  Deep2ExecutionTelemetry.cpp
+  GenerationBouncer.cpp
+  RawrRuntime.cpp
+  Sovereign_KernelBridge_CPP.cpp
+  ElasticArchitectureDetector.cpp
+  ElasticDecoder.cpp
+  ElasticEngine.cpp
+  Generating Code...
+  Compiling...
+  ElasticGGUFIndex.cpp
+  VulkanTensorResidencyBackend.cpp
+  gguf_tensor_loader.cpp
+  CapabilityTierMatrix.cpp
+  Ensemble58Governor.cpp
+  HardwareCapabilityProbe.cpp
+  HardwareGovernor.cpp
+  PressedStateEngine.cpp
+  TLSInstructionGate.cpp
+  UnifiedTriggerOrchestrator.cpp
+  PlacementPolicy.cpp
+  BP1BraidIndex.cpp
+  SharedModelRuntime.cpp
+  runtime_core.cpp
+  GenerationStopwatch.cpp
+  RuntimeSurfaceModule.cpp
+  advanced_sampler.cpp
+  InputSanitizer.cpp
+  ProviderKeyStore.cpp
+  ProviderKeyStore_get.cpp
+  Generating Code...
+  Compiling...
+  ProviderKeyStore_misc.cpp
+  dependency_audit.cpp
+  sast_rule_engine.cpp
+  secrets_scanner.cpp
+  gguf_server_hotpatch.cpp
+  SystemAwareness.cpp
+  BeaconBus.cpp
+  CapabilityBus.cpp
+  ExecutionCapsule.cpp
+  IntentCompression.cpp
+  SovereignControlPlane.cpp
+  SovereignIDEIntegration.cpp
+  AutonomousRecovery.cpp
+  ExecutionSpine.cpp
+  TerminalOwnership.cpp
+  RealityValidator.cpp
+  SovereignAgentRuntime.cpp
+  SovereignBlackboard.cpp
+  SovereignCritic.cpp
+  SovereignMissionPlanner.cpp
+  Generating Code...
+  Compiling...
+  SovereignReflectionEngine.cpp
+  SovereignTaskGraph.cpp
+  spengine_bridge.cpp
+  streaming_gguf_loader.cpp
+  subagent_core.cpp
+  UnifiedTelemetryCore.cpp
+  telemetry_export.cpp
+  embedded_terminal.cpp
+  RAWRXD_ThermalDashboard.cpp
+  tool_registry.cpp
+  tool_registry_advanced.cpp
+  license_validator_manifest.cpp
+  ExportBridge.cpp
+  ImportBridge.cpp
+  RawrXD_MainLoop.cpp
+  agentic_bridge.cpp
+  chat_message_renderer.cpp
+  chat_panel.cpp
+  debugger_core.cpp
+  interpretability_panel.cpp
+  Generating Code...
+  Compiling...
+  monaco_settings_dialog.cpp
+  tool_action_status.cpp
+  webview2_bridge.cpp
+  universal_model_router.cpp
+  Diagnostics.cpp
+  ErrorReporter.cpp
+  AgenticBrowserLayer.cpp
+  AutonomousAgent.cpp
+  BenchmarkMenu.cpp
+  ConsentPrompt.cpp
+  EditorOperations.cpp
+  HeadlessIDE.cpp
+  HeadlessIDE_FileAliases.cpp
+  HeadlessIDE_GuiRoutes.cpp
+  HeadlessIDE_ToolRoutes.cpp
+  IDEDiagnosticAutoHealer.cpp
+  IMultiFileSearchWidget.cpp
+  IV280Bridge.cpp
+  IocpFileWatcher.cpp
+  OSExplorerInterceptor.cpp
+  Generating Code...
+  Compiling...
+  RouterOperations.cpp
+  ScreenPilotModelHub.cpp
+  TodoManager.cpp
+  TransparentRenderer.cpp
+  VSCodeMarketplaceAPI.cpp
+  VulkanRenderer.cpp
+  Win32IDE.cpp
+  Win32IDE_AIBackend.cpp
+  Win32IDE_AIReverseEngineering.cpp
+  Win32IDE_Accelerators.cpp
+  Win32IDE_AgentCommands.cpp
+  Win32IDE_AgentHistory.cpp
+  Win32IDE_AgentStreamingBridge.cpp
+  Win32IDE_AgenticBrowser.cpp
+  Win32IDE_AgenticComposerUX.cpp
+  Win32IDE_AgenticPlanningPanel.cpp
+  Win32IDE_AirgappedEnterprise.cpp
+  Win32IDE_Annotations.cpp
+  Win32IDE_AsmSemantic.cpp
+  Win32IDE_AuditDashboard.cpp
+  Generating Code...
+  Compiling...
+  Win32IDE_AutonomousAgent.cpp
+  Win32IDE_AutonomousCommunicator.cpp
+  Win32IDE_AutonomousDebugger.cpp
+  Win32IDE_Autonomy.cpp
+  Win32IDE_BackendSwitcher.cpp
+  Win32IDE_Breadcrumbs.cpp
+  Win32IDE_CaretAnimation.cpp
+  Win32IDE_ChatMessageRenderer.cpp
+  Win32IDE_ChatPanel_Ollama.cpp
+  Win32IDE_CodeLens.cpp
+  Win32IDE_Collab.cpp
+  Win32IDE_ColorPicker.cpp
+  Win32IDE_CommandFlight.cpp
+  Win32IDE_CommandSurface.cpp
+  Win32IDE_ConsentPrompt.cpp
+  Win32IDE_ContextMentionParser.cpp
+  Win32IDE_CopilotGapPanel.cpp
+  Win32IDE_CoreRuntimeSpine.cpp
+  Win32IDE_CrashReporter.cpp
+  Win32IDE_CruciblePanel.cpp
+  Generating Code...
+  Compiling...
+  Win32IDE_CursorParity.cpp
+  Win32IDE_Debugger.cpp
+  Win32IDE_DecompilerView.cpp
+  Win32IDE_DiffView.cpp
+  Win32IDE_DiskRecovery.cpp
+  Win32IDE_DualAgentPanel.cpp
+  Win32IDE_EmojiSupport.cpp
+  Win32IDE_EnterpriseStressTests.cpp
+  Win32IDE_ExecutionGovernor.cpp
+  Win32IDE_FailureDetector.cpp
+  Win32IDE_FailureIntelligence.cpp
+  Win32IDE_FeatureManifest.cpp
+  Win32IDE_FlagshipFeatures.cpp
+  Win32IDE_FlightRecorder.cpp
+  Win32IDE_FuzzySearch.cpp
+  Win32IDE_GGUFInspector.cpp
+  Win32IDE_GUILayoutHotpatch.cpp
+  Win32IDE_GameEnginePanel.cpp
+  Win32IDE_Gauntlet.cpp
+  Win32IDE_HandleExtensionCommand.cpp
+  Generating Code...
+  Compiling...
+  Win32IDE_HexMagCopilotRoute.cpp
+  Win32IDE_HotpatchCtrlPanel.cpp
+  Win32IDE_HotpatchPanel.cpp
+  Win32IDE_HoverTooltips.cpp
+  Win32IDE_IDEDiagnosticAutoHealer.cpp
+  Win32IDE_IOCPFileWatcher.cpp
+  Win32IDE_IRCBridge.cpp
+  Win32IDE_IRCBridgeCommands.cpp
+  Win32IDE_InlayHints.cpp
+  Win32IDE_Instructions.cpp
+  Win32IDE_LLMRouter.cpp
+  Win32IDE_LanguagePlugin.cpp
+  Win32IDE_LayerEviction.cpp
+  Win32IDE_LicenseCreator.cpp
+  Win32IDE_LocalServer.cpp
+  Win32IDE_MarketplacePanel.cpp
+  Win32IDE_MenuE2eProbe.cpp
+  Win32IDE_Minimap.cpp
+  Win32IDE_ModelAnatomy.cpp
+  Win32IDE_ModelDiscovery.cpp
+  Generating Code...
+  Compiling...
+  Win32IDE_MonacoThemes.cpp
+  Win32IDE_MultiCursor.cpp
+  Win32IDE_MultiResponse.cpp
+  Win32IDE_NativeDebugPanel.cpp
+  Win32IDE_NativePipeline.cpp
+  Win32IDE_NetworkPanel.cpp
+  Win32IDE_OSExplorerInterceptor.cpp
+  Win32IDE_OutlinePanel.cpp
+  Win32IDE_PDBSymbols.cpp
+  Win32IDE_PeekOverlay.cpp
+  Win32IDE_PeekView.cpp
+  Win32IDE_PerfTelemetry.cpp
+  Win32IDE_PipelinePanel.cpp
+  Win32IDE_PlanExecutor.cpp
+  Win32IDE_PluginSignature.cpp
+  Win32IDE_Plugins.cpp
+  Win32IDE_PowerShell.cpp
+  Win32IDE_PowerShellPanel.cpp
+  Win32IDE_ProblemsPanel.cpp
+  Win32IDE_ProvableAgent.cpp
+  Generating Code...
+  Compiling...
+  Win32IDE_QuickWins.cpp
+  Win32IDE_Refactor.cpp
+  Win32IDE_RefactoringPlugin.cpp
+  Win32IDE_RenamePreview.cpp
+  Win32IDE_ResourceGenerator.cpp
+  Win32IDE_ReverseEngineering.cpp
+  Win32IDE_SQLite3Core.cpp
+  Win32IDE_SecurityScans.cpp
+  Win32IDE_SemanticIndex.cpp
+  Win32IDE_SemanticPanel.cpp
+  Win32IDE_ShortcutEditor.cpp
+  Win32IDE_SnippetEngine.cpp
+  Win32IDE_StaticAnalysisPanel.cpp
+  Win32IDE_SubAgent.cpp
+  Win32IDE_SwarmModelSelector.cpp
+  Win32IDE_SwarmPanel.cpp
+  Win32IDE_Tasks.cpp
+  Win32IDE_Telemetry.cpp
+  Win32IDE_TelemetryDashboard.cpp
+  Win32IDE_TelemetryExport.cpp
+  Generating Code...
+  Compiling...
+  Win32IDE_TelemetryPanel.cpp
+  Win32IDE_TestExplorerTree.cpp
+  Win32IDE_Themes.cpp
+  Win32IDE_Tier1Cosmetics.cpp
+  Win32IDE_Tier2Cosmetics.cpp
+  Win32IDE_Tier3Cosmetics.cpp
+  Win32IDE_Tier3Polish.cpp
+  Win32IDE_Tier5Cosmetics.cpp
+  Win32IDE_ToolActionStatus.cpp
+  Win32IDE_TranscendencePanel.cpp
+  Win32IDE_UnifiedTelemetry.cpp
+  Win32IDE_UpdateSignature.cpp
+  Win32IDE_VSCodeExtAPI.cpp
+  Win32IDE_VSCodeUI.cpp
+  Win32IDE_VisionEncoder.cpp
+  Win32IDE_VoiceAutomation.cpp
+  Win32IDE_VoiceChat.cpp
+  Win32IDE_VulkanRenderer.cpp
+  Win32IDE_WebView2.cpp
+  Win32IDE_WindowOwnership.cpp
+  Generating Code...
+  Compiling...
+  Win32TerminalManager.cpp
+  WindowManager.cpp
+  ai_workers_queue.cpp
+  v280_link_bridge.cpp
+  GhostTextRenderer.cpp
+  Omega1IDEIntegration.cpp
+  Omega1IPCClient.cpp
+  StatusBarTelemetry.cpp
+  Win32IDE_Omega1Integration.cpp
+  Generating Code...
+  autonomous_orchestrator.cpp
+  Deep2Bridge.cpp
+  vulkan_compute.cpp
+  inference_kernels.cpp
+  sampler.cpp
+  Logger.cpp
+  feature_registry_panel.cpp
+  feature_registry_panel.cpp
+  autonomous_orchestrator.cpp
+  Deep2Engine.cpp
+  Deep2Bridge.cpp
+  ElasticResidencyManager.cpp
   RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked
      Creating library F:/~dev/rawrxd/build_clean_n1/Release/RawrXD-Win32IDE.lib and object F:/~dev/rawrxd/build_clean_n1/Release/RawrXD-Win32IDE.exp
 auto_feature_registry.obj : error LNK2001: unresolved external symbol "public: struct rawrxd::agent::ReasoningResult __cdecl rawrxd::agent::LocalReasoningEngine::Reason(struct rawrxd::agent::AgentContext const &)" (?Reason@LocalReasoningEngine@agent@rawrxd@@QEAA?AUReasoningResult@23@AEBUAgentContext@23@@Z) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
@@ -848,12 +864,6 @@ Win32IDE_ShellLayout.obj : error LNK2001: unresolved external symbol "void __cde
 Win32IDE_LSP_AI_Bridge.obj : error LNK2001: unresolved external symbol "void __cdecl RawrXD::IDE::EditorEngine_SetGhostText(int,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?EditorEngine_SetGhostText@IDE@RawrXD@@YAXHAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 Win32IDE_LSP_AI_Bridge.obj : error LNK2001: unresolved external symbol "void __cdecl RawrXD::IDE::EditorEngine_ClearGhostText(void)" (?EditorEngine_ClearGhostText@IDE@RawrXD@@YAXXZ) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 AgentOrchestrator.obj : error LNK2001: unresolved external symbol "public: struct rawrxd::closure::ToolResult __cdecl rawrxd::closure::ToolGateway::invoke(struct rawrxd::closure::ToolRequest)" (?invoke@ToolGateway@closure@rawrxd@@QEAA?AUToolResult@23@UToolRequest@23@@Z) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-rawrxd_subsystem_api.obj : error LNK2001: unresolved external symbol DiskRecovery_FindDrive [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-rawrxd_subsystem_api.obj : error LNK2001: unresolved external symbol DiskRecovery_Init [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-rawrxd_subsystem_api.obj : error LNK2001: unresolved external symbol DiskRecovery_ExtractKey [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-rawrxd_subsystem_api.obj : error LNK2001: unresolved external symbol DiskRecovery_Run [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-rawrxd_subsystem_api.obj : error LNK2001: unresolved external symbol DiskRecovery_Cleanup [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-rawrxd_subsystem_api.obj : error LNK2001: unresolved external symbol DiskRecovery_GetStats [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 auto_repair_orchestrator.obj : error LNK2001: unresolved external symbol asm_hotpatch_flush_icache [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 shadow_page_detour.obj : error LNK2001: unresolved external symbol asm_hotpatch_flush_icache [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 auto_repair_orchestrator.obj : error LNK2001: unresolved external symbol asm_snapshot_restore [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
@@ -868,85 +878,16 @@ streaming_engine_registry.obj : error LNK2001: unresolved external symbol QB_Rel
 streaming_engine_registry.obj : error LNK2001: unresolved external symbol QB_GetStats [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 streaming_engine_registry.obj : error LNK2001: unresolved external symbol QB_ForceEviction [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 streaming_engine_registry.obj : error LNK2001: unresolved external symbol QB_SetVRAMLimit [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol Enterprise_InitLicenseSystem [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_devunlock_bridge.obj : error LNK2001: unresolved external symbol Enterprise_InitLicenseSystem [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol Enterprise_ValidateLicense [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol Enterprise_CheckFeature [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol Enterprise_Unlock800BDualEngine [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol Enterprise_InstallLicense [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol Enterprise_GetLicenseStatus [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol Enterprise_GetFeatureString [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol Enterprise_GenerateHardwareHash [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol Streaming_CheckEnterpriseBudget [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 enterprise_license.obj : error LNK2001: unresolved external symbol "public: static void __cdecl IDELogger::error(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?error@IDELogger@@SAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 enterprise_license.obj : error LNK2001: unresolved external symbol "public: static void __cdecl IDELogger::warn(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?warn@IDELogger@@SAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 enterprise_license.obj : error LNK2001: unresolved external symbol "public: static void __cdecl IDELogger::info(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?info@IDELogger@@SAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_license.obj : error LNK2001: unresolved external symbol g_EnterpriseFeatures [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_devunlock_bridge.obj : error LNK2001: unresolved external symbol g_EnterpriseFeatures [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 enterprise_licensev2_impl.obj : error LNK2001: unresolved external symbol "struct RawrXD::License::FeatureDefV2 * RawrXD::License::g_FeatureManifest" (?g_FeatureManifest@License@RawrXD@@3PAUFeatureDefV2@12@A) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-enterprise_devunlock_bridge.obj : error LNK2001: unresolved external symbol g_800B_Unlocked [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_init [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_set_key [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-shadow_page_detour.obj : error LNK2001: unresolved external symbol asm_camellia256_set_key [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_encrypt_block [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_decrypt_block [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_encrypt_ctr [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_decrypt_ctr [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_encrypt_file [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_decrypt_file [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_get_status [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_shutdown [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_self_test [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-shadow_page_detour.obj : error LNK2001: unresolved external symbol asm_camellia256_self_test [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-camellia256_bridge.obj : error LNK2001: unresolved external symbol asm_camellia256_get_hmac_key [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-flash_attention.obj : error LNK2001: unresolved external symbol FlashAttention_Init [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-flash_attention.obj : error LNK2001: unresolved external symbol FlashAttention_Forward [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-flash_attention.obj : error LNK2001: unresolved external symbol FlashAttention_GetTileConfig [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-flash_attention.obj : error LNK2001: unresolved external symbol g_FlashAttnCalls [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-flash_attention.obj : error LNK2001: unresolved external symbol g_FlashAttnTiles [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 layer_offload_manager.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Memory::TransferScheduler::schedule(struct RawrXD::Memory::TransferRequest const &,class std::function<void __cdecl(unsigned __int64,bool)>)" (?schedule@TransferScheduler@Memory@RawrXD@@QEAAXAEBUTransferRequest@23@V?$function@$$A6AX_K_N@Z@std@@@Z) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol sgemm_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol sgemv_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol sgemm_avx512 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol sgemv_avx512 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol native_rmsnorm_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol native_rmsnorm_avx512 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol native_softmax_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol native_softmax_avx512 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol native_rope_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol native_vdot_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol native_vdot_avx512 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol native_fused_mlp_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol native_nt_memcpy [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol dequant_q4_0_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol dequant_q4_0_avx512 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol dequant_q8_0_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol dequant_q8_0_avx512 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol dequant_q2k_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol qgemv_q4_0_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_speed_layer.obj : error LNK2001: unresolved external symbol qgemv_q8_0_avx2 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_coordinator.obj : error LNK2001: unresolved external symbol Swarm_RingBuffer_Init [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_worker.obj : error LNK2001: unresolved external symbol Swarm_RingBuffer_Init [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_coordinator.obj : error LNK2001: unresolved external symbol Swarm_XXH64 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_worker.obj : error LNK2001: unresolved external symbol Swarm_XXH64 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_coordinator.obj : error LNK2001: unresolved external symbol Swarm_ValidatePacketHeader [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_worker.obj : error LNK2001: unresolved external symbol Swarm_ValidatePacketHeader [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_coordinator.obj : error LNK2001: unresolved external symbol Swarm_BuildPacketHeader [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_worker.obj : error LNK2001: unresolved external symbol Swarm_BuildPacketHeader [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_coordinator.obj : error LNK2001: unresolved external symbol Swarm_HeartbeatRecord [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_worker.obj : error LNK2001: unresolved external symbol Swarm_HeartbeatRecord [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_coordinator.obj : error LNK2001: unresolved external symbol Swarm_HeartbeatCheck [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_coordinator.obj : error LNK2001: unresolved external symbol Swarm_ComputeNodeFitness [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_worker.obj : error LNK2001: unresolved external symbol Swarm_ComputeNodeFitness [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_coordinator.obj : error LNK2001: unresolved external symbol Swarm_IOCP_Create [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-swarm_coordinator.obj : error LNK2001: unresolved external symbol Swarm_IOCP_Associate [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 native_debugger_engine.obj : error LNK2001: unresolved external symbol Dbg_InjectINT3 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 native_debugger_engine.obj : error LNK2001: unresolved external symbol Dbg_RestoreINT3 [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 native_debugger_engine.obj : error LNK2001: unresolved external symbol Dbg_SetHardwareBreakpoint [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 native_debugger_engine.obj : error LNK2001: unresolved external symbol Dbg_ClearHardwareBreakpoint [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 native_debugger_engine.obj : error LNK2001: unresolved external symbol Dbg_WalkStack [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_debugger_engine.obj : error LNK2001: unresolved external symbol Dbg_ReadMemory [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-native_debugger_engine.obj : error LNK2001: unresolved external symbol Dbg_WriteMemory [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 native_debugger_engine.obj : error LNK2001: unresolved external symbol Dbg_MemoryScan [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 unified_hotpatch_manager.obj : error LNK2001: unresolved external symbol "public: static class LiveBinaryPatcher & __cdecl LiveBinaryPatcher::instance(void)" (?instance@LiveBinaryPatcher@@SAAEAV1@XZ) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 unified_hotpatch_manager.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::initialize(unsigned __int64)" (?initialize@LiveBinaryPatcher@@QEAA?AUPatchResult@@_K@Z) [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
@@ -1017,5 +958,5 @@ hexmag_ide_link_probe.obj : error LNK2001: unresolved external symbol HexMag_Bot
 hexmag_ide_link_probe.obj : error LNK2001: unresolved external symbol HexMag_IsInitialized [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 hexmag_ide_link_probe.obj : error LNK2001: unresolved external symbol HexMag_GetParallelAgents [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 hexmag_ide_link_probe.obj : error LNK2001: unresolved external symbol HexMag_Tuner_GenerationId [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
-F:\~dev\rawrxd\build_clean_n1\bin\Release\RawrXD-Win32IDE.exe : fatal error LNK1120: 186 unresolved externals [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\build_clean_n1\bin\Release\RawrXD-Win32IDE.exe : fatal error LNK1120: 121 unresolved externals [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]
 C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(1193,5): error MSB6006: "link.exe" exited with code 1120. [F:\~dev\rawrxd\build_clean_n1\RawrXD-Win32IDE.vcxproj]

@@ -15,12 +15,10 @@
 -- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
 -- test_parseheader_fuzz: B32 deterministic fuzz matrix configured
 -- test_gguf_metadata_bounds: B33 metadata bounds gate configured
--- test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured
 -- Dual GPU Smoke Test configured
 -- GGUF Inspector tool configured
 -- Comprehensive Dual GPU Test configured
 -- OMEGA-1 Bridge Test Harness configured
--- K2 Router Injection Smoke Test configured
 -- Batch 15A GGUF Alignment Diagnostic configured
 -- Batch 15B Q4_0 GEMV Certification configured
 -- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
@@ -65,33 +63,32 @@
 -- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
 -- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
 -- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+CMake Error at CMakeLists.txt:5307 (target_compile_definitions):
+  Cannot specify compile definitions for target "RawrXD-InferenceEngine"
+  which is not built by this project.
+
+
+CMake Error at CMakeLists.txt:5407 (add_dependencies):
+  Cannot add target-level dependencies to non-existent target
+  "RawrXD-InferenceEngine".
+
+  The add_dependencies works for top-level logical targets created by the
+  add_executable, add_library, or add_custom_target commands.  If you want to
+  add file-level dependencies see the DEPENDS option of the add_custom_target
+  and add_custom_command commands.
+
+
+CMake Error at CMakeLists.txt:5426 (set_target_properties):
+  set_target_properties Can not find target to add properties to:
+  RawrXD-InferenceEngine
+
+
+CMake Error at CMakeLists.txt:5433 (target_link_options):
+  Cannot specify link options for target "RawrXD-InferenceEngine" which is
+  not built by this project.
+
+
 -- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
--- MultiWindow Kernel DLL target enabled
--- DynamicPromptEngine DLL target enabled (Unity/Unreal compatible)
--- Win32IDE: Real lane - using isolated handlers + runtime handlers
--- [Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)
--- [Win32IDE] Sovereign GPU ASM disabled +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ fraudulent claims removed
-CMake Warning at CMakeLists.txt:6723 (message):
-  [Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips fallback/shim TUs
-  (strict lane).  The IDE usually will not link unless every ASM symbol is
-  provided elsewhere.  For a normal dev link:
-  -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON or remove that cache entry.
-
-
--- [Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)
--- Deep2Engine Metadata Regression Test configured
--- [Win32IDE] Partial ODR purge: Deep2 test/main TUs removed
--- [Win32IDE] ATL static lib: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/atlmfc/lib/x64
--- +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RawrXD-Win32IDE: No stub policy violations
--- QuickJS found: JS extension host enabled
--- [Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/RawrXD_Product100.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wire.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave3.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave4.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/asm/RawrXD_Product100_x64.asm
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/product/gateway/product_deep2_infer.cpp
--- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 overlay skipped: no sources or target
 -- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
 -- [Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle
 -- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_c1_c9: missing src/deep2/K2C1C9.cpp
@@ -161,30 +158,15 @@ CMake Warning at CMakeLists.txt:6723 (message):
 -- [Interstellar] sources missing ΓÇö skipping (BUILD_INTERSTELLAR gated)
 -- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
 -- [CI] RAWR_ASAN=OFF
--- [Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)
 -- [Batch 1] Production benchmark target: RawrXD-ProductionBenchmark
 -- [Batch 1] Production cert test target: RawrXD-ProductionCertTest
 -- [Phase C] GPU Benchmark target: RawrXD-Benchmark
 -- [Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark
 -- [Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark
--- [Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark
--- [Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark
--- [VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark
--- [VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark
 -- [VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple
--- [VAL-033] Profiling instrumentation: tree_attention_profiled
--- [VAL-034] Q@K^T alignment optimization: tree_attention_aligned
--- [VAL-035] Tiled Q@K^T: tree_attention_tiled
--- [VAL-036] Vectorized softmax: tree_attention_vectorized
--- [VAL-037] Tree sparsity: tree_attention_sparse
--- [VAL-037.1] Fused online softmax: tree_attention_fused_sparse
--- [VAL-037.2] Tree-specialized: tree_attention_tree_specialized
 -- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
--- [VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark
--- [VAL-038] Validation benchmark (B+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜C+∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜A): VAL038_Validation_Benchmark
 -- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
 -- [Analysis] RawrXD-ModelAnalysis target (Implant_Model_Analysis.ps1 / ANALYSIS_QUICKSTART.md)
--- [Analysis] Win32IDE linked to RawrXD-ModelAnalysisLib (RAWR_HAS_MODEL_ANATOMY)
 -- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
 -- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
 -- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
@@ -196,7 +178,6 @@ CMake Warning at CMakeLists.txt:6723 (message):
 -- [LSP] RawrXD-Script Language Server target enabled: RawrXD_LSPServer
 -- [DAP] RawrXD-Script Debug Adapter target enabled: RawrXDScriptDAPAdapter
 -- [Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)
--- [Test] DebugBridge telemetry test: TestDebugBridgeTelemetry
 -- [Test] Pure MASM inference test: TestMASMInference
 -- [Test] Debugger stress tests: stress_target, stress_memory
 -- [Test] SovereignRPC Simulator: test_simulator (build with: cmake --build . --target test_simulator)
@@ -218,13 +199,11 @@ CMake Warning at CMakeLists.txt:6723 (message):
 --   [MEASURE] benchmark_dispatch_pmc - PMC profiling
 -- ========================================
 -- Could NOT find Qt6 (missing: Qt6_DIR)
-CMake Warning at CMakeLists.txt:14840 (message):
+CMake Warning at CMakeLists.txt:14827 (message):
   [SoloIDE] Qt6 not found +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ SoloIDE target skipped.
   Install Qt6 or set CMAKE_PREFIX_PATH.
 
 
 -- certification_harness: Adversarial evidence-producing certification suite configured
 -- native_toolchain_cert: Native toolchain certification target configured
--- Configuring done (0.8s)
--- Generating done (3.4s)
--- Build files have been written to: F:/~dev/rawrxd/build_clean_n1
+-- Configuring incomplete, errors occurred!
