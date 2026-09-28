@@ -497,6 +497,14 @@ static void handleConnection(SOCKET clientSock,
                 goto done;
             }
 
+            // Each HTTP completion is an independent conversation. The engine's
+            // prefill loop requires an empty KV cache (pos == p), so any prior
+            // request's KV state must be cleared here or forwardTokenAllLayers
+            // throws "sequence/KV position mismatch" and the request returns 0
+            // tokens. Deep2Engine::reset() clears KV, hidden buffers, SSM state
+            // and GPU MLA caches.
+            engine->reset();
+
             std::string prompt = assembleChatPrompt(chatReq, chatTemplate);
             std::string responseId = generateId("chatcmpl-");
             uint64_t created = unixTimestamp();
