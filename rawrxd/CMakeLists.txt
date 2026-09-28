@@ -3040,9 +3040,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     list(REMOVE_ITEM RAWR_ENGINE_SOURCES src/agent/quantum_dynamic_time_manager_impl.cpp)
 endif()
 
-# RouterPrefetchTelemetry is added to SOURCES after RAWR_ENGINE_SOURCES is captured;
-# add it explicitly here so RawrEngine links the telemetry definitions.
-list(APPEND RAWR_ENGINE_SOURCES # AUTO-REMOVED: stub file)
+# RouterPrefetchTelemetry was stub-only -- list(APPEND) removed
 
 string(TOUPPER "${RAWR_SSOT_PROVIDER}" RAWR_SSOT_PROVIDER_UPPER)
 set(_RAWR_VALID_SSOT_PROVIDERS CORE EXT AUTO STUBS FEATURES)
@@ -3244,28 +3242,15 @@ endif()
 # =============================================================================
 set(OMEGA1_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/omega1_modules")
 
-set(OMEGA1_SOURCES
-    ${OMEGA1_DIR}/OmegaPowerShellBridge.cpp
-)
+# OMEGA1_SOURCES removed -- OmegaPowerShellBridge.cpp was stub-only
+# set(OMEGA1_SOURCES ${OMEGA1_DIR}/OmegaPowerShellBridge.cpp)
+# set(OMEGA1_HEADERS ${OMEGA1_DIR}/OmegaPowerShellBridge.h)
 
-set(OMEGA1_HEADERS
-    ${OMEGA1_DIR}/OmegaPowerShellBridge.h
-)
-
-# OMEGA-1 Engine as static library
-add_library(Omega1Engine STATIC ${OMEGA1_SOURCES} ${OMEGA1_HEADERS})
-
-target_include_directories(Omega1Engine PUBLIC
-    ${OMEGA1_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
-target_compile_definitions(Omega1Engine PRIVATE
-    OMEGA1_BUILDING=1
-    RAWRXD_OMEGA1_ENABLED=1
-)
-
-set_property(TARGET Omega1Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# OMEGA-1 Engine library removed -- all sources were stub-only
+# add_library(Omega1Engine STATIC ${OMEGA1_SOURCES} ${OMEGA1_HEADERS})
+# target_include_directories(Omega1Engine PUBLIC ${OMEGA1_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)
+# target_compile_definitions(Omega1Engine PRIVATE OMEGA1_BUILDING=1 RAWRXD_OMEGA1_ENABLED=1)
+# set_property(TARGET Omega1Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # =============================================================================
 # RawrXD Compression Library (Zero-Dependency Runtime ZLIB Loader)
@@ -3380,7 +3365,7 @@ endif()
 
 # Link RE library and OMEGA-1 Engine into RawrEngine
 if(TARGET RawrEngine)
-target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library Omega1Engine)
+target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library)
 endif()
 
 target_include_directories(RawrEngine PRIVATE 
@@ -3741,7 +3726,7 @@ if(WIN32)
     )
 endif()
 
-target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library Omega1Engine rguf)
+target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library rguf)
 
 target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -5528,8 +5513,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
         list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
         # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
-        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/# AUTO-REMOVED: stub file")
-            list(APPEND WIN32IDE_SOURCES # AUTO-REMOVED: stub file)
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/__DELETED_STUB__")
+            # list(APPEND WIN32IDE_SOURCES ...) -- stub file deleted
         endif()
     endif()
 
@@ -10143,7 +10128,8 @@ if(BUILD_DEEP2_VWA_IOCP_RANGE_001 AND WIN32 AND MSVC)
     add_executable(deep2_vwa_iocp_range_001
         src/deep2/deep2_vwa_iocp_range_001.cpp
         # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file)
+        # AUTO-REMOVED: stub file
+    )
     target_compile_definitions(deep2_vwa_iocp_range_001 PRIVATE VWA_IOCP_RANGE_CERT=1)
     target_compile_options(deep2_vwa_iocp_range_001 PRIVATE
         $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20 /Gy)
@@ -10605,7 +10591,8 @@ option(BUILD_DEEP2_NU_PACK_FORMAT_CERT "Build NU_PACK_FORMAT_001" OFF)
 if(BUILD_DEEP2_NU_PACK_FORMAT_CERT)
     add_executable(deep2_nu_pack_format_cert
         src/deep2/deep2_nu_pack_format_cert.cpp
-        # AUTO-REMOVED: stub file)
+        # AUTO-REMOVED: stub file
+        )
     if(MSVC)
         target_compile_options(deep2_nu_pack_format_cert PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -14841,7 +14828,19 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
     endif()
 endif()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_generation.cpp")
-add_executable(test_generation tests/test_generation.cpp # AUTO-REMOVED: stub file src/deep2/Deep2Engine.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file src/deep2/MoERouter.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp # AUTO-REMOVED: stub file src/deep2/QuantKernelRegistry.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file src/deep2/mars/MARSController.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file)
+add_executable(test_generation tests/test_generation.cpp
+    src/deep2/Deep2Engine.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/mars/MARSController.cpp
+    tests/deep2_link_stubs.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/deep2/BP16Streamer.cpp
+    src/deep2/BP16Extractor.cpp
+)
 set_target_properties(test_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -14938,7 +14937,8 @@ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file)
+    # AUTO-REMOVED: stub file
+    )
 set_target_properties(k2_runtime_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_runtime_validation PRIVATE InferenceEngine)
 add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15013,7 +15013,8 @@ add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file)
+    # AUTO-REMOVED: stub file
+    )
 set_target_properties(k2_native_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_native_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15061,7 +15062,8 @@ add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file)
+    # AUTO-REMOVED: stub file
+    )
 set_target_properties(k2_002_tensor_streaming PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_002_tensor_streaming PRIVATE InferenceEngine)
 add_test(NAME k2_002_tensor_streaming COMMAND k2_002_tensor_streaming WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15109,7 +15111,8 @@ add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file)
+    # AUTO-REMOVED: stub file
+    )
 set_target_properties(k2_003_layer_execution PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_003_layer_execution PRIVATE InferenceEngine)
 add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15185,7 +15188,8 @@ add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file)
+    # AUTO-REMOVED: stub file
+    )
 set_target_properties(k2_004_bounded_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_004_bounded_prefill PRIVATE InferenceEngine)
 add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15288,7 +15292,8 @@ add_test(NAME k2_008_end_to_end_semantic_generation COMMAND k2_008_end_to_end_se
 # K2-TLS: Time-Limited Serving Smoke Test
 # Proves scheduler-level inference budget primitives work correctly.
 add_executable(k2_tls_smoke_test tests/k2_tls_smoke_test.cpp
-    # AUTO-REMOVED: stub file)
+    # AUTO-REMOVED: stub file
+    )
 set_target_properties(k2_tls_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_tls_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
