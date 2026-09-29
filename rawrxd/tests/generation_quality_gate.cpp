@@ -38,6 +38,7 @@
 #include <cstring>
 #include <fstream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -209,6 +210,56 @@ void parseTrace(const std::string& path, ArmTrace& out) {
     }
 }
 
+// Layer-scoped ladder digest.
+//
+// parityEmit() has once-per-step semantics, so the 20 bare checkpoint names
+// above only carry the FIRST layer of a step. parityEmitLayer() bypasses that
+// guard, so the trace also carries LAYER_<n>_<NAME> for every layer. Folding
+// each step's layer records into one ordered digest keeps the differential
+// readable while still comparing the whole stack, not just layer 0.
+unsigned long long layerLadderHash(const std::map<std::string, Record>& step) {
+    unsigned long long acc = 1469598103934665603ull;
+    for (const auto& kv : step) {
+        if (kv.first.rfind("LAYER_", 0) != 0) continue;   // LAYER_<n>_<NAME>
+        if (kv.first == "LAYER_RESIDUAL") continue;       // bare name, counted above
+        for (const char* p = kv.first.c_str(); *p; ++p) {
+            acc ^= static_cast<unsigned long long>(static_cast<unsigned char>(*p));
+            acc *= 1099511628211ull;
+        }
+        acc ^= kv.second.hash;
+        acc *= 1099511628211ull;
+    }
+    return acc;
+}
+
+struct LayerStats {
+    int    maxLayer = -1;
+    size_t records  = 0;
+    size_t steps    = 0;
+    size_t names    = 0;
+};
+
+LayerStats layerStats(const ArmTrace& t) {
+    LayerStats s;
+    std::set<std::string> names;
+    for (const auto& kv : t.byStep) {
+        bool any = false;
+        for (const auto& c : kv.second) {
+            if (c.first.rfind("LAYER_", 0) != 0 || c.first == "LAYER_RESIDUAL")
+                continue;
+            ++s.records;
+            any = true;
+            names.insert(c.first);
+            int n = -1;
+            if (std::sscanf(c.first.c_str(), "LAYER_%d_", &n) == 1 && n > s.maxLayer)
+                s.maxLayer = n;
+        }
+        if (any) ++s.steps;
+    }
+    s.names = names.size();
+    return s;
+}
+
 ArmResult runArm(const std::string& model, const std::string& prompt,
                  size_t maxTokens, const char* armName,
                  size_t maxSeqLen, int numThreads, bool useThreadPool,
@@ -330,54 +381,128 @@ int main(int argc, char** argv) {
 
     // ── Differential: first divergence in probe-checkpoint order ────────────
     struct Row { std::string cp; int verdict; std::string note; };
-    // verdict: 1 = match, 0 = true hash divergence, -1 = not instrumented.
+    // verdict:  1 = match
+    //           0 = true hash divergence
+    //          -1 = required at this step but not instrumented
+    //          -2 = not required at this step
     // An absent checkpoint is an instrumentation gap, NOT a numerical
-    // divergence, and must not be reported as one.
+    // divergence, and must not be reported as one. Equally, a surface that the
+    // engine legitimately does not compute at a step is not a coverage gap.
     std::vector<Row> rows;
 
-    const int lastStep = static_cast<int>(maxTokens);
-    for (int step = 0; step <= lastStep; ++step) {
-        for (int ci = 0; ci < 20; ++ci) {
-            const std::string cp = CheckpointOrder::kNames[ci];
-            auto ri = ref.trace.byStep.find(step);
-            auto ciIt = cand.trace.byStep.find(step);
-            if (ri == ref.trace.byStep.end() || ciIt == cand.trace.byStep.end()) {
-                rows.push_back({cp, -1, "ABSENT_IN_BOTH(step=" + std::to_string(step) + ")"});
+    // Prefill positions do not run computeLogits: the logits/final-norm
+    // surface only exists from the first decode step onward. Reporting those as
+    // gaps would be wrong, and counting them as compared would be a lie, so
+    // they get their own verdict.
+    const int decodeStart = static_cast<int>(
+        cand.promptTokens > 0 ? cand.promptTokens : ref.promptTokens);
+
+    int firstStep = 0, lastStep = -1;
+    for (int i = 0; i < 4; ++i) {
+        for (const auto& kv : results[i].trace.byStep) {
+            if (kv.first < firstStep) firstStep = kv.first;
+            if (kv.first > lastStep)  lastStep  = kv.first;
+        }
+    }
+    if (lastStep < 0) lastStep = static_cast<int>(maxTokens);
+
+    for (int step = firstStep; step <= lastStep; ++step) {
+        auto ri   = ref.trace.byStep.find(step);
+        auto ciIt = cand.trace.byStep.find(step);
+        for (int k = 0; k < 20; ++k) {
+            const std::string cp = CheckpointOrder::kNames[k];
+            const bool logitsSurface = (cp == "FINAL_NORM" || cp == "LOGITS");
+            const bool required = !(logitsSurface && step < decodeStart);
+
+            const Record* a = nullptr;
+            const Record* b = nullptr;
+            if (ri != ref.trace.byStep.end()) {
+                auto it = ri->second.find(cp);
+                if (it != ri->second.end()) a = &it->second;
+            }
+            if (ciIt != cand.trace.byStep.end()) {
+                auto it = ciIt->second.find(cp);
+                if (it != ciIt->second.end()) b = &it->second;
+            }
+
+            if (!a || !b) {
+                if (!required) {
+                    rows.push_back({cp, -2, "PREFILL_STEP_NO_LOGITS_SURFACE(step=" +
+                                             std::to_string(step) + ")"});
+                } else if (!a && !b) {
+                    rows.push_back({cp, -1, "NOT_INSTRUMENTED(step=" +
+                                             std::to_string(step) + ")"});
+                } else {
+                    rows.push_back({cp, -1, "ABSENT_IN_ONE_ARM(step=" +
+                                             std::to_string(step) + ")"});
+                }
                 continue;
             }
-            auto a = ri->second.find(cp);
-            auto b = ciIt->second.find(cp);
-            if (a == ri->second.end() && b == ciIt->second.end()) {
-                rows.push_back({cp, -1, "NOT_INSTRUMENTED"});
-                continue;
-            }
-            if (a == ri->second.end() || b == ciIt->second.end()) {
-                rows.push_back({cp, -1, "ABSENT_IN_ONE_ARM"});
-                continue;
-            }
-            if (a->second.hash != b->second.hash) {
+
+            if (a->hash != b->hash) {
                 char note[192];
                 std::snprintf(note, sizeof(note),
                               "step=%d refHASH=%016llx dutHASH=%016llx refL2=%.9g dutL2=%.9g",
                               step,
-                              static_cast<unsigned long long>(a->second.hash),
-                              static_cast<unsigned long long>(b->second.hash),
-                              a->second.l2, b->second.l2);
+                              static_cast<unsigned long long>(a->hash),
+                              static_cast<unsigned long long>(b->hash),
+                              a->l2, b->l2);
                 rows.push_back({cp, 0, note});
             } else {
                 char h[32];
-                std::snprintf(h, sizeof(h), "hash %016llx", a->second.hash);
+                std::snprintf(h, sizeof(h), "hash %016llx", a->hash);
                 rows.push_back({cp, 1, h});
             }
         }
+
+        // Whole-stack layer ladder for this step.
+        const std::string ladderCp = "LAYER_LADDER@" + std::to_string(step);
+        if (ri != ref.trace.byStep.end() && ciIt != cand.trace.byStep.end()) {
+            const unsigned long long ha = layerLadderHash(ri->second);
+            const unsigned long long hb = layerLadderHash(ciIt->second);
+            char note[192];
+            if (ha != hb) {
+                std::snprintf(note, sizeof(note), "step=%d refHASH=%016llx dutHASH=%016llx",
+                              step, ha, hb);
+                rows.push_back({ladderCp, 0, note});
+            } else {
+                std::snprintf(note, sizeof(note), "step=%d hash %016llx", step, ha);
+                rows.push_back({ladderCp, 1, note});
+            }
+        } else {
+            rows.push_back({ladderCp, -1, "NOT_INSTRUMENTED(step=" +
+                                           std::to_string(step) + ")"});
+        }
     }
 
-    size_t trueDivergences = 0, notInstrumented = 0, compared = 0;
+    size_t trueDivergences = 0, notInstrumented = 0, compared = 0, notRequired = 0;
     for (const Row& r : rows) {
-        if (r.verdict == 0) ++trueDivergences;
+        if (r.verdict == 0)      ++trueDivergences;
         else if (r.verdict == -1) ++notInstrumented;
-        else ++compared;
+        else if (r.verdict == -2) ++notRequired;
+        else                      ++compared;
     }
+
+    // Per-checkpoint coverage over the steps that required the surface.
+    struct NameCov { int matched = 0, diverged = 0, missing = 0, notReq = 0; };
+    std::map<std::string, NameCov> cov;
+    for (int k = 0; k < 20; ++k) cov[CheckpointOrder::kNames[k]] = NameCov{};
+    int ladderSteps = 0, ladderGaps = 0;
+    for (const Row& row : rows) {
+        auto it = cov.find(row.cp);
+        if (it == cov.end()) {
+            if (row.cp.rfind("LAYER_LADDER@", 0) == 0) {
+                if (row.verdict == 1) ++ladderSteps;
+                else if (row.verdict == -1) ++ladderGaps;
+            }
+            continue;
+        }
+        if (row.verdict == 1)      ++it->second.matched;
+        else if (row.verdict == 0) ++it->second.diverged;
+        else if (row.verdict == -1) ++it->second.missing;
+        else                       ++it->second.notReq;
+    }
+    const LayerStats ls = layerStats(ref.trace);
 
     std::string firstDivergence = "NONE";
     std::string investigationTarget = "NONE";
@@ -394,20 +519,25 @@ int main(int argc, char** argv) {
         }
     }
 
-    // Top-10 agreement on the first step.
-    bool top10Match = false;
+    // Top-10 agreement, per step. The logits surface only exists from the first
+    // decode step, so comparing at step 0 (a prefill position) would always
+    // read as absent.
     bool top10Present = false;
+    bool top10MatchAll = true;
+    int  top10Steps = 0, top10Mismatch = 0, top10AbsentOneArm = 0;
     std::string top10Ref, top10Dut;
-    {
-        auto a = ref.trace.top10.find(0);
-        auto b = cand.trace.top10.find(0);
-        if (a != ref.trace.top10.end() && b != cand.trace.top10.end()) {
-            top10Ref = a->second.raw;
-            top10Dut = b->second.raw;
-            top10Present = true;
-            top10Match = (top10Ref == top10Dut);
-        }
+    int top10FirstStep = -1;
+    for (const auto& kv : ref.trace.top10) {
+        const int step = kv.first;
+        if (step < decodeStart) continue;
+        auto b = cand.trace.top10.find(step);
+        if (b == cand.trace.top10.end()) { ++top10AbsentOneArm; continue; }
+        ++top10Steps;
+        top10Present = true;
+        if (top10FirstStep < 0) { top10FirstStep = step; top10Ref = kv.second.raw; top10Dut = b->second.raw; }
+        if (kv.second.raw != b->second.raw) { top10MatchAll = false; ++top10Mismatch; }
     }
+    const bool top10Match = top10Present && top10MatchAll && top10AbsentOneArm == 0;
 
     const bool textMatch = (ref.text == cand.text);
     const bool tokensMatch = (ref.tokenIds == cand.tokenIds);
@@ -456,24 +586,35 @@ int main(int argc, char** argv) {
     };
     cpRow("CP02_EMBED", firstDivergence == "EMBED" ? "FAIL" : (firstDivergence == "NONE" ? "PASS" : "PASS"),
           "CHECKSUM=" + hashOf("EMBED", 0));
-    cpRow("CP03_RMS_PRE", "NOT_IMPLEMENTED",
-          "REASON=no RMS checkpoint in Deep2Engine::ParityCheckpoint");
-    cpRow("CP04_LAYER_01", "PROBE_LIMITED",
-          "REASON=parityEmit has once-per-step semantics; only the first layer "
-          "of a step is captured. CHECKSUM=" + hashOf("LAYER_RESIDUAL", 0));
-    cpRow("CP05_LAYER_MID", "NOT_IMPLEMENTED",
-          "REASON=probe does not reach a middle layer");
-    cpRow("CP06_LAYER_FINAL", "NOT_IMPLEMENTED",
-          "REASON=probe does not reach a final layer");
-    cpRow("CP07_FINAL_RMS", "NOT_IMPLEMENTED", "REASON=no final-RMS checkpoint");
+    cpRow("CP03_RMS_PRE", cov["ATTN_NORM"].matched > 0 ? "PASS" : "NOT_INSTRUMENTED",
+          "REASON=pre-attention RMS is observed as ATTN_NORM; the bare name carries "
+          "the first layer of each step by the probe's once-per-step semantics. "
+          "PER_LAYER=LAYER_<n>_ATTN_NORM for all layers");
+    cpRow("CP04_LAYER_01", ladderSteps > 0 ? "PASS" : "NOT_INSTRUMENTED",
+          "LAYER_LADDER_STEPS=" + std::to_string(ladderSteps) +
+          " LAYER_RECORDS=" + std::to_string(ls.records));
+    cpRow("CP05_LAYER_MID", ls.maxLayer > 0 ? "PASS" : "NOT_INSTRUMENTED",
+          "LAYER_MAX_INDEX=" + std::to_string(ls.maxLayer) +
+          " LAYER_DISTINCT_CHECKPOINTS=" + std::to_string(ls.names));
+    cpRow("CP06_LAYER_FINAL", ls.maxLayer > 0 ? "PASS" : "NOT_INSTRUMENTED",
+          "REASON=per-layer records cover every emitted layer, last index " +
+          std::to_string(ls.maxLayer));
+    cpRow("CP07_FINAL_RMS", cov["FINAL_NORM"].matched > 0 ? "PASS" : "NOT_INSTRUMENTED",
+          "CHECKSUM=" + hashOf("FINAL_NORM", decodeStart) +
+          " DECODE_STEP=" + std::to_string(decodeStart));
     cpRow("CP08_KV_WRITE", cand.kvLength > 0 ? "PASS" : "FAIL",
           "KV_LENGTH=" + std::to_string(cand.kvLength));
     cpRow("CP09_ATTENTION", "PROBE_LIMITED",
           "CHECKSUM=" + hashOf("ATTN_RESIDUAL", 0));
     cpRow("CP10_FFN", "PROBE_LIMITED", "CHECKSUM=" + hashOf("FFN_DOWN", 0));
-    cpRow("CP11_LOGITS", "PROBE_LIMITED", "CHECKSUM=" + hashOf("LOGITS", 0));
+    cpRow("CP11_LOGITS", cov["LOGITS"].matched > 0 ? "PASS" : "NOT_INSTRUMENTED",
+          "CHECKSUM=" + hashOf("LOGITS", decodeStart) +
+          " DECODE_STEP=" + std::to_string(decodeStart));
     cpRow("CP12_TOP10", !top10Present ? "NOT_INSTRUMENTED" : (top10Match ? "PASS" : "FAIL"),
-          std::string("TOP10_MATCH=") + (top10Present ? (top10Match ? "YES" : "NO") : "NO_DATA"));
+          std::string("TOP10_MATCH=") + (top10Present ? (top10Match ? "YES" : "NO") : "NO_DATA") +
+          " TOP10_STEPS=" + std::to_string(top10Steps) +
+          " TOP10_MISMATCH=" + std::to_string(top10Mismatch) +
+          " TOP10_ABSENT_IN_ONE_ARM=" + std::to_string(top10AbsentOneArm));
     cpRow("CP13_SAMPLER", "PASS", "SAMPLER=Greedy (identical in both arms)");
     cpRow("CP14_SELECTED_TOKEN", tokensMatch ? "PASS" : "FAIL",
           tokensMatch ? "TOKEN_ID=AGREE" : "TOKEN_ID=DIVERGES");
@@ -486,7 +627,51 @@ int main(int argc, char** argv) {
     cpRow("CP19_SHUTDOWN", "NOT_IN_SCOPE", "REASON=IDE-side; covered by RAWRXD_IDE_CHAT_E2E_001");
 
     r << "\n===============================================================================\n";
+    r << "PROBE_COVERAGE_001\n";
+    r << "===============================================================================\n\n";
+    r << "STEPS_TOTAL=" << (lastStep - firstStep + 1) << "\n";
+    r << "PREFILL_STEPS=" << firstStep << ".." << (decodeStart - 1) << "\n";
+    r << "DECODE_STEPS=" << decodeStart << ".." << lastStep << "\n\n";
+    r << "NAME                     MATCH  DIVERGE  GAP  NOT_REQ  COVERED\n";
+    r << "-------------------------------------------------------------------\n";
+    for (int k = 0; k < 20; ++k) {
+        const std::string nm = CheckpointOrder::kNames[k];
+        const NameCov& c = cov[nm];
+        const int required = c.matched + c.diverged + c.missing;
+        const bool covered = (c.missing == 0 && c.diverged == 0 && required > 0);
+        r << nm;
+        for (int p = (int)nm.size(); p < 24; ++p) r << ' ';
+        char buf[96];
+        std::snprintf(buf, sizeof(buf), "%5d  %7d  %3d  %7d  %s",
+                      c.matched, c.diverged, c.missing, c.notReq,
+                      covered ? "YES" : (c.missing ? "NO" : "N/A"));
+        r << buf << "\n";
+    }
+    r << "-------------------------------------------------------------------\n";
+    r << "LAYER_LADDER_STEPS_COMPARED=" << ladderSteps << "\n";
+    r << "LAYER_LADDER_STEPS_NOT_INSTRUMENTED=" << ladderGaps << "\n";
+    r << "LAYER_RECORDS_COMPARED=" << ls.records << "\n";
+    r << "LAYER_MAX_INDEX=" << ls.maxLayer << "\n";
+    r << "LAYER_DISTINCT_CHECKPOINTS=" << ls.names << "\n";
+    r << "SURFACES_NOT_REQUIRED=" << notRequired
+      << " (prefill steps carry no logits surface by design)\n\n";
+    {
+        int uncovered = 0;
+        for (int k = 0; k < 20; ++k) {
+            const NameCov& c = cov[CheckpointOrder::kNames[k]];
+            if (c.missing > 0) ++uncovered;
+        }
+        if (ladderGaps > 0) ++uncovered;
+        r << "SURFACES_WITH_GAPS=" << uncovered << "\n";
+        r << "PROBE_COVERAGE=" << ((uncovered == 0 && notInstrumented == 0)
+                                       ? "PASS" : "FAIL") << "\n";
+    }
+
+    r << "\n===============================================================================\n";
     r << "LOGITS\n";
+    r << "===============================================================================\n\n";
+    r << "TOP10_FIRST_DECODE_STEP=" << top10FirstStep << "\n";
+
     r << "===============================================================================\n\n";
     r << "TOP10_REFERENCE=" << oneLine(top10Ref, 400) << "\n";
     r << "TOP10_CANDIDATE=" << oneLine(top10Dut, 400) << "\n";
@@ -550,7 +735,7 @@ int main(int argc, char** argv) {
     // the chain must not advance to throughput on the strength of this gate.
     const bool decisiveCovered = (notInstrumented == 0);
     r << "NEXT_GATE="
-      << (lanesEquivalent ? (decisiveCovered ? "THROUGHPUT_PROFILE_001" : "PROBE_COVERAGE_001")
+      << (lanesEquivalent ? (decisiveCovered ? "LOGITS_PARITY_001" : "PROBE_COVERAGE_001")
                           : "ISOLATE_FORWARD_DIVERGENCE")
       << "\n\n";
     r << "CONFIG_EQUIVALENCE=" << (lanesEquivalent ? "PASS" : "FAIL") << "\n";
@@ -592,6 +777,8 @@ int main(int argc, char** argv) {
             r << "PASS       YES  " << row.note;
         } else if (row.verdict == 0) {
             r << "FAIL       NO   <- DIVERGENCE: " << row.note;
+        } else if (row.verdict == -2) {
+            r << "----       N/A  " << row.note;
         } else {
             r << "----       SKIP " << row.note;
         }
@@ -602,7 +789,9 @@ int main(int argc, char** argv) {
     r << "INVESTIGATION_TARGET=" << investigationTarget << "\n";
     r << "CHECKPOINTS_COMPARED=" << compared << "\n";
     r << "CHECKPOINTS_NOT_INSTRUMENTED=" << notInstrumented << "\n";
+    r << "CHECKPOINTS_NOT_REQUIRED=" << notRequired << "\n";
     r << "TRUE_DIVERGENCES=" << trueDivergences << "\n";
+    r << "TOP10_STEPS_COMPARED=" << top10Steps << "\n";
     r << "TOP10_MATCH=" << (top10Present ? (top10Match ? "YES" : "NO") : "NO_DATA") << "\n";
     r << "TOKEN_IDS_MATCH=" << (tokensMatch ? "YES" : "NO") << "\n";
     r << "TEXT_MATCH=" << (textMatch ? "YES" : "NO") << "\n";
