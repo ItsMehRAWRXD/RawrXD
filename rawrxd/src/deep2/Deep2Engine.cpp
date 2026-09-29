@@ -3568,7 +3568,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             auto fr = forwardTokenAllLayers(hidden.data(), p + 1);
             if (!fr.ok) {
                 std::fprintf(stderr, "[PREFILL] forwardTokenAllLayers FAILED at prefill token %zu stage=%s route=%d\n",
-                    p, fr.failureStage ? fr.failureStage : "(null)", (int)fr.route);
+                    p, fr.failureStage ? fr.failureStage : "(null)", (int)fr.actualRoute);
                 std::fflush(stderr);
                 modelState_ = ModelState::Choreographable;
                 if (profiler_) profiler_->abortToken(static_cast<uint32_t>(p));
@@ -3645,7 +3645,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 auto fr = forwardTokenAllLayers(hidden.data(),seq);
                 if(!fr.ok) {
                     std::fprintf(stderr, "[DECODE] forwardTokenAllLayers FAILED at decode token %zu stage=%s route=%d\n",
-                        generated, fr.failureStage ? fr.failureStage : "(null)", (int)fr.route);
+                        generated, fr.failureStage ? fr.failureStage : "(null)", (int)fr.actualRoute);
                     std::fflush(stderr);
                     if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
                     lastFailureStatus_ = GenerationStatus::ForwardFailure;
