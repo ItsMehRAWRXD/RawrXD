@@ -1456,39 +1456,40 @@ static int runGpuCorrectnessGate()
     if (stubFallbacks > 0) pass = false;
     if (testBackendUsed > 0) pass = false;
 
-    // Write receipt
-    std::ofstream f(receiptPath);
-    if (f.is_open()) {
-        f << "=== RAWRXD_GPU_CORRECTNESS_001 ===\n";
-        f << "MODEL_PATH=" << modelPath << "\n";
-        f << "VULKAN_INIT=" << vulkanInit << "\n";
-        f << "DEVICE_COUNT=" << deviceCount << "\n";
-        f << "SELECTED_DEVICE=" << selectedDevice << "\n";
-        f << "SELECTED_VENDOR=" << selectedVendor << "\n";
-        f << "SELECTED_DEVICE_ID=" << selectedDeviceId << "\n";
-        f << "\n";
-        f << "MODEL_LOAD=" << modelLoad << "\n";
-        f << "GPU_FORWARD_REQUESTED=" << gpuForwardRequested << "\n";
-        f << "GPU_FORWARD_REACHED=" << gpuForwardReached << "\n";
-        f << "GPU_DISPATCH_COUNT=" << gpuDispatchCount << "\n";
-        f << "\n";
-        f << "LOGITS_COUNT=" << logitsCount << "\n";
-        f << "LOGITS_FINITE=" << logitsFinite << "\n";
-        f << "LOGITS_NAN=" << logitsNan << "\n";
-        f << "LOGITS_INF=" << logitsInf << "\n";
-        f << "\n";
-        f << "GENERATED_TOKEN_COUNT=" << generatedTokenCount << "\n";
-        f << "GENERATION_STATUS=" << generationStatus << "\n";
-        f << "\n";
-        f << "HOST_FALLBACKS=" << hostFallbacks << "\n";
-        f << "UNPLANNED_FALLBACKS=" << unplannedFallbacks << "\n";
-        f << "STRICT_GPU_VIOLATIONS=" << strictGpuViolations << "\n";
-        f << "STUB_FALLBACKS=" << stubFallbacks << "\n";
-        f << "TEST_BACKEND_USED=" << testBackendUsed << "\n";
-        f << "\n";
-        f << "VERDICT=" << (pass ? "PASS" : "FAIL") << "\n";
-        f << "=== RECEIPT_END ===\n";
-        f.close();
+    // Write receipt using C-style FILE* (std::ofstream crashes after Vulkan)
+    FILE* f = nullptr;
+    fopen_s(&f, receiptPath.c_str(), "w");
+    if (f) {
+        std::fprintf(f, "=== RAWRXD_GPU_CORRECTNESS_001 ===\n");
+std::fprintf(f, "MODEL_PATH=%s\n", modelPath.c_str());
+std::fprintf(f, "VULKAN_INIT=%s\n", vulkanInit.c_str());
+std::fprintf(f, "DEVICE_COUNT=%d\n", deviceCount);
+std::fprintf(f, "SELECTED_DEVICE=%s\n", selectedDevice.c_str());
+std::fprintf(f, "SELECTED_VENDOR=%s\n", selectedVendor.c_str());
+std::fprintf(f, "SELECTED_DEVICE_ID=%s\n", selectedDeviceId.c_str());
+std::fprintf(f, "\n");
+std::fprintf(f, "MODEL_LOAD=%s\n", modelLoad.c_str());
+std::fprintf(f, "GPU_FORWARD_REQUESTED=%d\n", gpuForwardRequested);
+std::fprintf(f, "GPU_FORWARD_REACHED=%d\n", gpuForwardReached);
+std::fprintf(f, "GPU_DISPATCH_COUNT=%d\n", gpuDispatchCount);
+std::fprintf(f, "\n");
+std::fprintf(f, "LOGITS_COUNT=%d\n", logitsCount);
+std::fprintf(f, "LOGITS_FINITE=%d\n", logitsFinite);
+std::fprintf(f, "LOGITS_NAN=%d\n", logitsNan);
+std::fprintf(f, "LOGITS_INF=%d\n", logitsInf);
+std::fprintf(f, "\n");
+std::fprintf(f, "GENERATED_TOKEN_COUNT=%d\n", generatedTokenCount);
+std::fprintf(f, "GENERATION_STATUS=%s\n", generationStatus.c_str());
+std::fprintf(f, "\n");
+std::fprintf(f, "HOST_FALLBACKS=%d\n", hostFallbacks);
+std::fprintf(f, "UNPLANNED_FALLBACKS=%d\n", unplannedFallbacks);
+std::fprintf(f, "STRICT_GPU_VIOLATIONS=%d\n", strictGpuViolations);
+std::fprintf(f, "STUB_FALLBACKS=%d\n", stubFallbacks);
+std::fprintf(f, "TEST_BACKEND_USED=%d\n", testBackendUsed);
+std::fprintf(f, "\n");
+std::fprintf(f, "VERDICT=%s\n", pass ? "PASS" : "FAIL");
+std::fprintf(f, "=== RECEIPT_END ===\n");
+std::fclose(f);
     }
 
     std::fprintf(stderr, "GPU_GATE: VERDICT=%s\n", pass ? "PASS" : "FAIL");
