@@ -1,0 +1,4 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build\Release\InferenceEngine.lib
+  rawrxd.vcxproj -> F:\~dev\rawrxd\build\bin\Release\rawrxd.exe

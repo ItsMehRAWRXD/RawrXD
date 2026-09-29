@@ -86,6 +86,7 @@ struct StartupOptions {
 
 static StartupOptions g_startupOptions;
 static FILE* g_headlessLog = nullptr;  // File log for GUI-subsystem headless runs
+static bool g_certTimerExpired = false;  // W8: set when cert timer fires
 
 // ---------------------------------------------------------------------------
 // Persistent chat engine — wires ChatPanel → Deep2Engine → streamed tokens
@@ -1220,6 +1221,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         break;
     case WM_CLOSE:
+        // W8_HEADLESS_LIFECYCLE_CERT_001: suppress premature WM_CLOSE during
+        // cert mode. The cert timer (0xB008) will set g_certTimerExpired and
+        // post WM_CLOSE when the requested duration expires. Without this,
+        // the OS or desktop manager can send WM_CLOSE immediately in headless
+        // / no-display scenarios.
+        if (g_startupOptions.certStayAlive && !g_certTimerExpired && g_hMainWnd == hWnd) {
+            return 0;  // suppress — cert timer will handle exit
+        }
         // D-W6-001: do NOT clean up the engine here — the destructor chain
         // (111+ STL members) causes both stack overflow and access violations
         // during window teardown. The engine is intentionally leaked; the OS
@@ -1502,6 +1511,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         // W8 stay-alive timer fired: post WM_CLOSE to end cleanly
         if (msg.message == WM_TIMER && msg.wParam == 0xB008) {
             KillTimer(g_hMainWnd, g_stayAliveTimer);
+            g_certTimerExpired = true;  // allow WM_CLOSE through cert suppression
             PostMessageA(g_hMainWnd, WM_CLOSE, 0, 0);
             continue;
         }

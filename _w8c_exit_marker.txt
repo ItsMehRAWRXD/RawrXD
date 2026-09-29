@@ -1,0 +1,1 @@
+EXIT_AT_SEC=42
