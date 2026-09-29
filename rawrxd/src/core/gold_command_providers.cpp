@@ -67,10 +67,15 @@ public:
         return instance;
     }
     bool Initialize(SecurityLevel level) {
-        (void)level;
+        level_ = level;
         return true;
     }
-    void Shutdown() {}
+    void Shutdown() {
+        // Clear security state and release any held handles.
+        // In production this would revoke tokens, close audit logs,
+        // and reset the security level to default.
+        level_ = SecurityLevel::Low;
+    }
     bool ValidatePreExecution(uint64_t a, uint64_t b, std::string& error) {
         (void)a; (void)b; (void)error;
         return true;
@@ -78,6 +83,8 @@ public:
     void LogPostExecution(uint64_t a, uint64_t b, bool success) {
         (void)a; (void)b; (void)success;
     }
+private:
+    SecurityLevel level_ = SecurityLevel::Low;
 };
 
 } // namespace Security
