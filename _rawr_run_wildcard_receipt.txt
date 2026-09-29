@@ -1,0 +1,8 @@
+RAWRXD_RAWR_RUN_WILDCARD_AUTHORITY_001=ENTERED
+COMMAND=rawr run --tokens 5 modelname "*"
+RAWR_PATH=C:\Users\Garrett\rawrxd\bin\rawr.exe
+EXIT_CODE=1
+GENERATION_OBSERVED=0
+STDOUT=F:\~dev\_rawr_run_wildcard_stdout.txt
+STDERR=F:\~dev\_rawr_run_wildcard_stderr.txt
+VERDICT=FAIL

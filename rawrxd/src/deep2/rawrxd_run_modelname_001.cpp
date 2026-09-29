@@ -211,22 +211,43 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
         if (!ollama.empty()) return ollama;
     }
 
-    // Search directories
+    // Search directories — automatic discovery, no single hardcoded root
     std::vector<fs::path> searchDirs;
 
+    // 1. RAWRXD_MODEL_DIR (if set)
     const char* modelDir = std::getenv("RAWRXD_MODEL_DIR");
     if (modelDir && modelDir[0]) searchDirs.emplace_back(modelDir);
 
-    // Common local model locations
+    // 2. Common local model locations (all drives, all common dirs)
     searchDirs.emplace_back("F:\\models");
+    searchDirs.emplace_back("F:\\~dev");
     searchDirs.emplace_back("C:\\models");
     searchDirs.emplace_back("D:\\models");
+    searchDirs.emplace_back("G:\\~dev");
+    searchDirs.emplace_back("G:\\OllamaModels");
+    searchDirs.emplace_back("F:\\OllamaModels");
 
+    // 3. User profile model dirs
     const char* home = std::getenv("USERPROFILE");
     if (home) {
         searchDirs.emplace_back(fs::path(home) / ".cache" / "lm-studio" / "models");
         searchDirs.emplace_back(fs::path(home) / "models");
+        searchDirs.emplace_back(fs::path(home) / ".ollama" / "models");
     }
+
+    // 4. Ollama model store (from env or default)
+    const char* ollamaModels = std::getenv("OLLAMA_MODELS");
+    if (ollamaModels && ollamaModels[0]) searchDirs.emplace_back(ollamaModels);
+    if (home) searchDirs.emplace_back(fs::path(home) / ".ollama");
+
+    // 5. Current working directory
+    searchDirs.emplace_back(fs::current_path());
+
+    // 6. Walk all drive roots for .gguf files if nothing found yet
+    // (covers G:\, F:\, D:\, C:\, E:\, H:\ — any mounted drive)
+    std::vector<std::string> driveRoots = {
+        "C:\\", "D:\\", "E:\\", "F:\\", "G:\\", "H:\\", "I:\\"
+    };
 
     for (const fs::path& dir : searchDirs) {
         if (!fs::exists(dir)) continue;
@@ -247,6 +268,43 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
             for (char& c : nameLow) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
             if (stemLow.find(nameLow) != std::string::npos)
                 return entry.path().string();
+        }
+    }
+
+    // 6. Last resort: scan all drive roots for any .gguf matching the name.
+    // This is the automatic discovery path — no hardcoded root required.
+    // Only search top-level + one level deep to avoid multi-minute scans.
+    for (const std::string& root : driveRoots) {
+        fs::path rootPath(root);
+        std::error_code ec;
+        if (!fs::exists(rootPath, ec)) continue;
+        // Check root level
+        for (const auto& entry : fs::directory_iterator(rootPath, ec)) {
+            if (ec) break;
+            if (!entry.is_regular_file()) continue;
+            if (entry.path().extension().string() != ".gguf") continue;
+            std::string stemLow = entry.path().stem().string();
+            std::string nameLow = effective;
+            for (char& c : stemLow) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            for (char& c : nameLow) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            if (stemLow.find(nameLow) != std::string::npos)
+                return entry.path().string();
+        }
+        // Check one level deep
+        for (const auto& dirEntry : fs::directory_iterator(rootPath, ec)) {
+            if (ec) break;
+            if (!dirEntry.is_directory()) continue;
+            for (const auto& entry : fs::directory_iterator(dirEntry.path(), ec)) {
+                if (ec) break;
+                if (!entry.is_regular_file()) continue;
+                if (entry.path().extension().string() != ".gguf") continue;
+                std::string stemLow = entry.path().stem().string();
+                std::string nameLow = effective;
+                for (char& c : stemLow) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                for (char& c : nameLow) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                if (stemLow.find(nameLow) != std::string::npos)
+                    return entry.path().string();
+            }
         }
     }
     return {};
