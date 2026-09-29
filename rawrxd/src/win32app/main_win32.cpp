@@ -16,6 +16,8 @@
 #include "closure/RawrXDAutoClosure.hpp"
 #include "agentic/RawrXDAgenticE2E.hpp"
 #include "deep2/Deep2Engine.h"
+#include "deep2/ReceiptAuthority.h"
+#include "W8LifecycleAuthority.h"
 #include "Win32IDE_MCPHooks.h"
 #include "Win32IDE_ChatPanel.h"
 
@@ -1906,28 +1908,94 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     // W8_HEADLESS_LIFECYCLE_CERT_001: write certification receipt
+    // MIGRATION_BATCH_1 — switched to ReceiptAuthority immutable per-run API.
+    // Verdict is derived from measured actual-vs-target duration. PASS is only
+    // emitted when the cert timer reached (or exceeded) its target duration AND
+    // the recorded shutdown reason is CertTimerExpired.
     if (g_startupOptions.certStayAlive) {
         const ULONGLONG actualMs = GetTickCount64() - g_certStartTick;
         const uint32_t  actualSec = static_cast<uint32_t>(actualMs / 1000);
-        FILE* f = nullptr;
-        fopen_s(&f, "w8_headless_lifecycle_receipt.txt", "w");
-        if (f) {
-            std::fprintf(f, "GATE=W8_HEADLESS_IDLE_LIFECYCLE_001\n");
-            std::fprintf(f, "CERT_STAY_ALIVE=1\n");
-            std::fprintf(f, "CERT_TIMER_EXPIRED=%d\n", g_certTimerExpired ? 1 : 0);
-            std::fprintf(f, "DURATION_TARGET_SEC=%u\n", g_startupOptions.certDurationSec);
-            std::fprintf(f, "DURATION_ACTUAL_SEC=%u\n", actualSec);
-            std::fprintf(f, "MODEL_LOADED=0\n");
-            std::fprintf(f, "DEEP2_USED=0\n");
-            std::fprintf(f, "OLLAMA_USED=0\n");
-            std::fprintf(f, "SHUTDOWN_REASON=%s\n",
-                shutdownReasonName(static_cast<ShutdownReason>(g_shutdownReason.load())));
-            std::fprintf(f, "SHUTDOWN_THREAD_ID=%lu\n",
-                static_cast<unsigned long>(g_shutdownThreadId.load()));
-            std::fprintf(f, "EXIT_BEFORE_TARGET=%d\n", actualSec < g_startupOptions.certDurationSec ? 1 : 0);
-            std::fprintf(f, "EXIT_CODE=0\n");
-            std::fprintf(f, "VERDICT=%s\n", actualSec >= g_startupOptions.certDurationSec ? "PASS" : "FAIL");
-            std::fclose(f);
+        const uint32_t  targetSec = g_startupOptions.certDurationSec;
+        const bool      timerExpired = g_certTimerExpired;
+        const int       reasonCode  = g_shutdownReason.load();
+        const char*     reasonName  = shutdownReasonName(static_cast<ShutdownReason>(reasonCode));
+
+        // Measured verdict: PASS only if we actually ran the full duration
+        // AND the natural cert-timer shutdown fired (not a forced close).
+        const bool ranFullDuration = (actualSec >= targetSec);
+        const bool naturalShutdown =
+            (reasonCode == static_cast<int>(ShutdownReason::CertTimerExpired));
+        const std::string verdict = (ranFullDuration && naturalShutdown) ? "PASS" : "FAIL";
+
+        // Begin an immutable per-run receipt (CREATE_NEW) under
+        // receipts/<gate>/runs/<UTC>_<PID>_<RUN>.ini.
+        const std::string runPath =
+            rawrxd::receipt::beginImmutableGate(rawrxd::lifecycle::W8_GATE_NAME);
+        if (!runPath.empty()) {
+            rawrxd::receipt::writeImmutableKeyValue(runPath,
+                "CERT_STAY_ALIVE", "1");
+            rawrxd::receipt::writeImmutableKeyValueInt(runPath,
+                "CERT_TIMER_EXPIRED", timerExpired ? 1 : 0);
+            rawrxd::receipt::writeImmutableKeyValueInt(runPath,
+                "DURATION_TARGET_SEC", (int64_t)targetSec);
+            rawrxd::receipt::writeImmutableKeyValueInt(runPath,
+                "DURATION_ACTUAL_SEC", (int64_t)actualSec);
+            rawrxd::receipt::writeImmutableKeyValue(runPath,
+                "MODEL_LOADED", "0");
+            rawrxd::receipt::writeImmutableKeyValue(runPath,
+                "DEEP2_USED", "0");
+            rawrxd::receipt::writeImmutableKeyValue(runPath,
+                "OLLAMA_USED", "0");
+            rawrxd::receipt::writeImmutableKeyValue(runPath,
+                "SHUTDOWN_REASON", reasonName ? reasonName : "Unknown");
+            rawrxd::receipt::writeImmutableKeyValueInt(runPath,
+                "SHUTDOWN_REASON_CODE", (int64_t)reasonCode);
+            rawrxd::receipt::writeImmutableKeyValueInt(runPath,
+                "SHUTDOWN_THREAD_ID",
+                (int64_t)g_shutdownThreadId.load());
+            rawrxd::receipt::writeImmutableKeyValueInt(runPath,
+                "EXIT_BEFORE_TARGET", actualSec < targetSec ? 1 : 0);
+            rawrxd::receipt::writeImmutableKeyValueInt(runPath,
+                "RAN_FULL_DURATION", ranFullDuration ? 1 : 0);
+            rawrxd::receipt::writeImmutableKeyValueInt(runPath,
+                "NATURAL_SHUTDOWN", naturalShutdown ? 1 : 0);
+            rawrxd::receipt::writeImmutableKeyValue(runPath,
+                "EXIT_CODE", "0");
+
+            // endImmutableGate writes VERDICT line, computes RECEIPT_SHA256,
+            // refreshes latest.txt, and appends to index.jsonl.
+            (void)rawrxd::receipt::endImmutableGate(runPath, verdict);
+        }
+
+        // Legacy mirror: write the historical fixed-path receipt so existing
+        // external verifiers (cert scripts, dashboards) that hardcoded
+        // w8_headless_lifecycle_receipt.txt continue to find a file.
+        // This mirror is mutable; the immutable receipt above is the
+        // authoritative artifact for RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001.
+        {
+            FILE* f = nullptr;
+            fopen_s(&f, "w8_headless_lifecycle_receipt.txt", "w");
+            if (f) {
+                std::fprintf(f, "GATE=W8_HEADLESS_IDLE_LIFECYCLE_001\n");
+                std::fprintf(f, "CERT_STAY_ALIVE=1\n");
+                std::fprintf(f, "CERT_TIMER_EXPIRED=%d\n", timerExpired ? 1 : 0);
+                std::fprintf(f, "DURATION_TARGET_SEC=%u\n", targetSec);
+                std::fprintf(f, "DURATION_ACTUAL_SEC=%u\n", actualSec);
+                std::fprintf(f, "MODEL_LOADED=0\n");
+                std::fprintf(f, "DEEP2_USED=0\n");
+                std::fprintf(f, "OLLAMA_USED=0\n");
+                std::fprintf(f, "SHUTDOWN_REASON=%s\n", reasonName);
+                std::fprintf(f, "SHUTDOWN_THREAD_ID=%lu\n",
+                    static_cast<unsigned long>(g_shutdownThreadId.load()));
+                std::fprintf(f, "EXIT_BEFORE_TARGET=%d\n", actualSec < targetSec ? 1 : 0);
+                std::fprintf(f, "RAN_FULL_DURATION=%d\n", ranFullDuration ? 1 : 0);
+                std::fprintf(f, "NATURAL_SHUTDOWN=%d\n", naturalShutdown ? 1 : 0);
+                std::fprintf(f, "EXIT_CODE=0\n");
+                std::fprintf(f, "IMMUTABLE_RUN_PATH=%s\n",
+                    runPath.empty() ? "<failed>" : runPath.c_str());
+                std::fprintf(f, "VERDICT=%s\n", verdict.c_str());
+                std::fclose(f);
+            }
         }
     }
 
