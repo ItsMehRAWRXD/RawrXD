@@ -78,6 +78,10 @@ struct StartupOptions {
     bool     chatGreedy = false;      // --chat-greedy
     uint64_t chatSeed = 0;            // --chat-seed=N (determinism gate)
     std::string chatParityProbePath; // --chat-parity-probe=FILE (differential gate)
+    // W8_HEADLESS_LIFECYCLE_CERT_001: keep the message loop alive for
+    // certification duration testing without requiring a model or user input.
+    bool     certStayAlive = false;       // --cert-stay-alive
+    uint32_t certDurationSec = 1800;      // --cert-duration-sec=N (default 30min)
 };
 
 static StartupOptions g_startupOptions;
@@ -1319,6 +1323,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             else if (arg == L"--chat-exit-on-done") {
                 g_startupOptions.chatExitOnDone = true;
             }
+            else if (arg == L"--cert-stay-alive") {
+                g_startupOptions.certStayAlive = true;
+            }
+            else if (arg == L"--cert-duration-sec" && i + 1 < argc) {
+                g_startupOptions.certDurationSec =
+                    static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
+            }
             else if (arg == L"--chat-max-tokens" && i + 1 < argc) {
                 g_startupOptions.chatMaxTokens =
                     static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
@@ -1354,6 +1365,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                     while (!u8.empty() && u8.back() == '\0') u8.pop_back();
                     g_startupOptions.chatParityProbePath = u8;
                 }
+            }
+            else if (arg == L"--stay-alive-sec" && i + 1 < argc) {
+                g_startupOptions.stayAliveSec =
+                    static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
             }
             else if ((arg == L"--chat-prompt" || arg == L"--chat-prompt=") && i + 1 < argc) {
                 int len = WideCharToMultiByte(CP_UTF8, 0, argv[++i], -1, nullptr, 0, nullptr, nullptr);
@@ -1475,8 +1490,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     MSG msg;
+    // W8 certification mode: if --stay-alive-sec is set, set a timer to
+    // post WM_CLOSE after the specified duration. This keeps the message
+    // loop alive for the full certification period without requiring user
+    // interaction or model load.
+    UINT_PTR g_stayAliveTimer = 0;
+    if (g_startupOptions.stayAliveSec > 0 && g_hMainWnd) {
+        g_stayAliveTimer = SetTimer(g_hMainWnd, 0xB008,
+            g_startupOptions.stayAliveSec * 1000, nullptr);
+    }
     while (GetMessage(&msg, NULL, 0, 0))
     {
+        // W8 stay-alive timer fired: post WM_CLOSE to end cleanly
+        if (msg.message == WM_TIMER && msg.wParam == 0xB008) {
+            KillTimer(g_hMainWnd, g_stayAliveTimer);
+            PostMessageA(g_hMainWnd, WM_CLOSE, 0, 0);
+            continue;
+        }
         if (msg.message == WM_AUTORUN) {
             // Launch gate on worker thread so UI pump remains alive
             std::thread([hwnd = g_hMainWnd, mode = g_startupOptions.autoRun]() {
