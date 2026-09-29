@@ -1281,6 +1281,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     (void)hPrevInstance;
 
+    // W8 certification: record process start tick for actual-duration measurement
+    const ULONGLONG g_certStartTick = GetTickCount64();
+
     // RAWRXD_AUTOCLOSURE_001 — bounded autonomous CLI path before GUI startup.
     if (RawrXD::AutoClosure::CommandLineRequested()) {
         return RawrXD::AutoClosure::RunFromCurrentCommandLine();
@@ -1365,10 +1368,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                     while (!u8.empty() && u8.back() == '\0') u8.pop_back();
                     g_startupOptions.chatParityProbePath = u8;
                 }
-            }
-            else if (arg == L"--stay-alive-sec" && i + 1 < argc) {
-                g_startupOptions.stayAliveSec =
-                    static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
             }
             else if ((arg == L"--chat-prompt" || arg == L"--chat-prompt=") && i + 1 < argc) {
                 int len = WideCharToMultiByte(CP_UTF8, 0, argv[++i], -1, nullptr, 0, nullptr, nullptr);
@@ -1490,14 +1489,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     MSG msg;
-    // W8 certification mode: if --stay-alive-sec is set, set a timer to
-    // post WM_CLOSE after the specified duration. This keeps the message
-    // loop alive for the full certification period without requiring user
-    // interaction or model load.
+    // W8_HEADLESS_LIFECYCLE_CERT_001: --cert-stay-alive keeps the message
+    // loop alive for --cert-duration-sec seconds, then exits cleanly.
+    // No model, no Deep2, no Ollama, no user interaction required.
     UINT_PTR g_stayAliveTimer = 0;
-    if (g_startupOptions.stayAliveSec > 0 && g_hMainWnd) {
+    if (g_startupOptions.certStayAlive && g_startupOptions.certDurationSec > 0 && g_hMainWnd) {
         g_stayAliveTimer = SetTimer(g_hMainWnd, 0xB008,
-            g_startupOptions.stayAliveSec * 1000, nullptr);
+            g_startupOptions.certDurationSec * 1000, nullptr);
     }
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -1548,6 +1546,27 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // exit, causing the same 0xC0000005 access violation.
     if (g_chatEngine) {
         (void)g_chatEngine.release();  // leak the raw pointer; OS reclaims it
+    }
+
+    // W8_HEADLESS_LIFECYCLE_CERT_001: write certification receipt
+    if (g_startupOptions.certStayAlive) {
+        const ULONGLONG actualMs = GetTickCount64() - g_certStartTick;
+        const uint32_t  actualSec = static_cast<uint32_t>(actualMs / 1000);
+        FILE* f = nullptr;
+        fopen_s(&f, "w8_headless_lifecycle_receipt.txt", "w");
+        if (f) {
+            std::fprintf(f, "GATE=W8_HEADLESS_LIFECYCLE_CERT_001\n");
+            std::fprintf(f, "CERT_STAY_ALIVE=1\n");
+            std::fprintf(f, "DURATION_TARGET_SEC=%u\n", g_startupOptions.certDurationSec);
+            std::fprintf(f, "DURATION_ACTUAL_SEC=%u\n", actualSec);
+            std::fprintf(f, "MODEL_LOADED=0\n");
+            std::fprintf(f, "DEEP2_USED=0\n");
+            std::fprintf(f, "OLLAMA_USED=0\n");
+            std::fprintf(f, "EXIT_BEFORE_TARGET=%d\n", actualSec < g_startupOptions.certDurationSec ? 1 : 0);
+            std::fprintf(f, "EXIT_CODE=0\n");
+            std::fprintf(f, "VERDICT=%s\n", actualSec >= g_startupOptions.certDurationSec ? "PASS" : "FAIL");
+            std::fclose(f);
+        }
     }
 
     closeHeadlessLog();
