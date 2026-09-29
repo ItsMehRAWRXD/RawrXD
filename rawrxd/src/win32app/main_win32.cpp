@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstdarg>
+#include <fstream>
 #include <thread>
 #include <io.h>
 #include <fcntl.h>
