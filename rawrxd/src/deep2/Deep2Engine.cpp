@@ -562,7 +562,7 @@ bool Deep2Engine::allocateBuffers() {
         std::fprintf(stderr, "[ALLOC] allocateBuffers FAILED: H=%zu V=%zu I=%zu\n", H, V, I); std::fflush(stderr);
         return false;
     }
-    std::fprintf(stderr, "[ALLOC] allocateBuffers H=%zu V=%zu I=%zu qDim=%zu kvDim=%zu\n", H, V, I, qDim, kvDim); std::fflush(stderr);
+    std::fprintf(stderr, "[ALLOC] allocateBuffers H=%zu V=%zu I=%zu\n", H, V, I); std::fflush(stderr);
 
     // Determine projection dimensions based on model metadata (supports rectangular attention like Gemma3)
     const size_t numHeads = modelWeights.numHeads ? modelWeights.numHeads : config.numHeads;
@@ -571,6 +571,8 @@ bool Deep2Engine::allocateBuffers() {
 
     const size_t qDim  = (numHeads && headDim) ? (numHeads * headDim) : H;
     const size_t kvDim = (numKVHeads && headDim) ? (numKVHeads * headDim) : H;
+    std::fprintf(stderr, "[ALLOC] qDim=%zu kvDim=%zu numHeads=%zu headDim=%zu numKVHeads=%zu\n",
+        qDim, kvDim, numHeads, headDim, numKVHeads); std::fflush(stderr);
 
     deallocateBuffers();
 
