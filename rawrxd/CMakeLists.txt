@@ -13754,6 +13754,8 @@ message(STATUS "[GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build 
 # Only add sovereign runtime if CLI version not already defined
 if(NOT TARGET rawrxd)
     add_executable(rawrxd
+        # Headless CLI entry point with model router (RAWRXD_MODEL_ROUTER_001)
+        src/win32app/cli_main_headless.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
