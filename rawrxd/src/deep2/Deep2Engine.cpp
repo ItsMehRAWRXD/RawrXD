@@ -3501,15 +3501,28 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                               InferenceStats* stats,
                               std::function<bool(int)> onToken) {    if (stats) *stats = {};
     if (!initialized || !modelWeights.loaded) {
+        std::fprintf(stderr, "[GENERATE] SILENT_EXIT: not initialized or model not loaded (init=%d loaded=%d)\n",
+            initialized ? 1 : 0, modelWeights.loaded ? 1 : 0);
+        std::fflush(stderr);
         return 0;
     }
     if (!promptTokens || promptLen == 0) {
+        std::fprintf(stderr, "[GENERATE] SILENT_EXIT: null promptTokens=%p promptLen=%zu\n",
+            (void*)promptTokens, promptLen);
+        std::fflush(stderr);
         return 0;
     }
     if (!outputTokens || maxOutputLen == 0) {
+        std::fprintf(stderr, "[GENERATE] SILENT_EXIT: null outputTokens=%p maxOutputLen=%zu\n",
+            (void*)outputTokens, maxOutputLen);
+        std::fflush(stderr);
         return 0;
     }
     if (!hiddenStates || !logits || config.hiddenDim == 0 || config.vocabSize == 0) {
+        std::fprintf(stderr, "[GENERATE] SILENT_EXIT: hiddenStates=%p logits=%p hiddenDim=%zu vocabSize=%zu\n",
+            (void*)hiddenStates, (void*)logits,
+            (size_t)config.hiddenDim, (size_t)config.vocabSize);
+        std::fflush(stderr);
         return 0;
     }
 
@@ -3522,6 +3535,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     std::vector<float> hidden(config.hiddenDim);    // Prefill each prompt token exactly once, in token order.
     for (size_t p = 0; p < promptLen; ++p) {
         if (cancelRequested_.load(std::memory_order_acquire)) {
+            std::fprintf(stderr, "[PREFILL] CANCELLED at prefill token %zu/%zu\n", p, promptLen);
+            std::fflush(stderr);
             modelState_ = ModelState::Choreographable;            if (profiler_) profiler_->abortToken(static_cast<uint32_t>(p));
             return 0;
         }
@@ -3529,6 +3544,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (profiler_) profiler_->beginToken(static_cast<uint32_t>(p), p, Deep2::ProfilePhase::Prefill);
         auto tEmbed0 = std::chrono::steady_clock::now();
         if (!embedToken(promptTokens[p], hidden.data())) {
+            std::fprintf(stderr, "[PREFILL] embedToken FAILED for prefill token %zu (tokenId=%d)\n",
+                p, promptTokens[p]);
+            std::fflush(stderr);
             modelState_ = ModelState::Choreographable;            if (profiler_) profiler_->abortToken(static_cast<uint32_t>(p));
             lastFailureDetail_ = "embedToken failed for prefill token " + std::to_string(p);
             lastFailureStatus_ = GenerationStatus::InternalError;
@@ -3549,6 +3567,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         {
             auto fr = forwardTokenAllLayers(hidden.data(), p + 1);
             if (!fr.ok) {
+                std::fprintf(stderr, "[PREFILL] forwardTokenAllLayers FAILED at prefill token %zu stage=%s route=%d\n",
+                    p, fr.failureStage ? fr.failureStage : "(null)", (int)fr.route);
+                std::fflush(stderr);
                 modelState_ = ModelState::Choreographable;
                 if (profiler_) profiler_->abortToken(static_cast<uint32_t>(p));
                 lastFailureStatus_ = GenerationStatus::ForwardFailure;
@@ -3597,7 +3618,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             parityBeginStep(static_cast<int>(
                 kvCache?kvCache->currentLength():promptLen+generated-1));
             auto tEmb0 = std::chrono::steady_clock::now();
-            if(!embedToken(pendingToken,hidden.data())) {                if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
+            if(!embedToken(pendingToken,hidden.data())) {
+                std::fprintf(stderr, "[DECODE] embedToken FAILED for decode token %zu (tokenId=%d)\n",
+                    generated, pendingToken);
+                std::fflush(stderr);
+                if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
                 lastFailureDetail_ = "embedToken failed for decode token " + std::to_string(generated);
                 lastFailureStatus_ = GenerationStatus::InternalError;
                 break;
@@ -3619,6 +3644,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             {
                 auto fr = forwardTokenAllLayers(hidden.data(),seq);
                 if(!fr.ok) {
+                    std::fprintf(stderr, "[DECODE] forwardTokenAllLayers FAILED at decode token %zu stage=%s route=%d\n",
+                        generated, fr.failureStage ? fr.failureStage : "(null)", (int)fr.route);
+                    std::fflush(stderr);
                     if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
                     lastFailureStatus_ = GenerationStatus::ForwardFailure;
                     lastFailureDetail_ = std::string("decode forward failed at token ")
@@ -3630,7 +3658,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             auto tFwd1 = std::chrono::steady_clock::now();
             if (profiler_) profiler_->recordGpuForward(
                 static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tFwd1 - tFwd0).count()));
-            if(config.useKVCache&&kvCache&&!kvCache->advance()) {                if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
+            if(config.useKVCache&&kvCache&&!kvCache->advance()) {
+                std::fprintf(stderr, "[DECODE] kvCache->advance() FAILED at decode token %zu (KV full?)\n", generated);
+                std::fflush(stderr);
+                if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
                 break;
             }
             pendingForward=false;
@@ -3648,23 +3679,28 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         const size_t remaining=decodeLimit-generated;
-        if (deep2ForwardTraceEnabled()) {        }
+        std::fprintf(stderr, "[DECODE] token=%zu/%zu remaining=%zu specActive=%d\n",
+            generated, decodeLimit, remaining, specActive ? 1 : 0);
+        std::fflush(stderr);
         if(specActive&&remaining>=2) {
             try {
-                if (deep2ForwardTraceEnabled()) {                }
+                std::fprintf(stderr, "[SPEC] building proposals at token %zu remaining %zu\n", generated, remaining);
+                std::fflush(stderr);
                 std::vector<int32_t> proposals;
-                if (deep2ForwardTraceEnabled()) {                }
                 (void)buildAdaptiveSpeculativeProposals(
                     hidden.data(),remaining,proposals);
-                if (deep2ForwardTraceEnabled()) {                }
+                std::fprintf(stderr, "[SPEC] proposals=%zu at token %zu\n", proposals.size(), generated);
+                std::fflush(stderr);
                 if(!proposals.empty()) {
 
                     std::vector<int32_t> verified;
-                    if (deep2ForwardTraceEnabled()) {                    }
+                    std::fprintf(stderr, "[SPEC] verifying %zu proposals at token %zu\n", proposals.size(), generated);
+                    std::fflush(stderr);
                     if(verifySpeculativeGreedyWindow(
                             hidden.data(),proposals,remaining,verified)&&
                        !verified.empty()) {
-                        if (deep2ForwardTraceEnabled()) {                        }
+                        std::fprintf(stderr, "[SPEC] verified=%zu tokens at token %zu\n", verified.size(), generated);
+                        std::fflush(stderr);
                         if(medusaDecoder_) {
                             ++medusaDecoder_->stats.exact.speculativeWindowsSucceeded;
                         }
@@ -3682,19 +3718,23 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                         if(stop) break;
                         continue;
                     } else {
-                        if (deep2ForwardTraceEnabled()) {                        }
+                        std::fprintf(stderr, "[SPEC] verify FAILED (0 verified) at token %zu\n", generated);
+                        std::fflush(stderr);
                     }
                 } else {
-                    if (deep2ForwardTraceEnabled()) {                    }
+                    std::fprintf(stderr, "[SPEC] no proposals at token %zu (specActive but empty)\n", generated);
+                    std::fflush(stderr);
                 }
             } catch(const std::exception& e) {
-                if (deep2ForwardTraceEnabled()) {                }
+                std::fprintf(stderr, "[DECODE] SPECULATIVE_EXCEPTION at token %zu: %s\n", generated, e.what());
+                std::fflush(stderr);
                 if(medusaDecoder_) {
                     ++medusaDecoder_->stats.exact.exceptionFallbacks;
                     ++medusaDecoder_->stats.exact.proposalExceptions;
                 }
             } catch(...) {
-                if (deep2ForwardTraceEnabled()) {                }
+                std::fprintf(stderr, "[DECODE] SPECULATIVE_UNKNOWN_EXCEPTION at token %zu\n", generated);
+                std::fflush(stderr);
                 if(medusaDecoder_) {
                     ++medusaDecoder_->stats.exact.exceptionFallbacks;
                 }
@@ -3703,6 +3743,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         try {
             computeLogits(hidden.data(), logits);
         } catch (const std::exception& e) {
+            std::fprintf(stderr, "[DECODE] computeLogits THREW at token %zu: %s\n", generated, e.what());
+            std::fflush(stderr);
             lastFailureStatus_ = GenerationStatus::InternalError;
             lastFailureDetail_ = std::string("computeLogits failed at token ")
                 + std::to_string(generated) + ": " + e.what();
@@ -3727,7 +3769,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // parityBeginStep(promptLen+i-1) before this token's forward pass.
         parityEmitLogitsTop10(logits, config.vocabSize);
         // Temporary logits sanity dump (first 5 and top-5 indices)
-        if (deep2ForwardTraceEnabled()) {
+        {
             int vocab = static_cast<int>(config.vocabSize);
             float maxv = logits[0];
             int maxi = 0;
@@ -3742,10 +3784,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             double var = 0.0;
             for (int vi = 0; vi < vocab; ++vi) { double d = logits[vi] - mean; var += d * d; }
             var = std::sqrt(var / vocab);
-            {
-                std::fprintf(stderr, "[LOGITS] token=%zu min=%g max=%g mean=%g std=%g argmax=%d\n",
-                    generated, minv, maxv, mean, var, maxi);
-            }
+            std::fprintf(stderr, "[LOGITS] token=%zu min=%g max=%g mean=%g std=%g argmax=%d\n",
+                generated, minv, maxv, mean, var, maxi);
+            std::fflush(stderr);
         }
         auto tSample0 = std::chrono::steady_clock::now();
         const int nextTok = sampleToken(logits);
@@ -3753,7 +3794,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         std::fflush(stderr);
         auto tSample1 = std::chrono::steady_clock::now();        if (profiler_) profiler_->recordSampling(
             static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tSample1 - tSample0).count()));
-        if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) {            if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
+        if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) {
+            std::fprintf(stderr, "[DECODE] sampleToken returned INVALID token=%d (vocab=%zu) at decode token %zu\n",
+                nextTok, (size_t)config.vocabSize, generated);
+            std::fflush(stderr);
+            if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
             break;
         }
         outputTokens[generated] = nextTok;        if (profiler_) profiler_->endToken(static_cast<uint32_t>(generated));
@@ -3772,7 +3817,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // should normally be a no-op, but guards speculative paths)
     }
 
-    if (deep2ForwardTraceEnabled()) {    }    auto tEnd = std::chrono::steady_clock::now();
+    std::fprintf(stderr, "[GENERATE] EXIT generated=%zu promptLen=%zu prefillMs=%.1f decodeMs=%.1f tps=%.2f\n",
+        generated, promptLen,
+        stats ? std::chrono::duration<double, std::milli>(tPrefillEnd - t0).count() : 0.0,
+        stats ? 0.0 : 0.0,
+        0.0);
+    std::fflush(stderr);
+    auto tEnd = std::chrono::steady_clock::now();
 
     if (stats) {
         stats->tokensGenerated = generated;
@@ -3842,7 +3893,12 @@ GenerationResult Deep2Engine::generateStream(
 
     auto toks = tokenize(prompt);
     res.promptTokens = toks.size();
-    if (toks.empty() || !initialized || !modelWeights.loaded) return res;
+    if (toks.empty() || !initialized || !modelWeights.loaded) {
+        std::fprintf(stderr, "[STREAM] EARLY_EXIT toks=%zu init=%d loaded=%d\n",
+            toks.size(), initialized ? 1 : 0, modelWeights.loaded ? 1 : 0);
+        std::fflush(stderr);
+        return res;
+    }
 
     // maxTokens==0 means "until a real stop condition". This engine does not
     // yet own EOS metadata, so the hard context boundary is the safe stop.
@@ -3851,6 +3907,9 @@ GenerationResult Deep2Engine::generateStream(
         if (config.maxSeqLen > toks.size()) {
             limit = config.maxSeqLen - toks.size();
         } else {
+            std::fprintf(stderr, "[STREAM] EARLY_EXIT: promptLen=%zu >= maxSeqLen=%zu (context full)\n",
+                toks.size(), (size_t)config.maxSeqLen);
+            std::fflush(stderr);
             return res;
         }
     }
@@ -3872,6 +3931,15 @@ GenerationResult Deep2Engine::generateStream(
     res.generationTimeMs = st.decodeMs;
     res.cancelled = cancelRequested_.load(std::memory_order_acquire);
     res.completed = !res.cancelled;
+    std::fprintf(stderr, "[STREAM] RESULT generated=%zu promptTokens=%zu prefillMs=%.1f decodeMs=%.1f tps=%.2f cancelled=%d completed=%d\n",
+        (size_t)n, (size_t)res.promptTokens, res.promptTimeMs, res.generationTimeMs,
+        st.decodeMs > 0 ? (double)n / (st.decodeMs / 1000.0) : 0.0,
+        res.cancelled ? 1 : 0, res.completed ? 1 : 0);
+    std::fflush(stderr);
+    if (n == 0 && !res.cancelled && lastFailureDetail_.empty()) {
+        std::fprintf(stderr, "[STREAM] 0_TOKENS_NO_FAILURE: likely EOS or context boundary (EndOfSequence)\n");
+        std::fflush(stderr);
+    }
     // P0.3: intentional status contract (see enum comment in Deep2Engine.h).
     if (res.cancelled) {
         res.status = GenerationStatus::Cancelled;
