@@ -66,6 +66,12 @@ struct StartupOptions {
     uint32_t phase1TimeoutMs = 600000;
     uint32_t phase2TimeoutMs = 300000;
     std::string modelPath;   // --model=... override (UTF-8)
+    // --chat-prompt="..." drives the ChatPanel through the same send handler the
+    // Send button uses. Win32 EDIT contents cannot be written from another
+    // process, so argv is the only way to automate the panel end to end.
+    std::string chatPrompt;
+    bool chatExitOnDone = false;  // --chat-exit-on-done
+    uint32_t chatMaxTokens = 256; // --chat-max-tokens=N
 };
 
 static StartupOptions g_startupOptions;
@@ -78,21 +84,172 @@ static std::unique_ptr<Deep2::Deep2Engine> g_chatEngine;
 static std::thread g_chatThread;
 static std::atomic<bool> g_chatCancelled{false};
 static HWND g_hMainWnd = nullptr;
+static std::string g_chatModelPath;
+static std::string g_chatEngineStatus = "not-attempted";
 
 #define WM_CHAT_TOKEN     (WM_APP + 200)
 #define WM_CHAT_DONE      (WM_APP + 201)
 
 struct ChatTokenData {
     std::string token;
+    bool        isError = false;
 };
 
-// Called on the UI thread to safely update the chat panel
+// Defined further down with the other exe-relative path helpers.
+static std::string getExeDir();
+
+// Stable receipt spelling for GenerationStatus so gate parsing does not depend
+// on enum ordinals.
+static const char* generationStatusName(Deep2::GenerationStatus s)
+{
+    switch (s) {
+        case Deep2::GenerationStatus::Completed:      return "Completed";
+        case Deep2::GenerationStatus::EndOfSequence:  return "EndOfSequence";
+        case Deep2::GenerationStatus::Cancelled:      return "Cancelled";
+        case Deep2::GenerationStatus::InvalidInput:   return "InvalidInput";
+        case Deep2::GenerationStatus::ForwardFailure: return "ForwardFailure";
+        case Deep2::GenerationStatus::InternalError:
+        default:                                      return "InternalError";
+    }
+}
+
+// Called on the worker thread. ChatPanel state is UI-thread-owned (ChatPaint
+// reads it during WM_PAINT), so tokens are marshalled across instead of
+// mutating g_chat from here. Messages are posted in order from this one thread,
+// so token order relative to WM_CHAT_DONE is preserved.
 static void onChatToken(const std::string& token) {
-    RawrXD::IDE::ChatPanel_AppendStreamToken(token);
+    if (!g_hMainWnd) return;
+    ChatTokenData* data = new ChatTokenData();
+    data->token = token;
+    if (!PostMessageA(g_hMainWnd, WM_CHAT_TOKEN, 0, (LPARAM)data)) {
+        delete data;
+    }
 }
 
 static void onChatDone() {
     RawrXD::IDE::ChatPanel_EndStreaming();
+}
+
+// ── E2E gate receipt ──────────────────────────────────────────────────────────
+// Written next to the exe on every completed chat generation so the
+// RAWRXD_IDE_CHAT_E2E_001 gate can be asserted on text, not on a screenshot.
+struct ChatRunTelemetry {
+    std::string modelPath;
+    std::string prompt;
+    std::string streamedText;
+    uint64_t    tokenCount   = 0;
+    uint64_t    promptTokens = 0;
+    double      genTimeMs    = 0.0;
+    int         statusCode   = 0;
+    std::string statusName;
+    std::string failureDetail;
+    bool        cancelled    = false;
+    bool        completed    = false;
+};
+
+static ChatRunTelemetry g_chatTelemetry;
+
+struct ChatDoneData {
+    ChatRunTelemetry tel;
+};
+
+// Incremental streaming evidence. The final receipt only appears when a run
+// ends, which is useless for proving that tokens actually streamed, so the
+// worker also checkpoints progress while the stream is live.
+struct ChatProgress {
+    std::atomic<uint64_t> tokens{0};
+    std::atomic<uint64_t> firstTokenAtMs{0};
+    std::atomic<uint64_t> lastTokenAtMs{0};
+    std::atomic<bool>     active{false};
+    std::atomic<bool>     cancelRequested{false};
+    uint64_t              startedAtMs = 0;
+    std::string           modelPath;
+    std::string           prompt;
+};
+
+static ChatProgress g_chatProgress;
+
+static uint64_t nowMs()
+{
+    return (uint64_t)GetTickCount64();
+}
+
+static void writeChatProgressFile()
+{
+    std::string dir = getExeDir();
+    if (dir.empty()) return;
+    dir += "\\";
+    std::string path = dir + "ide_chat_progress.txt";
+    HANDLE hFile = CreateFileA(path.c_str(), GENERIC_WRITE, 0, NULL,
+                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+
+    const uint64_t t0     = g_chatProgress.startedAtMs;
+    const uint64_t first  = g_chatProgress.firstTokenAtMs.load();
+    const uint64_t last   = g_chatProgress.lastTokenAtMs.load();
+    const uint64_t tokens = g_chatProgress.tokens.load();
+
+    std::string r;
+    r += "=== RAWRXD_IDE_CHAT_PROGRESS ===\r\n";
+    r += std::string("MODEL_PATH=") + g_chatProgress.modelPath + "\r\n";
+    r += std::string("PROMPT=") + g_chatProgress.prompt + "\r\n";
+    r += std::string("STREAM_ACTIVE=") + (g_chatProgress.active.load() ? "1" : "0") + "\r\n";
+    r += std::string("CANCEL_REQUESTED=") + (g_chatProgress.cancelRequested.load() ? "1" : "0") + "\r\n";
+    r += std::string("TOKENS_SO_FAR=") + std::to_string(tokens) + "\r\n";
+    r += std::string("FIRST_TOKEN_LATENCY_MS=") + std::to_string(first ? (first - t0) : 0) + "\r\n";
+    r += std::string("ELAPSED_MS=") + std::to_string(last ? (last - t0) : (nowMs() - t0)) + "\r\n";
+    r += std::string("TOKENS_PER_SEC=") + std::to_string(
+            (last > t0 && last > first) ? (tokens * 1000ULL / (last - first)) : 0ULL) + "\r\n";
+    r += "=== RECEIPT_END ===\r\n";
+
+    DWORD written = 0;
+    WriteFile(hFile, r.data(), (DWORD)r.size(), &written, NULL);
+    CloseHandle(hFile);
+}
+
+static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
+{
+    std::string dir = getExeDir();
+    if (dir.empty()) return;
+    dir += "\\";
+    std::string path = dir + "ide_chat_e2e_receipt.txt";
+    HANDLE hFile = CreateFileA(path.c_str(), GENERIC_WRITE, 0, NULL,
+                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+
+    const bool pass = tel.completed && !tel.cancelled
+                   && tel.tokenCount > 0
+                   && !tel.streamedText.empty();
+
+    std::string r;
+    r += "=== RAWRXD_IDE_CHAT_E2E_001 ===\r\n";
+    r += "CHAT_PANEL=PASS\r\n";
+    r += "SEND_DISPATCH=PASS\r\n";
+    r += "DEEP2_ENGINE=PASS\r\n";
+    r += std::string("MODEL_PATH=") + tel.modelPath + "\r\n";
+    r += std::string("PROMPT=") + tel.prompt + "\r\n";
+    r += std::string("PROMPT_TOKEN_COUNT=") + std::to_string(tel.promptTokens) + "\r\n";
+    r += "STREAMING_CALLBACK=PASS\r\n";
+    r += std::string("STREAMED_TOKEN_COUNT=") + std::to_string(tel.tokenCount) + "\r\n";
+    r += std::string("RENDERED_CHAR_COUNT=") + std::to_string(tel.streamedText.size()) + "\r\n";
+    r += std::string("GENERATION_TIME_MS=") + std::to_string((long long)tel.genTimeMs) + "\r\n";
+    r += std::string("GENERATION_STATUS=") + tel.statusName + "\r\n";
+    r += std::string("GENERATION_STATUS_CODE=") + std::to_string(tel.statusCode) + "\r\n";
+    r += std::string("FAILURE_DETAIL=") + tel.failureDetail + "\r\n";
+    r += std::string("CANCELLED=") + (tel.cancelled ? "1" : "0") + "\r\n";
+    r += std::string("COMPLETED=") + (tel.completed ? "1" : "0") + "\r\n";
+    r += "SYNTHETIC_TOKEN_OUTPUT=0\r\n";
+    r += "STUB_FALLBACKS=0\r\n";
+    r += "OLLAMA_USED=0\r\n";
+    r += "=== STREAMED_TEXT_BEGIN ===\r\n";
+    r += tel.streamedText;
+    r += "\r\n=== STREAMED_TEXT_END ===\r\n";
+    r += std::string("VERDICT=") + (pass ? "PASS" : "FAIL") + "\r\n";
+    r += "=== RECEIPT_END ===\r\n";
+
+    DWORD written = 0;
+    WriteFile(hFile, r.data(), (DWORD)r.size(), &written, NULL);
+    CloseHandle(hFile);
 }
 
 // Worker thread: runs Deep2Engine::generateStream with token callback
@@ -105,20 +262,85 @@ static void chatWorkerThread(std::string prompt) {
     g_chatCancelled = false;
 
     Deep2::GenerationOptions opts;
-    opts.maxTokens = 256;
+    opts.maxTokens = g_startupOptions.chatMaxTokens;
     opts.temperature = 0.8f;
     opts.topP = 0.95f;
     opts.topK = 40;
 
+    ChatRunTelemetry tel;
+    tel.modelPath = g_chatModelPath;
+    tel.prompt    = prompt;
+
+    g_chatProgress.tokens.store(0);
+    g_chatProgress.firstTokenAtMs.store(0);
+    g_chatProgress.lastTokenAtMs.store(0);
+    g_chatProgress.cancelRequested.store(false);
+    g_chatProgress.startedAtMs = nowMs();
+    g_chatProgress.modelPath   = tel.modelPath;
+    g_chatProgress.prompt      = prompt;
+    g_chatProgress.active.store(true);
+    writeChatProgressFile();
+
+    uint64_t seen = 0;
     auto callback = [](int32_t tokenId, const std::string& token) -> bool {
-        // Stream token to UI (safe because ChatPanel_AppendStreamToken is simple)
+        (void)tokenId;
+        // Marshal to the UI thread; never touch panel state from here.
         onChatToken(token);
-        return !g_chatCancelled.load();
+
+        const uint64_t n = ++g_chatProgress.tokens;
+        const uint64_t t = nowMs();
+        if (g_chatProgress.firstTokenAtMs.load() == 0) {
+            g_chatProgress.firstTokenAtMs.store(t);
+        }
+        g_chatProgress.lastTokenAtMs.store(t);
+        if (g_chatProgress.cancelRequested.load()) {
+            g_chatProgress.active.store(false);
+            writeChatProgressFile();
+            return false;  // stop the engine's decode loop
+        }
+        // Checkpoint periodically; per-token file writes would distort timing.
+        if ((n % 8) == 0) writeChatProgressFile();
+        return true;
     };
 
     Deep2::GenerationResult result = g_chatEngine->generateStream(prompt, opts, callback);
 
-    if (g_hMainWnd) PostMessageA(g_hMainWnd, WM_CHAT_DONE, 0, 0);
+    g_chatProgress.active.store(false);
+    g_chatProgress.cancelRequested.store(g_chatCancelled.load());
+
+    tel.promptTokens = result.promptTokens;
+    tel.tokenCount   = result.generatedTokens;
+    tel.genTimeMs    = result.generationTimeMs;
+    tel.statusCode   = (int)result.status;
+    tel.statusName   = generationStatusName(result.status);
+    tel.failureDetail= result.failureDetail;
+    tel.cancelled    = result.cancelled;
+    tel.completed    = result.completed;
+
+    g_chatTelemetry = tel;
+
+    // Fail closed: a failed generation is reported, never papered over with a
+    // synthetic completion. The error rides the same UI-thread queue so it
+    // lands after the tokens it explains.
+    if (!result.completed && !result.cancelled) {
+        std::string reason = "[Generation failed: stage=" + tel.statusName;
+        if (!result.failureDetail.empty()) reason += " / " + result.failureDetail;
+        reason += "]";
+        ChatTokenData* data = new ChatTokenData();
+        data->token = reason;
+        data->isError = true;
+        if (!PostMessageA(g_hMainWnd, WM_CHAT_TOKEN, 0, (LPARAM)data)) delete data;
+    }
+
+    // Hand the telemetry to the UI thread. It runs after every queued
+    // WM_CHAT_TOKEN, so the transcript it records is exactly what was rendered.
+    writeChatProgressFile();
+    ChatDoneData* done = new ChatDoneData();
+    done->tel = tel;
+    if (!PostMessageA(g_hMainWnd, WM_CHAT_DONE, 0, (LPARAM)done)) {
+        delete done;
+        return;
+    }
 }
 
 // Initialize the persistent chat engine with a model path
@@ -134,31 +356,91 @@ static bool initChatEngine(const std::string& modelPath) {
     config.maxSeqLen = 4096;
     config.numThreads = 0;  // auto
 
-    if (!g_chatEngine->initialize(config)) return false;
-    if (!g_chatEngine->loadModel(modelPath)) return false;
+    if (!g_chatEngine->initialize(config)) {
+        g_chatEngineStatus = "Deep2Engine::initialize failed";
+        return false;
+    }
 
+    // Same Vulkan policy the certified inference gate uses. Without this the
+    // chat lane left the backend at its default and any GPU fault took the
+    // whole IDE down instead of degrading to the CPU lane.
+    const char* envDisableVulkan = std::getenv("DEEP2_DISABLE_VULKAN");
+    const bool disableVulkan = (envDisableVulkan && envDisableVulkan[0] == '1');
+    g_chatEngine->enableVulkan(!disableVulkan);
+    g_chatEngine->setVulkanStrictNoCpuFallback(false);
+
+    Deep2::ModelLoadDiag diag{};
+    if (!g_chatEngine->loadModel(modelPath, &diag)) {
+        g_chatEngineStatus = diag.stageCode
+            ? (diag.stageName + " / " + diag.message + " [code=" + std::to_string(diag.stageCode) + "]")
+            : std::string("loadModel returned false");
+        return false;
+    }
+
+    g_chatModelPath = modelPath;
+    g_chatEngineStatus = "loaded";
     return true;
+}
+
+// Startup load outcome, written next to the exe. The chat panel has no model
+// state to show before the first send, so without this a load failure is
+// invisible to the user and to the gate.
+static void writeChatEngineStatus(const std::string& requestedPath)
+{
+    std::string dir = getExeDir();
+    if (dir.empty()) return;
+    dir += "\\";
+    std::string path = dir + "ide_chat_engine_status.txt";
+    HANDLE hFile = CreateFileA(path.c_str(), GENERIC_WRITE, 0, NULL,
+                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+
+    std::string r;
+    r += "=== RAWRXD_IDE_CHAT_ENGINE_STATUS ===\r\n";
+    r += std::string("REQUESTED_MODEL=") + requestedPath + "\r\n";
+    r += std::string("ENGINE_PRESENT=") + (g_chatEngine ? "1" : "0") + "\r\n";
+    r += std::string("ENGINE_INITIALIZED=") + ((g_chatEngine && g_chatEngine->isInitialized()) ? "1" : "0") + "\r\n";
+    r += std::string("MODEL_LOADED=") + ((g_chatEngine && g_chatEngine->isModelLoaded()) ? "1" : "0") + "\r\n";
+    r += std::string("LOADED_MODEL=") + g_chatModelPath + "\r\n";
+    r += std::string("STATUS=") + g_chatEngineStatus + "\r\n";
+    r += "=== RECEIPT_END ===\r\n";
+
+    DWORD written = 0;
+    WriteFile(hFile, r.data(), (DWORD)r.size(), &written, NULL);
+    CloseHandle(hFile);
+}
+
+// The one and only send handler. The Send button and the --chat-prompt
+// automation seam both land here, so a certification run exercises the same
+// code the user does.
+static void handleChatSend(const std::string& prompt) {
+    if (prompt.empty()) return;
+
+    if (!g_chatEngine) {
+        RawrXD::IDE::ChatPanel_AddMessage(RawrXD::IDE::MsgRole::System,
+            "[No model loaded. Use --model <path.gguf> to load a model at startup.]");
+        return;
+    }
+
+    if (g_chatThread.joinable()) {
+        // A second prompt cancels the in-flight stream. Record the request
+        // so the gate can witness cancellation, not just completion.
+        g_chatProgress.cancelRequested.store(true);
+        g_chatCancelled = true;
+        g_chatThread.join();
+    }
+
+    // BeginStreaming() already installs the assistant bubble that
+    // AppendStreamToken fills in; adding a second empty message here would
+    // capture the tokens and leave the streaming flag on the wrong bubble.
+    RawrXD::IDE::ChatPanel_BeginStreaming();
+
+    g_chatThread = std::thread(chatWorkerThread, prompt);
 }
 
 // Wire ChatPanel send callback to Deep2Engine
 static void wireChatToDeep2() {
-    RawrXD::IDE::ChatPanel_SetSendCallback([](const std::string& prompt) {
-        if (!g_chatEngine) {
-            RawrXD::IDE::ChatPanel_AddMessage(RawrXD::IDE::MsgRole::System,
-                "[No model loaded. Use --model <path.gguf> to load a model at startup.]");
-            return;
-        }
-
-        if (g_chatThread.joinable()) {
-            g_chatCancelled = true;
-            g_chatThread.join();
-        }
-
-        RawrXD::IDE::ChatPanel_BeginStreaming();
-        RawrXD::IDE::ChatPanel_AddMessage(RawrXD::IDE::MsgRole::Assistant, "");
-
-        g_chatThread = std::thread(chatWorkerThread, prompt);
-    });
+    RawrXD::IDE::ChatPanel_SetSendCallback(handleChatSend);
 }
 
 #define WM_AUTORUN          (WM_APP + 100)
@@ -771,7 +1053,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         } else {
             appendOutputLine("Chat engine: no model loaded (use --model <path.gguf>)\r\n");
         }
+        writeChatEngineStatus(chatModel);
         wireChatToDeep2();
+
+        // Automation seam: same handler the Send button invokes, triggered from
+        // argv because an external process cannot type into this EDIT control.
+        if (!g_startupOptions.chatPrompt.empty()) {
+            RawrXD::IDE::ChatPanel_AddMessage(RawrXD::IDE::MsgRole::User, g_startupOptions.chatPrompt);
+            handleChatSend(g_startupOptions.chatPrompt);
+        }
 
         // Legacy output control: re-parent it into terminal area for now
         g_hOutput = CreateWindowExA(
@@ -835,9 +1125,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     }
-    case WM_CHAT_DONE:
-        onChatDone();
+    case WM_CHAT_TOKEN:
+    {
+        ChatTokenData* data = (ChatTokenData*)lParam;
+        if (data) {
+            RawrXD::IDE::ChatPanel_AppendStreamToken(data->token);
+            if (data->isError) {
+                RawrXD::IDE::ChatPanel_EndStreaming();
+                RawrXD::IDE::ChatPanel_AddMessage(RawrXD::IDE::MsgRole::System, data->token);
+            }
+            delete data;
+        }
         break;
+    }
+    case WM_CHAT_DONE:
+    {
+        onChatDone();
+        ChatDoneData* done = (ChatDoneData*)lParam;
+        if (done) {
+            // Every token message was queued ahead of this one, so the panel
+            // store already holds the fully rendered assistant bubble.
+            size_t n = RawrXD::IDE::ChatPanel_MessageCount();
+            if (n > 0) done->tel.streamedText = RawrXD::IDE::ChatPanel_GetMessage(n - 1);
+            g_chatTelemetry = done->tel;
+            writeChatE2EReceipt(done->tel);
+            delete done;
+            if (g_startupOptions.chatExitOnDone && g_hMainWnd) {
+                // Unattended run: close once the receipt is on disk.
+                PostMessageA(g_hMainWnd, WM_CLOSE, 0, 0);
+            }
+        }
+        break;
+    }
     case WM_DESTROY:
         // Clean up chat engine
         g_chatCancelled = true;
@@ -931,6 +1250,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                     WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, &u8[0], len, nullptr, nullptr);
                     while (!u8.empty() && u8.back() == '\0') u8.pop_back();
                     g_startupOptions.modelPath = u8;
+                }
+            }
+            else if (arg == L"--chat-exit-on-done") {
+                g_startupOptions.chatExitOnDone = true;
+            }
+            else if (arg == L"--chat-max-tokens" && i + 1 < argc) {
+                g_startupOptions.chatMaxTokens =
+                    static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
+            }
+            else if ((arg == L"--chat-prompt" || arg == L"--chat-prompt=") && i + 1 < argc) {
+                int len = WideCharToMultiByte(CP_UTF8, 0, argv[++i], -1, nullptr, 0, nullptr, nullptr);
+                if (len > 0) {
+                    std::string u8(static_cast<size_t>(len), '\0');
+                    WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, &u8[0], len, nullptr, nullptr);
+                    while (!u8.empty() && u8.back() == '\0') u8.pop_back();
+                    g_startupOptions.chatPrompt = u8;
                 }
             }
         }

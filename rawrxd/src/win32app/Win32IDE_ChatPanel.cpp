@@ -41,6 +41,27 @@ static ChatPanelState g_chat;
 // Forward declaration
 void ChatPanel_AddMessage(MsgRole role, const std::string& text);
 
+// Panel-side trace of the send path. Written beside the exe so a certification
+// run can see what the panel actually received, not just what it rendered.
+static void ChatPanel_Trace(const std::string& line)
+{
+    char mod[MAX_PATH] = {};
+    DWORD n = GetModuleFileNameA(nullptr, mod, MAX_PATH);
+    if (n == 0 || n >= MAX_PATH) return;
+    std::string path(mod);
+    size_t slash = path.find_last_of("\\/");
+    if (slash == std::string::npos) return;
+    path = path.substr(0, slash) + "\\ide_chat_send_trace.txt";
+
+    HANDLE h = CreateFileA(path.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ,
+                           nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (h == INVALID_HANDLE_VALUE) return;
+    std::string out = line + "\r\n";
+    DWORD written = 0;
+    WriteFile(h, out.data(), (DWORD)out.size(), &written, nullptr);
+    CloseHandle(h);
+}
+
 // ── Measure wrapped text height ───────────────────────────────────────────────
 static int MeasureWrappedHeight(HDC hdc, const std::string& text, int maxW, int lineH)
 {
@@ -201,6 +222,11 @@ static LRESULT CALLBACK ChatWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                 char buf[4096] = {};
                 GetWindowTextA(g_chat.hInput, buf, sizeof(buf));
                 std::string text(buf);
+
+                ChatPanel_Trace("WM_COMMAND send inputHwnd=" + std::to_string((uintptr_t)g_chat.hInput)
+                              + " textLen=" + std::to_string(text.size())
+                              + " onSend=" + (g_chat.onSend ? "1" : "0"));
+
                 if (!text.empty()) {
                     SetWindowTextA(g_chat.hInput, "");
                     ChatPanel_AddMessage(MsgRole::User, text);
@@ -299,6 +325,35 @@ void ChatPanel_Clear()
     g_chat.messages.clear();
     g_chat.scrollOffset = 0;
     if (g_chat.hwnd) InvalidateRect(g_chat.hwnd, nullptr, FALSE);
+}
+
+// ── Gate evidence ─────────────────────────────────────────────────────────────
+// These read the same store ChatPaint draws from, so a certification run can
+// assert on precisely what the user sees. UI-thread only.
+size_t ChatPanel_MessageCount()
+{
+    return g_chat.messages.size();
+}
+
+std::string ChatPanel_GetMessage(size_t index)
+{
+    if (index >= g_chat.messages.size()) return std::string();
+    return g_chat.messages[index].text;
+}
+
+bool ChatPanel_IsLastStreaming()
+{
+    if (g_chat.messages.empty()) return false;
+    return g_chat.messages.back().streaming;
+}
+
+size_t ChatPanel_StreamingTokenCount()
+{
+    if (g_chat.messages.empty()) return 0;
+    if (!g_chat.messages.back().streaming) return 0;
+    // Approximate the streamed token count from the rendered text; the engine
+    // callback is the authoritative count and is recorded in the E2E receipt.
+    return g_chat.messages.back().text.size();
 }
 
 } // namespace RawrXD::IDE
