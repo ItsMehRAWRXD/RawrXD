@@ -1421,8 +1421,10 @@ static int runGpuCorrectnessGate()
                     std::fflush(stderr);
 
                     if (result.completed) {
+                        std::fprintf(stderr, "GPU_GATE: result.completed=true\n"); std::fflush(stderr);
                         generatedTokenCount = static_cast<int>(result.generatedTokens);
                         generationStatus = "Completed";
+                        std::fprintf(stderr, "GPU_GATE: generationStatus=Completed tokenCount=%d\n", generatedTokenCount); std::fflush(stderr);
                         // Check if fallback occurred
                         if (g_startupOptions.gpuNoFallback) {
                             // In strict mode, any CPU fallback is a violation
@@ -1446,6 +1448,7 @@ static int runGpuCorrectnessGate()
     }
 
     // Determine verdict
+    std::fprintf(stderr, "GPU_GATE: computing verdict\n"); std::fflush(stderr);
     bool pass = true;
     if (vulkanInit != "PASS") pass = false;
     if (deviceCount == 0 && vulkanInit == "PASS") {
@@ -1460,6 +1463,8 @@ static int runGpuCorrectnessGate()
     if (hostFallbacks > 0 && g_startupOptions.gpuNoFallback) pass = false;
     if (stubFallbacks > 0) pass = false;
     if (testBackendUsed > 0) pass = false;
+
+    std::fprintf(stderr, "GPU_GATE: verdict=%s pass=%d\n", pass ? "PASS" : "FAIL", pass ? 1 : 0); std::fflush(stderr);
 
     // Write receipt using C-style FILE* (std::ofstream crashes after Vulkan)
     std::fprintf(stderr, "GPU_GATE: writing receipt to %s\n", receiptPath.c_str());
