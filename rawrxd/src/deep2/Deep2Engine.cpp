@@ -1900,19 +1900,40 @@ void Deep2Engine::unloadModel() {
 }
 
 bool Deep2Engine::switchModel(const std::string& ggufPath) {
+    std::fprintf(stderr, "[SWITCH_MODEL] unloading old model, loading '%s'\n", ggufPath.c_str()); std::fflush(stderr);
     unloadModel();
-    return loadModel(ggufPath);
+    bool ok = loadModel(ggufPath);
+    std::fprintf(stderr, "[SWITCH_MODEL] loadModel result=%d\n", ok ? 1 : 0); std::fflush(stderr);
+    return ok;
 }
 
 // =================== TOKENIZE / DETOKENIZE ====================
 std::vector<int> Deep2Engine::tokenize(const std::string& text) {
-    if (!tokenizer) return {};
-    return tokenizer->encode(text);
+    if (!tokenizer) {
+        std::fprintf(stderr, "[TOKENIZE] FAIL: no tokenizer for text='%s' (len=%zu)\n", text.c_str(), text.size());
+        std::fflush(stderr);
+        return {};
+    }
+    auto toks = tokenizer->encode(text);
+    std::fprintf(stderr, "[TOKENIZE] text='%s' -> %zu tokens\n", text.c_str(), toks.size());
+    std::fflush(stderr);
+    if (toks.empty()) {
+        std::fprintf(stderr, "[TOKENIZE] WARNING: tokenizer returned 0 tokens for non-empty text\n");
+        std::fflush(stderr);
+    }
+    return toks;
 }
 
 std::string Deep2Engine::detokenize(const std::vector<int>& tokens) {
-    if (!tokenizer) return "";
-    return tokenizer->decode(tokens);
+    if (!tokenizer) {
+        std::fprintf(stderr, "[DETOKENIZE] FAIL: no tokenizer for %zu tokens\n", tokens.size());
+        std::fflush(stderr);
+        return "";
+    }
+    auto result = tokenizer->decode(tokens);
+    std::fprintf(stderr, "[DETOKENIZE] %zu tokens -> '%s' (len=%zu)\n", tokens.size(), result.c_str(), result.size());
+    std::fflush(stderr);
+    return result;
 }
 
 // =================== EMBED TOKEN (REAL MAPPED WEIGHT ROW) ====================
@@ -2939,8 +2960,12 @@ void Deep2Engine::SwiGLU(const float* gate, const float* up,
 void Deep2Engine::computeMoEFFN(size_t layer,
                                 const float* input,
                                 float* output) {
-    if (!input || !output || layer >= modelWeights.layers.size())
+    std::fprintf(stderr, "[MOE_FFN] layer=%zu input=%p output=%p\n", layer, (void*)input, (void*)output); std::fflush(stderr);
+    if (!input || !output || layer >= modelWeights.layers.size()) {
+        std::fprintf(stderr, "[MOE_FFN] FAIL: invalid args input=%p output=%p layer=%zu layers=%zu\n",
+            (void*)input, (void*)output, layer, modelWeights.layers.size()); std::fflush(stderr);
         throw std::runtime_error("MoE: invalid layer/input/output");
+    }
 
     // BATCH10_GPU_MOE_FIRST
     if (vulkanInitialized_ && !vulkanDevices_.empty()) {
@@ -3216,8 +3241,12 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     using Deep2::Arch::Ref::mamba2Step;
     using Deep2::Arch::Ref::finite;
 
-    if (!input || !output || layer >= modelWeights.layers.size())
+    std::fprintf(stderr, "[SSM] layer=%zu input=%p output=%p\n", layer, (void*)input, (void*)output); std::fflush(stderr);
+    if (!input || !output || layer >= modelWeights.layers.size()) {
+        std::fprintf(stderr, "[SSM] FAIL: invalid args input=%p output=%p layer=%zu layers=%zu\n",
+            (void*)input, (void*)output, layer, modelWeights.layers.size()); std::fflush(stderr);
         throw std::runtime_error("computeSSM: invalid layer/input/output");
+    }
 
     const LayerWeights& lw = modelWeights.layers[layer];
     if (!lw.hasSSM)

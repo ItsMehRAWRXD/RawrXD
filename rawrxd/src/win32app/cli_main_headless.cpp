@@ -67,6 +67,8 @@ static ModelRoute classifyModel(const std::string& modelSpec) {
 // Ollama proxy: POST to http://127.0.0.1:11434/api/generate
 // ----------------------------------------------------------------------------
 static std::string ollamaGenerate(const std::string& model, const std::string& prompt, int maxTokens) {
+    std::fprintf(stderr, "[CLI_OLLAMA] model='%s' prompt='%s' maxTokens=%d\n",
+        model.c_str(), prompt.c_str(), maxTokens); std::fflush(stderr);
     // Build JSON body manually (no JSON library dependency)
     std::ostringstream json;
     json << "{\"model\":\"" << model << "\",\"prompt\":\"" << prompt
@@ -78,14 +80,14 @@ static std::string ollamaGenerate(const std::string& model, const std::string& p
     HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0",
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
         WINHTTP_NO_PROXY_BYPASS, 0);
-    if (!hSession) return "";
+    if (!hSession) { std::fprintf(stderr, "[CLI_OLLAMA] FAIL: WinHttpOpen returned null\n"); std::fflush(stderr); return ""; }
 
     HINTERNET hConnect = WinHttpConnect(hSession, L"127.0.0.1", 11434, 0);
-    if (!hConnect) { WinHttpCloseHandle(hSession); return ""; }
+    if (!hConnect) { std::fprintf(stderr, "[CLI_OLLAMA] FAIL: WinHttpConnect returned null\n"); std::fflush(stderr); WinHttpCloseHandle(hSession); return ""; }
 
     HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/generate",
         NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
-    if (!hRequest) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return ""; }
+    if (!hRequest) { std::fprintf(stderr, "[CLI_OLLAMA] FAIL: WinHttpOpenRequest returned null\n"); std::fflush(stderr); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return ""; }
 
     // Convert body to wide string for WinHttpSendRequest
     std::wstring wBody(bodyStr.begin(), bodyStr.end());
@@ -102,6 +104,7 @@ static std::string ollamaGenerate(const std::string& model, const std::string& p
 
     bResult = WinHttpReceiveResponse(hRequest, NULL);
     if (!bResult) {
+        std::fprintf(stderr, "[CLI_OLLAMA] FAIL: WinHttpReceiveResponse failed\n"); std::fflush(stderr);
         WinHttpCloseHandle(hRequest);
         WinHttpCloseHandle(hConnect);
         WinHttpCloseHandle(hSession);
@@ -127,7 +130,7 @@ static std::string ollamaGenerate(const std::string& model, const std::string& p
     // Parse "response" field from JSON (simple string extraction)
     // Look for "response":"..."
     size_t pos = response.find("\"response\":\"");
-    if (pos == std::string::npos) return "";
+    if (pos == std::string::npos) { std::fprintf(stderr, "[CLI_OLLAMA] FAIL: no 'response' field in Ollama response (len=%zu)\n", response.size()); std::fflush(stderr); return ""; }
     pos += 12; // skip "response":"
     std::string result;
     while (pos < response.size() && response[pos] != '"') {
@@ -148,6 +151,7 @@ static std::string ollamaGenerate(const std::string& model, const std::string& p
     }
     return result;
 #else
+    std::fprintf(stderr, "[CLI_OLLAMA] FAIL: non-Windows not supported\n"); std::fflush(stderr);
     return ""; // Non-Windows not supported in this CLI
 #endif
 }
@@ -156,6 +160,10 @@ static std::string ollamaGenerate(const std::string& model, const std::string& p
 // Deep2 GGUF route: load model via Deep2Engine and generate
 // ----------------------------------------------------------------------------
 static std::string deep2Generate(const std::string& modelPath, const std::string& prompt, int maxTokens) {
+    std::fprintf(stderr, "[CLI_DEEP2] modelPath='%s' prompt='%s' maxTokens=%d\n",
+        modelPath.c_str(), prompt.c_str(), maxTokens);
+    std::fflush(stderr);
+
     // Use the Deep2Engine via the same API as the Win32IDE chat path
     Deep2::Deep2Engine engine;
     Deep2::EngineConfig config;
@@ -163,14 +171,20 @@ static std::string deep2Generate(const std::string& modelPath, const std::string
     config.numThreads = 0; // auto
 
     if (!engine.initialize(config)) {
+        std::fprintf(stderr, "[CLI_DEEP2] FAIL: Deep2Engine::initialize returned false\n"); std::fflush(stderr);
         return "[DEEP2_INIT_FAILED]";
     }
+    std::fprintf(stderr, "[CLI_DEEP2] engine initialized OK\n"); std::fflush(stderr);
     engine.enableVulkan(false);
+    std::fprintf(stderr, "[CLI_DEEP2] Vulkan disabled (CPU-only mode)\n"); std::fflush(stderr);
 
     Deep2::ModelLoadDiag diag{};
     if (!engine.loadModel(modelPath, &diag)) {
+        std::fprintf(stderr, "[CLI_DEEP2] FAIL: loadModel returned false stage=%s msg='%s' code=%d\n",
+            diag.stageName.c_str(), diag.message.c_str(), diag.stageCode); std::fflush(stderr);
         return "[DEEP2_LOAD_FAILED]";
     }
+    std::fprintf(stderr, "[CLI_DEEP2] model loaded OK\n"); std::fflush(stderr);
 
     Deep2::GenerationOptions opts;
     opts.maxTokens = maxTokens;
@@ -180,14 +194,23 @@ static std::string deep2Generate(const std::string& modelPath, const std::string
     opts.seed = 1;
 
     std::string generatedText;
-    auto callback = [&generatedText](int32_t, const std::string& token) -> bool {
+    auto callback = [&generatedText](int32_t tokenId, const std::string& token) -> bool {
         generatedText += token;
         return true;
     };
 
+    std::fprintf(stderr, "[CLI_DEEP2] calling generateStream...\n"); std::fflush(stderr);
     Deep2::GenerationResult result = engine.generateStream(prompt, opts, callback);
+    std::fprintf(stderr, "[CLI_DEEP2] generateStream returned completed=%d generatedTokens=%llu status=%d\n",
+        result.completed ? 1 : 0, (unsigned long long)result.generatedTokens, (int)result.status);
+    std::fflush(stderr);
 
-    if (result.completed) return generatedText;
+    if (result.completed) {
+        std::fprintf(stderr, "[CLI_DEEP2] SUCCESS: %zu chars generated\n", generatedText.size()); std::fflush(stderr);
+        return generatedText;
+    }
+    std::fprintf(stderr, "[CLI_DEEP2] FAIL: generation incomplete cancelled=%d failureDetail='%s'\n",
+        result.cancelled ? 1 : 0, result.failureDetail.c_str()); std::fflush(stderr);
     return "[DEEP2_GENERATION_FAILED]";
 }
 
