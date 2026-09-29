@@ -72,6 +72,10 @@ struct StartupOptions {
     std::string chatPrompt;
     bool chatExitOnDone = false;  // --chat-exit-on-done
     uint32_t chatMaxTokens = 256; // --chat-max-tokens=N
+    float    chatTemperature = 0.8f;  // --chat-temperature=F
+    float    chatTopP = 0.95f;        // --chat-top-p=F
+    uint32_t chatTopK = 40;           // --chat-top-k=N
+    bool     chatGreedy = false;      // --chat-greedy
 };
 
 static StartupOptions g_startupOptions;
@@ -229,6 +233,10 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
     r += std::string("MODEL_PATH=") + tel.modelPath + "\r\n";
     r += std::string("PROMPT=") + tel.prompt + "\r\n";
     r += std::string("PROMPT_TOKEN_COUNT=") + std::to_string(tel.promptTokens) + "\r\n";
+    r += std::string("TEMPERATURE=") + std::to_string(g_startupOptions.chatTemperature) + "\r\n";
+    r += std::string("TOP_P=") + std::to_string(g_startupOptions.chatTopP) + "\r\n";
+    r += std::string("TOP_K=") + std::to_string(g_startupOptions.chatTopK) + "\r\n";
+    r += std::string("GREEDY=") + (g_startupOptions.chatGreedy ? "1" : "0") + "\r\n";
     r += "STREAMING_CALLBACK=PASS\r\n";
     r += std::string("STREAMED_TOKEN_COUNT=") + std::to_string(tel.tokenCount) + "\r\n";
     r += std::string("RENDERED_CHAR_COUNT=") + std::to_string(tel.streamedText.size()) + "\r\n";
@@ -262,7 +270,18 @@ static void chatWorkerThread(std::string prompt) {
     g_chatCancelled = false;
 
     Deep2::GenerationOptions opts;
-    opts.maxTokens = g_startupOptions.chatMaxTokens;
+    opts.maxTokens   = g_startupOptions.chatMaxTokens;
+    opts.temperature = g_startupOptions.chatTemperature;
+    opts.topP        = g_startupOptions.chatTopP;
+    opts.topK        = g_startupOptions.chatTopK;
+    opts.seed        = 0;
+    if (g_startupOptions.chatGreedy) {
+        // Greedy decode: the deterministic reference for judging whether the
+        // engine's logits or the sampler is at fault.
+        opts.temperature = 0.0f;
+        opts.topP = 1.0f;
+        opts.topK = 1;
+    }
     opts.temperature = 0.8f;
     opts.topP = 0.95f;
     opts.topK = 40;
@@ -1257,6 +1276,21 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             }
             else if (arg == L"--chat-max-tokens" && i + 1 < argc) {
                 g_startupOptions.chatMaxTokens =
+                    static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
+            }
+            else if (arg == L"--chat-greedy") {
+                g_startupOptions.chatGreedy = true;
+            }
+            else if (arg == L"--chat-temperature" && i + 1 < argc) {
+                g_startupOptions.chatTemperature =
+                    static_cast<float>(std::wcstod(argv[++i], nullptr));
+            }
+            else if (arg == L"--chat-top-p" && i + 1 < argc) {
+                g_startupOptions.chatTopP =
+                    static_cast<float>(std::wcstod(argv[++i], nullptr));
+            }
+            else if (arg == L"--chat-top-k" && i + 1 < argc) {
+                g_startupOptions.chatTopK =
                     static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
             }
             else if ((arg == L"--chat-prompt" || arg == L"--chat-prompt=") && i + 1 < argc) {
