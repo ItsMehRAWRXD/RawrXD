@@ -6976,14 +6976,16 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         set_target_properties(RawrXD-Win32IDE PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
         target_link_options(RawrXD-Win32IDE PRIVATE
             /LARGEADDRESSAWARE
+            /DEBUG:FASTLINK
             /LTCG:OFF
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO
         )
-        # /DEBUG REMOVED: LNK1201 and LNK1318 PDB errors were recurring
-        # across builds. Certification doesn't need debug symbols. The map
-        # file still provides symbol addresses for auditing.
+        # /DEBUG:FASTLINK: The no-debug build (3.3MB) produced a broken exe
+        # (HEXMAG_INIT=0, EXIT=-1). The debug build (20.4MB) worked correctly.
+        # FASTLINK writes minimal PDB info using .obj files, avoiding LNK1201
+        # while keeping the exe functional. Do NOT delete the PDB between builds.
         # PRE_LINK REMOVED: no more exe/pdb deletion before link.
         # The linker handles overwriting the output naturally.
         # /FORCE:MULTIPLE REMOVED (W3 dedupe wave 7a73ec687): all LNK4006

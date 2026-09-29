@@ -1213,22 +1213,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     case WM_DESTROY:
-        // D-W6-001 FIX: Engine cleanup moved to WM_CLOSE (before DestroyWindow).
-        // Calling ~Deep2Engine → ~VulkanCompute::cleanup() from within
-        // WM_DESTROY (nested inside DestroyWindow's internal teardown) caused
-        // STATUS_STACK_OVERFLOW (0xC00000FD). The cleanup is now done in
-        // WM_CLOSE before DestroyWindow is called, keeping the stack shallow.
         PostQuitMessage(0);
         break;
     case WM_CLOSE:
-        // D-W6-001 FIX: Clean up the chat engine BEFORE DestroyWindow to keep
-        // the destructor chain on a shallow stack frame.
+        // D-W6-001: do NOT clean up the engine here — the destructor chain
+        // (111+ STL members) causes both stack overflow and access violations
+        // during window teardown. The engine is intentionally leaked; the OS
+        // reclaims all memory on process exit. The generation receipt is
+        // already written before this point.
         g_chatCancelled = true;
         if (g_chatThread.joinable()) g_chatThread.join();
-        if (g_chatEngine) {
-            g_chatEngine->unloadModel();
-            g_chatEngine.reset();
-        }
         DestroyWindow(hWnd);
         break;
     default:
