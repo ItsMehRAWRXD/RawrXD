@@ -6976,16 +6976,18 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         set_target_properties(RawrXD-Win32IDE PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
         target_link_options(RawrXD-Win32IDE PRIVATE
             /LARGEADDRESSAWARE
-            /DEBUG:FASTLINK
+            /DEBUG:FULL
             /LTCG:OFF
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO
         )
-        # /DEBUG:FASTLINK: The no-debug build (3.3MB) produced a broken exe
-        # (HEXMAG_INIT=0, EXIT=-1). The debug build (20.4MB) worked correctly.
-        # FASTLINK writes minimal PDB info using .obj files, avoiding LNK1201
-        # while keeping the exe functional. Do NOT delete the PDB between builds.
+        # /DEBUG:FULL REQUIRED: FASTLINK and no-DEBUG both produce broken
+        # exes (HEXMAG_INIT=0, EXIT=-1). Only FULL produces a working exe.
+        # LNK1201 (PDB write failure) is caused by a locked PDB from a
+        # running RawrXD-Win32IDE.exe process — NOT by /DEBUG:FULL itself.
+        # Fix: kill all RawrXD processes before building. Do NOT delete the
+        # PDB (LNK1318 if deleted while linker expects it).
         # PRE_LINK REMOVED: no more exe/pdb deletion before link.
         # The linker handles overwriting the output naturally.
         # /FORCE:MULTIPLE REMOVED (W3 dedupe wave 7a73ec687): all LNK4006
