@@ -83,12 +83,14 @@ Solution ConstraintSolver::solve(
         sol.valid = true;
         // Evaluate soft constraints
         for (const auto& c : constraints_) {
-            if (c.type == ConstraintType::Soft && c.checker) {
-                if (!c.checker(binding)) {
+            if (c.type == ConstraintType::Soft) {
+                bool violated = false;
+                if (c.checker) { violated = !c.checker(binding); }
+                else { auto it2 = binding.find(c.variable); if (it2 != binding.end()) { if (c.op == "==" && it2->second != c.value) violated = true; if (c.op == "!=" && it2->second == c.value) violated = true; } }
+                if (violated) {
                     sol.violatedSoft.push_back(c.name);
                     sol.totalPenalty += c.penalty;
                 }
-            }
         }
     } else {
         sol.valid = false;

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <set>
 
 namespace rawrxd::graph {
 
@@ -28,7 +29,7 @@ struct CapabilityDescriptor {
     std::string name;
     std::string provider;           // which subsystem provides this
     std::vector<std::string> provides;  // what this capability produces
-    std::vector<std::string> requires;  // what this capability needs
+    std::vector<std::string> dependencies_;  // what this capability needs
     int priority = 0;               // higher = preferred
     bool available = true;
     std::string version;

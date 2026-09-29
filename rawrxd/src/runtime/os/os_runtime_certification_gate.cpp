@@ -136,7 +136,7 @@ static void test_capability_solver() {
     compiler.name = "Compiler";
     compiler.provider = "toolchain";
     compiler.provides = {"object_file"};
-    compiler.requires = {};
+    compiler.dependencies_ = {};
     compiler.priority = 10;
     compiler.available = true;
     solver.registerCapability(compiler);
@@ -145,7 +145,7 @@ static void test_capability_solver() {
     linker.name = "Linker";
     linker.provider = "toolchain";
     linker.provides = {"executable"};
-    linker.requires = {"object_file"};
+    linker.dependencies_ = {"object_file"};
     linker.priority = 10;
     linker.available = true;
     solver.registerCapability(linker);

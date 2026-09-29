@@ -45,7 +45,7 @@ std::vector<CapabilityDescriptor> CapabilitySolver::fromProvider(const std::stri
 
 bool CapabilitySolver::requirementsMet(const CapabilityDescriptor& cap,
                                        const std::set<std::string>& availableOutputs) const {
-    for (const auto& req : cap.requires) {
+    for (const auto& req : cap.dependencies_) {
         if (availableOutputs.find(req) == availableOutputs.end()) return false;
     }
     return true;
@@ -67,7 +67,7 @@ bool CapabilitySolver::orderSteps(std::vector<CapabilityDescriptor>& selected,
                 ExecutionStep step;
                 step.capability = selected[i].name;
                 step.provider = selected[i].provider;
-                for (const auto& r : selected[i].requires) step.inputs.push_back(r);
+                for (const auto& r : selected[i].dependencies_) step.inputs.push_back(r);
                 for (const auto& p : selected[i].provides) step.outputs.push_back(p);
                 // Set dependencies: which steps this depends on
                 for (size_t j = 0; j < plan.steps.size(); ++j) {
@@ -121,7 +121,7 @@ ExecutionPlan CapabilitySolver::solve(const Intent& intent) const {
                 if (needed.count(p) && !provided.count(p)) {
                     selected.push_back(cap);
                     for (const auto& pp : cap.provides) provided.insert(pp);
-                    for (const auto& rr : cap.requires) needed.insert(rr);
+                    for (const auto& rr : cap.dependencies_) needed.insert(rr);
                     progress = true;
                     break;
                 }

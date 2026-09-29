@@ -81,6 +81,10 @@ struct GraphEdge {
 class UniversalGraph {
 public:
     UniversalGraph() = default;
+    UniversalGraph(UniversalGraph&& other) noexcept;
+    UniversalGraph& operator=(UniversalGraph&& other) noexcept;
+    UniversalGraph(const UniversalGraph&) = delete;
+    UniversalGraph& operator=(const UniversalGraph&) = delete;
 
     // --- Node operations ---
     NodeId addNode(std::string name, std::string type);

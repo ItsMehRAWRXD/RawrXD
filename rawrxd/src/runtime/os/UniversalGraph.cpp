@@ -9,6 +9,8 @@
 #include <iomanip>
 
 namespace rawrxd::graph {
+UniversalGraph::UniversalGraph(UniversalGraph&& other) noexcept { std::lock_guard<std::mutex> lk(other.mutex_); nextNodeId_.store(other.nextNodeId_.load(std::memory_order_relaxed), std::memory_order_relaxed); nextEdgeId_.store(other.nextEdgeId_.load(std::memory_order_relaxed), std::memory_order_relaxed); nodes_ = std::move(other.nodes_); edges_ = std::move(other.edges_); outEdges_ = std::move(other.outEdges_); inEdges_ = std::move(other.inEdges_); } UniversalGraph& UniversalGraph::operator=(UniversalGraph&& other) noexcept { if (this != &other) { std::lock_guard<std::mutex> lk1(mutex_); std::lock_guard<std::mutex> lk2(other.mutex_); nextNodeId_.store(other.nextNodeId_.load(std::memory_order_relaxed), std::memory_order_relaxed); nextEdgeId_.store(other.nextEdgeId_.load(std::memory_order_relaxed), std::memory_order_relaxed); nodes_ = std::move(other.nodes_); edges_ = std::move(other.edges_); outEdges_ = std::move(other.outEdges_); inEdges_ = std::move(other.inEdges_); } return *this; }
+
 
 // ---------------------------------------------------------------------------
 // Node operations
