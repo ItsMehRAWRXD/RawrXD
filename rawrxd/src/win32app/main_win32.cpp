@@ -1546,6 +1546,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                     g_startupOptions.modelPath = u8;
                 }
             }
+            else if (arg.rfind(L"--model=", 0) == 0) {
+                // --model=path syntax (no space)
+                std::wstring val = arg.substr(8);
+                int len = WideCharToMultiByte(CP_UTF8, 0, val.c_str(), -1, nullptr, 0, nullptr, nullptr);
+                if (len > 0) {
+                    std::string u8(static_cast<size_t>(len), '\0');
+                    WideCharToMultiByte(CP_UTF8, 0, val.c_str(), -1, &u8[0], len, nullptr, nullptr);
+                    while (!u8.empty() && u8.back() == '\0') u8.pop_back();
+                    g_startupOptions.modelPath = u8;
+                }
+            }
             else if (arg == L"--chat-exit-on-done") {
                 g_startupOptions.chatExitOnDone = true;
             }
