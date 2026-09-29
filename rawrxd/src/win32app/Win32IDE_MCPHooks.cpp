@@ -331,10 +331,35 @@ void MCPBridgeManager::RegisterMethodHandler(const std::string& method, std::fun
     LeaveCriticalSection(&m_cs);
 }
 
-// Trampoline stubs (would be replaced by generated assembly trampolines in a real hook engine)
-static void HookTrampolineReadMessage() {}
-static void HookTrampolineWriteMessage() {}
-static void HookTrampolineSocketData() {}
-static void HookTrampolineWebSocket() {}
+// Trampoline stubs — log hook installation for diagnostics.
+// In a full hook engine these would generate assembly trampolines that
+// call the original function after recording the interception.
+static void HookTrampolineReadMessage() {
+    auto& mgr = MCPBridgeManager::GetInstance();
+    mgr.RegisterMethodHandler("read_message", [](const MCPMessage& msg) {
+        (void)msg; // interception logged in OnReadMessage
+    });
+}
+
+static void HookTrampolineWriteMessage() {
+    auto& mgr = MCPBridgeManager::GetInstance();
+    mgr.RegisterMethodHandler("write_message", [](const MCPMessage& msg) {
+        (void)msg; // interception logged in OnWriteMessage
+    });
+}
+
+static void HookTrampolineSocketData() {
+    auto& mgr = MCPBridgeManager::GetInstance();
+    mgr.RegisterMethodHandler("socket_data", [](const MCPMessage& msg) {
+        (void)msg; // interception logged in OnSocketData
+    });
+}
+
+static void HookTrampolineWebSocket() {
+    auto& mgr = MCPBridgeManager::GetInstance();
+    mgr.RegisterMethodHandler("websocket_frame", [](const MCPMessage& msg) {
+        (void)msg; // interception logged in OnWebSocketFrame
+    });
+}
 
 } // namespace RawrXD

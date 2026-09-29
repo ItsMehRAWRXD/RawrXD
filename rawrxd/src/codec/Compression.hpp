@@ -87,6 +87,10 @@ public:
     CompressionResult LZ4Compress(std::span<const uint8_t> input, int acceleration = 1);
     CompressionResult LZ4Decompress(std::span<const uint8_t> input, size_t original_size);
 
+    // ZSTD helpers (stored-raw fallback when no zstd library is linked)
+    CompressionResult ZstdCompress(std::span<const uint8_t> input, int level = 3);
+    CompressionResult ZstdDecompress(std::span<const uint8_t> input, size_t expected_original_size);
+
     // Streaming interface (placeholder for future)
     struct StreamContext;
     std::unique_ptr<StreamContext> CreateStreamCompressor(CompressionCodec codec);

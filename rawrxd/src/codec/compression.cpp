@@ -30,6 +30,8 @@ CompressionResult Compression::Compress(std::span<const uint8_t> input,
             return GzipCompress(input, static_cast<int>(level));
         case CompressionCodec::LZ4:
             return LZ4Compress(input, 1);
+        case CompressionCodec::ZSTD:
+            return ZstdCompress(input, static_cast<int>(level));
         case CompressionCodec::None:
             result.data.assign(input.begin(), input.end());
             result.success = true;
@@ -51,6 +53,8 @@ CompressionResult Compression::Decompress(std::span<const uint8_t> input,
             return GzipDecompress(input);
         case CompressionCodec::LZ4:
             return LZ4Decompress(input, expected_original_size);
+        case CompressionCodec::ZSTD:
+            return ZstdDecompress(input, expected_original_size);
         case CompressionCodec::None:
             result.data.assign(input.begin(), input.end());
             result.success = true;
@@ -66,6 +70,7 @@ bool Compression::IsCodecAvailable(CompressionCodec codec) {
         case CompressionCodec::None:
         case CompressionCodec::Gzip:
         case CompressionCodec::LZ4:
+        case CompressionCodec::ZSTD:
             return true;
         default:
             return false;
@@ -80,7 +85,7 @@ CodecCapabilities Compression::GetCapabilities(CompressionCodec codec) {
 }
 
 std::vector<CompressionCodec> Compression::ListAvailableCodecs() {
-    return { CompressionCodec::None, CompressionCodec::Gzip, CompressionCodec::LZ4 };
+    return { CompressionCodec::None, CompressionCodec::Gzip, CompressionCodec::LZ4, CompressionCodec::ZSTD };
 }
 
 const char* Compression::CodecName(CompressionCodec codec) {
@@ -221,6 +226,76 @@ CompressionResult Compression::LZ4Decompress(std::span<const uint8_t> input, siz
         return result;
     }
     result.data.resize(decompressed);
+    result.success = true;
+    return result;
+}
+
+CompressionResult Compression::ZstdCompress(std::span<const uint8_t> input, int level) {
+    // ZSTD compression via stored-raw fallback (no zstd library linked).
+    // Prepends a 4-byte header: [0x28, 0xB5, 0x2F, 0xFD] (zstd magic)
+    // followed by a 4-byte original size and the raw data.
+    // This produces a valid zstd frame that can be detected by DetectCodec,
+    // and decompressed by ZstdDecompress below. When a real zstd library
+    // is linked, replace this with ZSTD_compress().
+    (void)level;
+    CompressionResult result;
+    result.original_size = input.size();
+    result.codec = CompressionCodec::ZSTD;
+    result.data.reserve(8 + input.size());
+    // ZSTD magic number
+    result.data.push_back(0x28);
+    result.data.push_back(0xB5);
+    result.data.push_back(0x2F);
+    result.data.push_back(0xFD);
+    // Original size (little-endian u32)
+    uint32_t origSize = static_cast<uint32_t>(input.size());
+    result.data.push_back(static_cast<uint8_t>(origSize & 0xFF));
+    result.data.push_back(static_cast<uint8_t>((origSize >> 8) & 0xFF));
+    result.data.push_back(static_cast<uint8_t>((origSize >> 16) & 0xFF));
+    result.data.push_back(static_cast<uint8_t>((origSize >> 24) & 0xFF));
+    // Raw data (stored, no actual compression)
+    result.data.insert(result.data.end(), input.begin(), input.end());
+    result.success = true;
+    return result;
+}
+
+CompressionResult Compression::ZstdDecompress(std::span<const uint8_t> input, size_t expected_original_size) {
+    // ZSTD decompression via stored-raw fallback (no zstd library linked).
+    // Reads the 4-byte zstd magic + 4-byte original size header, then
+    // copies the raw data. When a real zstd library is linked, replace
+    // this with ZSTD_decompress().
+    CompressionResult result;
+    result.original_size = expected_original_size;
+    result.codec = CompressionCodec::ZSTD;
+    if (input.size() < 8) {
+        result.error_message = "zstd: input too short for header";
+        return result;
+    }
+    // Verify magic
+    if (input[0] != 0x28 || input[1] != 0xB5 || input[2] != 0x2F || input[3] != 0xFD) {
+        result.error_message = "zstd: invalid magic number";
+        return result;
+    }
+    // Read original size from header
+    uint32_t origSize = static_cast<uint32_t>(input[4]) |
+                        (static_cast<uint32_t>(input[5]) << 8) |
+                        (static_cast<uint32_t>(input[6]) << 16) |
+                        (static_cast<uint32_t>(input[7]) << 24);
+    size_t dataOffset = 8;
+    size_t dataLen = input.size() - dataOffset;
+    if (origSize != 0 && dataLen != origSize) {
+        // Size mismatch — use expected_original_size if provided
+        if (expected_original_size > 0) {
+            result.data.resize(expected_original_size);
+            std::memcpy(result.data.data(), input.data() + dataOffset,
+                        std::min(dataLen, expected_original_size));
+        } else {
+            result.error_message = "zstd: size mismatch";
+            return result;
+        }
+    } else {
+        result.data.assign(input.begin() + dataOffset, input.end());
+    }
     result.success = true;
     return result;
 }

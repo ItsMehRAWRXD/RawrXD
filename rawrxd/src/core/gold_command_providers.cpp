@@ -11,6 +11,13 @@
 #include <functional>
 #include <any>
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
+
 // Include nlohmann::json properly
 #include <nlohmann/json.hpp>
 
@@ -223,8 +230,17 @@ SignatureResult UpdateSignatureVerifier::verifyAuthenticode(const wchar_t*) { re
 
 // ASM dispatch bridge stubs
 extern "C" {
-    void BeaconSend() {}
-    void RunInference() {}
+    void BeaconSend() {
+        // Emit a debug beacon pulse via OutputDebugString for live diagnostics.
+        // This is the C fallback for the MASM RawrXD_BeaconSend.asm kernel.
+        OutputDebugStringA("[RawrXD] BeaconSend: dispatch beacon pulse\n");
+    }
+    void RunInference() {
+        // C fallback for the MASM RawrXD_RunInference.asm kernel.
+        // In the Gold build (no Deep2 linked), this logs the dispatch attempt.
+        // The real inference path goes through Deep2Engine::generateStream.
+        OutputDebugStringA("[RawrXD] RunInference: dispatch requested (Gold fallback)\n");
+    }
 
     // These asm_* symbols have REAL implementations in the
     // unlinked_symbols_batch_*.cpp TUs (state + validation, not no-ops).

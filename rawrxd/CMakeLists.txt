@@ -6911,11 +6911,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # a stale handle, indexer, or crashed link left the binary busy +�-�+�-�+�-� harmless if files are absent).
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     # Use CMake-native removal to avoid shell quoting issues in generated link commands.
+    # PRE_LINK: remove only the prior exe (not the pdb — the pdb is regenerated
+    # during compile and may be locked by MSBuild's own PDB writer, causing
+    # spurious "File can't be removed" failures that block the link).
     if(MSVC)
         add_custom_command(TARGET RawrXD-Win32IDE PRE_LINK
-            COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE:RawrXD-Win32IDE>" "$<TARGET_PDB_FILE:RawrXD-Win32IDE>"
-            COMMENT "RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked"
-            VERBATIM
+            COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE:RawrXD-Win32IDE>"
+            COMMENT "RawrXD-Win32IDE: PRE_LINK clear prior exe"
         )
     endif()
 
@@ -6974,7 +6976,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # HOST_DECODE still forced when GPU/ICD unsafe (ProductStreamerPrep).
         target_link_options(RawrXD-Win32IDE PRIVATE
             /LARGEADDRESSAWARE
-            /DEBUG:FULL
+            /DEBUG:FASTLINK
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO

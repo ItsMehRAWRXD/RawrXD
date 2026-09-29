@@ -76,6 +76,8 @@ struct StartupOptions {
     float    chatTopP = 0.95f;        // --chat-top-p=F
     uint32_t chatTopK = 40;           // --chat-top-k=N
     bool     chatGreedy = false;      // --chat-greedy
+    uint64_t chatSeed = 0;            // --chat-seed=N (determinism gate)
+    std::string chatParityProbePath; // --chat-parity-probe=FILE (differential gate)
 };
 
 static StartupOptions g_startupOptions;
@@ -237,6 +239,7 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
     r += std::string("TOP_P=") + std::to_string(g_startupOptions.chatTopP) + "\r\n";
     r += std::string("TOP_K=") + std::to_string(g_startupOptions.chatTopK) + "\r\n";
     r += std::string("GREEDY=") + (g_startupOptions.chatGreedy ? "1" : "0") + "\r\n";
+    r += std::string("SEED=") + std::to_string(g_startupOptions.chatSeed) + "\r\n";
     r += "STREAMING_CALLBACK=PASS\r\n";
     r += std::string("STREAMED_TOKEN_COUNT=") + std::to_string(tel.tokenCount) + "\r\n";
     r += std::string("RENDERED_CHAR_COUNT=") + std::to_string(tel.streamedText.size()) + "\r\n";
@@ -274,7 +277,7 @@ static void chatWorkerThread(std::string prompt) {
     opts.temperature = g_startupOptions.chatTemperature;
     opts.topP        = g_startupOptions.chatTopP;
     opts.topK        = g_startupOptions.chatTopK;
-    opts.seed        = 0;
+    opts.seed        = g_startupOptions.chatSeed;
     if (g_startupOptions.chatGreedy) {
         // Greedy decode: the deterministic reference for judging whether the
         // engine's logits or the sampler is at fault.
@@ -282,9 +285,10 @@ static void chatWorkerThread(std::string prompt) {
         opts.topP = 1.0f;
         opts.topK = 1;
     }
-    opts.temperature = 0.8f;
-    opts.topP = 0.95f;
-    opts.topK = 40;
+    // NOTE: the previous hardcoded overrides (temperature=0.8 / topP=0.95 /
+    // topK=40) were removed — they silently destroyed the --chat-greedy and
+    // --chat-temperature/topP/topK flags, making the differential test
+    // impossible. The CLI flags now reach the engine unmodified.
 
     ChatRunTelemetry tel;
     tel.modelPath = g_chatModelPath;
@@ -373,7 +377,11 @@ static bool initChatEngine(const std::string& modelPath) {
 
     Deep2::EngineConfig config;
     config.maxSeqLen = 4096;
-    config.numThreads = 0;  // auto
+    // PROBE_COVERAGE_001: when a parity probe is active, force single-thread
+    // to match the oracle's deterministic config (numThreads=1). Multi-threaded
+    // parallel reductions introduce floating-point non-associativity that
+    // confounds the differential comparison.
+    config.numThreads = g_startupOptions.chatParityProbePath.empty() ? 0 : 1;
 
     if (!g_chatEngine->initialize(config)) {
         g_chatEngineStatus = "Deep2Engine::initialize failed";
@@ -398,6 +406,25 @@ static bool initChatEngine(const std::string& modelPath) {
 
     g_chatModelPath = modelPath;
     g_chatEngineStatus = "loaded";
+
+    // Differential gate: enable the parity probe if --chat-parity-probe=FILE
+    // was given. Emits the same checkpoint trace that the certified CPU oracle
+    // produces, so the two paths can be diffed checkpoint by checkpoint to
+    // localize the first divergence.
+    //
+    // PROBE_COVERAGE_001: to make the differential conclusive, the IDE lane
+    // must match the oracle's deterministic config when a parity probe is
+    // active: (a) force CPU-only (no Vulkan), (b) single-thread, (c) full
+    // per-layer checkpoint emission. Without this, config differences
+    // (thread count, GPU offload) confound the comparison.
+    if (!g_startupOptions.chatParityProbePath.empty()) {
+        g_chatEngine->enableVulkan(false);  // CPU-only: match oracle lane
+        g_chatEngine->enableParityProbe(g_startupOptions.chatParityProbePath.c_str(), 0);
+        // Enable full-vector dumps for layer 0 (matches oracle's
+        // enableParityProbeFullVectors(0) for external Q/K/V verification).
+        g_chatEngine->enableParityProbeFullVectors(0);
+    }
+
     return true;
 }
 
@@ -1281,6 +1308,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             else if (arg == L"--chat-greedy") {
                 g_startupOptions.chatGreedy = true;
             }
+            else if (arg == L"--chat-seed" && i + 1 < argc) {
+                g_startupOptions.chatSeed =
+                    static_cast<uint64_t>(std::wcstoull(argv[++i], nullptr, 10));
+            }
             else if (arg == L"--chat-temperature" && i + 1 < argc) {
                 g_startupOptions.chatTemperature =
                     static_cast<float>(std::wcstod(argv[++i], nullptr));
@@ -1292,6 +1323,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             else if (arg == L"--chat-top-k" && i + 1 < argc) {
                 g_startupOptions.chatTopK =
                     static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
+            }
+            else if (arg == L"--chat-seed" && i + 1 < argc) {
+                g_startupOptions.chatSeed =
+                    std::wcstoull(argv[++i], nullptr, 10);
+            }
+            else if ((arg == L"--chat-parity-probe" || arg == L"--chat-parity-probe=") && i + 1 < argc) {
+                int len = WideCharToMultiByte(CP_UTF8, 0, argv[++i], -1, nullptr, 0, nullptr, nullptr);
+                if (len > 0) {
+                    std::string u8(static_cast<size_t>(len), '\0');
+                    WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, &u8[0], len, nullptr, nullptr);
+                    while (!u8.empty() && u8.back() == '\0') u8.pop_back();
+                    g_startupOptions.chatParityProbePath = u8;
+                }
             }
             else if ((arg == L"--chat-prompt" || arg == L"--chat-prompt=") && i + 1 < argc) {
                 int len = WideCharToMultiByte(CP_UTF8, 0, argv[++i], -1, nullptr, 0, nullptr, nullptr);
