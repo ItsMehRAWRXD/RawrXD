@@ -151,6 +151,11 @@ struct ChatRunTelemetry {
     std::string failureDetail;
     bool        cancelled    = false;
     bool        completed    = false;
+    // Actual sampler values (after greedy override) for receipt accuracy
+    float       actualTemperature = 0.8f;
+    float       actualTopP        = 0.95f;
+    uint32_t    actualTopK        = 40;
+    uint64_t    actualSeed        = 0;
 };
 
 static ChatRunTelemetry g_chatTelemetry;
@@ -235,9 +240,9 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
     r += std::string("MODEL_PATH=") + tel.modelPath + "\r\n";
     r += std::string("PROMPT=") + tel.prompt + "\r\n";
     r += std::string("PROMPT_TOKEN_COUNT=") + std::to_string(tel.promptTokens) + "\r\n";
-    r += std::string("TEMPERATURE=") + std::to_string(g_startupOptions.chatTemperature) + "\r\n";
-    r += std::string("TOP_P=") + std::to_string(g_startupOptions.chatTopP) + "\r\n";
-    r += std::string("TOP_K=") + std::to_string(g_startupOptions.chatTopK) + "\r\n";
+    r += std::string("TEMPERATURE=") + std::to_string(tel.actualTemperature) + "\r\n";
+    r += std::string("TOP_P=") + std::to_string(tel.actualTopP) + "\r\n";
+    r += std::string("TOP_K=") + std::to_string(tel.actualTopK) + "\r\n";
     r += std::string("GREEDY=") + (g_startupOptions.chatGreedy ? "1" : "0") + "\r\n";
     r += std::string("SEED=") + std::to_string(g_startupOptions.chatSeed) + "\r\n";
     r += "STREAMING_CALLBACK=PASS\r\n";
@@ -339,6 +344,10 @@ static void chatWorkerThread(std::string prompt) {
     tel.failureDetail= result.failureDetail;
     tel.cancelled    = result.cancelled;
     tel.completed    = result.completed;
+    tel.actualTemperature = opts.temperature;
+    tel.actualTopP        = opts.topP;
+    tel.actualTopK        = opts.topK;
+    tel.actualSeed        = opts.seed;
 
     g_chatTelemetry = tel;
 
@@ -1261,26 +1270,17 @@ static int runAutorunGate(AutoRunMode mode)
 // ---------------------------------------------------------------------------
 // Entry Point
 // ---------------------------------------------------------------------------
-// D-W6-002: SEH wrapper for engine cleanup. Access violations during the
-// Deep2Engine destructor chain (stale handles after window destruction) are
-// caught here so the process can exit cleanly with the generation receipt
-// intact. C++ try/catch cannot catch SEH exceptions (0xC0000005).
-static void SafeCleanupChatEngine() {
-    g_chatCancelled = true;
-    if (g_chatThread.joinable()) g_chatThread.join();
-    if (g_chatEngine) {
-        __try {
-            g_chatEngine->unloadModel();
-            g_chatEngine.reset();
-        } __except (EXCEPTION_EXECUTE_HANDLER) {
-            // Engine destructor accessed a stale resource after window
-            // destruction. The generation receipt is already written;
-            // suppress to allow a clean exit.
-        }
-    }
-}
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    // D-W6-003: catch access violations during post-generation shutdown.
+    SetUnhandledExceptionFilter([](LPEXCEPTION_POINTERS ep) -> LONG {
+        if (ep && ep->ExceptionRecord &&
+            ep->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
+            return EXCEPTION_EXECUTE_HANDLER;
+        }
+        return EXCEPTION_CONTINUE_SEARCH;
+    });
+
     (void)hPrevInstance;
 
     // RAWRXD_AUTOCLOSURE_001 — bounded autonomous CLI path before GUI startup.
@@ -1503,8 +1503,30 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     if (hAccel) DestroyAcceleratorTable(hAccel);
 
-    // D-W6-001/D-W6-002: clean up chat engine after message loop via SEH wrapper.
-    SafeCleanupChatEngine();
+    // D-W6-001: clean up chat engine AFTER the message loop exits, on the
+    // WinMain stack frame (not inside WM_DESTROY's window-procedure call).
+    // This prevents the STATUS_STACK_OVERFLOW that occurred when the 111+
+    // STL member destructor chain of Deep2Engine ran inside DispatchMessage.
+    // D-W6-002: wrap in try/catch — the engine destructor may touch resources
+    // (telemetry, parity probe file handles) that reference the now-destroyed
+    // window. The generation receipt is already written; a crash here must not
+    // affect the exit code.
+    g_chatCancelled = true;
+    if (g_chatThread.joinable()) g_chatThread.join();
+    if (g_chatEngine) {
+        try {
+            g_chatEngine->unloadModel();
+        } catch (...) {
+            // unloadModel may throw if internal state references freed memory;
+            // the engine is being destroyed anyway.
+        }
+        try {
+            g_chatEngine.reset();
+        } catch (...) {
+            // Destructor chain may access stale handles; suppress to allow
+            // a clean process exit with the generation receipt intact.
+        }
+    }
 
     closeHeadlessLog();
     return (int)msg.wParam;
