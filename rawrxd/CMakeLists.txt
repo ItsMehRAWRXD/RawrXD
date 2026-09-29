@@ -228,8 +228,11 @@ if(MSVC)
 else()
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-O3>)
 endif()
-# Keep LTCG globally, but avoid executable-only/defaultlib overrides here.
-# /NODEFAULTLIB + /ENTRY + /SUBSYSTEM must not leak into DLL targets.
+# LTCG disabled for the Win32IDE target: with ~400 TUs the link-time code
+# generation phase ("Generating Code...") consumes excessive memory and
+# time, causing the linker to fail (LNK1201) or the build process to be
+# killed. The global /LTCG is kept for libraries; the Win32IDE executable
+# overrides it with /LTCG:OFF in target_link_options below.
 if(MSVC)
     add_link_options(/LTCG)
 endif()
@@ -6977,6 +6980,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         target_link_options(RawrXD-Win32IDE PRIVATE
             /LARGEADDRESSAWARE
             /DEBUG:FASTLINK
+            /LTCG:OFF
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO

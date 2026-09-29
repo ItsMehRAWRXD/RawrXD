@@ -1,0 +1,12 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  RawrXD-ModelAnalysisLib.vcxproj -> F:\~dev\rawrxd\build_w1\Release\RawrXD-ModelAnalysisLib.lib
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
+  RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_w1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
+  RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\RawrXD_MultiWindow_Kernel.dll
+  rguf.vcxproj -> F:\~dev\rawrxd\build_w1\rguf_source\Release\rguf.lib
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_w1\Release\InferenceEngine.lib
+  RawrXD-Win32IDE: PRE_LINK clear prior exe
+     Creating library F:/~dev/rawrxd/build_w1/Release/RawrXD-Win32IDE.lib and object F:/~dev/rawrxd/build_w1/Release/RawrXD-Win32IDE.exp
+  LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+LINK : fatal error LNK1201: error writing to program database 'F:\~dev\rawrxd\build_w1\bin\Release\RawrXD-Win32IDE.pdb'; check for insufficient disk space, invalid path, or insufficient privilege [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]

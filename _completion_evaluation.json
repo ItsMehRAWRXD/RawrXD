@@ -1,0 +1,51 @@
+{
+  "overall": 40.2,
+  "subsystems": {
+    "Inference": 65.5,
+    "GPU": 67.9,
+    "GenerationCore": 24.8,
+    "ModelAdapter": 47.4,
+    "AgentRuntime": 37.3,
+    "BuildToolchain": 26.6,
+    "IDE": 31.9,
+    "Quality": 29.3,
+    "Runtime": 38.7,
+    "BeaconismUniversalKernel": 16.0,
+    "CEO Entry Compatibility": 30.2
+  },
+  "baselines": {
+    "Cursor (shipping AI IDE)": {
+      "Inference": 75,
+      "GPU": 5,
+      "GenerationCore": 40,
+      "ModelAdapter": 60,
+      "AgentRuntime": 65,
+      "BuildToolchain": 10,
+      "IDE": 85,
+      "Quality": 45,
+      "Runtime": 50,
+      "BeaconismUniversalKernel": 5,
+      "CEO Entry Compatibility": 50
+    },
+    "Fully Complete (architectural vision)": {
+      "Inference": 98,
+      "GPU": 98,
+      "GenerationCore": 98,
+      "ModelAdapter": 95,
+      "AgentRuntime": 95,
+      "BuildToolchain": 95,
+      "IDE": 95,
+      "Quality": 95,
+      "Runtime": 95,
+      "BeaconismUniversalKernel": 98,
+      "CEO Entry Compatibility": 98
+    }
+  },
+  "source_files": {
+    "total": 2363,
+    "stub": 363,
+    "real": 2000
+  },
+  "exe_on_disk": false,
+  "receipts_found": 39
+}

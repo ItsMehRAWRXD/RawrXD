@@ -287,3 +287,41 @@ Dedupe final leg this wave:
   compatibility notes (signatures intentionally diverge; canonical contract
   documented in rawrxd_subsystem_api.cpp).
 - Remaining LNK4204 warnings are PDB-debug-info cosmetics on stripped TUs.
+
+## W3 Final — /FORCE:MULTIPLE Removed, Strict Link Certified (2026-09-28 21:05)
+
+```
+GATE=RAWRXD_WIN32IDE_REAL_LINK_001
+GATE=RAWRXD_STUB_FREE_BUILD_001 (partial → near-complete)
+
+CONFIGURE=PASS (reconfigure clean, strict lane)
+COMPILE=PASS  (0 C-errors)
+LINK=PASS      (0 unresolved, 0 LNK4006, 0 LNK4088)
+FORCE_USED=NO  (no /FORCE in link command — first time since N2)
+LAUNCH=PASS    (pid alive 6s, HexMag MASM backend)
+
+EXE_BYTES=20359168
+BUILD_LOG=_w1_build24.txt (BUILD_EXIT=0)
+COMMIT=c153c4f71
+
+STRICT_LANE=HELD
+  RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF
+  RAWRXD_BUILD_LEGACY_CERTS=OFF
+
+VERDICT=PASS
+```
+
+### Full dedupe arc
+- 91 unresolved → 0 (W3 wiring: embedding/vision/RE/agent TUs)
+- 141 LNK4006 → 67 (74 empty stubs removed that won /FORCE over real bodies)
+- 67 LNK4006 → 0 (real-vs-real ODR resolved: omega_asm_native_kernel excluded,
+  16 *Mode stubs removed, 10 SO_* signature mismatches fixed, 11 win32ide_asm
+  dupes removed, AppendANSIToRichEdit deduped)
+- /FORCE:MULTIPLE removed from target_link_options (strict link, no overrides)
+
+### What remains (not link blockers)
+- LNK4204: pdb missing debug info for DiskRecoveryAgent/vulkan_compute (cosmetic,
+  those TUs have stripped debug info)
+- BUILD-003 stub-free: inference_link_production asm_selfhost_* are fake-return
+  stubs (return 1/return nullptr) — UNIQUE providers, not duplicates. These are
+  genuine stub implementations needing real bodies (separate work item).

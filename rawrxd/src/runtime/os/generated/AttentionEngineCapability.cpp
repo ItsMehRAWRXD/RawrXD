@@ -1,0 +1,77 @@
+// ============================================================================
+// AttentionEngineCapability.cpp — Generated capability implementation
+// ============================================================================
+#include "AttentionEngineCapability.hpp"
+#include "../RuntimeCapabilityIds.hpp"
+
+namespace rawrxd::generation {
+
+rawrxd::runtime::CapabilityId AttentionEngineCapability::id() const noexcept {
+    return rawrxd::runtime::CapabilityIds::CAPID_GENERATION_ATTENTIONENGINE;
+}
+
+std::string_view AttentionEngineCapability::name() const noexcept {
+    return "AttentionEngine";
+}
+
+bool AttentionEngineCapability::discover(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written discover logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Discovered;
+    return true;
+}
+
+bool AttentionEngineCapability::admit(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written admit logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Admitted;
+    return true;
+}
+
+bool AttentionEngineCapability::initialize(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written initialize logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Initialized;
+    return true;
+}
+
+bool AttentionEngineCapability::execute(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written execute logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Running;
+    return true;
+}
+
+bool AttentionEngineCapability::observe(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written observe logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Ready;
+    return true;
+}
+
+bool AttentionEngineCapability::verify(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written verify logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Ready;
+    return true;
+}
+
+bool AttentionEngineCapability::commit(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written commit logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Ready;
+    return true;
+}
+
+bool AttentionEngineCapability::persist(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written persist logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Ready;
+    return true;
+}
+
+bool AttentionEngineCapability::recover(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written recover logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Ready;
+    return true;
+}
+
+bool AttentionEngineCapability::shutdown(rawrxd::runtime::CapabilityContext& ctx) {
+    // TODO: hand-written shutdown logic for AttentionEngine
+    state_ = rawrxd::runtime::CapabilityState::Shutdown;
+    return true;
+}
+
+} // namespace rawrxd::generation

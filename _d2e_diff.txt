@@ -1,0 +1,33 @@
+diff --git a/rawrxd/src/deep2/Deep2Engine.cpp b/rawrxd/src/deep2/Deep2Engine.cpp
+index da5f0be6a..b65f5a86b 100644
+--- a/rawrxd/src/deep2/Deep2Engine.cpp
++++ b/rawrxd/src/deep2/Deep2Engine.cpp
+@@ -2781,10 +2781,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
+             }
+             scores[t] = static_cast<float>(dot) * scale;
+         }
++        parityEmit(ParityCheckpoint::AttnScores, scores.data(), attend);
+         parityEmitLayer(static_cast<int>(layer), "ATTN_SCORES",
+                         scores.data(), attend);
+ 
+         softmax(scores.data(), scores.size());
++        parityEmit(ParityCheckpoint::AttnProbs, scores.data(), attend);
+         parityEmitLayer(static_cast<int>(layer), "ATTN_PROBS",
+                         scores.data(), attend);
+ 
+@@ -2798,6 +2800,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
+             }
+         }
+     }
++    parityEmit(ParityCheckpoint::AttnValue, attnValue.data(), qDim);
+     parityEmitLayer(static_cast<int>(layer), "ATTN_VALUE",
+                     attnValue.data(), qDim);
+ 
+@@ -2816,6 +2819,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
+         throw std::runtime_error("attention: invalid output projection geometry");
+     }
+     LinearW(*outWeight, attnValue.data(), nullptr, output, H);
++    parityEmit(ParityCheckpoint::OProj, output, H);
+     parityEmitLayer(static_cast<int>(layer), "O_PROJ", output, H);
+ 
+     if (!finiteVector(output, H)) {

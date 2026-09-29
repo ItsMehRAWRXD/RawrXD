@@ -1,0 +1,354 @@
+# Runtime Capability Manifest
+# Each entry generates a RuntimeCapability subclass with the uniform
+# 10-phase lifecycle (discover/admit/initialize/execute/observe/verify/
+# commit/persist/recover/shutdown).
+#
+# Domain-specific behavior is handwritten in the .cpp files AFTER generation.
+# The generator only emits: declarations, registration, factory, IDs, CMake.
+#
+# Format:
+#   - name: ClassName
+#     ns: namespace (rawrxd::runtime | rawrxd::kernel | rawrxd::generation | rawrxd::certification)
+#     id: numeric ID (auto-assigned if omitted)
+#     category: inference|gpu|agent|build|ide|tool|model|quality|runtime|platform|kernel|cert|gen
+
+capabilities:
+  # === Core build capabilities (rawrxd::runtime) ===
+  - { name: CompilerCapability,           ns: rawrxd::runtime, category: build }
+  - { name: LinkerCapability,             ns: rawrxd::runtime, category: build }
+  - { name: BuilderCapability,            ns: rawrxd::runtime, category: build }
+  - { name: LoaderCapability,             ns: rawrxd::runtime, category: build }
+  - { name: PackageCapability,            ns: rawrxd::runtime, category: build }
+  - { name: GenerationCapability,         ns: rawrxd::runtime, category: gen }
+  - { name: DebuggerCapability,           ns: rawrxd::runtime, category: ide }
+  - { name: ProfilerCapability,           ns: rawrxd::runtime, category: ide }
+  - { name: AssemblerCapability,          ns: rawrxd::runtime, category: build }
+  - { name: OptimizerCapability,          ns: rawrxd::runtime, category: build }
+  - { name: EmitterCapability,            ns: rawrxd::runtime, category: build }
+  - { name: SelfHostCapability,           ns: rawrxd::runtime, category: build }
+  - { name: ParserCapability,             ns: rawrxd::runtime, category: build }
+  - { name: LexerCapability,              ns: rawrxd::runtime, category: build }
+  - { name: SemanticCapability,           ns: rawrxd::runtime, category: build }
+  - { name: IRCapability,                 ns: rawrxd::runtime, category: build }
+  - { name: SSACapability,                ns: rawrxd::runtime, category: build }
+  - { name: CodeGenCapability,            ns: rawrxd::runtime, category: build }
+
+  # === OS platform services (rawrxd::runtime) ===
+  - { name: ClockCapability,              ns: rawrxd::runtime, category: platform }
+  - { name: TimerCapability,              ns: rawrxd::runtime, category: platform }
+  - { name: EventLoopCapability,          ns: rawrxd::runtime, category: platform }
+  - { name: MessageQueueCapability,       ns: rawrxd::runtime, category: platform }
+  - { name: TaskSchedulerCapability,      ns: rawrxd::runtime, category: platform }
+  - { name: ResourceSchedulerCapability,  ns: rawrxd::runtime, category: platform }
+  - { name: DeviceCapability,             ns: rawrxd::runtime, category: platform }
+  - { name: FilesystemCapability,         ns: rawrxd::runtime, category: platform }
+  - { name: StorageCapability,            ns: rawrxd::runtime, category: platform }
+  - { name: NetworkCapability,            ns: rawrxd::runtime, category: platform }
+  - { name: ConsoleCapability,            ns: rawrxd::runtime, category: platform }
+  - { name: WindowingCapability,          ns: rawrxd::runtime, category: platform }
+  - { name: InputCapability,              ns: rawrxd::runtime, category: platform }
+  - { name: DisplayCapability,            ns: rawrxd::runtime, category: platform }
+  - { name: PowerCapability,              ns: rawrxd::runtime, category: platform }
+  - { name: CrashHandlerCapability,       ns: rawrxd::runtime, category: platform }
+  - { name: ExceptionCapability,          ns: rawrxd::runtime, category: platform }
+  - { name: DiagnosticsCapability,        ns: rawrxd::runtime, category: platform }
+  - { name: HealthCapability,             ns: rawrxd::runtime, category: platform }
+  - { name: TelemetryCapability,          ns: rawrxd::runtime, category: platform }
+  - { name: EvidenceCapability,           ns: rawrxd::runtime, category: runtime }
+  - { name: ReceiptCapability,            ns: rawrxd::runtime, category: runtime }
+  - { name: StateStoreCapability,         ns: rawrxd::runtime, category: runtime }
+  - { name: SnapshotCapability,           ns: rawrxd::runtime, category: runtime }
+  - { name: VersionCapability,            ns: rawrxd::runtime, category: runtime }
+  - { name: ProcessCapability,            ns: rawrxd::runtime, category: platform }
+  - { name: ThreadCapability,             ns: rawrxd::runtime, category: platform }
+  - { name: FiberCapability,              ns: rawrxd::runtime, category: platform }
+  - { name: IPCCapability,                ns: rawrxd::runtime, category: platform }
+  - { name: SecurityCapability,           ns: rawrxd::runtime, category: platform }
+  - { name: ReflectionCapability,         ns: rawrxd::runtime, category: runtime }
+  - { name: MetadataCapability,           ns: rawrxd::runtime, category: runtime }
+  - { name: BootstrapCapability,          ns: rawrxd::runtime, category: runtime }
+  - { name: SelfCertificationCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: RecoveryCapability,           ns: rawrxd::runtime, category: runtime }
+  - { name: AuthorityCapability,          ns: rawrxd::runtime, category: runtime }
+
+  # === Universal registries (rawrxd::runtime) ===
+  - { name: KernelServicesCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: ServiceRegistryCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: ObjectRegistryCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: HandleTableCapability,        ns: rawrxd::runtime, category: runtime }
+  - { name: ObjectFactoryCapability,      ns: rawrxd::runtime, category: runtime }
+  - { name: EntityRegistryCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: RelationshipRegistryCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: ConstraintRegistryCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: TransitionRegistryCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityGraphCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: ExecutionGraphCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: ResourceGraphCapability,      ns: rawrxd::runtime, category: runtime }
+  - { name: StateGraphCapability,         ns: rawrxd::runtime, category: runtime }
+  - { name: AuthorityGraphCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: EvidenceRegistryCapability,   ns: rawrxd::runtime, category: runtime }
+  - { name: ReceiptRegistryCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: SnapshotRegistryCapability,   ns: rawrxd::runtime, category: runtime }
+  - { name: HistoryRegistryCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: AdmissionRegistryCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: DiscoveryRegistryCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: ExecutionRegistryCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: VerificationRegistryCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityDatabaseCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: KnowledgeRegistryCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: GenerationRegistryCapability, ns: rawrxd::runtime, category: gen }
+  - { name: GenerationPipelineCapability, ns: rawrxd::runtime, category: gen }
+  - { name: LifecycleRegistryCapability,  ns: rawrxd::runtime, category: runtime }
+
+  # === Capability lifecycle services (rawrxd::runtime) ===
+  - { name: CapabilityNegotiatorCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityAuthorityCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityAdmissionCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityLifecycleCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityEvidenceCapability,   ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityMetricsCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityHealthCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityPolicyCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilitySnapshotCapability,   ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityReplayCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityCheckpointCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityRollbackCapability,   ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityMigrationCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityReplicationCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilitySynchronizationCapability, ns: rawrxd::runtime, category: runtime }
+
+  # === Capability orchestration (rawrxd::runtime) ===
+  - { name: CapabilityCompositionCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityDiscoveryCapability,   ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityResolverCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilitySchedulerCapability,   ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityDispatcherCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityExecutorCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityResourceMapCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityDependencyGraphCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityStateCapability,       ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityContextCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityDescriptorCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityManifestCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityContractCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityNegotiationGraphCapability, ns: rawrxd::runtime, category: runtime }
+  - { name: CapabilityExecutionGraphCapability, ns: rawrxd::runtime, category: runtime }
+
+  # === Database registries (rawrxd::runtime) ===
+  - { name: InstructionSetCapability,     ns: rawrxd::runtime, category: build }
+  - { name: OpcodeRegistryCapability,     ns: rawrxd::runtime, category: build }
+  - { name: ExecutionEngineCapability,    ns: rawrxd::runtime, category: build }
+  - { name: IRDatabaseCapability,         ns: rawrxd::runtime, category: build }
+  - { name: SymbolDatabaseCapability,     ns: rawrxd::runtime, category: build }
+  - { name: TypeDatabaseCapability,       ns: rawrxd::runtime, category: build }
+  - { name: ModuleDatabaseCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: PackageDatabaseCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: ProjectDatabaseCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: WorkspaceDatabaseCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: SessionDatabaseCapability,    ns: rawrxd::runtime, category: runtime }
+  - { name: CacheManagerCapability,       ns: rawrxd::runtime, category: runtime }
+  - { name: ObjectCacheCapability,        ns: rawrxd::runtime, category: runtime }
+  - { name: StringPoolCapability,         ns: rawrxd::runtime, category: runtime }
+  - { name: HashDatabaseCapability,       ns: rawrxd::runtime, category: runtime }
+  - { name: UUIDRegistryCapability,       ns: rawrxd::runtime, category: runtime }
+  - { name: IdentityManagerCapability,    ns: rawrxd::runtime, category: runtime }
+
+  # === Transaction/delta/determinism (rawrxd::runtime) ===
+  - { name: TransactionEngineCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: CommitLogCapability,          ns: rawrxd::runtime, category: runtime }
+  - { name: DeltaEngineCapability,        ns: rawrxd::runtime, category: runtime }
+  - { name: MergeEngineCapability,        ns: rawrxd::runtime, category: runtime }
+  - { name: ConflictResolverCapability,   ns: rawrxd::runtime, category: runtime }
+  - { name: DeterminismEngineCapability,  ns: rawrxd::runtime, category: runtime }
+  - { name: CertificationEngineCapability, ns: rawrxd::runtime, category: cert }
+  - { name: RealityEngineCapability,      ns: rawrxd::runtime, category: runtime }
+
+  # === Beacon universal services (rawrxd::runtime) ===
+  - { name: BeaconSchedulerCapability,       ns: rawrxd::runtime, category: runtime }
+  - { name: BeaconDispatcherCapability,      ns: rawrxd::runtime, category: runtime }
+  - { name: BeaconResolverCapability,        ns: rawrxd::runtime, category: runtime }
+  - { name: BeaconPlannerCapability,         ns: rawrxd::runtime, category: runtime }
+  - { name: BeaconExecutorCapability,        ns: rawrxd::runtime, category: runtime }
+  - { name: BeaconConsensusCapability,       ns: rawrxd::runtime, category: runtime }
+  - { name: BeaconReplicationCapability,     ns: rawrxd::runtime, category: runtime }
+  - { name: BeaconSynchronizationCapability, ns: rawrxd::runtime, category: runtime }
+
+  # === Kernel convergence layer (rawrxd::kernel) ===
+  - { name: KernelCoreCapability,          ns: rawrxd::kernel, category: kernel }
+  - { name: KernelUniverseCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelTopologyCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelSchedulerCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelDispatcherCapability,    ns: rawrxd::kernel, category: kernel }
+  - { name: KernelExecutorCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelCoordinatorCapability,   ns: rawrxd::kernel, category: kernel }
+  - { name: KernelCompositionCapability,   ns: rawrxd::kernel, category: kernel }
+  - { name: KernelResolverCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelAdmissionCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelNegotiationCapability,   ns: rawrxd::kernel, category: kernel }
+  - { name: KernelObservationCapability,   ns: rawrxd::kernel, category: kernel }
+  - { name: KernelVerificationCapability,  ns: rawrxd::kernel, category: kernel }
+  - { name: KernelPersistenceCapability,   ns: rawrxd::kernel, category: kernel }
+  - { name: KernelLifecycleCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelIdentityCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelGraphCapability,         ns: rawrxd::kernel, category: kernel }
+  - { name: KernelRegistryCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelAuthorityCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelContractsCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelInvariantsCapability,    ns: rawrxd::kernel, category: kernel }
+  - { name: KernelEvidenceCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelPoliciesCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelDecisionsCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelGoalsCapability,         ns: rawrxd::kernel, category: kernel }
+  - { name: KernelPlannerCapability,       ns: rawrxd::kernel, category: kernel }
+  - { name: KernelReasonerCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelKnowledgeCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelMemoryCapability,        ns: rawrxd::kernel, category: kernel }
+  - { name: KernelRealityCapability,       ns: rawrxd::kernel, category: kernel }
+  - { name: KernelCapabilitiesCapability,  ns: rawrxd::kernel, category: kernel }
+  - { name: KernelResourcesCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelExecutionCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelCertificationCapability, ns: rawrxd::kernel, category: kernel }
+  - { name: KernelGenerationCapability,    ns: rawrxd::kernel, category: kernel }
+  - { name: KernelBootstrapCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelManifestCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelDescriptorCapability,    ns: rawrxd::kernel, category: kernel }
+  - { name: KernelMetadataCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelNamespaceCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelTypeSystemCapability,    ns: rawrxd::kernel, category: kernel }
+  - { name: KernelABICapability,           ns: rawrxd::kernel, category: kernel }
+  - { name: KernelLoaderCapability,        ns: rawrxd::kernel, category: kernel }
+  - { name: KernelEmitterCapability,       ns: rawrxd::kernel, category: kernel }
+  - { name: KernelSerializerCapability,    ns: rawrxd::kernel, category: kernel }
+  - { name: KernelDeserializerCapability,  ns: rawrxd::kernel, category: kernel }
+  - { name: KernelMigrationCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelCompatibilityCapability, ns: rawrxd::kernel, category: kernel }
+  - { name: KernelDiagnosticsCapability,   ns: rawrxd::kernel, category: kernel }
+  - { name: KernelProfilerCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelOptimizerCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelHotPatchCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelRecoveryCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelReplayCapability,        ns: rawrxd::kernel, category: kernel }
+  - { name: KernelSnapshotCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelSealCapability,          ns: rawrxd::kernel, category: kernel }
+  - { name: KernelRootCapability,          ns: rawrxd::kernel, category: kernel }
+  - { name: KernelHostCapability,          ns: rawrxd::kernel, category: kernel }
+  - { name: KernelPlatformCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelEnvironmentCapability,   ns: rawrxd::kernel, category: kernel }
+  - { name: KernelConfigurationCapability, ns: rawrxd::kernel, category: kernel }
+  - { name: KernelBootCapability,          ns: rawrxd::kernel, category: kernel }
+  - { name: KernelSessionCapability,       ns: rawrxd::kernel, category: kernel }
+  - { name: KernelWorkspaceCapability,     ns: rawrxd::kernel, category: kernel }
+  - { name: KernelProjectCapability,       ns: rawrxd::kernel, category: kernel }
+  - { name: KernelArtifactCapability,      ns: rawrxd::kernel, category: kernel }
+  - { name: KernelModuleCapability,        ns: rawrxd::kernel, category: kernel }
+  - { name: KernelPackageCapability,       ns: rawrxd::kernel, category: kernel }
+  - { name: KernelImageCapability,         ns: rawrxd::kernel, category: kernel }
+  - { name: KernelProcessCapability,       ns: rawrxd::kernel, category: kernel }
+  - { name: KernelThreadCapability,        ns: rawrxd::kernel, category: kernel }
+  - { name: KernelFiberCapability,         ns: rawrxd::kernel, category: kernel }
+  - { name: KernelDeviceCapability,        ns: rawrxd::kernel, category: kernel }
+  - { name: KernelServiceCapability,       ns: rawrxd::kernel, category: kernel }
+  - { name: KernelRootAuthorityCapability, ns: rawrxd::kernel, category: kernel }
+
+  # === GenerationCore engines (rawrxd::generation) ===
+  - { name: GoalEngineCapability,              ns: rawrxd::generation, category: gen }
+  - { name: DecisionEngineCapability,          ns: rawrxd::generation, category: gen }
+  - { name: EvidenceGraphCapability,           ns: rawrxd::generation, category: gen }
+  - { name: ReasoningGraphCapability,          ns: rawrxd::generation, category: gen }
+  - { name: PlanningGraphCapability,           ns: rawrxd::generation, category: gen }
+  - { name: ContextGraphCapability,            ns: rawrxd::generation, category: gen }
+  - { name: WorldStateGraphCapability,         ns: rawrxd::generation, category: gen }
+  - { name: ConfidenceEngineCapability,        ns: rawrxd::generation, category: gen }
+  - { name: ConsistencyEngineCapability,       ns: rawrxd::generation, category: gen }
+  - { name: QualityEngineCapability,           ns: rawrxd::generation, category: gen }
+  - { name: ConstraintGraphCapability,         ns: rawrxd::generation, category: gen }
+  - { name: CapabilityArbitratorCapability,    ns: rawrxd::generation, category: gen }
+  - { name: GenerationOrchestratorCapability,  ns: rawrxd::generation, category: gen }
+  - { name: RealityGraphCapability,            ns: rawrxd::generation, category: gen }
+  - { name: UniversalCapabilityRegistryCapability, ns: rawrxd::generation, category: gen }
+
+  # === Inference engines (rawrxd::generation) ===
+  - { name: ModelAdmissionEngineCapability,    ns: rawrxd::generation, category: inference }
+  - { name: ModelCapabilityEngineCapability,   ns: rawrxd::generation, category: inference }
+  - { name: ModelTranslationEngineCapability,  ns: rawrxd::generation, category: inference }
+  - { name: InferenceKernelCapability,         ns: rawrxd::generation, category: inference }
+  - { name: InferenceSchedulerCapability,      ns: rawrxd::generation, category: inference }
+  - { name: InferencePlannerCapability,        ns: rawrxd::generation, category: inference }
+  - { name: TensorRegistryCapability,          ns: rawrxd::generation, category: inference }
+  - { name: TensorSchedulerCapability,         ns: rawrxd::generation, category: inference }
+  - { name: TensorMemoryCapability,            ns: rawrxd::generation, category: inference }
+  - { name: OperationRegistryCapability,       ns: rawrxd::generation, category: inference }
+  - { name: OperationSchedulerCapability,      ns: rawrxd::generation, category: inference }
+  - { name: OperationFusionCapability,         ns: rawrxd::generation, category: inference }
+  - { name: GraphOptimizerCapability,          ns: rawrxd::generation, category: inference }
+  - { name: KernelFusionCapability,            ns: rawrxd::generation, category: inference }
+  - { name: AttentionEngineCapability,         ns: rawrxd::generation, category: inference }
+  - { name: MoEEngineCapability,               ns: rawrxd::generation, category: inference }
+  - { name: KVEngineCapability,                ns: rawrxd::generation, category: inference }
+  - { name: TokenizerEngineCapability,         ns: rawrxd::generation, category: inference }
+  - { name: SamplingEngineCapability,          ns: rawrxd::generation, category: inference }
+  - { name: DecodeEngineCapability,            ns: rawrxd::generation, category: inference }
+  - { name: StreamEngineCapability,            ns: rawrxd::generation, category: inference }
+
+  # === Knowledge/learning engines (rawrxd::generation) ===
+  - { name: KnowledgeEngineCapability,         ns: rawrxd::generation, category: gen }
+  - { name: MemoryEngineCapability,            ns: rawrxd::generation, category: gen }
+  - { name: LearningEngineCapability,          ns: rawrxd::generation, category: gen }
+  - { name: SelfImprovementEngineCapability,   ns: rawrxd::generation, category: gen }
+  - { name: ReflectionEngineCapability,        ns: rawrxd::generation, category: gen }
+  - { name: HypothesisEngineCapability,        ns: rawrxd::generation, category: gen }
+  - { name: SimulationEngineCapability,        ns: rawrxd::generation, category: gen }
+  - { name: PredictionEngineCapability,        ns: rawrxd::generation, category: gen }
+  - { name: OptimizationEngineCapability,      ns: rawrxd::generation, category: gen }
+  - { name: CompositionEngineCapability,       ns: rawrxd::generation, category: gen }
+  - { name: AdaptationEngineCapability,        ns: rawrxd::generation, category: gen }
+  - { name: CoordinationEngineCapability,      ns: rawrxd::generation, category: gen }
+  - { name: GenerationKernelCapability,        ns: rawrxd::generation, category: gen }
+  - { name: GenerationAuthorityCapability,     ns: rawrxd::generation, category: gen }
+
+  # === Certification (rawrxd::certification) ===
+  - { name: ExternalOracleRegistryCapability,  ns: rawrxd::certification, category: cert }
+  - { name: OracleSubjectCapability,           ns: rawrxd::certification, category: cert }
+  - { name: OracleEvidenceCapability,          ns: rawrxd::certification, category: cert }
+  - { name: OracleComparisonCapability,        ns: rawrxd::certification, category: cert }
+  - { name: OracleTruthEngineCapability,       ns: rawrxd::certification, category: cert }
+  - { name: OracleIsolationCapability,         ns: rawrxd::certification, category: cert }
+  - { name: OracleDeterminismCapability,       ns: rawrxd::certification, category: cert }
+  - { name: OracleLogitsParityCapability,      ns: rawrxd::certification, category: cert }
+  - { name: OracleHiddenParityCapability,      ns: rawrxd::certification, category: cert }
+  - { name: OracleCheckpointRegistryCapability, ns: rawrxd::certification, category: cert }
+  - { name: OracleReceiptCapability,           ns: rawrxd::certification, category: cert }
+  - { name: CertificationAuthorityCapability,  ns: rawrxd::certification, category: cert }
+  - { name: SubjectFreezeEngineCapability,     ns: rawrxd::certification, category: cert }
+  - { name: SubjectFingerprintCapability,      ns: rawrxd::certification, category: cert }
+  - { name: EvidenceChainCapability,           ns: rawrxd::certification, category: cert }
+  - { name: IndependentProbeCapability,        ns: rawrxd::certification, category: cert }
+  - { name: OracleExecutionCapability,         ns: rawrxd::certification, category: cert }
+  - { name: OracleStateCaptureCapability,      ns: rawrxd::certification, category: cert }
+  - { name: NumericalTruthEngineCapability,    ns: rawrxd::certification, category: cert }
+  - { name: StructuralTruthEngineCapability,   ns: rawrxd::certification, category: cert }
+  - { name: ConstraintTruthEngineCapability,   ns: rawrxd::certification, category: cert }
+  - { name: TruthConsensusEngineCapability,    ns: rawrxd::certification, category: cert }
+  - { name: CertificationLedgerCapability,     ns: rawrxd::certification, category: cert }
+  - { name: ImmutableReceiptCapability,        ns: rawrxd::certification, category: cert }
+  - { name: AuthorityPipelineCapability,       ns: rawrxd::certification, category: cert }
+  - { name: TruthRegistryCapability,           ns: rawrxd::certification, category: cert }
+  - { name: OracleRegistryCapability,          ns: rawrxd::certification, category: cert }
+  - { name: SubjectRegistryCapability,         ns: rawrxd::certification, category: cert }
+  - { name: AuthorityRegistryCapability,       ns: rawrxd::certification, category: cert }
+  - { name: VerdictRegistryCapability,         ns: rawrxd::certification, category: cert }
+  - { name: CertificationKernelCapability,     ns: rawrxd::certification, category: cert }
+
+  # === Generation subject/ledger/replay (rawrxd::generation) ===
+  - { name: GenerationSubjectCapability,       ns: rawrxd::generation, category: gen }
+  - { name: GenerationLedgerCapability,        ns: rawrxd::generation, category: gen }
+  - { name: GenerationReplayCapability,        ns: rawrxd::generation, category: gen }
+  - { name: GenerationArchiveCapability,       ns: rawrxd::generation, category: gen }
+  - { name: GenerationHistoryCapability,       ns: rawrxd::generation, category: gen }
+  - { name: GenerationEvidenceCapability,      ns: rawrxd::generation, category: gen }
+  - { name: GenerationIdentityCapability,      ns: rawrxd::generation, category: gen }
+  - { name: GenerationStateCapability,         ns: rawrxd::generation, category: gen }
+  - { name: GenerationManifestCapability,      ns: rawrxd::generation, category: gen }
+  - { name: GenerationContractCapability,      ns: rawrxd::generation, category: gen }
+  - { name: GenerationAuthorityBoundaryCapability, ns: rawrxd::generation, category: gen }
+  - { name: ProducerBoundaryCapability,        ns: rawrxd::generation, category: gen }

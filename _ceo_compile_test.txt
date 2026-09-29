@@ -1,0 +1,14 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Sync + regenerate SSOT beacon ownership artifacts
+  The argument 'F:/~dev/rawrxd/tools/sync_ssot_beacon_symbols.ps1' to the -File parameter does not exist. Provide the path to an existing '.ps1' file as an argument to the -File parameter.
+  Windows PowerShell
+  Copyright (C) Microsoft Corporation. All rights reserved.
+  
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(254,5): error MSB8066: Custom build for 'F:\~dev\rawrxd\build_w1\CMakeFiles\b769fb38407897b6f90a4669326025c9\regen-ssot-beacons.rule;F:\~dev\rawrxd\CMakeLists.txt' exited with code -196608. [F:\~dev\rawrxd\build_w1\regen-ssot-beacons.vcxproj]
+  Verify SSOT EXT ownership artifacts are consistent
+  Windows PowerShell
+  The argument 'F:/~dev/rawrxd/tools/verify_ssot_ext_ownership.ps1' to the -File parameter does not exist. Provide the path to an existing '.ps1' file as an argument to the -File parameter.
+  Copyright (C) Microsoft Corporation. All rights reserved.
+  
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(254,5): error MSB8066: Custom build for 'F:\~dev\rawrxd\build_w1\CMakeFiles\b769fb38407897b6f90a4669326025c9\verify-ssot-ext-ownership.rule;F:\~dev\rawrxd\CMakeLists.txt' exited with code -196608. [F:\~dev\rawrxd\build_w1\verify-ssot-ext-ownership.vcxproj]

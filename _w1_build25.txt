@@ -2,8 +2,8 @@ MSBuild version 17.14.51+25f168cee for .NET Framework
 
   RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_w1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
   RawrXD-ModelAnalysisLib.vcxproj -> F:\~dev\rawrxd\build_w1\Release\RawrXD-ModelAnalysisLib.lib
-  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
   rguf.vcxproj -> F:\~dev\rawrxd\build_w1\rguf_source\Release\rguf.lib
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
   RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\RawrXD_MultiWindow_Kernel.dll
   InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_w1\Release\InferenceEngine.lib
   main_win32.cpp
@@ -247,4 +247,255 @@ MSBuild version 17.14.51+25f168cee for .NET Framework
   problems_panel_bridge.cpp
   problems_aggregator.cpp
   Generating Code...
-F:\~dev\rawrxd\src\core\deterministic_swarm.cpp(1,1): error C1083: Cannot open compiler generated file: 'F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.dir\Release\deterministic_swarm.obj': Permission denied [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  Compiling...
+  semantic_code_intelligence.cpp
+  enterprise_telemetry_compliance.cpp
+  websocket_hub.cpp
+  omega_orchestrator.cpp
+  omega_asm_native_kernel.cpp
+  mesh_brain.cpp
+  speciator_engine.cpp
+  neural_bridge.cpp
+  self_host_engine.cpp
+  hardware_synthesizer.cpp
+  transcendence_coordinator.cpp
+  integrated_runtime.cpp
+  reasoning_profile.cpp
+  Win32IDE_MCPHooks.cpp
+  crash_containment.cpp
+  patch_rollback_ledger.cpp
+  quant_hysteresis.cpp
+  perf_telemetry.cpp
+  cursor_github_parity_bridge.cpp
+  swarm_reconciliation.cpp
+  Generating Code...
+  Compiling...
+  auto_update_system.cpp
+  knowledge_graph_core.cpp
+  swarm_conflict_resolver.cpp
+  autonomous_debugger.cpp
+  semantic_index.cpp
+  Win32IDE_GitPanel.cpp
+  Win32IDE_SearchPanel.cpp
+  Win32IDE_SettingsGUI.cpp
+  agentic_autonomous_config.cpp
+  enterprise_feature_manager.cpp
+  context_deterioration_hotpatch.cpp
+  feature_registry_panel.cpp
+  autonomous_feature_engine.cpp
+  autonomous_intelligence_orchestrator.cpp
+  ai_model_caller.cpp
+  hybrid_cloud_manager.cpp
+  benchmark_menu_widget.cpp
+  benchmark_runner.cpp
+  Win32IDE_AutoSave.cpp
+  Win32IDE_TerminalSplit.cpp
+  Generating Code...
+  Compiling...
+  AntiPatcher.cpp
+  StreamEngine.cpp
+  Deep2ModelRuntime.cpp
+  local_parity_bridge.cpp
+  json_instantiations.cpp
+  hexmag_ide_link_probe.cpp
+  hexmag_client.cpp
+  cot_fallback_system.cpp
+  agentic_model_streamer_bridge.cpp
+  GpuDecodeEfficiency.cpp
+  AmdGpuPowerBackend.cpp
+  Sampler.cpp
+  Tokenizer.cpp
+  streaming_inference_engine.cpp
+  AgentToolAuthority.cpp
+  Win32IDE_ChatPanel.cpp
+  TensorExecutionRouter.cpp
+  StreamRouterAdapter.cpp
+  TransferScheduler.cpp
+  PredictiveMemoryManager.cpp
+  Generating Code...
+  Compiling...
+  ResidencyTracker.cpp
+  WorkingSetPredictor.cpp
+  CapacityManager.cpp
+  TensorPlacementManager.cpp
+  b014_profiler.cpp
+  Deep2Engine.cpp
+  CycloneScheduler.cpp
+  PlasmaGovernor.cpp
+  ElasticResidencyManager.cpp
+  MARSController.cpp
+  MoERouter.cpp
+  CompressedKVCache.cpp
+  NVMeStream.cpp
+  QuantKernelRegistry.cpp
+  StreamRouter.cpp
+  Deep2ExecutionGraph.cpp
+  ScaleQuality.cpp
+  Deep2Discovery.cpp
+  Deep2Benchmark.cpp
+  Deep2InferenceEndpoint.cpp
+  Generating Code...
+  Compiling...
+  Deep2InferenceGateway.cpp
+  Deep2Integration.cpp
+  Deep2LocalServer.cpp
+  GGUFDiagnostics.cpp
+  mcp_bridge.cpp
+  Deep2GPUBackend.cpp
+  GPUDeviceRegistry.cpp
+  MultiGPUScheduler.cpp
+  VRAMAllocator.cpp
+  deep2_http_gateway.cpp
+  sdma_scheduler.cpp
+  sdma_ring_allocator.cpp
+  workspace_reasoning_profiles.cpp
+  reasoning_schema_versioning.cpp
+  safe_refactor_engine.cpp
+  BP1BraidStreamer.cpp
+  VulkanGemmDispatcher.cpp
+  RawrXDAutoClosure.cpp
+  runtime_symbol_bridge.cpp
+  inference_link_production.cpp
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(131,10): error C2039: 'atomic': is not a member of 'std' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(29,1):
+      see declaration of 'std'
+  
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(131,10): error C7568: argument list missing after assumed function template 'atomic' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(131,10): error C2062: type '<error type>' unexpected [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(131,45): error C2143: syntax error: missing ';' before '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(131,45): error C2447: '{': missing function header (old-style formal list?) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(132,10): error C2039: 'atomic': is not a member of 'std' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(29,1):
+      see declaration of 'std'
+  
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(132,10): error C7568: argument list missing after assumed function template 'atomic' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(132,10): error C2062: type '<error type>' unexpected [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(132,44): error C2143: syntax error: missing ';' before '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(132,44): error C2447: '{': missing function header (old-style formal list?) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(133,10): error C2039: 'atomic': is not a member of 'std' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(29,1):
+      see declaration of 'std'
+  
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(133,10): error C7568: argument list missing after assumed function template 'atomic' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(133,10): error C2062: type '<error type>' unexpected [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(133,50): error C2143: syntax error: missing ';' before '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(133,50): error C2447: '{': missing function header (old-style formal list?) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(134,10): error C2039: 'atomic': is not a member of 'std' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(29,1):
+      see declaration of 'std'
+  
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(134,10): error C7568: argument list missing after assumed function template 'atomic' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(134,10): error C2062: type '<error type>' unexpected [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(134,48): error C2143: syntax error: missing ';' before '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(134,48): error C2447: '{': missing function header (old-style formal list?) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(141,14): error C2065: 'g_selfhost_initialized': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(144,9): error C2065: 'g_selfhost_generation': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(145,9): error C2065: 'g_selfhost_profileCount': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(146,9): error C2065: 'g_selfhost_patchCount': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(153,9): error C2065: 'HMODULE': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(153,17): error C2146: syntax error: missing ';' before identifier 'hMod' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(153,17): error C2065: 'hMod': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(154,33): error C2065: 'GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(154,74): error C2065: 'GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(155,50): error C2061: syntax error: identifier 'LPCSTR' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(155,87): error C2143: syntax error: missing ';' before '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(159,14): error C2065: 'hMod': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(161,38): error C2061: syntax error: identifier 'IMAGE_DOS_HEADER' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(162,13): error C3536: 'dos': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(162,29): error C2065: 'IMAGE_DOS_SIGNATURE': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(163,37): error C2061: syntax error: identifier 'IMAGE_NT_HEADERS' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(165,13): error C3536: 'nt': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(165,30): error C2065: 'IMAGE_NT_SIGNATURE': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(166,21): error C3861: 'IMAGE_FIRST_SECTION': identifier not found [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(166,19): error C3535: cannot deduce type for 'auto *' from '<error type>' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(167,14): error C2065: 'WORD': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(167,19): error C2146: syntax error: missing ';' before identifier 'i' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(167,21): error C2143: syntax error: missing ';' before '=' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(167,21): error C2143: syntax error: missing ')' before '=' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(167,21): error C2059: syntax error: '=' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(167,61): error C2059: syntax error: ';' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(167,73): error C2059: syntax error: ')' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(167,75): error C2143: syntax error: missing ';' before '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(168,50): error C2059: syntax error: ')' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(168,58): error C2143: syntax error: missing ';' before '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(170,29): error C2947: expecting '>' to terminate template-argument-list, found '>' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(170,34): error C2059: syntax error: ')' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(170,36): error C2146: syntax error: missing ';' before identifier 'copyLen' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(170,36): error C2065: 'copyLen': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(171,68): error C2065: 'hMod': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(172,34): error C3536: 'src': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(172,39): error C2065: 'copyLen': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(173,27): error C2065: 'copyLen': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(177,10): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(178,9): error C2059: syntax error: 'return' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(179,5): error C2059: syntax error: '}' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(179,5): error C2143: syntax error: missing ';' before '}' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(181,79): error C2143: syntax error: missing ';' before '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(181,79): error C2447: '{': missing function header (old-style formal list?) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(206,55): error C2065: 'MEM_COMMIT': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(206,68): error C2065: 'MEM_RESERVE': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(206,81): error C2065: 'PAGE_EXECUTE_READWRITE': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(206,21): error C3861: 'VirtualAlloc': identifier not found [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(214,9): error C2065: 'g_selfhost_patchCount': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(222,48): error C2065: 'MEM_COMMIT': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(222,61): error C2065: 'MEM_RESERVE': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(222,74): error C2065: 'PAGE_EXECUTE_READWRITE': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(222,21): error C3861: 'VirtualAlloc': identifier not found [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(226,9): error C2065: 'g_selfhost_patchCount': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(233,22): error C3861: 'InterlockedExchangePointerNoFence': identifier not found [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(279,23): error C2079: 'f' uses undefined class 'std::basic_ifstream<char,std::char_traits<char>>' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(279,41): error C2027: use of undefined type 'std::basic_ios<char,std::char_traits<char>>' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\iosfwd(167,7):
+      see declaration of 'std::basic_ios<char,std::char_traits<char>>'
+  
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(279,41): error C2065: 'binary': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(291,23): error C2079: 'f' uses undefined class 'std::basic_ofstream<char,std::char_traits<char>>' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(291,41): error C2027: use of undefined type 'std::basic_ios<char,std::char_traits<char>>' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\iosfwd(167,7):
+      see declaration of 'std::basic_ios<char,std::char_traits<char>>'
+  
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(291,41): error C2065: 'binary': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(291,60): error C2027: use of undefined type 'std::basic_ios<char,std::char_traits<char>>' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\iosfwd(167,7):
+      see declaration of 'std::basic_ios<char,std::char_traits<char>>'
+  
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(298,16): error C2065: 'g_selfhost_generation': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(309,18): error C2065: 'g_selfhost_initialized': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(310,13): error C2065: 'g_selfhost_generation': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(311,33): error C2065: 'g_selfhost_profileCount': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(312,33): error C2065: 'g_selfhost_patchCount': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(319,14): error C2065: 'g_selfhost_initialized': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(320,9): error C2065: 'g_selfhost_initialized': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(321,9): error C2065: 'g_selfhost_generation': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(325,1): error C2059: syntax error: '}' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\inference_link_production.cpp(325,1): error C2143: syntax error: missing ';' before '}' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  Generating Code...
+  Compiling...
+  win32ide_asm_kernel_bridge.cpp
+  kquant_nonmsvc.cpp
+  RawrXDAgenticE2E.cpp
+  ide_agentic_gate.cpp
+  live_binary_patcher.cpp
+  AgentOllamaClient.cpp
+  IDELogger.cpp
+  enterprise_license_manifest.cpp
+  Win32IDE_StatusBar.cpp
+  embedding_engine.cpp
+  vision_encoder.cpp
+  lsp_hotpatch_impl.cpp
+  lsp_hotpatch_bridge_impl.cpp
+  ToolGateway.cpp
+  WorkspaceGuard.cpp
+  local_reasoning_engine_real.cpp
+  local_reasoning_integration.cpp
+  autonomous_workflow_engine.cpp
+  agentic_task_graph.cpp
+  pdb_native.cpp
+  Generating Code...
+  Compiling...
+  pdb_gsi_hash.cpp
+  win32ide_debugger_bridge.cpp
+  win32ide_quadbuffer_bridge.cpp
+  re_api_bridge.cpp
+  disassembler.cpp
+  Generating Code...
