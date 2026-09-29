@@ -6913,16 +6913,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Ensure link output dir exists; clear prior exe/pdb before link (mitigates MSVC LNK1104 when
     # a stale handle, indexer, or crashed link left the binary busy +�-�+�-�+�-� harmless if files are absent).
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-    # Use CMake-native removal to avoid shell quoting issues in generated link commands.
-    # PRE_LINK: remove only the prior exe (not the pdb — the pdb is regenerated
-    # during compile and may be locked by MSBuild's own PDB writer, causing
-    # spurious "File can't be removed" failures that block the link).
-    if(MSVC)
-        add_custom_command(TARGET RawrXD-Win32IDE PRE_LINK
-            COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE:RawrXD-Win32IDE>"
-            COMMENT "RawrXD-Win32IDE: PRE_LINK clear prior exe"
-        )
-    endif()
+    # PRE_LINK REMOVED: the prior exe deletion was causing build failures
+    # when the exe was locked by running test processes (W7 gate, detached
+    # workers). The linker overwrites the exe naturally; no PRE_LINK needed.
 
     # =========================================================================
     # PRODUCTION POLICY ENFORCEMENT
@@ -6983,23 +6976,16 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         set_target_properties(RawrXD-Win32IDE PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
         target_link_options(RawrXD-Win32IDE PRIVATE
             /LARGEADDRESSAWARE
-            /DEBUG:FULL
             /LTCG:OFF
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO
         )
-        # /DEBUG:FULL + /LTCG:OFF: the previous LNK1201 was caused by LTCG
-        # (link-time code generation with ~400 TUs), NOT by /DEBUG:FULL.
-        # build24 used /DEBUG:FULL + LTCG and linked fine because objs were
-        # cached. With LTCG disabled, /DEBUG:FULL works correctly.
-        # PRE_LINK removes the prior pdb+exe to avoid lock contention.
-        add_custom_command(TARGET RawrXD-Win32IDE PRE_LINK
-            COMMAND ${CMAKE_COMMAND} -E rm -f
-            "${CMAKE_BINARY_DIR}/bin/Release/RawrXD-Win32IDE.pdb"
-            "${CMAKE_BINARY_DIR}/bin/Release/RawrXD-Win32IDE.exe"
-            COMMENT "RawrXD-Win32IDE: PRE_LINK clear prior pdb+exe"
-        )
+        # /DEBUG REMOVED: LNK1201 and LNK1318 PDB errors were recurring
+        # across builds. Certification doesn't need debug symbols. The map
+        # file still provides symbol addresses for auditing.
+        # PRE_LINK REMOVED: no more exe/pdb deletion before link.
+        # The linker handles overwriting the output naturally.
         # /FORCE:MULTIPLE REMOVED (W3 dedupe wave 7a73ec687): all LNK4006
         # duplicate symbols eliminated — 0 LNK4006, 0 LNK4088, 0 unresolved.
         # The link is now strict (no force-override of duplicate definitions).
