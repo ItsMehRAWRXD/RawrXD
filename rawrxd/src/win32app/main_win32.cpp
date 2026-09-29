@@ -1195,6 +1195,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         switch (wmId)
         {
         case IDM_FILE_EXIT:
+            // W8: guard against premature exit during cert stay-alive mode
+            if (certStayAliveBlocksShutdown()) {
+                recordShutdownReason(ShutdownReason::ApplicationQuit);
+                break;  // suppress — cert timer will handle exit
+            }
+            recordShutdownReason(ShutdownReason::ApplicationQuit);
             DestroyWindow(hWnd);
             break;
         case IDM_BUILD_NATIVE:
@@ -1254,8 +1260,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             writeChatE2EReceipt(done->tel);
             delete done;
             if (g_startupOptions.chatExitOnDone && g_hMainWnd) {
-                // Unattended run: close once the receipt is on disk.
-                PostMessageA(g_hMainWnd, WM_CLOSE, 0, 0);
+                // W8: guard chat-exit-on-done during cert stay-alive mode
+                if (certStayAliveBlocksShutdown()) {
+                    recordShutdownReason(ShutdownReason::ChatExitOnDone);
+                    // suppress — cert timer will handle exit
+                } else {
+                    recordShutdownReason(ShutdownReason::ChatExitOnDone);
+                    PostMessageA(g_hMainWnd, WM_CLOSE, 0, 0);
+                }
             }
         }
         break;
