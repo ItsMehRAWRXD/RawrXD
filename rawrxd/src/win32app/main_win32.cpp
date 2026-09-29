@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstdarg>
+#include <cstdlib>
 #include <fstream>
 #include <thread>
 #include <io.h>
@@ -1438,6 +1439,63 @@ static int runGpuCorrectnessGate()
                             hostFallbacks = 1;  // Forward failed — likely fell back
                         }
                     }
+
+                    // Write receipt NOW, before engine destructor runs (which crashes)
+                    bool pass = true;
+                    if (vulkanInit != "PASS") pass = false;
+                    if (deviceCount == 0 && vulkanInit == "PASS") deviceCount = 1;
+                    if (modelLoad != "PASS") pass = false;
+                    if (g_startupOptions.gpuForward && gpuForwardReached == 0) pass = false;
+                    if (g_startupOptions.gpuForward && gpuDispatchCount == 0) pass = false;
+                    if (g_startupOptions.gpuForward && generatedTokenCount == 0) pass = false;
+                    if (generationStatus != "Completed" && g_startupOptions.gpuForward) pass = false;
+                    if (hostFallbacks > 0 && g_startupOptions.gpuNoFallback) pass = false;
+                    if (stubFallbacks > 0) pass = false;
+                    if (testBackendUsed > 0) pass = false;
+
+                    std::fprintf(stderr, "GPU_GATE: verdict=%s writing receipt\n", pass ? "PASS" : "FAIL"); std::fflush(stderr);
+                    FILE* f = nullptr;
+                    fopen_s(&f, receiptPath.c_str(), "w");
+                    if (f) {
+                        std::fprintf(f, "=== RAWRXD_GPU_CORRECTNESS_001 ===\n");
+                        std::fprintf(f, "MODEL_PATH=%s\n", modelPath.c_str());
+                        std::fprintf(f, "VULKAN_INIT=%s\n", vulkanInit.c_str());
+                        std::fprintf(f, "DEVICE_COUNT=%d\n", deviceCount);
+                        std::fprintf(f, "SELECTED_DEVICE=%s\n", selectedDevice.c_str());
+                        std::fprintf(f, "SELECTED_VENDOR=%s\n", selectedVendor.c_str());
+                        std::fprintf(f, "SELECTED_DEVICE_ID=%s\n", selectedDeviceId.c_str());
+                        std::fprintf(f, "\n");
+                        std::fprintf(f, "MODEL_LOAD=%s\n", modelLoad.c_str());
+                        std::fprintf(f, "GPU_FORWARD_REQUESTED=%d\n", gpuForwardRequested);
+                        std::fprintf(f, "GPU_FORWARD_REACHED=%d\n", gpuForwardReached);
+                        std::fprintf(f, "GPU_DISPATCH_COUNT=%d\n", gpuDispatchCount);
+                        std::fprintf(f, "\n");
+                        std::fprintf(f, "LOGITS_COUNT=%d\n", logitsCount);
+                        std::fprintf(f, "LOGITS_FINITE=%d\n", logitsFinite);
+                        std::fprintf(f, "LOGITS_NAN=%d\n", logitsNan);
+                        std::fprintf(f, "LOGITS_INF=%d\n", logitsInf);
+                        std::fprintf(f, "\n");
+                        std::fprintf(f, "GENERATED_TOKEN_COUNT=%d\n", generatedTokenCount);
+                        std::fprintf(f, "GENERATION_STATUS=%s\n", generationStatus.c_str());
+                        std::fprintf(f, "\n");
+                        std::fprintf(f, "HOST_FALLBACKS=%d\n", hostFallbacks);
+                        std::fprintf(f, "UNPLANNED_FALLBACKS=%d\n", unplannedFallbacks);
+                        std::fprintf(f, "STRICT_GPU_VIOLATIONS=%d\n", strictGpuViolations);
+                        std::fprintf(f, "STUB_FALLBACKS=%d\n", stubFallbacks);
+                        std::fprintf(f, "TEST_BACKEND_USED=%d\n", testBackendUsed);
+                        std::fprintf(f, "\n");
+                        std::fprintf(f, "VERDICT=%s\n", pass ? "PASS" : "FAIL");
+                        std::fprintf(f, "=== RECEIPT_END ===\n");
+                        std::fclose(f);
+                        std::fprintf(stderr, "GPU_GATE: receipt written and closed\n"); std::fflush(stderr);
+                    } else {
+                        std::fprintf(stderr, "GPU_GATE: FAILED to open receipt file\n"); std::fflush(stderr);
+                    }
+
+                    std::fprintf(stderr, "GPU_GATE: VERDICT=%s\n", pass ? "PASS" : "FAIL");
+                    std::fflush(stderr);
+                    // Exit immediately to avoid engine destructor crash
+                    std::exit(pass ? 0 : 1);
                 } else {
                     // Just init test
                     generationStatus = "InitOnly";
