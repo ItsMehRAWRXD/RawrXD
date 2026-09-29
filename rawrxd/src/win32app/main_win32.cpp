@@ -1970,12 +1970,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         // Legacy mirror: write the historical fixed-path receipt so existing
         // external verifiers (cert scripts, dashboards) that hardcoded
         // w8_headless_lifecycle_receipt.txt continue to find a file.
-        // This mirror is mutable; the immutable receipt above is the
-        // authoritative artifact for RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001.
+        //
+        // RAWRXD_LEGACY_MIRROR_NON_AUTHORITATIVE_001:
+        //   This mirror is MUTABLE and NON_AUTHORITATIVE. The immutable
+        //   receipt written above is the SOLE AUTHORITATIVE artifact for
+        //   RAWRXD_W8_LIFECYCLE_AUTHORITY_001. No verifier, gate, or
+        //   RawrGate input may treat this mirror as a source of truth.
         {
             FILE* f = nullptr;
             fopen_s(&f, "w8_headless_lifecycle_receipt.txt", "w");
             if (f) {
+                std::fprintf(f, "# >>> NON_AUTHORITATIVE_MIRROR — DO NOT CERTIFY FROM THIS FILE <<<\n");
+                std::fprintf(f, "AUTHORITY=NON_AUTHORITATIVE_MIRROR\n");
+                std::fprintf(f, "DEPRECATED=1\n");
+                std::fprintf(f, "MIRROR_FORBIDDEN_TO_CERTIFY=1\n");
+                std::fprintf(f, "MIRROR_FORBIDDEN_AS_RAWGATE_INPUT=1\n");
+                std::fprintf(f, "AUTHORITATIVE_ARTIFACT=%s\n",
+                    runPath.empty() ? "<failed>" : runPath.c_str());
                 std::fprintf(f, "GATE=W8_HEADLESS_IDLE_LIFECYCLE_001\n");
                 std::fprintf(f, "CERT_STAY_ALIVE=1\n");
                 std::fprintf(f, "CERT_TIMER_EXPIRED=%d\n", timerExpired ? 1 : 0);
@@ -1994,6 +2005,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 std::fprintf(f, "IMMUTABLE_RUN_PATH=%s\n",
                     runPath.empty() ? "<failed>" : runPath.c_str());
                 std::fprintf(f, "VERDICT=%s\n", verdict.c_str());
+                std::fprintf(f, "# <<< END_NON_AUTHORITATIVE_MIRROR >>>\n");
                 std::fclose(f);
             }
         }
