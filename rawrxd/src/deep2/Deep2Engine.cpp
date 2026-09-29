@@ -2,6 +2,7 @@
  * Connects: tokenizer, sampler, KV cache, weights, forward pass
  */
 #include "Deep2Engine.h"
+#include "Deep2Diag.h"
 #include "Tokenizer.hpp"
 #include "Sampler.hpp"
 #include "GGUFLoader.hpp"
@@ -488,6 +489,10 @@ Deep2Engine::~Deep2Engine() { unloadModel(); }
 
 // =================== INITIALIZE ====================
 bool Deep2Engine::initialize(const EngineConfig& cfg) {
+    std::fprintf(stderr, "[INIT] Deep2Engine::initialize hiddenDim=%zu vocabSize=%zu numLayers=%zu numHeads=%zu maxSeqLen=%zu numThreads=%zu\n",
+        (size_t)cfg.hiddenDim, (size_t)cfg.vocabSize, (size_t)cfg.numLayers,
+        (size_t)cfg.numHeads, (size_t)cfg.maxSeqLen, (size_t)cfg.numThreads);
+    std::fflush(stderr);
     // Core lifecycle owns runtime objects; model geometry may still be unknown
     // until the GGUF/model-loader batch binds real metadata.
     deallocateBuffers();
@@ -500,6 +505,8 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
 
     if (cfg.useThreadPool && cfg.numThreads > 0) {
         threadPool = std::make_unique<ThreadPool>(cfg.numThreads);
+        std::fprintf(stderr, "[INIT] threadPool created numThreads=%zu\n", (size_t)cfg.numThreads);
+        std::fflush(stderr);
     } else {
         threadPool.reset();
     }
@@ -509,6 +516,7 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
     deterministicGreedy_ = true;
     QuantKernelRegistry::Instance().Initialize();
+    std::fprintf(stderr, "[INIT] KVCache+tokenizer+sampler created\n"); std::fflush(stderr);
 
     // Initialization means the runtime is ready. Scratch buffers are allocated
     // immediately only when geometry is already known; otherwise loadModel()
@@ -516,9 +524,11 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     initialized = true;
     if (cfg.hiddenDim != 0 && cfg.vocabSize != 0) {
         if (!allocateBuffers()) {
+            std::fprintf(stderr, "[INIT] allocateBuffers FAILED\n"); std::fflush(stderr);
             initialized = false;
             return false;
         }
+        std::fprintf(stderr, "[INIT] allocateBuffers OK\n"); std::fflush(stderr);
     }
 
     if (cfg.useKVCache && cfg.numLayers != 0 && cfg.maxSeqLen != 0 &&
@@ -529,10 +539,14 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
         kc.headDim = cfg.headDim ? cfg.headDim : (cfg.hiddenDim / cfg.numHeads);
         kc.maxSeqLen = cfg.maxSeqLen;
         if (kc.headDim == 0 || !kvCache->allocate(kc)) {
+            std::fprintf(stderr, "[INIT] KVCache::allocate FAILED headDim=%zu\n", (size_t)kc.headDim); std::fflush(stderr);
             initialized = false;
             return false;
         }
+        std::fprintf(stderr, "[INIT] KVCache::allocate OK layers=%zu heads=%zu headDim=%zu maxSeqLen=%zu\n",
+            (size_t)kc.numLayers, (size_t)kc.numHeads, (size_t)kc.headDim, (size_t)kc.maxSeqLen); std::fflush(stderr);
     }
+    std::fprintf(stderr, "[INIT] Deep2Engine::initialize SUCCESS\n"); std::fflush(stderr);
     return true;
 }
 
@@ -544,7 +558,11 @@ bool Deep2Engine::allocateBuffers() {
         ? modelWeights.intermediateDim
         : (config.intermediateDim ? config.intermediateDim : (H ? H * 4 : 0));
 
-    if (H == 0 || V == 0 || I == 0) return false;
+    if (H == 0 || V == 0 || I == 0) {
+        std::fprintf(stderr, "[ALLOC] allocateBuffers FAILED: H=%zu V=%zu I=%zu\n", H, V, I); std::fflush(stderr);
+        return false;
+    }
+    std::fprintf(stderr, "[ALLOC] allocateBuffers H=%zu V=%zu I=%zu qDim=%zu kvDim=%zu\n", H, V, I, qDim, kvDim); std::fflush(stderr);
 
     // Determine projection dimensions based on model metadata (supports rectangular attention like Gemma3)
     const size_t numHeads = modelWeights.numHeads ? modelWeights.numHeads : config.numHeads;
@@ -588,9 +606,14 @@ bool Deep2Engine::allocateBuffers() {
     if (!hiddenStates || !attentionOutput || !ffnOutput || !logits ||
         !qProj || !kProj || !vProj || !gateBuf || !upBuf || !layerTemp ||
         !layerOut) {
+        std::fprintf(stderr, "[ALLOC] FAILED: one or more buffers null (hidden=%p attn=%p ffn=%p logits=%p q=%p k=%p v=%p gate=%p up=%p temp=%p out=%p)\n",
+            (void*)hiddenStates, (void*)attentionOutput, (void*)ffnOutput, (void*)logits,
+            (void*)qProj, (void*)kProj, (void*)vProj, (void*)gateBuf, (void*)upBuf, (void*)layerTemp, (void*)layerOut);
+        std::fflush(stderr);
         deallocateBuffers();
         return false;
     }
+    std::fprintf(stderr, "[ALLOC] all buffers allocated OK\n"); std::fflush(stderr);
 
     std::memset(hiddenStates,    0, H * sizeof(float));
     std::memset(attentionOutput, 0, H * sizeof(float));
@@ -1894,15 +1917,23 @@ std::string Deep2Engine::detokenize(const std::vector<int>& tokens) {
 bool Deep2Engine::embedToken(int tokenId, float* output) {
     if (!modelWeights.loaded || !output ||
         tokenId < 0 ||
-        static_cast<size_t>(tokenId) >= modelWeights.vocabSize)
+        static_cast<size_t>(tokenId) >= modelWeights.vocabSize) {
+        std::fprintf(stderr, "[EMBED] FAIL: loaded=%d output=%p tokenId=%d vocabSize=%zu\n",
+            modelWeights.loaded ? 1 : 0, (void*)output, tokenId, (size_t)modelWeights.vocabSize);
+        std::fflush(stderr);
         return false;
+    }
 
     const WeightTensor& wt = modelWeights.tokenEmbed;
     const size_t H = modelWeights.hiddenDim;
     const size_t V = modelWeights.vocabSize;
 
-    if (!wt.data || wt.rows != V || wt.cols != H || H == 0)
+    if (!wt.data || wt.rows != V || wt.cols != H || H == 0) {
+        std::fprintf(stderr, "[EMBED] FAIL: wt.data=%p rows=%zu cols=%zu H=%zu V=%zu\n",
+            (void*)wt.data, (size_t)wt.rows, (size_t)wt.cols, H, V);
+        std::fflush(stderr);
         return false;
+    }
 
     const auto* desc = LookupQuantType(static_cast<uint32_t>(wt.type));
     if (!desc || desc->blockBytes == 0 || desc->blockElements == 0)
@@ -1928,7 +1959,10 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
         return false;
 
     auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
-    if (!dequant) return false;
+    if (!dequant) {
+        std::fprintf(stderr, "[EMBED] FAIL: no dequant kernel for type=%d\n", wt.type); std::fflush(stderr);
+        return false;
+    }
 
     const auto* src = static_cast<const uint8_t*>(wt.data) + offset;
     dequant(src, output, H);
@@ -1947,15 +1981,24 @@ bool Deep2Engine::embedTokensBatch(
     const int32_t* tokenIds,size_t count,float* outputBatch)
 {
     if(!tokenIds||!outputBatch||count==0||count>4||
-       modelWeights.hiddenDim==0)
+       modelWeights.hiddenDim==0) {
+        std::fprintf(stderr, "[EMBED_BATCH] FAIL: tokenIds=%p output=%p count=%zu hiddenDim=%zu\n",
+            (void*)tokenIds, (void*)outputBatch, count, (size_t)modelWeights.hiddenDim);
+        std::fflush(stderr);
         return false;
+    }
     const size_t H=modelWeights.hiddenDim;
     for(size_t b=0;b<count;++b) {
-        if(!embedToken(tokenIds[b],outputBatch+b*H))
+        if(!embedToken(tokenIds[b],outputBatch+b*H)) {
+            std::fprintf(stderr, "[EMBED_BATCH] FAIL: embedToken failed at batch index %zu (tokenId=%d)\n", b, tokenIds[b]);
+            std::fflush(stderr);
             return false;
+        }
     }
     return true;
 }
+
+static bool deep2ForwardTraceEnabled();  // forward decl (defined later in this file)
 
 // =================== COMPUTE LOGITS (FINAL NORM + REAL LM HEAD) ====================
 void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
@@ -2014,8 +2057,16 @@ void Deep2Engine::computeLogitsBatch(
 
 // =================== SAMPLE TOKEN ====================
 int Deep2Engine::sampleToken(const float* logitsPtr) {
-    if (!sampler) return 0;
-    return sampler->sample(logitsPtr, (int)config.vocabSize);
+    if (!sampler) {
+        std::fprintf(stderr, "[SAMPLE] FAIL: no sampler\n"); std::fflush(stderr);
+        return 0;
+    }
+    if (!logitsPtr) {
+        std::fprintf(stderr, "[SAMPLE] FAIL: null logits\n"); std::fflush(stderr);
+        return 0;
+    }
+    int tok = sampler->sample(logitsPtr, (int)config.vocabSize);
+    return tok;
 }
 
 // =================== DECODE CONTINUOUS ONE ====================
@@ -2025,6 +2076,10 @@ int Deep2Engine::sampleToken(const float* logitsPtr) {
 bool Deep2Engine::initializeDecodeCursor(DecodeCursor& cursor) const {
     if (!initialized || !modelWeights.loaded ||
         config.hiddenDim == 0 || config.vocabSize == 0) {
+        std::fprintf(stderr, "[DECODE_CURSOR] FAIL: init=%d loaded=%d hiddenDim=%zu vocabSize=%zu\n",
+            initialized ? 1 : 0, modelWeights.loaded ? 1 : 0,
+            (size_t)config.hiddenDim, (size_t)config.vocabSize);
+        std::fflush(stderr);
         return false;
     }
     cursor.hidden.assign(config.hiddenDim, 0.0f);
@@ -2044,15 +2099,21 @@ Deep2Engine::DecodeOneResult Deep2Engine::decodeContinuousOne(DecodeCursor& curs
 
     // --- Validate state ---
     if (!initialized || !modelWeights.loaded) {
+        std::fprintf(stderr, "[DECODE_ONE] ERROR: ENGINE_NOT_INITIALIZED\n"); std::fflush(stderr);
         return R::make_error("ENGINE_NOT_INITIALIZED");
     }
     if (cursor.hidden.size() != config.hiddenDim ||
         cursor.logits.size() != config.vocabSize) {
+        std::fprintf(stderr, "[DECODE_ONE] ERROR: CURSOR_GEOMETRY_MISMATCH hidden=%zu/%zu logits=%zu/%zu\n",
+            cursor.hidden.size(), (size_t)config.hiddenDim,
+            cursor.logits.size(), (size_t)config.vocabSize);
+        std::fflush(stderr);
         return R::make_error("CURSOR_GEOMETRY_MISMATCH");
     }
 
     // --- Cancel check ---
     if (cancelRequested_.load(std::memory_order_acquire)) {
+        std::fprintf(stderr, "[DECODE_ONE] CANCELLED\n"); std::fflush(stderr);
         return R::make_error("CANCELLED");
     }
 
@@ -2064,6 +2125,7 @@ Deep2Engine::DecodeOneResult Deep2Engine::decodeContinuousOne(DecodeCursor& curs
         }
 
         if (!embedToken(cursor.pendingToken, cursor.hidden.data())) {
+            std::fprintf(stderr, "[DECODE_ONE] ERROR: EMBED_FAILED tokenId=%d\n", cursor.pendingToken); std::fflush(stderr);
             return R::make_error("EMBED_FAILED");
         }
 
@@ -2071,6 +2133,8 @@ Deep2Engine::DecodeOneResult Deep2Engine::decodeContinuousOne(DecodeCursor& curs
 
         auto fr = forwardTokenAllLayers(cursor.hidden.data(), seq);
         if (!fr.ok) {
+            std::fprintf(stderr, "[DECODE_ONE] ERROR: FORWARD_FAILED stage=%s route=%d\n",
+                fr.failureStage ? fr.failureStage : "(null)", (int)fr.actualRoute); std::fflush(stderr);
             return R::make_error("FORWARD_FAILED");
         }
 
@@ -2102,13 +2166,15 @@ Deep2Engine::DecodeOneResult Deep2Engine::decodeContinuousOne(DecodeCursor& curs
     try {
         computeLogits(cursor.hidden.data(), cursor.logits.data());
     } catch (const std::exception& e) {
-        (void)e;
+        std::fprintf(stderr, "[DECODE_ONE] ERROR: LOGITS_FAILED: %s\n", e.what()); std::fflush(stderr);
         return R::make_error("LOGITS_FAILED");
     }
 
     // --- Sample token ---
     const int nextTok = sampleToken(cursor.logits.data());
     if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) {
+        std::fprintf(stderr, "[DECODE_ONE] ERROR: SAMPLE_FAILED nextTok=%d vocabSize=%zu\n",
+            nextTok, (size_t)config.vocabSize); std::fflush(stderr);
         return R::make_error("SAMPLE_FAILED");
     }
 
@@ -2161,8 +2227,15 @@ const SpeculativeCounters& Deep2Engine::speculativeCounters() const {
 // diagnostic: opt-in via DEEP2_TRACE_FORWARD=1 (checked once per process).
 static bool deep2ForwardTraceEnabled() {
     static const bool enabled = [] {
-        const char* v = std::getenv("DEEP2_TRACE_FORWARD");
-        return v && v[0] == '1';
+        auto on = [](const char* name) {
+            const char* v = std::getenv(name);
+            return v && v[0] && v[0] != '0';
+        };
+        // Raw per-token stderr spam only. IDE-diag (RAWRXD_IDE_DIAG) is
+        // intentionally NOT here: it enables the structured Deep2Diag receipt
+        // without the noisy per-token dumps.
+        return on("DEEP2_TRACE_FORWARD") || on("RAWRXD_VERBOSE") ||
+               on("RAWRXD_TRACE_TOKEN");
     }();
     return enabled;
 }
@@ -2187,10 +2260,8 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                           float* output,
                           size_t outDim) {
     const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
-    if (deep2ForwardTraceEnabled()) {
-        std::fprintf(stderr,"LINEARW name=%s rows=%zu cols=%zu type=%d\n",
-                     wtn, wt.rows, wt.cols, wt.type); std::fflush(stderr);
-    }
+    std::fprintf(stderr,"LINEARW name=%s rows=%zu cols=%zu type=%d\n",
+                 wtn, wt.rows, wt.cols, wt.type); std::fflush(stderr);
     if (!wt.data || !input || !output || outDim == 0) {
         throw std::runtime_error("LinearW: null tensor/input/output");
     }
@@ -2211,9 +2282,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     // BATCH10_ROW_SPLIT_LINEAR â€” real GPU arithmetic, host result contract.
     if (vulkanInitialized_ && !vulkanDevices_.empty()) {
         std::memset(output, 0, outDim * sizeof(float));
-        if (deep2ForwardTraceEnabled()) {
-            std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
-        }
+        std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
 
         // B4_LMHEAD_PERMANENT_RESIDENCY_001: the lmHead must never churn
         // through the weight cache. Pin its per-device slices (at the live
@@ -2251,12 +2320,10 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                     const uint64_t up1b = vulkanDevices_[1]->WeightUploadCount();
                     lmHeadPinUploadDeltas_[0] += up0b - up0a;
                     lmHeadPinUploadDeltas_[1] += up1b - up1a;
-                    if (deep2ForwardTraceEnabled() || geometryChanged) {
-                        std::fprintf(stderr,
-                            "[B4_LMHEAD_PIN] slot0rows=%u slot1rows=%u "
-                            "repin=%u\n",
-                            w0v.rows, w1v.rows, lmHeadPinRePins_);
-                    }
+                    std::fprintf(stderr,
+                        "[B4_LMHEAD_PIN] slot0rows=%u slot1rows=%u repin=%u\n",
+                        w0v.rows, w1v.rows, lmHeadPinRePins_);
+                    std::fflush(stderr);
                 }
             }
         }
@@ -2270,9 +2337,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             }
         }
         if (dualOk) {
-            if (deep2ForwardTraceEnabled()) {
-                std::fprintf(stderr,"LINEARW_RESULT=DUAL_GPU name=%s\n",wtn); std::fflush(stderr);
-            }
+            std::fprintf(stderr,"LINEARW_RESULT=DUAL_GPU name=%s\n",wtn); std::fflush(stderr);
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
             }
@@ -2281,16 +2346,12 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             return;
         }
         if (triedDual) {
-            if (deep2ForwardTraceEnabled()) {
-                std::fprintf(stderr,"LINEARW_DUAL_ROW_FAIL name=%s\n",wtn); std::fflush(stderr);
-            }
+            std::fprintf(stderr,"LINEARW_DUAL_ROW_FAIL name=%s\n",wtn); std::fflush(stderr);
         }
 
         // Attempt 2: single-GPU fallback
         if (tryVulkanHostGEMV(wt, input, output, outDim)) {
-            if (deep2ForwardTraceEnabled()) {
-                std::fprintf(stderr,"LINEARW_RESULT=SINGLE_GPU name=%s\n",wtn); std::fflush(stderr);
-            }
+            std::fprintf(stderr,"LINEARW_RESULT=SINGLE_GPU name=%s\n",wtn); std::fflush(stderr);
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
             }
@@ -2300,18 +2361,14 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         }
 
         // GPU paths exhausted
-        if (deep2ForwardTraceEnabled()) {
-            std::fprintf(stderr,"LINEARW_RESULT=FAIL name=%s strict=%d\n",
-                         wtn,(int)vulkanStrictNoCpuFallback_); std::fflush(stderr);
-        }
+        std::fprintf(stderr,"LINEARW_RESULT=FAIL name=%s strict=%d\n",
+                     wtn,(int)vulkanStrictNoCpuFallback_); std::fflush(stderr);
         if (vulkanStrictNoCpuFallback_)
             throw std::runtime_error("LinearW: GPU path failed under strict mode");
     }
 
     // CPU fallback
-    if (deep2ForwardTraceEnabled()) {
-        std::fprintf(stderr,"LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn); std::fflush(stderr);
-    }
+    std::fprintf(stderr,"LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn); std::fflush(stderr);
     auto kernel = QuantKernelRegistry::Instance().GetGEMV(wt.type);
     if (!kernel) {
         throw std::runtime_error("LinearW: no registered GEMV kernel");
@@ -2326,14 +2383,12 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         if (input[i] < inMin) inMin = input[i];
         if (input[i] > inMax) inMax = input[i];
     }
-    if (deep2ForwardTraceEnabled()) {
-        std::fprintf(stderr,
-            "LINEAR_CPU_BEGIN name=%s type=%d rows=%zu cols=%zu "
-            "inputFinite=%d inputBad=%zu inputMin=%.9g inputMax=%.9g\n",
-            wtn, wt.type, rows, cols,
-            (inBad == SIZE_MAX) ? 1 : 0, inBad, inMin, inMax);
-        std::fflush(stderr);
-    }
+    std::fprintf(stderr,
+        "LINEAR_CPU_BEGIN name=%s type=%d rows=%zu cols=%zu "
+        "inputFinite=%d inputBad=%zu inputMin=%.9g inputMax=%.9g\n",
+        wtn, wt.type, rows, cols,
+        (inBad == SIZE_MAX) ? 1 : 0, inBad, inMin, inMax);
+    std::fflush(stderr);
 
     std::memset(output, 0, outDim * sizeof(float));
     kernel(static_cast<const uint8_t*>(wt.data), input, output, rows, cols);
@@ -2351,13 +2406,11 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         if (output[i] > outMax) outMax = output[i];
     }
     if (outBad != SIZE_MAX) {
-        if (deep2ForwardTraceEnabled()) {
-            std::fprintf(stderr,
-                "LINEAR_CPU_NONFINITE name=%s type=%d firstBadIdx=%zu value=%.9g\n",
-                wtn, wt.type, outBad,
-                outBad < outDim ? output[outBad] : 0.0f);
-            std::fflush(stderr);
-        }
+        std::fprintf(stderr,
+            "LINEAR_CPU_NONFINITE name=%s type=%d firstBadIdx=%zu value=%.9g\n",
+            wtn, wt.type, outBad,
+            outBad < outDim ? output[outBad] : 0.0f);
+        std::fflush(stderr);
         throw std::runtime_error("LinearW: non-finite output");
     }
 }
@@ -2493,9 +2546,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
                                float* output, size_t seqLen) {
     if (profiler_) profiler_->beginLayer(static_cast<uint32_t>(layer));
     auto tLayer0 = std::chrono::steady_clock::now();
-    if (deep2ForwardTraceEnabled()) {
-        std::fprintf(stderr,"FWD_LAYER layer=%zu seqLen=%zu\n",layer,seqLen); std::fflush(stderr);
-    }
+    std::fprintf(stderr,"FWD_LAYER layer=%zu seqLen=%zu\n",layer,seqLen); std::fflush(stderr);
     if (!input || !output || config.hiddenDim == 0) {
         throw std::runtime_error("forwardLayer: invalid buffers/geometry");
     }
@@ -2521,9 +2572,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
         parityEmit(ParityCheckpoint::AttnNorm, layerTemp, H);
         parityEmitLayer(static_cast<int>(layer), "ATTN_NORM", layerTemp, H);
 
-        if (deep2ForwardTraceEnabled()) {
-            std::fprintf(stderr,"FWD_LAYER layer=%zu ATTENTION\n",layer); std::fflush(stderr);
-        }
+        std::fprintf(stderr,"FWD_LAYER layer=%zu ATTENTION\n",layer); std::fflush(stderr);
         computeAttention(layer, layerTemp, attentionOutput, seqLen);
 
         // Gemma3: post-attention norm before residual add
@@ -2545,9 +2594,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
 
     // ---- SSM branch (Mamba) ----
     if (doSSM) {
-        if (deep2ForwardTraceEnabled()) {
-            std::fprintf(stderr,"FWD_LAYER layer=%zu SSM\n",layer); std::fflush(stderr);
-        }
+        std::fprintf(stderr,"FWD_LAYER layer=%zu SSM\n",layer); std::fflush(stderr);
         // For now: computeSSM has an identity fallback so Nemotron-H models can run
         // and produce TPS numbers. Real selective scan is TODO.
         computeSSM(layer, output, output);
@@ -2566,9 +2613,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
         parityEmit(ParityCheckpoint::FfnNorm, layerTemp, H);
         parityEmitLayer(static_cast<int>(layer), "FFN_NORM", layerTemp, H);
 
-        if (deep2ForwardTraceEnabled()) {
-            std::fprintf(stderr,"FWD_LAYER layer=%zu FFN_ENTER\n",layer); std::fflush(stderr);
-        }
+        std::fprintf(stderr,"FWD_LAYER layer=%zu FFN_ENTER\n",layer); std::fflush(stderr);
         if (modelWeights.numExperts > 0) {
             computeMoEFFN(layer, layerTemp, ffnOutput);
         } else {
@@ -2601,9 +2646,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
             static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tLayer1 - tLayer0).count()));
         profiler_->endLayer(static_cast<uint32_t>(layer));
     }
-    if (deep2ForwardTraceEnabled()) {
-        std::fprintf(stderr,"FWD_LAYER layer=%zu DONE\n",layer); std::fflush(stderr);
-    }
+    std::fprintf(stderr,"FWD_LAYER layer=%zu DONE\n",layer); std::fflush(stderr);
 }
 
 // =================== ATTENTION (REAL MHA/GQA) ====================
@@ -2733,7 +2776,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         const float scaling = modelWeights.ropeScaling > 0.0f
             ? modelWeights.ropeScaling
             : config.ropeScaling;
-        if (deep2ForwardTraceEnabled()) {
+        {
             const bool isLocalLayer =
                 modelWeights.slidingWindowPattern > 0 &&
                 (layer % modelWeights.slidingWindowPattern) != 0;
@@ -3321,11 +3364,19 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
 // =================== FORWARD ALL LAYERS ====================
 Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     if (!modelWeights.loaded || !hidden || seqLen == 0) {
+        std::fprintf(stderr, "[FWD_ALL] FAIL: invalid_args loaded=%d hidden=%p seqLen=%zu\n",
+            modelWeights.loaded ? 1 : 0, (void*)hidden, seqLen); std::fflush(stderr);
         return ForwardResult{false, ExecutionRoute::Unset, false, "invalid_args"};
     }
     if (modelWeights.layers.size() < modelWeights.numLayers) {
+        std::fprintf(stderr, "[FWD_ALL] FAIL: layer_count_mismatch layers.size=%zu numLayers=%zu\n",
+            modelWeights.layers.size(), (size_t)modelWeights.numLayers); std::fflush(stderr);
         return ForwardResult{false, ExecutionRoute::Unset, false, "layer_count_mismatch"};
     }
+    std::fprintf(stderr, "[FWD_ALL] seqLen=%zu numLayers=%zu isMoE=%d useMLA=%d vulkan=%d/%d\n",
+        seqLen, (size_t)modelWeights.numLayers,
+        modelWeights.isMoE ? 1 : 0, modelWeights.useMLA ? 1 : 0,
+        vulkanEnabled_ ? 1 : 0, vulkanInitialized_ ? 1 : 0); std::fflush(stderr);
 
     // Once any lane has mutated per-token state (device KV/residency, or
     // hidden rewritten layer-by-layer), no other lane may retry the token,
@@ -3608,6 +3659,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         medusaDecoder_->observe(promptTokens,promptLen);
     }
 
+    // RAWRXD_IDE_GENERATION_UNSILENT_001: structured stage diagnostics (opt-in;
+    // disabled by default so the clean CLI path is unaffected).
+    auto& diag = Deep2::Deep2Diag::instance();
+    diag.configureFromEnv();
+    diag.setBackendRoute(isVulkanInitialized() ? "vulkan" : "cpu");
+    diag.beginSession(static_cast<uint32_t>(promptLen));
+
     while(generated<decodeLimit) {        if(cancelRequested_.load(std::memory_order_acquire)) {            break;
         }
 
@@ -3656,6 +3714,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 }
             }
             auto tFwd1 = std::chrono::steady_clock::now();
+            diag.record(Deep2::DiagStage::Forward,
+                static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tFwd1 - tFwd0).count()),
+                static_cast<uint32_t>(generated));
             if (profiler_) profiler_->recordGpuForward(
                 static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tFwd1 - tFwd0).count()));
             if(config.useKVCache&&kvCache&&!kvCache->advance()) {
@@ -3679,28 +3740,26 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         const size_t remaining=decodeLimit-generated;
-        std::fprintf(stderr, "[DECODE] token=%zu/%zu remaining=%zu specActive=%d\n",
-            generated, decodeLimit, remaining, specActive ? 1 : 0);
-        std::fflush(stderr);
+        if (deep2ForwardTraceEnabled()) {
+            std::fprintf(stderr, "[DECODE] token=%zu/%zu remaining=%zu specActive=%d\n",
+                generated, decodeLimit, remaining, specActive ? 1 : 0);
+            std::fflush(stderr);
+        }
         if(specActive&&remaining>=2) {
             try {
-                std::fprintf(stderr, "[SPEC] building proposals at token %zu remaining %zu\n", generated, remaining);
-                std::fflush(stderr);
+                if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "[SPEC] building proposals at token %zu remaining %zu\n", generated, remaining); std::fflush(stderr); }
                 std::vector<int32_t> proposals;
                 (void)buildAdaptiveSpeculativeProposals(
                     hidden.data(),remaining,proposals);
-                std::fprintf(stderr, "[SPEC] proposals=%zu at token %zu\n", proposals.size(), generated);
-                std::fflush(stderr);
+                if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "[SPEC] proposals=%zu at token %zu\n", proposals.size(), generated); std::fflush(stderr); }
                 if(!proposals.empty()) {
 
                     std::vector<int32_t> verified;
-                    std::fprintf(stderr, "[SPEC] verifying %zu proposals at token %zu\n", proposals.size(), generated);
-                    std::fflush(stderr);
+                    if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "[SPEC] verifying %zu proposals at token %zu\n", proposals.size(), generated); std::fflush(stderr); }
                     if(verifySpeculativeGreedyWindow(
                             hidden.data(),proposals,remaining,verified)&&
                        !verified.empty()) {
-                        std::fprintf(stderr, "[SPEC] verified=%zu tokens at token %zu\n", verified.size(), generated);
-                        std::fflush(stderr);
+                        if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "[SPEC] verified=%zu tokens at token %zu\n", verified.size(), generated); std::fflush(stderr); }
                         if(medusaDecoder_) {
                             ++medusaDecoder_->stats.exact.speculativeWindowsSucceeded;
                         }
@@ -3718,12 +3777,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                         if(stop) break;
                         continue;
                     } else {
-                        std::fprintf(stderr, "[SPEC] verify FAILED (0 verified) at token %zu\n", generated);
-                        std::fflush(stderr);
+                        if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "[SPEC] verify FAILED (0 verified) at token %zu\n", generated); std::fflush(stderr); }
                     }
                 } else {
-                    std::fprintf(stderr, "[SPEC] no proposals at token %zu (specActive but empty)\n", generated);
-                    std::fflush(stderr);
+                    if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "[SPEC] no proposals at token %zu (specActive but empty)\n", generated); std::fflush(stderr); }
                 }
             } catch(const std::exception& e) {
                 std::fprintf(stderr, "[DECODE] SPECULATIVE_EXCEPTION at token %zu: %s\n", generated, e.what());
@@ -3739,18 +3796,29 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                     ++medusaDecoder_->stats.exact.exceptionFallbacks;
                 }
             }
-        }        std::fprintf(stderr, "FINAL_NORM_ENTER\n"); std::fflush(stderr);
+        }
+        if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "FINAL_NORM_ENTER\n"); std::fflush(stderr); }
+        auto tLogits0 = std::chrono::steady_clock::now();
         try {
             computeLogits(hidden.data(), logits);
         } catch (const std::exception& e) {
+            // Always-on: real failure surfacing (not per-token spam).
             std::fprintf(stderr, "[DECODE] computeLogits THREW at token %zu: %s\n", generated, e.what());
             std::fflush(stderr);
             lastFailureStatus_ = GenerationStatus::InternalError;
             lastFailureDetail_ = std::string("computeLogits failed at token ")
                 + std::to_string(generated) + ": " + e.what();
+            diag.endSession(false, lastFailureDetail_);
             break;
-        }        std::fprintf(stderr, "COMPUTE_LOGITS_RETURNED\n"); std::fflush(stderr);
-        {
+        }
+        diag.record(Deep2::DiagStage::Logits,
+            static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - tLogits0).count()),
+            static_cast<uint32_t>(generated));
+        if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "COMPUTE_LOGITS_RETURNED\n"); std::fflush(stderr); }
+        // Full-vocab sanity scan is diagnostic only: costs a vocabSize pass per
+        // token, so keep it off the default (clean CLI) hot path.
+        if (deep2ForwardTraceEnabled()) {
             size_t finite = 0, nan = 0, inf = 0;
             float logitMin = std::numeric_limits<float>::max();
             float logitMax = -std::numeric_limits<float>::max();
@@ -3768,8 +3836,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // Step label was set by the prefill loop (step 0) or by the decode
         // parityBeginStep(promptLen+i-1) before this token's forward pass.
         parityEmitLogitsTop10(logits, config.vocabSize);
-        // Temporary logits sanity dump (first 5 and top-5 indices)
-        {
+        // Diagnostic logit stats: three more full-vocab passes, diag-gated.
+        if (deep2ForwardTraceEnabled()) {
             int vocab = static_cast<int>(config.vocabSize);
             float maxv = logits[0];
             int maxi = 0;
@@ -3790,9 +3858,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
         auto tSample0 = std::chrono::steady_clock::now();
         const int nextTok = sampleToken(logits);
-        std::fprintf(stderr, "SAMPLER_RESULT token=%d vocab=%zu\n", nextTok, (size_t)config.vocabSize);
-        std::fflush(stderr);
-        auto tSample1 = std::chrono::steady_clock::now();        if (profiler_) profiler_->recordSampling(
+        if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "SAMPLER_RESULT token=%d vocab=%zu\n", nextTok, (size_t)config.vocabSize); std::fflush(stderr); }
+        auto tSample1 = std::chrono::steady_clock::now();
+        diag.record(Deep2::DiagStage::Sampler,
+            static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tSample1 - tSample0).count()),
+            static_cast<uint32_t>(generated));
+        if (profiler_) profiler_->recordSampling(
             static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tSample1 - tSample0).count()));
         if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) {
             std::fprintf(stderr, "[DECODE] sampleToken returned INVALID token=%d (vocab=%zu) at decode token %zu\n",
@@ -3806,9 +3877,19 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if(specActive) medusaDecoder_->observe(nextTok);
         pendingToken=nextTok;
         pendingForward=true;
-        if (onToken && !onToken(nextTok)) {            break;
+        if (onToken) {
+            auto tCb0 = std::chrono::steady_clock::now();
+            const bool cont = onToken(nextTok);
+            diag.record(Deep2::DiagStage::Callback,
+                static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - tCb0).count()),
+                static_cast<uint32_t>(generated));
+            if (!cont) break;
         }
     }
+
+    diag.setGenTokens(static_cast<uint32_t>(generated));
+    diag.endSession(lastFailureDetail_.empty(), lastFailureDetail_);
 
     // Flush any dangling active token profile when decode loop exits
     if (profiler_ && profiler_->counters().tokensStarted > profiler_->counters().tokensCompleted + profiler_->counters().tokensAborted) {
@@ -3817,12 +3898,14 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // should normally be a no-op, but guards speculative paths)
     }
 
-    std::fprintf(stderr, "[GENERATE] EXIT generated=%zu promptLen=%zu prefillMs=%.1f decodeMs=%.1f tps=%.2f\n",
-        generated, promptLen,
-        stats ? std::chrono::duration<double, std::milli>(tPrefillEnd - t0).count() : 0.0,
-        stats ? 0.0 : 0.0,
-        0.0);
-    std::fflush(stderr);
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr, "[GENERATE] EXIT generated=%zu promptLen=%zu prefillMs=%.1f decodeMs=%.1f tps=%.2f\n",
+            generated, promptLen,
+            stats ? std::chrono::duration<double, std::milli>(tPrefillEnd - t0).count() : 0.0,
+            stats ? 0.0 : 0.0,
+            0.0);
+        std::fflush(stderr);
+    }
     auto tEnd = std::chrono::steady_clock::now();
 
     if (stats) {
@@ -3873,14 +3956,26 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 }
 
 std::string Deep2Engine::generateText(const std::string& prompt, size_t maxTokens) {
-    if (prompt.empty() || maxTokens == 0) return {};
+    if (prompt.empty() || maxTokens == 0) {
+        std::fprintf(stderr, "[GENTEXT] EARLY_EXIT: prompt.empty=%d maxTokens=%zu\n",
+            prompt.empty() ? 1 : 0, maxTokens); std::fflush(stderr);
+        return {};
+    }
     auto toks = tokenize(prompt);
-    if (toks.empty()) return {};
+    if (toks.empty()) {
+        std::fprintf(stderr, "[GENTEXT] EARLY_EXIT: tokenize returned 0 tokens for prompt='%s'\n",
+            prompt.c_str()); std::fflush(stderr);
+        return {};
+    }
+    std::fprintf(stderr, "[GENTEXT] prompt='%s' tokens=%zu maxTokens=%zu\n",
+        prompt.c_str(), toks.size(), maxTokens); std::fflush(stderr);
     std::vector<int> out(maxTokens);
     InferenceStats st{};
     size_t n = generate(toks.data(), toks.size(), out.data(), maxTokens, &st);
     out.resize(n);
-    return detokenize(out);
+    std::string result = detokenize(out);
+    std::fprintf(stderr, "[GENTEXT] RESULT generated=%zu text='%s'\n", n, result.c_str()); std::fflush(stderr);
+    return result;
 }
 
 // =================== STREAMING GENERATE ====================
