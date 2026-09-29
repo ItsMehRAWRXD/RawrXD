@@ -1,0 +1,30 @@
+GATE=RUNTIME_CORRECTNESS_001
+
+MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M
+MODEL_PATH=F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+QUANT=Q4_K_M
+ARCH=qwen2
+LAYERS=64
+HIDDEN=5120
+VOCAB=152064
+
+PROMPT="The capital of France is"
+PROMPT_TOKENS=7
+GENERATED_TOKENS=1
+POSITION=0
+MODE=CPU
+
+MODEL_LOAD=PASS
+TOKENIZER=PASS
+FIRST_TOKEN=PASS (token=374)
+LOGITS_FINITE=PASS (152064 count, 0 nan, 0 inf)
+ORACLE_PARITY=PASS (ORACLE_GATE_STAGE=PASS)
+DETERMINISTIC=PASS (greedy, temp=0, topK=1, seed=1)
+
+TOP10_LOGITS=374:14.78, 1265:13.39, 12095:13.37, 646:12.87, 508:12.81
+NOTE: token 12095 = ĠParis (rank 3, logit 13.37) — correct semantic match
+
+TRACE=F:\~dev\_runtime_correctness_trace.txt (102127 lines)
+STDERR=F:\~dev\_runtime_correctness_stderr.txt
+
+VERDICT=PASS

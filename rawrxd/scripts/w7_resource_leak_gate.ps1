@@ -49,30 +49,17 @@ $failCount = 0
 for ($i = 1; $i -le $Cycles; $i++) {
     Write-Output "  Cycle $i/$Cycles :"
 
-    # Launch process
+    # Launch process (must NOT use WindowStyle Hidden — the chat window
+    # needs to be created for --chat-exit-on-done to trigger PostQuitMessage)
     $p = Start-Process $Exe -ArgumentList @(
         '--chat-exit-on-done',
         '--chat-model', "`"$Model`"",
         '--chat-prompt', "`"$Prompt`"",
         '--chat-max-tokens', $MaxTokens.ToString(),
         '--chat-seed', $Seed.ToString()
-    ) -PassThru -WindowStyle Hidden
+    ) -PassThru -Wait
 
-    # Wait for exit (with timeout)
-    $timeout = 120  # 2 min per cycle
-    $waited = 0
-    while (-not $p.HasExited -and $waited -lt $timeout) {
-        Start-Sleep -Seconds 2
-        $waited += 2
-    }
-
-    if (-not $p.HasExited) {
-        Write-Output "    TIMEOUT — killing process"
-        $p | Stop-Process -Force
-        $exitCode = -1
-    } else {
-        $exitCode = $p.ExitCode
-    }
+    $exitCode = $p.ExitCode
 
     # Get final resource usage (from the process before it fully exits)
     # Since the process has exited, we measure system-level resources instead
