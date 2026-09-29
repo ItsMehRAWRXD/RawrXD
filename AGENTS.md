@@ -411,3 +411,93 @@ SAFE_TO_PROMOTE_ANYTHING=0
 `
 
 ---
+## Corrected Ledger — 2026-09-29 (duplicate retraction)
+
+The retraction for RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001 is itself
+duplicated:
+
+`
+FALSE_PASS_COMMIT=4659ed89e
+FIRST_RETRACTION=366b6d81c
+SECOND_RETRACTION=37685e71b
+RETRACTION_DUPLICATED=1
+`
+
+This does not resurrect the false PASS. Both retractions are preserved.
+The later authoritative ledger (this entry) describes their relationship.
+
+The duplicate itself proves the single-writer failure continued through the
+recovery procedure. **No third corrective record will be created.**
+
+Updated classification:
+
+`
+RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001=RETRACTED_FALSE_PASS
+RAWRXD_SINGLE_WRITER_AUTHORITY_001=FAIL_RECURRING
+SAFE_TO_PROMOTE_RECEIPT_IMMUTABILITY=0
+SAFE_TO_W8_CERTIFY=0
+SAFE_TO_GPU=0
+STRICT_CERT=NOT_COMPLETE
+`
+
+### Critical path (corrected)
+
+Step 2 is **not** "replace beginGate() yet." The system has now demonstrated
+that even recovery commits can race one another. The single-writer authority
+must become enforceable before another certification-related source mutation
+is trusted.
+
+`
+SINGLE_WRITER
+      ↓
+RECONCILE
+      ↓
+IMMUTABLE RECEIPT ADOPTION
+      ↓
+MEASURED REGRESSION
+      ↓
+RAWRGATE META-VERIFICATION
+      ↓
+W8 CERTIFICATION
+      ↓
+GPU
+`
+
+### Next gate acceptance: RAWRXD_SINGLE_WRITER_AUTHORITY_001
+
+`
+NEXT_GATE=RAWRXD_SINGLE_WRITER_AUTHORITY_001
+
+SECOND_WRITER_ACQUIRE_BLOCKED=1
+COMMIT_WITHOUT_LEASE_BLOCKED=1
+COMMIT_AFTER_HEAD_MOVED_BLOCKED=1
+UNAUTHORIZED_STAGED_PATH_BLOCKED=1
+FOREIGN_LEASE_RELEASE_BLOCKED=1
+STALE_LEASE_RECOVERY_TESTED=1
+
+VERDICT_DERIVED_FROM_CHECKS=1
+HARDCODED_VERDICT=0
+`
+
+### Pipeline architecture (addresses both failure classes)
+
+`
+Model proposes action
+        ↓
+Request-boundary authority permits effect
+        ↓
+Single-writer authority permits mutation
+        ↓
+Gate executes
+        ↓
+Immutable receipt records measurements
+        ↓
+RawrGate audits receipt + implementation + adoption
+        ↓
+Only then may ledger record PASS
+`
+
+This addresses both failure classes already uncovered:
+**uncontrolled writers** and **self-certifying evidence**.
+
+---
