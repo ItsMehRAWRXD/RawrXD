@@ -1330,6 +1330,13 @@ static int runGpuCorrectnessGate()
     const std::string& modelPath = g_startupOptions.modelPath;
     const std::string& receiptPath = g_startupOptions.gpuReceiptPath;
 
+    // Debug: trace model path + GPU flags
+    std::fprintf(stderr, "GPU_GATE: modelPath='%s' gpuInit=%d gpuForward=%d gpuNoFallback=%d receiptPath='%s'\n",
+        modelPath.c_str(), g_startupOptions.gpuInit ? 1 : 0,
+        g_startupOptions.gpuForward ? 1 : 0,
+        g_startupOptions.gpuNoFallback ? 1 : 0,
+        receiptPath.c_str());
+
     // Receipt fields
     std::string vulkanInit = "FAIL";
     int deviceCount = 0;
