@@ -48,7 +48,7 @@ Start-Sleep 3
 
 Write-Output "=== W8 measured 30-minute run ==="
 
-$p = Start-Process -FilePath $Exe -PassThru
+$p = Start-Process -FilePath $Exe -ArgumentList "--stay-alive-sec","1800" -PassThru
 $procId = $p.Id
 
 "t_sec,ws_mb,private_mb,handles,threads,cpu_sec" |
@@ -66,7 +66,7 @@ $exitCode = ""
 for ($i = 0; $i -le 1800; $i++) {
     Start-Sleep -Seconds 1
 
-    $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
+    $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
 
     if (-not $proc) {
         $exitTime = $i
@@ -98,7 +98,7 @@ for ($i = 0; $i -le 1800; $i++) {
         "SPIKE_DETECTED_AT_SEC=$i" |
           Tee-Object -FilePath "F:\~dev\_w8_spike_marker.txt"
 
-        Get-Process -Id $procId -Module -ErrorAction SilentlyContinue |
+        Get-Process -Id $pid -Module -ErrorAction SilentlyContinue |
           Select-Object ModuleName,FileName,ModuleMemorySize |
           Sort-Object ModuleMemorySize -Descending |
           Format-Table -AutoSize |
@@ -113,10 +113,10 @@ for ($i = 0; $i -le 1800; $i++) {
     }
 }
 
-$stillAlive = [bool](Get-Process -Id $procId -ErrorAction SilentlyContinue)
+$stillAlive = [bool](Get-Process -Id $pid -ErrorAction SilentlyContinue)
 
 if ($stillAlive) {
-    Stop-Process -Id $procId -Force
+    Stop-Process -Id $pid -Force
     $exitCode = "KILLED_AFTER_SUCCESS_WINDOW"
 }
 
