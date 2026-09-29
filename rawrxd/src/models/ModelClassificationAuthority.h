@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <cstdint>
 
 // Model classification authority - Classifies models by size, name, quant, source
 // This authority classifies models based on size, name, quantization, and source

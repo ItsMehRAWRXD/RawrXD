@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <vector>
 
 // Rawr dump rules - Parses user-custom classification rules
 // This authority parses user-custom classification rules for model dump

@@ -122,11 +122,7 @@ namespace rawrxd::models
         std::cout << "[ModelCatalogAuthority] Deduplicating model records..." << std::endl;
     }
 
-    // Probe all GGUF metadata
-    void probeAllGgufMetadata()
-    {
-        std::cout << "[ModelCatalogAuthority] Probing all GGUF metadata..." << std::endl;
-    }
+    // probeAllGgufMetadata() is implemented in GgufMetadataProbe.cpp — called, not redefined here.
 
     // Classify all models
     void classifyAllModels()

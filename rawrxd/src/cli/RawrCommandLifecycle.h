@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 // Rawr command lifecycle authority - Gates rawr command lifecycle tracking
 // This authority ensures every rawr command is explicitly staged, timed, and failure-tracked

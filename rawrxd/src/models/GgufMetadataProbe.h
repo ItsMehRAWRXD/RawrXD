@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <cstdint>
 
 // GGUF metadata probe - Probes GGUF metadata from model files
 // This authority probes GGUF metadata from model files to extract model information

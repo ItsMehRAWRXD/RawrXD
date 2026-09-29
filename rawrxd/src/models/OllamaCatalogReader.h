@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <vector>
 
 // Ollama catalog reader - Reads Ollama manifests and blobs
 // This authority reads Ollama manifests and blobs to build the model catalog

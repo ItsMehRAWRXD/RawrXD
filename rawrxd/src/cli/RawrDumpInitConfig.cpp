@@ -24,6 +24,11 @@ namespace rawrxd::cli
     // Global state instance
     static RawrDumpInitConfigState g_initConfigState;
 
+    // Forward declarations for internal helpers
+    void createRulesFile();
+    void createAliasesFile();
+    void createCatalogFile();
+
     // Initialize dump config
     void initDumpConfig()
     {
