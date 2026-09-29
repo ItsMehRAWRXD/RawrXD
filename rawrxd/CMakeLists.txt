@@ -6910,19 +6910,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=0)
     endif()
 
-    # Ensure link output dir exists; clear prior exe/pdb before link (mitigates MSVC LNK1104 when
-    # a stale handle, indexer, or crashed link left the binary busy +�-�+�-�+�-� harmless if files are absent).
+    # Ensure link output dir exists.
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-    # Use CMake-native removal to avoid shell quoting issues in generated link commands.
-    # PRE_LINK: remove only the prior exe (not the pdb — the pdb is regenerated
-    # during compile and may be locked by MSBuild's own PDB writer, causing
-    # spurious "File can't be removed" failures that block the link).
-    if(MSVC)
-        add_custom_command(TARGET RawrXD-Win32IDE PRE_LINK
-            COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE:RawrXD-Win32IDE>"
-            COMMENT "RawrXD-Win32IDE: PRE_LINK clear prior exe"
-        )
-    endif()
+    # PRE_LINK custom command removed (caused LNK1104/LNK1201 pdb-lock failures).
 
     # =========================================================================
     # PRODUCTION POLICY ENFORCEMENT
