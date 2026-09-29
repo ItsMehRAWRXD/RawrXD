@@ -248,4 +248,84 @@ The hidden compute unlocks are now visible in:
 7. KV/prefix/cache reuse (authorized)
 8. Debug contamination (audited)
 9. Model truth layer (rawr dump)
-"
+
+---
+
+## RawrXD Agent Modes
+
+### Universal Rule
+
+Honesty outranks the gate. A gate may not pass unless runtime evidence proves it. No session
+cost, speed, convenience, or appearance of completion may override source truth, runtime
+truth, or receipt truth.
+
+```
+HONESTY IS ABOVE THE GATE.
+A GATE MAY NOT PASS DISHONESTLY.
+A DISHONEST GATE IS A FAILED GATE.
+```
+
+### Modes
+
+| Mode | Replaces | Edits source | Runs build | Marks PASS |
+|---|---|---|---|---|
+| `RawrCode` | Code | yes | yes | only from a receipt |
+| `RawrAsk` | Ask | no | no | never |
+| `RawrDebug` | Debug | yes | yes | only after a rerun |
+| `RawrPlan` | Plan | plan files only | no | never |
+| `RawrConductor` | Orchestrator | no | no | never |
+| `RawrGate` | new | no | read-only | yes, may retract |
+| `RawrReceipt` | new | receipt files only | no | computed only |
+| `RawrAudit` | new | no | no | never |
+| `RawrFix` | new | yes | yes | one scoped fix |
+| `RawrCert` | new | no | yes | final only |
+
+**RawrAsk** classifies every claim as SOURCE_EVIDENCED, RUNTIME_EVIDENCED, INFERENCE,
+UNKNOWN, or CONTRADICTION.
+
+**RawrDebug** must reproduce the failure, name the root cause as file:line, patch, rebuild,
+rerun, and write a receipt.
+
+**RawrGate** may retract a PASS when it finds a hardcoded verdict, a fabricated counter,
+stub logic, a missing receipt, or a source/runtime mismatch. It may not soften a pass
+condition in order to obtain one.
+
+**RawrReceipt** cannot invent measured values. A missing field is reported missing, never
+defaulted.
+
+**RawrAudit** scans for stubs, hardcoded PASS, simulated counters, print-only functions and
+exclusions. Exemptions are always counted in the receipt, never applied silently.
+
+**RawrFix** handles one failure at a time: one failure, one root cause, one patch, one
+rebuild, one rerun, one receipt.
+
+**RawrCert** certifies only from receipts that already exist. It cannot pass a partial chain.
+
+### Commands
+
+```text
+rawr modes                                 emit the mode registry
+rawr audit  <root> [--out <receipt>]       scan a source tree for stubs
+rawr gate   <gate> <receipt> <src...>      verify a gate; may retract a PASS
+rawr cert   <exe> <gate>=<receipt>...      certify a chain from receipts
+```
+
+### Ledger correction: RAWRXD_RAWR_DUMP_AUTHORITY_001
+
+Item 9 above ("Model truth layer") previously read as delivered. It was not.
+`RawrDumpAuthority.cpp` assigned `modelsDiscovered = 161` and friends as literals
+(`// Example: from Ollama models root`), the verdict was computed from those literals, and
+`--all` printed four hardcoded rows. The catalog authority pushed literal paths instead of
+scanning, and the GGUF probe never opened a file. The build worked; the catalog did not
+exist.
+
+Retracted on evidence, then reimplemented against the real filesystem. A scan that finds
+nothing now reports `MODELS_DISCOVERED=0` and `VERDICT=FAIL`, which the stub could not do.
+
+```text
+rawr dump --root "G:\~dev\rawrxd\models"    # 6 models, real paths, real sizes
+rawr dump --format json tinyllama           # arch=llama tensor_count=201, read from bytes
+```
+
+A repo-wide `rawr audit src` reports findings from the same rules; several hundred blocking
+stub signals remain outside the dump chain and are tracked separately.

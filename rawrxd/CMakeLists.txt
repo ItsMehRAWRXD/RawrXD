@@ -9968,6 +9968,7 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     add_executable(rawr
         src/deep2/rawr_run.cpp
         src/deep2/rawrxd_run_modelname_001.cpp
+        src/deep2/ReceiptAuthority.cpp
         src/cli/RawrDumpAuthority.cpp
         src/cli/RawrDumpInitConfig.cpp
         src/cli/RawrDumpRebuild.cpp
@@ -9975,7 +9976,14 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         src/models/ModelClassificationAuthority.cpp
         src/models/OllamaCatalogReader.cpp
         src/models/GgufMetadataProbe.cpp
-        src/models/RawrDumpRules.cpp)
+        src/models/RawrDumpRules.cpp
+        src/agentmodes/AgentModeRegistry.cpp
+        src/agentmodes/RawrAuditAuthority.cpp
+        src/agentmodes/RawrReceiptValidator.cpp
+        src/agentmodes/RawrGateVerifier.cpp
+        src/agentmodes/RawrCertAuthority.cpp
+        src/agentmodes/RawrFailureLedger.cpp
+        src/agentmodes/RawrModesCli.cpp)
     target_link_libraries(rawr PRIVATE InferenceEngine dxgi)
     endif()
     if(MSVC)

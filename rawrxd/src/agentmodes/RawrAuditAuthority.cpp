@@ -320,6 +320,17 @@ static bool readFile(const fs::path& p, std::string& out) {
     return true;
 }
 
+bool auditFile(const std::string& path, ScanResult& out) {
+    std::string text;
+    if (!readFile(fs::path(path), text)) return false;
+    const std::string rel = fs::path(path).filename().string();
+    ++out.filesScanned;
+    out.rootExisted = true;
+    scanBuffer(rel, text, out);
+    scanFunctionBodies(rel, text, out);
+    return true;
+}
+
 ScanResult scanSourceTree(const ScanOptions& opts) {
     ScanResult res;
     std::error_code ec;

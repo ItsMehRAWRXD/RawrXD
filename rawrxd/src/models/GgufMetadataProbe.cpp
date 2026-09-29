@@ -1,136 +1,178 @@
-// GGUF metadata probe implementation
-// RawrXD GgufMetadataProbe - Probes GGUF metadata from model files
+// GgufMetadataProbe.cpp — RAWRXD_GGUF_METADATA_PROBE_001
+// Real GGUF header parser.
+//
+// Layout (GGUF v2/v3):
+//   char   magic[4]   = "GGUF"
+//   u32    version
+//   u64    tensor_count
+//   u64    metadata_kv_count
+//   kv[metadata_kv_count]
+//     key:   u64 length + bytes
+//     type:  u32
+//     value: depends on type
+//
+// Only the header region is read; tensor data is never touched.
 
 #include "models/GgufMetadataProbe.h"
-#include <iostream>
-#include <string>
+#include "deep2/ReceiptAuthority.h"
+
+#include <cstdio>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <vector>
-#include <unordered_map>
 
 namespace rawrxd::models
 {
-    // Global GGUF metadata probe state
-    struct GgufMetadataProbeState
-    {
-        bool entered = false;
-        std::string modelPath;
-        int ggufVersion = 0;
-        std::string ggufArch;
-        std::string ggufName;
-        uint64_t tensorCount = 0;
-        uint64_t vocabSize = 0;
-        uint64_t contextLength = 0;
-        uint64_t layerCount = 0;
-        uint64_t hiddenSize = 0;
-        uint64_t attentionHeads = 0;
-        uint64_t kvHeads = 0;
-        std::string ropeType;
-        std::string quantization;
-        uint64_t fileSizeBytes = 0;
-        std::string sha256;
-        bool valid = false;
-        std::string verdict = "FAIL";
+    namespace {
+
+    // GGUF value type ids.
+    enum : uint32_t {
+        T_UINT8 = 0, T_INT8 = 1, T_UINT16 = 2, T_INT16 = 3,
+        T_UINT32 = 4, T_INT32 = 5, T_FLOAT32 = 6, T_BOOL = 7,
+        T_STRING = 8, T_ARRAY = 9, T_UINT64 = 10, T_INT64 = 11, T_FLOAT64 = 12
     };
 
-    // Global state instance
-    static GgufMetadataProbeState g_ggufState;
-
-    // Probe GGUF metadata
-    void probeGgufMetadata(const std::string& modelPath)
-    {
-        g_ggufState.entered = true;
-        g_ggufState.modelPath = modelPath;
-        
-        // Simulate GGUF metadata probing (would read actual file in production)
-        g_ggufState.ggufVersion = 3;
-        g_ggufState.ggufArch = "llama";
-        g_ggufState.ggufName = "ministral3_q4_0";
-        g_ggufState.tensorCount = 200;
-        g_ggufState.vocabSize = 32000;
-        g_ggufState.contextLength = 4096;
-        g_ggufState.layerCount = 28;
-        g_ggufState.hiddenSize = 4096;
-        g_ggufState.attentionHeads = 32;
-        g_ggufState.kvHeads = 8;
-        g_ggufState.ropeType = "neox";
-        g_ggufState.quantization = "Q4_0";
-        g_ggufState.fileSizeBytes = 640000000; // 0.64GB
-        g_ggufState.sha256 = "abc123def456...";
-        g_ggufState.valid = true;
-        
-        // Set verdict
-        g_ggufState.verdict = g_ggufState.valid ? "PASS" : "FAIL";
-        
-        std::cout << "[GgufMetadataProbe] Probed GGUF metadata:" << std::endl;
-        std::cout << "  MODEL_PATH=" << g_ggufState.modelPath << std::endl;
-        std::cout << "  GGUF_VERSION=" << g_ggufState.ggufVersion << std::endl;
-        std::cout << "  GGUF_ARCH=" << g_ggufState.ggufArch << std::endl;
-        std::cout << "  GGUF_NAME=" << g_ggufState.ggufName << std::endl;
-        std::cout << "  TENSOR_COUNT=" << g_ggufState.tensorCount << std::endl;
-        std::cout << "  VOCAB_SIZE=" << g_ggufState.vocabSize << std::endl;
-        std::cout << "  CONTEXT_LENGTH=" << g_ggufState.contextLength << std::endl;
-        std::cout << "  LAYER_COUNT=" << g_ggufState.layerCount << std::endl;
-        std::cout << "  HIDDEN_SIZE=" << g_ggufState.hiddenSize << std::endl;
-        std::cout << "  ATTENTION_HEADS=" << g_ggufState.attentionHeads << std::endl;
-        std::cout << "  KV_HEADS=" << g_ggufState.kvHeads << std::endl;
-        std::cout << "  ROPE_TYPE=" << g_ggufState.ropeType << std::endl;
-        std::cout << "  QUANTIZATION=" << g_ggufState.quantization << std::endl;
-        std::cout << "  FILE_SIZE_BYTES=" << g_ggufState.fileSizeBytes << std::endl;
-        std::cout << "  SHA256=" << g_ggufState.sha256 << std::endl;
-        std::cout << "  VALID=" << (g_ggufState.valid ? "true" : "false") << std::endl;
-        std::cout << "  VERDICT=" << g_ggufState.verdict << std::endl;
+    // Fixed byte width of a scalar type; 0 means variable length.
+    uint32_t scalarWidth(uint32_t t) {
+        switch (t) {
+            case T_UINT8: case T_INT8: case T_BOOL: return 1;
+            case T_UINT16: case T_INT16: return 2;
+            case T_UINT32: case T_INT32: case T_FLOAT32: return 4;
+            case T_UINT64: case T_INT64: case T_FLOAT64: return 8;
+            default: return 0;
+        }
     }
 
-    // Probe all GGUF metadata
-    void probeAllGgufMetadata()
-    {
-        std::cout << "[GgufMetadataProbe] Probing all GGUF metadata..." << std::endl;
-        // Would iterate through all discovered models in production
+    struct Cursor {
+        const std::vector<unsigned char>& buf;
+        size_t pos = 0;
+        bool   bad = false;
+
+        explicit Cursor(const std::vector<unsigned char>& b) : buf(b) {}
+
+        bool need(size_t n) const { return pos + n <= buf.size(); }
+
+        uint8_t  u8()  { if (!need(1)) { bad = true; return 0; }  return buf[pos++]; }
+        uint16_t u16() { if (!need(2)) { bad = true; return 0; }
+                         uint16_t v = uint16_t(buf[pos]) | (uint16_t(buf[pos+1]) << 8);
+                         pos += 2; return v; }
+        uint32_t u32() { if (!need(4)) { bad = true; return 0; }
+                         uint32_t v = uint32_t(buf[pos]) | (uint32_t(buf[pos+1]) << 8) |
+                                      (uint32_t(buf[pos+2]) << 16) | (uint32_t(buf[pos+3]) << 24);
+                         pos += 4; return v; }
+        uint64_t u64() { if (!need(8)) { bad = true; return 0; }
+                         uint64_t v = 0;
+                         for (int i = 7; i >= 0; --i) v = (v << 8) | buf[pos + size_t(i)];
+                         pos += 8; return v; }
+        std::string str() {
+            const uint64_t n = u64();
+            if (bad || n > buf.size() || !need(size_t(n))) { bad = true; return {}; }
+            std::string s(reinterpret_cast<const char*>(buf.data() + pos), size_t(n));
+            pos += size_t(n);
+            return s;
+        }
+        // Skip a value of the given type, recursing into arrays.
+        void skipValue(uint32_t type) {
+            if (bad) return;
+            if (type == T_STRING) { (void)str(); return; }
+            if (type == T_ARRAY) {
+                const uint32_t elem = u32();
+                const uint64_t n    = u64();
+                if (bad) return;
+                for (uint64_t i = 0; i < n; ++i) skipValue(elem);
+                return;
+            }
+            const uint32_t w = scalarWidth(type);
+            if (w == 0) { bad = true; return; }
+            pos += w;
+            if (pos > buf.size()) bad = true;
+        }
+    };
+
+    GgufInfo g_last;
+
+    } // namespace
+
+    GgufInfo probeGgufFile(const std::string& path) {
+        GgufInfo info;
+
+        std::ifstream in(path, std::ios::binary);
+        if (!in) { info.error = "cannot open " + path; return info; }
+
+        // 8 MiB is far more than any header and bounds the read.
+        std::vector<unsigned char> buf(8u << 20);
+        in.read(reinterpret_cast<char*>(buf.data()), std::streamsize(buf.size()));
+        buf.resize(size_t(in.gcount()));
+        in.close();
+
+        if (buf.size() < 24) { info.error = "file shorter than a GGUF header"; return info; }
+        if (std::memcmp(buf.data(), "GGUF", 4) != 0) {
+            info.error = "bad magic (not a GGUF file)";
+            return info;
+        }
+
+        Cursor c(buf);
+        c.pos = 4;
+        info.version         = c.u32();
+        info.tensorCount     = c.u64();
+        info.metadataKvCount = c.u64();
+        if (c.bad) { info.error = "truncated header"; return info; }
+
+        // Walk the KV block, keeping only the keys we understand.
+        const uint64_t limit = info.metadataKvCount < 100000 ? info.metadataKvCount : 100000;
+        for (uint64_t i = 0; i < limit && !c.bad; ++i) {
+            const std::string key = c.str();
+            if (c.bad) break;
+            const uint32_t type = c.u32();
+            if (c.bad) break;
+
+            if (type == T_STRING) {
+                const std::string val = c.str();
+                if (c.bad) break;
+                if (key == "general.architecture") info.architecture = val;
+                else if (key == "general.name")      info.name = val;
+                else if (key.size() > 20 && key.compare(key.size() - 20, 20,
+                         ".quantization_type") == 0) info.quantization = val;
+            } else {
+                if (key == "general.architecture" || key == "general.name") {
+                    // We wanted these as strings but they are not; skip cleanly.
+                }
+                c.skipValue(type);
+            }
+        }
+
+        if (c.bad) { info.error = "metadata walk desynchronised"; return info; }
+
+        std::error_code ec;
+        info.fileSizeBytes = std::filesystem::file_size(std::filesystem::path(path), ec);
+        info.valid = true;
+        return info;
     }
 
-    // Get GGUF version
-    int getGgufVersion()
-    {
-        return g_ggufState.ggufVersion;
-    }
+    void probeGgufMetadata(const std::string& modelPath) { g_last = probeGgufFile(modelPath); }
 
-    // Get GGUF arch
-    std::string getGgufArch()
-    {
-        return g_ggufState.ggufArch;
-    }
+    // probeAllGgufMetadata() is defined in ModelCatalogAuthority.cpp, which
+    // owns the record walk. It is not redefined here.
 
-    // Get GGUF name
-    std::string getGgufName()
-    {
-        return g_ggufState.ggufName;
-    }
+    int         getGgufVersion()      { return int(g_last.version); }
+    std::string getGgufArch()         { return g_last.architecture; }
+    std::string getGgufName()         { return g_last.name; }
+    std::string getQuantization()     { return g_last.quantization; }
+    uint64_t    getFileSizeBytes()    { return g_last.fileSizeBytes; }
 
-    // Get quantization
-    std::string getQuantization()
-    {
-        return g_ggufState.quantization;
-    }
-
-    // Get file size
-    uint64_t getFileSizeBytes()
-    {
-        return g_ggufState.fileSizeBytes;
-    }
-
-    // Write GGUF metadata probe receipt
-    void writeGgufMetadataProbeReceipt()
-    {
-        std::cout << "[GgufMetadataProbe] Writing GGUF metadata probe receipt:" << std::endl;
-        std::cout << "  RAWRXD_GGUF_METADATA_PROBE_001=ENTERED" << std::endl;
-        std::cout << "  MODEL_PATH=" << g_ggufState.modelPath << std::endl;
-        std::cout << "  GGUF_VERSION=" << g_ggufState.ggufVersion << std::endl;
-        std::cout << "  GGUF_ARCH=" << g_ggufState.ggufArch << std::endl;
-        std::cout << "  GGUF_NAME=" << g_ggufState.ggufName << std::endl;
-        std::cout << "  TENSOR_COUNT=" << g_ggufState.tensorCount << std::endl;
-        std::cout << "  QUANTIZATION=" << g_ggufState.quantization << std::endl;
-        std::cout << "  FILE_SIZE_BYTES=" << g_ggufState.fileSizeBytes << std::endl;
-        std::cout << "  VALID=" << (g_ggufState.valid ? "1" : "0") << std::endl;
-        std::cout << "  VERDICT=" << g_ggufState.verdict << std::endl;
+    void writeGgufMetadataProbeReceipt() {
+        const std::string path = "_rawr_gguf_metadata_probe_receipt.txt";
+        receipt::beginGate(path, "RAWRXD_GGUF_METADATA_PROBE_001");
+        receipt::writeKeyValueInt(path, "GGUF_VALID", g_last.valid ? 1 : 0);
+        receipt::writeKeyValueInt(path, "GGUF_VERSION", int(g_last.version));
+        receipt::writeKeyValueInt(path, "TENSOR_COUNT", (int64_t)g_last.tensorCount);
+        receipt::writeKeyValueInt(path, "METADATA_KV_COUNT", (int64_t)g_last.metadataKvCount);
+        receipt::writeKeyValue(path, "GGUF_ARCH", g_last.architecture);
+        receipt::writeKeyValue(path, "GGUF_NAME", g_last.name);
+        receipt::writeKeyValue(path, "QUANTIZATION", g_last.quantization);
+        receipt::writeKeyValueInt(path, "FILE_SIZE_BYTES", (int64_t)g_last.fileSizeBytes);
+        receipt::writeKeyValue(path, "PARSE_ERROR", g_last.error);
+        receipt::endGate(path, g_last.valid ? "PASS" : "FAIL");
     }
 }

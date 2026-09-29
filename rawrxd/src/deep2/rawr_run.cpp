@@ -9,6 +9,7 @@
 #include "rawr_run.h"
 #include "rawrxd_run_modelname_001.h"
 #include "cli/RawrDumpAuthority.h"
+#include "agentmodes/RawrModesCli.h"
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -97,6 +98,13 @@ int main(int argc, char** argv) {
     // Dump command: first-class model truth command
     if (std::strcmp(argv[1], "dump") == 0) {
         return rawrxd::cli::runRawrDump(argc - 2, argv + 2);
+    }
+    // Honesty-gated agent modes: modes / audit / gate / cert.
+    if (std::strcmp(argv[1], "modes") == 0 ||
+        std::strcmp(argv[1], "audit") == 0 ||
+        std::strcmp(argv[1], "gate") == 0 ||
+        std::strcmp(argv[1], "cert") == 0) {
+        return rawrxd::modes::runRawrModes(argc - 1, argv + 1);
     }
     // If first arg is literally "run", consume it (for compatibility)
     int offset = 0;

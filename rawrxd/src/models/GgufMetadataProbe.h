@@ -1,33 +1,40 @@
 #pragma once
-#include <string>
 #include <cstdint>
+#include <string>
 
-// GGUF metadata probe - Probes GGUF metadata from model files
-// This authority probes GGUF metadata from model files to extract model information
+// GGUF metadata probe - reads the real GGUF container header.
+//
+// This authority parses the file. It reports what the bytes say. A file that
+// is not GGUF yields valid == false and no fabricated fields.
 
 namespace rawrxd::models
 {
-    // Probe GGUF metadata
+    // Everything the header walk can actually recover.
+    struct GgufInfo {
+        bool        valid          = false;
+        uint32_t    version        = 0;
+        uint64_t    tensorCount    = 0;
+        uint64_t    metadataKvCount= 0;
+        std::string architecture;    // general.architecture
+        std::string name;           // general.name
+        std::string quantization;   // file_type.{arch}.quantization_type
+        uint64_t    fileSizeBytes   = 0;
+        std::string error;          // why parsing stopped, when it did
+    };
+
+    // Read the header of a GGUF file. Reads only the header region, so this
+    // is cheap regardless of model size.
+    GgufInfo probeGgufFile(const std::string& path);
+
+    // Probe and remember the result for the legacy accessors below.
     void probeGgufMetadata(const std::string& modelPath);
-    
-    // Probe all GGUF metadata
     void probeAllGgufMetadata();
-    
-    // Get GGUF version
-    int getGgufVersion();
-    
-    // Get GGUF arch
+
+    int         getGgufVersion();
     std::string getGgufArch();
-    
-    // Get GGUF name
     std::string getGgufName();
-    
-    // Get quantization
     std::string getQuantization();
-    
-    // Get file size
-    uint64_t getFileSizeBytes();
-    
-    // Write GGUF metadata probe receipt
+    uint64_t    getFileSizeBytes();
+
     void writeGgufMetadataProbeReceipt();
 }

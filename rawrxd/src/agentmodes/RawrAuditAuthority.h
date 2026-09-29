@@ -54,6 +54,10 @@ ScanResult scanSourceTree(const ScanOptions& opts);
 void scanBuffer(const std::string& fileLabel, const std::string& text,
                 ScanResult& out);
 
+// Read and audit one file by path, including function-body rules. Used by the
+// gate verifier, which scopes its check to the files backing a single gate.
+bool auditFile(const std::string& path, ScanResult& out);
+
 // Classify a function body: true when it performs no computation and only
 // emits output. This is the signature of a print-only stub.
 bool isPrintOnlyBody(const std::string& body);
