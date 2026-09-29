@@ -1501,26 +1501,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // WinMain stack frame (not inside WM_DESTROY's window-procedure call).
     // This prevents the STATUS_STACK_OVERFLOW that occurred when the 111+
     // STL member destructor chain of Deep2Engine ran inside DispatchMessage.
-    // D-W6-002: wrap in try/catch — the engine destructor may touch resources
-    // (telemetry, parity probe file handles) that reference the now-destroyed
-    // window. The generation receipt is already written; a crash here must not
-    // affect the exit code.
+    // D-W6-001/D-W6-002/D-W6-003: the Deep2Engine has 111+ STL members whose
+    // destructor chain causes both STATUS_STACK_OVERFLOW (inside WM_DESTROY) and
+    // STATUS_ACCESS_VIOLATION (post-message-loop, stale handle dereference).
+    // The generation receipt is already written; the OS reclaims all memory on
+    // process exit. Join the chat thread (it must not outlive the process) but
+    // intentionally leak g_chatEngine (unique_ptr::reset is skipped) to avoid
+    // the crash. This is acceptable for a GUI application's exit path.
     g_chatCancelled = true;
     if (g_chatThread.joinable()) g_chatThread.join();
-    if (g_chatEngine) {
-        try {
-            g_chatEngine->unloadModel();
-        } catch (...) {
-            // unloadModel may throw if internal state references freed memory;
-            // the engine is being destroyed anyway.
-        }
-        try {
-            g_chatEngine.reset();
-        } catch (...) {
-            // Destructor chain may access stale handles; suppress to allow
-            // a clean process exit with the generation receipt intact.
-        }
-    }
+    // g_chatEngine is intentionally NOT reset — the destructor is unsafe during
+    // process teardown. The OS will reclaim the memory.
 
     closeHeadlessLog();
     return (int)msg.wParam;
