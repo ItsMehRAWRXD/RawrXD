@@ -2244,23 +2244,73 @@ const SpeculativeCounters& Deep2Engine::speculativeCounters() const {
     return medusaDecoder_?medusaDecoder_->stats.exact:speculativeEmpty_;
 }
 
+// =================== TRACE PROFILE POLICY ====================
+// RAWRXD_TRACE_PROFILE_POLICY_001
+// Controls which traces fire. Profiles:
+//   perf    — no stderr hotpath spam; structured counters only; TPS valid
+//   ide     — structured IDE diagnostics; stage events; summaries; no flood
+//   debug   — full unsilent stderr flood; TPS marked DEBUG_CONTAMINATED
+//   receipt — machine-readable receipts only
+//
+// Default: perf for rawr CLI, ide for Win32IDE (detected via --headless flag)
+// Override: RAWRXD_TRACE_PROFILE=<perf|ide|debug|receipt>
+//           RAWRXD_VERBOSE=1 / RAWRXD_TRACE_TOKEN=1 / DEEP2_TRACE_FORWARD=1 → debug
+enum class TraceProfile { Perf, Ide, Debug, Receipt };
+
+static TraceProfile rawrxdTraceProfile() {
+    static const TraceProfile profile = [] {
+        const char* env = std::getenv("RAWRXD_TRACE_PROFILE");
+        if (env && env[0]) {
+            if (std::strcmp(env, "debug") == 0) return TraceProfile::Debug;
+            if (std::strcmp(env, "ide") == 0) return TraceProfile::Ide;
+            if (std::strcmp(env, "receipt") == 0) return TraceProfile::Receipt;
+            if (std::strcmp(env, "perf") == 0) return TraceProfile::Perf;
+        }
+        // Legacy env vars force debug
+        auto on = [](const char* name) {
+            const char* v = std::getenv(name);
+            return v && v[0] && v[0] != '0';
+        };
+        if (on("DEEP2_TRACE_FORWARD") || on("RAWRXD_VERBOSE") ||
+            on("RAWRXD_TRACE_TOKEN"))
+            return TraceProfile::Debug;
+        // Default: perf (clean TPS, no hotpath spam)
+        return TraceProfile::Perf;
+    }();
+    return profile;
+}
+
+// Hotpath spam = per-layer, per-token, per-LinearW traces.
+// Only fire in debug mode. In ide mode, fire stage events only.
+static bool rawrxdHotpathTraceEnabled() {
+    return rawrxdTraceProfile() == TraceProfile::Debug;
+}
+
+// Stage events = [INIT], [ALLOC], [FWD_ALL] entry, [STREAM] RESULT, failures.
+// Fire in debug AND ide mode. Suppress in perf and receipt.
+static bool rawrxdStageTraceEnabled() {
+    auto p = rawrxdTraceProfile();
+    return p == TraceProfile::Debug || p == TraceProfile::Ide;
+}
+
+// Failure traces = silent-failure-path diagnostics (embed fail, forward fail, etc).
+// Fire in all modes except receipt-only.
+static bool rawrxdFailureTraceEnabled() {
+    return rawrxdTraceProfile() != TraceProfile::Receipt;
+}
+
+// Summary traces = [STREAM] RESULT, [GENERATE] EXIT, TPS.
+// Fire in all modes (including perf) — these are the clean TPS receipts.
+static bool rawrxdSummaryTraceEnabled() {
+    return true;
+}
+
 // =================== FORWARD-LAYER TRACE GATE ====================
 // Product path (rawr run) must stream only generated text to stdout and
 // receipts to stderr. Per-op FWD_LAYER/LINEARW tracing is a batch-gate
 // diagnostic: opt-in via DEEP2_TRACE_FORWARD=1 (checked once per process).
 static bool deep2ForwardTraceEnabled() {
-    static const bool enabled = [] {
-        auto on = [](const char* name) {
-            const char* v = std::getenv(name);
-            return v && v[0] && v[0] != '0';
-        };
-        // Raw per-token stderr spam only. IDE-diag (RAWRXD_IDE_DIAG) is
-        // intentionally NOT here: it enables the structured Deep2Diag receipt
-        // without the noisy per-token dumps.
-        return on("DEEP2_TRACE_FORWARD") || on("RAWRXD_VERBOSE") ||
-               on("RAWRXD_TRACE_TOKEN");
-    }();
-    return enabled;
+    return rawrxdHotpathTraceEnabled();
 }
 
 // B4b: once the lmHead slices are pinned at the frozen split geometry, the

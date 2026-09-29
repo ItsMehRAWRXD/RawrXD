@@ -10,7 +10,8 @@
 # Usage: pwsh -File w8_long_duration_stability_gate.ps1
 
 param(
-    [string]$Exe = "F:\~dev\rawrxd\build_w1\bin\Release\RawrXD-Win32IDE.exe"
+    [string]$Exe = "F:\~dev\build_win32ide_strict\bin\RawrXD-Win32IDE.exe",
+    [int]$DurationSec = 1800
 )
 
 $ErrorActionPreference = "Stop"
@@ -48,7 +49,7 @@ Start-Sleep 3
 
 Write-Output "=== W8 measured 30-minute run ==="
 
-$p = Start-Process -FilePath $Exe -ArgumentList "--stay-alive-sec","1800" -PassThru
+$p = Start-Process -FilePath $Exe -ArgumentList "--cert-stay-alive","--cert-duration-sec","$DurationSec","--headless" -PassThru
 $procId = $p.Id
 
 "t_sec,ws_mb,private_mb,handles,threads,cpu_sec" |
@@ -63,7 +64,7 @@ $spikeDetected = $false
 $exitTime = ""
 $exitCode = ""
 
-for ($i = 0; $i -le 1800; $i++) {
+for ($i = 0; $i -le $DurationSec; $i++) {
     Start-Sleep -Seconds 1
 
     $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
@@ -120,10 +121,16 @@ if ($stillAlive) {
     $exitCode = "KILLED_AFTER_SUCCESS_WINDOW"
 }
 
+Start-Sleep 2
 $linger = (Get-Process RawrXD-Win32IDE -ErrorAction SilentlyContinue | Measure-Object).Count
 
+# A full-duration survival is a PASS whether the process was still alive at the
+# end of the monitor window (script killed it) OR it self-exited cleanly at/after
+# the target via its own --cert-duration-sec timer (exitTime >= DurationSec).
+$survivedFullWindow = $stillAlive -or ($exitTime -ne "" -and [int]$exitTime -ge $DurationSec)
+
 $verdict = "FAIL"
-if ($stillAlive -and -not $spikeDetected -and $linger -eq 0) {
+if ($survivedFullWindow -and -not $spikeDetected -and $linger -eq 0) {
     $verdict = "PASS"
 }
 
@@ -131,7 +138,7 @@ if ($stillAlive -and -not $spikeDetected -and $linger -eq 0) {
 GATE=W8_LONG_DURATION_STABILITY_001
 DATE=2026-09-29
 EXE=$Exe
-DURATION_TARGET_SEC=1800
+DURATION_TARGET_SEC=$DurationSec
 WARMUP_USED=1
 KNOWN_DEFECT_ABSORBED=D_W7_001_FIRST_LAUNCH_0xCFFFFFFF
 BASELINE_WORKING_SET_MB=$baselineWs

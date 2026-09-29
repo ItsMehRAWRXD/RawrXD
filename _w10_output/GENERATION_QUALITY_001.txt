@@ -1,0 +1,404 @@
+===============================================================================
+RAWRXD CERTIFICATION RECORD
+===============================================================================
+
+PROGRAM=Program0_GenerationQuality
+GATE=GENERATION_QUALITY_001
+VERSION=1
+
+STATUS=PASS
+DATE_UTC=
+BRANCH=
+COMMIT=
+BUILD=Release
+
+MODEL=F:\~dev\qwen2.5-coder-1.5b-base.gguf
+MODEL_SHA256=NOT_COMPUTED
+TOKENIZER_SHA256=NOT_COMPUTED
+REFERENCE_COMMIT=
+
+PROMPT=hello
+PROMPT_TOKENS=1
+SEED=1
+
+SAMPLER=Greedy
+TEMPERATURE=0
+TOP_K=1
+TOP_P=1
+MAX_TOKENS=5
+
+===============================================================================
+CHECKPOINT LADDER
+===============================================================================
+
+CP00_MODEL_LOAD
+    STATUS=PASS
+    TIME_MS=1073
+CP01_TOKENIZE
+    STATUS=PASS
+    TOKEN_COUNT=1
+CP02_EMBED
+    STATUS=PASS
+    CHECKSUM=0000000000000000
+CP03_RMS_PRE
+    STATUS=PASS
+    REASON=pre-attention RMS is observed as ATTN_NORM; the bare name carries the first layer of each step by the probe's once-per-step semantics. PER_LAYER=LAYER_<n>_ATTN_NORM for all layers
+CP04_LAYER_01
+    STATUS=PASS
+    LAYER_LADDER_STEPS=5 LAYER_RECORDS=2380
+CP05_LAYER_MID
+    STATUS=PASS
+    LAYER_MAX_INDEX=27 LAYER_DISTINCT_CHECKPOINTS=476
+CP06_LAYER_FINAL
+    STATUS=PASS
+    REASON=per-layer records cover every emitted layer, last index 27
+CP07_FINAL_RMS
+    STATUS=PASS
+    CHECKSUM=00000000000e7639 DECODE_STEP=1
+CP08_KV_WRITE
+    STATUS=PASS
+    KV_LENGTH=5
+CP09_ATTENTION
+    STATUS=PROBE_LIMITED
+    CHECKSUM=0000000000000000
+CP10_FFN
+    STATUS=PROBE_LIMITED
+    CHECKSUM=0000000000000053
+CP11_LOGITS
+    STATUS=PASS
+    CHECKSUM=0000000000000000 DECODE_STEP=1
+CP12_TOP10
+    STATUS=PASS
+    TOP10_MATCH=YES TOP10_STEPS=4 TOP10_MISMATCH=0 TOP10_ABSENT_IN_ONE_ARM=0
+CP13_SAMPLER
+    STATUS=PASS
+    SAMPLER=Greedy (identical in both arms)
+CP14_SELECTED_TOKEN
+    STATUS=PASS
+    TOKEN_ID=AGREE
+CP15_STREAM
+    STATUS=PASS
+    UTF8_VALID=YES TEXT=留言板，欢迎来到我的
+CP16_UI_APPEND
+    STATUS=NOT_IN_SCOPE
+    REASON=IDE-side; covered by RAWRXD_IDE_CHAT_E2E_001
+CP17_RENDER
+    STATUS=NOT_IN_SCOPE
+    REASON=IDE-side; covered by RAWRXD_IDE_CHAT_E2E_001
+CP18_REQUEST_END
+    STATUS=NOT_IN_SCOPE
+    REASON=IDE-side; covered by RAWRXD_IDE_CHAT_E2E_001
+CP19_SHUTDOWN
+    STATUS=NOT_IN_SCOPE
+    REASON=IDE-side; covered by RAWRXD_IDE_CHAT_E2E_001
+
+===============================================================================
+PROBE_COVERAGE_001
+===============================================================================
+
+STEPS_TOTAL=5
+PREFILL_STEPS=0..0
+DECODE_STEPS=1..4
+
+NAME                     MATCH  DIVERGE  GAP  NOT_REQ  COVERED
+-------------------------------------------------------------------
+EMBED                       5        0    0        0  YES
+ATTN_NORM                   5        0    0        0  YES
+Q                           5        0    0        0  YES
+K                           5        0    0        0  YES
+V                           5        0    0        0  YES
+Q_ROPE                      5        0    0        0  YES
+K_ROPE                      5        0    0        0  YES
+ATTN_SCORES                 5        0    0        0  YES
+ATTN_PROBS                  5        0    0        0  YES
+ATTN_VALUE                  5        0    0        0  YES
+O_PROJ                      5        0    0        0  YES
+ATTN_RESIDUAL               5        0    0        0  YES
+FFN_NORM                    5        0    0        0  YES
+FFN_GATE                    5        0    0        0  YES
+FFN_UP                      5        0    0        0  YES
+SWIGLU                      5        0    0        0  YES
+FFN_DOWN                    5        0    0        0  YES
+LAYER_RESIDUAL              5        0    0        0  YES
+FINAL_NORM                  5        0    0        0  YES
+LOGITS                      5        0    0        0  YES
+-------------------------------------------------------------------
+LAYER_LADDER_STEPS_COMPARED=5
+LAYER_LADDER_STEPS_NOT_INSTRUMENTED=0
+LAYER_RECORDS_COMPARED=2380
+LAYER_MAX_INDEX=27
+LAYER_DISTINCT_CHECKPOINTS=476
+SURFACES_NOT_REQUIRED=0 (prefill steps carry no logits surface by design)
+
+SURFACES_WITH_GAPS=0
+PROBE_COVERAGE=PASS
+
+===============================================================================
+LOGITS
+===============================================================================
+
+TOP10_FIRST_DECODE_STEP=1
+===============================================================================
+
+TOP10_REFERENCE=3837:13.673712,198:12.967791,271:12.759926,6313:12.602902,1699:12.029573,5122:12.019819,62:12.005117,11:11.975800,9370:11.924621,91:11.817839,31139:11.732093,481:11.694955,760:11.664938,220:11.480637,25:11.353117,12:11.338218,17447:11.290442,1773:11.092955,100010:11.031056,9909:10.936930,0:10.887997,17:10.505479,10904:10.420650,8545:10.385967,15946:10.310011,37945:10.284393,7:10.277342,16:10.16173...
+TOP10_CANDIDATE=3837:13.673712,198:12.967791,271:12.759926,6313:12.602902,1699:12.029573,5122:12.019819,62:12.005117,11:11.975800,9370:11.924621,91:11.817839,31139:11.732093,481:11.694955,760:11.664938,220:11.480637,25:11.353117,12:11.338218,17447:11.290442,1773:11.092955,100010:11.031056,9909:10.936930,0:10.887997,17:10.505479,10904:10.420650,8545:10.385967,15946:10.310011,37945:10.284393,7:10.277342,16:10.16173...
+SELECTED_TOKEN=AGREE
+
+===============================================================================
+KV CACHE
+===============================================================================
+
+KV_WRITES_REF=5
+KV_WRITES_DUT=5
+KV_LENGTH=5
+KV_ADVANCES=NOT_IMPLEMENTED
+KV_RESETS=NOT_IMPLEMENTED
+
+===============================================================================
+NUMERICAL METRICS
+===============================================================================
+
+MAX_ABS_ERROR=SEE_TRACE_DIFF
+MEAN_ABS_ERROR=NOT_COMPUTED
+MAX_REL_ERROR=NOT_COMPUTED
+FIRST_MISMATCH=NONE
+
+===============================================================================
+PERFORMANCE
+===============================================================================
+
+FIRST_TOKEN_MS=3239
+TOKENS_PER_SECOND=0.708447
+TOTAL_TOKENS=5
+TOTAL_TIME_MS=9698
+
+===============================================================================
+DEFECTS
+===============================================================================
+
+DEFECT_ID=NONE
+SEVERITY=NONE
+DESCRIPTION=No divergence between the certified CPU lane and the IDE chat lane.
+ROOT_CEAUSE=NONE
+
+===============================================================================
+EVIDENCE
+===============================================================================
+
+BUILD_LOG=build_w1/generation_quality_build.log
+RUN_LOG=F:\~dev\_w10_output/GENERATION_QUALITY_001.txt
+TRACE=F:\~dev\_w10_output/trace_D_IDE_CHAT.txt
+PROBE_OUTPUT=F:\~dev\_w10_output/trace_A_CPU_HARNESS.txt
+SCREENSHOT=NONE
+
+===============================================================================
+GENERATION RECEIPT
+===============================================================================
+
+PRODUCER=Deep2::Deep2Engine (self-reported; not authoritative)
+GENERATION_ID=GEN-1093b8cfda71bfc0
+GENERATION_HASH=GEN-1093b8cfda71bfc0
+GENERATION_HASH_ALGORITHM=FNV-1a-64 over token ids and decoded text
+
+INPUT_MODEL=F:\~dev\qwen2.5-coder-1.5b-base.gguf
+INPUT_PROMPT=hello
+INPUT_PROMPT_TOKENS=1
+INPUT_SEED=1
+INPUT_SAMPLER=Greedy
+INPUT_TEMPERATURE=0
+INPUT_TOP_K=1
+INPUT_TOP_P=1
+INPUT_MAX_TOKENS=5
+
+OUTPUT_STATUS=Completed
+OUTPUT_TOKEN_COUNT=5
+OUTPUT_TOKEN_IDS=117612,3837,100437,104071,97611
+OUTPUT_TEXT=留言板，欢迎来到我的
+OUTPUT_UTF8_VALID=YES
+
+RUNTIME_MAXSEQLEN=4096
+RUNTIME_THREADS=auto
+RUNTIME_THREADPOOL=true
+RUNTIME_KV_LENGTH=5
+RUNTIME_TRACE=F:\~dev\_w10_output/trace_D_IDE_CHAT.txt
+
+CAPABILITY_PROBE_SURFACES_EMITTED=20
+CAPABILITY_LAYER_RECORDS_EMITTED=2380
+CAPABILITY_LAYER_MAX_INDEX=27
+CAPABILITY_STEPS_EMITTED=5
+STATE_HASH_STEPS=5
+
+===============================================================================
+CERTIFICATION RECEIPT
+===============================================================================
+
+CERTIFIER=tests/generation_quality_gate.cpp (independent of the producer's judgement)
+CERTIFIER_INSTRUMENT=ENGINE_PARITY_PROBE_PRODUCER_OWNED
+CERTIFIER_INSTRUMENT_NOTE=probe emission is inside the runtime under test; external adjudication is deferred to LOGITS_PARITY_001
+SUBJECT_GENERATION_ID=GEN-1093b8cfda71bfc0
+
+STRUCTURAL=PASS (utf8_valid, status=Completed)
+NUMERICAL=PASS (true_divergences=0, scope=self-consistency across configurations, NOT external truth)
+CONSTRAINT=PASS (greedy tokens and text agree between reference and candidate)
+EVIDENCE=PASS (checkpoints_not_instrumented=0)
+DETERMINISM=PASS (non-reference arms reproducing reference output: 3/3)
+POLICY=PASS (greedy, fixed seed, no remote provider, fail-closed verdict)
+COMPLETENESS=PASS (required probe surfaces covered: all)
+GENERATION_QUALITY=NOT_ASSESSED
+  (an output-coherence judgement requires an external reference; the same
+   certifier that grades configuration equivalence cannot grade meaning)
+VERDICT=PASS
+
+===============================================================================
+VERDICT
+===============================================================================
+
+PASS_CRITERIA=all probe checkpoints hash-identical between A_CPU_HARNESS and D_IDE_CHAT for every step, identical greedy token ids, and valid UTF-8 output
+NEXT_GATE=LOGITS_PARITY_001
+
+CONFIG_EQUIVALENCE=PASS
+GENERATION_QUALITY=NOT_ASSESSED (this gate compares configurations, not output coherence)
+VERDICT=PASS
+===============================================================================
+
+===============================================================================
+DIFFERENTIAL RECORD
+===============================================================================
+
+REFERENCE=A_CPU_HARNESS
+CANDIDATE=D_IDE_CHAT
+MODEL_SHA256=NOT_COMPUTED
+PROMPT_SHA256=NOT_COMPUTED
+SEED=1
+
+ARM MATRIX (maxSeqLen / threads / threadPool)
+  A_CPU_HARNESS  seq=64 threads=1 pool=false  tokens=5  text=留言板，欢迎来到我的
+  B_SEQ4096  seq=4096 threads=1 pool=false  tokens=5  text=留言板，欢迎来到我的
+  C_THREADPOOL  seq=64 threads=auto pool=true  tokens=5  text=留言板，欢迎来到我的
+  D_IDE_CHAT  seq=4096 threads=auto pool=true  tokens=5  text=留言板，欢迎来到我的
+
+PER-ARM EQUIVALENCE TO REFERENCE
+  B_SEQ4096: text=MATCH tokens=MATCH firstDiv=NONE
+  C_THREADPOOL: text=MATCH tokens=MATCH firstDiv=NONE
+  D_IDE_CHAT: text=MATCH tokens=MATCH firstDiv=NONE
+
+CHECKPOINT        REF        DUT        MATCH
+-------------------------------------------------------------------
+EMBED           PASS       YES  hash 0000000000000000
+ATTN_NORM       PASS       YES  hash 0000000000000dd5
+Q               PASS       YES  hash 0000000000000000
+K               PASS       YES  hash 000000000000019c
+V               PASS       YES  hash 00000000db6f32a7
+Q_ROPE          PASS       YES  hash 0000000000000000
+K_ROPE          PASS       YES  hash 000000000000019c
+ATTN_SCORES     PASS       YES  hash 00000000000354a9
+ATTN_PROBS      PASS       YES  hash 0000000000000002
+ATTN_VALUE      PASS       YES  hash 0000000000000002
+O_PROJ          PASS       YES  hash 0000000000000000
+ATTN_RESIDUAL   PASS       YES  hash 0000000000000000
+FFN_NORM        PASS       YES  hash 0000000000000000
+FFN_GATE        PASS       YES  hash 000000000000015c
+FFN_UP          PASS       YES  hash 0000000000000004
+SWIGLU          PASS       YES  hash 0000000000000000
+FFN_DOWN        PASS       YES  hash 0000000000000053
+LAYER_RESIDUAL  PASS       YES  hash 0000000000000000
+FINAL_NORM      PASS       YES  hash 00000000000001f2
+LOGITS          PASS       YES  hash 0000000000000004
+LAYER_LADDER@0  PASS       YES  step=0 hash 6cd03728482325b9
+EMBED           PASS       YES  hash 0000000000000018
+ATTN_NORM       PASS       YES  hash 0000000000000003
+Q               PASS       YES  hash 0000000000000044
+K               PASS       YES  hash 0000000000000006
+V               PASS       YES  hash 0000000000000000
+Q_ROPE          PASS       YES  hash 000000000048686e
+K_ROPE          PASS       YES  hash 000000000007f49f
+ATTN_SCORES     PASS       YES  hash 0000000000000000
+ATTN_PROBS      PASS       YES  hash 000000000000012b
+ATTN_VALUE      PASS       YES  hash 0000000000000000
+O_PROJ          PASS       YES  hash 0000000000000002
+ATTN_RESIDUAL   PASS       YES  hash 0000000000000000
+FFN_NORM        PASS       YES  hash 00000000000003de
+FFN_GATE        PASS       YES  hash 0000000000000000
+FFN_UP          PASS       YES  hash 0000000000000006
+SWIGLU          PASS       YES  hash 0000000000000009
+FFN_DOWN        PASS       YES  hash 00000000000c403b
+LAYER_RESIDUAL  PASS       YES  hash 00000000000e8660
+FINAL_NORM      PASS       YES  hash 00000000000e7639
+LOGITS          PASS       YES  hash 0000000000000000
+LAYER_LADDER@1  PASS       YES  step=1 hash bf955e0d46d9c112
+EMBED           PASS       YES  hash 0000000000000009
+ATTN_NORM       PASS       YES  hash 0000000000000000
+Q               PASS       YES  hash 0000000000000000
+K               PASS       YES  hash 0000000000000009
+V               PASS       YES  hash 0000000000000004
+Q_ROPE          PASS       YES  hash 0000000000000021
+K_ROPE          PASS       YES  hash 0000000000000000
+ATTN_SCORES     PASS       YES  hash 0000000000000000
+ATTN_PROBS      PASS       YES  hash 0000000000000055
+ATTN_VALUE      PASS       YES  hash 0000000000000005
+O_PROJ          PASS       YES  hash 0000000000000000
+ATTN_RESIDUAL   PASS       YES  hash 0000000000000000
+FFN_NORM        PASS       YES  hash 0000000000000002
+FFN_GATE        PASS       YES  hash 0000000000000031
+FFN_UP          PASS       YES  hash 000000000000002c
+SWIGLU          PASS       YES  hash 0000000000000000
+FFN_DOWN        PASS       YES  hash 0000000000000004
+LAYER_RESIDUAL  PASS       YES  hash 0000000000000042
+FINAL_NORM      PASS       YES  hash 0000000000000000
+LOGITS          PASS       YES  hash 0000000000000000
+LAYER_LADDER@2  PASS       YES  step=2 hash 52d17195ca427423
+EMBED           PASS       YES  hash 000000000001b81f
+ATTN_NORM       PASS       YES  hash 0000000000000000
+Q               PASS       YES  hash 0000000000000000
+K               PASS       YES  hash 000000000000034d
+V               PASS       YES  hash 0000000000010807
+Q_ROPE          PASS       YES  hash 0000000000000000
+K_ROPE          PASS       YES  hash 0000000000000054
+ATTN_SCORES     PASS       YES  hash 0000000000000005
+ATTN_PROBS      PASS       YES  hash 0000000000000044
+ATTN_VALUE      PASS       YES  hash 0000000000000001
+O_PROJ          PASS       YES  hash 0000000000000000
+ATTN_RESIDUAL   PASS       YES  hash 0000000000000029
+FFN_NORM        PASS       YES  hash 000000000093a2cf
+FFN_GATE        PASS       YES  hash 0000000000000049
+FFN_UP          PASS       YES  hash 000000000000045d
+SWIGLU          PASS       YES  hash 0000000000000004
+FFN_DOWN        PASS       YES  hash 0000000000000000
+LAYER_RESIDUAL  PASS       YES  hash 000000000003e968
+FINAL_NORM      PASS       YES  hash 0000000000000000
+LOGITS          PASS       YES  hash 0000000000000002
+LAYER_LADDER@3  PASS       YES  step=3 hash 3f5b7288797bdedc
+EMBED           PASS       YES  hash 0000000000011ff7
+ATTN_NORM       PASS       YES  hash 0000000000000010
+Q               PASS       YES  hash 0000000000000000
+K               PASS       YES  hash 0000000000000053
+V               PASS       YES  hash 0000000000000000
+Q_ROPE          PASS       YES  hash 00000000000150a0
+K_ROPE          PASS       YES  hash 0000000000000000
+ATTN_SCORES     PASS       YES  hash 000009129acedd90
+ATTN_PROBS      PASS       YES  hash 0000000000000009
+ATTN_VALUE      PASS       YES  hash 000000000000000c
+O_PROJ          PASS       YES  hash 0000000000000007
+ATTN_RESIDUAL   PASS       YES  hash 0000000000000000
+FFN_NORM        PASS       YES  hash 000000000000003b
+FFN_GATE        PASS       YES  hash 0000000000000009
+FFN_UP          PASS       YES  hash 0000000000000000
+SWIGLU          PASS       YES  hash 0000000000000002
+FFN_DOWN        PASS       YES  hash 000000000000004c
+LAYER_RESIDUAL  PASS       YES  hash 0000000000000009
+FINAL_NORM      PASS       YES  hash 0000000000000062
+LOGITS          PASS       YES  hash 0000000000000000
+LAYER_LADDER@4  PASS       YES  step=4 hash d4628071d03c8305
+-------------------------------------------------------------------
+
+FIRST_DIVERGENCE=NONE
+INVESTIGATION_TARGET=NONE
+CHECKPOINTS_COMPARED=105
+CHECKPOINTS_NOT_INSTRUMENTED=0
+CHECKPOINTS_NOT_REQUIRED=0
+TRUE_DIVERGENCES=0
+TOP10_STEPS_COMPARED=4
+TOP10_MATCH=YES
+TOKEN_IDS_MATCH=YES
+TEXT_MATCH=YES
+===============================================================================

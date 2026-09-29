@@ -1,0 +1,14 @@
+﻿=== RAWR INSTALL ===
+SOURCE_EXE=F:\~dev\build_win32ide_strict\bin\rawr.exe
+INSTALL_DIR=C:\Users\Garrett\rawrxd\bin
+MODEL_DIR=F:\models
+SOURCE_EXE_EXISTS=1
+INSTALLED_EXE=C:\Users\Garrett\rawrxd\bin\rawr.exe
+INSTALLED_EXE_EXISTS=True
+PATH_APPENDED=1
+RAWRXD_MODEL_DIR_SET=F:\models
+MODEL_DIR_EXISTS=True
+AUTOSTART_REGISTERED=0  reason=not requested (pass -RegisterAutostart to enable)
+VERIFY_FRESH_SHELL=PATH_HAS_RAWR=False;RAWR_SOURCE=;MODEL_DIR=F:\models
+VERDICT=PASS
+NOTE=Open a NEW terminal, then: rawr run <modelname-or-gguf> "<prompt>"

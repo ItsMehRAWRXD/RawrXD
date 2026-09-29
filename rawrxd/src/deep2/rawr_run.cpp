@@ -8,6 +8,7 @@
 //   rawrxd_cli.exe run --tokens 256 --vulkan <model> <prompt>
 #include "rawr_run.h"
 #include "rawrxd_run_modelname_001.h"
+#include "cli/RawrDumpAuthority.h"
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -80,8 +81,22 @@ int main(int argc, char** argv) {
     if (argc < 2) {
         std::fprintf(stderr,
             "Usage: rawr <model> <prompt>\n"
-            "  or:  rawr --tokens N [--vulkan] <model> <prompt>\n");
+            "  or:  rawr run [--tokens N] [--vulkan] <model> <prompt>\n"
+            "  or:  rawr list                 (list every selectable model)\n"
+            "\n"
+            "<model> may be an Ollama model name (see `rawr list`), a registered\n"
+            "alias, or a .gguf path. No model is hardcoded.\n");
         return 1;
+    }
+    // Full selection: list every selectable model (Ollama + local + aliases)
+    if (std::strcmp(argv[1], "list") == 0 ||
+        std::strcmp(argv[1], "ls")   == 0 ||
+        std::strcmp(argv[1], "models") == 0) {
+        return rawrxd_list_models_001();
+    }
+    // Dump command: first-class model truth command
+    if (std::strcmp(argv[1], "dump") == 0) {
+        return rawrxd::cli::runRawrDump(argc - 2, argv + 2);
     }
     // If first arg is literally "run", consume it (for compatibility)
     int offset = 0;

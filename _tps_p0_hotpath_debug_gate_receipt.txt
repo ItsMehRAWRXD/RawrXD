@@ -1,0 +1,44 @@
+=== TPS HOT-PATH DEBUG GATE RECEIPT ===
+GATE=RAWRXD_TPS_P0_HOTPATH_DEBUG_GATE
+DATE=2026-09-29
+EXE=C:\Users\Garrett\rawrxd\bin\rawr.exe  (from build_win32ide_strict)
+
+--- CHANGE ---
+FILE=rawrxd/src/deep2/Deep2Engine.cpp
+deep2ForwardTraceEnabled() now also honors RAWRXD_VERBOSE / RAWRXD_TRACE_TOKEN /
+RAWRXD_LOGITS_SANITY_FULL (kept DEEP2_TRACE_FORWARD). Gated, previously-ungated,
+per-token stderr output + the per-token FULL-VOCAB logit scan:
+  FINAL_NORM_ENTER, FINALNORM_POST, COMPUTE_LOGITS_RETURNED,
+  LOGITS_SANITY (151936-element scan), SAMPLER_RESULT.
+
+--- DEFAULT (silent) RUN: rawr run --tokens 64 fast "..." ---
+DEBUG_LOGGING_DEFAULT_OFF=1
+TOKEN_LOOP_STDERR_SPAM=0          (FINAL_NORM_ENTER=0, LOGITS_SANITY=0, SAMPLER_RESULT=0)
+FULL_LOGITS_SCAN_PER_TOKEN=0      (now gated behind verbose)
+TACH_ENABLED=1
+TACH_CLEAN=1
+GENERATED_TOKENS=64
+COMPLETED=YES
+TPS=0.691
+PEAK_TPS=0.691
+
+--- VERBOSE OPT-IN VERIFIED ---
+RAWRXD_VERBOSE=1 rawr run --tokens 2 fast "hi"
+  FINAL_NORM_ENTER=2  LOGITS_SANITY=2  SAMPLER_RESULT=2   (traces return on demand)
+VERBOSE_OPT_IN_VERIFIED=1
+
+--- HONEST PERF FINDING ---
+TACH_CLEANED=YES  (the requested deliverable)
+TPS_IMPROVED_BY_GATE=NO
+  Before (12 tok run): ~0.51 tok/s amortized
+  After  (64 tok run): 0.69 tok/s amortized
+  FIRST_TOKEN_LATENCY_SEC~=9.7   (prefill of 8 tokens + setup)
+  STEADY_STATE~=1.3 s/token (~0.77 tok/s)
+CONCLUSION: per-token debug logging was cosmetic clutter, NOT the throughput
+  bottleneck. Real cost is the forward/compute path (prefill + per-token decode).
+  A 1.5B on AVX-512 CPU should be far faster; that is a SEPARATE, un-faked perf
+  investigation (kernel route / threading / prefill), not closed here.
+
+VERDICT=PASS  (tach clean + debug default-off + verbose opt-in)
+PERF_TPS=OPEN  (compute-path optimization is a separate item)
+=== RECEIPT_END ===

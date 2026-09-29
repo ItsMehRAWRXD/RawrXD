@@ -1,0 +1,5 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_w1\Release\InferenceEngine.lib
+  generation_quality_gate.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\Release\generation_quality_gate.exe

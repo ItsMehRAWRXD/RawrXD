@@ -1,0 +1,1106 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  RawrXD-ModelAnalysisLib.vcxproj -> F:\~dev\rawrxd\build_w1\Release\RawrXD-ModelAnalysisLib.lib
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
+  RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_w1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
+  RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\RawrXD_MultiWindow_Kernel.dll
+  rguf.vcxproj -> F:\~dev\rawrxd\build_w1\rguf_source\Release\rguf.lib
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_w1\Release\InferenceEngine.lib
+  main_win32.cpp
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1452,19): error C2079: 'f' uses undefined class 'std::basic_ofstream<char,std::char_traits<char>>' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1454,11): error C2297: '<<': not valid as right operand has type 'const char [36]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11): error C2297: '<<': not valid as right operand has type 'const char [12]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  ide_inference_gate.cpp
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,28): error C2677: binary '<<': no global operator found which takes type 'const std::string' (or there is no acceptable conversion) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(37,27):
+      could be 'std::byte std::operator <<(const std::byte,const _IntType) noexcept'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::byte std::operator <<(const std::byte,const _IntType) noexcept': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(36,39):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_string_view.hpp(1976,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3444,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1984,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3792,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\thread(251,37):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(688,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(732,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(768,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(813,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(851,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(894,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(930,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(936,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(941,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(947,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(955,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(957,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(961,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(963,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(969,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(972,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(976,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(978,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(981,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(983,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(986,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(988,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(991,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(993,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1005,9):
+      or       '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1004,5):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1031,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1455,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+  
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11): error C2297: '<<': not valid as right operand has type 'const char [13]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,29): error C2677: binary '<<': no global operator found which takes type 'std::string' (or there is no acceptable conversion) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(37,27):
+      could be 'std::byte std::operator <<(const std::byte,const _IntType) noexcept'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::byte std::operator <<(const std::byte,const _IntType) noexcept': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(36,39):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_string_view.hpp(1976,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3444,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1984,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3792,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\thread(251,37):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(688,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(732,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(768,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(813,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(851,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(894,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(930,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(936,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(941,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(947,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(955,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(957,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(961,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(963,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(969,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(972,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(976,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(978,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(981,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(983,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(986,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(988,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(991,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(993,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1005,9):
+      or       '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1004,5):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1031,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1456,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+  
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1457,11): error C2297: '<<': not valid as right operand has type 'const char [14]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1457,45): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11): error C2297: '<<': not valid as right operand has type 'const char [17]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,33): error C2677: binary '<<': no global operator found which takes type 'std::string' (or there is no acceptable conversion) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(37,27):
+      could be 'std::byte std::operator <<(const std::byte,const _IntType) noexcept'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::byte std::operator <<(const std::byte,const _IntType) noexcept': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(36,39):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_string_view.hpp(1976,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3444,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1984,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3792,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\thread(251,37):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(688,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(732,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(768,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(813,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(851,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(894,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(930,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(936,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(941,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(947,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(955,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(957,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(961,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(963,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(969,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(972,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(976,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(978,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(981,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(983,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(986,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(988,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(991,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(993,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1005,9):
+      or       '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1004,5):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1031,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1458,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+  
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11): error C2297: '<<': not valid as right operand has type 'const char [17]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,33): error C2677: binary '<<': no global operator found which takes type 'std::string' (or there is no acceptable conversion) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(37,27):
+      could be 'std::byte std::operator <<(const std::byte,const _IntType) noexcept'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::byte std::operator <<(const std::byte,const _IntType) noexcept': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(36,39):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_string_view.hpp(1976,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3444,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1984,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3792,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\thread(251,37):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(688,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(732,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(768,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(813,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(851,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(894,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(930,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(936,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(941,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(947,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(955,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(957,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(961,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(963,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(969,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(972,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(976,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(978,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(981,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(983,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(986,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(988,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(991,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(993,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1005,9):
+      or       '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1004,5):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1031,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1459,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+  
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11): error C2297: '<<': not valid as right operand has type 'const char [20]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,36): error C2677: binary '<<': no global operator found which takes type 'std::string' (or there is no acceptable conversion) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(37,27):
+      could be 'std::byte std::operator <<(const std::byte,const _IntType) noexcept'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::byte std::operator <<(const std::byte,const _IntType) noexcept': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(36,39):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_string_view.hpp(1976,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3444,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1984,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3792,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\thread(251,37):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(688,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(732,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(768,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(813,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(851,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(894,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(930,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(936,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(941,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(947,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(955,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(957,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(961,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(963,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(969,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(972,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(976,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(978,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(981,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(983,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(986,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(988,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(991,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(993,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1005,9):
+      or       '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1004,5):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1031,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1460,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+  
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1461,11): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11): error C2297: '<<': not valid as right operand has type 'const char [12]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,28): error C2677: binary '<<': no global operator found which takes type 'std::string' (or there is no acceptable conversion) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(37,27):
+      could be 'std::byte std::operator <<(const std::byte,const _IntType) noexcept'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::byte std::operator <<(const std::byte,const _IntType) noexcept': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(36,39):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_string_view.hpp(1976,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3444,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1984,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3792,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\thread(251,37):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(688,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(732,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(768,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(813,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(851,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(894,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(930,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(936,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(941,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(947,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(955,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(957,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(961,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(963,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(969,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(972,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(976,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(978,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(981,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(983,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(986,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(988,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(991,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(993,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1005,9):
+      or       '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1004,5):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1031,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1462,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+  
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1463,11): error C2297: '<<': not valid as right operand has type 'const char [23]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1463,62): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1464,11): error C2297: '<<': not valid as right operand has type 'const char [21]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1464,58): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1465,11): error C2297: '<<': not valid as right operand has type 'const char [20]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1465,56): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1466,11): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1467,11): error C2297: '<<': not valid as right operand has type 'const char [14]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1467,45): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1468,11): error C2297: '<<': not valid as right operand has type 'const char [15]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1468,47): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1469,11): error C2297: '<<': not valid as right operand has type 'const char [12]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1469,41): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1470,11): error C2297: '<<': not valid as right operand has type 'const char [12]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1470,41): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1471,11): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1472,11): error C2297: '<<': not valid as right operand has type 'const char [23]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1472,62): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11): error C2297: '<<': not valid as right operand has type 'const char [19]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,35): error C2677: binary '<<': no global operator found which takes type 'std::string' (or there is no acceptable conversion) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(37,27):
+      could be 'std::byte std::operator <<(const std::byte,const _IntType) noexcept'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::byte std::operator <<(const std::byte,const _IntType) noexcept': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstddef(36,39):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_string_view.hpp(1976,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string_view<_Elem,_Traits>)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(3444,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::basic_string<_Elem,_Traits,_Alloc> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1984,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::shared_ptr<_Ty> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3792,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::unique_ptr<_Ty2,_Dx2> &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\thread(251,37):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,std::thread::id)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(688,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(732,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(768,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(813,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(851,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const _Elem *)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(894,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,_Elem)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(930,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const signed char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(936,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,signed char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(941,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const unsigned char *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(947,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,unsigned char)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(955,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(957,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char8_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(961,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(963,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char8_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(969,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,wchar_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(972,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const wchar_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(976,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(978,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(981,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char16_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(983,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,char32_t)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(986,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(988,31):
+      or       'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<char,_Traits> &std::operator <<(std::basic_ostream<char,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<char,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(991,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char16_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(993,34):
+      or       'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<wchar_t,_Traits> &std::operator <<(std::basic_ostream<wchar_t,_Traits> &,const char32_t *)': could not deduce template argument for 'std::basic_ostream<wchar_t,_Traits> &' from '<error type>'
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1005,9):
+      or       '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          '_Ostr &&std::operator <<(_Ostr &&,const _Ty &)': could not deduce template argument for '__formal'
+              C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1004,5):
+              'std::enable_if_t<false,int>' : Failed to specialize alias template
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(1031,32):
+      or       'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)'
+          F:\~dev\rawrxd\src\win32app\main_win32.cpp(1473,11):
+          'std::basic_ostream<_Elem,_Traits> &std::operator <<(std::basic_ostream<_Elem,_Traits> &,const std::error_code &)': could not deduce template argument for 'std::basic_ostream<_Elem,_Traits> &' from '<error type>'
+  
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1474,11): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1475,11): error C2297: '<<': not valid as right operand has type 'const char [16]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1475,49): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1476,11): error C2297: '<<': not valid as right operand has type 'const char [21]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1476,59): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1477,11): error C2297: '<<': not valid as right operand has type 'const char [23]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1477,62): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1478,11): error C2297: '<<': not valid as right operand has type 'const char [16]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1478,49): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1479,11): error C2297: '<<': not valid as right operand has type 'const char [19]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1479,54): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1480,11): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1481,11): error C2297: '<<': not valid as right operand has type 'const char [9]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1481,25): error C2297: '<<': not valid as right operand has type 'const char [5]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1481,53): error C2297: '<<': not valid as right operand has type 'const char [2]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(1482,11): error C2297: '<<': not valid as right operand has type 'const char [21]' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  ide_toolchain_gate.cpp
+  gold_command_providers.cpp
+  JITAssembler.cpp
+  quantum_agent_orchestrator.cpp
+  quantum_autonomous_todo_system.cpp
+  quantum_multi_model_agent_cycling.cpp
+  quantum_dynamic_time_manager.cpp
+  quantum_missing_impl.cpp
+  quantum_production_orchestrator.cpp
+  autonomous_orchestrator.cpp
+  orchestrator_cli_handler.cpp
+  Win32SwarmBridge.cpp
+  SwarmIATRegistration.cpp
+  UnifiedModelMetadata.cpp
+  ErrorRecoveryManager.cpp
+  ai_model_caller_real.cpp
+  inference_engine_real.cpp
+  auto_feature_registry.cpp
+  Generating Code...
+  Compiling...
+  Win32IDE_Core.cpp
+  Win32IDE_Commands.cpp
+  CommandBroker.cpp
+  CommandEventJournal.cpp
+  SessionBinder.cpp
+  CapabilityProfile.cpp
+  CICDSettings.cpp
+  Win32IDE_Watchdog.cpp
+  Win32IDE_SyntaxHighlight.cpp
+  Win32IDE_StreamingUX.cpp
+  Win32IDE_Sidebar.cpp
+  Win32IDE_Logger.cpp
+  Win32IDE_AgenticBridge.cpp
+  FullAgenticIDE.cpp
+  AgenticPlanningOrchestrator.cpp
+  AgenticIOCPBridge.cpp
+  Win32IDE_TabManager.cpp
+  Win32IDE_Settings.cpp
+  Win32IDE_ShellLayout.cpp
+  Win32IDE_Session.cpp
+  Generating Code...
+  Compiling...
+  Win32IDE_FileOps.cpp
+  zlib_runtime_loader.cpp
+  Deep2APIServer.cpp
+  Deep2ProductionRuntime.cpp
+  NegativeSpaceProfiler.cpp
+  unlinked_symbols_batch_022.cpp
+  RawrXD_AutonomousAgenticPipeline.cpp
+  RawrXD_AgentCoordinator.cpp
+  Win32IDE_GhostText.cpp
+  ai_completion_real.cpp
+  Deep2Bridge.cpp
+  ANSIColorParser.cpp
+  FindReplaceDialog.cpp
+  GitCommitDialog.cpp
+  GitDiffViewer.cpp
+  failure_intelligence_orchestrator.cpp
+  Win32IDE_LSPClient.cpp
+  Win32IDE_LSP_AI_Bridge.cpp
+  Win32IDE_AgentPanel.cpp
+  IDEConfig.cpp
+  Generating Code...
+  Compiling...
+  QuantumAuthUI.cpp
+  AgentToolHandlers.cpp
+  BoundedAgentLoop.cpp
+  OllamaProvider.cpp
+  DeterministicReplayEngine.cpp
+  autonomous_recovery_orchestrator.cpp
+  AgenticDeepThinkingEngine.cpp
+  AgentOrchestrator.cpp
+  OrchestratorBridge.cpp
+  AgenticNavigator.cpp
+  ToolRegistry.cpp
+  RawrXD_AgentLoop.cpp
+  agentic_executor.cpp
+  FIMPromptBuilder.cpp
+  unlinked_symbols_batch_001.cpp
+  unlinked_symbols_batch_002.cpp
+  unlinked_symbols_batch_003.cpp
+  win32ide_watchdog_init.cpp
+  unlinked_symbols_batch_005.cpp
+  unlinked_symbols_batch_006.cpp
+  Generating Code...
+  Compiling...
+  unlinked_symbols_batch_007.cpp
+  unlinked_symbols_batch_008.cpp
+  unlinked_symbols_batch_009.cpp
+  unlinked_symbols_batch_010.cpp
+  unlinked_symbols_batch_011.cpp
+  unlinked_symbols_batch_012.cpp
+  unlinked_symbols_batch_021.cpp
+  ANSIParser.cpp
+  vulkan_kernel_bridge.cpp
+  cursor_widget.cpp
+  crdt_buffer.cpp
+  sdma_coordinator.cpp
+  rawrxd_subsystem_api.cpp
+  telemetry_collector.cpp
+  auto_repair_orchestrator.cpp
+  agent_memory_indexer.cpp
+  agentic_transaction.cpp
+  agent_workflow_orchestrator.cpp
+  DiskRecoveryToolHandler.cpp
+  Logger.cpp
+  Generating Code...
+  Compiling...
+  ConfigurationValidator.cpp
+  rawrxd_inference.cpp
+  rawrxd_model_loader.cpp
+  rawrxd_transformer.cpp

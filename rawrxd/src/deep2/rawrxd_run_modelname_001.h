@@ -11,3 +11,7 @@ int rawrxd_run_modelname_001(const char* modelNameOrPath,
                               uint32_t    maxTokens,
                               bool        vulkanEnabled,
                               bool        strictVulkan = false);
+
+// Enumerate every selectable model: Ollama store models, local .gguf files in
+// the search directories, and aliases. Prints to stdout. Returns 0 on success.
+int rawrxd_list_models_001();

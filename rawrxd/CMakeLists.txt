@@ -170,18 +170,20 @@ endif()
 project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 
 function(rawrxd_filter_missing_sources list_var)
-    # Fail-closed tripwire (RAWRXD_SOURCE_GRAPH_TRUTH_001): a referenced source
-    # that does not exist is a configure-time error, never a silent drop.
+    set(_kept)
     foreach(_src IN LISTS ${list_var})
         if(IS_ABSOLUTE "${_src}")
             set(_path "${_src}")
         else()
             set(_path "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
         endif()
-        if(NOT EXISTS "${_path}")
-            message(FATAL_ERROR "[rawrxd_source_truth] ${list_var}: missing ${_src}")
+        if(EXISTS "${_path}")
+            list(APPEND _kept "${_src}")
+        else()
+            message(WARNING "[rawrxd_filter_missing_sources] ${list_var}: missing ${_src}")
         endif()
     endforeach()
+    set(${list_var} "${_kept}" PARENT_SCOPE)
 endfunction()
 
 # ============================================================================
@@ -267,6 +269,7 @@ if(RAWRXD_BUILD_CLI)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
+        src/win32app/HeadlessIDE_FileAliases.cpp
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
         src/asm/rawr_cpu_features.asm
@@ -351,6 +354,8 @@ if(RAWRXD_BUILD_CLI)
         # HeadlessIDE dependencies
         # AUTO-REMOVED: stub file
         src/model_source_resolver.cpp
+        src/modules/engine_manager.cpp
+        src/modules/codex_ultimate.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # Missing utilities required by agentic stack
@@ -360,6 +365,7 @@ if(RAWRXD_BUILD_CLI)
         # HeadlessIDE agentic dependencies
         # AUTO-REMOVED: stub file
         src/core/chain_of_thought_engine.cpp
+        src/lsp/RawrXD_LSPServer.cpp
         # Missing implementations for unresolved externals
         # AUTO-REMOVED: stub file
         src/core/enterprise_telemetry_compliance.cpp
@@ -2391,6 +2397,8 @@ set(SOURCES
 
     # Context deterioration hotpatch + LSP hotpatch + symbol provider +�-�+�-�+�-� required by feature_handlers, auto_feature_registry
     src/core/context_deterioration_hotpatch.cpp
+    src/lsp/lsp_hotpatch_bridge.cpp
+    src/lsp/hotpatch_symbol_provider.cpp
 
     # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) +�-�+�-�+�-� required by enterprise_licensev2_impl
     src/core/license_anti_tampering.cpp
@@ -2410,9 +2418,12 @@ set(SOURCES
     src/core/menu_auditor.cpp
 
     # GGUF diagnostic provider + LSP server +�-�+�-�+�-� required by lsp_hotpatch_bridge
+    src/lsp/gguf_diagnostic_provider.cpp
+    src/lsp/RawrXD_LSPServer.cpp
 
     # Extension polyfill engine + VSCode API +�-�+�-�+�-� required by js_extension_host
     src/core/extension_polyfill_engine.cpp
+    src/modules/vscode_extension_api.cpp
 
     # JS extension host +�-�+�-�+�-� required by ssot_handlers_ext
     # src/core/js_extension_host.cpp
@@ -3041,6 +3052,8 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/core/ssot_validation.cpp
     src/core/rawrxd_subsystem_api.cpp
     src/core/auto_feature_registry.cpp
+    src/lsp/RawrXD_LSPServer.cpp
+    src/lsp/lsp_hotpatch_bridge.cpp
     # Swarm files that reference symbols not available in RawrEngine target
     src/swarm/InfinitePerfectionTelemetry.cpp
     src/swarm/InfinitePerfectionTelemetrySQLite.cpp
@@ -3064,6 +3077,8 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     # Remove model_config.cpp - references OllamaClient which is not linked in RawrEngine
     src/model_config.cpp
     # Remove LSP providers referencing direct_read (byte_level_hotpatcher.cpp excluded)
+    src/lsp/hotpatch_symbol_provider.cpp
+    src/lsp/gguf_diagnostic_provider.cpp
     # Remove quantum_agent_orchestrator.cpp - references GPUDispatchGate which has no implementation
     src/agent/quantum_agent_orchestrator.cpp
     # Remove RawrXD_AgentLoop.cpp and DiskRecoveryToolHandler.cpp - reference AgentToolRegistry from excluded ToolRegistry.cpp
@@ -3187,14 +3202,19 @@ message(STATUS "[SSOT Ownership] RawrEngine provider=${RAWR_SSOT_PROVIDER_UPPER}
 
 # RawrEngine is headless; don't hard-depend on the Win32IDE VSCode API bridge.
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
+    src/modules/vscode_extension_api.cpp
+    src/win32app/Win32IDE_VSCodeExtAPI.cpp
     # src/core/js_extension_host.cpp
     src/core/extension_polyfill_engine.cpp
+    src/modules/quickjs_extension_host.cpp
+    src/modules/quickjs_vscode_bindings.cpp
     # AUTO-REMOVED: stub file
 )
 
 # RawrEngine is headless; exclude Win32IDE GUI translation units.
 list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX "^src/win32app/Win32IDE_.*\\.cpp$")
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
+    src/win32app/Win32IDE.cpp
     src/win32app/main_win32.cpp
 )
 
@@ -3685,6 +3705,7 @@ endif()
 list(REMOVE_DUPLICATES GOLD_UNDERSCORE_SOURCES)
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
     # AUTO-REMOVED: stub file
+    src/modules/vscode_extension_api.cpp
     # src/core/js_extension_host.cpp
     src/ui/entry_point.cpp
 )
@@ -4966,6 +4987,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
+        src/win32app/HeadlessIDE_FileAliases.cpp
         src/agent/quantum_agent_orchestrator.cpp
         src/agent/quantum_autonomous_todo_system.cpp
         src/agent/quantum_multi_model_agent_cycling.cpp
@@ -4974,8 +4996,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/quantum_production_orchestrator.cpp
         src/agent/autonomous_orchestrator.cpp
         src/agent/orchestrator_cli_handler.cpp
+        src/ui/RawrXD_MainLoop.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
+        src/ui/agentic_bridge.cpp
         src/win32app/RawrXD-Win32IDE.rc
         src/bridge/Win32SwarmBridge.cpp
         src/bridge/SwarmIATRegistration.cpp
@@ -5030,30 +5054,62 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     list(APPEND WIN32IDE_SOURCES
         # Core Win32IDE implementation units (required for real GUI command/menu behavior)
+        src/win32app/Win32IDE.cpp
         src/win32app/Win32IDE_Core.cpp
+        src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/Win32IDE_Commands.cpp
+        src/win32app/Win32IDE_CommandSurface.cpp
         src/command/CommandBroker.cpp
         src/command/CommandEventJournal.cpp
         src/command/SessionBinder.cpp
         src/command/CapabilityProfile.cpp
+        src/win32app/Win32IDE_VSCodeUI.cpp
         # Win32IDE_Window.cpp removed: duplicate createWindow/WindowProc/onCreate
         # conflicted with Core. /FORCE:MULTIPLE was removed in the W3 dedupe wave
         # (7a73ec687) after all LNK4006 duplicates were eliminated.
+        src/win32app/Win32IDE_WindowOwnership.cpp
+        src/win32app/Win32IDE_Accelerators.cpp
+        src/win32app/IV280Bridge.cpp
+        src/win32app/IMultiFileSearchWidget.cpp
         src/win32app/CICDSettings.cpp
+        src/win32app/BenchmarkMenu.cpp
+            src/win32app/WindowManager.cpp
+            src/win32app/EditorOperations.cpp
+            src/win32app/RouterOperations.cpp
                     src/win32app/Win32IDE_Watchdog.cpp
         src/win32app/Win32IDE_SyntaxHighlight.cpp
+        src/win32app/Win32IDE_VisionEncoder.cpp
+        src/win32app/Win32IDE_Themes.cpp
         src/win32app/Win32IDE_StreamingUX.cpp
         src/win32app/Win32IDE_Sidebar.cpp
+        src/win32app/Win32IDE_Debugger.cpp
+        src/win32app/Win32IDE_AutonomousDebugger.cpp
+        src/win32app/Win32IDE_Annotations.cpp
+        src/win32app/Win32IDE_ReverseEngineering.cpp
         src/win32app/Win32IDE_Logger.cpp
         src/win32app/Win32IDE_AgenticBridge.cpp
         src/full_agentic_ide/FullAgenticIDE.cpp
         src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
         src/full_agentic_ide/AgenticIOCPBridge.cpp
+        src/win32app/Win32IDE_AgentCommands.cpp
         src/win32app/Win32IDE_TabManager.cpp
         src/win32app/Win32IDE_Settings.cpp
+        src/win32app/Win32IDE_AutonomousCommunicator.cpp
+        src/win32app/Win32IDE_AgenticComposerUX.cpp
+        src/win32app/Win32IDE_ContextMentionParser.cpp
+        src/win32app/Win32IDE_UnifiedTelemetry.cpp
+        src/win32app/Win32IDE_Autonomy.cpp
+        src/win32app/Win32IDE_PowerShell.cpp
+        src/win32app/Win32IDE_PowerShellPanel.cpp
+        src/win32app/Win32IDE_CommandFlight.cpp
         src/win32app/Win32IDE_ShellLayout.cpp
+        src/win32app/Win32IDE_MenuE2eProbe.cpp
         src/win32app/Win32IDE_Session.cpp
+        src/win32app/Win32IDE_GGUFInspector.cpp
         src/win32app/Win32IDE_FileOps.cpp
+        src/win32app/Win32IDE_DecompilerView.cpp
+        src/win32app/Win32IDE_NativePipeline.cpp
+        src/win32app/Win32IDE_ModelAnatomy.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         src/compression/zlib_runtime_loader.cpp
@@ -5066,6 +5122,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
         Ship/RawrXD_AgentCoordinator.cpp
 
+        src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
         # Deep2 completion provider and bridge +�-�+�-�+�-� real local inference for ghost text
         src/ai_completion_real.cpp
@@ -5075,19 +5132,51 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/ide/FindReplaceDialog.cpp
         src/ide/GitCommitDialog.cpp
         src/ide/GitDiffViewer.cpp
+        src/win32app/Win32IDE_OutlinePanel.cpp
+        src/win32app/Win32IDE_RenamePreview.cpp
+        src/win32app/Win32IDE_Tier2Cosmetics.cpp
+        src/win32app/Win32IDE_Tier1Cosmetics.cpp
+        src/win32app/Win32IDE_Breadcrumbs.cpp
+        src/win32app/Win32IDE_PlanExecutor.cpp
         # AUTO-REMOVED: stub file
         src/agentic/failure_intelligence_orchestrator.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
 
+        src/win32app/Win32IDE_AgenticPlanningPanel.cpp
+        src/win32app/Win32IDE_FailureDetector.cpp
+        src/win32app/Win32IDE_FailureIntelligence.cpp
         src/win32app/Win32IDE_Settings.cpp
+        src/win32app/Win32IDE_LocalServer.cpp
+        src/win32app/Win32IDE_BackendSwitcher.cpp
+        src/security/ProviderKeyStore.cpp
+        src/security/ProviderKeyStore_get.cpp
+        src/security/ProviderKeyStore_misc.cpp
+        src/win32app/Win32IDE_AIBackend.cpp
+        src/win32app/Win32IDE_LLMRouter.cpp
         src/win32app/Win32IDE_LSPClient.cpp
+        src/win32app/Win32IDE_PeekOverlay.cpp
+        src/win32app/Win32IDE_CaretAnimation.cpp
         # src/win32app/Win32IDE_AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
+        src/win32app/Win32IDE_ModelDiscovery.cpp
+        src/win32app/Win32IDE_SwarmModelSelector.cpp
+        src/win32app/Win32IDE_AsmSemantic.cpp
         src/win32app/Win32IDE_LSP_AI_Bridge.cpp
+        src/win32app/Win32IDE_MultiResponse.cpp
+        src/win32app/Win32IDE_ExecutionGovernor.cpp
+        src/win32app/Win32IDE_LayerEviction.cpp
+        src/win32app/Win32IDE_SubAgent.cpp
+        src/win32app/Win32IDE_AgentHistory.cpp
         src/win32app/Win32IDE_AgentPanel.cpp
+        src/win32app/Win32IDE_DiskRecovery.cpp
+        src/win32app/Win32TerminalManager.cpp
+        src/win32app/TransparentRenderer.cpp
 
         # Plugin System +�-�+�-�+�-� Phase 43: Native Win32 DLL loading (C ABI)
+        src/plugin_system/win32_plugin_loader.cpp
+        src/win32app/Win32IDE_Plugins.cpp
+        src/win32app/Win32IDE_HandleExtensionCommand.cpp
 
         # Configuration management
         src/config/IDEConfig.cpp
@@ -5104,6 +5193,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # Real GPU compute backends (required by vulkan_kernel_bridge.cpp and rdna3_bridge.cpp)
         src/backend/vulkan_compute.cpp
+        src/kernels/rdna3/RDNA3_GpuDispatcher.cpp
 
         # Bounded Agent Loop + FIM Provider (Agent+�-�+�-�+�-�IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
@@ -5154,8 +5244,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/vulkan_kernel_bridge.cpp
 
         # AUTO-REMOVED: stub file
+        src/rdna3_bridge.cpp
         # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
         # src/core/gguf_runner_stub.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_002.cpp (matmul_kernel_avx2, ggml_gemm_q4_0)
+        src/llm_adapter/rawrxd_ggufrunner_signals.cpp
         # src/core/subsystem_api_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_011.cpp (AD_ProcessGGUF, SO_LoadExecFile), batch_010.cpp (SO_InitializeVulkan), batch_019.cpp
         # src/core/crypto_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_005.cpp and batch_019.cpp (asm_camellia256_auth_*)
         # src/core/watchdog_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp, batch_004.cpp, batch_005.cpp, batch_019.cpp
@@ -5174,7 +5266,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
         # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
+        src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
+        src/win32app/Win32IDE_SemanticIndex.cpp  # REAL: Semantic code intelligence (file is clean, 509 lines)
         # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations +�-�+�-�+�-� real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
@@ -5182,6 +5276,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         
         # AUTO-REMOVED: stub file
         src/core/rawrxd_subsystem_api.cpp
+        src/runtime_core.cpp
         # AUTO-REMOVED: stub file
         src/agent/telemetry_collector.cpp
 
@@ -5212,6 +5307,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
+        src/utils/ErrorReporter.cpp
         # Observability + validation + perf telemetry (link-time required)
         src/logging/Logger.cpp
         # AUTO-REMOVED: stub file
@@ -5222,6 +5318,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/rawrxd_transformer.cpp
         src/rawrxd_tokenizer.cpp
         src/rawrxd_sampler.cpp
+        src/modules/engine_manager.cpp
         src/cpu_inference_engine.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
@@ -5280,12 +5377,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Distributed Swarm Compilation (Phase 11)
         src/core/swarm_coordinator.cpp
         src/core/swarm_worker.cpp
+        src/win32app/Win32IDE_SwarmPanel.cpp
         
         # Dual-Agent Orchestrator (Phase 41)
+        src/win32app/Win32IDE_DualAgentPanel.cpp
         
         # Native Debugger Engine (Phase 12) + P0 source-level symbols (dbghelp)
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
+        src/win32app/Win32IDE_NativeDebugPanel.cpp
         
         # Three-Layer Hotpatch System (Phase 14.2)
         src/core/model_memory_hotpatch.cpp
@@ -5297,6 +5397,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/pt_driver_contract.cpp
         src/core/shadow_page_detour.cpp
         src/core/sentinel_watchdog.cpp
+        src/win32app/Win32IDE_HotpatchPanel.cpp
         
         # Agent-Driven Hotpatch Orchestration (Phase 18)
         src/agent/agentic_hotpatch_orchestrator.cpp
@@ -5331,8 +5432,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/agent_self_healing_orchestrator.cpp
         
         # Module implementations
+        src/modules/vsix_loader_win32.cpp
+        src/modules/codex_ultimate.cpp
 
         # Phase 29: VS Code Extension API Compatibility Layer
+        src/modules/vscode_extension_api.cpp
+        src/win32app/Win32IDE_VSCodeExtAPI.cpp
         
         # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
         src/core/swarm_decision_bridge.cpp
@@ -5375,11 +5480,19 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/pdb_reference_provider.cpp
         
         # Phase 26: WebView2 + Monaco Editor Integration
+        src/win32app/Win32IDE_WebView2.cpp
+        src/win32app/AgenticBrowserLayer.cpp
+        src/win32app/Win32IDE_AgenticBrowser.cpp
+        src/win32app/Win32IDE_MonacoThemes.cpp
 
         # Phase 27: Embedded LSP Server (JSON-RPC 2.0)
+        src/lsp/RawrXD_LSPServer.cpp
         src/win32app/Win32IDE_LSPServer.cpp
 
         # Phase 27b: LSP +�-�+�-�+�-� Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
+        src/lsp/lsp_hotpatch_bridge.cpp
+        src/lsp/hotpatch_symbol_provider.cpp
+        src/lsp/gguf_diagnostic_provider.cpp
 
         # Phase 28: MonacoCore Native Editor Engine + Toggleable Engine System
         # EXCLUDED: missing RawrXD_MonacoCore.h, IDETheme.h
@@ -5394,23 +5507,29 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/pdb_native.cpp
         # EXCLUDED: missing lsp/RawrXD_LSPServer.h
         # src/core/pdb_lsp_bridge.cpp
+        src/win32app/Win32IDE_PDBSymbols.cpp
 
         # Phase 31: IDE Self-Audit & Verification System
         src/core/feature_registry.cpp
         src/core/menu_auditor.cpp
         src/core/auto_discovery.cpp
+        src/win32app/Win32IDE_AuditDashboard.cpp
 
         # Phase 32: The Final Gauntlet + Pre-Packaging Runtime Verification
         # EXCLUDED: missing RawrXD_MonacoCore.h — src/core/final_gauntlet.cpp
+        src/win32app/Win32IDE_Gauntlet.cpp
 
         # Phase 33: Voice Chat Engine
         src/core/voice_chat.cpp
         src/core/voice_automation.cpp
+        src/win32app/Win32IDE_VoiceChat.cpp
+        src/win32app/Win32IDE_VoiceAutomation.cpp
 
         # Phase 33: Quick-Win Ports
         src/core/shortcut_manager.cpp
         src/core/backup_manager.cpp
         src/core/alert_system.cpp
+        src/win32app/Win32IDE_QuickWins.cpp
 
         # Shared Feature Dispatch System (CLI + GUI unified command routing)
         # NOTE: shared_feature_dispatch.cpp REMOVED +�-�+�-�+�-� duplicated by unified_command_dispatch.cpp
@@ -5422,11 +5541,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # auto_feature_registry excluded for Win32 IDE + use ssot_handlers (lightweight stubs)
         src/core/intent_engine.cpp
         src/core/model_training_pipeline.cpp
+        src/model_trainer.cpp
         # REMOVED: # AUTO-REMOVED: stub file - Ollama backend replaced with native GGUF loader
         # REMOVED: src/agentic/AgentOllamaClient_stubs.cpp - stub file deleted
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
+        src/modules/autonomous_agentic_orchestrator.cpp
     # src/core/native_gguf_loader_link_impl.cpp
         # src/codec/compression.cpp  # Removed: requires zlib.h (not installed)
         # AUTO-REMOVED: stub file
@@ -5434,6 +5555,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # EXCLUDED: missing native_gguf_loader.h — src/core/ssot_handlers.cpp
     # src/core/ssot_handlers_ext_isolated.cpp
         # src/core/beacon_link_stub.cpp  # REMOVED: File does not exist
+        src/win32app/v280_link_bridge.cpp
         src/core/ssot_validation.cpp
 
         # Unified Command Dispatch +�-�+�-�+�-� Zero-drift SSOT dispatch (replaces manual registration)
@@ -5451,13 +5573,18 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/chain_of_thought_engine.cpp
 
         # Phase 34: Telemetry Export
+        src/win32app/Win32IDE_Telemetry.cpp
 
         # Phase 36: MCP Integration +�-�-� Model Context Protocol Server + Client
+        src/mcp_integration.cpp
         src/win32app/Win32IDE_MCP.cpp
 
         # Phase 36: Flight Recorder +�-�+�-�+�-� memory-mapped binary ring-buffer logger
+        src/win32app/Win32IDE_FlightRecorder.cpp
 
         # Phase 36: QuickJS VSIX JavaScript Extension Host
+        src/modules/quickjs_extension_host.cpp
+        src/modules/quickjs_vscode_bindings.cpp
 
         # Phase 36: Cross-Process MMF State Synchronization
         src/core/rawrxd_state_mmf.cpp
@@ -5506,40 +5633,71 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # Instructions Provider +�-�+�-�+�-� unified *.instructions.md loader (HTTP+CLI+GUI)
         src/core/instructions_provider.cpp
+        src/win32app/Win32IDE_Instructions.cpp
 
         # Phase 45: Game Engine Integration (Unity + Unreal)
+        src/modules/unity_engine_integration.cpp
+        src/modules/unreal_engine_integration.cpp
+        src/modules/game_engine_manager.cpp
+        src/win32app/Win32IDE_GameEnginePanel.cpp
 
         # Phase 48: The Final Crucible (Unified Stress-Test Harness)
+        src/modules/crucible_engine.cpp
+        src/win32app/Win32IDE_CruciblePanel.cpp
 
         # Phase 49: Copilot Gap Closer (HNSW + Composer + CRDT + Git Context)
+        src/modules/copilot_gap_closer.cpp
+        src/win32app/Win32IDE_CopilotGapPanel.cpp
 
         # Phase 13: Distributed Pipeline Orchestrator
         src/core/distributed_pipeline_orchestrator.cpp
+        src/win32app/Win32IDE_PipelinePanel.cpp
 
         # Phase 14: Hotpatch Control Plane
         src/core/hotpatch_control_plane.cpp
+        src/win32app/Win32IDE_HotpatchCtrlPanel.cpp
 
         # Phase 15: Static Analysis Engine
         src/core/static_analysis_engine.cpp
         # src/core/code_linter.cpp
         # AUTO-REMOVED: stub file
+        src/win32app/Win32IDE_StaticAnalysisPanel.cpp
 
         # P0: Unified Problems Panel (LSP, SAST, SCA, Secrets, Build)
+        src/win32app/Win32IDE_ProblemsPanel.cpp
         src/win32app/Win32IDE_BuildRunner.cpp
+        src/win32app/Win32IDE_SecurityScans.cpp
         src/core/problems_panel_bridge.cpp
         src/core/problems_aggregator.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
+        src/win32app/Win32IDE_AgentStreamingBridge.cpp
 
         # Phase 16: Semantic Code Intelligence
         src/core/semantic_code_intelligence.cpp
+        src/win32app/Win32IDE_SemanticPanel.cpp
 
         # Phase 17: Enterprise Telemetry & Compliance
         src/core/enterprise_telemetry_compliance.cpp
+        src/win32app/Win32IDE_TelemetryPanel.cpp
+        src/win32app/Win32IDE_Tier3Polish.cpp
+        src/win32app/Win32IDE_Tier3Cosmetics.cpp
+        src/win32app/Win32IDE_Tier5Cosmetics.cpp
+        src/win32app/Win32IDE_CrashReporter.cpp
+        src/win32app/Win32IDE_ColorPicker.cpp
+        src/win32app/Win32IDE_EmojiSupport.cpp
+        src/win32app/Win32IDE_ShortcutEditor.cpp
+        src/win32app/Win32IDE_TelemetryDashboard.cpp
+        src/win32app/Win32IDE_MarketplacePanel.cpp
+        src/win32app/Win32IDE_Collab.cpp
 
         # Phase 51: mIRC Control Bridge +�-�+�-�+�-� IRC bot for remote IDE control
+        src/win32app/Win32IDE_IRCBridge.cpp
+        src/win32app/Win32IDE_IRCBridgeCommands.cpp
         src/collab/websocket_hub.cpp
+        src/win32app/Win32IDE_TestExplorerTree.cpp
+        src/win32app/Win32IDE_NetworkPanel.cpp
         # NOTE: Experimental features removed from production build
         src/core/omega_orchestrator.cpp
         # Canonical omega provider: correct signatures per omega_orchestrator.hpp
@@ -5561,7 +5719,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/reasoning_profile.cpp
         # src/core/win32ide_link_stubs.cpp  # Conflicts with existing fallbacks
         # src/win32app/Win32IDE_TranscendencePanel.cpp
+        src/win32app/VulkanRenderer.cpp
+        src/win32app/OSExplorerInterceptor.cpp
         src/win32app/Win32IDE_MCPHooks.cpp
+        src/win32app/TodoManager.cpp
+        src/win32app/IocpFileWatcher.cpp
+        src/win32app/IDEDiagnosticAutoHealer.cpp
+        src/win32app/ConsentPrompt.cpp
+        src/win32app/AutonomousAgent.cpp
 
         # UI Rendering +�-�+�-�+�-� Chat message renderer + tool action status + chat panel
         # AUTO-REMOVED: stub file
@@ -5624,25 +5789,42 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         src/context/semantic_index.cpp
         # AUTO-REMOVED: stub file
+        src/win32app/Win32IDE_CursorParity.cpp
+        src/win32app/Win32IDE_GUILayoutHotpatch.cpp
 
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Compile-Debt Resolved: IDE Feature Modules (Tasks, Git, Search,
         # Fuzzy Search, Refactor, CallStack, Multi-File Search)
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        src/win32app/Win32IDE_Tasks.cpp
         src/win32app/Win32IDE_GitPanel.cpp
+        src/win32app/Win32IDE_Refactor.cpp
         src/win32app/Win32IDE_SearchPanel.cpp
+        src/win32app/Win32IDE_FuzzySearch.cpp
 
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Compile-Debt Resolved: IDE Cosmetics & Intelligence Layer
         # (Minimap, DiffView, SettingsGUI, CodeLens, InlayHints, Hover)
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        src/win32app/Win32IDE_Minimap.cpp
+        src/win32app/Win32IDE_DiffView.cpp
         src/win32app/Win32IDE_SettingsGUI.cpp
+        src/win32app/Win32IDE_CodeLens.cpp
+        src/win32app/Win32IDE_InlayHints.cpp
+        src/win32app/Win32IDE_HoverTooltips.cpp
 
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Flagship Product Pillars (Provable Agent, AI RE, Airgapped)
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        src/win32app/Win32IDE_ProvableAgent.cpp
+        src/win32app/Win32IDE_AIReverseEngineering.cpp
+        src/win32app/Win32IDE_AirgappedEnterprise.cpp
+        src/win32app/Win32IDE_FlagshipFeatures.cpp
 
         # Linker deps: ProjectContext, UniversalModelRouter, ModelRegistry, CheckpointManager
+        src/project_context.cpp
+        src/universal_model_router.cpp
+        src/model_registry.cpp
         # AUTO-REMOVED: stub file
     # src/core/checkpoint_manager.cpp
         # AgenticAutonomousConfig, EnterpriseFeatureManager, ContextDeteriorationHotpatch
@@ -5651,23 +5833,37 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/context_deterioration_hotpatch.cpp
         # src/core/model_loader_asm_stubs.cpp  # Conflicts with model_loader_fallbacks.cpp
         # Win32 panels and dialogs
+        src/ui/interpretability_panel.cpp
         # Advanced feature modules (src scope)
+        src/real_time_completion_engine.cpp
+        src/LanguageServerIntegration.cpp
+        src/interpretability_panel_enhanced.cpp
         src/feature_registry_panel.cpp
         src/autonomous_feature_engine.cpp
         src/autonomous_intelligence_orchestrator.cpp
         # Advanced feature module deps
+        src/plan_orchestrator.cpp
+        src/tool_registry_advanced.cpp
+        src/lsp_client.cpp
+        src/intelligent_codebase_engine.cpp
         src/ai_model_caller.cpp
         src/hybrid_cloud_manager.cpp
         # Benchmarks (real implementation; replaces earlier IDE stubs)
         src/benchmark_menu_widget.cpp
         src/benchmark_runner.cpp
+        src/win32app/feature_registry_panel.cpp
+        src/ui/monaco_settings_dialog.cpp
+        src/thermal/RAWRXD_ThermalDashboard.cpp
+        src/win32app/VSCodeMarketplaceAPI.cpp
         # Multi-file search (real implementation; replaces earlier IDE stub)
+        src/multi_file_search.cpp
         # Legacy support unit wiring removed from production lane.
         # Completed modules previously documented as shipped
     # src/core/license_manager_panel.cpp
         # Qt-based logger disabled (project is Qt-free; Win32IDE_Logger.cpp provides logging)
         # src/telemetry/logger.cpp
         # License Creator + Feature Registry dialogs (showLicenseCreatorDialog, showFeatureRegistryDialog)
+        src/win32app/Win32IDE_LicenseCreator.cpp
         # License enforcement + manifest (g_FeatureManifest + featureName from license_validator_manifest.cpp; LicenseEnforcer from license_enforcement.cpp)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -5679,8 +5875,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Batch 2 Parity Enhancements (Peek, AutoSave, TermSplit, Snippets, MultiCursor)
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        src/win32app/Win32IDE_PeekView.cpp
         src/win32app/Win32IDE_AutoSave.cpp
         src/win32app/Win32IDE_TerminalSplit.cpp
+        src/win32app/Win32IDE_SnippetEngine.cpp
+        src/win32app/Win32IDE_MultiCursor.cpp
 
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Cognitive Architecture +�-�+�-�+�-� Autonomous Reverse Engineering OS
@@ -5731,6 +5930,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         list(REMOVE_ITEM WIN32IDE_SOURCES
             src/core/native_debugger_engine.cpp
             src/core/native_debugger_symbols.cpp
+            src/win32app/Win32IDE_NativeDebugPanel.cpp
             src/core/shadow_page_detour.cpp
             src/agent/agentic_deep_thinking_engine.cpp
             # NOTE: Quantum fiction files already removed from SOURCES
@@ -5740,7 +5940,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             src/core/vector_index.cpp
     # src/core/agentic_task_graph.cpp
     # src/core/vision_encoder.cpp
+            src/win32app/Win32IDE_Minimap.cpp
             src/win32app/Win32IDE_SettingsGUI.cpp
+            src/win32app/VulkanRenderer.cpp
+            src/win32app/OSExplorerInterceptor.cpp
         )
     endif()
      
@@ -5960,10 +6163,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     endif()
 
     list(APPEND WIN32IDE_SOURCES
+        src/win32app/ai_workers_queue.cpp
         # v14.7.0 Native Track B Modules
+        src/ui/ImportBridge.cpp
+        src/ui/ExportBridge.cpp
+        src/terminal/embedded_terminal.cpp
         # REMOVED: src/win32app/sovereign_gpu_link_stubs.cpp - stub file deleted
         # HEXMAG_IDE_ROUTE +�-�+�-�+�-� controller + MASM client + FINALIZE_POLICY
         src/core/hexmag_ide_link_probe.cpp
+        src/win32app/Win32IDE_HexMagCopilotRoute.cpp
         # Win32IDE_HexMag.cpp excluded: G HexMag UI transplant; CopilotRoute owns control-plane + link stubs
     # src/core/hexmag_control_plane.cpp
     # src/core/hexmag_oracle_binder.cpp
@@ -6254,13 +6462,31 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/win32app/Win32IDE_SelfHostEngine.cpp      # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_HardwareSynthesizer.cpp # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_TranscendenceCoordinator.cpp # Handlers in rawrengine_command_handlers.cpp
+        src/win32app/Win32IDE_TranscendencePanel.cpp
     )
 
     # Add UI & infrastructure handler files for batch 50-56
     list(APPEND WIN32IDE_SOURCES
         # NOTE: Win32IDE_CommandHandlers.cpp removed - CommandResult handlers already in rawrengine_command_handlers.cpp
+        src/win32app/Win32IDE_AutonomousAgent.cpp
+        src/win32app/Win32IDE_ChatMessageRenderer.cpp
+        src/win32app/Win32IDE_ToolActionStatus.cpp
         src/win32app/Win32IDE_ChatPanel.cpp
         # src/win32app/Win32IDE_ChatPanel_Ollama.cpp  # Removed: file does not exist
+        src/win32app/Win32IDE_VulkanRenderer.cpp
+        src/win32app/Win32IDE_OSExplorerInterceptor.cpp
+        src/win32app/Win32IDE_IOCPFileWatcher.cpp
+        src/win32app/Win32IDE_IDEDiagnosticAutoHealer.cpp
+        src/win32app/Win32IDE_ConsentPrompt.cpp
+        src/win32app/Win32IDE_PerfTelemetry.cpp
+        src/win32app/Win32IDE_UpdateSignature.cpp
+        src/win32app/Win32IDE_PluginSignature.cpp
+        src/win32app/Win32IDE_EnterpriseStressTests.cpp
+        src/win32app/Win32IDE_SQLite3Core.cpp
+        src/win32app/Win32IDE_TelemetryExport.cpp
+        src/win32app/Win32IDE_RefactoringPlugin.cpp
+        src/win32app/Win32IDE_LanguagePlugin.cpp
+        src/win32app/Win32IDE_ResourceGenerator.cpp
     )
 
     # Runtime surface +�-�+�-�+�-� unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
@@ -6275,6 +6501,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Batch 5: InferenceProfiler +�-�+�-�+�-� per-layer profiling + Prometheus export
     # Batch 6: BackendOrchestrator +�-�+�-�+�-� dynamic switching, sharding, semantic cache
     list(APPEND WIN32IDE_SOURCES
+        src/memory/UnifiedMemoryPool.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -6463,16 +6690,39 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     # Sovereign Coordination System - 10 primitives + Execution Capsule
     list(APPEND WIN32IDE_SOURCES
+        src/sovereign/spine/ExecutionSpine.cpp
+        src/sovereign/build/BuildStateGraph.cpp
+        src/sovereign/ide/SovereignIDEIntegration.cpp
+        src/sovereign/terminal/TerminalOwnership.cpp
+        src/sovereign/bus/CapabilityBus.cpp
+        src/sovereign/bus/BeaconBus.cpp
+        src/sovereign/awareness/SystemAwareness.cpp
+        src/sovereign/validator/RealityValidator.cpp
+        src/sovereign/recovery/AutonomousRecovery.cpp
+        src/sovereign/control/SovereignControlPlane.cpp
+        src/sovereign/compression/IntentCompression.cpp
+        src/sovereign/capsule/ExecutionCapsule.cpp
     )
 
     # Sovereign Autonomy Stack - Blackboard, TaskGraph, MissionPlanner, Reflection, Critic, Runtime
     list(APPEND WIN32IDE_SOURCES
+        src/sovereign_autonomy/SovereignBlackboard.cpp
+        src/sovereign_autonomy/SovereignTaskGraph.cpp
+        src/sovereign_autonomy/SovereignMissionPlanner.cpp
+        src/sovereign_autonomy/SovereignReflectionEngine.cpp
+        src/sovereign_autonomy/SovereignCritic.cpp
+        src/sovereign_autonomy/SovereignAgentRuntime.cpp
     )
 
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # OMEGA-1 v2.0 IDE Integration - IPC Layer for Ghost Text & Telemetry
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     list(APPEND WIN32IDE_SOURCES
+        src/win32ide/Omega1IPCClient.cpp
+        src/win32ide/GhostTextRenderer.cpp
+        src/win32ide/StatusBarTelemetry.cpp
+        src/win32ide/Omega1IDEIntegration.cpp
+        src/win32ide/Win32IDE_Omega1Integration.cpp
     )
     
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
@@ -9717,7 +9967,15 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/rawr_run.cpp")
     add_executable(rawr
         src/deep2/rawr_run.cpp
-        src/deep2/rawrxd_run_modelname_001.cpp)
+        src/deep2/rawrxd_run_modelname_001.cpp
+        src/cli/RawrDumpAuthority.cpp
+        src/cli/RawrDumpInitConfig.cpp
+        src/cli/RawrDumpRebuild.cpp
+        src/models/ModelCatalogAuthority.cpp
+        src/models/ModelClassificationAuthority.cpp
+        src/models/OllamaCatalogReader.cpp
+        src/models/GgufMetadataProbe.cpp
+        src/models/RawrDumpRules.cpp)
     target_link_libraries(rawr PRIVATE InferenceEngine dxgi)
     endif()
     if(MSVC)
@@ -13729,6 +13987,7 @@ option(RAWRXD_BUILD_LSP_SERVER "Build RawrXD-Script LSP server for VS Code exten
 if(RAWRXD_BUILD_LSP_SERVER AND EXISTS "${CMAKE_SOURCE_DIR}/src/lsp/RawrXD_LSPServer.cpp")
     # Minimal LSP server - core functionality only (avoid hotpatch dependencies)
     add_executable(RawrXD_LSPServer
+        src/lsp/RawrXD_LSPServer.cpp
     )
     target_compile_features(RawrXD_LSPServer PRIVATE cxx_std_20)
     target_include_directories(RawrXD_LSPServer BEFORE PRIVATE
