@@ -7718,6 +7718,30 @@ set_target_properties(test_embed_parity PROPERTIES
 )
 message(STATUS "[Deep2] Embed parity test: test_embed_parity")
 
+# generation_quality_gate -- GENERATION_QUALITY_001
+# Differential certification of the IDE chat lane against the certified CPU
+# correctness lane, using the engine's existing parity probe as the instrument.
+# Runs the 2x2 (maxSeqLen x threading) so a divergence is attributed to a
+# specific EngineConfig knob rather than "the configs differ".
+add_executable(generation_quality_gate
+    tests/generation_quality_gate.cpp
+)
+target_link_libraries(generation_quality_gate PRIVATE InferenceEngine)
+if(MSVC)
+    target_compile_options(generation_quality_gate PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+endif()
+target_include_directories(generation_quality_gate PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src/tokenizer
+    ${CMAKE_SOURCE_DIR}/include
+)
+set_target_properties(generation_quality_gate PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/Release
+    OUTPUT_NAME generation_quality_gate
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+message(STATUS "[Deep2] Generation quality differential gate: generation_quality_gate")
+
 # test_tokenizer — Tokenizer encode/decode verification
 add_executable(test_tokenizer
     src/deep2/test_tokenizer.cpp
