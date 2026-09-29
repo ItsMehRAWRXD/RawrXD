@@ -1261,6 +1261,24 @@ static int runAutorunGate(AutoRunMode mode)
 // ---------------------------------------------------------------------------
 // Entry Point
 // ---------------------------------------------------------------------------
+// D-W6-002: SEH wrapper for engine cleanup. Access violations during the
+// Deep2Engine destructor chain (stale handles after window destruction) are
+// caught here so the process can exit cleanly with the generation receipt
+// intact. C++ try/catch cannot catch SEH exceptions (0xC0000005).
+static void SafeCleanupChatEngine() {
+    g_chatCancelled = true;
+    if (g_chatThread.joinable()) g_chatThread.join();
+    if (g_chatEngine) {
+        __try {
+            g_chatEngine->unloadModel();
+            g_chatEngine.reset();
+        } __except (EXCEPTION_EXECUTE_HANDLER) {
+            // Engine destructor accessed a stale resource after window
+            // destruction. The generation receipt is already written;
+            // suppress to allow a clean exit.
+        }
+    }
+}
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     (void)hPrevInstance;
@@ -1484,6 +1502,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     if (hAccel) DestroyAcceleratorTable(hAccel);
+
+    // D-W6-001/D-W6-002: clean up chat engine after message loop via SEH wrapper.
+    SafeCleanupChatEngine();
 
     closeHeadlessLog();
     return (int)msg.wParam;
