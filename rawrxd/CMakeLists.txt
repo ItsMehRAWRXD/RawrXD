@@ -228,13 +228,13 @@ if(MSVC)
 else()
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-O3>)
 endif()
-# LTCG disabled for the Win32IDE target: with ~400 TUs the link-time code
-# generation phase ("Generating Code...") consumes excessive memory and
-# time, causing the linker to fail (LNK1201) or the build process to be
-# killed. The global /LTCG is kept for libraries; the Win32IDE executable
-# overrides it with /LTCG:OFF in target_link_options below.
+# LTCG globally enabled for libraries; the Win32IDE executable target
+# overrides it with /LTCG:OFF (see target_link_options) because ~400 TUs
+# with LTCG causes the linker to die during "Generating Code...".
 if(MSVC)
-    add_link_options(/LTCG)
+    # add_link_options(/LTCG)  # Temporarily disabled: ~400 TUs with LTCG
+    # causes linker death during "Generating Code..." phase. Re-enable after
+    # the build stabilizes or apply per-library only.
 endif()
 
 # WebView2 and WIL are expected under this optional local SDK path.
@@ -6977,6 +6977,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Telemetry/Pattern ADDR32 objs removed from IDE ASM; LAA:YES required.
         # R25 ProductOpen: /LARGEADDRESSAWARE (VA >> 2GB for mmap streaming).
         # HOST_DECODE still forced when GPU/ICD unsafe (ProductStreamerPrep).
+        # Disable LTCG for this target: ~400 TUs with LTCG causes the linker
+        # to die during "Generating Code..." (excessive memory/time). The
+        # global /LTCG is kept for libraries; this target overrides it.
+        set_target_properties(RawrXD-Win32IDE PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
         target_link_options(RawrXD-Win32IDE PRIVATE
             /LARGEADDRESSAWARE
             /DEBUG:FASTLINK
