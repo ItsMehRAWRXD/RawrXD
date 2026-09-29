@@ -1,0 +1,27 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "win32ide-strict",
+      "displayName": "RawrXD Win32IDE Strict",
+      "generator": "Ninja",
+      "binaryDir": "F:/~dev/build_win32ide_strict",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "RAWRXD_BUILD_WIN32IDE": "ON",
+        "BUILD_RAWRXD_RUN_MODELNAME_001": "ON",
+        "RAWRXD_BUILD_LEGACY_CERTS": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "win32ide-strict",
+      "configurePreset": "win32ide-strict",
+      "targets": [
+        "RawrXD-Win32IDE"
+      ],
+      "jobs": 2
+    }
+  ]
+}
