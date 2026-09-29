@@ -1,0 +1,103 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_w1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
+  RawrXD-ModelAnalysisLib.vcxproj -> F:\~dev\rawrxd\build_w1\Release\RawrXD-ModelAnalysisLib.lib
+  rguf.vcxproj -> F:\~dev\rawrxd\build_w1\rguf_source\Release\rguf.lib
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
+  RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\RawrXD_MultiWindow_Kernel.dll
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_w1\Release\InferenceEngine.lib
+  embedding_engine.cpp
+  vision_encoder.cpp
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(559,32): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(560,17): error C3536: 'loader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(564,38): error C2530: 'zone': references must be initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(564,38): error C3531: 'zone': a symbol whose type contains 'auto' must have an initializer [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(564,43): error C2143: syntax error: missing ';' before ':' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(564,45): error C3536: 'zones': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(564,50): error C2143: syntax error: missing ';' before ')' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(574,21): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(578,17): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(648,36): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(649,28): error C3536: 'loader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(653,26): error C2530: 'tref': references must be initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(653,26): error C3531: 'tref': a symbol whose type contains 'auto' must have an initializer [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(653,31): error C2143: syntax error: missing ';' before ':' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(653,33): error C3536: 'tensorIndex': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(653,44): error C2143: syntax error: missing ';' before ')' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1062,36): error C2039: 'StreamingGGUFLoader': is not a member of 'RawrXD' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\vision_encoder.cpp(24,11):
+      see declaration of 'RawrXD'
+  
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1062,36): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1063,13): error C3536: 'loader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1069,34): error C2530: 'zone': references must be initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1069,34): error C3531: 'zone': a symbol whose type contains 'auto' must have an initializer [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1069,39): error C2143: syntax error: missing ';' before ':' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1069,41): error C3536: 'zones': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1069,46): error C2143: syntax error: missing ';' before ')' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1082,17): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1088,13): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1100,40): error C2039: 'StreamingGGUFLoader': is not a member of 'RawrXD' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\vision_encoder.cpp(24,11):
+      see declaration of 'RawrXD'
+  
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1100,40): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1101,13): error C3536: 'projLoader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1107,34): error C2530: 'zone': references must be initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1107,34): error C3531: 'zone': a symbol whose type contains 'auto' must have an initializer [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1107,39): error C2143: syntax error: missing ';' before ':' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1107,41): error C3536: 'zones': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1107,46): error C2143: syntax error: missing ';' before ')' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1116,17): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1122,13): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1137,44): error C2039: 'StreamingGGUFLoader': is not a member of 'RawrXD' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\vision_encoder.cpp(24,11):
+      see declaration of 'RawrXD'
+  
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1137,44): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1138,9): error C3536: 'loader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1139,9): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1145,48): error C2039: 'StreamingGGUFLoader': is not a member of 'RawrXD' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\vision_encoder.cpp(24,11):
+      see declaration of 'RawrXD'
+  
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1145,48): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1146,9): error C3536: 'projLoader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1147,9): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1267,44): error C2039: 'StreamingGGUFLoader': is not a member of 'RawrXD' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\vision_encoder.cpp(24,11):
+      see declaration of 'RawrXD'
+  
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1267,44): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1268,28): error C3536: 'loader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1272,26): error C2530: 'tref': references must be initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1272,26): error C3531: 'tref': a symbol whose type contains 'auto' must have an initializer [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1272,31): error C2143: syntax error: missing ';' before ':' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1272,33): error C3536: 'tensorIndex': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1272,44): error C2143: syntax error: missing ';' before ')' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1308,56): error C2039: 'StreamingGGUFLoader': is not a member of 'RawrXD' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\vision_encoder.cpp(24,11):
+      see declaration of 'RawrXD'
+  
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1308,56): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1309,36): error C3536: 'projLoader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1310,34): error C2530: 'tref': references must be initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1310,34): error C3531: 'tref': a symbol whose type contains 'auto' must have an initializer [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1310,39): error C2143: syntax error: missing ';' before ':' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1310,41): error C3536: 'projTensors': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(1310,52): error C2143: syntax error: missing ';' before ')' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(2225,44): error C2039: 'StreamingGGUFLoader': is not a member of 'RawrXD' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\vision_encoder.cpp(24,11):
+      see declaration of 'RawrXD'
+  
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(2225,44): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(2226,9): error C3536: 'loader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(2227,9): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(2234,48): error C2039: 'StreamingGGUFLoader': is not a member of 'RawrXD' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\vision_encoder.cpp(24,11):
+      see declaration of 'RawrXD'
+  
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(2234,48): error C2061: syntax error: identifier 'StreamingGGUFLoader' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(2235,9): error C3536: 'projLoader': cannot be used before it is initialized [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(2236,9): error C2541: 'delete': cannot delete objects that are not pointers [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  Generating Code...

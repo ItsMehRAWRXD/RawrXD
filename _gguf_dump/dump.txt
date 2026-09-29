@@ -1,0 +1,390 @@
+﻿STAGE=header
+GGUF_MAGIC=0x46554747 VERSION=3 N_TENSORS=338 N_KV=33
+STAGE=kv_parse n=33
+KV  general.architecture                           = qwen2
+KV  general.tags                                   = [array type=Q8_0 n=5]
+KV  general.languages                              = [array type=Q8_0 n=1]
+KV  qwen2.context_length                           = 32768
+KV  qwen2.embedding_length                         = 1536
+KV  qwen2.feed_forward_length                      = 8960
+KV  qwen2.attention.head_count                     = 12
+KV  qwen2.attention.head_count_kv                  = 2
+KV  qwen2.rope.freq_base                           = 1e+06
+KV  qwen2.attention.layer_norm_rms_epsilon         = 1e-06
+KV  general.file_type                              = 15
+KV  tokenizer.ggml.tokens                          = [array type=Q8_0 n=151936]
+KV  tokenizer.ggml.token_type                      = [array type=TYPE_5 n=151936]
+KV  tokenizer.ggml.merges                          = [array type=Q8_0 n=151387]
+STAGE=tensor_parse n=338
+
+=== TENSORS OF INTEREST (total=338) ===
+token_embd.weight                            dims=1536x151936              type=Q6_K   off=0
+blk.0.attn_norm.weight                       dims=1536                     type=F32    off=191439360
+blk.0.ffn_down.weight                        dims=8960x1536                type=Q6_K   off=191445504
+blk.0.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=202735104
+blk.0.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=210476544
+blk.0.ffn_norm.weight                        dims=1536                     type=F32    off=218217984
+blk.0.attn_k.bias                            dims=256                      type=F32    off=218224128
+blk.0.attn_k.weight                          dims=1536x256                 type=Q4_K   off=218225152
+blk.0.attn_output.weight                     dims=1536x1536                type=Q4_K   off=218446336
+blk.0.attn_q.bias                            dims=1536                     type=F32    off=219773440
+blk.0.attn_q.weight                          dims=1536x1536                type=Q4_K   off=219779584
+blk.0.attn_v.bias                            dims=256                      type=F32    off=221106688
+blk.0.attn_v.weight                          dims=1536x256                 type=Q6_K   off=221107712
+blk.1.attn_norm.weight                       dims=1536                     type=F32    off=221430272
+blk.1.ffn_down.weight                        dims=8960x1536                type=Q6_K   off=221436416
+blk.1.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=232726016
+blk.1.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=240467456
+blk.1.ffn_norm.weight                        dims=1536                     type=F32    off=248208896
+blk.1.attn_k.bias                            dims=256                      type=F32    off=248215040
+blk.1.attn_k.weight                          dims=1536x256                 type=Q4_K   off=248216064
+blk.1.attn_output.weight                     dims=1536x1536                type=Q4_K   off=248437248
+blk.1.attn_q.bias                            dims=1536                     type=F32    off=249764352
+blk.1.attn_q.weight                          dims=1536x1536                type=Q4_K   off=249770496
+blk.1.attn_v.bias                            dims=256                      type=F32    off=251097600
+blk.1.attn_v.weight                          dims=1536x256                 type=Q6_K   off=251098624
+blk.10.attn_norm.weight                      dims=1536                     type=F32    off=251421184
+blk.10.ffn_down.weight                       dims=8960x1536                type=Q6_K   off=251427328
+blk.10.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=262716928
+blk.10.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=270458368
+blk.10.ffn_norm.weight                       dims=1536                     type=F32    off=278199808
+blk.10.attn_k.bias                           dims=256                      type=F32    off=278205952
+blk.10.attn_k.weight                         dims=1536x256                 type=Q4_K   off=278206976
+blk.10.attn_output.weight                    dims=1536x1536                type=Q4_K   off=278428160
+blk.10.attn_q.bias                           dims=1536                     type=F32    off=279755264
+blk.10.attn_q.weight                         dims=1536x1536                type=Q4_K   off=279761408
+blk.10.attn_v.bias                           dims=256                      type=F32    off=281088512
+blk.10.attn_v.weight                         dims=1536x256                 type=Q6_K   off=281089536
+blk.11.attn_norm.weight                      dims=1536                     type=F32    off=281412096
+blk.11.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=281418240
+blk.11.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=289159680
+blk.11.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=296901120
+blk.11.ffn_norm.weight                       dims=1536                     type=F32    off=304642560
+blk.11.attn_k.bias                           dims=256                      type=F32    off=304648704
+blk.11.attn_k.weight                         dims=1536x256                 type=Q4_K   off=304649728
+blk.11.attn_output.weight                    dims=1536x1536                type=Q4_K   off=304870912
+blk.11.attn_q.bias                           dims=1536                     type=F32    off=306198016
+blk.11.attn_q.weight                         dims=1536x1536                type=Q4_K   off=306204160
+blk.11.attn_v.bias                           dims=256                      type=F32    off=307531264
+blk.11.attn_v.weight                         dims=1536x256                 type=Q4_K   off=307532288
+blk.12.attn_norm.weight                      dims=1536                     type=F32    off=307753472
+blk.12.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=307759616
+blk.12.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=315501056
+blk.12.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=323242496
+blk.12.ffn_norm.weight                       dims=1536                     type=F32    off=330983936
+blk.12.attn_k.bias                           dims=256                      type=F32    off=330990080
+blk.12.attn_k.weight                         dims=1536x256                 type=Q4_K   off=330991104
+blk.12.attn_output.weight                    dims=1536x1536                type=Q4_K   off=331212288
+blk.12.attn_q.bias                           dims=1536                     type=F32    off=332539392
+blk.12.attn_q.weight                         dims=1536x1536                type=Q4_K   off=332545536
+blk.12.attn_v.bias                           dims=256                      type=F32    off=333872640
+blk.12.attn_v.weight                         dims=1536x256                 type=Q4_K   off=333873664
+blk.13.attn_norm.weight                      dims=1536                     type=F32    off=334094848
+blk.13.ffn_down.weight                       dims=8960x1536                type=Q6_K   off=334100992
+blk.13.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=345390592
+blk.13.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=353132032
+blk.13.ffn_norm.weight                       dims=1536                     type=F32    off=360873472
+blk.13.attn_k.bias                           dims=256                      type=F32    off=360879616
+blk.13.attn_k.weight                         dims=1536x256                 type=Q4_K   off=360880640
+blk.13.attn_output.weight                    dims=1536x1536                type=Q4_K   off=361101824
+blk.13.attn_q.bias                           dims=1536                     type=F32    off=362428928
+blk.13.attn_q.weight                         dims=1536x1536                type=Q4_K   off=362435072
+blk.13.attn_v.bias                           dims=256                      type=F32    off=363762176
+blk.13.attn_v.weight                         dims=1536x256                 type=Q6_K   off=363763200
+blk.14.attn_norm.weight                      dims=1536                     type=F32    off=364085760
+blk.14.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=364091904
+blk.14.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=371833344
+blk.14.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=379574784
+blk.14.ffn_norm.weight                       dims=1536                     type=F32    off=387316224
+blk.14.attn_k.bias                           dims=256                      type=F32    off=387322368
+blk.14.attn_k.weight                         dims=1536x256                 type=Q4_K   off=387323392
+blk.14.attn_output.weight                    dims=1536x1536                type=Q4_K   off=387544576
+blk.14.attn_q.bias                           dims=1536                     type=F32    off=388871680
+blk.14.attn_q.weight                         dims=1536x1536                type=Q4_K   off=388877824
+blk.14.attn_v.bias                           dims=256                      type=F32    off=390204928
+blk.14.attn_v.weight                         dims=1536x256                 type=Q4_K   off=390205952
+blk.15.attn_norm.weight                      dims=1536                     type=F32    off=390427136
+blk.15.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=390433280
+blk.15.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=398174720
+blk.15.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=405916160
+blk.15.ffn_norm.weight                       dims=1536                     type=F32    off=413657600
+blk.15.attn_k.bias                           dims=256                      type=F32    off=413663744
+blk.15.attn_k.weight                         dims=1536x256                 type=Q4_K   off=413664768
+blk.15.attn_output.weight                    dims=1536x1536                type=Q4_K   off=413885952
+blk.15.attn_q.bias                           dims=1536                     type=F32    off=415213056
+blk.15.attn_q.weight                         dims=1536x1536                type=Q4_K   off=415219200
+blk.15.attn_v.bias                           dims=256                      type=F32    off=416546304
+blk.15.attn_v.weight                         dims=1536x256                 type=Q4_K   off=416547328
+blk.16.attn_norm.weight                      dims=1536                     type=F32    off=416768512
+blk.16.ffn_down.weight                       dims=8960x1536                type=Q6_K   off=416774656
+blk.16.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=428064256
+blk.16.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=435805696
+blk.16.ffn_norm.weight                       dims=1536                     type=F32    off=443547136
+blk.16.attn_k.bias                           dims=256                      type=F32    off=443553280
+blk.16.attn_k.weight                         dims=1536x256                 type=Q4_K   off=443554304
+blk.16.attn_output.weight                    dims=1536x1536                type=Q4_K   off=443775488
+blk.16.attn_q.bias                           dims=1536                     type=F32    off=445102592
+blk.16.attn_q.weight                         dims=1536x1536                type=Q4_K   off=445108736
+blk.16.attn_v.bias                           dims=256                      type=F32    off=446435840
+blk.16.attn_v.weight                         dims=1536x256                 type=Q6_K   off=446436864
+blk.17.attn_norm.weight                      dims=1536                     type=F32    off=446759424
+blk.17.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=446765568
+blk.17.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=454507008
+blk.17.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=462248448
+blk.17.ffn_norm.weight                       dims=1536                     type=F32    off=469989888
+blk.17.attn_k.bias                           dims=256                      type=F32    off=469996032
+blk.17.attn_k.weight                         dims=1536x256                 type=Q4_K   off=469997056
+blk.17.attn_output.weight                    dims=1536x1536                type=Q4_K   off=470218240
+blk.17.attn_q.bias                           dims=1536                     type=F32    off=471545344
+blk.17.attn_q.weight                         dims=1536x1536                type=Q4_K   off=471551488
+blk.17.attn_v.bias                           dims=256                      type=F32    off=472878592
+blk.17.attn_v.weight                         dims=1536x256                 type=Q4_K   off=472879616
+blk.18.attn_norm.weight                      dims=1536                     type=F32    off=473100800
+blk.18.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=473106944
+blk.18.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=480848384
+blk.18.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=488589824
+blk.18.ffn_norm.weight                       dims=1536                     type=F32    off=496331264
+blk.18.attn_k.bias                           dims=256                      type=F32    off=496337408
+blk.18.attn_k.weight                         dims=1536x256                 type=Q4_K   off=496338432
+blk.18.attn_output.weight                    dims=1536x1536                type=Q4_K   off=496559616
+blk.18.attn_q.bias                           dims=1536                     type=F32    off=497886720
+blk.18.attn_q.weight                         dims=1536x1536                type=Q4_K   off=497892864
+blk.18.attn_v.bias                           dims=256                      type=F32    off=499219968
+blk.18.attn_v.weight                         dims=1536x256                 type=Q4_K   off=499220992
+blk.19.attn_norm.weight                      dims=1536                     type=F32    off=499442176
+blk.19.ffn_down.weight                       dims=8960x1536                type=Q6_K   off=499448320
+blk.19.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=510737920
+blk.19.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=518479360
+blk.19.ffn_norm.weight                       dims=1536                     type=F32    off=526220800
+blk.19.attn_k.bias                           dims=256                      type=F32    off=526226944
+blk.19.attn_k.weight                         dims=1536x256                 type=Q4_K   off=526227968
+blk.19.attn_output.weight                    dims=1536x1536                type=Q4_K   off=526449152
+blk.19.attn_q.bias                           dims=1536                     type=F32    off=527776256
+blk.19.attn_q.weight                         dims=1536x1536                type=Q4_K   off=527782400
+blk.19.attn_v.bias                           dims=256                      type=F32    off=529109504
+blk.19.attn_v.weight                         dims=1536x256                 type=Q6_K   off=529110528
+blk.2.attn_norm.weight                       dims=1536                     type=F32    off=529433088
+blk.2.ffn_down.weight                        dims=8960x1536                type=Q4_K   off=529439232
+blk.2.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=537180672
+blk.2.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=544922112
+blk.2.ffn_norm.weight                        dims=1536                     type=F32    off=552663552
+blk.2.attn_k.bias                            dims=256                      type=F32    off=552669696
+blk.2.attn_k.weight                          dims=1536x256                 type=Q4_K   off=552670720
+blk.2.attn_output.weight                     dims=1536x1536                type=Q4_K   off=552891904
+blk.2.attn_q.bias                            dims=1536                     type=F32    off=554219008
+blk.2.attn_q.weight                          dims=1536x1536                type=Q4_K   off=554225152
+blk.2.attn_v.bias                            dims=256                      type=F32    off=555552256
+blk.2.attn_v.weight                          dims=1536x256                 type=Q4_K   off=555553280
+blk.20.attn_norm.weight                      dims=1536                     type=F32    off=555774464
+blk.20.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=555780608
+blk.20.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=563522048
+blk.20.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=571263488
+blk.20.ffn_norm.weight                       dims=1536                     type=F32    off=579004928
+blk.20.attn_k.bias                           dims=256                      type=F32    off=579011072
+blk.20.attn_k.weight                         dims=1536x256                 type=Q4_K   off=579012096
+blk.20.attn_output.weight                    dims=1536x1536                type=Q4_K   off=579233280
+blk.20.attn_q.bias                           dims=1536                     type=F32    off=580560384
+blk.20.attn_q.weight                         dims=1536x1536                type=Q4_K   off=580566528
+blk.20.attn_v.bias                           dims=256                      type=F32    off=581893632
+blk.20.attn_v.weight                         dims=1536x256                 type=Q4_K   off=581894656
+blk.21.attn_norm.weight                      dims=1536                     type=F32    off=582115840
+blk.21.ffn_down.weight                       dims=8960x1536                type=Q6_K   off=582121984
+blk.21.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=593411584
+blk.21.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=601153024
+blk.21.ffn_norm.weight                       dims=1536                     type=F32    off=608894464
+blk.21.attn_k.bias                           dims=256                      type=F32    off=608900608
+blk.21.attn_k.weight                         dims=1536x256                 type=Q4_K   off=608901632
+blk.21.attn_output.weight                    dims=1536x1536                type=Q4_K   off=609122816
+blk.21.attn_q.bias                           dims=1536                     type=F32    off=610449920
+blk.21.attn_q.weight                         dims=1536x1536                type=Q4_K   off=610456064
+blk.21.attn_v.bias                           dims=256                      type=F32    off=611783168
+blk.21.attn_v.weight                         dims=1536x256                 type=Q6_K   off=611784192
+blk.22.attn_norm.weight                      dims=1536                     type=F32    off=612106752
+blk.22.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=612112896
+blk.22.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=619854336
+blk.22.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=627595776
+blk.22.ffn_norm.weight                       dims=1536                     type=F32    off=635337216
+blk.22.attn_k.bias                           dims=256                      type=F32    off=635343360
+blk.22.attn_k.weight                         dims=1536x256                 type=Q4_K   off=635344384
+blk.22.attn_output.weight                    dims=1536x1536                type=Q4_K   off=635565568
+blk.22.attn_q.bias                           dims=1536                     type=F32    off=636892672
+blk.22.attn_q.weight                         dims=1536x1536                type=Q4_K   off=636898816
+blk.22.attn_v.bias                           dims=256                      type=F32    off=638225920
+blk.22.attn_v.weight                         dims=1536x256                 type=Q4_K   off=638226944
+blk.23.attn_norm.weight                      dims=1536                     type=F32    off=638448128
+blk.23.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=638454272
+blk.23.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=646195712
+blk.23.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=653937152
+blk.23.ffn_norm.weight                       dims=1536                     type=F32    off=661678592
+blk.23.attn_k.bias                           dims=256                      type=F32    off=661684736
+blk.23.attn_k.weight                         dims=1536x256                 type=Q4_K   off=661685760
+blk.23.attn_output.weight                    dims=1536x1536                type=Q4_K   off=661906944
+blk.23.attn_q.bias                           dims=1536                     type=F32    off=663234048
+blk.23.attn_q.weight                         dims=1536x1536                type=Q4_K   off=663240192
+blk.23.attn_v.bias                           dims=256                      type=F32    off=664567296
+blk.23.attn_v.weight                         dims=1536x256                 type=Q4_K   off=664568320
+blk.24.attn_norm.weight                      dims=1536                     type=F32    off=664789504
+blk.24.ffn_down.weight                       dims=8960x1536                type=Q6_K   off=664795648
+blk.24.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=676085248
+blk.24.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=683826688
+blk.24.ffn_norm.weight                       dims=1536                     type=F32    off=691568128
+blk.24.attn_k.bias                           dims=256                      type=F32    off=691574272
+blk.24.attn_k.weight                         dims=1536x256                 type=Q4_K   off=691575296
+blk.24.attn_output.weight                    dims=1536x1536                type=Q4_K   off=691796480
+blk.24.attn_q.bias                           dims=1536                     type=F32    off=693123584
+blk.24.attn_q.weight                         dims=1536x1536                type=Q4_K   off=693129728
+blk.24.attn_v.bias                           dims=256                      type=F32    off=694456832
+blk.24.attn_v.weight                         dims=1536x256                 type=Q6_K   off=694457856
+blk.25.attn_norm.weight                      dims=1536                     type=F32    off=694780416
+blk.25.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=694786560
+blk.25.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=702528000
+blk.25.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=710269440
+blk.25.ffn_norm.weight                       dims=1536                     type=F32    off=718010880
+blk.25.attn_k.bias                           dims=256                      type=F32    off=718017024
+blk.25.attn_k.weight                         dims=1536x256                 type=Q4_K   off=718018048
+blk.25.attn_output.weight                    dims=1536x1536                type=Q4_K   off=718239232
+blk.25.attn_q.bias                           dims=1536                     type=F32    off=719566336
+blk.25.attn_q.weight                         dims=1536x1536                type=Q4_K   off=719572480
+blk.25.attn_v.bias                           dims=256                      type=F32    off=720899584
+blk.25.attn_v.weight                         dims=1536x256                 type=Q4_K   off=720900608
+blk.26.attn_norm.weight                      dims=1536                     type=F32    off=721121792
+blk.26.ffn_down.weight                       dims=8960x1536                type=Q4_K   off=721127936
+blk.26.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=728869376
+blk.26.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=736610816
+blk.26.ffn_norm.weight                       dims=1536                     type=F32    off=744352256
+blk.26.attn_k.bias                           dims=256                      type=F32    off=744358400
+blk.26.attn_k.weight                         dims=1536x256                 type=Q4_K   off=744359424
+blk.26.attn_output.weight                    dims=1536x1536                type=Q4_K   off=744580608
+blk.26.attn_q.bias                           dims=1536                     type=F32    off=745907712
+blk.26.attn_q.weight                         dims=1536x1536                type=Q4_K   off=745913856
+blk.26.attn_v.bias                           dims=256                      type=F32    off=747240960
+blk.26.attn_v.weight                         dims=1536x256                 type=Q4_K   off=747241984
+blk.27.attn_norm.weight                      dims=1536                     type=F32    off=747463168
+blk.27.ffn_down.weight                       dims=8960x1536                type=Q6_K   off=747469312
+blk.27.ffn_gate.weight                       dims=1536x8960                type=Q4_K   off=758758912
+blk.27.ffn_up.weight                         dims=1536x8960                type=Q4_K   off=766500352
+blk.27.ffn_norm.weight                       dims=1536                     type=F32    off=774241792
+blk.27.attn_k.bias                           dims=256                      type=F32    off=774247936
+blk.27.attn_k.weight                         dims=1536x256                 type=Q4_K   off=774248960
+blk.27.attn_output.weight                    dims=1536x1536                type=Q4_K   off=774470144
+blk.27.attn_q.bias                           dims=1536                     type=F32    off=775797248
+blk.27.attn_q.weight                         dims=1536x1536                type=Q4_K   off=775803392
+blk.27.attn_v.bias                           dims=256                      type=F32    off=777130496
+blk.27.attn_v.weight                         dims=1536x256                 type=Q6_K   off=777131520
+blk.3.attn_norm.weight                       dims=1536                     type=F32    off=777454080
+blk.3.ffn_down.weight                        dims=8960x1536                type=Q4_K   off=777460224
+blk.3.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=785201664
+blk.3.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=792943104
+blk.3.ffn_norm.weight                        dims=1536                     type=F32    off=800684544
+blk.3.attn_k.bias                            dims=256                      type=F32    off=800690688
+blk.3.attn_k.weight                          dims=1536x256                 type=Q4_K   off=800691712
+blk.3.attn_output.weight                     dims=1536x1536                type=Q4_K   off=800912896
+blk.3.attn_q.bias                            dims=1536                     type=F32    off=802240000
+blk.3.attn_q.weight                          dims=1536x1536                type=Q4_K   off=802246144
+blk.3.attn_v.bias                            dims=256                      type=F32    off=803573248
+blk.3.attn_v.weight                          dims=1536x256                 type=Q4_K   off=803574272
+blk.4.attn_norm.weight                       dims=1536                     type=F32    off=803795456
+blk.4.ffn_down.weight                        dims=8960x1536                type=Q4_K   off=803801600
+blk.4.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=811543040
+blk.4.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=819284480
+blk.4.ffn_norm.weight                        dims=1536                     type=F32    off=827025920
+blk.4.attn_k.bias                            dims=256                      type=F32    off=827032064
+blk.4.attn_k.weight                          dims=1536x256                 type=Q4_K   off=827033088
+blk.4.attn_output.weight                     dims=1536x1536                type=Q4_K   off=827254272
+blk.4.attn_q.bias                            dims=1536                     type=F32    off=828581376
+blk.4.attn_q.weight                          dims=1536x1536                type=Q4_K   off=828587520
+blk.4.attn_v.bias                            dims=256                      type=F32    off=829914624
+blk.4.attn_v.weight                          dims=1536x256                 type=Q4_K   off=829915648
+blk.5.attn_norm.weight                       dims=1536                     type=F32    off=830136832
+blk.5.ffn_down.weight                        dims=8960x1536                type=Q6_K   off=830142976
+blk.5.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=841432576
+blk.5.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=849174016
+blk.5.ffn_norm.weight                        dims=1536                     type=F32    off=856915456
+blk.5.attn_k.bias                            dims=256                      type=F32    off=856921600
+blk.5.attn_k.weight                          dims=1536x256                 type=Q4_K   off=856922624
+blk.5.attn_output.weight                     dims=1536x1536                type=Q4_K   off=857143808
+blk.5.attn_q.bias                            dims=1536                     type=F32    off=858470912
+blk.5.attn_q.weight                          dims=1536x1536                type=Q4_K   off=858477056
+blk.5.attn_v.bias                            dims=256                      type=F32    off=859804160
+blk.5.attn_v.weight                          dims=1536x256                 type=Q6_K   off=859805184
+blk.6.attn_norm.weight                       dims=1536                     type=F32    off=860127744
+blk.6.ffn_down.weight                        dims=8960x1536                type=Q6_K   off=860133888
+blk.6.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=871423488
+blk.6.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=879164928
+blk.6.ffn_norm.weight                        dims=1536                     type=F32    off=886906368
+blk.6.attn_k.bias                            dims=256                      type=F32    off=886912512
+blk.6.attn_k.weight                          dims=1536x256                 type=Q4_K   off=886913536
+blk.6.attn_output.weight                     dims=1536x1536                type=Q4_K   off=887134720
+blk.6.attn_q.bias                            dims=1536                     type=F32    off=888461824
+blk.6.attn_q.weight                          dims=1536x1536                type=Q4_K   off=888467968
+blk.6.attn_v.bias                            dims=256                      type=F32    off=889795072
+blk.6.attn_v.weight                          dims=1536x256                 type=Q6_K   off=889796096
+blk.7.attn_norm.weight                       dims=1536                     type=F32    off=890118656
+blk.7.ffn_down.weight                        dims=8960x1536                type=Q6_K   off=890124800
+blk.7.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=901414400
+blk.7.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=909155840
+blk.7.ffn_norm.weight                        dims=1536                     type=F32    off=916897280
+blk.7.attn_k.bias                            dims=256                      type=F32    off=916903424
+blk.7.attn_k.weight                          dims=1536x256                 type=Q4_K   off=916904448
+blk.7.attn_output.weight                     dims=1536x1536                type=Q4_K   off=917125632
+blk.7.attn_q.bias                            dims=1536                     type=F32    off=918452736
+blk.7.attn_q.weight                          dims=1536x1536                type=Q4_K   off=918458880
+blk.7.attn_v.bias                            dims=256                      type=F32    off=919785984
+blk.7.attn_v.weight                          dims=1536x256                 type=Q6_K   off=919787008
+blk.8.attn_norm.weight                       dims=1536                     type=F32    off=920109568
+blk.8.ffn_down.weight                        dims=8960x1536                type=Q6_K   off=920115712
+blk.8.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=931405312
+blk.8.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=939146752
+blk.8.ffn_norm.weight                        dims=1536                     type=F32    off=946888192
+blk.8.attn_k.bias                            dims=256                      type=F32    off=946894336
+blk.8.attn_k.weight                          dims=1536x256                 type=Q4_K   off=946895360
+blk.8.attn_output.weight                     dims=1536x1536                type=Q4_K   off=947116544
+blk.8.attn_q.bias                            dims=1536                     type=F32    off=948443648
+blk.8.attn_q.weight                          dims=1536x1536                type=Q4_K   off=948449792
+blk.8.attn_v.bias                            dims=256                      type=F32    off=949776896
+blk.8.attn_v.weight                          dims=1536x256                 type=Q6_K   off=949777920
+blk.9.attn_norm.weight                       dims=1536                     type=F32    off=950100480
+blk.9.ffn_down.weight                        dims=8960x1536                type=Q6_K   off=950106624
+blk.9.ffn_gate.weight                        dims=1536x8960                type=Q4_K   off=961396224
+blk.9.ffn_up.weight                          dims=1536x8960                type=Q4_K   off=969137664
+blk.9.ffn_norm.weight                        dims=1536                     type=F32    off=976879104
+blk.9.attn_k.bias                            dims=256                      type=F32    off=976885248
+blk.9.attn_k.weight                          dims=1536x256                 type=Q4_K   off=976886272
+blk.9.attn_output.weight                     dims=1536x1536                type=Q4_K   off=977107456
+blk.9.attn_q.bias                            dims=1536                     type=F32    off=978434560
+blk.9.attn_q.weight                          dims=1536x1536                type=Q4_K   off=978440704
+blk.9.attn_v.bias                            dims=256                      type=F32    off=979767808
+blk.9.attn_v.weight                          dims=1536x256                 type=Q6_K   off=979768832
+output_norm.weight                           dims=1536                     type=F32    off=980091392
+
+=== BLK.0 CENSUS ===
+blk.0.attn_norm.weight                       dims=1536                     type=F32
+blk.0.ffn_down.weight                        dims=8960x1536                type=Q6_K
+blk.0.ffn_gate.weight                        dims=1536x8960                type=Q4_K
+blk.0.ffn_up.weight                          dims=1536x8960                type=Q4_K
+blk.0.ffn_norm.weight                        dims=1536                     type=F32
+blk.0.attn_k.bias                            dims=256                      type=F32
+blk.0.attn_k.weight                          dims=1536x256                 type=Q4_K
+blk.0.attn_output.weight                     dims=1536x1536                type=Q4_K
+blk.0.attn_q.bias                            dims=1536                     type=F32
+blk.0.attn_q.weight                          dims=1536x1536                type=Q4_K
+blk.0.attn_v.bias                            dims=256                      type=F32
+blk.0.attn_v.weight                          dims=1536x256                 type=Q6_K
+
+=== GEOMETRY ===
+TOKEN_EMBD     PRESENT=1 dims=1536x151936              type=Q6_K   off=0
+LM_HEAD_out    PRESENT=0
+LM_HEAD_alt    PRESENT=0
+ATTN_Q         PRESENT=1 dims=1536x1536                type=Q4_K   off=219779584
+ATTN_K         PRESENT=1 dims=1536x256                 type=Q4_K   off=218225152
+ATTN_V         PRESENT=1 dims=1536x256                 type=Q6_K   off=221107712
+ATTN_OUTPUT    PRESENT=1 dims=1536x1536                type=Q4_K   off=218446336
+FFN_GATE       PRESENT=1 dims=1536x8960                type=Q4_K   off=202735104
+FFN_UP         PRESENT=1 dims=1536x8960                type=Q4_K   off=210476544
+FFN_DOWN       PRESENT=1 dims=8960x1536                type=Q6_K   off=191445504
+Q_BIAS         PRESENT=1 dims=1536                     type=F32    off=219773440
+K_BIAS         PRESENT=1 dims=256                      type=F32    off=218224128
+V_BIAS         PRESENT=1 dims=256                      type=F32    off=221106688
+FINAL_NORM     PRESENT=1 dims=1536                     type=F32    off=980091392
+
+GGUF_DUMP_DONE

@@ -1,0 +1,88 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  re_api_bridge.cpp
+  rguf.vcxproj -> F:\~dev\rawrxd\build_w1\rguf_source\Release\rguf.lib
+  RawrXD-ModelAnalysisLib.vcxproj -> F:\~dev\rawrxd\build_w1\Release\RawrXD-ModelAnalysisLib.lib
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
+  RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\RawrXD_MultiWindow_Kernel.dll
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_w1\Release\InferenceEngine.lib
+F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(11,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\~dev\rawrxd\build_w1\src\reverse_engineering\RawrXD-RE-Library.vcxproj]
+  (compiling source file '../../src/reverse_engineering/re_api_bridge.cpp')
+      F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(11,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(12,9): warning C4005: 'NOMINMAX': macro redefinition [F:\~dev\rawrxd\build_w1\src\reverse_engineering\RawrXD-RE-Library.vcxproj]
+  (compiling source file '../../src/reverse_engineering/re_api_bridge.cpp')
+      F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(12,9):
+      'NOMINMAX' previously declared on the command line
+  
+  RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_w1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
+  embedding_engine.cpp
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(9,10): error C1083: Cannot open include file: '../streaming_gguf_loader.h': No such file or directory [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  vision_encoder.cpp
+F:\~dev\rawrxd\src\core\vision_encoder.cpp(8,10): error C1083: Cannot open include file: '../streaming_gguf_loader.h': No such file or directory [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  lsp_hotpatch_impl.cpp
+  lsp_hotpatch_bridge_impl.cpp
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(29,32): error C2027: use of undefined type 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge.hpp(12,8):
+      see declaration of 'PatchResult'
+  
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(29,32): error C2079: 'RawrXD::LSP::LSPHotpatchBridge::refreshDiagnostics' uses undefined struct 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(33,29): error C2027: use of undefined type 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge.hpp(12,8):
+      see declaration of 'PatchResult'
+  
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(33,29): error C3861: 'error': identifier not found [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(37,25): error C2027: use of undefined type 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge.hpp(12,8):
+      see declaration of 'PatchResult'
+  
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(37,25): error C3861: 'ok': identifier not found [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(40,32): error C2027: use of undefined type 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge.hpp(12,8):
+      see declaration of 'PatchResult'
+  
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(40,32): error C2079: 'RawrXD::LSP::LSPHotpatchBridge::rebuildSymbolIndex' uses undefined struct 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(43,17): error C2079: 'r' uses undefined struct 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(43,56): error C2027: use of undefined type 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge.hpp(12,8):
+      see declaration of 'PatchResult'
+  
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(47,32): error C2027: use of undefined type 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge.hpp(12,8):
+      see declaration of 'PatchResult'
+  
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(47,32): error C2079: 'RawrXD::LSP::LSPHotpatchBridge::detach' uses undefined struct 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(49,29): error C2027: use of undefined type 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge.hpp(12,8):
+      see declaration of 'PatchResult'
+  
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(49,29): error C3861: 'ok': identifier not found [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(52,25): error C2027: use of undefined type 'PatchResult' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge.hpp(12,8):
+      see declaration of 'PatchResult'
+  
+F:\~dev\rawrxd\src\lsp\lsp_hotpatch_bridge_impl.cpp(52,25): error C3861: 'ok': identifier not found [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  ToolGateway.cpp
+  local_reasoning_engine_real.cpp
+F:\~dev\rawrxd\src\agent\local_reasoning_engine_real.cpp(168,37): error C2660: 'rawrxd::agent::LocalReasoningEngine::Impl::planFor': function does not take 1 arguments [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\agent\local_reasoning_engine_real.cpp(86,17):
+      see declaration of 'rawrxd::agent::LocalReasoningEngine::Impl::planFor'
+      F:\~dev\rawrxd\src\agent\local_reasoning_engine_real.cpp(168,37):
+      while trying to match the argument list '(const rawrxd::agent::AgentContext)'
+  
+  local_reasoning_integration.cpp
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(3,8): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(3,29): error C2146: syntax error: missing ';' before identifier 's_instance' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(5,21): error C2143: syntax error: missing ';' before '&' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(5,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(5,1): error C2086: 'int LocalReasoningEngine': redefinition [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(3,8):
+      see declaration of 'LocalReasoningEngine'
+  
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(5,23): error C2653: 'LocalReasoningIntegration': is not a class or namespace name [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(5,50): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(5,61): error C2059: syntax error: '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(5,61): error C2143: syntax error: missing ';' before '{' [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\agent\local_reasoning_integration.cpp(5,61): error C2447: '{': missing function header (old-style formal list?) [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  Generating Code...

@@ -1,0 +1,16 @@
+TENSOR rows=5120 cols=27648 sizeBytes=116121600 type=14
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+ROW 0 kernel=0.0247228742 canonical=0.0251151084 rel=0.0156
+ROW 1 kernel=-1.47111702 canonical=-1.47295458 rel=0.00125
+ROW 2 kernel=-1.03957963 canonical=-1.03804842 rel=0.00148
+ROW 3 kernel=1.03766656 canonical=1.04197211 rel=0.00413
+ROW 4 kernel=-0.192739204 canonical=-0.191259476 rel=0.00774
+ROW 5 kernel=-0.0493142605 canonical=-0.0490017577 rel=0.00638
+ROW 6 kernel=-1.58938324 canonical=-1.59210707 rel=0.00171
+ROW 7 kernel=0.202577233 canonical=0.204643846 rel=0.0101
+GATE=DEEP2_Q6K_GEMV_PARITY_001
+ROWS_TESTED=8
+MISMATCHES=5
+WORST_REL_ERR=0.0156175
+PARITY=FAIL

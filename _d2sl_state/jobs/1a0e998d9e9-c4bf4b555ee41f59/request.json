@@ -1,0 +1,11 @@
+{
+    "messages":  [
+                     {
+                         "content":  "Reply with exactly: DEEP2_SERVERLESS_OK",
+                         "role":  "user"
+                     }
+                 ],
+    "stream":  false,
+    "model":  "qwen2.5-coder-1.5b-base",
+    "max_tokens":  32
+}

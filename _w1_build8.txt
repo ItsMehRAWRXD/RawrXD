@@ -1,0 +1,25 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_w1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
+  rguf.vcxproj -> F:\~dev\rawrxd\build_w1\rguf_source\Release\rguf.lib
+  RawrXD-ModelAnalysisLib.vcxproj -> F:\~dev\rawrxd\build_w1\Release\RawrXD-ModelAnalysisLib.lib
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_w1\Release\InferenceEngine.lib
+  RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\RawrXD_MultiWindow_Kernel.dll
+  Win32IDE_GhostText.cpp
+  IDELogger.cpp
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(120,5): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(121,5): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(122,5): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(123,5): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(124,9): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(124,31): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(125,24): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(130,5): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(131,5): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(132,5): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(133,5): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(134,9): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\win32app\Win32IDE_GhostText.cpp(135,24): error C2065: 'g_ghost': undeclared identifier [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+  Win32IDE_StatusBar.cpp
+  Generating Code...

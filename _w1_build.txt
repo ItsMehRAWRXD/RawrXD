@@ -1,0 +1,105 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  [MASM64] Assembling RawrXD_MetaReverse.asm (authenticity detection)
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+   Assembling: F:/~dev/rawrxd/src/reverse_engineering/deobfuscator/RawrXD_MetaReverse.asm
+  [MASM64] Assembling RawrXD_OmegaDeobfuscator.asm (AVX-512 deobfuscation)
+  Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+   Assembling: F:/~dev/rawrxd/src/reverse_engineering/deobfuscator/RawrXD_OmegaDeobfuscator.asm
+  Building Custom Rule F:/~dev/rawrxd/src/reverse_engineering/CMakeLists.txt
+  Building Custom Rule F:/~dev/rawrxd/src/reverse_engineering/CMakeLists.txt
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  re_tools.cpp
+  model_anatomy.cpp
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  Building Custom Rule F:/~dev/rawrxd/rguf_source/CMakeLists.txt
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  Assembling F:\~dev\rawrxd\src\asm\RawrXD_MultiWindow_Kernel.asm...
+  quickjs.c
+  RGUFPlatform.cpp
+  multiwindow_scheduler.cpp
+  libregexp.c
+  libunicode.c
+  RGUFQuant.cpp
+  disassembler.cpp
+F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(11,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\~dev\rawrxd\build_w1\src\reverse_engineering\RawrXD-RE-Library.vcxproj]
+  (compiling source file '../../../src/reverse_engineering/disassembler.cpp')
+      F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(11,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(12,9): warning C4005: 'NOMINMAX': macro redefinition [F:\~dev\rawrxd\build_w1\src\reverse_engineering\RawrXD-RE-Library.vcxproj]
+  (compiling source file '../../../src/reverse_engineering/disassembler.cpp')
+      F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(12,9):
+      'NOMINMAX' previously declared on the command line
+  
+  cutils.c
+  dtoa.c
+  RGUFWriter.cpp
+  Generating Code...
+  RGUFLoader.cpp
+  neurological_diff.cpp
+     Creating library F:/~dev/rawrxd/build_w1/Release/RawrXD_MultiWindow_Kernel.lib and object F:/~dev/rawrxd/build_w1/Release/RawrXD_MultiWindow_Kernel.exp
+  LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+  pe_analyzer.cpp
+F:\~dev\rawrxd\src\reverse_engineering\pe_analyzer.h(10,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\~dev\rawrxd\build_w1\src\reverse_engineering\RawrXD-RE-Library.vcxproj]
+  (compiling source file '../../../src/reverse_engineering/pe_analyzer.cpp')
+      F:\~dev\rawrxd\src\reverse_engineering\pe_analyzer.h(10,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\~dev\rawrxd\src\reverse_engineering\pe_analyzer.h(11,9): warning C4005: 'NOMINMAX': macro redefinition [F:\~dev\rawrxd\build_w1\src\reverse_engineering\RawrXD-RE-Library.vcxproj]
+  (compiling source file '../../../src/reverse_engineering/pe_analyzer.cpp')
+      F:\~dev\rawrxd\src\reverse_engineering\pe_analyzer.h(11,9):
+      'NOMINMAX' previously declared on the command line
+  
+LINK : warning LNK4286: symbol 'KernelInit' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'KernelShutdown' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'SubmitTask' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'CancelTask' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'IsTaskComplete' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'RegisterWindow' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'UnregisterWindow' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'SendIPCMessage' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'GetKernelStats' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'SwarmBroadcast' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'ChainOfThought' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+LINK : warning LNK4286: symbol 'GetMicroseconds' defined in 'RawrXD_MultiWindow_Kernel.obj' is imported by 'multiwindow_scheduler.obj' [F:\~dev\rawrxd\build_w1\RawrXD_MultiWindow_Kernel.vcxproj]
+  RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\RawrXD_MultiWindow_Kernel.dll
+  Generating Code...
+  Generating Code...
+  rguf.vcxproj -> F:\~dev\rawrxd\build_w1\rguf_source\Release\rguf.lib
+  decompiler.cpp
+F:\~dev\rawrxd\src\reverse_engineering\decompiler.h(11,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\~dev\rawrxd\build_w1\src\reverse_engineering\RawrXD-RE-Library.vcxproj]
+  (compiling source file '../src/reverse_engineering/decompiler.cpp')
+      F:\~dev\rawrxd\src\reverse_engineering\decompiler.h(11,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\~dev\rawrxd\src\reverse_engineering\decompiler.h(12,9): warning C4005: 'NOMINMAX': macro redefinition [F:\~dev\rawrxd\build_w1\src\reverse_engineering\RawrXD-RE-Library.vcxproj]
+  (compiling source file '../src/reverse_engineering/decompiler.cpp')
+      F:\~dev\rawrxd\src\reverse_engineering\decompiler.h(12,9):
+      'NOMINMAX' previously declared on the command line
+  
+  RawrXD-ModelAnalysisLib.vcxproj -> F:\~dev\rawrxd\build_w1\Release\RawrXD-ModelAnalysisLib.lib
+  binary_patcher.cpp
+  InstructionEncoderX64.cpp
+  RawrCOFFWriter.cpp
+  RawrPE64Linker.cpp
+  Generating Code...
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  Assembling F:\~dev\rawrxd\src\asm\k2_real_attention\RawrXD_K2_RealAttention_x64.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\lavapath\KN_O3KKEN.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\lavapath\r25_productopen_masm.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_deep2_kernels.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q4k_gemv.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q4_1_gemv.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q5_k_gemv.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q6_k_gemv.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_q8_0_gemv.asm...
+  Assembling F:\~dev\rawrxd\src\deep2\sovereign_fp16_gemv.asm...
+  Assembling F:\~dev\rawrxd\src\asm\rawr_globals.asm...

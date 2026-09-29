@@ -1,0 +1,20 @@
+Start testing: Sep 28 16:40 Eastern Daylight Time
+----------------------------------------------------------
+1/1 Testing: rawrxd-value-pack2-core
+1/1 Test: rawrxd-value-pack2-core
+Command: "F:/~dev/_vp2_build/Release/rawrxd-value-pack2-test.exe"
+Directory: F:/~dev/_vp2_build
+"rawrxd-value-pack2-core" start time: Sep 28 16:40 Eastern Daylight Time
+Output:
+----------------------------------------------------------
+GATE=RAWRXD_VALUE_PACK2_TEST_001
+VERDICT=PASS
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"rawrxd-value-pack2-core" end time: Sep 28 16:40 Eastern Daylight Time
+"rawrxd-value-pack2-core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 28 16:40 Eastern Daylight Time

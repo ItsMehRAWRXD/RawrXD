@@ -62,50 +62,10 @@ void AVScanMode() {
     setMode(1u << 8);
 }
 
-// Streaming orchestrator functions
-bool SO_InitializeVulkan() {
-    g_stream.vulkanReady.store(true, std::memory_order_relaxed);
-    return true;
-}
-
-bool SO_InitializeStreaming() {
-    if (!g_stream.vulkanReady.load(std::memory_order_relaxed)) {
-        return false;
-    }
-    g_stream.streamingReady.store(true, std::memory_order_relaxed);
-    return true;
-}
-
-bool SO_CreateMemoryArena(size_t size, void** out_arena) {
-    if (size == 0 || out_arena == nullptr) {
-        return false;
-    }
-    *out_arena = ::operator new(size, std::nothrow);
-    if (*out_arena == nullptr) {
-        return false;
-    }
-    g_stream.arenasCreated.fetch_add(1, std::memory_order_relaxed);
-    return true;
-}
-
-bool SO_CreateThreadPool(int thread_count) {
-    if (thread_count <= 0) {
-        return false;
-    }
-    g_stream.threadPoolSize.store(thread_count, std::memory_order_relaxed);
-    return true;
-}
-
-bool SO_CreateComputePipelines() {
-    return g_stream.vulkanReady.load(std::memory_order_relaxed);
-}
-
-bool SO_InitializePrefetchQueue(int queue_depth) {
-    if (queue_depth <= 0) {
-        return false;
-    }
-    g_stream.queueDepth.store(queue_depth, std::memory_order_relaxed);
-    return true;
-}
+// SO_* functions REMOVED — canonical definitions in rawrxd_subsystem_api.cpp
+// (correct signatures for Win32IDE callers: int(void), void*(uint64_t), etc.).
+// The batch_010 versions had incompatible signatures (bool, void** out_arena,
+// int thread_count, int queue_depth) that would cause undefined behavior if
+// linked instead of the subsystem_api stubs.
 
 } // extern "C"

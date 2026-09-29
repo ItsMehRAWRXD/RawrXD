@@ -5696,6 +5696,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_NetworkPanel.cpp
         # NOTE: Experimental features removed from production build
         src/core/omega_orchestrator.cpp
+        # Canonical omega provider: correct signatures per omega_orchestrator.hpp
+        # (int asm_omega_init(), uint64_t asm_omega_ingest_requirement(const char*, int), etc).
+        # batch_005/006 had WRONG signatures (bool return, different args) that collided
+        # under extern C; those omega defs removed from the batch TUs.
         src/core/omega_asm_native_kernel.cpp
         src/core/mesh_brain.cpp
         src/core/speciator_engine.cpp
@@ -6865,6 +6869,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # counters, IsStubFunction) + real QuadBuffer VRAM residency registry.
     list(APPEND WIN32IDE_SOURCES src/core/win32ide_debugger_bridge.cpp)
     list(APPEND WIN32IDE_SOURCES src/core/win32ide_quadbuffer_bridge.cpp)
+    # BATCH J (W3): production reverse-engineering API surface consumed by
+    # auto_feature_registry. The bridge and its decoder were only present in
+    # the standalone reverse_engineering target, so the Win32IDE link never
+    # received their object files.
+    list(APPEND WIN32IDE_SOURCES src/reverse_engineering/re_api_bridge.cpp)
+    list(APPEND WIN32IDE_SOURCES src/reverse_engineering/disassembler.cpp)
     # BATCH I (W3): real TransferScheduler (priority queue + bandwidth
     # accounting + honest callbacks; prior file was a 2-byte scaffold) and
     # the real AgenticTaskGraph (77KB TU, previously commented out).
@@ -6966,7 +6976,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO
-            "/FORCE:MULTIPLE"
         )
         # FORCE still required: ssot+�-�+�-�+�-�auto_feature, batch_021 stubs+�-�+�-�+�-�real TUs, omega C+�-�+�-�+�-�batch,
         # v280+�-�+�-�+�-�batch_001, CursorParity+�-�+�-�+�-�SemanticIndex, etc. Surgical ASM fixes landed;

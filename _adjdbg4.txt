@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<string>", line 27, in <module>
+    dims, tt, off = t['blk.4.ffn_gate.weight']
+                    ~^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: tuple indices must be integers or slices, not str

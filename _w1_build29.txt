@@ -1,0 +1,21 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_w1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
+  rguf.vcxproj -> F:\~dev\rawrxd\build_w1\rguf_source\Release\rguf.lib
+  RawrXD-ModelAnalysisLib.vcxproj -> F:\~dev\rawrxd\build_w1\Release\RawrXD-ModelAnalysisLib.lib
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
+  RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\RawrXD_MultiWindow_Kernel.dll
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_w1\Release\InferenceEngine.lib
+  rawrxd_subsystem_api.cpp
+  RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked
+EXEC : CMake error : File can't be removed and still exist: F:/~dev/rawrxd/build_w1/bin/Release/RawrXD-Win32IDE.pdb [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: The command "setlocal [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: "C:\Program Files\CMake\bin\cmake.exe" -E rm -f F:/~dev/rawrxd/build_w1/bin/Release/RawrXD-Win32IDE.exe F:/~dev/rawrxd/build_w1/bin/Release/RawrXD-Win32IDE.pdb [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: if %errorlevel% neq 0 goto :cmEnd [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: :cmEnd [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: :cmErrorLevel [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: exit /b %1 [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: :cmDone [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: if %errorlevel% neq 0 goto :VCEnd [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(161,5): error MSB3073: :VCEnd" exited with code 1. [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]

@@ -1,0 +1,3 @@
+LLAMA_DEQUANT row 0 = -5.272889   engine = -3.196813   diff = 2.076e+00
+LLAMA_DEQUANT row 1 = -5.252993   engine = -3.183523   diff = 2.069e+00
+LLAMA_DEQUANT row 2 = -5.204827   engine = -3.156686   diff = 2.048e+00

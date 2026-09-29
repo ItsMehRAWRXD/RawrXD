@@ -79,9 +79,8 @@ void asm_spengine_shutdown() {
     markSubsystemOffline(g_shutdown.spengineOnline);
 }
 
-void asm_omega_shutdown() {
-    markSubsystemOffline(g_shutdown.omegaOnline);
-}
+// asm_omega_shutdown: REMOVED — canonical body in omega_asm_native_kernel.cpp
+// (int return per omega_orchestrator.hpp; batch_001 had void return).
 
 void asm_mesh_shutdown() {
     markSubsystemOffline(g_shutdown.meshOnline);

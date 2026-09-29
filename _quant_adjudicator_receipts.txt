@@ -1,0 +1,56 @@
+# FORMALIZED ADJUDICATOR RECEIPTS — DEEP2_QUANT_ADJUDICATOR_RECEIPT_001
+# (Q's recommended machine-readable format — implemented 2026-09-28)
+#
+# Tool: F:\~dev\_quant_adjudicator.py
+#   usage: python _quant_adjudicator.py <model.gguf> <trace.txt> <tensor>
+#            <rows> <step> --out <receipt.json>
+# Every invocation writes JSON with: gguf sha256, trace sha256, engine commit,
+# reference, tensor, quant type, rows, max_abs_error, max_rel_error,
+# first_mismatch_index, correlation, verdict.
+#
+# === L4 ladder on _qwen2_32b_final_trace.txt (5-token prompt, fixed kernel) ===
+#
+# gguf_sha256        = 8E2FD78FF55E7CDF577FDA257BAC2776FEB7D73D922613CAF35468073807E815
+# trace_sha256       = (recorded per JSON in _adjrec_*.json)
+# engine_commit      = 56329cb7f (model-correctness)
+# reference          = llama.cpp ggml-quants.c dequantize_row_q4_K / q6_K (verbatim,
+#                      fetched from ggml-org/llama.cpp master 2026-09-28)
+# model              = F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+# step               = 4 (position 4, last prompt token of 5)
+# rows_tested        = 8 per tensor
+# pass rule          = per-row |err| <= max(0.01*|ref|, 0.05)
+#
+# tensor                       quant   max_abs      max_rel    corr        verdict
+# blk.4.attn_q.weight          Q4_K    8.82E-007    1.41E-006  1.0000000000  PASS
+# blk.4.attn_k.weight          Q4_K    1.31E-006    9.42E-005  1.0000000000  PASS
+# blk.4.attn_v.weight          Q6_K    3.38E-003    4.77E-002  0.9999762446  PASS
+# blk.4.attn_output.weight     Q4_K    2.74E-007    9.82E-006  1.0000000000  PASS
+# blk.4.ffn_gate.weight        Q4_K    1.13E-005    1.61E-006  1.0000000000  PASS
+# blk.4.ffn_up.weight          Q4_K    1.30E-006    2.35E-006  1.0000000000  PASS
+# blk.4.ffn_down.weight        Q6_K    1.05E-002    6.59E-002  0.9998932910  PASS
+#
+# Receipts: F:\~dev\_adjrec_{attn_q,attn_k,attn_v,attn_o,ffn_gate,ffn_up,ffn_down}.json
+#
+# === Cross-checks ===
+# - Q4_K tensors agree with the engine to fp16-rounding level (1e-6 rel) — the
+#   llama-verbatim 32lo+32hi kernel (commit 0309b5152) is bit-consistent with
+#   the float dequant reference.
+# - Q6_K residual 4.8%/6.6% = Q8K activation-quantization noise (int-dot vs
+#   float-dequant reference), consistent with the repo's own
+#   DEEP2_Q6K_GEMV_PARITY_001 (0.4-1.5% per-row variance; corr > 0.9998).
+# - 32B position-0 prediction: token 12095 " Paris" (rank 1, logit 17.63 vs
+#   14.72) == llama.cpp greedy adjudication.
+#
+# === Receipt-tool provenance notes (recorded, all fixed) ===
+# 1. GGUF v3 tensor data offsets are relative to the ALIGNED position AFTER
+#    all tensor headers (data_start = align(pos after tensor loop)).
+# 2. Q6_K scale mapping is STRIDED: sc[is+0 / +2 / +4 / +6] per 32-quarter,
+#    sc += 8 per 128-chunk; the write index advances by n (128) per chunk.
+# 3. Qwen2 attention projections add biases (attn_q/k/v.bias) — the reference
+#    adds them when present (BIAS_MAP).
+# 4. Python-side traps fixed: struct '<3I' words need a 4th utmp slot;
+#    get_scale_min_k4(j>=4) uses q[j-4]>>6 for d-high and q[j]>>6 for m-high.
+#
+# GATE=DEEP2_QUANT_ADJUDICATOR_RECEIPT_001
+# TENSORS_PASS=7/7
+# VERDICT=PASS

@@ -11,7 +11,7 @@ import struct
 import numpy as np
 
 GGUF = r"F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf"
-TRACE = r"F:\~dev\_qwen2_32b_oracle_trace.txt"
+TRACE = r"F:\~dev\_qwen2_32b_fixed_trace.txt"
 
 
 def parse_header(path):

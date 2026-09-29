@@ -1,0 +1,10 @@
+^F:\~DEV\_VP2_BUILD\CMAKEFILES\A539510AF3EBE0076FC9A3A2D805035F\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/RawrXD_Value_Pack_2/RawrXD_Value_Pack_2 -BF:/~dev/_vp2_build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file F:/~dev/_vp2_build/RawrXDValuePack2.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

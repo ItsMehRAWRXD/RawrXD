@@ -1,0 +1,8 @@
+=============================================
+  Deep2 OpenAI-Compatible Local Model Server
+=============================================
+[server] Loading model: F:\~dev\qwen2.5-coder-1.5b-base.gguf
+D2LOAD_S04a_MODEL_ENTER
+[Deep2Engine] ROPE_ARCH=qwen2 ROPE_THETA_GLOBAL=1000000.0 ROPE_THETA_LOCAL=1000000.0 SLIDING_WINDOW=0 SLIDING_WINDOW_PATTERN=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels

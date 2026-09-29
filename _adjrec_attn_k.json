@@ -1,0 +1,20 @@
+{
+  "receipt": "DEEP2_QUANT_ADJUDICATOR_RECEIPT_001",
+  "gguf": "F:\\models\\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf",
+  "gguf_sha256": "8E2FD78FF55E7CDF577FDA257BAC2776FEB7D73D922613CAF35468073807E815",
+  "trace": "F:\\~dev\\_qwen2_32b_final_trace.txt",
+  "trace_sha256": "6B992E9B701C730314FC19C1AAC63EE367D1989DF44D1EB98ED73EEDCC506A6D",
+  "engine_commit": "56329cb7f",
+  "reference": "llama.cpp ggml-quants.c dequantize_row_q4_K/q6_K (verbatim)",
+  "reference_commit": null,
+  "tensor": "blk.4.attn_k.weight",
+  "quant_type": "Q4_K",
+  "step": 4,
+  "rows_tested": 8,
+  "max_abs_error": 1.307398647232283e-06,
+  "max_rel_error": 9.416885465179204e-05,
+  "first_mismatch_index": null,
+  "correlation": 0.9999999999992879,
+  "verdict": "PASS",
+  "fail_reason": null
+}

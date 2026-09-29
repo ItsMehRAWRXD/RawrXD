@@ -1,0 +1,3 @@
+engine row 0 -> best canonical row 6 absdiff 0.5764 second (np.float64(0.6007413187876658), 5)
+engine row 1 -> best canonical row 6 absdiff 0.5631 second (np.float64(0.6140319587876655), 5)
+engine row 2 -> best canonical row 6 absdiff 0.5363 second (np.float64(0.6408685887876655), 5)

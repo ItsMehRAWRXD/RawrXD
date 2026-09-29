@@ -1,0 +1,6 @@
+G4_SYNC status=500 tokens=0 challenge=RAWRXD_HANDLER_PROOF_1790626208
+G4_FAIL
+G5_UNREACHABLE status=502 body={"error":"Deep2 upstream unavailable: <urlopen error [WinError 10061] 
+G5_FAIL
+G6_JOBS_WRONG_KEY status=401
+G6_PASS

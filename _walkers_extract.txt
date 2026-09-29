@@ -1,0 +1,152 @@
+// name -> absolute virtual address for every exported symbol. No synthetic
+// entries: unmapped RVAs and out-of-range reads simply stop the walk.
+std::unordered_map<std::string, uint64_t>
+NativeDisassembler::AnalyzeExports(const std::string& filePath) {
+    std::unordered_map<std::string, uint64_t> out;
+
+    PeImage pe;
+    if (!MapPe(filePath, pe) || !pe.valid) return out;
+
+    const IMAGE_OPTIONAL_HEADER64& opt = pe.nt->OptionalHeader;
+    const IMAGE_DATA_DIRECTORY& expDir = opt.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+    if (expDir.VirtualAddress == 0 || expDir.Size == 0) return out;
+
+    size_t expOff = 0;
+    if (!RvaToFileOffset(pe, expDir.VirtualAddress, expOff)) return out;
+    const IMAGE_EXPORT_DIRECTORY* exp = PePtr<IMAGE_EXPORT_DIRECTORY>(pe, expOff);
+    if (!exp) return out;
+
+    size_t namesOff = 0, funcsOff = 0, ordsOff = 0;
+    if (!RvaToFileOffset(pe, exp->AddressOfNames, namesOff)) return out;
+    if (!RvaToFileOffset(pe, exp->AddressOfFunctions, funcsOff)) return out;
+    if (!RvaToFileOffset(pe, exp->AddressOfNameOrdinals, ordsOff)) return out;
+
+    const uint32_t* names = PePtr<uint32_t>(pe, namesOff);
+    const uint32_t* funcs = PePtr<uint32_t>(pe, funcsOff);
+    const uint16_t* ords = PePtr<uint16_t>(pe, ordsOff);
+    if (!names || !funcs || !ords) return out;
+
+    const uint32_t count = exp->NumberOfNames;
+    for (uint32_t i = 0; i < count; ++i) {
+        size_t nameStrOff = 0;
+        if (!RvaToFileOffset(pe, names[i], nameStrOff)) continue;
+        if (nameStrOff >= pe.viewSize) continue;
+        const char* nameStr = reinterpret_cast<const char*>(pe.view + nameStrOff);
+        size_t maxLen = pe.viewSize - nameStrOff;
+        size_t len = strnlen(nameStr, maxLen);
+        if (len == 0) continue;
+
+        const uint16_t ord = ords[i];
+        if (ord >= exp->NumberOfFunctions) continue;
+
+        uint32_t funcRva = 0;
+        const size_t funcIdxOff = funcsOff + static_cast<size_t>(ord) * sizeof(uint32_t);
+        if (funcIdxOff + sizeof(uint32_t) <= pe.viewSize) {
+            std::memcpy(&funcRva, pe.view + funcIdxOff, sizeof(uint32_t));
+        }
+        // Forwarded exports (RVA inside the export directory) still resolve;
+        // the address reported is the real RVA slot value.
+        out.emplace(std::string(nameStr, len),
+                    static_cast<uint64_t>(funcRva) + opt.ImageBase);
+    }
+    return out;
+}
+
+// AnalyzeImports: walks the real PE import directory (IAT/INT) and returns
+// import name -> thunk RVA. Handles both 64-bit and PE32 (32-bit) images.
+std::unordered_map<std::string, uint64_t>
+NativeDisassembler::AnalyzeImports(const std::string& filePath) {
+    std::unordered_map<std::string, uint64_t> out;
+
+    PeImage pe;
+    if (!MapPe(filePath, pe) || !pe.valid) return out;
+
+    const bool is64 = (pe.nt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC);
+    const IMAGE_DATA_DIRECTORY& impDir = is64
+        ? pe.nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
+        : reinterpret_cast<const IMAGE_OPTIONAL_HEADER64&>(
+              reinterpret_cast<const IMAGE_NT_HEADERS32*>(pe.view + pe.dos->e_lfanew)
+                  ->OptionalHeader).DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
+    if (impDir.VirtualAddress == 0 || impDir.Size == 0) return out;
+
+    size_t descOff = 0;
+    if (!RvaToFileOffset(pe, impDir.VirtualAddress, descOff)) return out;
+
+    for (uint32_t i = 0;; ++i) {
+        const size_t dOff = descOff + static_cast<size_t>(i) * sizeof(IMAGE_IMPORT_DESCRIPTOR);
+        const IMAGE_IMPORT_DESCRIPTOR* desc = PePtr<IMAGE_IMPORT_DESCRIPTOR>(pe, dOff);
+        if (!desc) break;
+        if (desc->OriginalFirstThunk == 0 && desc->FirstThunk == 0) break; // terminator
+        if (desc->OriginalFirstThunk == 0 && desc->FirstThunk == 0xFFFFFFFF) break;
+
+        // DLL name
+        size_t dllNameOff = 0;
+        std::string dllName;
+        if (RvaToFileOffset(pe, desc->Name, dllNameOff) && dllNameOff < pe.viewSize) {
+            const char* p = reinterpret_cast<const char*>(pe.view + dllNameOff);
+            dllName.assign(p, strnlen(p, pe.viewSize - dllNameOff));
+        }
+
+        // Walk the INT (OriginalFirstThunk) if present, else the IAT.
+        const uint32_t thunkRva = desc->OriginalFirstThunk ? desc->OriginalFirstThunk
+                                                           : desc->FirstThunk;
+        size_t thunkOff = 0;
+        if (!RvaToFileOffset(pe, thunkRva, thunkOff)) continue;
+
+        for (uint32_t j = 0;; ++j) {
+            const size_t eOff = thunkOff + static_cast<size_t>(j) *
+                (is64 ? sizeof(uint64_t) : sizeof(uint32_t));
+            std::string symName;
+            uint64_t iatRva = 0;
+
+            if (is64) {
+                uint64_t thunk = 0;
+                const uint64_t* t = PePtr<uint64_t>(pe, eOff);
+                if (!t) goto done_thunk;
+                std::memcpy(&thunk, t, sizeof(thunk));
+                if (thunk == 0) break;
+                iatRva = desc->FirstThunk + static_cast<uint64_t>(j) * sizeof(uint64_t);
+                if (thunk & (1ULL << 63)) {
+                    // Import by ordinal
+                    symName = dllName + "#ord" + std::to_string(thunk & 0xFFFF);
+                } else {
+                    size_t hintOff = 0;
+                    if (RvaToFileOffset(pe, static_cast<uint32_t>(thunk), hintOff)) {
+                        const IMAGE_IMPORT_BY_NAME* hint =
+                            PePtr<IMAGE_IMPORT_BY_NAME>(pe, hintOff);
+                        if (hint) {
+                            const char* p = reinterpret_cast<const char*>(hint->Name);
+                            size_t maxLen = pe.viewSize - hintOff - offsetof(IMAGE_IMPORT_BY_NAME, Name);
+                            symName.assign(p, strnlen(p, maxLen));
+                        }
+                    }
+                }
+            } else {
+                uint32_t thunk = 0;
+                const uint32_t* t = PePtr<uint32_t>(pe, eOff);
+                if (!t) goto done_thunk;
+                std::memcpy(&thunk, t, sizeof(thunk));
+                if (thunk == 0) break;
+                iatRva = desc->FirstThunk + static_cast<uint64_t>(j) * sizeof(uint32_t);
+                if (thunk & (1UL << 31)) {
+                    symName = dllName + "#ord" + std::to_string(thunk & 0xFFFF);
+                } else {
+                    size_t hintOff = 0;
+                    if (RvaToFileOffset(pe, thunk, hintOff)) {
+                        const IMAGE_IMPORT_BY_NAME* hint =
+                            PePtr<IMAGE_IMPORT_BY_NAME>(pe, hintOff);
+                        if (hint) {
+                            const char* p = reinterpret_cast<const char*>(hint->Name);
+                            size_t maxLen = pe.viewSize - hintOff - offsetof(IMAGE_IMPORT_BY_NAME, Name);
+                            symName.assign(p, strnlen(p, maxLen));
+                        }
+                    }
+                }
+            }
+
+            if (!symName.empty()) {
+                out.emplace(std::move(symName), iatRva);
+            }
+        }
+        done_thunk:;
+    }

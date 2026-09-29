@@ -1,0 +1,6 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build\Release\quickjs_static.lib
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build\Release\InferenceEngine.lib
+  deep2_openai_server.cpp
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(492,31): error C2065: 'pImpl': undeclared identifier [F:\~dev\rawrxd\build\rawr-server.vcxproj]

@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "<string>", line 34, in <module>
+    k = rs(f); t = struct.unpack('<I', f.read(4))[0]
+  File "<string>", line 10, in rs
+    return fh.read(n).decode('utf-8', 'replace')
+           ~~~~~~~^^^
+MemoryError

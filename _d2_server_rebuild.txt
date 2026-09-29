@@ -1,0 +1,2213 @@
+CMake is re-running because F:/~dev/rawrxd/build/CMakeFiles/generate.stamp is out-of-date.
+  the file 'F:/~dev/rawrxd/CMakeLists.txt'
+  is newer than 'F:/~dev/rawrxd/build/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- [SDK Fix] Found MSVC with cl.exe at: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [SDK Fix] INCLUDE = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um
+-- [SDK Fix] LIB     = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/x64;C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/onecore/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64
+-- [SDK Fix] MT      = C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe
+-- [Vulkan] Common SDK: C:/VulkanSDK/1.4.357.0
+-- VAL-051.2.A: Real Token Proof Harness configured
+-- G3_K3C_E2E_REAL_001: smoke_k3c_e2e configured
+-- P1: CPUInferenceEngine::LoadModel harness configured
+-- VAL-051.5: 32-Token KV Stability Gate configured
+-- VAL-051.6: 15-Token KV Stability Gate configured
+-- VAL-051.7: Residency Baseline / Fixture Gate configured
+-- RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured
+-- RAWRXD_LOCAL_AGENT_FLEET_001: per-model fleet gate configured
+-- validate_val051_evidence: VAL-051.2.A evidence validator configured
+-- test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured
+-- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
+-- test_parseheader_fuzz: B32 deterministic fuzz matrix configured
+-- test_gguf_metadata_bounds: B33 metadata bounds gate configured
+-- test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured
+-- Dual GPU Smoke Test configured
+-- GGUF Inspector tool configured
+-- Comprehensive Dual GPU Test configured
+-- OMEGA-1 Bridge Test Harness configured
+-- K2 Router Injection Smoke Test configured
+-- Batch 15A GGUF Alignment Diagnostic configured
+-- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
+-- [Build Paths] MSVC CRT: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [Intent Guardrails] Configuring...
+-- [Intent Guardrails] Features:
+--   - Intent Guard: ON
+--   - Validation: ON
+--   - Transactions: ON
+--   - Capability Tokens: ON
+--   - Hotpatch Journal: ON
+--   - Patch Firewall: ON
+--   - Reflector Agent: ON
+--   - Atomic Activation: ON
+--   - First-Class Rollback: ON
+--   - Model Adapter: ON
+-- [Intent Guardrails] Added src/intent/intent_config.cpp to build
+-- [Intent Guardrails] Configuration complete
+-- MASM64 enabled: ASM kernels will be compiled
+-- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
+-- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
+-- +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- [RE] Deobfuscator MASM64 targets registered
+-- [RE] Model reverse pipeline MASM64 target registered
+-- [RE] NASM not found ΓÇö Reverser compiler targets skipped
+-- [RE] Reverse Engineering Suite configured:
+--   C++ Library:       RawrXD-RE-Library (pe_tools/re_tools.cpp;disassembler.cpp;pe_analyzer.cpp;decompiler.cpp;binary_patcher.cpp;../compiler_backend/InstructionEncoderX64.cpp;../compiler_backend/RawrCOFFWriter.cpp;../compiler_backend/RawrPE64Linker.cpp)
+--   Headers:           4 HPP files (Codex, Compiler, DumpBin, ReverseEngine)
+--   Omega Suite:       19 ASM files across v3/v4/v5/v7 + src_variants
+--   Deobfuscator:      3 ASM files + 1 INC + build/test
+--   Reverser Compiler: 11 ASM + 6 tests + 1 .rev source
+--   PE Tools:          re_tools.cpp/h (PE analyzer + inline compiler)
+--   Model Reverse:     model-llm-harvester.asm
+--   Security Toolkit:  RawrXD_IDE_unified.asm
+--   RE Modules:        gpu_dma_complete_reverse_engineered.asm
+-- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/requantize_q4km_to_q2k_avx512.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/gpu_requantize_rocm.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/swarm_tensor_stream.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_MonacoCore.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_PDBKernel.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_RouterBridge.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_GSIHash.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_RefProvider.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_StubDetector.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/rawrxd_cot_engine.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/rawrxd_cot_dll_entry.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/rawrxd_cot_phase39.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_LSP_SymbolIndex.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrCodex.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Debug_Engine.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_QuadBuffer_Streamer.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Swarm_Network.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_EnterpriseLicense.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_License_Shield.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_VulkanBridge.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_SocketResponder.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_TridentBeacon.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_TridentBeacon_GPU.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_AgenticOrchestrator.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_GGUF_Vulkan_Loader.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_LSP_AI_Bridge.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Streaming_QuadBuffer.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_SelfPatch_Engine.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/kernels/rdna3/RDNA3_Full_Test.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Camellia256.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Camellia256_Auth.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_KQuant_Kernel.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Watchdog.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_SelfHost_Engine.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_HardwareSynthesizer.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_MeshBrain.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Speciator.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_NeuralBridge.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_OmegaOrchestrator.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_PerfCounters.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Hotpatch_Kernel.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Snapshot.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Pyre_Compute.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_CopilotGapCloser.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/native_speed_kernels.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/gpu_masm/deflate_brutal_masm.asm
+-- [NanoQuant] DISABLED +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix ΓÇö Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [RawrXD] Γ£à Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+-- MultiWindow Kernel DLL target enabled
+-- DynamicPromptEngine DLL target enabled (Unity/Unreal compatible)
+-- Win32IDE: Real lane - using isolated handlers + runtime handlers
+-- [Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)
+-- [Win32IDE] Sovereign GPU ASM disabled +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ fraudulent claims removed
+CMake Warning at CMakeLists.txt:6206 (message):
+  [Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips fallback/shim TUs
+  (strict lane).  The IDE usually will not link unless every ASM symbol is
+  provided elsewhere.  For a normal dev link:
+  -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON or remove that cache entry.
+
+
+-- [Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)
+-- [Win32IDE] Partial ODR purge: Deep2 test/main TUs removed
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/HeadlessIDE_FileAliases.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/agent/autonomous_orchestrator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/agent/orchestrator_cli_handler.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ui/RawrXD_MainLoop.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ui/agentic_bridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/inference/ai_model_caller_real.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/inference/inference_engine_real.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_CoreRuntimeSpine.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_CommandSurface.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/command/SessionBinder.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_VSCodeUI.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_WindowOwnership.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Accelerators.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/IV280Bridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/IMultiFileSearchWidget.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/BenchmarkMenu.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/WindowManager.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/EditorOperations.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/RouterOperations.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_VisionEncoder.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Themes.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Debugger.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AutonomousDebugger.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Annotations.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ReverseEngineering.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/full_agentic_ide/FullAgenticIDE.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/full_agentic_ide/AgenticIOCPBridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AgentCommands.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AutonomousCommunicator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AgenticComposerUX.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ContextMentionParser.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_UnifiedTelemetry.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Autonomy.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_PowerShell.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_PowerShellPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_CommandFlight.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_MenuE2eProbe.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_GGUFInspector.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_DecompilerView.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_NativePipeline.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ModelAnatomy.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/Deep2APIServer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/production/Deep2ProductionRuntime.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_FeatureManifest.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ai_completion_real.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ide/Deep2Bridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ide/ANSIColorParser.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ide/FindReplaceDialog.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ide/GitCommitDialog.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ide/GitDiffViewer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_OutlinePanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_RenamePreview.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Tier2Cosmetics.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Tier1Cosmetics.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Breadcrumbs.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_PlanExecutor.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/agentic/failure_intelligence_orchestrator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AgenticPlanningPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_FailureDetector.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_FailureIntelligence.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_LocalServer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_BackendSwitcher.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/security/ProviderKeyStore.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/security/ProviderKeyStore_get.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/security/ProviderKeyStore_misc.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AIBackend.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_LLMRouter.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_PeekOverlay.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_CaretAnimation.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ModelDiscovery.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_SwarmModelSelector.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AsmSemantic.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_MultiResponse.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ExecutionGovernor.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_LayerEviction.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_SubAgent.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AgentHistory.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_DiskRecovery.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32TerminalManager.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/TransparentRenderer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/plugin_system/win32_plugin_loader.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Plugins.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_HandleExtensionCommand.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/auth/QuantumAuthUI.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/backend/vulkan_compute.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/kernels/rdna3/RDNA3_GpuDispatcher.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/agentic/OllamaProvider.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/rdna3_bridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/llm_adapter/rawrxd_ggufrunner_signals.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/collab/cursor_widget.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/collab/crdt_buffer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/spengine_bridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_SemanticIndex.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/runtime_core.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/utils/ErrorReporter.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/engine_manager.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_SwarmPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_DualAgentPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_NativeDebugPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_HotpatchPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/agent/meta_planner.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/cloud_api_client.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/vsix_loader_win32.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/codex_ultimate.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/vscode_extension_api.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_VSCodeExtAPI.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_WebView2.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/AgenticBrowserLayer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AgenticBrowser.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_MonacoThemes.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/lsp/RawrXD_LSPServer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/lsp/lsp_hotpatch_bridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/lsp/hotpatch_symbol_provider.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/lsp/gguf_diagnostic_provider.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_PDBSymbols.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AuditDashboard.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Gauntlet.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_VoiceChat.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_VoiceAutomation.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_QuickWins.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/model_trainer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/autonomous_agentic_orchestrator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/v280_link_bridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Telemetry.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/mcp_integration.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_FlightRecorder.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/quickjs_extension_host.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/quickjs_vscode_bindings.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/agentic_agent_coordinator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Instructions.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/unity_engine_integration.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/unreal_engine_integration.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/game_engine_manager.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_GameEnginePanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/crucible_engine.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_CruciblePanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/modules/copilot_gap_closer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_CopilotGapPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_PipelinePanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_HotpatchCtrlPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_StaticAnalysisPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ProblemsPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_SecurityScans.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AgentStreamingBridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_SemanticPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_TelemetryPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Tier3Polish.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Tier3Cosmetics.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Tier5Cosmetics.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_CrashReporter.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ColorPicker.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_EmojiSupport.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ShortcutEditor.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_TelemetryDashboard.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_MarketplacePanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Collab.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_IRCBridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_IRCBridgeCommands.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/collab/websocket_hub.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_TestExplorerTree.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_NetworkPanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/VulkanRenderer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/OSExplorerInterceptor.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/TodoManager.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/IocpFileWatcher.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/IDEDiagnosticAutoHealer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/ConsentPrompt.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/AutonomousAgent.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_CursorParity.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_GUILayoutHotpatch.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Tasks.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Refactor.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_FuzzySearch.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_Minimap.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_DiffView.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_CodeLens.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_InlayHints.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_HoverTooltips.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ProvableAgent.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AIReverseEngineering.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AirgappedEnterprise.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_FlagshipFeatures.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/project_context.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/universal_model_router.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/model_registry.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ui/interpretability_panel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/real_time_completion_engine.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/LanguageServerIntegration.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/interpretability_panel_enhanced.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/feature_registry_panel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/autonomous_feature_engine.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/autonomous_intelligence_orchestrator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/plan_orchestrator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/tool_registry_advanced.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/lsp_client.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/intelligent_codebase_engine.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ai_model_caller.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/hybrid_cloud_manager.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/benchmark_menu_widget.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/benchmark_runner.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/feature_registry_panel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ui/monaco_settings_dialog.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/thermal/RAWRXD_ThermalDashboard.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/VSCodeMarketplaceAPI.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/multi_file_search.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_LicenseCreator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_PeekView.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_SnippetEngine.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_MultiCursor.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/ai_workers_queue.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ui/ImportBridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/ui/ExportBridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/terminal/embedded_terminal.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_HexMagCopilotRoute.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/agent/hexmag_client.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_TranscendencePanel.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_AutonomousAgent.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ChatMessageRenderer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ToolActionStatus.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_VulkanRenderer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_OSExplorerInterceptor.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_IOCPFileWatcher.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_IDEDiagnosticAutoHealer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ConsentPrompt.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_PerfTelemetry.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_UpdateSignature.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_PluginSignature.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_EnterpriseStressTests.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_SQLite3Core.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_TelemetryExport.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_RefactoringPlugin.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_LanguagePlugin.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32app/Win32IDE_ResourceGenerator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/memory/UnifiedMemoryPool.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/ScaleQuality.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/Deep2Discovery.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/Deep2Benchmark.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/Deep2InferenceGateway.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/Deep2Integration.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/Deep2LocalServer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/Deep2APIServer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/GGUFDiagnostics.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/mcp_bridge.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/gpu/Deep2GPUBackend.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/MultiGPU/GPUDeviceRegistry.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/MultiGPU/MultiGPUScheduler.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/MultiGPU/VRAMAllocator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/production/Deep2ProductionRuntime.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/deep2/deep2_http_gateway.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/spine/ExecutionSpine.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/build/BuildStateGraph.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/ide/SovereignIDEIntegration.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/terminal/TerminalOwnership.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/bus/CapabilityBus.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/bus/BeaconBus.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/awareness/SystemAwareness.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/validator/RealityValidator.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/recovery/AutonomousRecovery.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/control/SovereignControlPlane.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/compression/IntentCompression.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign/capsule/ExecutionCapsule.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign_autonomy/SovereignBlackboard.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign_autonomy/SovereignTaskGraph.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign_autonomy/SovereignMissionPlanner.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign_autonomy/SovereignReflectionEngine.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign_autonomy/SovereignCritic.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/sovereign_autonomy/SovereignAgentRuntime.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32ide/Omega1IPCClient.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32ide/GhostTextRenderer.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32ide/StatusBarTelemetry.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32ide/Omega1IDEIntegration.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+CMake Warning at CMakeLists.txt:183 (message):
+  [rawrxd_filter_missing_sources] WIN32IDE_SOURCES: missing
+  src/win32ide/Win32IDE_Omega1Integration.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:6803 (rawrxd_filter_missing_sources)
+
+
+-- [Win32IDE] ATL static lib: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/atlmfc/lib/x64
+-- +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ RawrXD-Win32IDE: No stub policy violations
+-- QuickJS found: JS extension host enabled
+-- [Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/RawrXD_Product100.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wire.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave3.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave4.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/asm/RawrXD_Product100_x64.asm
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/product/gateway/product_deep2_infer.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 overlay skipped: no sources or target
+-- RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)
+-- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
+-- [Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_c1_c9: missing src/deep2/K2C1C9.cpp
+-- [Deep2] OpenAI-compatible server target: rawr-server (port 11435)
+-- [Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping agentic rawr CLI: missing src/cli/rawr_main.cpp and other agentic sources
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agentic_cli_001: missing certs/rawrxd_agentic_cli_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_session_001: missing certs/rawrxd_agent_session_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_tools_001: missing certs/rawrxd_agent_tools_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_patch_001: missing certs/rawrxd_agent_patch_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_build_test_001: missing certs/rawrxd_agent_build_test_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_steer_001: missing certs/rawrxd_agent_steer_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_safety_001: missing certs/rawrxd_agent_safety_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_resume_001: missing certs/rawrxd_agent_resume_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_run_quality_001: missing certs/rawrxd_run_quality_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target vwa_k2_prefetch_overlap_001_src: missing certs/vwa_k2_prefetch_overlap_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target vwa_bounded_k2_001: missing certs/vwa_bounded_k2_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target k2_useful_tps_001_src: missing certs/k2_useful_tps_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_stdout_clean_001: missing certs/rawrxd_stdout_clean_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_no_ollama_contract_001: missing certs/rawrxd_no_ollama_contract_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_dual_lane_contract_001: missing certs/rawrxd_dual_lane_contract_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_auto_ladder_001: missing certs/rawrxd_auto_ladder_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_chat_repl_001: missing certs/rawrxd_chat_repl_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_frontdoor_001: missing certs/rawrxd_product_frontdoor_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_embed_norm_guard_001: missing certs/rawrxd_embed_norm_guard_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_decode_carry_001: missing certs/rawrxd_decode_carry_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_workspace_live_001: missing certs/rawrxd_agent_workspace_live_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_loop_e2e_001: missing certs/rawrxd_agent_loop_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_steer_resume_001: missing certs/rawrxd_agent_steer_resume_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_second_model_001: missing certs/rawrxd_second_model_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_llama32_prefill_divergence_001: missing certs/rawrxd_llama32_prefill_divergence_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_e2e_001: missing certs/rawrxd_autocomplete_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_local_model_compat_001: missing certs/rawrxd_local_model_compat_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_live_second_001: missing certs/rawrxd_autocomplete_live_second_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_k2_product_e2e_001: missing certs/rawrxd_k2_product_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_e2e_001: missing certs/rawrxd_product_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_lavapath_001: missing certs/rawrxd_product_lavapath_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_mount_001: missing certs/rawrxd_mount_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_ge_probe_001: missing certs/rawrxd_ge_probe_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_capability_solve_001: missing certs/rawrxd_capability_solve_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_qkv_rows_measure_001: missing certs/rawrxd_qkv_rows_measure_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_kernel_tune_001: missing certs/rawrxd_kernel_tune_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_streamer_vocab_ext_001: missing certs/rawrxd_streamer_vocab_ext_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_actual_e2e_generation_001: missing certs/rawrxd_actual_e2e_generation_001.cpp
+-- [Deep2] RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 wired
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping Deep2_Gateway_Runtime_Certification: missing source files
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_benchmark: missing source files
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target k2_useful_tps_001: missing certs/k2_useful_tps_001.cpp
+-- [Deep2] Benchmark cert CLI: deep2_benchmark + k2_useful_tps_001 + mla_cert_001
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_product_lavapath: missing source files
+-- [Deep2] RAWRXD_BACKGROUND_TERMINALS kitchen-sink wired
+-- [Deep2] RAWRXD_REMAINING_STYLE_CLI wired
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping MASM: src/masm/rawr_product_x64.asm not found
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping MASM: src/masm/rawr_product_pipe_x64.asm not found
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_001: missing certs/rawrxd_product_layer_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_002: missing certs/rawrxd_product_layer_002.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_win32_editor_surface_001: missing certs/rawrxd_win32_editor_surface_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_rawr_pipe_001: missing certs/rawrxd_rawr_pipe_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_editor_agent_e2e_001: missing certs/rawrxd_editor_agent_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_ghost_bind_001: missing certs/rawrxd_product_ghost_bind_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_cancel_001: missing certs/rawrxd_autocomplete_cancel_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_installer_clean_machine_001: missing certs/rawrxd_installer_clean_machine_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_offline_demo_001: missing certs/rawrxd_offline_demo_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_repeatable_demo_record_001: missing certs/rawrxd_repeatable_demo_record_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_runtime_001: missing certs/rawrxd_product_runtime_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_local_api_compat_001: missing certs/rawrxd_local_api_compat_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_003: missing certs/rawrxd_product_layer_003.cpp
+-- [Deep2] RAWRXD_PRODUCT_LAYER wired
+-- [Interstellar] sources missing ΓÇö skipping (BUILD_INTERSTELLAR gated)
+-- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
+-- [CI] RAWR_ASAN=OFF
+-- RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)
+-- [Batch 1] Production benchmark target: RawrXD-ProductionBenchmark
+-- [Batch 1] Production cert test target: RawrXD-ProductionCertTest
+-- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
+-- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
+-- [Analysis] Win32IDE linked to RawrXD-ModelAnalysisLib (RAWR_HAS_MODEL_ANATOMY)
+-- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
+-- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
+-- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
+-- [SovereignRuntime] Vulkan SDK: C:/VulkanSDK/1.4.357.0
+-- [SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004
+-- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
+-- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
+-- [Validation] RAWRXD_ENABLE_VALIDATION=ON +∩┐╜-∩┐╜+∩┐╜-∩┐╜+∩┐╜-∩┐╜ runtime tensor dumping enabled
+-- [Test] Pure MASM inference test: TestMASMInference
+-- [VAL-Q4.0] Fused pipeline validation: test_q4_fused_pipeline
+-- [VAL-Q4.0] Cache alignment validation: test_q4_cache_alignment
+-- [VAL-Q4.0] ASM debug test: test_q4_asm_debug
+-- [VAL-Q4.0] AVX-512 kernel: q4_preprocessed_avx512
+-- [VAL-Q4.0] Scalar SIMD simulation: test_q4_scalar_simd
+-- ========================================
+-- Measurement Framework Tests
+-- ========================================
+--   [MEASURE] benchmark_dispatch_overhead - RDTSC dispatch latency
+--   [MEASURE] benchmark_planner_amortization - Break-even analysis
+--   [MEASURE] validate_end_to_end - Four independent gates
+--   [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a hashing
+--   [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring
+--   [MEASURE] benchmark_dispatch_pmc - PMC profiling
+-- ========================================
+-- certification_harness: Adversarial evidence-producing certification suite configured
+-- native_toolchain_cert: Native toolchain certification target configured
+-- Configuring done (0.8s)
+-- Generating done (2.8s)
+-- Build files have been written to: F:/~dev/rawrxd/build
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build\Release\quickjs_static.lib
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build\Release\InferenceEngine.lib
+  Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt
+  deep2_openai_server.cpp
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(547,33): warning C4100: 'tokenId': unreferenced parameter [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(593,33): warning C4100: 'tokenId': unreferenced parameter [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(543,24): warning C4189: 'promptTokenCount': local variable is initialized but not referenced [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(43,20): warning C4505: 'Deep2::escapeJsonString': unreferenced function with internal linkage has been removed [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(121,20): warning C4505: 'Deep2::getHeader': unreferenced function with internal linkage has been removed [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+  deep2_openai_server_main.cpp
+  Generating Code...
+deep2_openai_server.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::ChatTemplate::initFromGGUF(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?initFromGGUF@ChatTemplate@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+deep2_openai_server.obj : error LNK2001: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl Deep2::ChatTemplate::format(class std::vector<struct Deep2::ChatMessage,class std::allocator<struct Deep2::ChatMessage> > const &)const " (?format@ChatTemplate@Deep2@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV?$vector@UChatMessage@Deep2@@V?$allocator@UChatMessage@Deep2@@@std@@@4@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+deep2_openai_server.obj : error LNK2001: unresolved external symbol "public: char const * __cdecl Deep2::ChatTemplate::getTypeName(void)const " (?getTypeName@ChatTemplate@Deep2@@QEBAPEBDXZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: __cdecl Deep2::VramStreamingController::VramStreamingController(void)" (??0VramStreamingController@Deep2@@QEAA@XZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: __cdecl Deep2::VramStreamingController::~VramStreamingController(void)" (??1VramStreamingController@Deep2@@QEAA@XZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::lockResidency(void)" (?lockResidency@VramStreamingController@Deep2@@QEAAXXZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::unlockResidency(void)" (?unlockResidency@VramStreamingController@Deep2@@QEAAXXZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::setVramCeilingGiB(unsigned int)" (?setVramCeilingGiB@VramStreamingController@Deep2@@QEAAXI@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: unsigned __int64 __cdecl Deep2::VramStreamingController::vramCeilingBytes(void)const " (?vramCeilingBytes@VramStreamingController@Deep2@@QEBA_KXZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::beginTokenMeasurement(unsigned __int64)" (?beginTokenMeasurement@VramStreamingController@Deep2@@QEAAX_K@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::VramStreamingController::endTokenMeasurement(unsigned __int64 &)" (?endTokenMeasurement@VramStreamingController@Deep2@@QEAA_NAEA_K@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: struct Deep2::VramStreamingStats __cdecl Deep2::VramStreamingController::stats(void)const " (?stats@VramStreamingController@Deep2@@QEBA?AUVramStreamingStats@2@XZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::attachNvmeStream(class Deep2::NVMeStream *)" (?attachNvmeStream@VramStreamingController@Deep2@@QEAAXPEAVNVMeStream@2@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::attachElasticManager(class Deep2::ElasticResidencyManager *)" (?attachElasticManager@VramStreamingController@Deep2@@QEAAXPEAVElasticResidencyManager@2@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: __cdecl rawrxd::deep2::ExpertCache::~ExpertCache(void)" (??1ExpertCache@deep2@rawrxd@@QEAA@XZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine_VulkanRuntime.obj) : error LNK2001: unresolved external symbol "public: __cdecl rawrxd::deep2::ExpertCache::~ExpertCache(void)" (??1ExpertCache@deep2@rawrxd@@QEAA@XZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl rawrxd::deep2::ExpertCache::registerExpert(struct rawrxd::deep2::ExpertKey,struct rawrxd::deep2::ExpertLocation)" (?registerExpert@ExpertCache@deep2@rawrxd@@QEAA_NUExpertKey@23@UExpertLocation@23@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl rawrxd::deep2::ExpertCache::prefetch(struct rawrxd::deep2::ExpertKey,unsigned __int64)" (?prefetch@ExpertCache@deep2@rawrxd@@QEAA_NUExpertKey@23@_K@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine_GpuMoEMLA.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl rawrxd::deep2::ExpertCache::prefetch(struct rawrxd::deep2::ExpertKey,unsigned __int64)" (?prefetch@ExpertCache@deep2@rawrxd@@QEAA_NUExpertKey@23@_K@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine.obj) : error LNK2001: unresolved external symbol "public: __cdecl rawrxd::deep2::VulkanExpertTransport::~VulkanExpertTransport(void)" (??1VulkanExpertTransport@deep2@rawrxd@@QEAA@XZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine_VulkanRuntime.obj) : error LNK2001: unresolved external symbol "public: __cdecl rawrxd::deep2::VulkanExpertTransport::~VulkanExpertTransport(void)" (??1VulkanExpertTransport@deep2@rawrxd@@QEAA@XZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine_VulkanRuntime.obj) : error LNK2001: unresolved external symbol "public: __cdecl rawrxd::deep2::ExpertCache::ExpertCache(struct rawrxd::deep2::ExpertCacheConfig,struct rawrxd::deep2::ExpertTransport)" (??0ExpertCache@deep2@rawrxd@@QEAA@UExpertCacheConfig@12@UExpertTransport@12@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine_VulkanRuntime.obj) : error LNK2001: unresolved external symbol "public: static class std::unique_ptr<class rawrxd::deep2::VulkanExpertTransport,struct std::default_delete<class rawrxd::deep2::VulkanExpertTransport> > __cdecl rawrxd::deep2::VulkanExpertTransport::create(struct rawrxd::deep2::VulkanExpertTransportConfig const &)" (?create@VulkanExpertTransport@deep2@rawrxd@@SA?AV?$unique_ptr@VVulkanExpertTransport@deep2@rawrxd@@U?$default_delete@VVulkanExpertTransport@deep2@rawrxd@@@std@@@std@@AEBUVulkanExpertTransportConfig@23@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(Deep2Engine_VulkanRuntime.obj) : error LNK2001: unresolved external symbol "public: struct rawrxd::deep2::ExpertTransport __cdecl rawrxd::deep2::VulkanExpertTransport::callbacks(void)" (?callbacks@VulkanExpertTransport@deep2@rawrxd@@QEAA?AUExpertTransport@23@XZ) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(StreamEngine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::recordBytesMoved(unsigned __int64)" (?recordBytesMoved@VramStreamingController@Deep2@@QEAAX_K@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(StreamEngine.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::VramStreamingController::requestInFlightBytes(unsigned __int64,unsigned int)" (?requestInFlightBytes@VramStreamingController@Deep2@@QEAA_N_KI@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(StreamEngine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::releaseInFlightBytes(unsigned __int64)" (?releaseInFlightBytes@VramStreamingController@Deep2@@QEAAX_K@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(StreamEngine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::registerTensor(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,unsigned __int64,int)" (?registerTensor@VramStreamingController@Deep2@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@_KH@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(StreamEngine.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::VramStreamingController::requestResident(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?requestResident@VramStreamingController@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(StreamRouter.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::VramStreamingController::requestResident(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?requestResident@VramStreamingController@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(StreamEngine.obj) : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::VramStreamingController::markResident(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?markResident@VramStreamingController@Deep2@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+RawrXD-InferenceEngine.lib(StreamRouter.obj) : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::VramStreamingController::isResident(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)const " (?isResident@VramStreamingController@Deep2@@QEBA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]
+F:\~dev\rawrxd\build\bin\Release\deep2_openai_server.exe : fatal error LNK1120: 28 unresolved externals [F:\~dev\rawrxd\build\deep2_openai_server.vcxproj]

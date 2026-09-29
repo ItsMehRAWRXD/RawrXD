@@ -1,0 +1,72 @@
+=============================================
+  Deep2 OpenAI-Compatible Local Model Server
+=============================================
+[server] Loading model: F:\~dev\qwen2.5-coder-1.5b-base.gguf
+D2LOAD_S04a_MODEL_ENTER
+[Deep2Engine] ROPE_ARCH=qwen2 ROPE_THETA_GLOBAL=1000000.0 ROPE_THETA_LOCAL=1000000.0 SLIDING_WINDOW=0 SLIDING_WINDOW_PATTERN=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] GGUF mapped: arch=qwen2 shards=1 tensors=338 layers=28 hidden=1536 heads=12 kv_heads=2 vocab=151936
+ARCH=qwen2
+HIDDEN=1536
+LAYERS=28
+HEADS=12
+KV_HEADS=2
+HEAD_DIM=128
+GQA_GROUP=6
+FFN_DIM=8960
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=present
+K_BIAS=present
+V_BIAS=present
+TIE_EMBED=1
+D2LOAD_S04b_MODEL_PASS
+[OpenAI] ChatTemplate=chatml for model=qwen2.5-coder-1.5b-base
+[OpenAI] MODEL_LOAD=PASS  model=qwen2.5-coder-1.5b-base
+[OpenAI] BIND_MODE=LOOPBACK_ONLY
+[OpenAI] Server listening on http://127.0.0.1:11436
+[server] Ready.   Endpoint: http://127.0.0.1:11436/v1/chat/completions
+[server] Press Ctrl+C to stop.
+[GET /health] 200  0.22 ms
+CHECKPOINT REQUEST_BEGIN kv_len=0
+CHECKPOINT POST_RESET kv_len=0
+FINAL_NORM_ENTER
+FINALNORM_POST min=-28.5528 max=72.4382
+[OpenAI] JSON parse error: [json.exception.parse_error.101] parse error at line 1, column 2: syntax error while parsing object key - invalid literal; last read: '{i'; expected string literal
+[POST /v1/chat/completions] 400  1.24 ms
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=151936 finite=151936 nan=0 inf=0 min=-13.1593 max=13.6877
+SAMPLER_RESULT token=45764 vocab=151936
+FINAL_NORM_ENTER
+FINALNORM_POST min=-102.744 max=35.7962
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=151936 finite=151936 nan=0 inf=0 min=-8.69228 max=20.5496
+SAMPLER_RESULT token=6896 vocab=151936
+FINAL_NORM_ENTER
+FINALNORM_POST min=-95.1143 max=41.1726
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=151936 finite=151936 nan=0 inf=0 min=-7.52158 max=22.0729
+SAMPLER_RESULT token=25 vocab=151936
+FINAL_NORM_ENTER
+FINALNORM_POST min=-110.261 max=34.2341
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=151936 finite=151936 nan=0 inf=0 min=-10.8964 max=16.4275
+SAMPLER_RESULT token=393 vocab=151936
+FINAL_NORM_ENTER
+FINALNORM_POST min=-77.0081 max=81.3128
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=151936 finite=151936 nan=0 inf=0 min=-6.58691 max=22.5527
+SAMPLER_RESULT token=15 vocab=151936
+FINAL_NORM_ENTER
+FINALNORM_POST min=-96.0878 max=58.2038
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=151936 finite=151936 nan=0 inf=0 min=-6.83787 max=23.6338
+SAMPLER_RESULT token=18 vocab=151936
+CHECKPOINT REQUEST_END generated=6 kv_len=28
+[POST /v1/chat/completions] 200  15868.84 ms
+CHECKPOINT REQUEST_BEGIN kv_len=28
+CHECKPOINT POST_RESET kv_len=0

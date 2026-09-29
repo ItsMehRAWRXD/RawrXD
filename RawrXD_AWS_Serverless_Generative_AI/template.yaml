@@ -1,0 +1,139 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: RawrXD serverless control plane with Deep2 as the only generative inference backend.
+
+Parameters:
+  RawrxdBaseUrl:
+    Type: String
+    Default: https://smart-otters-follow.loca.lt
+  RawrxdUpstreamKey:
+    Type: String
+    Default: rawrxd
+    NoEcho: true
+  ClientApiKey:
+    Type: String
+    NoEcho: true
+    MinLength: 12
+  AllowedOrigin:
+    Type: String
+    Default: '*'
+  MaxSyncTokens:
+    Type: Number
+    Default: 128
+    MinValue: 1
+    MaxValue: 1024
+  JobTtlDays:
+    Type: Number
+    Default: 7
+    MinValue: 1
+    MaxValue: 30
+
+Globals:
+  Function:
+    Runtime: python3.13
+    Architectures: [x86_64]
+    MemorySize: 256
+    Tracing: Active
+    Environment:
+      Variables:
+        RAWXD_BASE_URL: !Ref RawrxdBaseUrl
+        RAWXD_UPSTREAM_KEY: !Ref RawrxdUpstreamKey
+        CLIENT_API_KEY: !Ref ClientApiKey
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
+        JOBS_TABLE: !Ref JobsTable
+        JOB_TTL_DAYS: !Ref JobTtlDays
+
+Resources:
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: '$default'
+      CorsConfiguration:
+        AllowOrigins: [!Ref AllowedOrigin]
+        AllowHeaders: [content-type, authorization, x-rawrxd-key]
+        AllowMethods: [GET, POST, OPTIONS]
+        MaxAge: 600
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/api/
+      Handler: app.handler
+      Timeout: 28
+      Environment:
+        Variables:
+          JOB_QUEUE_URL: !Ref JobQueue
+          MAX_SYNC_TOKENS: !Ref MaxSyncTokens
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [sqs:SendMessage]
+              Resource: !GetAtt JobQueue.Arn
+            - Effect: Allow
+              Action: [dynamodb:GetItem]
+              Resource: !GetAtt JobsTable.Arn
+      Events:
+        Health:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /health, Method: GET}
+        Chat:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /v1/chat/completions, Method: POST}
+        SubmitJob:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /jobs, Method: POST}
+        GetJob:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: "/jobs/{id}", Method: GET}
+
+  WorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/worker/
+      Handler: app.handler
+      Timeout: 840
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt JobsTable.Arn
+            - Effect: Allow
+              Action: [sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes]
+              Resource: !GetAtt JobQueue.Arn
+      Events:
+        JobQueueEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt JobQueue.Arn
+            BatchSize: 1
+            FunctionResponseTypes: [ReportBatchItemFailures]
+
+  JobDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+
+  JobQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 900
+      MessageRetentionPeriod: 86400
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt JobDeadLetterQueue.Arn
+        maxReceiveCount: 3
+
+  JobsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: job_id, AttributeType: S}
+      KeySchema:
+        - {AttributeName: job_id, KeyType: HASH}
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+Outputs:
+  ApiUrl:
+    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}'

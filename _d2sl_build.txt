@@ -1,0 +1,40 @@
+﻿CMake is re-running because F:/~dev/_d2sl/build/CMakeFiles/generate.stamp is out-of-date.
+  the file 'F:/~dev/_d2sl/CMakeLists.txt'
+  is newer than 'F:/~dev/_d2sl/build/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: F:/~dev/_d2sl/build
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  CMake is re-running because F:/~dev/_d2sl/build/CMakeFiles/generate.stamp is out-of-date.
+    the file 'F:/~dev/_d2sl/CMakeLists.txt'
+    is newer than 'F:/~dev/_d2sl/build/CMakeFiles/generate.stamp.depend'
+    result='-1'
+  -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+  -- Configuring done (0.0s)
+  -- Generating done (0.1s)
+  -- Build files have been written to: F:/~dev/_d2sl/build
+  Building Custom Rule F:/~dev/_d2sl/CMakeLists.txt
+  CMake is re-running because F:/~dev/_d2sl/build/CMakeFiles/generate.stamp is out-of-date.
+    the file 'F:/~dev/_d2sl/CMakeLists.txt'
+    is newer than 'F:/~dev/_d2sl/build/CMakeFiles/generate.stamp.depend'
+    result='-1'
+  -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+  -- Configuring done (0.0s)
+  -- Generating done (0.0s)
+  -- Build files have been written to: F:/~dev/_d2sl/build
+  deep2_serverless.cpp
+F:\~dev\_d2sl\deep2_serverless.cpp(67,26): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\_d2sl\build\deep2-serverless.vcxproj]
+  deep2-serverless.vcxproj -> F:\~dev\_d2sl\build\Release\deep2-serverless.exe
+  Building Custom Rule F:/~dev/_d2sl/CMakeLists.txt
+  CMake is re-running because F:/~dev/_d2sl/build/CMakeFiles/generate.stamp is out-of-date.
+    the file 'F:/~dev/_d2sl/CMakeLists.txt'
+    is newer than 'F:/~dev/_d2sl/build/CMakeFiles/generate.stamp.depend'
+    result='-1'
+  -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+  -- Configuring done (0.0s)
+  -- Generating done (0.0s)
+  -- Build files have been written to: F:/~dev/_d2sl/build

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "F:\~dev\_gguf_meta.py", line 11, in <module>
+    assert rd("<4s")[0] == b"GGUF"
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

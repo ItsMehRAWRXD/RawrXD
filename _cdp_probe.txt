@@ -1,0 +1,2 @@
+GET /json/version DOWN
+GET /json/list DOWN

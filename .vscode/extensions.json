@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "ollama.ollama"
+        "ollama.ollama",
+        "amazonwebservices.amazon-q-vscode",
+        "vizards.deepseek-v4-for-copilot"
     ]
 }

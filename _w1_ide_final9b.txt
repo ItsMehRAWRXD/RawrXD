@@ -1,0 +1,34 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_w1\Release\quickjs_static.lib
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_w1\Release\InferenceEngine.lib
+  RawrXD-ModelAnalysisLib.vcxproj -> F:\~dev\rawrxd\build_w1\Release\RawrXD-ModelAnalysisLib.lib
+  RawrXD-RE-Library.vcxproj -> F:\~dev\rawrxd\build_w1\src\reverse_engineering\Release\RawrXD-RE-Library.lib
+  RawrXD_MultiWindow_Kernel.vcxproj -> F:\~dev\rawrxd\build_w1\bin\Release\RawrXD_MultiWindow_Kernel.dll
+  rguf.vcxproj -> F:\~dev\rawrxd\build_w1\rguf_source\Release\rguf.lib
+  omega_asm_native_kernel.cpp
+  rawrxd_subsystem_api.cpp
+  unlinked_symbols_batch_001.cpp
+F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(109,37): error C2137: empty character constant [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(534,5): error C2660: 'SO_CreateThreadPool': function does not take 1 arguments [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(142,5):
+      see declaration of 'SO_CreateThreadPool'
+      F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(534,5):
+      while trying to match the argument list '(int)'
+  
+F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(536,5): error C2660: 'SO_InitializePrefetchQueue': function does not take 1 arguments [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(158,5):
+      see declaration of 'SO_InitializePrefetchQueue'
+      F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(536,5):
+      while trying to match the argument list '(int)'
+  
+F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(582,28): error C2660: 'SO_CreateComputePipelines': function does not take 0 arguments [F:\~dev\rawrxd\build_w1\RawrXD-Win32IDE.vcxproj]
+      F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(145,7):
+      see declaration of 'SO_CreateComputePipelines'
+      F:\~dev\rawrxd\src\core\rawrxd_subsystem_api.cpp(582,28):
+      while trying to match the argument list '()'
+  
+  unlinked_symbols_batch_005.cpp
+  unlinked_symbols_batch_006.cpp
+  unlinked_symbols_batch_021.cpp
+  Generating Code...

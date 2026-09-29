@@ -1,0 +1,6 @@
+GGML-canonical int-dot vs engine vs float-dequant (attn_q, Q4_K):
+ROW 0: floatdequant(A)=+3.493331  intdot(B)=+4.235890  engine(C)=+0.800786  |B-C|=3.435104  |A-B|=0.7426
+ROW 1: floatdequant(A)=+1.951216  intdot(B)=+0.110862  engine(C)=-1.583449  |B-C|=1.694311  |A-B|=1.8404
+ROW 2: floatdequant(A)=+2.357457  intdot(B)=+0.941851  engine(C)=-0.815454  |B-C|=1.757305  |A-B|=1.4156
+ROW 3: floatdequant(A)=+2.617353  intdot(B)=+1.345466  engine(C)=-0.935334  |B-C|=2.280800  |A-B|=1.2719
+ENGINE_VS_GGML_INTDOT=FAIL (worst |B-C| = 3.4351)

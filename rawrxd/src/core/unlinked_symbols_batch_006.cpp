@@ -27,50 +27,9 @@ struct MeshState {
 
 extern "C" {
 
-// Omega orchestrator functions (continued)
-bool asm_omega_world_model_update(const void* observation_data, size_t size) {
-    if (observation_data == nullptr || size == 0) {
-        return false;
-    }
-    g_omegaStats.worldUpdates.fetch_add(1, std::memory_order_relaxed);
-    return true;
-}
-
-bool asm_omega_agent_spawn(const char* agent_type, int task_id, void* out_agent_id) {
-    if (agent_type == nullptr || task_id <= 0 || out_agent_id == nullptr) {
-        return false;
-    }
-    const auto id = g_omegaStats.agentsSpawned.fetch_add(1, std::memory_order_relaxed) + 1;
-    *static_cast<int*>(out_agent_id) = static_cast<int>(id);
-    return true;
-}
-
-bool asm_omega_agent_step(int agent_id, void* out_action) {
-    if (agent_id <= 0 || out_action == nullptr) {
-        return false;
-    }
-    g_omegaStats.agentSteps.fetch_add(1, std::memory_order_relaxed);
-    *static_cast<int*>(out_action) = agent_id ^ 0xA55A;
-    return true;
-}
-
-bool asm_omega_execute_pipeline(int plan_id, void* out_status) {
-    if (plan_id <= 0 || out_status == nullptr) {
-        return false;
-    }
-    g_omegaStats.pipelinesExecuted.fetch_add(1, std::memory_order_relaxed);
-    *static_cast<int*>(out_status) = 1;
-    return true;
-}
-
-void* asm_omega_get_stats() {
-    static uint64_t stats[4] = {0, 0, 0, 0};
-    stats[0] = g_omegaStats.worldUpdates.load(std::memory_order_relaxed);
-    stats[1] = g_omegaStats.agentsSpawned.load(std::memory_order_relaxed);
-    stats[2] = g_omegaStats.agentSteps.load(std::memory_order_relaxed);
-    stats[3] = g_omegaStats.pipelinesExecuted.load(std::memory_order_relaxed);
-    return stats;
-}
+// Omega orchestrator functions: REMOVED — all 5 asm_omega_* had WRONG
+// signatures (bool return, void* args) vs omega_orchestrator.hpp (int return,
+// typed args). Canonical provider: omega_asm_native_kernel.cpp.
 
 // Mesh brain distributed system functions
 bool asm_mesh_init() {

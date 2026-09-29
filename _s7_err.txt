@@ -1,0 +1,36 @@
+=============================================
+  Deep2 OpenAI-Compatible Local Model Server
+=============================================
+[server] Loading model: F:\~dev\qwen2.5-coder-1.5b-base.gguf
+D2LOAD_S04a_MODEL_ENTER
+[Deep2Engine] ROPE_ARCH=qwen2 ROPE_THETA_GLOBAL=1000000.0 ROPE_THETA_LOCAL=1000000.0 SLIDING_WINDOW=0 SLIDING_WINDOW_PATTERN=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] GGUF mapped: arch=qwen2 shards=1 tensors=338 layers=28 hidden=1536 heads=12 kv_heads=2 vocab=151936
+ARCH=qwen2
+HIDDEN=1536
+LAYERS=28
+HEADS=12
+KV_HEADS=2
+HEAD_DIM=128
+GQA_GROUP=6
+FFN_DIM=8960
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=present
+K_BIAS=present
+V_BIAS=present
+TIE_EMBED=1
+D2LOAD_S04b_MODEL_PASS
+[OpenAI] ChatTemplate=chatml for model=qwen2.5-coder-1.5b-base
+[OpenAI] MODEL_LOAD=PASS  model=qwen2.5-coder-1.5b-base
+[OpenAI] BIND_MODE=LOOPBACK_ONLY
+[OpenAI] Server listening on http://127.0.0.1:11436
+[server] Ready.   Endpoint: http://127.0.0.1:11436/v1/chat/completions
+[server] Press Ctrl+C to stop.
+[GET /health] 200  0.14 ms
+CHECKPOINT REQUEST_BEGIN kv_len=0
+CHECKPOINT POST_RESET kv_len=0

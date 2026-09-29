@@ -1,0 +1,4 @@
+FROM G:\~dev\tinyllama_fresh.gguf
+PARAMETER temperature 0
+PARAMETER seed 1
+PARAMETER num_predict 6

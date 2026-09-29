@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"F:/~dev/_fleet_build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

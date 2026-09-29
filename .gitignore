@@ -48,3 +48,4 @@ tmp_*.txt
 
 # Deep2 closure artifacts (not source)
 _deep2_closure/
+qwen2.5-coder-1.5b-base.gguf

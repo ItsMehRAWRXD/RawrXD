@@ -1,0 +1,5 @@
+str1 len 72623859706101761
+Traceback (most recent call last):
+  File "F:\~dev\_golden_parse4.py", line 6, in <module>
+    msha = b[off:off+n].decode(); off += n
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe8 in position 73: invalid continuation byte

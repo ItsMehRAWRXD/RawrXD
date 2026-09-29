@@ -1,0 +1,1 @@
+Set-Location F:\~dev\rawrxd; cmake -S . -B "F:\~dev\rawrxd\build_w1" 2>&1 | Select-Object -Last 1 | Out-File F:\~dev\_w1_cfg11.txt -Encoding UTF8; cmake --build "F:\~dev\rawrxd\build_w1" --config Release --target RawrXD-Win32IDE -j 4 2>&1 | Out-File F:\~dev\_w1_build11.txt -Encoding UTF8; "BUILD_EXIT=$LASTEXITCODE" | Out-File F:\~dev\_w1_build11_done.txt -Encoding ASCII

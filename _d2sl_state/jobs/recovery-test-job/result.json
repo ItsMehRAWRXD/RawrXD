@@ -1,0 +1,1 @@
+{"id":"mock-1","object":"chat.completion","model":"qwen2.5-coder-1.5b-base","choices":[{"index":0,"message":{"role":"assistant","content":"DEEP2_SERVERLESS_OK"},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":4,"total_tokens":14}}

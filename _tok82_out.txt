@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "F:\~dev\_tok82_probe.py", line 56, in <module>
+    k = read_str(f)
+  File "F:\~dev\_tok82_probe.py", line 16, in read_str
+    return fh.read(n).decode("utf-8", "replace")
+           ~~~~~~~^^^
+MemoryError

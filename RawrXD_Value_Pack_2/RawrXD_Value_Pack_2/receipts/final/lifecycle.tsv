@@ -1,0 +1,9 @@
+1	1790627867175	SessionStart	selftest-1	selftest-1	title=Implement and validate value pack;model=Deep2
+2	1790627867175	BeforeInference	selftest-1	selftest-1	inference-start
+3	1790627867175	AfterMutation	selftest-1	selftest-1	src/example.cpp
+4	1790627867175	AfterInference	selftest-1	selftest-1	build-start
+5	1790627867175	BeforeBuild	selftest-1	selftest-1	build-start
+6	1790627867175	AfterBuild	selftest-1	selftest-1	merge-authorized
+7	1790627867175	BeforeMerge	selftest-1	selftest-1	merge-authorized
+8	1790627867175	AfterMerge	selftest-1	selftest-1	complete
+9	1790627867175	SessionStop	selftest-1	selftest-1	PASS

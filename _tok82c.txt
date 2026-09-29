@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "<string>", line 24, in <module>
+    k = read_str(f); t = struct.unpack('<I', f.read(4))[0]
+  File "<string>", line 11, in read_str
+    if n > 100000000: raise ValueError('bad str len %d ù misaligned' % n)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: bad str len 7954895644034859008 ù misaligned

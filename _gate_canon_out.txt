@@ -1,0 +1,2 @@
+ffn_gate row0: canonical(float)=-7.523796373 engine=-3.196813340  diff=4.327e+00
+row1: canonical=-7.565362678 engine=-3.183522700 diff=4.382e+00

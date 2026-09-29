@@ -90,24 +90,8 @@ extern "C"
         // RawrXD_DispatchIPC: removed from this TU — canonical definition lives in subsystem_mode_fallbacks.cpp.
         // Having multiple C++ definitions causes LNK2005 when more than one fallback TU is linked.
 
-    void asm_lsp_bridge_shutdown(void)
-    {
-        std::lock_guard<std::mutex> lock(g_fallbackMutex);
-        g_lspBridgeState = {};
-    }
-    void asm_gguf_loader_close(void* ctx)
-    {
-        if (ctx == nullptr)
-        {
-            return;
-        }
-        std::lock_guard<std::mutex> lock(g_fallbackMutex);
-        g_ggufLoaderPathByCtx.erase(ctx);
-        g_ggufLoaderParsedByCtx.erase(ctx);
-        g_ggufLoaderGpuThresholdByCtx.erase(ctx);
-        g_ggufLookupCountByCtx.erase(ctx);
-        g_ggufLoaderFileSizeByCtx.erase(ctx);
-    }
+    // asm_lsp_bridge_shutdown: REMOVED — canonical definition in unlinked_symbols_batch_001.cpp.
+    // asm_gguf_loader_close: REMOVED — canonical definition in unlinked_symbols_batch_001.cpp.
 
     int asm_lsp_bridge_init(void* symbolIndex, void* contextAnalyzer)
     {
@@ -504,55 +488,8 @@ extern "C"
         return 0;
     }
 
-    int asm_camellia256_auth_encrypt_file(const char* inputPath, const char* outputPath)
-    {
-        if (inputPath == nullptr || outputPath == nullptr)
-        {
-            return -1;
-        }
-        std::ifstream in(inputPath, std::ios::binary);
-        if (!in.is_open())
-        {
-            return -1;
-        }
-        std::ofstream out(outputPath, std::ios::binary | std::ios::trunc);
-        if (!out.is_open())
-        {
-            return -1;
-        }
-        std::vector<char> buf(4096);
-        uint64_t transformedBytes = 0;
-        while (in.good())
-        {
-            in.read(buf.data(), static_cast<std::streamsize>(buf.size()));
-            std::streamsize n = in.gcount();
-            for (std::streamsize i = 0; i < n; ++i)
-            {
-                buf[static_cast<size_t>(i)] =
-                    static_cast<char>(static_cast<unsigned char>(buf[static_cast<size_t>(i)]) ^ 0xA5u);
-            }
-            out.write(buf.data(), n);
-            if (!out.good())
-            {
-                return -1;
-            }
-            transformedBytes += static_cast<uint64_t>(n);
-        }
-        {
-            std::lock_guard<std::mutex> lock(g_fallbackMutex);
-            g_camelliaFileTransformBytes += transformedBytes;
-        }
-        return out.good() ? 0 : -1;
-    }
-    int asm_camellia256_auth_decrypt_file(const char* inputPath, const char* outputPath)
-    {
-        if (inputPath == nullptr || outputPath == nullptr)
-        {
-            return -1;
-        }
-        // XOR transform is symmetric for this fallback.
-        return asm_camellia256_auth_encrypt_file(inputPath, outputPath);
-    }
+    // asm_camellia256_auth_encrypt_file: REMOVED — canonical definition in unlinked_symbols_batch_005.cpp.
+    // asm_camellia256_auth_decrypt_file: REMOVED — canonical definition in unlinked_symbols_batch_005.cpp.
     int asm_camellia256_auth_encrypt_buf(uint8_t* plaintext, uint32_t plaintextLen, uint8_t* output,
                                          uint32_t* outputLen)
     {
@@ -765,65 +702,9 @@ extern "C"
         return 0;
     }
 
-    int asm_perf_init(void)
-    {
-        g_perfStartNs.fill(0);
-        g_perfLastNs.fill(0);
-        g_perfTotalNs.fill(0);
-        g_perfSamples.fill(0);
-        return 0;
-    }
-    uint64_t asm_perf_begin(uint32_t slot)
-    {
-        if (slot >= PERF_SLOT_COUNT)
-        {
-            return 0;
-        }
-        const uint64_t start = nowNs();
-        g_perfStartNs[slot] = start;
-        return start;
-    }
-    uint64_t asm_perf_end(uint32_t slot, uint64_t startTSC)
-    {
-        if (slot >= PERF_SLOT_COUNT)
-        {
-            return 0;
-        }
-        const uint64_t end = nowNs();
-        const uint64_t start = (startTSC != 0) ? startTSC : g_perfStartNs[slot];
-        if (end < start)
-        {
-            return 0;
-        }
-        const uint64_t delta = end - start;
-        g_perfLastNs[slot] = delta;
-        g_perfTotalNs[slot] += delta;
-        g_perfSamples[slot] += 1;
-        return delta;
-    }
-    int asm_perf_read_slot(uint32_t slotIndex, void* data)
-    {
-        if (data == nullptr || slotIndex >= PERF_SLOT_COUNT)
-        {
-            return -1;
-        }
-        uint64_t* out = static_cast<uint64_t*>(data);
-        out[0] = g_perfLastNs[slotIndex];
-        out[1] = g_perfTotalNs[slotIndex];
-        out[2] = g_perfSamples[slotIndex];
-        return 0;
-    }
-    void asm_perf_reset_slot(uint32_t slotIndex)
-    {
-        if (slotIndex >= PERF_SLOT_COUNT)
-        {
-            return;
-        }
-        g_perfStartNs[slotIndex] = 0;
-        g_perfLastNs[slotIndex] = 0;
-        g_perfTotalNs[slotIndex] = 0;
-        g_perfSamples[slotIndex] = 0;
-    }
+    // asm_perf_init/begin/end/read_slot/reset_slot: REMOVED — canonical definitions
+    // in unlinked_symbols_batch_001.cpp. These duplicates caused LNK4006 under
+    // /FORCE:MULTIPLE, with the batch_001 (wrong-signature) versions winning.
     uint32_t asm_perf_get_slot_count(void)
     {
         return 64;
@@ -833,24 +714,7 @@ extern "C"
         return g_perfTotalNs.data();
     }
 
-    // byte_level_hotpatcher + RawrXD_SelfPatch_Agent.asm (no byte_search.obj in kernel list)
-    const void* find_pattern_asm(const void* haystack, size_t haystack_len, const void* needle, size_t needle_len)
-    {
-        if (haystack == nullptr || needle == nullptr || needle_len == 0 || haystack_len < needle_len)
-        {
-            return nullptr;
-        }
-        const auto* h = static_cast<const uint8_t*>(haystack);
-        const auto* n = static_cast<const uint8_t*>(needle);
-        for (size_t i = 0; i + needle_len <= haystack_len; ++i)
-        {
-            if (std::memcmp(h + i, n, needle_len) == 0)
-            {
-                return h + i;
-            }
-        }
-        return nullptr;
-    }
+    // find_pattern_asm: REMOVED — canonical definition in byte_level_hotpatcher.cpp.
 
     int asm_apply_memory_patch(void* target, uint64_t patchBytes, const void* patchData)
     {

@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "<string>", line 57, in <module>
+    v = canon_dot_q4k(raw[r])
+  File "<string>", line 43, in canon_dot_q4k
+    a = np.concatenate([(qs[isb] & 0xF), (qs[isb] >> 4)])  # WRONG order test
+                            ^^^
+UnboundLocalError: cannot access local variable 'isb' where it is not associated with a value

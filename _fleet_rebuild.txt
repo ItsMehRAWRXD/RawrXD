@@ -1,0 +1,3 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  qwen2_oracle_gate.vcxproj -> F:\~dev\_fleet_build\bin\Release\qwen2_oracle_gate.exe

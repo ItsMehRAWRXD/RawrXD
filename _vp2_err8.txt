@@ -1,0 +1,2 @@
+[BrowserAuthority] /json/list -> 957 bytes
+[BrowserAuthority] openSocket failed (targets list empty or no webSocketDebuggerUrl)

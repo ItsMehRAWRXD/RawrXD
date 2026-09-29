@@ -50,8 +50,8 @@ void RawrXD::UI::AnnotationOverlay::OnEditorResize() {}
 // ---- RawrXD::ANSIParser ----
 // REMOVED: Real implementation now in src/ANSIParser.cpp
 // Stub removed to fix ODR violation — the stub had a different class layout than ANSIParser.h
+// AppendANSIToRichEdit also REMOVED — real implementation in src/ANSIParser.cpp.
 namespace RawrXD {
-    int AppendANSIToRichEdit(HWND, const std::string&);
     struct WindowState { int x=0,y=0,w=1200,h=800; };
     class SettingsManager {
     public:
@@ -62,7 +62,6 @@ namespace RawrXD {
         void SetWindowState(const WindowState&);
     };
 }
-int RawrXD::AppendANSIToRichEdit(HWND, const std::string&) { return 0; }
 RawrXD::SettingsManager& RawrXD::SettingsManager::Instance() { static SettingsManager inst; return inst; }
 bool RawrXD::SettingsManager::Initialize(const std::string&) { return true; }
 void RawrXD::SettingsManager::Shutdown() {}

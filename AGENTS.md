@@ -99,8 +99,9 @@ Where I have the necessary repo/files/tools in the current session, I'll continu
 
 | ID | Area | Current Status | Evidence | Missing Proof | Required Gate | Priority |
 |---|---|---|---|---|---|:---:|
-| SRC-001 | Placeholder source integrity | ⚠️ OPEN | Large number of `src/**/*.cpp` files were previously identified as one-line `// STUB:` placeholders | Confirm which placeholders are still reachable by production targets and remove/restore required implementations | `RAWRXD_SOURCE_INTEGRITY_001` | P0 |
-| CMAKE-001 | Missing-source filtering | 🟡 PARTIAL | `rawrxd_filter_missing_sources()` exists in `CMakeLists.txt` | Existing placeholder files are not necessarily rejected because they technically exist | `RAWRXD_CMAKE_SOURCE_TRUTH_001` | P0 |
+| SRC-001 | Placeholder source integrity | 🟡 PARTIAL | W3 wave replaced the last placeholder-fed externals (embedding/vision/RE/agent) with real TUs + removed 74 empty stubs that silently won /FORCE:MULTIPLE; LNK4006 141→67 (remaining are real-vs-real ODR) | Resolve 67 real-vs-real ODR duplicates (batch-vs-omega_asm_native_kernel, batch-vs-win32ide_asm_kernel_bridge, camellia_auth signature collapse) | `RAWRXD_SOURCE_INTEGRITY_001` | P1 |
+| CMAKE-001 | Missing-source filtering | 🟢 PASS | `rawrxd_filter_missing_sources()` + strict lane `RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF` held through build22; 0 unresolveds | — | `RAWRXD_CMAKE_SOURCE_TRUTH_001` | P1 |
+| **WIN32IDE-LINK** | **Win32IDE strict-link gate** | **🟢 PASS** | **build22 (07a2d7a8b): 0 C-errors, 0 unresolved externals, exe 20346880 B launches (HexMag MASM backend); 91→0 delta receipt in `_w1_link_authority_receipt.md`** | — | **`RAWRXD_WIN32IDE_REAL_LINK_001`** | **P0** |
 | CMAKE-002 | Legacy certification isolation | 🟡 PARTIAL | `RAWRXD_BUILD_LEGACY_CERTS` option exists and defaults OFF | Clean configure/build must prove legacy targets no longer contaminate production build | `RAWRXD_CMAKE_CONFIGURE_001` | P1 |
 | ENTRY-001 | CEO `main.cpp` compatibility | 🔴 **UNPROVEN** | `CMakeLists.txt` currently substitutes `src/ceo/main.cpp` for the previous `src/main.cpp` | **No evidence yet that `src/ceo/main.cpp` is API-, ABI-, lifecycle-, or behavior-compatible with the RawrXD target** | `RAWRXD_CEO_MAIN_COMPAT_001` | **P0** |
 | ENTRY-002 | Process entry point | 🔴 OPEN | CEO source exists | Determine expected `main`, `wmain`, `WinMain`, or `wWinMain` contract and verify CEO implementation matches target subsystem | `RAWRXD_CEO_ENTRYPOINT_001` | P0 |
@@ -115,9 +116,9 @@ Where I have the necessary repo/files/tools in the current session, I'll continu
 | ENTRY-011 | CEO → IDE/chat E2E | 🔴 OPEN | Chat UI exists | Prove Chat Send → request dispatch → Deep2 → token stream → chat render | `RAWRXD_CEO_CHAT_E2E_001` | P0 |
 | ENTRY-012 | CEO shutdown/lifetime | 🔴 OPEN | None yet | Prove cancellation, worker join, Deep2 teardown, GPU teardown, server stop, and clean process exit | `RAWRXD_CEO_SHUTDOWN_001` | P1 |
 | LOAD-001 | Parallel GGUF loader substitution | 🔴 UNPROVEN | `gguf_tensor_parallel_loader.cpp` substituted in CMake | No evidence it is API/behavior compatible with the previous tensor loader for all RawrXD callers | `RAWRXD_PARALLEL_LOADER_COMPAT_001` | P0 |
-| BUILD-001 | Clean production configure | 🔴 OPEN | CMake edits inspected | Fresh-cache CMake configure has not been certified | `RAWRXD_BUILD_CONFIGURE_001` | P0 |
-| BUILD-002 | Clean production compile/link | 🔴 OPEN | None yet | Production target must compile and link from a clean build tree | `RAWRXD_BUILD_RELEASE_001` | P0 |
-| BUILD-003 | Stub-free production build | 🔴 OPEN | Stub inventory known to be a concern | Prove required production paths do not resolve through placeholder/no-op/fake-success implementations | `RAWRXD_STUB_FREE_BUILD_001` | P0 |
+| BUILD-001 | Clean production configure | � PASS | `build_w1` configure 0 errors (strict lane: `RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF`, `RAWRXD_BUILD_LEGACY_CERTS=OFF`) | — | `RAWRXD_BUILD_CONFIGURE_001` | P1 |
+| BUILD-002 | Clean production compile/link | 🟢 PASS | RawrXD-Win32IDE: 0 C-errors, 0 unresolved externals, exe links + launches (build22, 07a2d7a8b) | — | `RAWRXD_BUILD_RELEASE_001` | P1 |
+| BUILD-003 | Stub-free production build | 🟡 PARTIAL | W3 replaced placeholder-fed externals with real TUs + removed 74 empty stubs that won /FORCE:MULTIPLE over real bodies (LNK4006 141→67); remaining 67 are real-vs-real ODR (architectural ownership decision) | Resolve the 67 real-vs-real ODR duplicates (batch-vs-omega_asm_native_kernel, batch-vs-win32ide_asm_kernel_bridge, camellia_auth signature collapse) | `RAWRXD_STUB_FREE_BUILD_001` | P1 |
 
 ---
 

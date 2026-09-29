@@ -214,24 +214,10 @@ UpdateSignatureVerifier& UpdateSignatureVerifier::instance() {
 SignatureResult UpdateSignatureVerifier::verifyAuthenticode(const wchar_t*) { return {true}; }
 } // namespace Update
 
-// Perf namespace stubs
-namespace Perf {
-struct PerfResult { bool success; };
-class PerfTelemetry {
-public:
-    static PerfTelemetry& instance();
-    PerfResult initialize();
-    void captureBaseline();
-    std::string getDiagnostics() const;
-};
-PerfTelemetry& PerfTelemetry::instance() {
-    static PerfTelemetry inst;
-    return inst;
-}
-PerfResult PerfTelemetry::initialize() { return {true}; }
-void PerfTelemetry::captureBaseline() {}
-std::string PerfTelemetry::getDiagnostics() const { return ""; }
-} // namespace Perf
+// Perf namespace stubs REMOVED — real implementations in perf_telemetry.cpp
+// (PerfTelemetry::instance, initialize, captureBaseline, getDiagnostics, etc.).
+// The empty stubs that were here won /FORCE:MULTIPLE (LNK4006) and silenced
+// the real perf_telemetry.cpp bodies.
 
 } // namespace RawrXD
 
@@ -254,3 +240,4 @@ extern "C" {
     //   asm_speciator_get_stats -> unlinked_symbols_batch_008.cpp
     //   asm_hwsynth_get_stats   -> unlinked_symbols_batch_009.cpp
     // Retained: BeaconSend, RunInference (unique to this TU).
+}
