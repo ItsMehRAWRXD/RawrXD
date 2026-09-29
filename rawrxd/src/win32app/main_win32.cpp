@@ -1512,6 +1512,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (g_chatThread.joinable()) g_chatThread.join();
     // g_chatEngine is intentionally NOT reset — the destructor is unsafe during
     // process teardown. The OS will reclaim the memory.
+    // CRITICAL: call .release() to prevent the static unique_ptr's destructor
+    // (which runs at CRT shutdown) from calling delete on the Deep2Engine.
+    // Without .release(), the unique_ptr would destroy the engine at program
+    // exit, causing the same 0xC0000005 access violation.
+    if (g_chatEngine) {
+        (void)g_chatEngine.release();  // leak the raw pointer; OS reclaims it
+    }
 
     closeHeadlessLog();
     return (int)msg.wParam;
