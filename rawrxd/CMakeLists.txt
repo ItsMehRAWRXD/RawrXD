@@ -5062,7 +5062,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/command/CapabilityProfile.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
         # Win32IDE_Window.cpp removed: duplicate createWindow/WindowProc/onCreate
-        # fought Core via /FORCE:MULTIPLE and risked a second product shell.
+        # conflicted with Core. /FORCE:MULTIPLE was removed in the W3 dedupe wave
+        # (7a73ec687) after all LNK4006 duplicates were eliminated.
         src/win32app/Win32IDE_WindowOwnership.cpp
         src/win32app/Win32IDE_Accelerators.cpp
         src/win32app/IV280Bridge.cpp
@@ -6081,12 +6082,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/beacon_link_stub.cpp
     )
 
-    # AUTO provider: ssot_handlers.cpp and auto_feature_registry.cpp both define
-    # some command handlers. Use /FORCE:MULTIPLE on the linker to tolerate the
-    # duplicates (auto_feature_registry takes priority due to link order).
-    # We keep ssot_handlers.cpp because it also provides unique handlers
-    # (handleTier1AutoUpdateCheck, handleTier1UpdateDismiss, isBeaconFullActive, etc.)
-    # that auto_feature_registry.cpp does not define.
+    # AUTO provider: ssot_handlers.cpp and auto_feature_registry.cpp previously
+    # defined overlapping command handlers, requiring /FORCE:MULTIPLE to tolerate
+    # duplicates. The W3 dedupe wave (7a73ec687) eliminated all LNK4006 duplicates
+    # and removed /FORCE:MULTIPLE from the link line. ssot_handlers.cpp is kept
+    # because it also provides unique handlers (handleTier1AutoUpdateCheck,
+    # handleTier1UpdateDismiss, isBeaconFullActive, etc.) that
+    # auto_feature_registry.cpp does not define.
 
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -6977,9 +6979,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             /MAPINFO:EXPORTS
             /MANIFEST:NO
         )
-        # FORCE still required: ssot+�-�+�-�+�-�auto_feature, batch_021 stubs+�-�+�-�+�-�real TUs, omega C+�-�+�-�+�-�batch,
-        # v280+�-�+�-�+�-�batch_001, CursorParity+�-�+�-�+�-�SemanticIndex, etc. Surgical ASM fixes landed;
-        # full FORCE removal blocked on symbol-level dedupe (see evidence LNK2005 inventory).
+        # /FORCE:MULTIPLE REMOVED (W3 dedupe wave 7a73ec687): all LNK4006
+        # duplicate symbols eliminated — 0 LNK4006, 0 LNK4088, 0 unresolved.
+        # The link is now strict (no force-override of duplicate definitions).
         # Mirror the map at the build root for audit tools that scan ${CMAKE_BINARY_DIR}.
         add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
