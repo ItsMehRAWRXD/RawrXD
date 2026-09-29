@@ -91,6 +91,7 @@ Solution ConstraintSolver::solve(
                     sol.violatedSoft.push_back(c.name);
                     sol.totalPenalty += c.penalty;
                 }
+            }
         }
     } else {
         sol.valid = false;
