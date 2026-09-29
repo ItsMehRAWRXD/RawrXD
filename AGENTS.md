@@ -329,3 +329,85 @@ rawr dump --format json tinyllama           # arch=llama tensor_count=201, read 
 
 A repo-wide `rawr audit src` reports findings from the same rules; several hundred blocking
 stub signals remain outside the dump chain and are tracked separately.
+
+## Corrected Ledger — 2026-09-29
+
+### Retraction: RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001
+
+Commit 4659ed89e pushed a PASS for RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001
+based on a regression test that hardcodes STRICT_CHAIN_USES_IMMUTABLE_API=1 and
+VERDICT=PASS as string literals. These are not measured fields.
+
+**Retracted** by 366b6d81c and formally by 37685e71b
+(RAWRXD_FALSE_PASS_RETRACTION_001).
+
+`
+RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001=RETRACTED_FALSE_PASS
+RAWRXD_SINGLE_WRITER_AUTHORITY_001=FAIL_RECURRING_THIRD_OCCURRENCE
+RECEIPT_IMMUTABILITY_ADOPTED_BY_CALLSITES=0
+LEGACY_MUTABLE_CALLSITES=36
+STRICT_CHAIN_STILL_MUTABLE=1
+STRICT_CERTIFICATION_RECEIPTS_MUTABLE=1
+W8_RECEIPTS_MUTABLE=1
+beginImmutableGate_callsite_count=0
+receipt::beginGate_callsite_count=36
+STRICT_CHAIN_USES_IMMUTABLE_API=0
+FIXED_PATH_WRITES_ALLOWED_FOR_STRICT_GATES=1
+`
+
+Correct classification:
+`
+DESIGN=PARTIALLY_IMPLEMENTED
+REGRESSION_TEST=FALSE_PASS
+PRODUCTION_ADOPTION=0
+CERTIFICATION=RETRACTED
+`
+
+### Rawr dump CPU-only authority
+
+`
+RAWRXD_RAWR_DUMP_CPU_ONLY_AUTHORITY_001=IMPLEMENTED_REPORTED_NOT_CHAIN_CERTIFIED
+`
+
+The dump authority was rewritten to use the real ModelCatalogAuthority scan
+and includes CPU-only invariant receipt fields. It is not yet chain-certified
+because the receipt immutability authority itself is retracted.
+
+### Mandatory gate verifier rules
+
+`
+SELF_CERTIFYING_GATE_PASS=FORBIDDEN
+HARDCODED_VERDICT_PASS=FORBIDDEN
+UNADOPTED_AUTHORITY_PASS=FORBIDDEN
+`
+
+A gate may record PASS only if:
+- receipt exists
+- receipt is immutable
+- receipt fields are measured or derived from measured evidence
+- RawrGate verifier finds no hardcoded verdict
+- RawrGate verifier finds no simulated counters
+- RawrGate verifier finds no orphan authority source
+- production callsites actually use the claimed authority
+
+### Recovery ladder
+
+`
+1. [DONE] Commit targeted false-PASS retraction for 4659ed89e
+2. Freeze/establish single-writer authority
+3. Verify committed ReceiptAuthority implementation
+4. Replace legacy beginGate callsites in strict/W8 gates
+5. Rerun immutability regression using measured fields only
+6. Run RawrGate against the immutability receipt and test source
+7. Only then mark RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001=PASS
+8. Then resume W8 provenance
+9. Then GPU
+`
+
+`
+GPU_BATCH=BLOCKED
+STRICT_CERT=NOT_COMPLETE
+SAFE_TO_PROMOTE_ANYTHING=0
+`
+
+---
