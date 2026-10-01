@@ -20,6 +20,14 @@
 #include <queue>
 #include <chrono>
 #include <optional>
+
+// RAWRXD_TASK_CONFIG_001: loadConfig/saveConfig are real JSON now, so the header
+// needs a JSON parser and file streams. nlohmann::json is already vendored in
+// 3rdparty and already used across the tree (core/settings_persistence.cpp,
+// core/workspace_model.cpp).
+#include <fstream>
+#include <cstdio>
+#include <nlohmann/json.hpp>
 #include <variant>
 #include <regex>
 
@@ -137,6 +145,49 @@ struct TaskGroup {
 };
 
 // ═══════════════════════════════════════════════════════════════════════
+// RAWRXD_TASK_CONFIG_001
+//
+// The measured outcome of loading a task configuration. Declared before
+// TaskRunner because loadConfigWithResult() returns it.
+//
+// A bare bool or void cannot distinguish "loaded zero tasks because the file was
+// absent" from "loaded zero tasks because the file was malformed", and those
+// demand opposite responses from a caller.
+// ═══════════════════════════════════════════════════════════════════════
+
+struct TaskConfigLoadResult {
+    bool        loadCalled = false;
+    bool        fileExisted = false;
+    bool        parsed = false;
+    bool        refused = false;          // present but not adopted
+    std::size_t tasksParsed = 0;
+    std::size_t tasksAdopted = 0;
+    std::size_t tasksSkipped = 0;
+    std::size_t entriesRejected = 0;     // malformed entries, counted not silent
+    std::string version;
+    std::string lastError;
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// RAWRXD_TASK_CONFIG_001 -- free functions for the product path
+//
+// Declared here rather than in task_config_bridge.cpp so main_win32.cpp needs one
+// include instead of two. They exist so a caller can operate on a TaskRunner it
+// already owns. They deliberately do not own a runner: handing the IDE a second,
+// private TaskRunner would create a second task registry, which is the same class
+// of mistake already made and undone once in the git-safety integration.
+//
+// Forward declared because the definitions follow the class below.
+// ═══════════════════════════════════════════════════════════════════════
+
+class TaskRunner;
+
+TaskConfigLoadResult LoadTaskConfigFor(TaskRunner& runner, const std::string& path);
+void                    SaveTaskConfigFor(TaskRunner& runner, const std::string& path);
+std::size_t             TaskConfigTaskCount(const TaskRunner& runner);
+std::vector<std::string> TaskConfigTaskLabels(const TaskRunner& runner);
+
+// ═══════════════════════════════════════════════════════════════════════
 // TASK RUNNER
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -177,8 +228,12 @@ public:
     bool isAnyRunning() const;
     
     // Configuration
+    // RAWRXD_TASK_CONFIG_001: config load/save. loadConfig keeps its original
+    // void signature; loadConfigWithResult returns the measured outcome so an
+    // absent file and a malformed one cannot look alike to a caller.
     void loadConfig(const std::string& config_path);
     void saveConfig(const std::string& config_path);
+    TaskConfigLoadResult loadConfigWithResult(const std::string& config_path);
     void setConfig(const TaskConfig& config) { config_ = config; }
     TaskConfig getConfig() const { return config_; }
     
@@ -807,12 +862,249 @@ inline bool TaskRunner::isAnyRunning() const {
     return false;
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// RAWRXD_TASK_CONFIG_001
+//
+// loadConfig/saveConfig were `// TODO: Parse JSON/YAML config file` and// `// TODO: Write JSON/YAML config file`. That is why this runner could not load
+// a tasks.json even though everything else about it -- process execution, output
+// capture, problem matching, dependency resolution, variable expansion, and
+// CMake/Make/MSBuild/Ninja detection -- is implemented. The external contract was
+// two empty functions.
+//
+// Implemented against the VS Code tasks.json shape, because that is what the
+// product is asked to read (application.cpp used to call
+// LoadTasksConfiguration("<workspace>/.vscode/tasks.json)"). Accepted forms:
+//
+//   { "version": "2.0.0", "tasks": [ { "label": ..., "type": ...,
+//     "command": ..., "args": [...], "options": { "cwd": ..., "env": {...} },
+//     "group": ..., "dependsOn": [...], "isBackground": ...,
+//     "problemMatcher": [...], "detail": ..., "presentation": ... } ] }
+//
+// plus the older flat form with "taskName"/"identifier" instead of "label".
+//
+// Returns a measured outcome rather than void, because "loaded zero tasks
+// because the file was absent" and "loaded zero tasks because the file was
+// malformed" must not look alike. See TaskConfigLoadResult.
+// ═══════════════════════════════════════════════════════════════════════
+
+
+inline TaskConfigLoadResult TaskRunner::loadConfigWithResult(const std::string& config_path) {
+    TaskConfigLoadResult result;
+    result.loadCalled = true;
+
+    std::ifstream file(config_path);
+    if (!file.is_open()) {
+        result.lastError = "tasks config absent";
+        return result;
+    }
+    result.fileExisted = true;
+
+    nlohmann::json j;
+    try {
+        file >> j;
+        result.parsed = true;
+    } catch (const std::exception& ex) {
+        result.lastError = std::string("tasks config unparsable: ") + ex.what();
+        return result;
+    }
+
+    try {
+        TaskConfig cfg;
+        if (j.contains("version") && j["version"].is_string()) {
+            cfg.version = j["version"].get<std::string>();
+        }
+        result.version = cfg.version;
+
+        if (j.contains("variables") && j["variables"].is_object()) {
+            for (auto it = j["variables"].begin(); it != j["variables"].end(); ++it) {
+                if (it.value().is_string()) cfg.variables[it.key()] = it.value().get<std::string>();
+            }
+        }
+
+        if (!j.contains("tasks") || !j["tasks"].is_array()) {
+            result.lastError = "tasks config has no 'tasks' array";
+            return result;
+        }
+
+        for (const auto& t : j["tasks"]) {
+            if (!t.is_object()) { ++result.entriesRejected; continue; }
+
+            TaskDefinition def;
+
+            // label, with the older flat aliases accepted.
+            if (t.contains("label") && t["label"].is_string()) {
+                def.label = t["label"].get<std::string>();
+            } else if (t.contains("taskName") && t["taskName"].is_string()) {
+                def.label = t["taskName"].get<std::string>();
+            }
+            if (def.label.empty()) { ++result.entriesRejected; continue; }
+            def.task_id = def.label;
+
+            // type
+            if (t.contains("type") && t["type"].is_string()) {
+                const std::string ty = t["type"].get<std::string>();
+                if      (ty == "shell")    def.type = TaskType::Shell;
+                else if (ty == "process")  def.type = TaskType::Process;
+                else if (ty == "build")    def.type = TaskType::Build;
+                else if (ty == "test")     def.type = TaskType::Test;
+                else if (ty == "run")      def.type = TaskType::Run;
+                else if (ty == "custom")   def.type = TaskType::Custom;
+            }
+
+            if (t.contains("command")) {
+                if (t["command"].is_string()) def.command = t["command"].get<std::string>();
+                else if (t["command"].is_array() && t["command"].size() >= 1 &&
+                         t["command"][0].is_string()) {
+                    // ["cmd", "arg", ...] form: command is element 0.
+                    def.command = t["command"][0].get<std::string>();
+                    for (std::size_t i = 1; i < t["command"].size(); ++i) {
+                        if (t["command"][i].is_string())
+                            def.args.push_back(t["command"][i].get<std::string>());
+                    }
+                }
+            }
+
+            if (t.contains("args") && t["args"].is_array()) {
+                for (const auto& a : t["args"]) {
+                    if (a.is_string()) def.args.push_back(a.get<std::string>());
+                }
+            }
+
+            if (t.contains("cwd") && t["cwd"].is_string()) def.cwd = t["cwd"].get<std::string>();
+            if (t.contains("detail") && t["detail"].is_string()) def.detail = t["detail"].get<std::string>();
+            if (t.contains("presentation") && t["presentation"].is_string())
+                def.presentation = t["presentation"].get<std::string>();
+            if (t.contains("isBackground") && t["isBackground"].is_boolean())
+                def.is_background = t["isBackground"].get<bool>();
+            if (t.contains("group")) {
+                if (t["group"].is_string()) def.group = t["group"].get<std::string>();
+                else if (t["group"].is_object() && t["group"].contains("kind"))
+                    def.group = t["group"]["kind"].is_string()
+                                  ? t["group"]["kind"].get<std::string>() : std::string();
+            }
+            if (t.contains("dependsOn")) {
+                if (t["dependsOn"].is_array()) {
+                    for (const auto& d : t["dependsOn"]) {
+                        if (d.is_string()) def.depends_on.push_back({d.get<std::string>(), true});
+                    }
+                } else if (t["dependsOn"].is_string()) {
+                    def.depends_on.push_back({t["dependsOn"].get<std::string>(), true});
+                }
+            }
+            if (t.contains("problemMatcher") && t["problemMatcher"].is_array()) {
+                for (const auto& p : t["problemMatcher"]) {
+                    if (p.is_string()) def.problem_matcher.push_back(p.get<std::string>());
+                }
+            }
+
+            // options: cwd, env, shell. Note options.env values may be non-string
+            // in practice, so numbers and booleans are coerced rather than dropped.
+            if (t.contains("options") && t["options"].is_object()) {
+                const auto& o = t["options"];
+                if (o.contains("cwd") && o["cwd"].is_string()) def.cwd = o["cwd"].get<std::string>();
+                if (o.contains("shell") && o["shell"].is_string()) def.shell = o["shell"].get<std::string>();
+                if (o.contains("env") && o["env"].is_object()) {
+                    for (auto it = o["env"].begin(); it != o["env"].end(); ++it) {
+                        const auto& v = it.value();
+                        if      (v.is_string())  def.env[it.key()] = v.get<std::string>();
+                        else if (v.is_boolean()) def.env[it.key()] = v.get<bool>() ? "1" : "0";
+                        else if (v.is_number())  def.env[it.key()] = v.dump();
+                    }
+                }
+            }
+
+            cfg.tasks.push_back(def);
+            ++result.tasksParsed;
+        }
+
+        // Adopt only after the whole document parsed, so a malformed entry cannot
+        // leave a half-populated registry. addTask returns the assigned task id,
+        // or an empty string when it refused the definition.
+        for (const auto& def : cfg.tasks) {
+            if (!addTask(def).empty()) ++result.tasksAdopted; else ++result.tasksSkipped;
+        }
+        if (result.tasksAdopted == 0 && result.tasksParsed == 0) {
+            result.refused = true;
+            result.lastError = "no usable task definitions";
+        }
+        return result;
+
+    } catch (const std::exception& ex) {
+        result.refused = true;
+        result.lastError = std::string("tasks config schema error: ") + ex.what();
+        return result;
+    }
+}
+
 inline void TaskRunner::loadConfig(const std::string& config_path) {
-    // TODO: Parse JSON/YAML config file
+    (void)loadConfigWithResult(config_path);
 }
 
 inline void TaskRunner::saveConfig(const std::string& config_path) {
-    // TODO: Write JSON/YAML config file
+    nlohmann::json j;
+    j["version"] = "2.0.0";
+    j["tasks"] = nlohmann::json::array();
+
+    // TaskType -> the string tasks.json uses. Written out rather than relying on
+    // an enum-to-string helper, because that helper does not exist and inventing
+    // one for a single call site is worse than the six cases.
+    auto typeName = [](TaskType t) -> const char* {
+        switch (t) {
+            case TaskType::Shell:   return "shell";
+            case TaskType::Process: return "process";
+            case TaskType::Build:   return "build";
+            case TaskType::Test:    return "test";
+            case TaskType::Run:     return "run";
+            case TaskType::Custom:  return "custom";
+        }
+        return "shell";
+    };
+
+    for (const TaskDefinition& def : getAllTasks()) {
+        nlohmann::json t;
+        t["label"]   = def.label;
+        t["type"]    = typeName(def.type);
+        t["command"] = def.command;
+        if (!def.args.empty())          t["args"]    = def.args;
+        if (!def.cwd.empty())           t["cwd"]     = def.cwd;
+        if (!def.detail.empty())        t["detail"]  = def.detail;
+        if (!def.group.empty())         t["group"]   = def.group;
+        if (!def.presentation.empty())  t["presentation"] = def.presentation;
+        if (def.is_background)          t["isBackground"] = true;
+        if (!def.problem_matcher.empty()) t["problemMatcher"] = def.problem_matcher;
+        if (!def.depends_on.empty()) {
+            t["dependsOn"] = nlohmann::json::array();
+            for (const auto& d : def.depends_on) t["dependsOn"].push_back(d.task_id);
+        }
+        if (!def.shell.empty() || !def.env.empty()) {
+            nlohmann::json o;
+            if (!def.shell.empty()) o["shell"] = def.shell;
+            if (!def.env.empty()) {
+                o["env"] = nlohmann::json::object();
+                for (const auto& e : def.env) o["env"][e.first] = e.second;
+            }
+            t["options"] = o;
+        }
+        j["tasks"].push_back(t);
+    }
+
+    // Atomic: a crash mid-write must not leave a truncated tasks.json.
+    const std::string tmp = config_path + ".tmp";
+    {
+        std::ofstream out(tmp, std::ios::binary | std::ios::trunc);
+        if (!out.is_open()) return;
+        out << j.dump(2);
+        out.flush();
+        if (!out.good()) { out.close(); std::remove(tmp.c_str()); return; }
+    }
+#if defined(_WIN32)
+    if (!ReplaceFileA(config_path.c_str(), tmp.c_str(), nullptr, 0, nullptr, nullptr)) {
+        MoveFileExA(tmp.c_str(), config_path.c_str(),
+                    MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+    }
+#else
+    std::rename(tmp.c_str(), config_path.c_str());
+#endif
 }
 
 inline void TaskRunner::addProblemMatcher(const ProblemMatcher& matcher) {

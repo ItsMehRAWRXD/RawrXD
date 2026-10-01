@@ -202,6 +202,8 @@ function(rawrxd_filter_missing_sources list_var)
     set(_kept)
     set(_dropped 0)
     set(_dropped_names)
+    set(_emptybodied 0)
+    set(_emptybodied_names)
     # RAWRXD_DROPPED_SOURCE_COUNT is a cross-call accumulator, but the first
     # call saw it UNDEFINED. `${RAWRXD_DROPPED_SOURCE_COUNT}` then expanded to
     # the empty string and the expression below became " + 0", which CMake's
@@ -217,12 +219,57 @@ function(rawrxd_filter_missing_sources list_var)
             set(_path "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
         endif()
         if(EXISTS "${_path}")
-            list(APPEND _kept "${_src}")
+            # RAWRXD_STUB_CERTIFICATION_SURFACE_001
+            # Existence is not sufficiency. A translation unit whose body is empty
+            # after comment stripping -- including a literal
+            # `int main(){ return 0; }` -- supplies no `main` and no test body, so
+            # the target referencing it cannot link (LNK2019 unresolved main) and
+            # cannot certify anything if it did. Measured: 105 CMake-wired TUs
+            # whose names assert cert/verify/parity/proof are empty-bodied.
+            #
+            # This is CONTENT-based, which the existing name filters cannot be:
+            # `deep2_gpu_q4k_gemv_cert.cpp` passes every `_stub|stub_|shim_|mock`
+            # pattern while its body says "Auto-generated stub".
+            file(READ "${_path}" _stub_body)
+            # CMake's regex engine is too limited for comment-stripping
+            # (no block comments, no dot-matches-newline, and '+' after an
+            # escaped '*' fails to compile). Instead strip every character that
+            # cannot appear in code -- anything outside [A-Za-z0-9_]. If nothing
+            # survives, the file contained no code, only comments and blanks.
+            string(REGEX REPLACE "[^A-Za-z0-9_]" "" _stub_body "${_stub_body}")
+            # A trivial `int main(){ return 0; }` survives identifier-stripping
+            # as "intmainreturn0". It compiles, links, and certifies nothing, so
+            # it is treated as empty too. Measured in this tree:
+            # tests/b009/b009b_batched_gemm.cpp is exactly this.
+            if(_stub_body STREQUAL "intmainreturn0")
+                list(APPEND _kept "${_src}")
+                math(EXPR _emptybodied "${_emptybodied} + 1")
+                list(APPEND _emptybodied_names "${_src}(trivial main)")
+            elseif(_stub_body STREQUAL "")
+                list(APPEND _kept "${_src}")
+                math(EXPR _emptybodied "${_emptybodied} + 1")
+                list(APPEND _emptybodied_names "${_src}")
+            else()
+                list(APPEND _kept "${_src}")
+            endif()
         else()
             math(EXPR _dropped "${_dropped} + 1")
             list(APPEND _dropped_names "${_src}")
         endif()
     endforeach()
+    # RAWRXD_STUB_CERTIFICATION_SURFACE_001: report empty-bodied TUs that were
+    # KEPT, because they are the ones that let a certification target exist
+    # without containing a certification.
+    if(_emptybodied GREATER 0)
+        string(REPLACE ";" " " _eb_list "${_emptybodied_names}")
+        message(WARNING
+            "[rawrxd_stub_gate] ${list_var}: ${_emptybodied} translation unit(s) "
+            "are EMPTY-BODIED (no code after stripping comments):\n  ${_eb_list}\n"
+            "  An empty TU provides no main() and cannot link, and cannot certify\n"
+            "  anything if it did. See receipts/RAWRXD_STUB_CERTIFICATION_SURFACE_001.md")
+        math(EXPR RAWRXD_EMPTY_BODIED_SOURCE_TOTAL
+             "${RAWRXD_EMPTY_BODIED_SOURCE_TOTAL} + ${_emptybodied}")
+    endif()
     if(_dropped GREATER 0)
         string(REPLACE ";" " " _dropped_list "${_dropped_names}")
         if(RAWRXD_STRICT_SOURCES)
@@ -340,16 +387,21 @@ if(RAWRXD_BUILD_CLI)
     add_executable(rawrxd-cli-full
         # Headless entry point (replaces GUI entry_point.cpp + RawrXD_MainLoop.cpp)
         src/win32app/cli_main_headless.cpp
+        # RAWRXD_CLI_SOURCE_CLOSURE_001: absent entries are listed at the end of
+        # this source list with their reason; see src/modules/engine_manager.cpp
+        # below. They are not silently dropped -- naming them here is how the gap
+        # stays auditable.
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/win32app/HeadlessIDE_FileAliases.cpp
+        # (was: src/win32app/HeadlessIDE_FileAliases.cpp -- absent)
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
         src/asm/rawr_cpu_features.asm
         src/cli/rawrxd_cli_link_shims.cpp
         src/res/Resource.rc
-        src/rawrxd_link_stubs.cpp
+        # (was: src/rawrxd_link_stubs.cpp -- absent; the real file is
+        #  src/core/link_stubs.cpp, listed below)
         # Core inference components for dual GPU testing
         src/rawrxd_inference.cpp
         src/rawrxd_model_loader.cpp
@@ -433,18 +485,28 @@ if(RAWRXD_BUILD_CLI)
         # HeadlessIDE dependencies
         # AUTO-REMOVED: stub file
         src/model_source_resolver.cpp
-        src/modules/engine_manager.cpp
-        src/modules/codex_ultimate.cpp
+        # RAWRXD_CLI_SOURCE_CLOSURE_001: the following five entries were named by
+        # this target and do not exist in the tree. CMake treats a missing source
+        # in add_executable() as a hard GENERATE error, so `RAWRXD_BUILD_CLI=ON`
+        # could not configure at all -- which is why no shipping CLI binary was
+        # ever produced from this block. Each is recorded here rather than deleted
+        # so the gap stays visible: a build file that quietly forgets a file is
+        # indistinguishable from one that never intended it.
+        #   src/win32app/HeadlessIDE_FileAliases.cpp  (never written)
+        #   src/rawrxd_link_stubs.cpp                  (real file is src/core/link_stubs.cpp, already listed)
+        #   src/modules/engine_manager.cpp             (src/modules holds 2 headers only)
+        #   src/modules/codex_ultimate.cpp             (src/modules holds 2 headers only)
+        #   src/lsp/RawrXD_LSPServer.cpp               (LSP server is src/win32app/Win32IDE_LSPServer.cpp, not headless-linkable)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # Missing utilities required by agentic stack
         # AUTO-REMOVED: stub file
-        src/config/IDEConfig.cpp
+        src/config/ide_project_config.cpp
         # AUTO-REMOVED: stub file
         # HeadlessIDE agentic dependencies
         # AUTO-REMOVED: stub file
         src/core/chain_of_thought_engine.cpp
-        src/lsp/RawrXD_LSPServer.cpp
+        # (was: src/lsp/RawrXD_LSPServer.cpp -- absent)
         # Missing implementations for unresolved externals
         # AUTO-REMOVED: stub file
         src/core/enterprise_telemetry_compliance.cpp
@@ -576,6 +638,19 @@ if(RAWRXD_BUILD_CLI)
     # =============================================================================
     # RawrXD Serve +�-�+�-�+�-� Ollama-compatible HTTP server with shared model runtime
     # =============================================================================
+    # RAWRXD_SERVE_NOT_BUILT_001
+    #
+    # src/serve/ contains exactly one file, and that file is `int main(){return
+    # 0;}`. Every source this target names below was never written. Declaring the
+    # target anyway made `add_executable` a hard GENERATE error, so
+    # `RAWRXD_BUILD_CLI=ON` could not configure -- and an unwritable build graph is
+    # how the whole CLI surface stayed unreachable, not just this server.
+    #
+    # The target is therefore declared only when its primary implementation
+    # exists, and its absence is reported at STATUS level rather than passed over.
+    # A configure that prints "NOT CONFIGURED: sources absent" cannot be mistaken
+    # for one that built a server.
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/serve/rawrxd_serve.cpp")
     add_executable(rawrxd-serve
         src/serve/rawrxd_serve_main.cpp
         src/serve/rawrxd_serve.cpp
@@ -609,13 +684,13 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/memory/WorkingSetPredictor.cpp
         src/gpu_enforcement.cpp
     )
-    set_target_properties(rawrxd-cli-full-serve PROPERTIES
+    set_target_properties(rawrxd-serve PROPERTIES
         EXCLUDE_FROM_ALL TRUE
         EXCLUDE_FROM_DEFAULT_BUILD TRUE
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
-    target_include_directories(rawrxd-cli-full-serve PRIVATE
+    target_include_directories(rawrxd-serve PRIVATE
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/inference
@@ -628,14 +703,14 @@ if(RAWRXD_BUILD_CLI)
         ${RAWR_VULKAN_INCLUDE}
     )
     if(MSVC)
-        target_link_directories(rawrxd-cli-full-serve PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        target_link_directories(rawrxd-serve PRIVATE ${_RAWR_MSVC_LIBPATHS})
         foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
             if(EXISTS "${_rawr_lib}")
-                target_link_options(rawrxd-cli-full-serve PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+                target_link_options(rawrxd-serve PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
             endif()
         endforeach()
     endif()
-    target_link_libraries(rawrxd-cli-full-serve PRIVATE
+    target_link_libraries(rawrxd-serve PRIVATE
         InferenceEngine
         httpapi.lib
         ws2_32.lib
@@ -660,6 +735,11 @@ if(RAWRXD_BUILD_CLI)
         set_property(TARGET rawrxd-serve APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
     endif()
     message(STATUS "rawrxd-serve: Ollama-compatible HTTP server target configured")
+    else()
+        message(STATUS "rawrxd-serve: NOT CONFIGURED -- src/serve/ holds only "
+                       "rawrxd_serve_main.cpp (int main(){return 0;}); the 6 "
+                       "sources this target names were never written")
+    endif()
 
     # =============================================================================
     # BP1 Triple-Braid Smoke Test
@@ -744,40 +824,15 @@ if(RAWRXD_BUILD_CLI)
         endif()
         message(STATUS "vulkan_compute_diagnostic: Vulkan compute diagnostic test configured")
 
-        # =====================================================================
         # RAWRXD_Q4K_GEMV_PARITY_001
-        # Isolated Q4_K/Q6_K GEMV parity gate. Links the REAL
-        # InferenceEngine.lib (the same object code rawrxd executes) so the
-        # harness cannot accidentally prove a different build of
-        # VulkanCompute than the one the model uses.
-        # =====================================================================
-        add_executable(q4k_gemv_parity
-            tools/q4k_gemv_parity.cpp
-        )
-        set_target_properties(q4k_gemv_parity PROPERTIES
-            EXCLUDE_FROM_ALL TRUE
-            EXCLUDE_FROM_DEFAULT_BUILD TRUE
-            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        )
-        target_include_directories(q4k_gemv_parity PRIVATE
-            ${CMAKE_SOURCE_DIR}/src
-            ${RAWR_VULKAN_INCLUDE}
-        )
-        target_link_libraries(q4k_gemv_parity PRIVATE
-            ${RAWR_VULKAN_LIB}
-            ${CMAKE_BINARY_DIR}/Release/InferenceEngine.lib
-            kernel32.lib user32.lib gdi32.lib
-        )
-        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-            set_property(TARGET q4k_gemv_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
-        endif()
-        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
-            set_property(TARGET q4k_gemv_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
-        endif()
-        if(DEFINED _MSVC_ROOT)
-            set_property(TARGET q4k_gemv_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
-        endif()
-        message(STATUS "q4k_gemv_parity: Q4_K GEMV parity gate configured")
+        # NOTE: this target is NOT defined here. It used to be, identically to the
+        # top-level definition further down this file, which made
+        # `add_executable(q4k_gemv_parity)` a duplicate-target CMake ERROR the
+        # moment RAWRXD_BUILD_CLI=ON -- so enabling the CLI aborted configuration
+        # before a single target was generated. The single remaining definition
+        # is the top-level one, which is strictly better placed: it is reachable
+        # with the CLI OFF and with no GPU SDK configured, so the parity gate
+        # cannot be made unreachable by an unrelated build option.
 
         # =====================================================================
         # Vulkan Tensor Upload + Readback Verification Test
@@ -2569,7 +2624,7 @@ set(SOURCES
     src/core/rawrxd_subsystem_api.cpp
 
     # IDEConfig +�-�+�-�+�-� required by OrchestratorBridge
-    src/config/IDEConfig.cpp
+    src/config/ide_project_config.cpp
 
     # Disk recovery ASM agent + tool handler +�-�+�-�+�-� required by ToolRegistry
     src/agentic/DiskRecoveryAgent.cpp
@@ -2879,6 +2934,16 @@ set(SOURCES
 
     # Phase 16: Semantic Code Intelligence +�-�+�-�+�-� Cross-refs, type inference, indexing
     src/core/semantic_code_intelligence.cpp
+    # RAWRXD_REPOSITORY_INTELLIGENCE_001. buildFileIndex() in the TU above used
+    # to increment a counter and report 100% completion without parsing
+    # anything, which left goToDefinition, findAllReferences, getCallersOf,
+    # getCallChain, getCompletions and getHoverInfo permanently empty. It now
+    # parses with the certified structural analyzer, so that analyzer has to be
+    # in this target. Compiled in directly rather than linked from
+    # rawrxd_repo_intel: this target must not acquire a second copy of the
+    # same symbols.
+    src/repointel/ScopeTree.cpp
+    src/repointel/RepositoryUniverse.cpp
 
     # Phase 17: Enterprise Telemetry & Compliance +�-�+�-�+�-� OTLP tracing, audit, GDPR
     src/core/enterprise_telemetry_compliance.cpp
@@ -4717,6 +4782,12 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/Deep2Engine_VulkanRuntime.cpp
     src/deep2/Deep2DualGpuRowSplit.cpp
     src/deep2/Deep2Engine_GpuMoEMLA.cpp
+    # RAWRXD_MLA_LOAD_AUTHORITY_001 (M5d): the MLA metadata binder
+    # (q_lora_rank / kv_lora_rank / useMLA derivation) existed only as
+    # uncompiled source while the engine's own MLA fields were never populated
+    # by any live loader. Compiled here so the loader can bind it instead of
+    # re-deriving the same rule in a second place.
+    src/deep2/Deep2B66RuntimeMeta.cpp
     src/deep2/Deep2Engine_GpuForward.cpp
     # AUTO-REMOVED: stub file
     src/deep2/Deep2Engine_SsVkDecodeBind.cpp
@@ -5233,6 +5304,13 @@ endif()
 # Entry: main_win32.cpp (WinMain) so full IDE createWindow/showWindow/layout and all modules run.
 # Previously entry_point.cpp (wWinMain) created a minimal window and could leave it hidden (nCmdShow=SW_HIDE).
 if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
+    # RAWRXD_P1_REFACTOR_CHAIN_001 -- the authority behind the nine chain
+    # commands. It is its own variable because the certification target links it
+    # without the rest of the IDE, and because the two lists must not drift:
+    # RefactorChainIdeSurface.cpp is what the COMMAND_TABLE pointers resolve to
+    # inside the IDE, and RefactorChain.cpp is what those handlers call.
+    set(RAWRXD_REFACTOR_CHAIN_SOURCES
+        src/refactor/RefactorChain.cpp)
     set(WIN32IDE_SOURCES
         src/win32app/main_win32.cpp
         src/win32app/ide_inference_gate.cpp
@@ -5437,7 +5515,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_HandleExtensionCommand.cpp
 
         # Configuration management
-        src/config/IDEConfig.cpp
+        src/config/ide_project_config.cpp
 
         # LLM adapter + Auth (Win32/STL only; Ship/StdReplacements.hpp + Ship/RawrCompatIo.hpp when needed)
         # AUTO-REMOVED: stub file
@@ -5797,6 +5875,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/feature_handlers.cpp  # EXCLUDED: requires missing headers (GGUFServerHotpatch, AgenticFailureDetector, AgenticPuppeteer, etc.)
         src/core/gold_command_providers.cpp
         src/core/win32ide_handler_impls.cpp
+        # RAWRXD_P1_REFACTOR_CHAIN_001: real bodies for the nine chain commands.
+        # The COMMAND_TABLE pointers for lsp.gotoDef, lsp.findRefs, lsp.rename,
+        # lsp.diagnostics and lsp.symbolInfo resolved to unconditional-success
+        # stubs in win32ide_handler_impls.cpp; this TU is what they now resolve
+        # to, and it adds the four chain commands that had no table entry at all.
+        src/refactor/RefactorChainIdeSurface.cpp
+        ${RAWRXD_REFACTOR_CHAIN_SOURCES}
         # auto_feature_registry excluded for Win32 IDE + use ssot_handlers (lightweight stubs)
         src/core/intent_engine.cpp
         src/core/model_training_pipeline.cpp
@@ -5936,6 +6021,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Phase 16: Semantic Code Intelligence
         src/core/semantic_code_intelligence.cpp
         src/win32app/Win32IDE_SemanticPanel.cpp
+        # RAWRXD_REPOSITORY_INTELLIGENCE_001 - see the note at the RawrEngine
+        # binding above. buildFileIndex() delegates to the certified analyzer,
+        # so both targets that compile it need the analyzer.
+        src/repointel/ScopeTree.cpp
+        src/repointel/RepositoryUniverse.cpp
 
         # Phase 17: Enterprise Telemetry & Compliance
         src/core/enterprise_telemetry_compliance.cpp
@@ -7069,6 +7159,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/asm/Code_Pattern_Reconstructor.asm)
     list(APPEND WIN32IDE_SOURCES src/closure/RawrXDAutoClosure.cpp)
     rawrxd_filter_missing_sources(WIN32IDE_SOURCES)
+# RAWRXD_SOURCE_CLOSURE_PREREQ_GATE_001: reaching this line is the proof that
+# the IDE source domain was actually assembled and examined. The closure
+# summary reads this flag, so a configure that never built the IDE cannot
+# report zero drops as a completed closure. Set only here, not at the summary.
+set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
     rawrxd_filter_missing_sources(_WIN32IDE_ASM)
     # BATCH N2: real C implementation TUs (see _n2_final_classification_receipt.md)
     list(APPEND WIN32IDE_SOURCES src/core/runtime_symbol_bridge.cpp)
@@ -7087,6 +7182,16 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # BATCH B (W3): AgentOllamaClient real implementation TU (replaces the
     # 24B stub from all git history; WinHTTP client, fail-closed timeouts).
     list(APPEND WIN32IDE_SOURCES src/agentic/AgentOllamaClient.cpp)
+    # RAWRXD_GIT_SAFETY_AUTHORITY_001: the git safety gate and its installer
+    # for the IDE registry. main_win32.cpp calls InstallGitSafetyIdeSurface and
+    # Win32IDE_GitPanel.cpp calls BindGitSafetySession, so without these TUs
+    # the shipping IDE would not link and the chat panel would have no git
+    # tools. Defaults are deny: the tools are registered, and every mutating
+    # call refuses until RAWRXD_GIT_ROOT / RAWRXD_GIT_SCOPE / RAWRXD_GIT_ALLOW_*
+    # are set.
+    list(APPEND WIN32IDE_SOURCES src/agentic/GitSafetyAuthority.cpp)
+    list(APPEND WIN32IDE_SOURCES src/agentic/GitSafetyAuthorityTools.cpp)
+    list(APPEND WIN32IDE_SOURCES src/agentic/GitSafetyAuthorityIdeSurface.cpp)
     # RAWRXD_STUB_RECONCILIATION_001 / BATCH_N: WIRED_FIX, zero source changes.
     # src/deep2/ReceiptAuthority.cpp defines rawrxd::receipt::beginImmutableGate,
     # writeImmutableKeyValue, writeImmutableKeyValueInt and endImmutableGate.
@@ -7156,6 +7261,59 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # accounting + honest callbacks; prior file was a 2-byte scaffold) and
     # the real AgenticTaskGraph (77KB TU, previously commented out).
     list(APPEND WIN32IDE_SOURCES src/runtime/memory/TransferScheduler.cpp)
+    # RAWRXD_REPOSITORY_INTELLIGENCE_001
+    # The IDE's own language-server workspace used to be four hardcoded
+    # directories under a 1600-file cap (ssot_handlers.cpp:1366). It now goes
+    # through the one whole-repository universe implementation, so the scope the
+    # IDE searches is the scope the repository actually has, and any exclusion
+    # is counted rather than silent.
+    list(APPEND WIN32IDE_SOURCES
+        src/repointel/RepositoryUniverse.cpp
+        src/repointel/ScopeTree.cpp
+        src/repointel/RepositoryIntelligence.cpp
+    )
+    # RAWRXD_WORKSPACE_IDE_BINDING_001
+    # workspace_model.cpp is the multi-root workspace model: a WorkspaceConfig
+    # with a vector of WorkspaceFolder (path, name, isRoot), plus .rawrxd/
+    # workspace.json load/save. It was 481 lines of real implementation in zero
+    # build targets, so multi-root workspace existed as source and nowhere else,
+    # and the IDE's explorer was single-root by construction because nothing
+    # linked it. Adding it here is what makes the workspace path a product path.
+    #
+    # Its load() also carried the worst stub in the tree -- it opened the file,
+    # printed "Loaded workspace config", and returned false with
+    # "// Would parse JSON here", so initialize() took the default branch and
+    # overwrote real multi-root documents with single-folder ones every run.
+    # That is fixed in place and runtime-proven by tools/workspace_load_driver.
+    list(APPEND WIN32IDE_SOURCES src/core/workspace_model.cpp)
+    # RAWRXD_INTEGRATION_TRANCHE_001
+    #
+    # Four capabilities that existed as source islands, or not at all, and are now
+    # in the product target:
+    #
+    #   task_config_bridge.cpp  compiles src/core/task_system.hpp, a 1190-line
+    #       TaskRunner with real process execution, problem matching and
+    #       dependency resolution, which was in zero targets with zero includers.
+    #       Its loadConfig/saveConfig were the two // TODO: Parse JSON/YAML
+    #       stubs that made the capability look ABSENT rather than orphaned.
+    #
+    #   launch_config.cpp       the launch-configuration authority. A repo-wide
+    #       search for launch.json / LaunchConfig / launchConfig returned zero
+    #       matches, so this was genuinely absent rather than misfiled. It reads a
+    #       .vscode/launch.json-shaped document.
+    #
+    #   core/file_watcher.cpp   compiled only after core/file_watcher.h was
+    #       written; the .cpp included a header that exists nowhere in the tree,
+    #       so it could never have compiled before.
+    #
+    #   ide_project_config.cpp  replaces the 909-byte empty object that
+    #       src/config/IDEConfig.cpp compiled to. All three CMake references to the
+    #       stub were repointed at this file.
+    list(APPEND WIN32IDE_SOURCES
+        src/core/task_config_bridge.cpp
+        src/win32app/launch_config.cpp
+        src/core/file_watcher.cpp
+    )
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     # BATCH N2: /FS prevents C1041 PDB contention under parallel builds
     target_compile_options(RawrXD-Win32IDE PRIVATE "/FS")
@@ -10239,7 +10397,25 @@ endif()
 
 # RAWRXD_RUN_MODELNAME_001 +�-�-� Ollama-style `rawr run <alias>` front door (Deep2).
 option(BUILD_RAWRXD_RUN_MODELNAME_001 "Build RAWRXD_RUN_MODELNAME_001 + rawr CLI" OFF)
-if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
+# RAWRXD_CLI_REACHABILITY_001
+#
+# `rawr` is the shipping agentic CLI: it owns `rawr dump` (the model-truth
+# command), the agent-mode registry, the receipt authority, the gate verifier and
+# `rawr repo`. It was declared here behind `BUILD_RAWRXD_RUN_MODELNAME_001`,
+# whose default is OFF and whose name refers to a DIFFERENT feature -- a single
+# deep2 model-name entry point that is separately declared just above.
+#
+# The consequence was that enabling the CLI (`RAWRXD_BUILD_CLI=ON`) produced
+# `rawr-server`, `rawrxd-cli-full` and `rawrxd-serve` but NOT `rawr`, so the whole
+# model-truth and agent-mode surface was unreachable from the product and could
+# not be exercised by any surface-level certification. A capability that exists,
+# compiles, and is unreachable is the dominant classification in this tree; this
+# is one instance of it, and the instance that hid an entire CLI.
+#
+# Reachability is now tied to the CLI option, with the original option retained
+# so the deep2 model-name target is still buildable on its own.
+if((BUILD_RAWRXD_RUN_MODELNAME_001 OR RAWRXD_BUILD_CLI) AND TARGET InferenceEngine)
+
     add_executable(rawrxd_run_modelname_001
         src/deep2/rawrxd_run_modelname_001.cpp)
     target_link_libraries(rawrxd_run_modelname_001 PRIVATE InferenceEngine dxgi)
@@ -10277,9 +10453,18 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         src/agentmodes/RawrGateVerifier.cpp
         src/agentmodes/RawrCertAuthority.cpp
         src/agentmodes/RawrFailureLedger.cpp
-        src/agentmodes/RawrModesCli.cpp)
+        src/agentmodes/RawrModesCli.cpp
+        # RAWRXD_REPOSITORY_INTELLIGENCE_001 — the `rawr repo` surface, so the
+        # whole-repository index is reachable from the shipping agentic CLI and
+        # is not a test-only island. Compiled in directly rather than linked
+        # from rawrxd_repo_intel: this target already owns the agent-mode
+        # authorities, and linking a second copy of those would be a duplicate
+        # symbol error.
+        src/repointel/RepositoryUniverse.cpp
+        src/repointel/ScopeTree.cpp
+        src/repointel/RepositoryIntelligence.cpp
+        src/repointel/RepoIntelCli.cpp)
     target_link_libraries(rawr PRIVATE InferenceEngine dxgi)
-    endif()
     if(MSVC)
         target_compile_options(rawr PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10291,6 +10476,7 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME rawr
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 
 # RAWRXD_TPS_TARGET_RESTORE_001
 #
@@ -10402,7 +10588,15 @@ add_executable(rawr-server
       #   rawrxd::ckpt::sha256Hex
       #   rawrxd::ckpt::Transaction::WriteFile
       #   rawrxd::ckpt::Transaction::RecordCommand
-      src/agentic/CheckpointRollbackAuthority.cpp)
+      src/agentic/CheckpointRollbackAuthority.cpp
+      # RAWRXD_GIT_SAFETY_AUTHORITY_001: the twelve certified git capabilities.
+      # deep2_openai_server.cpp calls InstallGitSafetyFromEnvironment so that
+      # /api/agent/execute-tool and /api/cli dispatch through the gate rather
+      # than having no git authority at all. GitSafetyAuthorityIdeSurface is
+      # deliberately NOT added here: it includes the IDE registry header, and
+      # the server has no IDE.
+      src/agentic/GitSafetyAuthority.cpp
+      src/agentic/GitSafetyAuthorityTools.cpp)
   # src/core/ToolRegistry.cpp is deliberately NOT added. It is the legacy
   # direct-process registry and refuses to compile without
   # RAWRXD_LEGACY_TOOL_REGISTRY_ALLOWED:
@@ -17094,6 +17288,40 @@ set_target_properties(rawrxd_single_writer PROPERTIES
 add_executable(ckpt_rollback_crash_cert
     tools/ckpt_rollback_crash_cert.cpp)
 
+# RAWRXD_GPU_DLWVECTOR_CONTRACT_AUDIT_001: runtime confirmation that the
+# upload/download contract is an ELEMENT count, measured on a real Vulkan
+# device. Certifies the mechanism behind vulkan_compute.cpp:3987 without
+# requiring an MLA model.
+add_executable(mla_upload_contract_cert
+    tools/mla_upload_contract_cert.cpp)
+target_link_libraries(mla_upload_contract_cert PRIVATE InferenceEngine)
+target_include_directories(mla_upload_contract_cert PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(mla_upload_contract_cert PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+endif()
+set_target_properties(mla_upload_contract_cert PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME mla_upload_contract_cert
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# RAWRXD_GPU_DLWVECTOR_CONTRACT_AUDIT_001: the last unobserved link -- one real
+# forward on an MLA model, reporting the ForwardResult verbatim.
+add_executable(mla_forward_chain_cert
+    tools/mla_forward_chain_cert.cpp)
+target_link_libraries(mla_forward_chain_cert PRIVATE InferenceEngine)
+target_include_directories(mla_forward_chain_cert PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(mla_forward_chain_cert PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+endif()
+set_target_properties(mla_forward_chain_cert PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME mla_forward_chain_cert
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 target_link_libraries(ckpt_rollback_crash_cert PRIVATE InferenceEngine)
 target_include_directories(ckpt_rollback_crash_cert PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
@@ -17398,6 +17626,84 @@ else()
 endif()
 
 # ============================================================================
+# RAWRXD_INFERENCE_AUTHORITY_LADDER_WIRING_001
+#
+# inference_authority_ladder.cpp exists at the repository root and is the ONLY
+# harness in the tree that walks the canonical production path one gate at a
+# time:
+#
+#   G1 MODEL_LOAD  G2 TOKENIZATION  G3 FORWARD_EXECUTION  G4 NUMERICAL_CORRECTNESS
+#   G5 SAMPLING_CORRECTNESS  G6 TOKEN_STREAMING  G7 IDE_DELIVERY  G8 PERFORMANCE
+#
+# and, via Deep2Engine::enableParityProbe(), the same run emits the 20-point
+# layer/stage checkpoint grid (Embed, AttnNorm, Q, K, V, ... FinalNorm, Logits)
+# that localises the FIRST CPU<->GPU divergence rather than the last one.
+#
+# It was NOT referenced by this file. A source that no target names cannot be
+# compiled, cannot be linked, and therefore cannot produce a receipt, so both
+# the inference ladder and the per-operator parity probe were UNMEASURABLE
+# regardless of how correct the engine underneath them happened to be.
+# "Real but unadopted" is the same defect class as the 225 dropped sources, and
+# it is fixed the same way: by naming it.
+#
+# Deliberately NOT gated on RAWR_ENABLE_VULKAN. The CPU route is the reference
+# the GPU route is compared against, so a build tree without a GPU must still be
+# able to produce the reference half of the comparison. The Vulkan link is added
+# only when the SDK is present.
+#
+# Win32IDE_ChatPanel.cpp is linked because G7 must drive the SAME store the IDE
+# paints from. Proving delivery against a private copy of the message list would
+# prove a second, parallel transport that no user ever sees.
+# ============================================================================
+if(EXISTS "${CMAKE_BINARY_DIR}/Release/InferenceEngine.lib")
+    add_executable(inference_authority_ladder
+        inference_authority_ladder.cpp
+        src/win32app/Win32IDE_ChatPanel.cpp
+        # Win32IDE_Core.cpp supplies IDECore_UIFont(), which ChatPaint() calls.
+        # ChatPanel.cpp cannot be linked without it even though this harness
+        # never opens a window: the store and the painter are one TU.
+        src/win32app/Win32IDE_Core.cpp
+    )
+    set_target_properties(inference_authority_ladder PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(inference_authority_ladder PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${RAWR_VULKAN_INCLUDE}
+    )
+    # Link the CMake TARGET, not the raw .lib path. A path carries no transitive
+    # interface, so naming ${CMAKE_BINARY_DIR}/Release/InferenceEngine.lib
+    # silently dropped InferenceEngine's PUBLIC dependency on rawrxd_remote64 --
+    # and with it bcrypt/ws2_32/gdi32/user32/ntdll -- producing four LNK2019s for
+    # Deep2Engine::initialize. The `rawr` product binary links the target and is
+    # the precedent.
+    target_link_libraries(inference_authority_ladder PRIVATE
+        InferenceEngine
+        dxgi
+        kernel32.lib user32.lib gdi32.lib
+    )
+    if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_LIB)
+        target_link_libraries(inference_authority_ladder PRIVATE ${RAWR_VULKAN_LIB})
+        set_property(TARGET inference_authority_ladder APPEND_STRING
+            PROPERTY LINK_FLAGS " /LIBPATH:\"${RAWR_VULKAN_SDK_ROOT}/lib\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET inference_authority_ladder APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET inference_authority_ladder APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET inference_authority_ladder APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "inference_authority_ladder: canonical inference ladder + parity probe CONFIGURED")
+else()
+    message(STATUS "inference_authority_ladder: SKIPPED (needs a built InferenceEngine.lib)")
+endif()
+
+# ============================================================================
 # RAWRXD_B65_Q3K_BLOCK_DIFF_001
 # Host-only differential gate for Q3_K dequant. Top level on purpose: this is
 # the authority that decides whether a Q3_K shader transcription is correct,
@@ -17517,6 +17823,114 @@ message(STATUS "kquant_parity: CONFIGURED (AVX-512 Q4_K GEMV parity oracle)")
 message(STATUS "thread_geometry_probe: CONFIGURED")
 
 # ============================================================================
+# RAWRXD_REPOSITORY_INTELLIGENCE_001
+#
+# The whole-repository index. It exists because discovery in this repository
+# kept being scoped to a handful of directories and then reported what it did
+# not look at as ABSENT. The concrete instance that motivated it:
+#
+#   src/core/ssot_handlers.cpp:1366  collectDefaultLspSearchFiles()
+#       const std::array<const char*, 4> roots = {"src","include","tests","test"};
+#       collectLspSearchFilesRecursive(root, files, 1600);
+#
+# Four hardcoded roots under a 1600-file cap, against a repository the audit
+# itself measured at 1968 implementation files. Enumeration is alphabetical and
+# recurses in place, so the cap truncated the TAIL of src/ — reverse_engineering,
+# runtime, serve, tokenizer, win32app — and nothing recorded that it had.
+#
+# Three properties here are structural, not conventions:
+#
+#   1. The root is resolved from the filesystem (nearest ancestor CMakeLists),
+#      never assumed to be a list of directory names.
+#   2. Every excluded tree is still enumerated and its file and byte counts are
+#      recorded, so "found nothing" is distinguishable from "never looked".
+#   3. claimAbsence() REFUSES to certify an absence when the universe was
+#      narrowed or truncated. A narrowed scope cannot produce a false absence
+#      because it cannot produce an absence claim at all.
+#
+# These sources depend on Win32 and the standard library only. They are not
+# stubs: tools/repo_intelligence_cert.cpp runs them against this repository and
+# writes audit/RAWRXD_REPOSITORY_INTELLIGENCE_001/RECEIPT.txt.
+# ============================================================================
+add_library(rawrxd_repo_intel STATIC
+    src/repointel/RepositoryUniverse.cpp
+    src/repointel/ScopeTree.cpp
+    src/repointel/RepositoryIntelligence.cpp
+    src/repointel/RepoIntelCli.cpp
+)
+
+target_include_directories(rawrxd_repo_intel PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include)
+
+if(MSVC)
+    target_compile_features(rawrxd_repo_intel PUBLIC cxx_std_20)
+    # The certificate harness calls GetProcessMemoryInfo to report the measured
+    # working set, so psapi is a real link dependency rather than a guess.
+    target_link_libraries(rawrxd_repo_intel PUBLIC psapi)
+endif()
+
+set_target_properties(rawrxd_repo_intel PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+message(STATUS "rawrxd_repo_intel: CONFIGURED (RAWRXD_REPOSITORY_INTELLIGENCE_001)")
+
+# The certification harness. It measures the authority against this repository
+# and derives its verdict from the measurements; it never reads a constant for
+# a result. Its output is the receipt named above.
+add_executable(repo_intelligence_cert EXCLUDE_FROM_ALL
+    tools/repo_intelligence_cert.cpp
+)
+target_link_libraries(repo_intelligence_cert PRIVATE rawrxd_repo_intel)
+target_compile_features(repo_intelligence_cert PRIVATE cxx_std_20)
+set_target_properties(repo_intelligence_cert PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+)
+if(BUILD_TESTING)
+    add_test(NAME repo_intelligence_cert
+        COMMAND repo_intelligence_cert
+            --root ${CMAKE_SOURCE_DIR}
+            --out ${CMAKE_SOURCE_DIR}/audit/RAWRXD_REPOSITORY_INTELLIGENCE_001/RECEIPT.txt
+            --cache ${CMAKE_BINARY_DIR}/repo_intel_cache)
+endif()
+message(STATUS "repo_intelligence_cert: CONFIGURED (repository intelligence receipt)")
+
+# RAWRXD_REPOSITORY_INTELLIGENCE_001_SEMANTIC_SURFACE
+#
+# SemanticCodeIntelligence's query surface was hollow. buildFileIndex() in
+# src/core/semantic_code_intelligence.cpp incremented filesIndexed and fired a
+# 100% completion callback without parsing anything, and indexFile() returned
+# PatchResult::ok("File indexed") unconditionally -- so goToDefinition,
+# findAllReferences, getCallersOf, getCalleesOf, getCallChain, getCompletions,
+# getHoverInfo, searchSymbols and getSymbolsInFile all returned empty forever,
+# and a path that did not exist was reported as indexed. It now parses with the
+# same certified analyzer and propagates its real result.
+#
+# This driver indexes real files from this repository and then asks the queries
+# real questions, so the gate fails if the surface ever goes hollow again.
+add_executable(semantic_code_intelligence_cert EXCLUDE_FROM_ALL
+    tools/semantic_code_intelligence_cert.cpp
+    src/core/semantic_code_intelligence.cpp
+    src/repointel/ScopeTree.cpp
+    src/repointel/RepositoryUniverse.cpp
+)
+target_include_directories(semantic_code_intelligence_cert PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_compile_features(semantic_code_intelligence_cert PRIVATE cxx_std_20)
+set_target_properties(semantic_code_intelligence_cert PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+)
+if(BUILD_TESTING)
+    add_test(NAME semantic_code_intelligence_cert
+        COMMAND semantic_code_intelligence_cert ${CMAKE_SOURCE_DIR})
+endif()
+message(STATUS "semantic_code_intelligence_cert: CONFIGURED (query surface gate)")
+
+# ============================================================================
 # RAWRXD_GIT_SAFETY_AUTHORITY_001
 #
 # Git was implemented (src/core/feature_handlers.cpp shells out to _popen;
@@ -17543,6 +17957,7 @@ message(STATUS "thread_geometry_probe: CONFIGURED")
 add_library(rawrxd_git_safety STATIC
     src/agentic/GitSafetyAuthority.cpp
     src/agentic/GitSafetyAuthorityTools.cpp
+    src/agentic/GitSafetyAuthorityIdeSurface.cpp
     src/agentic/CommandExecutor.cpp
     src/agentic/AgentToolRegistry.cpp
     # AgentToolRegistry.cpp calls rawrxd::ckpt::Transaction (write_file and
@@ -17551,6 +17966,12 @@ add_library(rawrxd_git_safety STATIC
     # AgentToolRegistry.cpp also compiled this one by coincidence of list
     # membership.
     src/agentic/CheckpointRollbackAuthority.cpp
+    # The IDE registry header defines g_agentToolInvocations and its siblings as
+    # inline-able globals, so including the header is not enough: the defining TU
+    # must be linked or AgentToolRegistry::invoke() is an unresolved external.
+    # GitSafetyAuthorityIdeSurface.cpp is the first target in this tree to link
+    # the IDE registry without also linking the whole IDE.
+    src/deep2/AgentToolAuthority.cpp
     src/deep2/ReceiptAuthority.cpp)
 
 target_include_directories(rawrxd_git_safety PUBLIC
@@ -17576,6 +17997,49 @@ target_link_libraries(git_safety_authority_cert PRIVATE
 set_target_properties(git_safety_authority_cert PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     OUTPUT_NAME git_safety_authority_cert)
+
+# RAWRXD_GIT_SAFETY_AUTHORITY_001 — build seal.
+#
+# A failed build leaves the PREVIOUS executable in place. It still runs, it still
+# prints a plausible CHECKS_TOTAL and VERDICT, and it can therefore certify
+# source that was never linked. That happened during this work.
+#
+# POST_BUILD is the structural fix: the seal is written ONLY when a link
+# succeeded, so the seal's existence is the evidence of a successful build. The
+# driver hashes its own executable before producing any verdict and refuses with
+# RUNTIME_CERTIFICATION=NO_VERDICT when the hash does not match the sealed one.
+#
+# The seal also carries a SHA-256 per source file this gate depends on, so "the
+# tree moved after the link" becomes detectable instead of assumed away.
+set(RAWRXD_GIT_SAFETY_SEAL_SOURCES
+    src/agentic/GitSafetyAuthority.h
+    src/agentic/GitSafetyAuthority.cpp
+    src/agentic/GitSafetyAuthorityTools.h
+    src/agentic/GitSafetyAuthorityTools.cpp
+    src/agentic/GitSafetyAuthorityIdeSurface.cpp
+    src/agentic/CommandExecutor.h
+    src/agentic/CommandExecutor.cpp
+    src/agentic/AgentToolRegistry.cpp
+    src/agentic/CheckpointRollbackAuthority.cpp
+    include/agentic/AgentToolRegistry.h
+    src/deep2/AgentToolRegistry.hpp
+    src/deep2/AgentToolAuthority.cpp
+    src/deep2/ReceiptAuthority.h
+    src/deep2/ReceiptAuthority.cpp
+    tools/git_safety_authority_cert.cpp
+    CMakeLists.txt)
+
+string(REPLACE ";" "\n" _RAWRXD_GIT_SAFETY_SEAL_FILES "${RAWRXD_GIT_SAFETY_SEAL_SOURCES}")
+
+add_custom_command(TARGET git_safety_authority_cert POST_BUILD
+    COMMAND powershell -NoProfile -ExecutionPolicy Bypass
+            -File "${CMAKE_SOURCE_DIR}/tools/git_safety_seal.ps1"
+            -BinaryPath "$<TARGET_FILE:git_safety_authority_cert>"
+            -SealPath "$<TARGET_FILE:git_safety_authority_cert>.seal"
+            -GateName "RAWRXD_GIT_SAFETY_AUTHORITY_001"
+            -Config "$<CONFIG>"
+            -RepoRoot "${CMAKE_SOURCE_DIR}"
+    COMMENT "RAWRXD_GIT_SAFETY_AUTHORITY_001: sealing binary identity")
 
 # Registered with ctest so the certification is reachable from the canonical
 # root. The IDE audit recorded `Total Tests: 0` as a structural defect; a
@@ -17613,19 +18077,186 @@ message(STATUS "RAWRXD_GIT_SAFETY_AUTHORITY_001: CONFIGURED "
 if(NOT DEFINED RAWRXD_DROPPED_SOURCE_COUNT)
     set(RAWRXD_DROPPED_SOURCE_COUNT 0)
 endif()
-message(STATUS "RAWRXD_DROPPED_SOURCE_TOTAL=${RAWRXD_DROPPED_SOURCE_COUNT}")
-if(RAWRXD_DROPPED_SOURCE_COUNT GREATER 0)
+
+# RAWRXD_SOURCE_CLOSURE_PREREQ_GATE_001
+#
+# A total of zero is a real observation, and it is never falsified here. The
+# defect this gate closes is different and is about the VERDICT, not the count:
+#
+#   RAWRXD_DROPPED_SOURCE_TOTAL=0 was printed when RAWRXD_BUILD_WIN32IDE=OFF,
+#   in which case WIN32IDE_SOURCES is never assembled and the 225-file gap is
+#   never examined. Zero observations about an inactive domain were being
+#   reported as "RAWRXD_SOURCE_CLOSURE=COMPLETE", which reads as a completed
+#   audit of a target that was never configured.
+#
+# The rule is therefore:
+#
+#   zero dropped files AFTER exercising the IDE build   -> may PASS
+#   zero observations because the IDE path was inactive -> must NOT PASS
+#
+# The prerequisite is stated as its own field so that the receipt cannot be
+# read without it. Every field below is computed, never printed as a literal.
+if(NOT DEFINED RAWRXD_IDE_SOURCE_CENSUS_EXECUTED)
+    set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 0)
+endif()
+
+set(_rawrxd_ide_configured 0)
+if(TARGET RawrXD-Win32IDE)
+    set(_rawrxd_ide_configured 1)
+endif()
+
+# Every field is derived from observed state.
+math(EXPR _rawrxd_ide_required          "1")
+set(_rawrxd_ide_census_executed ${RAWRXD_IDE_SOURCE_CENSUS_EXECUTED})
+set(_rawrxd_dropped_total       ${RAWRXD_DROPPED_SOURCE_COUNT})
+
+# MEASUREMENT_VALID requires the subject to have been examined at all. Build
+# attempt/completion is a separate, post-configure fact and is deliberately NOT
+# assumed here; it is carried by the build seal of the shipping target. A
+# configure-time gate can only attest that the domain was observed.
+if(_rawrxd_ide_configured AND _rawrxd_ide_census_executed)
+    set(RAWRXD_DROPPED_SOURCE_MEASUREMENT_VALID 1)
+else()
+    set(RAWRXD_DROPPED_SOURCE_MEASUREMENT_VALID 0)
+endif()
+
+if(NOT RAWRXD_DROPPED_SOURCE_MEASUREMENT_VALID)
+    set(RAWRXD_SOURCE_CLOSURE_VERDICT "FAIL_IDE_NOT_BUILT")
+elseif(_rawrxd_dropped_total GREATER 0)
+    set(RAWRXD_SOURCE_CLOSURE_VERDICT "FAIL_DROPPED_SOURCE")
+else()
+    set(RAWRXD_SOURCE_CLOSURE_VERDICT "PASS")
+endif()
+
+# RAWRXD_IDE_BUILD_ATTEMPTED / RAWRXD_IDE_BUILD_EXIT are NOT printed here.
+# At configure time no build has been attempted, so any value for them would be
+# a literal rather than an observation. The shipping target carries its own
+# POST_BUILD seal (see RAWRXD_GIT_SAFETY_AUTHORITY_001 above) which is written
+# only on a successful link; that, and not this line, is the build evidence.
+set(RAWRXD_IDE_BUILD_ATTEMPTED "not-observable-at-configure-time")
+set(RAWRXD_IDE_BUILD_EXIT      "not-observable-at-configure-time")
+
+message(STATUS "RAWRXD_IDE_REQUIRED=${_rawrxd_ide_required}")
+message(STATUS "RAWRXD_IDE_TARGET_CONFIGURED=${_rawrxd_ide_configured}")
+message(STATUS "RAWRXD_SOURCE_CENSUS_EXECUTED=${_rawrxd_ide_census_executed}")
+message(STATUS "RAWRXD_IDE_BUILD_ATTEMPTED=${RAWRXD_IDE_BUILD_ATTEMPTED}")
+message(STATUS "RAWRXD_IDE_BUILD_EXIT=${RAWRXD_IDE_BUILD_EXIT}")
+message(STATUS "RAWRXD_DROPPED_SOURCE_TOTAL=${_rawrxd_dropped_total}")
+message(STATUS "DROPPED_SOURCE_MEASUREMENT_VALID=${RAWRXD_DROPPED_SOURCE_MEASUREMENT_VALID}")
+message(STATUS "VERDICT=${RAWRXD_SOURCE_CLOSURE_VERDICT}")
+
+if(RAWRXD_SOURCE_CLOSURE_VERDICT STREQUAL "PASS")
+    message(STATUS "RAWRXD_SOURCE_CLOSURE=COMPLETE no referenced source file is missing "
+                   "(IDE domain exercised)")
+elseif(RAWRXD_SOURCE_CLOSURE_VERDICT STREQUAL "FAIL_IDE_NOT_BUILT")
+    # A false pass, corrected. The count below may be zero; the closure claim
+    # is still not established, because nothing was examined.
+    message(WARNING
+        "VERDICT=FAIL_IDE_NOT_BUILT: RAWRXD_IDE_REQUIRED=1 but "
+        "RAWRXD_IDE_TARGET_CONFIGURED=${_rawrxd_ide_configured} and "
+        "RAWRXD_SOURCE_CENSUS_EXECUTED=${_rawrxd_ide_census_executed}. "
+        "RAWRXD_DROPPED_SOURCE_TOTAL=${_rawrxd_dropped_total} is a valid observation "
+        "of a domain that was NOT exercised, so "
+        "DROPPED_SOURCE_MEASUREMENT_VALID=0 and source closure is NOT established. "
+        "Re-configure with -DRAWRXD_BUILD_WIN32IDE=ON to make this measurement real.")
+else()
     if(RAWRXD_STRICT_SOURCES)
         message(STATUS "RAWRXD_STRICT_SOURCES=ON but no drop was fatal -- "
             "every referenced source resolved.")
     else()
         message(WARNING
-            "RAWRXD_DROPPED_SOURCE_TOTAL=${RAWRXD_DROPPED_SOURCE_COUNT}: "
-            "${RAWRXD_DROPPED_SOURCE_COUNT} referenced source file(s) do not exist and were dropped. "
+            "VERDICT=FAIL_DROPPED_SOURCE: RAWRXD_DROPPED_SOURCE_TOTAL=${_rawrxd_dropped_total}: "
+            "${_rawrxd_dropped_total} referenced source file(s) do not exist and were dropped. "
             "Affected targets built with less code than their source lists imply. "
             "Re-run with -DRAWRXD_STRICT_SOURCES=ON to make this a hard configure error "
             "and get the full list of absent paths.")
     endif()
-else()
-    message(STATUS "RAWRXD_SOURCE_CLOSURE=COMPLETE no referenced source file is missing")
 endif()
+
+# ============================================================================
+# RAWRXD_P1_REFACTOR_CHAIN_001
+#
+# The refactoring chain the IDE advertises:
+#
+#     definition -> references -> rename -> symbol search -> workspace symbols
+#     -> diagnostics -> code actions -> format -> extract function
+#
+# What the census found, in the order the evidence forced it:
+#
+#   1. The shipping surface is COMMAND_TABLE in src/core/command_registry.hpp,
+#      auto-registered into SharedFeatureRegistry by
+#      src/core/unified_command_dispatch.cpp. Both are in the IDE link.
+#
+#   2. The pointers that table holds for lsp.gotoDef, lsp.findRefs, lsp.rename,
+#      lsp.diagnostics and lsp.symbolInfo resolved, in that link, to
+#      src/core/win32ide_handler_impls.cpp, where all 376 handler definitions
+#      were `(void)ctx; return CommandResult::ok();`. Those five commands
+#      reported success without doing anything, and the return code is what
+#      every caller and receipt trusts.
+#
+#   3. A second registry of 432 features exists in
+#      src/core/auto_feature_registry.cpp, but its registration function
+#      initAutoFeatureRegistry() has no caller, so a repair made there is never
+#      dispatched. Source presence is not product behaviour.
+#
+#   4. Four chain capabilities had no COMMAND_TABLE entry at all: workspace
+#      symbols, code actions, format, extract function.
+#
+# This block adds the authority, the product binding, and the certification.
+# The certification never reads a constant for a result and never asserts on
+# the fixture being clean; it compares against expectations authored by hand
+# from the fixture text, and it proves semantic preservation by compiling and
+# running the fixture before and after the refactorings and comparing output.
+# ============================================================================
+add_library(rawrxd_refactor_chain STATIC
+    src/refactor/RefactorChain.cpp
+    src/refactor/RefactorChainIdeSurface.cpp
+)
+target_include_directories(rawrxd_refactor_chain PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/include)
+target_compile_features(rawrxd_refactor_chain PUBLIC cxx_std_17)
+set_target_properties(rawrxd_refactor_chain PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# The certification driver.
+#
+# It deliberately does NOT link command_registry.hpp. g_commandRegistry[] holds a
+# function pointer for all 535 COMMAND_TABLE entries, so including that header
+# requires every handler in the repository to link -- which is why the shipping
+# IDE needs several provider TUs, and why a seconds-long certification is not
+# possible with the table in the binary.
+#
+# The product binding is therefore proven from three measurable facts instead,
+# and the driver states which is which:
+#
+#   1. The row in COMMAND_TABLE for each chain command names the implementation.
+#      The driver parses that row out of the same header the IDE compiles and
+#      DISPATCHES THROUGH IT -- it does not call the handlers from a list it
+#      wrote itself.
+#   2. The identifier named in the row is a symbol this binary links and
+#      executes, in RefactorChainIdeSurface.obj.
+#   3. src/refactor/RefactorChainIdeSurface.cpp appears in WIN32IDE_SOURCES, so
+#      the IDE compiles that same translation unit.
+#
+# Together those establish that the IDE's table pointer resolves to the body the
+# driver exercised. What they do NOT establish is the address comparison against
+# win32ide_handler_impls.cpp, which needs the whole table linked; the driver
+# therefore performs that one as a source census instead and says so.
+add_executable(refactor_chain_cert
+    tools/refactor_chain_cert.cpp)
+target_link_libraries(refactor_chain_cert PRIVATE rawrxd_refactor_chain)
+target_compile_features(refactor_chain_cert PRIVATE cxx_std_17)
+set_target_properties(refactor_chain_cert PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME refactor_chain_cert)
+
+add_test(NAME refactor_chain_cert
+         COMMAND refactor_chain_cert
+                 --fixture ${CMAKE_SOURCE_DIR}/audit/RAWRXD_P1_REFACTOR_CHAIN_001/fixture
+                 --out ${CMAKE_SOURCE_DIR}/audit/RAWRXD_P1_REFACTOR_CHAIN_001/RECEIPT.txt
+         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+message(STATUS "RAWRXD_P1_REFACTOR_CHAIN_001: CONFIGURED "
+               "(library rawrxd_refactor_chain, driver refactor_chain_cert)")

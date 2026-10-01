@@ -1,3 +1,203 @@
+
+---
+
+## Ledger — 2026-10-01: RAWRXD_UNBLOCK_LOCK_LEDGER_001 (measured, supersedes the 2026-09-29 block)
+
+The `Corrected Ledger — 2026-09-29` entries below were written against a
+different source identity and had drifted. Every `BLOCKED` / `RETRACTED` /
+`SAFE_TO_*` claim in them was re-resolved against the current tree by command,
+not by reading the old verdict. Full record with per-claim evidence:
+`rawrxd/audit/RAWRXD_UNBLOCK_LOCK_LEDGER_001.md`.
+
+```text
+CLAIMS_AUDITED=18  CLAIMS_STALE=6  CLAIMS_STILL_ACCURATE=9  CLAIMS_NEWLY_MEASURED=3
+RETIRED_FALSE_EVIDENCE=1   DEFECTS_FOUND_AND_FIXED=3   DEFECTS_FOUND_NOT_FIXED=2
+GATES_UNBLOCKED=1   GATES_STILL_BLOCKED=3
+```
+
+### RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001 — retraction upheld, but on new grounds
+
+The retraction was correct. `tests/test_receipt_immutability.cpp` printed 17
+fields as string literals including `VERDICT=PASS` and
+`STRICT_CHAIN_USES_IMMUTABLE_API=1`; nothing computed them, so the test could
+not fail. That test is rewritten. Every field is now an observation and the
+verdict is computed from them:
+
+```cpp
+if (!immutableHolds)        verdict = "FAIL_IMMUTABILITY_BROKEN";   exit 1;
+else if (!adoptionComplete) verdict = "FAIL_ADOPTION_INCOMPLETE";  exit 2;
+else                        verdict = "PASS";                      exit 0;
+```
+
+First honest result this gate has produced:
+
+```text
+IMMUTABILITY_HOLDS=1
+FIRST_RUN_RECEIPT_SHA256_UNCHANGED=1   (hashed before and after run 2, compared)
+SECOND_RUN_CREATED_DISTINCT_RECEIPT=1  INDEX_ENTRIES=2  OVERWRITE_ATTEMPT_BLOCKED=1
+BEGIN_IMMUTABLE_GATE_CALLSITES=2   LEGACY_BEGIN_GATE_CALLSITES=42
+STRICT_CHAIN_USES_IMMUTABLE_API=0  W8_USES_IMMUTABLE_API=1
+VERDICT=FAIL_ADOPTION_INCOMPLETE   EXIT=2
+```
+
+`BEGIN_IMMUTABLE_GATE_CALLSITES=0` was accurate when the retraction was
+written. It is now 2 — W8 is genuinely migrated
+(`src/win32app/W8LifecycleAuthority.cpp:32`, `main_win32.cpp:2795`). The gate
+now fails on *adoption*, which is a measured claim rather than a guess.
+
+Two defects in the new measurement were found and fixed first, both caught only
+because the measurement was cross-checked against source:
+
+- The test conflated the receipt root (`ReceiptAuthority.cpp:73` uses
+  `current_path()/receipts`) with the scan root, so it looked for receipts in
+  the wrong directory and reported immutability broken when it was fine.
+- It excluded function definitions by pattern-matching `"std::string"` on the
+  line, which misclassified the real callsite
+  `std::string runPath = ...beginImmutableGate(gateName);` and reported
+  `W8_USES_IMMUTABLE_API=0` — hiding a completed migration. Exclusion is now by
+  file.
+
+A census that undercounts is worse than one that fails loudly: it converts a
+real finding into silence.
+
+### RAWRXD_STRICT_CERTIFICATION_AUTHORITY_001 — NOT_COMPLETE, and the reason is worse than stated
+
+The old ledger blamed an un-migrated receipt API. Measured: the strict chain
+uses the mutable API at 1 callsite and the immutable at 0. True, but not the
+root cause.
+
+The five verdict flags have **no setters anywhere in the repository**:
+
+```cpp
+static std::atomic<bool> g_sourceGraphPass{false};   // never assigned true
+static std::atomic<bool> g_realLinkPass{false};
+static std::atomic<bool> g_w8Pass{false};
+static std::atomic<bool> g_chatE2EPass{false};
+static std::atomic<bool> g_gpuPass{false};
+```
+
+Each check increments a counter and returns the flag it never sets, so
+`allPass` is false for process lifetime and `endGate` can only ever write
+`HOLD`. The file is in no CMake target and has zero callers outside itself.
+
+```text
+STATUS=NOT_COMPLETE  ROOT_CAUSE=ORPHAN_AUTHORITY
+BUILT=0  CALLERS=0  PASS_SETTERS=0  CAN_REPORT_PASS=0
+```
+
+Migrating its receipt API would be cosmetic. An authority nobody calls and
+that cannot pass does not become a certification by changing its format.
+
+### RAWRXD_SINGLE_WRITER_AUTHORITY_001 — FAIL_RECURRING is stale
+
+`src/authority/SingleWriterAuthority.{h,cpp}` exist and are built as
+`rawrxd_single_writer` (CMakeLists.txt:17207). Adoption is **zero** — the only
+translation unit referencing it is its own.
+
+```text
+STATUS=IMPLEMENTED_BUILT_UNADOPTED   (was FAIL_RECURRING)
+```
+
+`FAIL_RECURRING` described a past runtime race. The present state is
+*unadopted*, which is a different fact. It is still the binding constraint on
+everything downstream, and the census shows why the recovery ladder has not
+moved: the authority it depends on is wired to nothing.
+
+### Recovery ladder, current
+
+```text
+1  [DONE]   false-PASS retraction committed          ACCURATE
+2  [OPEN]   single-writer enforceable               NOT DONE (unadopted)
+3  [DONE]   ReceiptAuthority implementation verified DONE (this session)
+4  [PARTIAL] legacy beginGate -> immutable          W8 done, strict not
+5  [DONE]   immutability regression, measured only   DONE (this session)
+6  [OPEN]   RawrGate against the receipt             NOT DONE
+7  [HELD]   mark IMMUTABILITY=PASS                   WITHHELD (verdict is FAIL)
+8  [PARTIAL] resume W8 provenance                   receipt API migrated
+9  [BLOCKED] GPU                                    blocked by 2 and 4
+```
+
+Step 5 was the one that mattered and had never actually been done — the
+"regression" was a constant.
+
+### GPU_BATCH
+
+```text
+GPU_BATCH=BLOCKED
+BLOCKED_BY=IMMUTABLE_ADOPTION_INCOMPLETE <- SINGLE_WRITER_UNADOPTED
+GPU_EVALUATED=0    (never reached; not a GPU finding)
+```
+
+### SAFE_TO_* — the blanket zero was never true
+
+```text
+SAFE_TO_PROMOTE_POOL_LIFECYCLE       = 1
+SAFE_TO_PROMOTE_BATCH_2              = 1
+SAFE_TO_PROMOTE_RECEIPT_IMMUTABILITY = 0
+SAFE_TO_PROMOTE_STRICT_CERT          = 0
+SAFE_TO_W8_CERTIFY                   = 0
+SAFE_TO_GPU                          = 0
+```
+
+`SAFE_TO_PROMOTE_ANYTHING=0` prevented individually-closed gates from being
+recognised. Per-gate is the honest form.
+
+### P1_PERFORMANCE_TUNING — the spread is dispatch granularity, not lifecycle
+
+`regime_sweep_d4096.exe`, depth=4096, CPU, trace gates off:
+
+```text
+ATTN threads=1  spread=60%  1.00x  PASS
+ATTN threads=2  spread=21%  1.32x  PASS
+ATTN threads=4  spread=80%  1.94x  PASS
+ATTN threads=8  spread=44%  2.60x  PASS
+BASE_DRIFT=-6%  (was -9%)
+```
+
+Every cell passes `argmax_match`, `determinism` and `no_stall` with
+`pending_at_return=0`, so lifecycle synchronization is ruled out as the cause.
+Every cell's geometry shows `rows=8`: the row space is the head count `nH=8`,
+so at 8 threads each worker gets **one row**.
+
+`kMinRowsPerThread = 4` exists at `src/rawrxd_cpu_math.cpp:110` but is only
+consulted by `MatMulThreadCount`, which the attention path bypasses.
+`ParallelRows` gates on `threads <= 1 || total_rows < 2` alone
+(`rawrxd_cpu_math.cpp:1141`). So an 8-row dispatch is split 8 ways and each
+split pays a condition-variable barrier to hand out a single head —
+`dispatches_with_this_request=11040` per cell.
+
+```text
+P1_PERFORMANCE_TUNING=OPEN
+ROOT_CAUSE=DISPATCH_GRANULARITY   LIFECYCLE_CAUSE=RULED_OUT
+```
+
+Not fixed: changing the threshold changes what the sweep measures, so it must
+be its own measured step.
+
+### Pattern worth recording
+
+Two of the three defects found in this session were in the *measurement*, not
+the measured system — the `seenOf_{8,0}` over-read that manufactured 162 fake
+stale-generation hits, and the census bug that hid W8's completed migration.
+Both produced confident, specific, wrong conclusions, and both were caught only
+by cross-checking the measurement against source.
+
+```text
+A_DIAGNOSTIC_THAT_CANNOT_DISAGREE_IS_NOT_A_DIAGNOSTIC
+A_CENSUS_THAT_UNDERCOUNTS_IS_WORSE_THAN_ONE_THAT_FAILS_LOUDLY
+MEASURED_VERDICT_BEATS_ITERATED_VERDICT
+```
+
+### Superseded
+
+The `Corrected Ledger — 2026-09-29` and `(duplicate retraction)` entries below
+are retained as history. Where they disagree with this entry, this entry is the
+current measurement and theirs is the record of what was believed at the time.
+Their retractions are preserved and not superseded; the retraction they made
+was correct, and this ledger re-confirms it independently.
+
+---
+
 # RAWRXD_MAX_THINKING_CONTINUATION_HOTPATCH_001
 
 > **Precedence.** This patch governs *how long an agent keeps working*. It does not grant
@@ -287,6 +487,89 @@ test harness passes
 ```
 
 into a stronger claim than the evidence supports.
+
+---
+
+## 7a. Investigation rules (permanent)
+
+These three exist because each was violated on 2026-10-01 and produced a
+confident, specific, wrong conclusion. They are not stylistic preferences.
+
+### 7a.1 `LOCK_OWNER_UNKNOWN` → query OS handle ownership, never attribute
+
+When a file cannot be written, **do not** attribute the lock to another agent, a
+concurrent lane, or an editor, and do not retry-loop until a timeout.
+
+```text
+LOCK_OWNER_UNKNOWN
+  -> query OS handle/process ownership   (Restart Manager: RmStartSession /
+                                         RmRegisterResources / RmGetList)
+  -> do NOT attribute a writer
+  -> if the holder is one of OUR processes, kill it and say so
+  -> only after the OS names a holder may you name an owner
+```
+
+**Why.** `src/agentic/GitSafetyAuthorityTools.h` was recorded as
+`BLOCKED_EXCLUSIVE_LOCK_HELD_BY_OTHER_SESSION` after twenty minutes of retries.
+Restart Manager named the holders in one call: `cl.exe` PIDs 21692 and 21100 —
+eight compilers this lane's own abandoned builds had orphaned. They were also the
+cause of every "mtime changed between two reads" symptom in that session. The
+wrong attribution cost an entire gate and produced a fabricated blame record.
+
+Related: `background_process` reporting "process stopped" does **not** reap
+compiler children. After abandoning a build, sweep `cl`/`MSBuild`.
+
+### 7a.2 `SYMBOL_NOT_FOUND` → repo-wide search, never infer from a local header
+
+Before concluding that a type or symbol does not exist, search **every** header
+in the tree, not the one nearest the call site.
+
+```text
+SYMBOL_NOT_FOUND
+  -> repo-wide search across src/, include/, tools/, cmake/
+  -> do NOT infer repository-wide absence from a single-header search
+  -> "no such class" is a claim about the whole tree; prove it as one
+```
+
+**Why.** `RawrXD::Agentic::AgentToolRegistry` was declared non-existent after a
+grep scoped to `include/agentic/AgentToolRegistry.h`. It is in
+`src/deep2/AgentToolRegistry.hpp:115`, with `registerTool` at `:119`. Acting on
+the wrong conclusion overwrote ~300 lines of **untracked** work with a tombstone
+before the error was caught. The owning lane regenerated it; recovery was luck.
+
+### 7a.3 `UNTRACKED_OR_EXTERNALLY_OWNED_SOURCE` → snapshot before replacing
+
+Before overwriting any file you did not author, record its identity.
+
+```text
+UNTRACKED_OR_EXTERNALLY_OWNED_SOURCE
+  -> git ls-files --error-unmatch <path>
+  -> UNTRACKED: copy to <path>.bak before any write
+  -> hash the content (SHA256) and record it in the receipt
+  -> a destructive edit to untracked source is unrecoverable
+```
+
+**Why.** Same incident. `git status` reporting `??` was available before the
+write and would have triggered the snapshot. There was no version control copy
+and no editor history entry, so recovery depended entirely on the other lane
+regenerating the file.
+
+### 7a.4 Compile evidence is not runtime evidence
+
+A clean compile and link certify **types and symbols**. They certify nothing
+about a lifecycle. The strongest single example in this project's history:
+
+```text
+initialize()
+  └─ locks m_mutex
+      └─ load()
+          └─ attempts the same non-recursive mutex
+              └─ resource_deadlock_would_occur   (thrown at RUNTIME)
+```
+
+`WorkspaceModel::load()` compiled perfectly for its entire life while every load
+silently failed to restore a workspace. A gate that certifies a lifecycle must
+execute it.
 
 ---
 
@@ -903,6 +1186,216 @@ rawr dump --format json tinyllama           # arch=llama tensor_count=201, read 
 
 A repo-wide `rawr audit src` reports findings from the same rules; several hundred blocking
 stub signals remain outside the dump chain and are tracked separately.
+
+## Ledger — 2026-10-01: RAWRXD_GIT_SAFETY_AUTHORITY_001 (ladder item 8)
+
+Git was implemented in five unrelated places and none of them gated whether an
+autonomous agent could mutate a repository holding someone else's uncommitted
+work. The IDE's `feature_handlers.cpp` shells `git commit -m "<text>"` through
+`_popen`; the Git panel runs `git add -A`; `AgentCore` and `ResponseCodedAgent`
+expose read-only git only. The canonical sandboxed registry the IDE HTTP routes
+dispatch through had **no git tool at all**.
+
+Implemented `src/agentic/GitSafetyAuthority.{h,cpp}` — twelve capabilities
+behind one default-deny gate — and registered thirteen tools into
+`rawrxd::agentic::ToolRegistry`. No shell anywhere: every git call is an argv to
+`CreateProcessW`, so a metacharacter in a commit message is data.
+
+The gate refuses a commit whose index holds any out-of-scope staged path, because
+`git commit` with no pathspec commits the whole index. That is the absorption
+vector, and it is the thing the dangerous test measures.
+
+Dangerous test: the user modifies three files and stages one; the agent is
+scoped to a different subsystem and asked to commit. PASS requires the commit
+refused, the user's file unstage refused, and after the user unstages, the
+agent's commit contains only its own path with every user file byte-identical.
+
+```text
+CHECKS_TOTAL=64  CHECKS_PASS=64  CHECKS_FAIL=0  CHECKS_NOT_RUN=0
+DIRTY_TREE_UNRELATED_PRESERVED=YES
+VERDICT=PASS
+GIT_CAPABILITIES_RUNTIME_CERTIFIED=12/12
+FALSIFICATION_PROBE_DETECTED_THE_DEFECT=1
+IDE_CTEST_TESTS_AFTER=1
+```
+
+Receipt `receipts/RAWRXD_GIT_SAFETY_AUTHORITY_001/runs/20261001T213516Z_PID24896_RUN0.ini`,
+SHA256 `FC2A6E4C2764B88B112541B52C31EBD7FD0CD76F1A26F40DE70A7F02F738D80E`,
+digest recomputed against its sidecar.
+
+The gate was disabled, rebuilt and re-run to prove the certification can fail:
+`DIRTY_TREE_004`/`008`/`011` failed and the verdict became FAIL. The gate was
+restored and the source verified byte-identical to its pre-probe hash.
+
+Two real defects were caught by that loop rather than shipped past it: the tool
+installer discarded the open session under a deny policy, and the absorption
+assertion compared newline-trimmed output against untrimmed bytes so it could
+never detect absorption.
+
+```text
+GIT_SAFETY=IMPLEMENTED_BUILT_CERTIFIED_NOT_YET_BOUND
+GIT_SAFETY_BOUND_TO_SHIPPING_TARGET=0
+IDE_MODEL_FACING_GIT_TOOLS_REGISTERED=0
+GIT_SAFETY_OPERATING_SYSTEM_SANDBOX=0
+LEGACY_IDE_GIT_HANDLERS_GATED=0
+```
+
+The IDE's model-facing surface is still one tool, `read_file`. Until a shipping
+target binds the policy and installs the tools, an autonomous agent cannot reach
+this gate. Full record:
+`rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/RAWRXD_GIT_SAFETY_AUTHORITY_001.md`.
+
+## Ledger — 2026-10-01: RAWRXD_GIT_SAFETY_AUTHORITY_001 (part 2, bound)
+
+The gap above was closed the same day. There are **two** tool registries in this
+product and they are different classes: `rawrxd::agentic::ToolRegistry`
+(`include/agentic/AgentToolRegistry.h`) used by the HTTP routes and the
+orchestrator, and `RawrXD::Agentic::AgentToolRegistry`
+(`src/deep2/AgentToolRegistry.hpp`) used by the desktop chat panel via
+`main_win32.cpp:570`. Both are now installed; the panel's model-facing tool
+count went from 1 to 13.
+
+`CEOAgent::InvokeTool` was `(void)toolName; result["success"] = true; return true;`
+— a success for every tool including `git_commit` and `git_rollback`, on an
+untouched repository. It now dispatches git to the authority and reports
+`UNIMPLEMENTED` for the rest. `handleGitCommit` and the Git panel no longer shell
+out or `git add -A`, and a refusal is shown instead of looking like success. The
+IDE and the server derive policy from one shared function with deny defaults.
+
+```text
+CHECKS_TOTAL=85  CHECKS_PASS=85  CHECKS_FAIL=0  CHECKS_NOT_RUN=0
+DIRTY_TREE_UNRELATED_PRESERVED=YES   VERDICT=PASS
+IDE_MODEL_FACING_TOOLS=13   CTEST_GIT_SAFETY=PASSED
+
+GIT_SAFETY=IMPLEMENTED_BUILT_CERTIFIED_BOUND
+GIT_SAFETY_BOUND_TO_SHIPPING_TARGET=1
+IDE_MODEL_FACING_GIT_TOOLS_REGISTERED=13
+LEGACY_IDE_GIT_HANDLERS_GATED=1
+CEOAGENT_FALSE_SUCCESS_ELIMINATED=1
+DEFAULTS_DENY=1
+SINGLE_SWITCH_ENABLES_MUTATION=0
+```
+
+Receipt `receipts/RAWRXD_GIT_SAFETY_AUTHORITY_001/runs/20261001T222457Z_PID18224_RUN0.ini`,
+SHA256 `C2D8590F4D5F28742DA69AA2815E3405A0536A32C47653D81F604EB35C27B271`.
+
+The original `git add -A` and `_popen("git push")` were reinstated and the
+certification failed 3 checks, then both files were restored byte-identical. That
+loop also caught a check that matched its own explanatory comment and so could
+never fail; source scans now strip comments.
+
+Two build breaks remain, both pre-existing and verified against pristine HEAD:
+`k_quant_gemv_avx512.h:264` assigns `__m512` to `__m512i`, which blocks the
+`InferenceEngine` target and therefore the `rawr-server` link; and
+`feature_handlers.cpp:1578` fails on `GGUFServerHotpatch`. Neither was caused by
+this work, so `rawr-server` and `RawrXD-Win32IDE` were not linked end to end.
+Every changed TU compiles clean and both installers are exercised at runtime.
+
+## Ledger — 2026-10-01: RAWRXD_GIT_SAFETY_AUTHORITY_001 (part 3, acceptance invariant)
+
+The capability/scope separation is now certified as a measured invariant rather
+than a design claim:
+
+```
+MutationAllowed = CapabilityGranted AND ScopeAuthorized AND OperationPermitted
+```
+
+Five cases: capability-only refuses `NO_SCOPE`, scope-only refuses
+`CAPABILITY_NOT_GRANTED`, both-but-operation-blocked refuses `PATH_OUTSIDE_SCOPE`
+with HEAD unmoved, all three **succeeds**, and setting all eight capability
+variables produces `granted_mask=255` and still refuses `NO_SCOPE`. The all-three
+case is what stops the rest being vacuous — a gate that refuses everything would
+pass the other four and is a broken tool, not a safe one.
+
+Disabling only the second conjunct failed 11 checks and flipped the verdict,
+then the source was restored byte-identical.
+
+```text
+CHECKS_TOTAL=90  CHECKS_PASS=90  CHECKS_FAIL=0  CHECKS_NOT_RUN=0
+DIRTY_TREE_UNRELATED_PRESERVED=YES   VERDICT=PASS
+INVARIANT_NO_2_OF_3=YES   INVARIANT_ALL_THREE_RUNS=YES
+INVARIANT_MASTER_SWITCH=IMPOSSIBLE
+```
+
+Receipt `receipts/RAWRXD_GIT_SAFETY_AUTHORITY_001/runs/20261001T223208Z_PID30936_RUN0.ini`,
+SHA256 `B5336CCFB789B36E44A9E18E7CF13F57AEDE981205582C7C73F415BB1B2635AB`, seal
+recomputed and matching.
+
+## Ledger — 2026-10-01: RAWRXD_GIT_SAFETY_AUTHORITY_001 (part 4, stale-binary invariant)
+
+The stale-binary incident is now a structural build invariant rather than a
+caveat:
+
+```ini
+BUILD_EXIT != 0
+    -> EXECUTABLE_FROM_THIS_BUILD = INVALID
+    -> RUNTIME_CERTIFICATION      = NO_VERDICT
+
+EXPECTED_BINARY_SHA256 = recorded immediately after successful link
+ACTUAL_BINARY_SHA256   = hashed immediately before execution
+REQUIRE: EXPECTED == ACTUAL
+```
+
+`tools/git_safety_seal.ps1` runs as a POST_BUILD step, so the seal's existence
+IS the evidence of a successful link. It is replaced, never appended, so a
+successful relink invalidates the previous certification automatically. The
+driver hashes its own executable before anything else and prints **no verdict**
+when the seal is missing, corrupt, has a non-zero `LINK_EXIT`, or describes a
+different binary — exiting 2, which is neither PASS nor FAIL, because an
+unsealed binary is an *invalid* run, not a failing test.
+
+Proven by removing the seal (`NO_VERDICT`) and by flipping one byte in the
+binary (`expected …1CBC80BE… but this executable is EBA46013…`). Both restored
+byte-identical.
+
+**A second hazard the seal does NOT cover.** An incremental build produced
+`CHECKS_FAIL=4` with the scope conjunct appearing missing while the source was
+correct and the seal matched — a **stale object file** that MSBuild's dependency
+tracking had not rebuilt. A clean rebuild gave 90/90 immediately.
+
+```ini
+STALE_BINARY_AFTER_FAILED_BUILD     = BLOCKED_BY_SEAL
+STALE_OBJECT_FILE                   = NOT_BLOCKED_BY_SEAL
+CERTIFICATION_REQUIRES_CLEAN_REBUILD = YES
+```
+
+The seal binds source to binary at link time; it cannot see an object file that
+predates its own source. "The seal makes certification safe" is the natural
+wrong inference, and it is false for one of the two stale-artifact classes.
+
+```text
+CHECKS_TOTAL=90  CHECKS_PASS=90  CHECKS_FAIL=0  CHECKS_NOT_RUN=0
+DIRTY_TREE_UNRELATED_PRESERVED=YES
+RUNTIME_CERTIFICATION=BINARY_MATCHES_SEAL   VERDICT=PASS
+RECEIPT_SHA256=E06709CB791EC68B92697B11BFC096CB5BCB220F475A808239ABD4512F9891BA
+
+CURRENT_PRODUCT_INTEGRATION = NOT_CERTIFIED
+```
+
+The 90/90 is certified for the sealed binary identity recorded in the receipt.
+The current worktree is not that identity and is not product-certified.
+Promotion requires a clean rebuild from a stable HEAD, artifact hashes, and a
+re-run of this gate through each actual product surface.
+
+**Source identity is currently unstable, so a re-pin is required.**
+`src/agentic/AgentToolRegistry.{h,cpp}` was observed not compiling
+(`AgentToolRegistry.cpp:345` calls `IsTransactionRequired`, the adjacent comment
+names `TransactionRequired`, neither is defined; the header was seen mid-edit).
+Five files were rewritten inside a three-minute window.
+
+No writer, process, session or lock holder is identified as the source. The
+earlier attribution to a "concurrent writer" is **withdrawn** — a file lock in
+this tree has previously been traced to an orphaned compiler process. Only the
+observation and its effect are recorded.
+
+The 90/90 is pinned to the identity that produced it and is valid for that
+identity only. A build failure from the above was observed to leave a **stale
+binary** that produced a plausible `CHECKS_TOTAL=63 / VERDICT=FAIL` describing a
+build that no longer existed; a run whose check count does not match the
+expected source identity should be discarded rather than read. Promotion to
+*current-product integration certified* requires a stable HEAD, a rebuild of
+both products from that identity, artifact hashes, and a re-run of this gate
+through each actual product surface.
 
 ## Corrected Ledger — 2026-09-29
 

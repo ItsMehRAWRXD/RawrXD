@@ -37,6 +37,13 @@
 // (src/core/settings_persistence.cpp) and ships in 3rdparty.
 #include <nlohmann/json.hpp>
 
+// RAWRXD_WORKSPACE_IDE_BINDING_001: the translation unit now includes its own
+// header. It previously declared every C API symbol locally, which is one reason
+// nothing outside this file could name them and one reason the model was never
+// wired into a target. The declarations here are authoritative and are checked
+// against the definitions below at link time.
+#include "workspace_model.h"
+
 namespace fs = std::filesystem;
 
 namespace RawrXD {
@@ -95,13 +102,48 @@ struct WorkspaceConfig {
 // ============================================================================
 
 class WorkspaceModel {
+    // RAWRXD_WORKSPACE_IDE_BINDING_001
+    //
+    // Measured load state. An enum rather than a bool, because a bool cannot
+    // distinguish the three outcomes that matter and that behave differently:
+    // the document was absent (a first run, not a failure), the document was
+    // refused (malformed, schema error, or zero folders -- in which case the
+    // previous config was deliberately left untouched), or the document was
+    // applied.
+    enum class LoadOutcome { NeverRun = 0, Absent = 1, Refused = 2, Applied = 3 };
+
 private:
     std::mutex m_mutex;
     WorkspaceConfig m_config;
     std::string m_configPath;      // .rawrxd/workspace.json
     bool m_initialized = false;
     bool m_dirty = false;           // Config needs saving
-    
+    LoadOutcome m_loadOutcome = LoadOutcome::NeverRun;
+    std::size_t m_saveCalls = 0;
+    bool m_saveWrote = false;
+    std::size_t m_saveBytes = 0;
+
+public:
+    // --- RAWRXD_WORKSPACE_IDE_BINDING_001 accessors ---
+    bool        isInitialized() const { return m_initialized; }
+    std::string documentPath() const { return m_configPath; }
+    bool        isDirty() const { return m_dirty; }
+    LoadOutcome lastLoadOutcome() const { return m_loadOutcome; }
+    std::size_t saveCallCount() const { return m_saveCalls; }
+    bool        lastSaveWrote() const { return m_saveWrote; }
+    std::size_t lastSaveBytes() const { return m_saveBytes; }
+    std::size_t folderCount() const {
+        return getFolders().size();
+    }
+    std::size_t rootCount() const {
+        std::size_t n = 0;
+        for (const auto& f : getFolders()) if (f.isRoot) ++n;
+        return n;
+    }
+    std::size_t openFileCount() const {
+        return getOpenFiles().size();
+    }
+
 public:
     WorkspaceModel() = default;
     ~WorkspaceModel() {
@@ -297,24 +339,30 @@ public:
     }
     
     // Save workspace config
+    // RAWRXD_WORKSPACE_IDE_BINDING_001: instrumented so the product path can be
+    // receipted. A no-op save (not dirty) is NOT counted as having written, so
+    // saveWrote cannot be true without a real byte count behind it.
     bool save() {
         std::lock_guard<std::mutex> lock(m_mutex);
-        
+        ++m_saveCalls;
+        m_saveWrote = false;
+        m_saveBytes = 0;
+
         if (!m_initialized || !m_dirty) {
             return true;
         }
-        
+
         try {
             // Create directory
             fs::path configDir = fs::path(m_configPath).parent_path();
             fs::create_directories(configDir);
-            
+
             // Write JSON (simplified format)
             std::ofstream file(m_configPath);
             if (!file.is_open()) {
                 return false;
             }
-            
+
             file << "{\n";
             file << "  \"name\": \"" << escapeJson(m_config.name) << "\",\n";
             
@@ -358,14 +406,21 @@ public:
             file << "  }\n";
             
             file << "}\n";
-            
+
             file.close();
-            
+
             m_dirty = false;
-            
-            fprintf(stderr, "[WorkspaceModel] Saved workspace config: %s\n",
-                    m_configPath.c_str());
-            
+
+            // Measured from the file on disk, not from what we intended to
+            // write, so a short write cannot report success.
+            std::error_code ec;
+            const auto bytes = fs::file_size(m_configPath, ec);
+            m_saveBytes = ec ? 0 : static_cast<std::size_t>(bytes);
+            m_saveWrote = !ec && m_saveBytes > 0;
+
+            fprintf(stderr, "[WorkspaceModel] Saved workspace config: %s (%zu bytes)\n",
+                    m_configPath.c_str(), m_saveBytes);
+
             return true;
             
         } catch (const std::exception& ex) {
@@ -394,6 +449,7 @@ private:
     bool load() {
         std::ifstream file(m_configPath);
         if (!file.is_open()) {
+            m_loadOutcome = LoadOutcome::Absent;
             return false; // No existing config — a first run, not a failure.
         }
 
@@ -403,6 +459,7 @@ private:
         } catch (const std::exception& ex) {
             fprintf(stderr, "[WorkspaceModel] Load failed (unparsable, config left untouched): %s\n",
                     ex.what());
+            m_loadOutcome = LoadOutcome::Refused;
             return false;
         }
         file.close();
@@ -474,6 +531,7 @@ private:
             // previous state is safer than adopting an empty document.
             if (parsed.folders.empty()) {
                 fprintf(stderr, "[WorkspaceModel] Load found zero folders, config left untouched\n");
+                m_loadOutcome = LoadOutcome::Refused;
                 return false;
             }
 
@@ -490,6 +548,7 @@ private:
             // runtime run of this path actually did.
             m_config = std::move(parsed);
             m_dirty = false;
+            m_loadOutcome = LoadOutcome::Applied;
 
             size_t rootCount = 0;
             for (const auto& f : m_config.folders) if (f.isRoot) ++rootCount;
@@ -502,6 +561,7 @@ private:
         } catch (const std::exception& ex) {
             fprintf(stderr, "[WorkspaceModel] Load failed (schema, config left untouched): %s\n",
                     ex.what());
+            m_loadOutcome = LoadOutcome::Refused;
             return false;
         }
     }
@@ -589,6 +649,34 @@ bool RawrXD_IDE_SaveWorkspace() {
     }
     
     return RawrXD::IDE::g_workspace->save();
+}
+
+// ============================================================================
+// RAWRXD_WORKSPACE_IDE_BINDING_001 -- measured diagnostics
+//
+// Every field is set by the code that performs the operation. Nothing defaults
+// to a healthy value: booleans start false and counters start at zero, so a
+// receipt cannot report a workspace as loaded without load() having run.
+// ============================================================================
+
+RawrXDWorkspaceDiagnostics RawrXD_IDE_GetWorkspaceDiagnostics() {
+    RawrXDWorkspaceDiagnostics d{};
+    std::lock_guard<std::mutex> lock(RawrXD::IDE::g_workspaceMutex);
+    if (!RawrXD::IDE::g_workspace) return d;
+    const RawrXD::IDE::WorkspaceModel* m = RawrXD::IDE::g_workspace.get();
+    d.initialized = m->isInitialized();
+    d.docPath     = m->documentPath();
+    d.name        = m->getName();
+    d.rootPath    = m->getRootPath();
+    d.folders     = m->folderCount();
+    d.roots       = m->rootCount();
+    d.openFiles   = m->openFileCount();
+    d.dirty       = m->isDirty();
+    d.loadOutcome = static_cast<int>(m->lastLoadOutcome());
+    d.saveCalls   = m->saveCallCount();
+    d.saveWrote   = m->lastSaveWrote();
+    d.saveBytes   = m->lastSaveBytes();
+    return d;
 }
 
 } // extern "C"

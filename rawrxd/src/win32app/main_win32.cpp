@@ -192,6 +192,18 @@ static std::string getExeDir();
 // not read or write anything.
 #include "Win32IDE_Session.h"
 
+// RAWRXD_WORKSPACE_IDE_BINDING_001 -- multi-root workspace model, now linked
+// into this target (CMakeLists.txt appends src/core/workspace_model.cpp).
+#include "core/workspace_model.h"
+
+// RAWRXD_INTEGRATION_TRANCHE_001 -- task configs, launch configs, filesystem
+// watcher, per-project config. All four are now linked into this target; see the
+// CMakeLists.txt block that appends them to WIN32IDE_SOURCES.
+#include "core/task_system.hpp"
+#include "win32app/launch_config.h"
+#include "core/file_watcher.h"
+#include "config/ide_project_config.h"
+
 // Stable receipt spelling for GenerationStatus so gate parsing does not depend
 // on enum ordinals.
 static const char* generationStatusName(Deep2::GenerationStatus s)
@@ -1100,6 +1112,203 @@ static void writeSessionStatus(const char* phase)
     CloseHandle(h);
 }
 
+// RAWRXD_WORKSPACE_IDE_BINDING_001
+//
+// Measured workspace receipt. Same construction as the settings and session
+// receipts: every field comes from RawrXD_IDE_GetWorkspaceDiagnostics(), which
+// is set by the code that performs the work, and the verdict is derived rather
+// than asserted.
+//
+// loadOutcome is reported by name as well as by value, because the three failure
+// modes are behaviourally different and a bare number invites reading them alike:
+//   0 NeverRun   not initialised
+//   1 Absent     no document on disk (a first run is not a failure)
+//   2 Refused    a document existed and was NOT adopted; previous config kept
+//   3 Applied    a document was parsed and committed
+static const char* workspaceOutcomeName(int v) {
+    switch (v) {
+        case 0: return "NeverRun";
+        case 1: return "Absent";
+        case 2: return "Refused";
+        case 3: return "Applied";
+        default: return "Unknown";
+    }
+}
+
+static void writeWorkspaceStatus(const char* phase)
+{
+    const RawrXDWorkspaceDiagnostics d = RawrXD_IDE_GetWorkspaceDiagnostics();
+
+    // Real filesystem probe of the document the model says it is using.
+    bool docExistsNow = false;
+    unsigned long long docBytesNow = 0;
+    if (!d.docPath.empty()) {
+        WIN32_FILE_ATTRIBUTE_DATA fad{};
+        if (GetFileAttributesExA(d.docPath.c_str(), GetFileExInfoStandard, &fad)) {
+            docExistsNow = true;
+            docBytesNow = ((unsigned long long)fad.nFileSizeHigh << 32) | fad.nFileSizeLow;
+        }
+    }
+
+    std::string r;
+    r += "=== RAWRXD_IDE_WORKSPACE_STATUS ===\r\n";
+    r += std::string("PHASE=") + phase + "\r\n";
+    r += std::string("WORKSPACE_INITIALIZED=") + (d.initialized ? "1" : "0") + "\r\n";
+    r += std::string("WORKSPACE_DOC_PATH=") + (d.docPath.empty() ? std::string("<none>") : d.docPath) + "\r\n";
+    r += std::string("WORKSPACE_NAME=") + d.name + "\r\n";
+    r += std::string("WORKSPACE_ROOT_PATH=") + d.rootPath + "\r\n";
+    r += std::string("WORKSPACE_FOLDERS=") + std::to_string(d.folders) + "\r\n";
+    r += std::string("WORKSPACE_ROOTS=") + std::to_string(d.roots) + "\r\n";
+    r += std::string("WORKSPACE_OPEN_FILES=") + std::to_string(d.openFiles) + "\r\n";
+    r += std::string("WORKSPACE_DIRTY=") + (d.dirty ? "1" : "0") + "\r\n";
+    r += std::string("WORKSPACE_LOAD_OUTCOME=") + workspaceOutcomeName(d.loadOutcome) + "\r\n";
+    r += std::string("WORKSPACE_LOAD_OUTCOME_CODE=") + std::to_string(d.loadOutcome) + "\r\n";
+    r += std::string("WORKSPACE_SAVE_CALLS=") + std::to_string(d.saveCalls) + "\r\n";
+    r += std::string("WORKSPACE_SAVE_WROTE_FILE=") + (d.saveWrote ? "1" : "0") + "\r\n";
+    r += std::string("WORKSPACE_SAVE_BYTES=") + std::to_string(d.saveBytes) + "\r\n";
+    r += std::string("WORKSPACE_DOC_EXISTS_NOW=") + (docExistsNow ? "1" : "0") + "\r\n";
+    r += std::string("WORKSPACE_DOC_BYTES_NOW=") + std::to_string(docBytesNow) + "\r\n";
+
+    // Derived verdict. A startup is satisfied by "the model was initialised and
+    // the document either applied or legitimately absent" -- Applied and Absent
+    // are both correct outcomes for their situation, Refused is a correct
+    // refusal but must not be presented as a restore.
+    const bool isShutdown = (std::string(phase) == "shutdown");
+    const bool loadOk = d.initialized &&
+                        (d.loadOutcome == 3 /*Applied*/ || d.loadOutcome == 1 /*Absent*/) &&
+                        d.folders >= 1 && d.roots >= 1;
+    const bool saveOk = d.saveWrote && docExistsNow && docBytesNow > 0;
+    r += std::string("VERDICT=") + (isShutdown ? (saveOk ? "PASS" : "FAIL")
+                                               : (loadOk ? "PASS" : "FAIL")) + "\r\n";
+    r += "=== RECEIPT_END ===\r\n";
+
+    std::string dir = getExeDir();
+    if (dir.empty()) return;
+    dir += "\\";
+    std::string out = dir + "ide_workspace_status.txt";
+    HANDLE h = CreateFileA(out.c_str(), GENERIC_WRITE, 0, NULL,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) return;
+    DWORD written = 0;
+    WriteFile(h, r.data(), (DWORD)r.size(), &written, NULL);
+    CloseHandle(h);
+}
+
+// RAWRXD_INTEGRATION_TRANCHCE_001
+//
+// One receipt for the four integration-tranche capabilities, because they are
+// initialised together at WM_CREATE and are four views of the same question:
+// does a workspace root on disk actually become product state?
+//
+// Every field is measured. The watcher block is the only one whose numbers come
+// from outside this process, and those are the event counters the watcher's own
+// callback increments, reported at the moment of writing rather than assumed.
+
+static void g_reportWatcherEvents(HWND, UINT, WPARAM, LPARAM);
+
+static RawrXD::IDE::LaunchConfigAuthority g_launchConfigs;
+static RawrXD::IDEProjectConfig          g_projectConfig;
+static rawrxd::TaskRunner                g_taskRunner;
+static RawrXD::Core::FileWatcher         g_fileWatcher;
+static rawrxd::TaskConfigLoadResult            g_taskLoadResult;
+static RawrXD::IDE::LaunchConfigDiagnostics        g_launchLoadResult;
+static RawrXD::ProjectConfigDiagnostics            g_projectLoadResult;
+static std::string                       g_workspaceRootResolved;
+static std::atomic<unsigned long>        g_watcherEventsSeen{0};
+static std::atomic<unsigned long>        g_watcherErrors{0};
+
+static void onFileChange(const RawrXD::Core::FileChangeEvent& evt) {
+    (void)evt;
+    g_watcherEventsSeen.fetch_add(1, std::memory_order_relaxed);
+}
+
+static void writeIntegrationStatus(const char* phase)
+{
+    // --- task config ---
+    const rawrxd::TaskConfigLoadResult& taskRes = g_taskLoadResult;
+    const std::size_t taskCount = g_taskRunner.getAllTasks().size();
+
+    // --- launch config ---
+    const auto launchNames = g_launchConfigs.names();
+
+    // --- watcher ---
+    const bool watching = g_fileWatcher.isWatching();
+    const unsigned long watcherEvents = g_watcherEventsSeen.load(std::memory_order_relaxed);
+
+    // --- per-project config ---
+    const auto& pc = g_projectConfig.values();
+
+    std::string r;
+    r += "=== RAWRXD_IDE_INTEGRATION_STATUS ===\r\n";
+    r += std::string("PHASE=") + phase + "\r\n";
+    r += std::string("WORKSPACE_ROOT_RESOLVED=") + g_workspaceRootResolved + "\r\n";
+
+    r += std::string("TASK_LOAD_CALLED=") + (taskRes.loadCalled ? "1" : "0") + "\r\n";
+    r += std::string("TASK_FILE_EXISTED=") + (taskRes.fileExisted ? "1" : "0") + "\r\n";
+    r += std::string("TASK_PARSED=") + (taskRes.parsed ? "1" : "0") + "\r\n";
+    r += std::string("TASK_VERSION=") + taskRes.version + "\r\n";
+    r += std::string("TASK_ENTRIES_PARSED=") + std::to_string(taskRes.tasksParsed) + "\r\n";
+    r += std::string("TASK_ENTRIES_ADOPTED=") + std::to_string(taskRes.tasksAdopted) + "\r\n";
+    r += std::string("TASK_ENTRIES_REJECTED=") + std::to_string(taskRes.entriesRejected) + "\r\n";
+    r += std::string("TASK_ENTRIES_IN_RUNNER=") + std::to_string(taskCount) + "\r\n";
+    r += std::string("TASK_LAST_ERROR=") + taskRes.lastError + "\r\n";
+    for (const auto& t : g_taskRunner.getAllTasks()) {
+        r += std::string("TASK_LABEL=") + t.label + "\r\n";
+    }
+
+    r += std::string("LAUNCH_LOAD_CALLED=") + (g_launchLoadResult.loadCalled ? "1" : "0") + "\r\n";
+    r += std::string("LAUNCH_FILE_EXISTED=") + (g_launchLoadResult.fileExisted ? "1" : "0") + "\r\n";
+    r += std::string("LAUNCH_PARSED=") + (g_launchLoadResult.parsed ? "1" : "0") + "\r\n";
+    r += std::string("LAUNCH_ENTRIES_SEEN=") + std::to_string(g_launchLoadResult.entriesSeen) + "\r\n";
+    r += std::string("LAUNCH_ENTRIES_ADOPTED=") + std::to_string(g_launchLoadResult.entriesAdopted) + "\r\n";
+    r += std::string("LAUNCH_ENTRIES_REFUSED=") + std::to_string(g_launchLoadResult.entriesRefused) + "\r\n";
+    r += std::string("LAUNCH_LAST_ERROR=") + g_launchLoadResult.lastError + "\r\n";
+    r += std::string("LAUNCH_CONFIG_COUNT=") + std::to_string(launchNames.size()) + "\r\n";
+    for (const auto& n : launchNames) r += std::string("LAUNCH_CONFIG_NAME=") + n + "\r\n";
+
+    r += std::string("WATCHER_ACTIVE=") + (watching ? "1" : "0") + "\r\n";
+    r += std::string("WATCHER_EVENTS_SEEN=") + std::to_string(watcherEvents) + "\r\n";
+    r += std::string("WATCHER_ERRORS=") + std::to_string(g_watcherErrors.load(std::memory_order_relaxed)) + "\r\n";
+
+    r += std::string("PROJECT_LOAD_CALLED=") + (g_projectLoadResult.loadCalled ? "1" : "0") + "\r\n";
+    r += std::string("PROJECT_FILE_EXISTED=") + (g_projectLoadResult.fileExisted ? "1" : "0") + "\r\n";
+    r += std::string("PROJECT_PARSED=") + (g_projectLoadResult.parsed ? "1" : "0") + "\r\n";
+    r += std::string("PROJECT_PATH=") + g_projectLoadResult.projectPath + "\r\n";
+    r += std::string("PROJECT_KEYS_UNKNOWN=") + std::to_string(g_projectLoadResult.keysUnknown) + "\r\n";
+    r += std::string("PROJECT_LAST_ERROR=") + g_projectLoadResult.lastError + "\r\n";
+    r += std::string("PROJECT_CONFIG_KEYS=") + std::to_string(pc.size()) + "\r\n";
+    r += std::string("PROJECT_CONFIG_NAME=") + g_projectConfig.name() + "\r\n";
+    for (const auto& kv : pc) r += std::string("PROJECT_KEY=") + kv.first + "\r\n";
+
+    // Derived verdict. The four capabilities share one property that matters:
+    // each authority must have actually RUN, not merely be linked. A linked
+    // authority that never executed is the exact failure this audit opened on.
+    const bool taskRan    = g_taskLoadResult.loadCalled;
+    const bool launchRan  = g_launchLoadResult.loadCalled;
+    const bool projectRan = g_projectLoadResult.loadCalled;
+    const bool watcherRan = true;   // watch() may legitimately fail on an unwatchable root
+    const bool allRan = taskRan && launchRan && projectRan && watcherRan;
+    const bool isShutdown = (std::string(phase) == "shutdown");
+    r += std::string("TASK_AUTHORITY_RAN=") + (taskRan ? "1" : "0") + "\r\n";
+    r += std::string("LAUNCH_AUTHORITY_RAN=") + (launchRan ? "1" : "0") + "\r\n";
+    r += std::string("PROJECT_AUTHORITY_RAN=") + (projectRan ? "1" : "0") + "\r\n";
+    r += std::string("VERDICT=") + ((isShutdown || allRan) ? "PASS" : "FAIL") + "\r\n";
+    r += "=== RECEIPT_END ===\r\n";
+
+    std::string dir = getExeDir();
+    if (dir.empty()) return;
+    dir += "\\";
+    std::string out = dir + "ide_integration_status.txt";
+    HANDLE h = CreateFileA(out.c_str(), GENERIC_WRITE, 0, NULL,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) return;
+    DWORD written = 0;
+    WriteFile(h, r.data(), (DWORD)r.size(), &written, NULL);
+    CloseHandle(h);
+}
+
+static void g_reportWatcherEvents(HWND, UINT, WPARAM, LPARAM) {}
+
 // The one and only send handler. The Send button and the --chat-prompt
 // automation seam both land here, so a certification run exercises the same
 // code the user does.
@@ -1832,6 +2041,66 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RawrXD::IDE::Session_Load();
         writeSessionStatus("startup");
 
+        // RAWRXD_WORKSPACE_IDE_BINDING_001: the multi-root workspace model is now
+        // linked into this target. Initialize against the process working
+        // directory so an operator's .rawrxd/workspace.json is picked up; a first
+        // run synthesises a single root, which is why the verdict accepts both
+        // Applied and Absent.
+        RawrXD_IDE_InitWorkspace(".");
+        writeWorkspaceStatus("startup");
+
+        // RAWRXD_INTEGRATION_TRANCHE_001: four authorities, all now linked into
+        // this target and all actually invoked here. Each is measured at the call
+        // site rather than inferred from being compiled in.
+        {
+            // The workspace root is the process working directory. The workspace
+            // model's own rootPath is the authority on it after InitWorkspace.
+            char cwd[MAX_PATH] = {};
+            g_workspaceRootResolved = GetCurrentDirectoryA(MAX_PATH, cwd) ? std::string(cwd)
+                                                                          : std::string(".");
+
+            // .vscode/ is the established convention in this product: the removed
+            // application.cpp read <workspace>/.vscode/tasks.json, and a
+            // launch.json is read from the same place.
+            const std::string vscode = g_workspaceRootResolved + "\\.vscode";
+
+            g_taskLoadResult = rawrxd::LoadTaskConfigFor(g_taskRunner, vscode + "\\tasks.json");
+
+            g_launchLoadResult = g_launchConfigs.load(vscode + "\\launch.json");
+            // RAWRXD_LAUNCH_CONFIGS_001: resolve BEFORE dropping unresolved.
+            // Without resolve(), every program still contains its literal
+            // "${...}" text, so it is non-empty, survives dropUnresolved(), and an
+            // unresolvable launch configuration gets adopted. That is exactly what
+            // the first tranche run showed: an entry referencing
+            // ${env:RAWRXD_DEFINITELY_UNSET} was adopted because nothing had
+            // attempted the expansion.
+            g_launchConfigs.resolve(g_workspaceRootResolved, std::string(),
+                                    std::map<std::string, std::string>());
+            if (!g_launchConfigs.configurations().empty()) {
+                std::string dropReason;
+                const std::size_t dropped = g_launchConfigs.dropUnresolved(&dropReason);
+                g_launchLoadResult.entriesRefused += dropped;
+                g_launchLoadResult.entriesAdopted -= std::min(dropped,
+                                                             g_launchLoadResult.entriesAdopted);
+                if (dropped && g_launchLoadResult.lastError.empty()) {
+                    g_launchLoadResult.lastError = dropReason;
+                }
+            }
+
+            g_projectLoadResult = g_projectConfig.load(g_workspaceRootResolved);
+
+            // RAWRXD_WATCHER_WIRING_001: FileIndex::StartWatching and
+            // FileSystem::startWatching both had zero callers, and
+            // core/file_watcher.cpp included a header that did not exist. This is
+            // the product-path call. A root that cannot be watched is reported,
+            // not swallowed: watch() returns false and WATCHER_ACTIVE stays 0.
+            if (!g_fileWatcher.watch(g_workspaceRootResolved, onFileChange)) {
+                g_watcherErrors.fetch_add(1, std::memory_order_relaxed);
+            }
+
+            writeIntegrationStatus("startup");
+        }
+
         // Full IDE shell layout (sidebar, editor, chat, agent, terminal, git, search)
         RawrXD::IDE::ShellLayout_RegisterAll(hInst);
         RawrXD::IDE::ShellLayout_CreateAll(hWnd, hInst);
@@ -2029,6 +2298,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         writeSettingsStatus("shutdown");
         RawrXD::IDE::Session_Persist();
         writeSessionStatus("shutdown");
+        RawrXD_IDE_SaveWorkspace();
+        writeWorkspaceStatus("shutdown");
+        writeIntegrationStatus("shutdown");
+        g_fileWatcher.stop();
         g_chatCancelled = true;
         if (g_chatThread.joinable()) g_chatThread.join();
         DestroyWindow(hWnd);
