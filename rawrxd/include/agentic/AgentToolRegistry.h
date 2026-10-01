@@ -52,6 +52,22 @@ struct ToolPolicy {
     bool allowWrite = false;
     bool allowExecute = false;
     std::uint32_t executeTimeoutMs = 60000;
+    // RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001
+    //
+    // allowWrite alone authorises an unjournaled autonomous edit. The file is
+    // published atomically, so a crash cannot truncate it, but nothing records
+    // what the file was before, so nothing can put it back: the agent's edit is
+    // permanent whether or not the turn that produced it succeeded.
+    //
+    // With this flag set, write_file is refused unless a checkpoint transaction
+    // (ckpt::Transaction) is open AND the target resolves inside that
+    // transaction's workspace root AND is not inside the .rawrxd\ckpt tree
+    // itself. Every accepted write is then journalled with its before-state and
+    // is undoable by rollback or by the startup recovery pass.
+    //
+    // This is a refusal, not a warning. A write that cannot be rolled back is
+    // not an autonomous edit; it is an unrecoverable mutation.
+    bool writeRequiresTransaction = false;
 
     static ToolPolicy DefaultDenyAll();
 };
@@ -61,6 +77,21 @@ struct ToolPolicy {
 // to start with a canonical root plus a separator.
 bool IsPathAllowed(const ToolPolicy& policy, const std::string& candidate,
                    std::string& outCanonical);
+
+// Canonicalises a configured root: resolves it to an absolute, separator-
+// normalised form using the same rules the tools use, and rejects UNC, device
+// and stream paths. An embedder must call this before putting a root into a
+// policy. A root left as a relative string still works for IsPathAllowed (the
+// join resolves it against the process CWD) but it can never be compared
+// against a canonical absolute path, which is what the transactional write
+// profile has to do.
+bool CanonicalizeRoot(const std::string& path, std::string& outCanonical, std::string& outError);
+
+// True when `absPath` is canonical and already resolves inside one of the
+// allowed roots. Use this for a caller that already holds an absolute path
+// (a transaction workspace root, for example) -- IsPathAllowed takes a
+// root-relative candidate and cannot be given one.
+bool IsCanonicalPathAllowed(const ToolPolicy& policy, const std::string& absPath);
 
 class ToolRegistry {
 public:

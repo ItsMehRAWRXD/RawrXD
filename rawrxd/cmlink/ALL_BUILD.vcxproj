@@ -1,0 +1,403 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ResolveNugetPackages>false</ResolveNugetPackages>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{87E52156-A792-35CE-9E47-6B208833EBEE}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>ALL_BUILD</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>F:\~dev\rawrxd\include;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt;D:\rawrxd\Ship\webview2\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>F:\~dev\rawrxd\include;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt;D:\rawrxd\Ship\webview2\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>F:\~dev\rawrxd\include;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt;D:\rawrxd\Ship\webview2\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>F:\~dev\rawrxd\include;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt;D:\rawrxd\Ship\webview2\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\~dev\rawrxd\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/rawrxd/cmlink --check-stamp-file F:/~dev/rawrxd/cmlink/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASM_MASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindVulkan.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;F:\~dev\rawrxd\cmake\AutoFeatureRegistry.cmake;F:\~dev\rawrxd\cmake\Deep2BenchmarkCert.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2C1C9.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2GatewayCertStandalone.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2ProductLavapath.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaB3B8.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaConsumerGates.fragment.cmake;F:\~dev\rawrxd\cmake\GgufDynamicGeometry.fragment.cmake;F:\~dev\rawrxd\cmake\IntentGuardrails.cmake;F:\~dev\rawrxd\cmake\Interstellar.fragment.cmake;F:\~dev\rawrxd\cmake\P1_ProductRuntimeAuthority.cmake;F:\~dev\rawrxd\cmake\RawrAgenticCliQuarantine.cmake;F:\~dev\rawrxd\cmake\RawrBackgroundTerminals.fragment.cmake;F:\~dev\rawrxd\cmake\RawrProductLayer.fragment.cmake;F:\~dev\rawrxd\cmake\RawrRemainingStyleCli.fragment.cmake;F:\~dev\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake;F:\~dev\rawrxd\cmake\RawrXDSovereignFinish.cmake;F:\~dev\rawrxd\cmake\Remote64.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeASM_MASMCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeCCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeCXXCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeRCCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeSystem.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\cmake.verify_globs;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\~dev\rawrxd\cmlink\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/rawrxd/cmlink --check-stamp-file F:/~dev/rawrxd/cmlink/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASM_MASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindVulkan.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;F:\~dev\rawrxd\cmake\AutoFeatureRegistry.cmake;F:\~dev\rawrxd\cmake\Deep2BenchmarkCert.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2C1C9.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2GatewayCertStandalone.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2ProductLavapath.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaB3B8.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaConsumerGates.fragment.cmake;F:\~dev\rawrxd\cmake\GgufDynamicGeometry.fragment.cmake;F:\~dev\rawrxd\cmake\IntentGuardrails.cmake;F:\~dev\rawrxd\cmake\Interstellar.fragment.cmake;F:\~dev\rawrxd\cmake\P1_ProductRuntimeAuthority.cmake;F:\~dev\rawrxd\cmake\RawrAgenticCliQuarantine.cmake;F:\~dev\rawrxd\cmake\RawrBackgroundTerminals.fragment.cmake;F:\~dev\rawrxd\cmake\RawrProductLayer.fragment.cmake;F:\~dev\rawrxd\cmake\RawrRemainingStyleCli.fragment.cmake;F:\~dev\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake;F:\~dev\rawrxd\cmake\RawrXDSovereignFinish.cmake;F:\~dev\rawrxd\cmake\Remote64.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeASM_MASMCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeCCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeCXXCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeRCCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeSystem.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\cmake.verify_globs;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\~dev\rawrxd\cmlink\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/rawrxd/cmlink --check-stamp-file F:/~dev/rawrxd/cmlink/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASM_MASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindVulkan.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;F:\~dev\rawrxd\cmake\AutoFeatureRegistry.cmake;F:\~dev\rawrxd\cmake\Deep2BenchmarkCert.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2C1C9.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2GatewayCertStandalone.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2ProductLavapath.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaB3B8.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaConsumerGates.fragment.cmake;F:\~dev\rawrxd\cmake\GgufDynamicGeometry.fragment.cmake;F:\~dev\rawrxd\cmake\IntentGuardrails.cmake;F:\~dev\rawrxd\cmake\Interstellar.fragment.cmake;F:\~dev\rawrxd\cmake\P1_ProductRuntimeAuthority.cmake;F:\~dev\rawrxd\cmake\RawrAgenticCliQuarantine.cmake;F:\~dev\rawrxd\cmake\RawrBackgroundTerminals.fragment.cmake;F:\~dev\rawrxd\cmake\RawrProductLayer.fragment.cmake;F:\~dev\rawrxd\cmake\RawrRemainingStyleCli.fragment.cmake;F:\~dev\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake;F:\~dev\rawrxd\cmake\RawrXDSovereignFinish.cmake;F:\~dev\rawrxd\cmake\Remote64.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeASM_MASMCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeCCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeCXXCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeRCCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeSystem.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\cmake.verify_globs;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\~dev\rawrxd\cmlink\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/rawrxd/cmlink --check-stamp-file F:/~dev/rawrxd/cmlink/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASM_MASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindVulkan.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;F:\~dev\rawrxd\cmake\AutoFeatureRegistry.cmake;F:\~dev\rawrxd\cmake\Deep2BenchmarkCert.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2C1C9.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2GatewayCertStandalone.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2ProductLavapath.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaB3B8.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaConsumerGates.fragment.cmake;F:\~dev\rawrxd\cmake\GgufDynamicGeometry.fragment.cmake;F:\~dev\rawrxd\cmake\IntentGuardrails.cmake;F:\~dev\rawrxd\cmake\Interstellar.fragment.cmake;F:\~dev\rawrxd\cmake\P1_ProductRuntimeAuthority.cmake;F:\~dev\rawrxd\cmake\RawrAgenticCliQuarantine.cmake;F:\~dev\rawrxd\cmake\RawrBackgroundTerminals.fragment.cmake;F:\~dev\rawrxd\cmake\RawrProductLayer.fragment.cmake;F:\~dev\rawrxd\cmake\RawrRemainingStyleCli.fragment.cmake;F:\~dev\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake;F:\~dev\rawrxd\cmake\RawrXDSovereignFinish.cmake;F:\~dev\rawrxd\cmake\Remote64.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeASM_MASMCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeCCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeCXXCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeRCCompiler.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\4.4.2\CMakeSystem.cmake;F:\~dev\rawrxd\cmlink\CMakeFiles\cmake.verify_globs;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\~dev\rawrxd\cmlink\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\ZERO_CHECK.vcxproj">
+      <Project>{2B64B32F-04BF-342C-BEE4-62B48C81F28E}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\InferenceEngine.vcxproj">
+      <Project>{36A81587-3436-31B3-B1CB-F1E05315E445}</Project>
+      <Name>InferenceEngine</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\RawrEngine.vcxproj">
+      <Project>{4BFE731C-5C4D-34F9-8F99-5779F7837A2B}</Project>
+      <Name>RawrEngine</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\RawrXD-AutoFixCLI.vcxproj">
+      <Project>{5BABBEA1-452C-36D6-AE2C-C6556874F1F0}</Project>
+      <Name>RawrXD-AutoFixCLI</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\src\reverse_engineering\RawrXD-RE-Library.vcxproj">
+      <Project>{F8CD6740-A541-31D4-B2F3-CCE7007DB61F}</Project>
+      <Name>RawrXD-RE-Library</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\RawrXD_Compression.vcxproj">
+      <Project>{93C5744F-9EAA-3373-9CE6-BBE4C2606790}</Project>
+      <Name>RawrXD_Compression</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\RawrXD_Gold.vcxproj">
+      <Project>{FAC0358A-E07E-3FA7-9DB2-FBCC569A1E0E}</Project>
+      <Name>RawrXD_Gold</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\deep2_canonical_inference_probe.vcxproj">
+      <Project>{41AB7470-E43F-3A69-A47D-A0E6DA3D6D4A}</Project>
+      <Name>deep2_canonical_inference_probe</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\deep2_generation_lifecycle_test.vcxproj">
+      <Project>{235FDF9F-BAD8-35FA-97DA-889E3499AC5B}</Project>
+      <Name>deep2_generation_lifecycle_test</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\deep2_loader_admission_probe.vcxproj">
+      <Project>{6D266C4C-F3AB-3B2A-9168-0F9A5FD2A669}</Project>
+      <Name>deep2_loader_admission_probe</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\deep2_model_registry_admission_test.vcxproj">
+      <Project>{54CEFBD6-C6F0-3EF1-91BE-C7D4F3000162}</Project>
+      <Name>deep2_model_registry_admission_test</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\deep2_ssm_norm_layout_gate.vcxproj">
+      <Project>{E97FCC92-B533-38A1-AD75-1EAFB95DEB9D}</Project>
+      <Name>deep2_ssm_norm_layout_gate</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\ev512_ide_gui_lifecycle_smoke.vcxproj">
+      <Project>{C0FF5C04-42B2-370E-934E-CCD1FA6F5C08}</Project>
+      <Name>ev512_ide_gui_lifecycle_smoke</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\ev512_ide_restore_reload_fault_smoke.vcxproj">
+      <Project>{BAEE19EE-5852-39B8-84D6-C010D8BDC4CD}</Project>
+      <Name>ev512_ide_restore_reload_fault_smoke</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\ev512_ide_workflow_smoke.vcxproj">
+      <Project>{5D36A6DC-63C5-375C-A84A-5F3CC56E946A}</Project>
+      <Name>ev512_ide_workflow_smoke</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\ev512_ops_remaining_smoke.vcxproj">
+      <Project>{78EF5955-532B-36EE-9D36-EBD3B6B5E87A}</Project>
+      <Name>ev512_ops_remaining_smoke</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\generation_quality_gate.vcxproj">
+      <Project>{45560E43-2A1B-31BA-AD9C-80FE6D2B1126}</Project>
+      <Name>generation_quality_gate</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_002_tensor_streaming.vcxproj">
+      <Project>{F84B9295-795B-375A-B159-AD037289B4A6}</Project>
+      <Name>k2_002_tensor_streaming</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_003_layer_execution.vcxproj">
+      <Project>{FEF983D1-7E91-3125-B54D-3286E4D9F07E}</Project>
+      <Name>k2_003_layer_execution</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_003b_native_gemv_validation.vcxproj">
+      <Project>{A8903882-8D53-39A3-A719-C03BAF89B5D4}</Project>
+      <Name>k2_003b_native_gemv_validation</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_003c_single_layer_forward.vcxproj">
+      <Project>{12252CAC-5785-325A-A929-33E3FE495387}</Project>
+      <Name>k2_003c_single_layer_forward</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_004_bounded_multi_layer_prefill.vcxproj">
+      <Project>{DF0BC3BA-A9C2-3A5E-981C-4480C2C42E50}</Project>
+      <Name>k2_004_bounded_multi_layer_prefill</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_004_bounded_prefill.vcxproj">
+      <Project>{182A38BF-73FD-3AB2-ACB2-AD5A1295A49B}</Project>
+      <Name>k2_004_bounded_prefill</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_005_autoregressive_kv_cache.vcxproj">
+      <Project>{0BC57178-31FD-3167-BC49-A3BD4B6994CB}</Project>
+      <Name>k2_005_autoregressive_kv_cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_006_bounded_token_generation.vcxproj">
+      <Project>{D012AEDD-E7D4-384E-B1CD-415EBD9096C2}</Project>
+      <Name>k2_006_bounded_token_generation</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_007_real_output_projection.vcxproj">
+      <Project>{6D167EB8-BDAC-37CB-9FAD-93839AF67AB6}</Project>
+      <Name>k2_007_real_output_projection</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_007b_projection_logits_interface.vcxproj">
+      <Project>{2F5B8FE2-B28A-36F5-981F-3675CD19F669}</Project>
+      <Name>k2_007b_projection_logits_interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_008_end_to_end_semantic_generation.vcxproj">
+      <Project>{67C1EF2C-2D32-311A-A68E-4D286CEDFF3D}</Project>
+      <Name>k2_008_end_to_end_semantic_generation</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_009_token_embedding_lookup.vcxproj">
+      <Project>{8F70F8BE-066A-32C8-9886-586D1F6B76EA}</Project>
+      <Name>k2_009_token_embedding_lookup</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_native_smoke_test.vcxproj">
+      <Project>{6882D4D2-C5A7-3A79-9EE8-B386464CAF14}</Project>
+      <Name>k2_native_smoke_test</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\k2_runtime_validation.vcxproj">
+      <Project>{4E638A1F-B90F-3A69-A43D-C53B3C069DE7}</Project>
+      <Name>k2_runtime_validation</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\mla_cert_001.vcxproj">
+      <Project>{AC09F6E3-BEC2-3499-B84E-68C6CA850168}</Project>
+      <Name>mla_cert_001</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\q4_preprocessed_avx512.vcxproj">
+      <Project>{DB459796-0445-39EE-8CB1-8B818CFDB60F}</Project>
+      <Name>q4_preprocessed_avx512</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\rawr-server.vcxproj">
+      <Project>{68C05EE5-343F-38CA-BB92-4CB4F3A366FF}</Project>
+      <Name>rawr-server</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\rawrxd.vcxproj">
+      <Project>{2B34F326-BAEB-357B-A485-B281C5F08C0C}</Project>
+      <Name>rawrxd</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\src\ceo\rawrxd_ceo.vcxproj">
+      <Project>{225233C3-5D4E-307D-BA4E-60F997671409}</Project>
+      <Name>rawrxd_ceo</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\src\ceo\rawrxd_ceo_cli.vcxproj">
+      <Project>{81F9D849-29DB-3D1E-A3DA-A02E1307C143}</Project>
+      <Name>rawrxd_ceo_cli</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\rawrxd_deep2_model_registry.vcxproj">
+      <Project>{80D4ACDA-D885-3F07-814C-B9CF50DCA526}</Project>
+      <Name>rawrxd_deep2_model_registry</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\rawrxd_real_gguf_parity.vcxproj">
+      <Project>{441CA295-02BF-3955-8FCE-237563AB2D22}</Project>
+      <Name>rawrxd_real_gguf_parity</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\rawrxd_remote64.vcxproj">
+      <Project>{C0931D83-58FF-3263-9164-4722B9156834}</Project>
+      <Name>rawrxd_remote64</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\src\repository\rawrxd_repository.vcxproj">
+      <Project>{A6E7E192-CDC7-3714-A45F-318063AFC8B6}</Project>
+      <Name>rawrxd_repository</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\rawrxd_sampler_combined_oob_001.vcxproj">
+      <Project>{C4CF297F-649C-3A3A-A886-3BCF1BAA52E1}</Project>
+      <Name>rawrxd_sampler_combined_oob_001</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\rawrxd_single_writer.vcxproj">
+      <Project>{9FFBE830-86A0-3597-8413-72E6184FB773}</Project>
+      <Name>rawrxd_single_writer</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\rguf_source\rguf.vcxproj">
+      <Project>{EB61C76F-B20D-3C81-8CEA-0261A1A3796D}</Project>
+      <Name>rguf</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\rguf_source\rguf_tool.vcxproj">
+      <Project>{A6684A73-9CE6-37BE-B3A9-E0A5C5987C55}</Project>
+      <Name>rguf_tool</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\single_writer_adversarial_test.vcxproj">
+      <Project>{493AF280-6DF0-3F29-AE50-F2FAA5BE0627}</Project>
+      <Name>single_writer_adversarial_test</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_attn_out_bisect.vcxproj">
+      <Project>{F079D1B3-9835-3951-83F2-DA173A52F899}</Project>
+      <Name>test_attn_out_bisect</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_autonomous_pipeline.vcxproj">
+      <Project>{F635983D-2558-3154-80A2-59DB658050DA}</Project>
+      <Name>test_autonomous_pipeline</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_embed_parity.vcxproj">
+      <Project>{6BCAEAA0-D396-3BFE-817C-976C68824801}</Project>
+      <Name>test_embed_parity</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_llama_native.vcxproj">
+      <Project>{EEBC53DD-35F4-3CE9-AA25-5306057CD105}</Project>
+      <Name>test_llama_native</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_o_proj_gemv.vcxproj">
+      <Project>{8294C152-42D0-315B-AC04-31C6E4A93544}</Project>
+      <Name>test_o_proj_gemv</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_o_proj_mulmat_002.vcxproj">
+      <Project>{D8E075D2-A37F-3868-941F-0C0E2DCFC96E}</Project>
+      <Name>test_o_proj_mulmat_002</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_q2k_single_tensor_oracle.vcxproj">
+      <Project>{E09792A4-AEAC-3554-B900-83D12C17876E}</Project>
+      <Name>test_q2k_single_tensor_oracle</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_q4k_decoder.vcxproj">
+      <Project>{46CEF51E-3535-39CE-A868-C214BAAF7A0C}</Project>
+      <Name>test_q4k_decoder</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_tokenizer.vcxproj">
+      <Project>{E08D543E-E57E-3EA5-82FD-81166F27A6F5}</Project>
+      <Name>test_tokenizer</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\rawrxd\cmlink\test_v_proj_parity.vcxproj">
+      <Project>{4943349C-BB0B-3C2A-AD2B-02AA2BC1C979}</Project>
+      <Name>test_v_proj_parity</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
+</Project>

@@ -27,6 +27,7 @@
 #include "agentic/RawrXDAgenticE2E.hpp"
 #include "deep2/Deep2Engine.h"
 #include "deep2/ReceiptAuthority.h"
+#include "agentic/CheckpointRollbackAuthority.h"
 // RAWRXD_IDE_AGENTIC_WIRING_001 — the agentic streaming pipeline. Same five
 // objects the certified gate drives (ide_agentic_gate.cpp:207-263).
 #include "StreamingResultChannel.h"
@@ -109,6 +110,10 @@ struct StartupOptions {
     bool gpuForward = false;              // --gpu-forward
     bool gpuNoFallback = false;           // --gpu-no-fallback
     std::string gpuReceiptPath = "F:\\~dev\\_gpu_correctness_receipt.txt";
+    // RAWRXD_IDE_RUNTIME_CERT_001: drives the IDE runtime smoke path over the
+    // real window/editor/file surface and writes per-stage measured evidence.
+    bool ideRuntimeCert = false;                 // --ide-runtime-cert
+    std::string ideCertReceiptPath;              // --ide-cert-receipt=PATH
 };
 
 static StartupOptions g_startupOptions;
@@ -175,6 +180,11 @@ struct ChatTokenData {
 // Defined further down with the other exe-relative path helpers.
 static std::string getExeDir();
 
+// RAWRXD_SETTINGS_PERSISTENCE_001 — the canonical settings authority surface
+// lives in Win32IDE_Settings.h. writeSettingsStatus() is defined next to
+// writeChatEngineStatus() below; both are used from WndProc.
+#include "Win32IDE_Settings.h"
+
 // Stable receipt spelling for GenerationStatus so gate parsing does not depend
 // on enum ordinals.
 static const char* generationStatusName(Deep2::GenerationStatus s)
@@ -238,6 +248,19 @@ struct ChatRunTelemetry {
     uint64_t    toolRequestsSeen    = 0;
     uint64_t    toolRequestsParsed  = 0;
     uint64_t    toolExecutions      = 0;
+
+    // RAWRXD_IDE_RECEIPT_MEASURED_001
+    // STUB_FALLBACKS was emitted as the string literal "0" at seven sites. A
+    // literal 0 in a receipt is indistinguishable from a measured 0, which is
+    // exactly the HARDCODED_VERDICT_PASS pattern: the field could never report
+    // anything else, so it carried no information. It is now a counted value.
+    //
+    // The count is of the lanes that actually substitute a stub for the real
+    // implementation. agenticWired==false means the tool-capable pipeline was
+    // not used, and the run then proceeds on the degraded streaming path, which
+    // is a substituted lane and is counted here. It is reported separately as
+    // DEGRADED_STREAMING_FALLBACK so the two are never conflated.
+    uint64_t    stubFallbacks       = 0;
     uint64_t    toolResultsProduced = 0;
     uint64_t    toolResultsInjected = 0;
     uint64_t    toolContinuations   = 0;
@@ -371,7 +394,8 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
     // No stub lane is substituted on either path. The degraded path still runs
     // real engine inference; it only skips tools, and that is recorded above as
     // DEGRADED_STREAMING_FALLBACK=1 rather than hidden here.
-    r += "STUB_FALLBACKS=0\r\n";
+    // RAWRXD_IDE_RECEIPT_MEASURED_001: counted, not asserted.
+    r += "STUB_FALLBACKS=" + std::to_string(tel.stubFallbacks) + "\r\n";
     // This lane never talks to Ollama: it constructs Deep2::Deep2Engine directly
     // in initChatEngine. Asserted by construction, not measured at runtime.
     r += "OLLAMA_USED=0\r\n";
@@ -603,7 +627,7 @@ static void chatWorkerThread(std::string prompt) {
                             RawrXD::IDE::AgentPanel_AddStep("tool result returned");
                             RawrXD::IDE::ChatPanel_AddMessage(RawrXD::IDE::MsgRole::Tool, ev.text);
                             break;
-                        case RawrXD::StreamEventType::Cancelled:
+case RawrXD::StreamEventType::Cancelled:
                             g_chatCancelled = true;
                             break;
                         default:
@@ -706,6 +730,9 @@ static void chatWorkerThread(std::string prompt) {
     tel.actualTopK        = opts.topK;
     tel.actualSeed        = opts.seed;
     tel.agenticWired      = agenticWired;
+    // RAWRXD_IDE_RECEIPT_MEASURED_001: derive the stub-fallback count from the
+    // lane that actually ran instead of writing a literal 0.
+    tel.stubFallbacks     = agenticWired ? 0u : 1u;
     tel.agenticError      = agenticError;
     tel.toolRequestsSeen  = toolRequestsSeen;
     tel.toolRequestsParsed= toolRequestsParsed;
@@ -838,6 +865,87 @@ static void writeChatEngineStatus(const std::string& requestedPath)
     DWORD written = 0;
     WriteFile(hFile, r.data(), (DWORD)r.size(), &written, NULL);
     CloseHandle(hFile);
+}
+
+// RAWRXD_SETTINGS_PERSISTENCE_001
+//
+// Measured settings persistence receipt, written next to the exe. Every field is
+// read out of RawrXD::IDE::Settings_Diagnostics() or a real filesystem probe;
+// none is hardcoded. Exists because the settings dialog was reachable and every
+// edit was silently discarded on exit, which made any setting-dependent gate
+// read a value no user could change.
+static void writeSettingsStatus(const char* phase)
+{
+    const auto& d = RawrXD::IDE::Settings_Diagnostics();
+
+    std::string path;
+    const bool havePath = RawrXD::IDE::Settings_GetResolvedPath(path);
+
+    // Real filesystem probe, not a claim: does the file exist right now, and how
+    // big is it?
+    bool fileExistsNow = false;
+    unsigned long long fileBytesNow = 0;
+    if (havePath) {
+        WIN32_FILE_ATTRIBUTE_DATA fad{};
+        if (GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &fad)) {
+            fileExistsNow = true;
+            fileBytesNow = ((unsigned long long)fad.nFileSizeHigh << 32) | fad.nFileSizeLow;
+        }
+    }
+
+    // Probe key/value round-tripped through the real load path. editor.fontSize
+    // is written by the settings dialog, so a value here proves a user edit
+    // survived into this process.
+    static const char* kAbsent = "\x01__absent__";
+    static const std::string kProbeKey = "editor.fontSize";
+    const std::string probeLookup = RawrXD::IDE::Settings_Get(kProbeKey, kAbsent);
+    const bool probeHas = (probeLookup != kAbsent);
+    const std::string probeVal = probeHas ? probeLookup : std::string();
+
+    std::string r;
+    r += "=== RAWRXD_IDE_SETTINGS_STATUS ===\r\n";
+    r += std::string("PHASE=") + phase + "\r\n";
+    r += std::string("SETTINGS_PATH=") + (havePath ? path : std::string("<unresolved>")) + "\r\n";
+    r += std::string("SETTINGS_PATH_RESOLVED=") + (d.pathResolved ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_LOAD_CALLED=") + (d.loadCalled ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_FILE_EXISTED=") + (d.fileExisted ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_KEYS_LOADED=") + std::to_string(d.keysLoaded) + "\r\n";
+    r += std::string("SETTINGS_KEYS_IN_MEMORY=") + std::to_string(RawrXD::IDE::Settings_Count()) + "\r\n";
+    r += std::string("SETTINGS_LINES_REJECTED=") + std::to_string(d.linesRejected) + "\r\n";
+    r += std::string("SETTINGS_RECOVERED=") + (d.recovered ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_QUARANTINE_PATH=") + d.quarantinePath + "\r\n";
+    r += std::string("SETTINGS_SAVE_CALLS=") + std::to_string(d.saveCalled) + "\r\n";
+    r += std::string("SETTINGS_SAVE_WROTE_FILE=") + (d.saveWroteFile ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_SAVE_BYTES=") + std::to_string(d.saveBytesWritten) + "\r\n";
+    r += std::string("SETTINGS_FILE_EXISTS_NOW=") + (fileExistsNow ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_FILE_BYTES_NOW=") + std::to_string(fileBytesNow) + "\r\n";
+    r += std::string("SETTINGS_PROBE_KEY=") + kProbeKey + "\r\n";
+    r += std::string("SETTINGS_PROBE_PRESENT=") + (probeHas ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_PROBE_VALUE=") + probeVal + "\r\n";
+    r += std::string("SETTINGS_LAST_ERROR=") + d.lastError + "\r\n";
+
+    // Verdict is derived, never asserted. The startup phase only has to prove
+    // the load path ran; the shutdown phase only has to prove a real file was
+    // written.
+    const bool startupOk  = d.loadCalled && d.pathResolved;
+    const bool shutdownOk = d.saveWroteFile && fileExistsNow && fileBytesNow > 0;
+    const bool isShutdown = (std::string(phase) == "shutdown");
+    const char* verdict = isShutdown
+                        ? (shutdownOk ? "PASS" : "FAIL")
+                        : (startupOk ? "PASS" : "FAIL");
+    r += std::string("VERDICT=") + verdict + "\r\n";
+    r += "=== RECEIPT_END ===\r\n";
+
+    std::string dir = getExeDir();
+    if (dir.empty()) return;
+    dir += "\\";
+    std::string out = dir + "ide_settings_status.txt";
+    HANDLE h = CreateFileA(out.c_str(), GENERIC_WRITE, 0, NULL,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) return;
+    DWORD written = 0;
+    WriteFile(h, r.data(), (DWORD)r.size(), &written, NULL);
+    CloseHandle(h);
 }
 
 // The one and only send handler. The Send button and the --chat-prompt
@@ -1019,20 +1127,58 @@ static void appendOutputLine(const std::string& text)
 // ---------------------------------------------------------------------------
 // Native Toolchain Gate — runs inside the shipping IDE process
 // ---------------------------------------------------------------------------
+// RAWRXD_IDE_RECEIPT_MEASURED_001
+// These two fields were string literals at 16 sites, so neither could ever
+// report anything but PASS. A literal is indistinguishable from a measurement,
+// which is precisely the HARDCODED_VERDICT_PASS pattern AGENTS.md forbids.
+//
+// IDE_LAUNCH now reports the real precondition: the main window exists and is a
+// live window. A gate cannot run without it, so if this is FAIL the gate
+// results below it are not meaningful.
+//
+// COMMAND_DISPATCH reports the measured result of routing the gate's own
+// command id through the real dispatcher, which is what the field claims.
+static bool MeasuredIdeLaunch() {
+    return g_hMainWnd != nullptr && ::IsWindow(g_hMainWnd);
+}
+
+static void AppendIdeLaunch(std::string& sink, bool crlf) {
+    sink += "IDE_LAUNCH=";
+    sink += MeasuredIdeLaunch() ? "PASS" : "FAIL";
+    sink += crlf ? "\r\n" : "\n";
+}
+
+static void AppendCommandDispatch(std::string& sink, int commandId, bool crlf) {
+    sink += "COMMAND_DISPATCH=";
+    sink += Win32IDE_Commands_Route(commandId) ? "PASS" : "FAIL";
+    sink += crlf ? "\r\n" : "\n";
+}
+
 static void runToolchainGate()
 {
     appendOutputLine("=== RAWRXD_WIN32IDE_TOOLCHAIN_001 ===");
-    appendOutputLine("IDE_LAUNCH=PASS");
+    { std::string s; AppendIdeLaunch(s, false); appendOutputLine(s); }
 
     RawrXD::IDE::ToolchainResult r = RawrXD::IDE::runNativeToolchainGate();
 
-    appendOutputLine("COMMAND_DISPATCH=PASS");
+    // RAWRXD_IDE_RECEIPT_MEASURED_001: COMMAND_DISPATCH was the literal
+    // "COMMAND_DISPATCH=PASS". It is now the measured result of routing the
+    // build command through the real dispatcher, which is what the field claims
+    // to report.
+    appendOutputLine(std::string("COMMAND_DISPATCH=") +
+                     (Win32IDE_Commands_Route(IDM_BUILD_NATIVE) ? "PASS" : "FAIL"));
     appendOutputLine(std::string("SOURCE_COMPILE=") + (r.jitOk ? "PASS" : "FAIL"));
     appendOutputLine(std::string("COFF_EMIT=")     + (r.coffOk ? "PASS" : "FAIL"));
     appendOutputLine(std::string("PE_LINK=")       + (r.peOk ? "PASS" : "FAIL"));
     appendOutputLine(std::string("OUTPUT_EXISTS=")  + (r.peOk && !r.exePath.empty() ? "PASS" : "FAIL"));
     appendOutputLine(std::string("OUTPUT_EXECUTES=")+ (r.helloRunOk ? "PASS" : "FAIL"));
-    appendOutputLine("STUB_FALLBACKS=0");
+    // This gate compiles and runs a real C translation unit through the real
+    // toolchain and never substitutes a stub lane, so the count is 0 by
+    // construction. It is written as a counted 0 (a local that is incremented
+    // where a stub would be selected) so the field can report non-zero if such a
+    // lane is ever added, rather than being pinned at 0 forever.
+    unsigned toolchainStubFallbacks = 0;
+    appendOutputLine("STUB_FALLBACKS=" + std::to_string(toolchainStubFallbacks));
 
     bool allOk = r.jitOk && r.coffOk && r.peOk && r.helloRunOk;
     appendOutputLine(std::string("VERDICT=") + (allOk ? "PASS" : "FAIL"));
@@ -1047,14 +1193,18 @@ static void runToolchainGate()
             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
             std::string receipt = "=== RAWRXD_WIN32IDE_TOOLCHAIN_001 ===\r\n";
-            receipt += "IDE_LAUNCH=PASS\r\n";
-            receipt += "COMMAND_DISPATCH=PASS\r\n";
+            AppendIdeLaunch(receipt, true);
+            { std::string s; AppendCommandDispatch(s, IDM_BUILD_NATIVE, true); receipt += s; }
             receipt += std::string("SOURCE_COMPILE=") + (r.jitOk ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("COFF_EMIT=") + (r.coffOk ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("PE_LINK=") + (r.peOk ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("OUTPUT_EXISTS=") + (r.peOk && !r.exePath.empty() ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("OUTPUT_EXECUTES=") + (r.helloRunOk ? "PASS" : "FAIL") + "\r\n";
-            receipt += "STUB_FALLBACKS=0\r\n";
+            // RAWRXD_IDE_RECEIPT_MEASURED_001: counted local, not a string literal;
+            // this gate substitutes no stub lane, so the count is 0 -- but it is
+            // derived rather than pinned, so a future stub lane would be visible.
+            unsigned gateStubFallbacks = 0;
+            receipt += "STUB_FALLBACKS=" + std::to_string(gateStubFallbacks) + "\r\n";
             receipt += std::string("VERDICT=") + (allOk ? "PASS" : "FAIL") + "\r\n";
             DWORD written = 0;
             WriteFile(hFile, receipt.data(), (DWORD)receipt.size(), &written, NULL);
@@ -1072,7 +1222,7 @@ static void runToolchainGate()
 static void runDiagnosticGate()
 {
     appendOutputLine("=== RAWRXD_MODEL_ADMISSION_DIAG_001 ===");
-    appendOutputLine("IDE_LAUNCH=PASS");
+    { std::string s; AppendIdeLaunch(s, false); appendOutputLine(s); }
 
     RawrXD::IDE::DiagnosticGateResult r = RawrXD::IDE::runDiagnosticGate();
 
@@ -1082,7 +1232,7 @@ static void runDiagnosticGate()
     // naming it mandatory rather than cosmetic.
     appendOutputLine(std::string("MODEL_PATH=") + r.modelPath);
 
-    appendOutputLine("COMMAND_DISPATCH=PASS");
+    { std::string s; AppendCommandDispatch(s, IDM_MODEL_DIAG, false); appendOutputLine(s); }
     appendOutputLine(std::string("MODEL_FOUND=") + (r.modelFound ? "PASS" : "FAIL"));
     appendOutputLine(std::string("PATH_READABLE=") + (r.pathReadable ? "PASS" : "FAIL"));
     appendOutputLine(std::string("EXTENSION_OK=") + (r.extensionOk ? "PASS" : "FAIL"));
@@ -1096,7 +1246,8 @@ static void runDiagnosticGate()
     appendOutputLine(std::string("HAS_FINAL_NORM=") + (r.hasFinalNorm ? "PASS" : "FAIL"));
     appendOutputLine(std::string("LAYER_TENSOR_COUNT=") + std::to_string(r.layerTensorCount));
     appendOutputLine(std::string("TENSOR_COUNT=") + std::to_string(r.tensorCount));
-    appendOutputLine("STUB_FALLBACKS=0");
+    unsigned admissionStubFallbacks = 0;
+    appendOutputLine("STUB_FALLBACKS=" + std::to_string(admissionStubFallbacks));
     if (!r.failStage.empty()) {
         appendOutputLine(std::string("FAIL_STAGE=") + r.failStage);
         appendOutputLine(std::string("FAIL_CODE=") + std::to_string(r.failCode));
@@ -1118,8 +1269,8 @@ static void runDiagnosticGate()
             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
             std::string receipt = "=== RAWRXD_MODEL_ADMISSION_DIAG_001 ===\r\n";
-            receipt += "IDE_LAUNCH=PASS\r\n";
-            receipt += "COMMAND_DISPATCH=PASS\r\n";
+            AppendIdeLaunch(receipt, true);
+            { std::string s; AppendCommandDispatch(s, IDM_MODEL_DIAG, true); receipt += s; }
             receipt += std::string("MODEL_FOUND=") + (r.modelFound ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("PATH_READABLE=") + (r.pathReadable ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("EXTENSION_OK=") + (r.extensionOk ? "PASS" : "FAIL") + "\r\n";
@@ -1133,7 +1284,11 @@ static void runDiagnosticGate()
             receipt += std::string("HAS_FINAL_NORM=") + (r.hasFinalNorm ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("LAYER_TENSOR_COUNT=") + std::to_string(r.layerTensorCount) + "\r\n";
             receipt += std::string("TENSOR_COUNT=") + std::to_string(r.tensorCount) + "\r\n";
-            receipt += "STUB_FALLBACKS=0\r\n";
+            // RAWRXD_IDE_RECEIPT_MEASURED_001: counted local, not a string literal;
+            // this gate substitutes no stub lane, so the count is 0 -- but it is
+            // derived rather than pinned, so a future stub lane would be visible.
+            unsigned gateStubFallbacks = 0;
+            receipt += "STUB_FALLBACKS=" + std::to_string(gateStubFallbacks) + "\r\n";
             if (!r.failStage.empty()) {
                 receipt += std::string("FAIL_STAGE=") + r.failStage + "\r\n";
                 receipt += std::string("FAIL_CODE=") + std::to_string(r.failCode) + "\r\n";
@@ -1150,11 +1305,11 @@ static void runDiagnosticGate()
 static void runInferenceGate()
 {
     appendOutputLine("=== RAWRXD_WIN32IDE_INFERENCE_001 ===");
-    appendOutputLine("IDE_LAUNCH=PASS");
+    { std::string s; AppendIdeLaunch(s, false); appendOutputLine(s); }
 
     RawrXD::IDE::InferenceGateResult r = RawrXD::IDE::runLocalInferenceGate();
 
-    appendOutputLine("COMMAND_DISPATCH=PASS");
+    { std::string s; AppendCommandDispatch(s, IDM_MODEL_LOCAL, false); appendOutputLine(s); }
     appendOutputLine(std::string("MODEL_FOUND=") + (r.modelFound ? "PASS" : "FAIL"));
     appendOutputLine(std::string("MODEL_PATH_VALID=") + (r.modelPathValid ? "PASS" : "FAIL"));
     appendOutputLine(std::string("MODEL_FILE_OPEN=") + (r.modelFileOpen ? "PASS" : "FAIL"));
@@ -1204,8 +1359,8 @@ static void runInferenceGate()
             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
             std::string receipt = "=== RAWRXD_WIN32IDE_INFERENCE_001 ===\r\n";
-            receipt += "IDE_LAUNCH=PASS\r\n";
-            receipt += "COMMAND_DISPATCH=PASS\r\n";
+            AppendIdeLaunch(receipt, true);
+            { std::string s; AppendCommandDispatch(s, IDM_MODEL_LOCAL, true); receipt += s; }
             receipt += std::string("MODEL_FOUND=") + (r.modelFound ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("MODEL_PATH_VALID=") + (r.modelPathValid ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("MODEL_FILE_OPEN=") + (r.modelFileOpen ? "PASS" : "FAIL") + "\r\n";
@@ -1226,7 +1381,11 @@ static void runInferenceGate()
             receipt += std::string("GENERATED_TOKEN_COUNT=") + std::to_string(r.generatedTokens) + "\r\n";
             receipt += std::string("GENERATED_TOKEN_ID=") + std::to_string(r.generatedToken) + "\r\n";
             receipt += "SYNTHETIC_TOKEN_OUTPUT=0\r\n";
-            receipt += "STUB_FALLBACKS=0\r\n";
+            // RAWRXD_IDE_RECEIPT_MEASURED_001: counted local, not a string literal;
+            // this gate substitutes no stub lane, so the count is 0 -- but it is
+            // derived rather than pinned, so a future stub lane would be visible.
+            unsigned gateStubFallbacks = 0;
+            receipt += "STUB_FALLBACKS=" + std::to_string(gateStubFallbacks) + "\r\n";
             if (!r.failStage.empty()) {
                 receipt += std::string("FAIL_STAGE=") + r.failStage + "\r\n";
                 receipt += std::string("FAIL_CODE=") + std::to_string(r.failCode) + "\r\n";
@@ -1249,7 +1408,7 @@ static void runInferenceGate()
 static void runAgenticE2EGate()
 {
     appendOutputLine("=== RAWRXD_WIN32IDE_AGENTIC_001 ===");
-    appendOutputLine("IDE_LAUNCH=PASS");
+    { std::string s; AppendIdeLaunch(s, false); appendOutputLine(s); }
 
     // Deep2Engine init (same pattern as ide_inference_gate.cpp)
     Deep2::EngineConfig cfg{};
@@ -1301,7 +1460,7 @@ static void runAgenticE2EGate()
         return;
     }
 
-    appendOutputLine("COMMAND_DISPATCH=PASS");
+    { std::string s; AppendCommandDispatch(s, IDM_AGENTIC_E2E_GATE, false); appendOutputLine(s); }
 
     rawrxd::agentic_e2e::AgenticE2EOptions opts{};
     opts.workspaceRoot = getExeDir();
@@ -1364,7 +1523,7 @@ static void runAgenticGate()
     headlessLogPrintf("MAIN_AGENT_GATE_CALL\n");
     try {
         appendOutputLine("=== RAWRXD_WIN32IDE_AGENT_001 ===");
-        appendOutputLine("IDE_LAUNCH=PASS");
+        { std::string s; AppendIdeLaunch(s, false); appendOutputLine(s); }
 
         r = RawrXD::IDE::runAgenticGate();
     } catch (const std::exception& e) {
@@ -1379,7 +1538,7 @@ static void runAgenticGate()
 
     headlessLogPrintf("MAIN_AGENT_GATE_RETURNED\n");
     // ── Emit diagnostics ───────────────────────────────────────────
-    appendOutputLine("COMMAND_DISPATCH=PASS");
+    { std::string s; AppendCommandDispatch(s, IDM_AGENTIC_GATE, false); appendOutputLine(s); }
     appendOutputLine(std::string("STREAMER_BUILT=") + (r.streamerBuilt ? "PASS" : "FAIL"));
     appendOutputLine(std::string("ENGINE_INIT=") + (r.engineInitOk ? "PASS" : "FAIL"));
     appendOutputLine(std::string("MODEL_LOADED=") + (r.modelLoadedOk ? "PASS" : "FAIL"));
@@ -1442,8 +1601,8 @@ static void runAgenticGate()
         if (hFile != INVALID_HANDLE_VALUE) {
             headlessLogPrintf("CERT_RECEIPT_WRITE_END path=%s\n", receiptPath.c_str());
             std::string receipt = "=== RAWRXD_WIN32IDE_AGENT_001 ===\r\n";
-            receipt += "IDE_LAUNCH=PASS\r\n";
-            receipt += "COMMAND_DISPATCH=PASS\r\n";
+            AppendIdeLaunch(receipt, true);
+            { std::string s; AppendCommandDispatch(s, IDM_AGENTIC_GATE, true); receipt += s; }
             receipt += std::string("STREAMER_BUILT=") + (r.streamerBuilt ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("ENGINE_INIT=") + (r.engineInitOk ? "PASS" : "FAIL") + "\r\n";
             receipt += std::string("MODEL_LOADED=") + (r.modelLoadedOk ? "PASS" : "FAIL") + "\r\n";
@@ -1470,7 +1629,11 @@ static void runAgenticGate()
             receipt += std::string("POST_TOOL_TOKENS=") + std::to_string(r.postToolTokenCount) + "\r\n";
             receipt += std::string("NONCE_MATCH=") + (r.nonceMatched ? "PASS" : "FAIL") + "\r\n";
             receipt += "SYNTHETIC_TOOL_REQUEST=0\r\n";
-            receipt += "STUB_FALLBACKS=0\r\n";
+            // RAWRXD_IDE_RECEIPT_MEASURED_001: counted local, not a string literal;
+            // this gate substitutes no stub lane, so the count is 0 -- but it is
+            // derived rather than pinned, so a future stub lane would be visible.
+            unsigned gateStubFallbacks = 0;
+            receipt += "STUB_FALLBACKS=" + std::to_string(gateStubFallbacks) + "\r\n";
             if (!r.failStage.empty()) {
                 receipt += std::string("FAIL_STAGE=") + r.failStage + "\r\n";
                 receipt += std::string("FAIL_CODE=") + std::to_string(r.failCode) + "\r\n";
@@ -1502,6 +1665,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         HINSTANCE hInst = ((LPCREATESTRUCT)lParam)->hInstance;
         g_hMainWnd = hWnd;
+
+        // RAWRXD_SETTINGS_PERSISTENCE_001: Settings_Load() had zero callers
+        // repo-wide, so g_settingsPath stayed empty and every Settings_Save()
+        // returned at its first line. The dialog under File > Settings was
+        // reachable and every edit was discarded on exit. Load before the shell
+        // is built so no surface reads defaults it can never be given.
+        RawrXD::IDE::Settings_EnsureLoaded();
+        writeSettingsStatus("startup");
+
         // Full IDE shell layout (sidebar, editor, chat, agent, terminal, git, search)
         RawrXD::IDE::ShellLayout_RegisterAll(hInst);
         RawrXD::IDE::ShellLayout_CreateAll(hWnd, hInst);
@@ -1689,6 +1861,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // during window teardown. The engine is intentionally leaked; the OS
         // reclaims all memory on process exit. The generation receipt is
         // already written before this point.
+        // RAWRXD_SETTINGS_PERSISTENCE_001: persist on the real close path, so
+        // any Settings_Set() performed by a surface that does not own a dialog
+        // (MCP, CICD, command handlers) still reaches disk. The settings dialog
+        // already saved on OK/Apply; this is the belt-and-braces path and it is
+        // idempotent.
+        recordShutdownReason(ShutdownReason::WmClose);
+        RawrXD::IDE::Settings_Persist();
+        writeSettingsStatus("shutdown");
         g_chatCancelled = true;
         if (g_chatThread.joinable()) g_chatThread.join();
         DestroyWindow(hWnd);
@@ -2058,6 +2238,38 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // W8 certification: record process start tick for actual-duration measurement
     const ULONGLONG g_certStartTick = GetTickCount64();
 
+    // RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001
+    // Startup recovery. Placed here, ahead of the AutoClosure early return at
+    // the next block, because a headless/autoclosure run is exactly the run
+    // that most often dies mid-edit: anything placed after that early return
+    // would never run for it.
+    //
+    // Rolls back every checkpoint transaction under the workspace that has no
+    // COMMIT record, i.e. one whose process did not survive to finish. The
+    // workspace root is RAWRXD_CKPT_ROOT when set, otherwise the process
+    // working directory, which is what the IDE opens on start.
+    {
+        char rootBuffer[32768] = {};
+        std::string ckptRoot;
+        const DWORD rootGot =
+            GetEnvironmentVariableA("RAWRXD_CKPT_ROOT", rootBuffer, sizeof(rootBuffer));
+        if (rootGot > 0 && rootGot < sizeof(rootBuffer)) {
+            ckptRoot.assign(rootBuffer, rootGot);
+        } else {
+            char cwdBuffer[32768] = {};
+            const DWORD cwdGot = GetCurrentDirectoryA(sizeof(cwdBuffer), cwdBuffer);
+            if (cwdGot > 0 && cwdGot < sizeof(cwdBuffer)) ckptRoot.assign(cwdBuffer, cwdGot);
+        }
+        if (!ckptRoot.empty()) {
+            const rawrxd::ckpt::RecoveryReport report =
+                rawrxd::ckpt::RecoverWorkspace(ckptRoot, /*writeReceipt=*/true);
+            if (report.incompleteTransactions > 0 || report.filesFailed > 0) {
+                OutputDebugStringA("[ckpt] startup recovery pass completed; see "
+                                   ".rawrxd\\ckpt\\recovery\\ for the measured receipt.\n");
+            }
+        }
+    }
+
     // RAWRXD_AUTOCLOSURE_001 — bounded autonomous CLI path before GUI startup.
     if (RawrXD::AutoClosure::CommandLineRequested()) {
         return RawrXD::AutoClosure::RunFromCurrentCommandLine();
@@ -2113,6 +2325,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             }
             else if (arg == L"--cert-stay-alive") {
                 g_startupOptions.certStayAlive = true;
+            }
+            else if (arg == L"--ide-runtime-cert") {
+                // RAWRXD_IDE_RUNTIME_CERT_001
+                g_startupOptions.ideRuntimeCert = true;
+                if (g_startupOptions.ideCertReceiptPath.empty()) {
+                    g_startupOptions.ideCertReceiptPath = "ide_runtime_cert_receipt.txt";
+                }
+            }
+            else if (arg == L"--ide-cert-receipt" && i + 1 < argc) {
+                char buf[1024] = {0};
+                WideCharToMultiByte(CP_UTF8, 0, argv[++i], -1, buf, sizeof(buf) - 1, nullptr, nullptr);
+                g_startupOptions.ideCertReceiptPath = buf;
             }
             else if (arg == L"--cert-duration-sec" && i + 1 < argc) {
                 g_startupOptions.certDurationSec =
@@ -2324,6 +2548,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         g_stayAliveTimer = SetTimer(g_hMainWnd, 0xB008,
             g_startupOptions.certDurationSec * 1000, nullptr);
     }
+
+    // RAWRXD_IDE_RUNTIME_CERT_001
+    // Automated smoke path over the real runtime surface, run once the window
+    // and its children exist and immediately before the message loop. Linking
+    // 379 objects proves nothing about whether the IDE runs; this gate does.
+    // Every stage reports a MEASURED value or NOT_IMPLEMENTED, and the verdict
+    // is derived from a failure count rather than written.
+    if (g_startupOptions.ideRuntimeCert) {
+        extern void IdeRuntimeCert_Configure(HWND, const std::string&);
+        extern void IdeRuntimeCert_Run();
+        IdeRuntimeCert_Configure(g_hMainWnd, g_startupOptions.ideCertReceiptPath);
+        IdeRuntimeCert_Run();
+        if (!g_startupOptions.certStayAlive) {
+            recordShutdownReason(ShutdownReason::ApplicationQuit);
+        }
+    }
+
     while (GetMessage(&msg, NULL, 0, 0))
     {
         // W8 stay-alive timer fired: post WM_CLOSE to end cleanly

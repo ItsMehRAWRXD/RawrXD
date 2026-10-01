@@ -4984,6 +4984,12 @@ list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
     src/agentic/StreamingToolParser.cpp
     src/agentic/AgentToolRegistry.cpp
     src/agentic/CommandExecutor.cpp
+    # RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001: durable checkpoint/rollback
+    # authority. Compiled into this library because the sandboxed tool authority
+    # above is the product's single write choke point -- write_file used to be
+    # CreateFileW(CREATE_ALWAYS)+WriteFile with no flush, backup or record, so a
+    # crash mid-write was unrecoverable.
+    src/agentic/CheckpointRollbackAuthority.cpp
     src/agentic/AgentStateManager.cpp
     src/agentic/AgentToolOrchestrator.cpp
     src/security/JwtValidator.cpp
@@ -5356,6 +5362,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Session.cpp
         src/win32app/Win32IDE_GGUFInspector.cpp
         src/win32app/Win32IDE_FileOps.cpp
+        # RAWRXD_IDE_RUNTIME_CERT_001: IDE runtime smoke path over the real
+        # window/editor/file surface. Drives per-stage measured evidence.
+        src/win32app/Win32IDE_RuntimeCert.cpp
         src/win32app/Win32IDE_DecompilerView.cpp
         src/win32app/Win32IDE_NativePipeline.cpp
         src/win32app/Win32IDE_ModelAnatomy.cpp
@@ -7097,6 +7106,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # were never listed in WIN32IDE_SOURCES (category: library-not-linked).
     list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_StatusBar.cpp)
     list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_EditorEngine.cpp)
+    # RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001 needs no entry here: the IDE
+    # links InferenceEngine (target_link_libraries at the RawrXD-Win32IDE
+    # target), and the authority is compiled into that library. Adding the TU
+    # here as well would define its symbols twice in one image.
     list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_GhostText.cpp)
     # BATCH E (W3): real singleton subsystem TUs, on disk but never wired
     # (same category as RawrXDAgenticE2E/re_api_bridge: library-not-linked).
@@ -10381,7 +10394,15 @@ add_executable(rawr-server
       # DefaultDenyAll, an allowedRoots allowlist, allowWrite/allowExecute
       # opt-ins, output caps, an execute timeout, and IsPathAllowed() rejecting
       # traversal/UNC/device/ADS paths.
-      src/agentic/AgentToolRegistry.cpp)
+      src/agentic/AgentToolRegistry.cpp
+      # RAWRXD_B82_CKPT_DEPENDENCY: the built-in tools record checkpoint and
+      # rollback transactions -- write_file and execute_command both call
+      # ckpt::Transaction, and write_file also calls ckpt::sha256Hex. Without
+      # this TU the server fails to link with three unresolved externals:
+      #   rawrxd::ckpt::sha256Hex
+      #   rawrxd::ckpt::Transaction::WriteFile
+      #   rawrxd::ckpt::Transaction::RecordCommand
+      src/agentic/CheckpointRollbackAuthority.cpp)
   # src/core/ToolRegistry.cpp is deliberately NOT added. It is the legacy
   # direct-process registry and refuses to compile without
   # RAWRXD_LEGACY_TOOL_REGISTRY_ALLOWED:
@@ -17062,6 +17083,29 @@ set_target_properties(rawrxd_single_writer PROPERTIES
 # so a later reader cannot mistake it for the live mechanism.
 # ============================================================================
 
+# ============================================================================
+# RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001 -- crash/recovery proof
+#
+# Drives a real multi-file agent edit through the production tool authority,
+# kills that process with TerminateProcess at a named write, then runs the IDE
+# startup recovery pass in a SEPARATE process and verifies byte-for-byte
+# restoration from the outside.
+# ============================================================================
+add_executable(ckpt_rollback_crash_cert
+    tools/ckpt_rollback_crash_cert.cpp)
+
+target_link_libraries(ckpt_rollback_crash_cert PRIVATE InferenceEngine)
+target_include_directories(ckpt_rollback_crash_cert PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(ckpt_rollback_crash_cert PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+endif()
+set_target_properties(ckpt_rollback_crash_cert PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME ckpt_rollback_crash_cert
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 add_executable(single_writer_adversarial_test
     tools/single_writer_adversarial_test.cpp)
 
@@ -17447,6 +17491,9 @@ endif()
 # ============================================================================
 add_executable(kquant_parity EXCLUDE_FROM_ALL
     kquant_parity_check.cpp
+    # The harness's gguf-loader cross-check constructs a rawrxd::GGUFTensorView and
+    # calls ToFloat32, so the loader is a real link dependency, not optional.
+    src/gguf_loader.cpp
 )
 set_target_properties(kquant_parity PROPERTIES
     EXCLUDE_FROM_ALL TRUE
@@ -17468,6 +17515,85 @@ endif()
 message(STATUS "kquant_parity: CONFIGURED (AVX-512 Q4_K GEMV parity oracle)")
 
 message(STATUS "thread_geometry_probe: CONFIGURED")
+
+# ============================================================================
+# RAWRXD_GIT_SAFETY_AUTHORITY_001
+#
+# Git was implemented (src/core/feature_handlers.cpp shells out to _popen;
+# AgentCore and ResponseCodedAgent read git_status through a no-shell runner)
+# and none of it was SAFE. Nothing anywhere decided whether an autonomous agent
+# could mutate a repository that already held someone else's uncommitted work.
+#
+# This target is the certification surface for that decision:
+#
+#   rawrxd_git_safety        the authority + the tool registration
+#   git_safety_authority_cert the runtime certification driver
+#
+# The driver creates its own scratch repository under %TEMP% and never touches
+# F:\~dev\rawrxd. Its dangerous test (RAWRXD_GIT_SAFETY_DIRTY_TREE_001) commits
+# to a worktree holding unrelated user modifications and requires those files
+# back byte-identical afterwards, verified with SHA-256 over file content rather
+# than by trusting git's own report about itself.
+#
+# The library deliberately does NOT link InferenceEngine. It needs
+# CommandExecutor, the tool registry and ReceiptAuthority, and nothing else.
+# That keeps the certification buildable in seconds instead of inheriting the
+# full engine build.
+# ============================================================================
+add_library(rawrxd_git_safety STATIC
+    src/agentic/GitSafetyAuthority.cpp
+    src/agentic/GitSafetyAuthorityTools.cpp
+    src/agentic/CommandExecutor.cpp
+    src/agentic/AgentToolRegistry.cpp
+    # AgentToolRegistry.cpp calls rawrxd::ckpt::Transaction (write_file and
+    # execute_command both journal through it), so the link needs this TU. It
+    # was previously satisfied only because every target that compiled
+    # AgentToolRegistry.cpp also compiled this one by coincidence of list
+    # membership.
+    src/agentic/CheckpointRollbackAuthority.cpp
+    src/deep2/ReceiptAuthority.cpp)
+
+target_include_directories(rawrxd_git_safety PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include)
+
+if(MSVC)
+    target_compile_features(rawrxd_git_safety PUBLIC cxx_std_20)
+    # BCryptOpenAlgorithmProvider is the SHA-256 provider; without this the
+    # link fails with an unresolved external rather than a compile error.
+    target_link_libraries(rawrxd_git_safety PUBLIC bcrypt)
+endif()
+
+set_target_properties(rawrxd_git_safety PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+add_executable(git_safety_authority_cert
+    tools/git_safety_authority_cert.cpp)
+
+target_link_libraries(git_safety_authority_cert PRIVATE
+    rawrxd_git_safety)
+
+set_target_properties(git_safety_authority_cert PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME git_safety_authority_cert)
+
+# Registered with ctest so the certification is reachable from the canonical
+# root. The IDE audit recorded `Total Tests: 0` as a structural defect; a
+# certification target that is defined but never registered is the same defect
+# one level down.
+#
+# enable_testing() is called here rather than relying on the call at the
+# tests/ subdirectory gate above: that call is inside an EXISTS() condition, so
+# a tree without tests/CMakeLists.txt would silently produce a target that
+# cannot be run by ctest at all — which is precisely the failure this gate
+# exists to prevent.
+enable_testing()
+add_test(NAME git_safety_authority_cert
+         COMMAND git_safety_authority_cert
+         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+message(STATUS "RAWRXD_GIT_SAFETY_AUTHORITY_001: CONFIGURED "
+               "(library rawrxd_git_safety, driver git_safety_authority_cert)")
 
 # ============================================================================
 # RAWRXD_SOURCE_CLOSURE_SUMMARY_001

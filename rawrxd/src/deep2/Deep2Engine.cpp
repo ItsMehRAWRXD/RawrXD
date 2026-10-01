@@ -692,8 +692,19 @@ Deep2Engine::~Deep2Engine() {
     std::fflush(stderr);
 }
 
-// =================== WEIGHT TYPE INTROSPECTION ====================
-// RAWRXD_WEIGHT_TYPE_FROM_TENSORS_001
+// RAWRXD_DEBUG_EXPOSE_LOGITS_001
+// Resolved once per process, like the other debug gates. A run without the
+// flag must not pay for a per-step V-float copy, and must not be able to
+// produce a vector that a harness might mistake for a measured one.
+bool Deep2Engine::debugLogitsEnabled() const {
+    static const bool on = [] {
+        const char* e = std::getenv("DEEP2_DEBUG_EXPOSE_LOGITS");
+        return e && (e[0] == '1' || e[0] == 't' || e[0] == 'T');
+    }();
+    return on;
+}
+
+// =================== WEIGHT TYPE INTROSPECTION ====================// RAWRXD_WEIGHT_TYPE_FROM_TENSORS_001
 // These read the GGML type off the tensors that were actually loaded. The
 // existing config_.weightQuant cannot answer this: it is a config field that is
 // never assigned from the model, so it reports FP32 for every model, including
@@ -710,16 +721,53 @@ void Accum(const WeightTensor& t, int& n, std::vector<int>& hist) {
 }
 } // namespace
 
+// RAWRXD_WEIGHT_TYPE_FROM_TENSORS_001
+// Shared histogram over the tensors that actually determine the weight format:
+// the projections and the FFN. Norms and biases are conventionally F32 inside a
+// quantized model and are not evidence of the weight format, so they are
+// excluded.
+static void ProjectionTypeHistogram(const ModelWeights& mw,
+                                    int* total, std::vector<int>* hist) {
+    int n = 0;
+    hist->assign(64, 0);
+    Accum(mw.lmHead, n, *hist);
+    Accum(mw.tokenEmbed, n, *hist);
+    for (const LayerWeights& lw : mw.layers) {
+        Accum(lw.wq, n, *hist); Accum(lw.wk, n, *hist);
+        Accum(lw.wv, n, *hist); Accum(lw.wo, n, *hist);
+        Accum(lw.wqkv, n, *hist);
+        Accum(lw.wGate, n, *hist); Accum(lw.wUp, n, *hist); Accum(lw.wDown, n, *hist);
+        Accum(lw.attnO, n, *hist);
+        Accum(lw.attnQ_b, n, *hist); Accum(lw.attnK_b, n, *hist);
+        Accum(lw.attnV_b, n, *hist);
+        for (const WeightTensor& g : lw.moeGate)  Accum(g, n, *hist);
+        for (const WeightTensor& u : lw.moeUp)    Accum(u, n, *hist);
+        for (const WeightTensor& d : lw.moeDown)  Accum(d, n, *hist);
+    }
+    *total = n;
+}
+
 int Deep2Engine::loadedWeightType() const noexcept {
     if (!modelWeights.loaded) return -1;
-    // The lm_head is the tensor every model has and that is stored in the
-    // model's own weight quantization, so it is the most representative probe.
-    // token_embed is the fallback for architectures that share or omit lm_head.
-    if (modelWeights.lmHead.data)   return modelWeights.lmHead.type;
-    if (modelWeights.tokenEmbed.data) return modelWeights.tokenEmbed.type;
-    if (!modelWeights.layers.empty() && modelWeights.layers[0].wq.data)
-        return modelWeights.layers[0].wq.type;
-    return -1;
+    // RAWRXD_WEIGHT_TYPE_DOMINANT_001: return the DOMINANT type, not the type
+    // of one convenient tensor.
+    //
+    // This previously probed lm_head and returned its type. On
+    // qwen2.5-coder-1.5b-base.gguf that reported Q6_K while the histogram was
+    // Q4_K=168 Q6_K=30 -- i.e. 85% of the projections are Q4_K and the receipt
+    // claimed the model was Q6_K. A single tensor presented as the model's
+    // weight type is the same class of error as reporting a config default, so
+    // the type is now the mode of the projection/FFN population and the
+    // dominance percentage is reported next to it.
+    int n = 0;
+    std::vector<int> hist;
+    ProjectionTypeHistogram(modelWeights, &n, &hist);
+    if (n == 0) return -1;
+    int best = -1, bestCount = 0;
+    for (size_t i = 0; i < hist.size(); ++i) {
+        if (hist[i] > bestCount) { bestCount = hist[i]; best = (int)i; }
+    }
+    return bestCount > 0 ? best : -1;
 }
 
 const char* Deep2Engine::loadedWeightTypeName() const noexcept {
@@ -747,26 +795,55 @@ const char* Deep2Engine::loadedWeightTypeName() const noexcept {
     }
 }
 
+// RAWRXD_WEIGHT_TYPE_FROM_TENSORS_001: the histogram makes dominance
+// interpretable. A Q6_K model reporting 15% Q6_K dominance is either genuinely
+// mixed or has `type` unpopulated on most tensors; those are indistinguishable
+// from a single percentage, and only the distribution tells them apart.
+std::string Deep2Engine::loadedWeightTypeHistogram() const {
+    if (!modelWeights.loaded) return "NO_MODEL";
+    int n = 0;
+    std::vector<int> hist;
+    ProjectionTypeHistogram(modelWeights, &n, &hist);
+    if (n == 0) return "NO_PROJECTION_TENSORS";
+
+    auto nameOf = [](int ty) -> const char* {
+        switch (ty) {
+        case  0: return "F32";    case  1: return "F16";
+        case  2: return "Q4_0";   case  3: return "Q4_1";
+        case  6: return "Q5_0";   case  7: return "Q5_1";
+        case  8: return "Q8_0";   case 10: return "Q2_K";
+        case 11: return "Q3_K";   case 12: return "Q4_K";
+        case 13: return "Q5_K";   case 14: return "Q6_K";
+        case 15: return "Q8_K";   case 30: return "BF16";
+        default: return "OTHER";
+        }
+    };
+    // Descending by count so the dominant type leads.
+    std::vector<std::pair<int,int>> byCount;   // (count, type)
+    for (size_t i = 0; i < hist.size(); ++i)
+        if (hist[i] > 0) byCount.emplace_back(hist[i], (int)i);
+    std::sort(byCount.begin(), byCount.end(),
+              [](const std::pair<int,int>& a, const std::pair<int,int>& b) {
+                  if (a.first != b.first) return a.first > b.first;
+                  return a.second < b.second;
+              });
+    std::string out;
+    char buf[64];
+    for (size_t i = 0; i < byCount.size() && i < 8; ++i) {
+        std::snprintf(buf, sizeof(buf), "%s%s=%d",
+                      i ? " " : "", nameOf(byCount[i].second), byCount[i].first);
+        out += buf;
+    }
+    std::snprintf(buf, sizeof(buf), " (tensors=%d)", n);
+    out += buf;
+    return out;
+}
+
 double Deep2Engine::loadedWeightTypeDominancePercent() const noexcept {
     if (!modelWeights.loaded) return 0.0;
     int n = 0;
-    std::vector<int> hist(64, 0);
-    Accum(modelWeights.lmHead, n, hist);
-    Accum(modelWeights.tokenEmbed, n, hist);
-    for (const LayerWeights& lw : modelWeights.layers) {
-        // Projections and FFN only. Norms and biases are conventionally F32 in
-        // a quantized model and are not evidence of the weight format.
-        Accum(lw.wq, n, hist); Accum(lw.wk, n, hist);
-        Accum(lw.wv, n, hist); Accum(lw.wo, n, hist);
-        Accum(lw.wqkv, n, hist);
-        Accum(lw.wGate, n, hist); Accum(lw.wUp, n, hist); Accum(lw.wDown, n, hist);
-        Accum(lw.attnO, n, hist);
-        Accum(lw.attnQ_b, n, hist); Accum(lw.attnK_b, n, hist);
-        Accum(lw.attnV_b, n, hist);
-        for (const WeightTensor& g : lw.moeGate)  Accum(g, n, hist);
-        for (const WeightTensor& u : lw.moeUp)    Accum(u, n, hist);
-        for (const WeightTensor& d : lw.moeDown)  Accum(d, n, hist);
-    }
+    std::vector<int> hist;
+    ProjectionTypeHistogram(modelWeights, &n, &hist);
     if (n == 0) return 0.0;
     const int want = loadedWeightType();
     if (want < 0 || static_cast<size_t>(want) >= hist.size()) return 0.0;
@@ -2691,17 +2768,47 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
     RMSNormW(modelWeights.finalNorm, hiddenState, layerTemp,
              H, modelWeights.normEps);
     {
-        float fnMin = std::numeric_limits<float>::infinity();
-        float fnMax = -std::numeric_limits<float>::infinity();
-        for (size_t i = 0; i < H; ++i) {
-            if (layerTemp[i] < fnMin) fnMin = layerTemp[i];
-            if (layerTemp[i] > fnMax) fnMax = layerTemp[i];
+        // RAWRXD_DEEP2_LOG_FLOOD_001: unconditional, once per token, and it
+        // computes a full H-element min/max reduction on every token purely to
+        // print two numbers nobody asked for. Both the write and the reduction
+        // are on the decode critical path. Now opt-in, and the reduction only
+        // happens when it will actually be printed.
+        static const bool traceFinalNorm = [] {
+            const char* e = std::getenv("RAWRXD_TRACE_FINALNORM");
+            return e && (e[0] == '1' || e[0] == 't' || e[0] == 'T');
+        }();
+        if (traceFinalNorm) {
+            float fnMin = std::numeric_limits<float>::infinity();
+            float fnMax = -std::numeric_limits<float>::infinity();
+            for (size_t i = 0; i < H; ++i) {
+                if (layerTemp[i] < fnMin) fnMin = layerTemp[i];
+                if (layerTemp[i] > fnMax) fnMax = layerTemp[i];
+            }
+            std::fprintf(stderr, "FINALNORM_POST min=%g max=%g\n", fnMin, fnMax);
+            std::fflush(stderr);
         }
-        std::fprintf(stderr, "FINALNORM_POST min=%g max=%g\n", fnMin, fnMax);
-        std::fflush(stderr);
     }
     parityEmit(ParityCheckpoint::FinalNorm, layerTemp, H);
     LinearW(modelWeights.lmHead, layerTemp, nullptr, logitsOut, V);
+    // RAWRXD_DEBUG_EXPOSE_LOGITS_001
+    // Capture the logits for the divergence harness, gated so it can never
+    // become a silent product API.
+    //
+    // The public API deliberately does not expose logits, which is correct
+    // product design. But that made the Vulkan divergence unlocatable: the
+    // ladder could only observe that the emitted TOKEN differed, and a wrong
+    // token is the last symptom of a long causal chain. Comparing logits
+    // between routes is what separates "the final projection is misindexed"
+    // from "an early layer diverged and the projection faithfully reported
+    // the damage".
+    //
+    // Gated on DEEP2_DEBUG_EXPOSE_LOGITS=1. stepSeq_ increments on every
+    // capture so a harness can tell a fresh vector from a stale one rather
+    // than diffing against whatever happened to be left over.
+    if (debugLogitsEnabled()) {
+        debugLastLogits_.assign(logitsOut, logitsOut + V);
+        ++debugLogitsStep_;
+    }
 
     if (!finiteVector(logitsOut, V))
         throw std::runtime_error("computeLogits: non-finite logits");
@@ -3722,9 +3829,24 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             const bool isLocalLayer =
                 modelWeights.slidingWindowPattern > 0 &&
                 (layer % modelWeights.slidingWindowPattern) != 0;
-            std::fprintf(stderr, "ROPE layer=%zu theta=%.1f local=%s\n",
-                         layer, theta, isLocalLayer ? "yes" : "no");
-            std::fflush(stderr);
+            // RAWRXD_DEEP2_LOG_FLOOD_001
+            // This print was unconditional and fired once per layer per token:
+            // 28 lines per generated token for a 28-layer model, 170 KB of
+            // stderr for 64 tokens. It contaminated every throughput measurement
+            // (the writes are on the critical path and stderr is unbuffered) and
+            // it buried the diagnostics that actually mattered -- a 170 KB log
+            // is why a STATUS_ACCESS_VIOLATION at teardown took this long to
+            // localise. It is now opt-in via RAWRXD_TRACE_ROPE=1 and off by
+            // default. The value is unchanged, only its reachability.
+            static const bool traceRope = [] {
+                const char* e = std::getenv("RAWRXD_TRACE_ROPE");
+                return e && (e[0] == '1' || e[0] == 't' || e[0] == 'T');
+            }();
+            if (traceRope) {
+                std::fprintf(stderr, "ROPE layer=%zu theta=%.1f local=%s\n",
+                             layer, theta, isLocalLayer ? "yes" : "no");
+                std::fflush(stderr);
+            }
         }
         // RAWRXD_GPU_K_ROPE_BISECT_001: capture K immediately before and after
         // applyRoPE so the CPU side of the K bisect is available. At pos=0

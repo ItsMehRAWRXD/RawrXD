@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="F:\~dev\rawrxd\certbuild\CMakeFiles\d9ac22f681e13ab8a45a30c9884824e7\RawrXD_MetaReverse.obj.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\~dev\rawrxd\certbuild\CMakeFiles\d9ac22f681e13ab8a45a30c9884824e7\RawrXD_OmegaDeobfuscator.obj.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\~dev\rawrxd\certbuild\CMakeFiles\7ed9b54e34885d4f2c58b6da6d362704\re_deobfuscator.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\~dev\rawrxd\src\reverse_engineering\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="F:\~dev\rawrxd\certbuild\src\reverse_engineering\CMakeFiles\re_deobfuscator" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{128642F8-93EF-3927-A112-EAFAA9DEA293}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

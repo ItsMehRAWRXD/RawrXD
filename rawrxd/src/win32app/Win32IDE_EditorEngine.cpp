@@ -11,6 +11,9 @@
 #include <cstdio>
 #include <functional>
 
+// RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001
+#include "agentic/CheckpointRollbackAuthority.h"
+
 namespace RawrXD::IDE {
 
 // ── Forward declarations from Core ───────────────────────────────────────────
@@ -679,17 +682,20 @@ bool EditorEngine_SaveFile(const std::string& path)
 {
     std::string p = path.empty() ? g_editor.filePath : path;
     if (p.empty()) return false;
-    // Binary, and CRLF written explicitly: see the open path for why.
-    std::ofstream f(p, std::ios::binary | std::ios::trunc);
-    if (!f) return false;
-    for (auto& line : g_editor.lines) f << line << "\r\n";
-    f.flush();
-    bool ok = f.good();
-    if (ok) {
-        g_editor.modified = false;
-        if (!path.empty()) g_editor.filePath = path;
-    }
-    return ok;
+    // RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001: this used to be
+    // std::ofstream(binary|trunc) + flush(), which truncates the target before
+    // a single byte is written. A crash mid-save therefore destroyed the file
+    // with no record that it had been modified. The authority publishes through
+    // a temp file plus atomic rename, and when a checkpoint transaction is open
+    // it records the pre-modification bytes, the post-modification bytes and
+    // the write itself in a flushed journal.
+    std::string content;
+    for (auto& line : g_editor.lines) content += line + "\r\n";
+    std::string error;
+    if (!::rawrxd::ckpt::Transaction::WriteFile(p, content, &error)) return false;
+    g_editor.modified = false;
+    if (!path.empty()) g_editor.filePath = path;
+    return true;
 }
 
 void EditorEngine_SetText(const std::string& text)

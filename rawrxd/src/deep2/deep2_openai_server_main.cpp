@@ -12,6 +12,10 @@
 // ============================================================================
 
 #include "deep2_openai_server.h"
+// RAWRXD_B82_IDE_TOOL_POPULATION_001: the real sandboxed tool authority the IDE
+// routes dispatch through (InstallBuiltinTools + ToolPolicy allowlist).
+#include "agentic/AgentToolRegistry.h"
+#include <windows.h>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -127,6 +131,46 @@ int main(int argc, char** argv) {
         "=============================================\n"
         "  Deep2 OpenAI-Compatible Local Model Server\n"
         "=============================================\n");
+
+    // RAWRXD_B82_IDE_TOOL_POPULATION_001: populate the tool authority the IDE
+    // routes dispatch through.
+    //
+    // The authority is rawrxd::agentic::ToolRegistry
+    // (include/agentic/AgentToolRegistry.h) -- the REAL sandboxed one, with
+    // InstallBuiltinTools() providing read_file, write_file, list_directory and
+    // search_code behind a ToolPolicy that has allowedRoots, output caps and an
+    // execute timeout.
+    //
+    // NOT RawrXD::Agent::ToolRegistry (src/agentic/ToolRegistry.h). That one is a
+    // stub whose RegisterTool was never called before this session, so it was
+    // always empty and InvokeTool always returned "". An ad-hoc implementation
+    // was written against it and then REMOVED rather than shipped: it duplicated
+    // this authority with a weaker design (no output cap, no execute timeout,
+    // hand-rolled escaping). One authority, the existing one.
+    {
+        using namespace rawrxd::agentic;
+        ToolRegistry& reg = ToolRegistry::Instance();
+        reg.InstallBuiltinTools();
+
+        // RAWRXD_TOOL_POLICY_001: DefaultDenyAll() means "no filesystem tool is
+        // enabled". That is the correct safe default, but it makes every route
+        // answer "denied by policy", so the set of enabled tools is stated
+        // explicitly at startup rather than left implicit.
+        ToolPolicy pol = ToolPolicy::DefaultDenyAll();
+        const char* root = std::getenv("RAWRXD_TOOL_ROOT");
+        if (!root || !*root) {
+            char cwd[MAX_PATH] = {0};
+            root = (GetCurrentDirectoryA(MAX_PATH, cwd) > 0) ? cwd : ".";
+        }
+        pol.allowedRoots.push_back(root);
+        pol.allowWrite   = (std::getenv("RAWRXD_TOOL_ALLOW_WRITE")   != nullptr);
+        pol.allowExecute = (std::getenv("RAWRXD_TOOL_ALLOW_EXECUTE") != nullptr);
+        reg.SetPolicy(pol);
+
+        std::fprintf(stderr,
+            "[server] tool authority: builtins installed, root=%s write=%s execute=%s\n",
+            root, pol.allowWrite ? "on" : "off", pol.allowExecute ? "on" : "off");
+    }
 
     Deep2::OpenAIServer server;
     g_server = &server;

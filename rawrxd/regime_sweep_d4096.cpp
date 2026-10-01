@@ -418,6 +418,36 @@ int main(int argc, char** argv) {
                 std::printf("%-22s  n=%d min=%8.1f med=%8.1f max=%8.1f spread=%5.0f%%  %7.2fx  %s\n",
                             label, (int)s.size(), lo, med, hi, spread, sp,
                             pass ? "PASS" : "REJECTED");
+                // P0_POOL_TRANSITION_001: the label alone is NOT an authority for
+                // what ran. threads_arg is TOTAL PARTICIPANTS; the caller keeps
+                // slice 0 on every dispatched path; actual_workers is the
+                // post-derivation worker count, which is clamped by the row count
+                // and is therefore NOT always threads-1. threads=1 never enters
+                // the pool at all. Printing only "threads=N" made every cell
+                // ambiguous, so the requested value and the executed geometry are
+                // both stated and a cell is identified by its geometry.
+                //
+                // RAWRXD_THREAD_GEOMETRY_TRACE_001: ask for the geometry OF THIS
+                // REQUEST, not the process-wide last dispatch. Reading
+                // LastActualWorkers() here made every cell report the same
+                // effective_participants, because the last dispatch in a forward
+                // pass is the final down-projection regardless of what the cell
+                // asked for.
+                const unsigned reqThreads = t;
+                const cpu::DispatchRecord g = cpu::GeometryForRequested(reqThreads);
+                const unsigned actualWorkers = g.actualWorkers;
+                const bool callerParts = g.callerParticipates;
+                const unsigned effParts = g.effectiveParticipants;
+                std::printf("%-22s     GEOMETRY requested_threads=%u actual_workers=%u "
+                            "caller_participates=%d effective_participants=%u "
+                            "rows=%zu slice=%zu dispatches_with_this_request=%llu %s\n",
+                            "", reqThreads, actualWorkers, callerParts ? 1 : 0,
+                            effParts, g.totalRows, g.chunk,
+                            (unsigned long long)g.timesRequested,
+                            g.timesRequested == 0
+                                ? "(THIS REQUEST NEVER DISPATCHED)"
+                                : (g.inlined ? "(inline; pool untouched)"
+                                             : "(caller does slice 0)"));
                 std::printf("%-22s     argmax_match=%d determinism=%d no_stall=%d%s\n",
                             "", a.argmax_match, a.det, a.no_stall,
                             pass ? "" : "   (TPS NOT ADMITTED)");
@@ -444,7 +474,25 @@ int main(int argc, char** argv) {
             const Cell trail = MeasureCell(1, kRounds);
             std::vector<double> bs = base_samples;
             std::sort(bs.begin(), bs.end());
-            const double leading = base_samples.empty() ? 0.0 : base_samples.front();
+            // RAWRXD_SWEEP_DRIFT_MEDIAN_001
+            // Drift was computed as (trailing_median - leading_FIRST_SAMPLE).
+            // The leading value was `base_samples.front()` -- the earliest of
+            // five interleaved rounds -- while the trailing value was a median of
+            // four fresh ones. That compares one cold early sample against a
+            // settled median, so much of the reported "drift" was the first
+            // sample being cold rather than the machine drifting.
+            //
+            // This is not a small correction. The same block reported
+            // BASE_DRIFT=-19% and BASE_DRIFT=+47% under the old comparison while
+            // every cell in it passed its correctness gate. A drift figure that
+            // large and sign-unstable across blocks is an artifact of the
+            // comparison, not a property of the host.
+            //
+            // Both ends are now medians of the same statistic: leading is the
+            // median of the interleaved t=1 samples, trailing the median of four
+            // more.
+            const double leading = base_samples.empty()
+                ? 0.0 : bs[bs.size() / 2];
             const double drift = leading > 0.0 && trail.med > 0.0
                 ? (trail.med - leading) / leading * 100.0 : 0.0;
             std::printf("  %s baseline: leading=%.1f trailing=%.1f pooled=%.1f "

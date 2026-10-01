@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include "agentic/CommandExecutor.h"
+#include "agentic/CheckpointRollbackAuthority.h"
 
 namespace rawrxd {
 namespace agentic {
@@ -102,6 +103,81 @@ bool ResolveUnderRoot(const std::string& root, const std::string& leaf, std::wst
     return true;
 }
 
+// RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001
+// Containment test for two ALREADY-CANONICAL absolute paths. ResolveUnderRoot
+// cannot be reused here: it joins root+leaf, and both sides of this comparison
+// are absolute, so a join would produce "F:\ws\\F:\ws\a.txt".
+//
+// Fails closed on any mismatch (case-folded ordinal compare, separator
+// required at the boundary) so "F:\workspace" cannot match
+// "F:\workspace-other\a.txt".
+bool IsUnderCanonicalRoot(const std::string& root, const std::string& candidate) {
+    if (root.empty() || candidate.empty()) return false;
+    std::string r = root;
+    while (r.size() > 1 && (r.back() == '\\' || r.back() == '/')) r.pop_back();
+    if (candidate.size() < r.size()) return false;
+    // CompareStringOrdinal takes LPCWCH; these are narrow strings. _strnicmp is
+    // the length-limited, case-folded ordinal compare this test means. The
+    // previous CompareStringOrdinal(candidate.data(), ...) could not convert a
+    // const char* to LPCWCH and failed to compile (C2664).
+    if (_strnicmp(candidate.data(), r.data(), r.size()) != 0) {
+        return false;
+    }
+    if (candidate.size() == r.size()) return true;
+    const char sep = candidate[r.size()];
+    return sep == '\\' || sep == '/';
+}
+
+// RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001
+// Absolute, separator-normalised form of a path that may be relative, bare "."
+// or carry redundant separators. No filesystem access: GetFullPathNameW
+// normalises lexically, which is the same property the sandbox relies on.
+bool CanonicalizeAbsolute(const std::string& path, std::wstring& outWide, std::string& outError) {
+    if (path.empty()) {
+        outError = "empty path";
+        return false;
+    }
+    if (path.find('\0') != std::string::npos) {
+        outError = "path contains NUL";
+        return false;
+    }
+    if (path.size() >= 2 && path[0] == '\\' && path[1] == '\\') {
+        outError = "UNC paths are not permitted";
+        return false;
+    }
+    const std::size_t colon = path.find(':');
+    if (colon != std::string::npos) {
+        const std::string scheme = path.substr(0, colon);
+        const bool drive = (scheme.size() == 2 &&
+                            std::isalpha(static_cast<unsigned char>(scheme[0])) &&
+                            scheme[1] == '\\');
+        if (!drive) {
+            outError = "device, stream and non-drive schemes are not permitted";
+            return false;
+        }
+    }
+    const std::wstring wide = Utf8ToWide(path);
+    const DWORD needed = GetFullPathNameW(wide.c_str(), 0, nullptr, nullptr);
+    if (needed == 0) {
+        outError = LastErrorText("GetFullPathNameW failed");
+        return false;
+    }
+    std::wstring canonical(needed, L'\0');
+    const DWORD written = GetFullPathNameW(wide.c_str(), needed, &canonical[0], nullptr);
+    if (written == 0 || written >= needed) {
+        outError = LastErrorText("GetFullPathNameW failed");
+        return false;
+    }
+    canonical.resize(written);
+    // Keep "C:\" but drop every other trailing separator, so root+leaf never
+    // produces a doubled separator and containment compares stay exact.
+    while (canonical.size() > 3 && (canonical.back() == L'\\' || canonical.back() == L'/')) {
+        canonical.pop_back();
+    }
+    outWide = canonical;
+    return true;
+}
+
 } // namespace
 
 ToolPolicy ToolPolicy::DefaultDenyAll() {
@@ -125,6 +201,28 @@ bool IsPathAllowed(const ToolPolicy& policy, const std::string& candidate,
             outCanonical = WideToUtf8(wide);
             return true;
         }
+    }
+    return false;
+}
+
+bool CanonicalizeRoot(const std::string& path, std::string& outCanonical, std::string& outError) {
+    outCanonical.clear();
+    std::wstring wide;
+    if (!CanonicalizeAbsolute(path, wide, outError)) return false;
+    outCanonical = WideToUtf8(wide);
+    return !outCanonical.empty();
+}
+
+bool IsCanonicalPathAllowed(const ToolPolicy& policy, const std::string& absPath) {
+    if (policy.allowedRoots.empty() || absPath.empty()) return false;
+    // Canonicalise the candidate too: a caller that passes "F:\ws\..\other"
+    // must not pass a lexical prefix test that the tools themselves would fail.
+    std::wstring wide;
+    std::string error;
+    if (!CanonicalizeAbsolute(absPath, wide, error)) return false;
+    const std::string canonical = WideToUtf8(wide);
+    for (const auto& root : policy.allowedRoots) {
+        if (IsUnderCanonicalRoot(root, canonical)) return true;
     }
     return false;
 }
@@ -446,34 +544,64 @@ void ToolRegistry::InstallBuiltinTools() {
                      r.error = "missing required parameter: path and content";
                      return r;
                  }
-                 std::string canonical;
-                 if (!IsPathAllowed(policy, pathIt->second, canonical)) {
-                     r.error = "path rejected by sandbox: " + pathIt->second;
-                     return r;
-                 }
-                 const std::wstring wide = Utf8ToWide(canonical);
-                 HANDLE h = CreateFileW(wide.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
-                                        FILE_ATTRIBUTE_NORMAL, nullptr);
-                 if (h == INVALID_HANDLE_VALUE) {
-                     r.error = LastErrorText("cannot create " + canonical);
-                     return r;
-                 }
-                 const std::string& content = contentIt->second;
-                 DWORD written = 0;
-                 BOOL ok = TRUE;
-                 if (!content.empty()) {
-                     ok = WriteFile(h, content.data(), static_cast<DWORD>(content.size()),
-                                    &written, nullptr);
-                 }
-                 CloseHandle(h);
-                 if (!ok) {
-                     r.error = LastErrorText("WriteFile failed");
-                     return r;
-                 }
-                 r.output = "wrote " + std::to_string(written) + " bytes to " + canonical;
-                 r.success = true;
-                 return r;
-             });
+                  std::string canonical;
+                  if (!IsPathAllowed(policy, pathIt->second, canonical)) {
+                      r.error = "path rejected by sandbox: " + pathIt->second;
+                      return r;
+                  }
+                  // RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001
+                  // Three refusals, in order, before a single byte is written.
+                  // Each closes a way for an edit to escape the rollback that is
+                  // the only reason an autonomous edit is allowed here.
+                  if (policy.writeRequiresTransaction) {
+                      if (!ckpt::Transaction::Active()) {
+                          r.error =
+                              "write_file requires an open checkpoint transaction; open one "
+                              "first (POST /api/agent/transaction {\"op\":\"begin\"})";
+                          return r;
+                      }
+                      const std::string txRoot = ckpt::Transaction::ActiveWorkspaceRoot();
+                      if (!IsUnderCanonicalRoot(txRoot, canonical)) {
+                          r.error = "path is outside the active transaction workspace: " +
+                                    canonical;
+                          return r;
+                      }
+                      // The journal and the content-addressed before-state blobs
+                      // live under <root>\.rawrxd\ckpt. An agent that can write
+                      // there can erase the record of its own edit, which turns a
+                      // recoverable transaction into an unrecoverable one.
+                      if (IsUnderCanonicalRoot(txRoot + "\\.rawrxd", canonical)) {
+                          r.error =
+                              "write refused: the checkpoint tree is not writable by the "
+                              "agent: " + canonical;
+                          return r;
+                      }
+                  }
+// RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001
+                  // This used to be CreateFileW(CREATE_ALWAYS) + WriteFile,
+                  // which truncates the target before a byte is written, with no
+                  // flush, no backup and no record. A crash mid-write left a
+                  // truncated source file and nothing that could undo it.
+                  // The authority publishes through a temp file plus an atomic
+                  // rename and, when a transaction is open, journals the
+                  // before-state, the write and the after-state.
+                  const ULONGLONG startedAt = GetTickCount64();
+                  std::string writeError;
+                  if (!ckpt::Transaction::WriteFile(canonical, contentIt->second, &writeError)) {
+                      r.error = writeError;
+                      return r;
+                  }
+                  const ULONGLONG elapsed = (GetTickCount64() - startedAt) * 1000ULL;
+                  r.elapsedMicros = elapsed;
+                  r.output = "wrote " + std::to_string(contentIt->second.size()) +
+                             " bytes to " + canonical;
+                  r.success = true;
+                  ckpt::Transaction::RecordToolResult(
+                      "write_file",
+                      "path=" + canonical + "|contentSha=" + ckpt::sha256Hex(contentIt->second),
+                      true, r.output, std::string(), elapsed);
+                  return r;
+              });
 
     Register({"execute_command",
               "Run a console command and capture its output. Disabled unless the tool "
@@ -513,21 +641,35 @@ void ToolRegistry::InstallBuiltinTools() {
                          timeout = static_cast<DWORD>(parsed);
                      }
                  }
-                 CommandExecutor::Options options;
-                 options.workingDir = workingDir;
-                 options.timeoutMs = timeout;
-                 options.allowShell = true;  // explicit model-requested console command
-                 const CommandExecutor::Result result =
-                     CommandExecutor::Run(cmdIt->second, options);
-                 r.success = result.success;
-                 r.output = result.stdoutText;
-                 r.error = result.stderrText;
-                 if (!result.error.empty()) {
-                     if (!r.error.empty()) r.error += " | ";
-                     r.error += result.error;
-                 }
-                 return r;
-             });
+CommandExecutor::Options options;
+                  options.workingDir = workingDir;
+                  options.timeoutMs = timeout;
+                  options.allowShell = true;  // explicit model-requested console command
+                  const CommandExecutor::Result result =
+                      CommandExecutor::Run(cmdIt->second, options);
+                  r.success = result.success;
+                  r.output = result.stdoutText;
+                  r.error = result.stderrText;
+                  if (!result.error.empty()) {
+                      if (!r.error.empty()) r.error += " | ";
+                      r.error += result.error;
+                  }
+                  // RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001
+                  // A command's stdout is frequently the only durable record of
+                  // what the agent ran (a build, a test, a migration). Without
+                  // this, a crashed transaction loses the commands entirely.
+                  ckpt::Transaction::RecordCommand(cmdIt->second,
+                                                   static_cast<int>(result.exitCode),
+                                                   result.stdoutText, result.stderrText,
+                                                   result.elapsedMicros);
+                  ckpt::Transaction::RecordToolResult("execute_command",
+                                                      "command=" + cmdIt->second + "|cwd=" +
+                                                          (cwdIt != p.end() ? cwdIt->second
+                                                                            : std::string()),
+                                                      r.success, r.output, r.error,
+                                                      result.elapsedMicros);
+                  return r;
+              });
 }
 
 } // namespace agentic

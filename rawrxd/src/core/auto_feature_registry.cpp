@@ -2507,23 +2507,42 @@ CommandResult handleLspFindReferences(const CommandContext& ctx) {
 }
 
 CommandResult handleLspGotoDefinition(const CommandContext& ctx) {
-    if (ctx.args && ctx.args[0]) {
-        auto symbols = HotpatchSymbolProvider::instance().getAllSymbols();
-        char buf[256];
-        for (auto& sym : symbols) {
-            if (sym.name == ctx.args) {
-                snprintf(buf, sizeof(buf), "[LSP] Definition: %s at %s:%d\n",
-                         (sym.name ? sym.name : ""), (sym.filePath ? sym.filePath : ""), sym.line);
-                ctx.output(buf);
-                return CommandResult::ok("lsp.gotoDefinition");
-            }
-        }
-        snprintf(buf, sizeof(buf), "[LSP] Symbol '%s' not found in index.\n", ctx.args);
-        ctx.output(buf);
-    } else {
-        ctx.output("[LSP] Navigating to definition of symbol at cursor...\n");
+    // RAWRXD_P1_FALSE_PASS_GOTO_DEFINITION_001
+    // This handler told the user "Symbol '<x>' not found in index." and then
+    // returned CommandResult::ok anyway, so a failed lookup was recorded as a
+    // success by every caller that trusted the return code. With no arguments
+    // it printed "Navigating to definition of symbol at cursor..." and returned
+    // ok without reading a cursor at all -- asserting an action that never
+    // happened.
+    //
+    // Both paths now report what actually occurred. There is no cursor position
+    // in CommandContext, so the no-argument case is an explicit usage error
+    // rather than a fabricated success.
+    if (!ctx.args || !ctx.args[0]) {
+        ctx.output("Usage: !lsp_goto_definition <symbol>\n");
+        return CommandResult::error("Missing symbol name", -1);
     }
-    return CommandResult::ok("lsp.gotoDefinition");
+    const auto symbols = HotpatchSymbolProvider::instance().getAllSymbols();
+    for (const auto& sym : symbols) {
+        // Compare against the FIRST token only: the previous whole-string
+        // comparison made any trailing text fail to match.
+        char name[256]{};
+        if (std::sscanf(ctx.args, "%255s", name) != 1) continue;
+        if (sym.name == name) {
+            char buf[512];
+            snprintf(buf, sizeof(buf), "[LSP] Definition: %s at %s:%d\n",
+                     (sym.name ? sym.name : ""),
+                     (sym.filePath ? sym.filePath : ""), sym.line);
+            ctx.output(buf);
+            return CommandResult::ok("lsp.gotoDefinition");
+        }
+    }
+    char buf[512];
+    snprintf(buf, sizeof(buf), "[LSP] Symbol '%s' not found in index (%zu symbols).\n",
+             ctx.args, symbols.size());
+    ctx.output(buf);
+    // NOT ok: the lookup did not resolve.
+    return CommandResult::error("Symbol not found", -1);
 }
 
 CommandResult handleLspHoverInfo(const CommandContext& ctx) {
@@ -2561,6 +2580,17 @@ CommandResult handleLspHoverInfo(const CommandContext& ctx) {
 }
 
 CommandResult handleLspRenameSymbol(const CommandContext& ctx) {
+    // RAWRXD_P1_FALSE_PASS_RENAME_001
+    // This handler printed "[LSP] Renamed 'a' -> 'b' (index rebuilt)" WITHOUT
+    // opening a file, rewriting any text, or recording an edit. It confirmed
+    // the symbol existed, rebuilt the index, and claimed the rename happened.
+    //
+    // That is a simulated success on a real code path: a user renaming a symbol
+    // through it would be told it worked. Absent a rename engine, the honest
+    // behaviour is to report the symbol was located and state plainly that no
+    // source edit was performed, and to fail rather than return ok.
+    //
+    // Implementing the rename is P1 work and must not be claimed here.
     if (!ctx.args || !ctx.args[0]) {
         ctx.output("Usage: !lsp_rename <old_name> <new_name>\n");
         return CommandResult::error("Missing arguments", -1);
@@ -2570,25 +2600,31 @@ CommandResult handleLspRenameSymbol(const CommandContext& ctx) {
         if (h) SendMessage(h, WM_COMMAND, IDM_LSP_RENAME_SYMBOL, 0);
     }
     char oldName[256]{}, newName[256]{};
-    if (sscanf(ctx.args, "%255s %255s", oldName, newName) < 2) {
+    if (std::sscanf(ctx.args, "%255s %255s", oldName, newName) < 2) {
         ctx.output("Usage: !lsp_rename <old_name> <new_name>\n");
         return CommandResult::error("Need two names", -1);
     }
-    auto& provider = HotpatchSymbolProvider::instance();
-    auto symbols = provider.getAllSymbols();
+    const auto& provider = HotpatchSymbolProvider::instance();
+    const auto symbols = provider.getAllSymbols();
     bool found = false;
-    for (auto& sym : symbols) {
+    for (const auto& sym : symbols) {
         if (sym.name == oldName) { found = true; break; }
     }
-    char buf[512];
-    if (found) {
-        provider.rebuildIndex();
-        snprintf(buf, sizeof(buf), "[LSP] Renamed '%s' → '%s' (index rebuilt)\n", oldName, newName);
-    } else {
-        snprintf(buf, sizeof(buf), "[LSP] Symbol '%s' not found in index (%zu symbols)\n", oldName, symbols.size());
+    char buf[640];
+    if (!found) {
+        snprintf(buf, sizeof(buf),
+                 "[LSP] Symbol '%s' not found in index (%zu symbols).\n",
+                 oldName, symbols.size());
+        ctx.output(buf);
+        return CommandResult::error("Symbol not found", -1);
     }
+    snprintf(buf, sizeof(buf),
+             "[LSP] Symbol '%s' located (%zu in index), but RENAME IS NOT "
+             "IMPLEMENTED: no source file was modified. Nothing was changed.\n",
+             oldName, symbols.size());
     ctx.output(buf);
-    return found ? CommandResult::ok("lsp.renameSymbol") : CommandResult::error("Symbol not found", -1);
+    // NOT ok: the requested rename did not occur.
+    return CommandResult::error("Rename not implemented", -2);
 }
 
 CommandResult handleLspRestartServer(const CommandContext& ctx) {

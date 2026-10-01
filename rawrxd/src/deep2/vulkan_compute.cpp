@@ -3372,10 +3372,18 @@ bool VulkanCompute::DispatchGemvQuant(
     int type,const void* weights,size_t weightBytes,
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols)
 {
-    // RAWRXD_B65_NATIVE_Q3K_GEMV_001: type 11 (Q3_K) admitted.
-    // Q3_K is 110 bytes / 256 elements (GGUFLoader.hpp:533). The shader
-    // branch is the host-verified transcription that passed
-    // q3k_block_diff.exe with Q3K_BLOCK_PARITY_V2=PASS over 18432 elements.
+    // RAWRXD_B73_Q5K_ROUTING_DEFECT_001: the admitted set is {8,10,11,12,14} and
+    // must match, exactly, the decode branches in deep2_qgemv.comp
+    // (q8_0_weight, q2k_weight, q3k_weight, q4k_weight, q6k_weight) AND the set
+    // returned by PackedQuant in Deep2Engine_GpuForward.cpp.
+    //
+    // These three lists previously disagreed by one type: PackedQuant also
+    // returned true for Q5_K (13), which has no kernel here. Q5_K weights were
+    // routed into the native branch, refused here, and the fused QKV path
+    // aborted with RANGE_OR_MULTIMAP on Codestral-22B at prefill token 0.
+    //
+    // Adding a type to one list without adding it to all three reintroduces
+    // exactly that failure.
     if(type!=8 && type!=10 && type!=11 && type!=12 && type!=14) return false;
     if(!weights||!weightBytes||!rows||!cols||
        rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)

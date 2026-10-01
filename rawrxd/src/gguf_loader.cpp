@@ -293,11 +293,23 @@ namespace {
         uint8_t sc[8], m[8];
         const size_t nsub = blk / 32;
         for (size_t j = 0; j < nsub; ++j) GetScaleMinK4(j, scales, sc[j], m[j]);
-        for (size_t j = 0; j < blk / 2; ++j) {
-            const int lo = (qs[j] & 0x0F);
-            const int hi = (qs[j] >> 4);
-            out[j]           = d * sc[j / 32] * lo - dmin * m[j / 32];
-            out[j + blk / 2] = d * sc[j / 32] * hi - dmin * m[j / 32];
+        // RAWRXD_Q4K_NIBBLE_MAP_001
+        // Weight group g (32 weights) is nibble parity (g&1) of bytes
+        // qs[(g/2)*32 .. +32). The previous loop wrote out[j] from the LOW
+        // nibble of qs[j] and out[j+128] from its HIGH nibble, which is a
+        // different permutation: it placed the high nibbles of qs[0..32) at
+        // weights 128..159 instead of 32..63, and scrambled 7 of the 8 groups.
+        // Every Q4_K weight matrix decoded through this function was garbage,
+        // and this is the decoder the inference path actually calls.
+        for (size_t g = 0; g < nsub && g < 8; ++g) {
+            const uint8_t* q = qs + (g / 2) * 32;
+            const int shift = (g & 1) ? 4 : 0;
+            const float ds = d * static_cast<float>(sc[g]);
+            const float dm = dmin * static_cast<float>(m[g]);
+            for (size_t l = 0; l < 32; ++l) {
+                const int nib = (q[l] >> shift) & 0x0F;
+                out[g * 32 + l] = ds * static_cast<float>(nib) - dm;
+            }
         }
     }
 

@@ -9,6 +9,7 @@
 // The reference here is deliberately written independently of the production
 // scalar routine so a shared indexing mistake cannot hide.
 #include "deep2/k_quant_gemv_avx512.h"
+#include "gguf_loader.hpp"
 
 #include <cmath>
 #include <cstdio>
@@ -192,6 +193,71 @@ int main() {
         Check(worst < 1e-5, "AVX512 vs scalar direct agreement", worst, 0.0);
     }
 #endif
+
+    // ---- CROSS-CHECK: gguf_loader's Q4_K decoder vs the GEMV kernel ---------
+    // RAWRXD_Q4K_NIBBLE_MAP_001
+    // These two decoders were written independently and disagreed. gguf_loader
+    // used a low/high-to-front/back permutation that scrambled 7 of 8 weight
+    // groups, and it is the decoder the INFERENCE path actually calls
+    // (LoadAllWeights -> rawrxd::GGUFTensorView::ToFloat32). The GEMV parity above
+    // could never catch that because it compared the GEMV against its own local
+    // reference, never against the loader. This closes that gap: decode the same
+    // synthetic super-block through both and require agreement.
+    {
+        auto rnd2 = [](uint32_t& s) { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return s; };
+        const size_t kBlk = 256;
+        std::vector<uint8_t> blk(kBlk / 32 * 144, 0);
+        uint32_t s = 4242u;
+        for (auto& b : blk) b = static_cast<uint8_t>(rnd2(s) & 0xFF);
+        // well-formed finite fp16 scales
+        auto putf16 = [](std::vector<uint8_t>& v, size_t o, uint16_t h) {
+            v[o] = static_cast<uint8_t>(h & 0xFF); v[o + 1] = static_cast<uint8_t>(h >> 8);
+        };
+        putf16(blk, 0, 0x2111);   // d
+        putf16(blk, 2, 0x1911);   // dmin
+
+        // (a) loader path
+        rawrxd::GGUFTensorInfo info;
+        info.ggml_type = rawrxd::GGMLType::Q4_K;
+        info.block_size = 256;
+        info.element_size = 144;
+        info.byte_size = 144;
+        info.element_count = 256;
+        rawrxd::GGUFTensorView view(blk.data(), info);
+        std::vector<float> loaded;
+        const bool got = view.ToFloat32(loaded);
+
+        // (b) independent reference (same group rule the GEMV uses)
+        uint8_t sc[8], mn[8];
+        RefScales(blk.data() + 4, sc, mn);
+        const float d = RefFP16((uint16_t)(blk[0] | (blk[1] << 8)));
+        const float dmin = RefFP16((uint16_t)(blk[2] | (blk[3] << 8)));
+        std::vector<float> want(256);
+        for (unsigned g = 0; g < 8; ++g) {
+            const uint8_t* q = blk.data() + 16 + (g / 2) * 32;
+            const int shift = (g & 1) ? 4 : 0;
+            for (size_t l = 0; l < 32; ++l) {
+                const int nib = (q[l] >> shift) & 0x0F;
+                want[g * 32 + l] =
+                    (float)((double)d * sc[g] * nib - (double)dmin * mn[g]);
+            }
+        }
+
+        Check(got && loaded.size() == 256, "loader decoded Q4_K super-block");
+        float worst = 0.0f;
+        int firstbad = -1;
+        for (size_t i = 0; i < 256; ++i) {
+            const double mag = std::max(1.0, std::fabs((double)want[i]));
+            const double e = std::fabs((double)loaded[i] - (double)want[i]) / mag;
+            if (e > worst) { worst = (float)e; }
+            if (e > 1e-4 && firstbad < 0) firstbad = (int)i;
+        }
+        if (firstbad >= 0) {
+            std::printf("  INFO first mismatch at weight %d: loader=%.6f ref=%.6f\n",
+                        firstbad, loaded[firstbad], want[firstbad]);
+        }
+        Check(worst < 1e-4, "gguf_loader Q4_K == independent reference", worst, 0.0);
+    }
 
     std::printf("\nRESULT %s (%d failures)\n", g_fail ? "FAIL" : "PASS", g_fail);
     return g_fail ? 1 : 0;

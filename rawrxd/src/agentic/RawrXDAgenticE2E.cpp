@@ -37,6 +37,7 @@
 #include "deep2/AgentToolAuthority.hpp"
 #include "deep2/AgentToolRegistry.hpp"
 #include "deep2/Deep2Engine.h"
+#include "agentic/CheckpointRollbackAuthority.h"
 
 namespace rawrxd::agentic_e2e {
 namespace {
@@ -307,27 +308,11 @@ ProcessResult runProcess(const std::filesystem::path& cwd,
 #endif
 
 
-bool commitTempFile(const std::filesystem::path& temp,
-                    const std::filesystem::path& dest,
-                    std::string& error) {
-#ifdef _WIN32
-    if (!MoveFileExW(temp.wstring().c_str(), dest.wstring().c_str(),
-                     MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-        error = "MoveFileEx failed: " + std::to_string(GetLastError());
-        return false;
-    }
-    return true;
-#else
-    std::error_code ec;
-    std::filesystem::rename(temp, dest, ec);
-    if (ec) {
-        error = "rename failed: " + ec.message();
-        return false;
-    }
-    return true;
-#endif
-}
-
+// RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001: the temp+MoveFileExW publish
+// this helper implemented now lives in ckpt::Transaction::WriteFileW, which
+// does the same temp+rename+MOVEFILE_WRITE_THROUGH sequence and additionally
+// journals the before-state when a transaction is open. Keeping a second
+// publisher here would leave a path that bypasses the journal.
 ToolResult readTool(const ToolRequest& req, ToolContext&) {
     ToolResult r;
     const std::string rel = jsonString(req.stdin_text, "path");
@@ -377,28 +362,17 @@ ToolResult writeTool(const ToolRequest& req, ToolContext&) {
         return r;
     }
 
-    const auto temp = full.string() + ".rawrxd_tmp";
-    {
-        std::ofstream f(temp, std::ios::binary | std::ios::trunc);
-        if (!f) {
-            r.exit_code = 73;
-            r.stderr_text = "cannot create temp file";
-            return r;
-        }
-        f.write(content.data(), static_cast<std::streamsize>(content.size()));
-        f.flush();
-        if (!f) {
-            r.exit_code = 74;
-            r.stderr_text = "write failed";
-            return r;
-        }
-    }
-
-    std::string commitError;
-    if (!commitTempFile(temp, full, commitError)) {
-        std::filesystem::remove(temp, ec);
+    // RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001
+    // The temp+MoveFileEx publish below was correct for one file at a time but
+    // kept no record of the pre-modification bytes, so a crash between two
+    // writeTool calls in the same agent turn left the workspace half-edited
+    // with nothing to roll back to. The authority publishes with the same
+    // temp+rename+write-through discipline and, when a transaction is open,
+    // journals before/after state so startup recovery can undo the whole turn.
+    std::string writeError;
+    if (!::rawrxd::ckpt::Transaction::WriteFileW(full.wstring(), content, &writeError)) {
         r.exit_code = 74;
-        r.stderr_text = commitError;
+        r.stderr_text = writeError;
         return r;
     }
 
@@ -455,28 +429,12 @@ ToolResult replaceTool(const ToolRequest& req, ToolContext&) {
         p += repl.size();
     }
 
-    const auto temp = full.string() + ".rawrxd_tmp";
-    {
-        std::ofstream out(temp, std::ios::binary | std::ios::trunc);
-        if (!out) {
-            r.exit_code = 73;
-            r.stderr_text = "cannot create temp file";
-            return r;
-        }
-        out.write(content.data(), static_cast<std::streamsize>(content.size()));
-        out.flush();
-        if (!out) {
-            r.exit_code = 74;
-            r.stderr_text = "write failed";
-            return r;
-        }
-    }
-    std::error_code ec;
-    std::string commitError;
-    if (!commitTempFile(temp, full, commitError)) {
-        std::filesystem::remove(temp, ec);
+    // RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001: same journalled publish as
+    // writeTool, so a multi-edit agent turn rolls back as one unit.
+    std::string writeError;
+    if (!::rawrxd::ckpt::Transaction::WriteFileW(full.wstring(), content, &writeError)) {
         r.exit_code = 74;
-        r.stderr_text = commitError;
+        r.stderr_text = writeError;
         return r;
     }
 

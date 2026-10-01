@@ -1,0 +1,38 @@
+^F:\~DEV\RAWRXD\CERTBUILD\CMAKEFILES\D9AC22F681E13AB8A45A30C9884824E7\RAWRXD_METAREVERSE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/~dev/rawrxd/certbuild/src/reverse_engineering/RawrXD_MetaReverse.obj F:/~dev/rawrxd/src/reverse_engineering/deobfuscator/RawrXD_MetaReverse.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\~DEV\RAWRXD\CERTBUILD\CMAKEFILES\D9AC22F681E13AB8A45A30C9884824E7\RAWRXD_OMEGADEOBFUSCATOR.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/~dev/rawrxd/certbuild/src/reverse_engineering/RawrXD_OmegaDeobfuscator.obj F:/~dev/rawrxd/src/reverse_engineering/deobfuscator/RawrXD_OmegaDeobfuscator.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\~DEV\RAWRXD\CERTBUILD\CMAKEFILES\7ED9B54E34885D4F2C58B6DA6D362704\RE_DEOBFUSCATOR.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\~DEV\RAWRXD\SRC\REVERSE_ENGINEERING\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/rawrxd/certbuild --check-stamp-file F:/~dev/rawrxd/certbuild/src/reverse_engineering/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

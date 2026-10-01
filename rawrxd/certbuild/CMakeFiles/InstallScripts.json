@@ -1,0 +1,12 @@
+{
+	"InstallScripts" : 
+	[
+		"F:/~dev/rawrxd/certbuild/cmake_install.cmake",
+		"F:/~dev/rawrxd/certbuild/src/reverse_engineering/cmake_install.cmake",
+		"F:/~dev/rawrxd/certbuild/src/ceo/cmake_install.cmake",
+		"F:/~dev/rawrxd/certbuild/src/repository/cmake_install.cmake",
+		"F:/~dev/rawrxd/certbuild/src/generation/cmake_install.cmake",
+		"F:/~dev/rawrxd/certbuild/rguf_source/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

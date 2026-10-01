@@ -1,6 +1,8 @@
 #include "rawrxd_transformer.hpp"
 #include "rawrxd_cpu_math.hpp"
 #include <cmath>
+#include <cstring>
+#include <cstdlib>
 #include <numeric>
 #include <algorithm>
 #include <chrono>
@@ -155,9 +157,10 @@ public:
         size_t n_heads;
         size_t head_dim;
         size_t kv_dim;
-        size_t kv_group;
-        int start_pos;
-    };
+size_t kv_group;
+int start_pos;
+    bool trace = false;
+};
     static void AttnHeadsTask(void* p, size_t b, size_t e) {
         AttnCtx* c = static_cast<AttnCtx*>(p);
         for (size_t h = b; h < e; ++h) {
@@ -172,10 +175,10 @@ public:
                 }
                 cpu::Softmax(sc, limit);
                 float* dst = (*c->attn)[t].data() + h * c->head_dim;
-                cpu::WeightedSum(dst, sc,
-                                 c->kv->value_cache.data() + kvh * c->head_dim,
-                                 c->kv_dim, c->head_dim, limit,
-                                 c->vsum + h * c->head_dim);
+cpu::WeightedSum(dst, sc,
+c->kv->value_cache.data() + kvh * c->head_dim,
+c->kv_dim, c->head_dim, limit,
+c->vsum + h * c->head_dim);
             }
         }
     }
@@ -422,6 +425,10 @@ public:
             std::vector<float> vsum_all(nH * head_dim, 0.0f);
             {
                 AttnCtx ac;
+                // LONG_CONTEXT_ATTN_NUMERICAL_CORRECTNESS: retained as a narrow diagnostic.
+                // OFF for the pool-transition experiment; re-enable only if pool
+                // state is proven identical while output still diverges.
+                { const char* tr = std::getenv("RAWRXD_TRACE_ATTN_HEAD"); ac.trace = (tr && tr[0] == '1'); }
                 ac.Q = &Q;
                 ac.kv = &kv_cache_[l];
                 ac.attn = &attn;

@@ -38,6 +38,17 @@
 // ----------------------------------------------------------------------------
 enum class ModelRoute {
     DEEP2_GGUF,
+    // RAWRXD_DEEP2_ONLY_AUTHORITY_001: RETAINED, NOT REACHABLE.
+    // classifyModel() no longer returns this for any input, so the Ollama
+    // proxy arm in main() is dead. The enumerator is deliberately kept so that
+    // removing the remaining arm, ollamaGenerate(), the <winhttp.h> include and
+    // the winhttp.lib pragma is one mechanical follow-up that a build can
+    // verify -- rather than six interdependent edits made blind on a tree that
+    // has never been compiled.
+    //
+    // Deleting the enum value NOW would break both switch arms (:341 receipt
+    // writer, :449 dispatcher) and leave ollamaGenerate() as a -Wunused-function
+    // warning. Keeping it reachable-but-dead is the safer intermediate state.
     OLLAMA_PROXY,
     FAIL_CLOSED
 };
@@ -55,12 +66,34 @@ static ModelRoute classifyModel(const std::string& modelSpec) {
         if (ext == ".gguf") return ModelRoute::DEEP2_GGUF;
     }
 
-    // Ollama model names contain ':' (e.g., glm-5.3:cloud, qwen2.5-coder:1.5b)
-    if (modelSpec.find(':') != std::string::npos) return ModelRoute::OLLAMA_PROXY;
-
-    // Could also be an Ollama model without a tag (e.g., "llama3")
-    // Try to check if Ollama is running and has this model
-    // For now, treat unknown names as FAIL_CLOSED
+    // RAWRXD_DEEP2_ONLY_AUTHORITY_001
+    //
+    // This used to read:
+    //     // Ollama model names contain ':' (e.g., glm-5.3:cloud, qwen2.5-coder:1.5b)
+    //     if (modelSpec.find(':') != std::string::npos) return ModelRoute::OLLAMA_PROXY;
+    //
+    // which put a live Ollama /api/generate HTTP client (ollamaGenerate, port
+    // 11434) on the shipping execution path, contradicting
+    // OLLAMA_REQUIRED=NO / DEEP2_NATIVE_AUTHORITY=YES. RawrXD has its own
+    // streamer; it must not fall out to Ollama.
+    //
+    // It was also a correctness bug independent of policy: a Windows path with a
+    // drive letter ALWAYS contains ':'. The DEEP2_GGUF checks above catch it
+    // only when the file exists, so a mistyped or not-yet-downloaded path such as
+    // C:\models\typo.gguf fell through to the Ollama branch and silently issued a
+    // network request instead of failing closed -- reporting an Ollama route for a
+    // local file the user simply mistyped.
+    //
+    // Non-GGUF, non-existent specs now fail closed with a reason naming the
+    // actual constraint, instead of being silently reinterpreted as an Ollama tag.
+    if (modelSpec.find(':') != std::string::npos) {
+        std::fprintf(stderr,
+            "[CLI_ROUTE] FAIL_CLOSED: spec '%s' contains ':' but is not an existing "
+            "GGUF. Ollama proxying is removed from this build "
+            "(RAWRXD_DEEP2_ONLY_AUTHORITY_001); pass a GGUF file path.\n",
+            modelSpec.c_str());
+        std::fflush(stderr);
+    }
     return ModelRoute::FAIL_CLOSED;
 }
 

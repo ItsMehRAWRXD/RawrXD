@@ -34,25 +34,39 @@ Fixed (B73). Codestral went `generated=0 status=4 RANGE_OR_MULTIMAP` ->
 audit's P0 verdict on Codestral stands for the wrong reason, and the underlying
 numerical defect is UNCLOSED.
 
-### "matFinalDownload" — not a defect, not a download
+### `matFinalDownload` — not a defect, not a download, and NOT the defect I first called it
 
-It is a receipt counter on `Deep2Engine` (Deep2Engine.h:1344), incremented at
-Deep2Engine_GpuForward.cpp:1524 and emitted in the GPU receipt. Measured on the
-current binary:
+First correction: it is a receipt counter on `Deep2Engine` (Deep2Engine.h:1344).
 
-```ini
-GPUFWD_RECEIPT gen=28 tokens=28 layers=784 qkv=3920 rms=784 attn=784 ffn=784
-                resid=784 slot0=784 hostMat=23 matFinal=0
+Second correction, to my own audit: I initially reported
+`hostMaterializations != matFinalDownload` (23 vs 0) as an unasserted invariant
+violation. **That was wrong.** The codebase documents this explicitly at
+Deep2Engine.h:1345-1351:
+
+> `hostMaterializations == matFinalDownload` alone is NOT an accounting
+> invariant -- it only holds when nothing else materialized. Asserting it as the
+> accounting check conflates "unclassified" with "not resident".
+
+The real exhaustive invariant is against the class sum, and it IS asserted:
+
+```cpp
+// Deep2Engine_GpuForward.cpp:1655-1660
+const uint64_t classSum = r.matCrossDeviceHandoff +
+                          r.matGemvSingleRoundTrip +
+                          r.matDualRowSingle + r.matDualRowGroup +
+                          r.matFinalDownload + r.matOther;
+if (r.hostMaterializations != classSum)
+    return false;
 ```
 
-The documented invariant is `hostMaterializations == matFinalDownload`.
-**Measured: 23 != 0.** The invariant is violated, and nothing asserts it, so the
-receipt prints both numbers and lets the discrepancy pass silently.
+Measured: `GPUFWD_RECEIPT hostMat=23 matFinal=0 ... receiptValid=1`.
 
-That is a real, unclaimed finding: 23 host materializations with 0 final
-downloads means weights were staged on the host 23 times and never downloaded to
-the device. That is consistent with the Q5_K path preparing F32 on the host and
-never reaching a device copy.
+`receiptValid=1` means the class-sum check passed. hostMat=23 decomposes across
+the classified buckets; matFinalDownload=0 simply means none of them was a
+final-logits download. There is no violation, and no missing assertion.
+
+I proposed a fix for a defect that does not exist. Recording the correction
+rather than quietly dropping it.
 
 ## Confirmed state
 

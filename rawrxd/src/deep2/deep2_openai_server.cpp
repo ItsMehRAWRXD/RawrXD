@@ -848,23 +848,23 @@ static void handleConnection(SOCKET clientSock,
             ToolPolicy p = ToolPolicy::DefaultDenyAll();
             const char* root = std::getenv("RAWRXD_TOOL_ROOT");
             if (!root || !*root) root = ".";
-            std::string canonical;
-            if (IsPathAllowed(p, root, canonical) || true) {
-                // Root is established by canonicalising it below instead; the
-                // policy check above is intentionally not used as a gate on
-                // configuring the gate itself.
-                p.allowedRoots.clear();
-            }
-            // Canonicalise the configured root through the same path rules the
-            // tools use, so an odd value cannot silently widen the sandbox.
-            {
-                ToolPolicy probe;
-                std::string out;
-                if (IsPathAllowed(probe, root, out) || !out.empty()) {
-                    p.allowedRoots.push_back(out.empty() ? std::string(root) : out);
-                } else {
-                    p.allowedRoots.push_back(root);
-                }
+            // Canonicalise the configured root through the authority's own rule
+            // set. The previous code built a probe policy with no allowed roots,
+            // asked IsPathAllowed about it, and then ignored the answer behind an
+            // `|| true`, so the root was pushed exactly as the operator typed it.
+            // A relative root still works for IsPathAllowed, but it can never be
+            // compared against a canonical absolute path -- which is precisely
+            // what the transactional write profile below has to do to prove a
+            // write is inside the workspace it can roll back.
+            std::string canonicalRoot;
+            std::string rootError;
+            if (!CanonicalizeRoot(root, canonicalRoot, rootError)) {
+                std::fprintf(stderr,
+                             "[server] tool authority: REFUSING tool root %s (%s). No "
+                             "filesystem tool is enabled.\n",
+                             root, rootError.c_str());
+            } else {
+                p.allowedRoots.push_back(canonicalRoot);
             }
             if (const char* w = std::getenv("RAWRXD_TOOL_ALLOW_WRITE")) {
                 p.allowWrite = (std::strcmp(w, "1") == 0);
@@ -872,12 +872,34 @@ static void handleConnection(SOCKET clientSock,
             if (const char* e = std::getenv("RAWRXD_TOOL_ALLOW_EXECUTE")) {
                 p.allowExecute = (std::strcmp(e, "1") == 0);
             }
+            // RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001
+            //
+            // allowWrite on its own authorises an unjournaled edit: the file is
+            // published atomically, so a crash cannot truncate it, but nothing
+            // records what it was before, so nothing can put it back. A write
+            // that cannot be rolled back is not an autonomous edit.
+            //
+            // So the transaction requirement is ON by default whenever write is
+            // enabled, and RAWRXD_TOOL_REQUIRE_TX=0 is the explicit, logged,
+            // named way to run the weaker profile. The default is the safe
+            // direction; the downgrade is the visible one.
+            if (const char* t = std::getenv("RAWRXD_TOOL_REQUIRE_TX")) {
+                p.writeRequiresTransaction = !(std::strcmp(t, "0") == 0 ||
+                                              std::strcmp(t, "off") == 0 ||
+                                              std::strcmp(t, "false") == 0);
+            } else {
+                p.writeRequiresTransaction = p.allowWrite;
+            }
             reg.SetPolicy(p);
             reg.InstallBuiltinTools();
             std::fprintf(stderr,
-                "[server] tool authority: %zu tools, root=%s write=%d execute=%d\n",
-                reg.Size(), p.allowedRoots.empty() ? "<none>" : p.allowedRoots.front().c_str(),
-                p.allowWrite ? 1 : 0, p.allowExecute ? 1 : 0);
+                         "[server] tool authority: %zu tools, root=%s write=%d execute=%d "
+                         "writeProfile=%s requireTx=%d\n",
+                         reg.Size(),
+                         p.allowedRoots.empty() ? "<none>" : p.allowedRoots.front().c_str(),
+                         p.allowWrite ? 1 : 0, p.allowExecute ? 1 : 0,
+                         p.writeRequiresTransaction ? "transactional" : "unjournalled",
+                         p.writeRequiresTransaction ? 1 : 0);
         });
 
         if (path == "/api/cli" && req.method == "POST") {
@@ -967,6 +989,224 @@ static void handleConnection(SOCKET clientSock,
             if (!r.success) statusCode = 400;
             goto done;
         }
+
+        // RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001
+        //
+        // write_file is only safe to expose over HTTP once the caller can open,
+        // commit and undo a checkpoint transaction. Without this route the
+        // transactional profile is unreachable from a client: write_file is
+        // refused for want of a transaction and no client can create one, which
+        // is the same structural dead end the route closure just fixed for the
+        // tool registry itself.
+        //
+        //   POST /api/agent/transaction {"op":"begin","workspace_root":"...",
+        //                                   "intent":"...","plan":"..."}
+        //   POST /api/agent/transaction {"op":"commit"}
+        //   POST /api/agent/transaction {"op":"rollback"}
+        //   POST /api/agent/transaction {"op":"recover"}   startup recovery pass
+        //   POST|GET /api/agent/transaction {"op":"status"} (the default)
+        //
+        // Every refusal is a 400 with the reason, never a success shape. There
+        // is no op that mutates outside the sandboxed root, and no op that
+        // returns "ok" for a write it did not perform.
+        if (path == "/api/agent/transaction" &&
+            (req.method == "POST" || req.method == "GET")) {
+            json body = json::parse(req.body.empty() ? "{}" : req.body, nullptr, false);
+            if (body.is_discarded()) body = json::object();
+            const std::string op = body.value("op", std::string("status"));
+
+            auto& reg = rawrxd::agentic::ToolRegistry::Instance();
+            const rawrxd::agentic::ToolPolicy policy = reg.GetPolicy();
+
+            json j;
+            j["op"] = op;
+            j["write_profile"] =
+                policy.writeRequiresTransaction ? "transactional" : "unjournalled";
+            j["write_enabled"] = policy.allowWrite;
+            j["execute_enabled"] = policy.allowExecute;
+            j["requires_transaction"] = policy.writeRequiresTransaction;
+            j["active"] = rawrxd::ckpt::Transaction::Active();
+            if (rawrxd::ckpt::Transaction::Active()) {
+                j["tx"] = rawrxd::ckpt::Transaction::ActiveTxId();
+                j["workspace_root"] = rawrxd::ckpt::Transaction::ActiveWorkspaceRoot();
+            }
+
+            const auto sendJson = [&](const json& payload, int code) {
+                std::string resp = buildJsonResponse(payload, code);
+                send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+                statusCode = code;
+            };
+            const auto fail = [&](int code, const std::string& message) {
+                json e = j;
+                e["ok"] = false;
+                e["error"] = message;
+                sendJson(e, code);
+            };
+
+            // A transaction exists to make a mutation undoable, so it is refused
+            // outright when no mutating tool is authorised at all.
+            const bool mutatingAllowed = policy.allowWrite || policy.allowExecute;
+
+            if (op == "status") {
+                const auto c = rawrxd::ckpt::Transaction::Counters();
+                j["ok"] = true;
+                j["journal_records"] = c.journalRecords;
+                j["journal_flushes"] = c.journalFlushes;
+                j["blob_writes"] = c.blobWrites;
+                j["atomic_publishes"] = c.atomicPublishes;
+                j["file_writes"] = c.fileWrites;
+                j["file_deletes"] = c.fileDeletes;
+                j["faults_injected"] = c.faultsInjected;
+                j["tools"] = reg.GetToolNames();
+                sendJson(j, 200);
+                goto done;
+            }
+
+            if (op == "begin") {
+                if (!mutatingAllowed) {
+                    fail(400,
+                         "transaction refused: no mutating tool is authorised. Set "
+                         "RAWRXD_TOOL_ALLOW_WRITE=1 (and/or RAWRXD_TOOL_ALLOW_EXECUTE=1).");
+                    goto done;
+                }
+                if (rawrxd::ckpt::Transaction::Active()) {
+                    fail(400, "a transaction is already active: " +
+                                  rawrxd::ckpt::Transaction::ActiveTxId());
+                    goto done;
+                }
+                std::string requested =
+                    body.value("workspace_root", body.value("root", std::string()));
+                if (requested.empty()) {
+                    if (policy.allowedRoots.empty()) {
+                        fail(400, "transaction refused: the tool policy has no allowed root");
+                        goto done;
+                    }
+                    requested = policy.allowedRoots.front();
+                }
+                // The transaction root is an absolute path chosen by a client, so
+                // it goes through the same containment test as every other path
+                // in this process. A transaction rooted outside the sandbox would
+                // let a rollback write bytes to an unsandboxed tree.
+                if (!rawrxd::agentic::IsCanonicalPathAllowed(policy, requested)) {
+                    fail(400, "workspace root rejected by sandbox: " + requested);
+                    goto done;
+                }
+                std::string canonicalRoot;
+                std::string rootError;
+                if (!rawrxd::agentic::CanonicalizeRoot(requested, canonicalRoot, rootError)) {
+                    fail(400, "workspace root cannot be canonicalised: " + rootError);
+                    goto done;
+                }
+
+                rawrxd::ckpt::TransactionSpec spec;
+                spec.workspaceRoot = canonicalRoot;
+                spec.intent = body.value("intent", std::string("agent edit session"));
+                spec.plan = body.value("plan", std::string());
+                spec.modelContext = body.value("model_context", std::string());
+                spec.diagnostics = body.value("diagnostics", std::string());
+
+                std::string txId;
+                std::string error;
+                if (!rawrxd::ckpt::Transaction::Begin(spec, &txId, &error)) {
+                    fail(400, "transaction begin failed: " + error);
+                    goto done;
+                }
+                const auto identity =
+                    rawrxd::ckpt::Transaction::CaptureIdentity(canonicalRoot);
+                j["ok"] = true;
+                j["active"] = true;
+                j["tx"] = txId;
+                j["workspace_root"] = canonicalRoot;
+                j["head_sha"] = identity.headSha;
+                j["tree_sha256"] = identity.treeSha256;
+                j["file_count"] = identity.fileCount;
+                j["identity_sha256"] = identity.identitySha256;
+                j["total_bytes"] = identity.totalBytes;
+                sendJson(j, 200);
+                goto done;
+            }
+
+            if (op == "commit") {
+                std::string error;
+                if (!rawrxd::ckpt::Transaction::Commit(&error)) {
+                    fail(400, "commit failed: " + error);
+                    goto done;
+                }
+                const auto c = rawrxd::ckpt::Transaction::Counters();
+                j["ok"] = true;
+                j["committed"] = true;
+                j["active"] = false;
+                j["file_writes"] = c.fileWrites;
+                j["journal_records"] = c.journalRecords;
+                sendJson(j, 200);
+                goto done;
+            }
+
+            if (op == "rollback") {
+                if (!rawrxd::ckpt::Transaction::Active()) {
+                    fail(400, "rollback failed: no active transaction");
+                    goto done;
+                }
+                std::string error;
+                if (!rawrxd::ckpt::Transaction::Rollback(&error)) {
+                    fail(400, "rollback failed: " + error);
+                    goto done;
+                }
+                j["ok"] = true;
+                j["rolled_back"] = true;
+                j["active"] = false;
+                // The measured recovery report, verbatim. A rollback that
+                // restored nothing must not be able to say "ok" without these.
+                j["workspace_root"] = policy.allowedRoots.empty()
+                                          ? std::string()
+                                          : policy.allowedRoots.front();
+                sendJson(j, 200);
+                goto done;
+            }
+
+            if (op == "recover") {
+                if (!mutatingAllowed) {
+                    fail(400,
+                         "recovery refused: no mutating tool is authorised, and recovery "
+                         "rewrites files.");
+                    goto done;
+                }
+                std::string target = body.value("workspace_root", std::string());
+                if (target.empty()) {
+                    target = rawrxd::ckpt::Transaction::ActiveWorkspaceRoot();
+                }
+                if (target.empty() && !policy.allowedRoots.empty()) {
+                    target = policy.allowedRoots.front();
+                }
+                if (target.empty() ||
+                    !rawrxd::agentic::IsCanonicalPathAllowed(policy, target)) {
+                    fail(400, "recovery root rejected by sandbox: " + target);
+                    goto done;
+                }
+                const auto rep = rawrxd::ckpt::RecoverWorkspace(target, /*writeReceipt=*/true);
+                j["ok"] = true;
+                j["workspace_root"] = rep.workspaceRoot;
+                j["journals_scanned"] = rep.journalsScanned;
+                j["closed_transactions"] = rep.closedTransactions;
+                j["incomplete_transactions"] = rep.incompleteTransactions;
+                j["files_restored"] = rep.filesRestored;
+                j["files_deleted"] = rep.filesDeleted;
+                j["files_verified"] = rep.filesVerified;
+                j["files_failed"] = rep.filesFailed;
+                j["torn_records_discarded"] = rep.tornRecordsDiscarded;
+                j["missing_blobs"] = rep.missingBlobs;
+                j["identity_before"] = rep.identityBeforeSha256;
+                j["identity_after"] = rep.identityAfterSha256;
+                j["receipt_path"] = rep.receiptPath;
+                j["all_restored"] = rep.AllRestored();
+                sendJson(j, 200);
+                goto done;
+            }
+
+            fail(400, "unknown transaction op: " + op);
+            goto done;
+        }
+
 
 
         // Unknown endpoint

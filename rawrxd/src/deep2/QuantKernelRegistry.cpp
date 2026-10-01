@@ -13,6 +13,7 @@
 #include "GGUFLoader.hpp"
 #include "QuantKernelRegistry_K.h"  // K-quant dequant/GEMV kernels
 #include "Deep2Q40Reference.hpp"    // Reference Q4_0 GEMV (VAL-051.7)
+#include "k_quant_gemv_avx512.h"    // RAWRXD_Q4K_AVX512_GEMV_001 fused Q4_K GEMV
 
 #include <immintrin.h>
 #include <cstring>
@@ -1161,14 +1162,26 @@ static void gemv_f16_avx512(
 }
 
 // --- Q4_K GEMV (AVX-512) ---
-// Delegate to scalar until a ggml-layout SIMD kernel is re-validated.
+// RAWRXD_Q4K_AVX512_GEMV_001
+// This previously delegated to gemv_q4_k_scalar, so a target compiled with
+// /arch:AVX512 still ran the scalar path for Q4_K -- the dominant weight type
+// in real Q4_K_M models. It now dispatches to the fused dequant+GEMV kernel in
+// k_quant_gemv_avx512.h, which is admitted by kquant_parity_check
+// (RESULT PASS, 0 failures, 20 checks; AVX-512 vs scalar direct agreement
+// included). The scalar body remains the reference and the non-AVX-512 path.
 static void gemv_q4_k_avx512(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
+#if defined(__AVX512F__)
+    rawrxd::kquant::GemvQ4K_AVX512(w, x, y, rows, cols);
+#else
+    // The TU was not built with AVX-512 enabled, so the vector body does not
+    // exist. Keep the scalar reference rather than failing to link.
     gemv_q4_k_scalar(w, x, y, rows, cols);
+#endif
 }
 
 // --- Q8_0 GEMV (AVX-512) ---
@@ -1916,7 +1929,15 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
+    // RAWRXD_Q4K_AVX512_GEMV_001
+    // Q4_K is the dominant weight type in real Q4_K_M models, and it was
+    // registered SCALAR-ONLY while gemv_q4_k_avx512 sat unregistered in this
+    // same file. That is why a real model decoded on a Zen 4 host used scalar
+    // dot products. Select the fused AVX-512 kernel only when the build enabled
+    // AVX-512 AND the host reports it; otherwise stay on the scalar reference.
+    // The kernel is admitted by kquant_parity_check (PASS, 0 failures).
+    if (hasAVX512) RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_avx512);
+    else          RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));
@@ -2068,7 +2089,13 @@ static const char* KernelImplName(int type, GEMVKernelFn fn) {
         if (fn == gemv_q8_0_scalar) return "scalar";
         break;
     case GGMLType::GGML_TYPE_Q4_K:
-        if (fn == gemv_q4_k_avx512) return "avx512(scalar-delegate)";
+        // RAWRXD_Q4K_AVX512_GEMV_001: gemv_q4_k_avx512 is a REAL fused
+        // AVX-512 dequant+GEMV kernel, admitted by kquant_parity_check
+        // (PASS, 0 failures). It is no longer a scalar delegate, so labelling
+        // it "avx512(scalar-delegate)" would make DumpTable report a false
+        // statement about the kernel that production actually runs.
+        // gemv_q4_k_avx2 IS still a scalar delegate (:1356).
+        if (fn == gemv_q4_k_avx512) return "avx512";
         if (fn == gemv_q4_k_avx2)   return "avx2(scalar-delegate)";
         if (fn == gemv_q4_k_scalar)  return "scalar";
         break;

@@ -685,10 +685,22 @@ std::atomic<unsigned> last_chunk_at_return_{0};
         // observes another generation's geometry. The dump distinguishes them
         // rather than assuming.
         for (size_t w = 0; w < threads_.size(); ++w) {
-            std::fprintf(stderr,
-                "POOL_WORKER worker=%zu eligible=%d seen=%llu\n",
-                w, (active_ != 0 && w < active_) ? 1 : 0,
-                (unsigned long long)seenOf_[w]);
+            // Bounded read: threads_ can outgrow the mirror, and a diagnostic
+            // that reads past its own buffer reports garbage as if it were pool
+            // state. Out-of-range prints seen=NA rather than an out-of-bounds
+            // load.
+            bool mirrored = (w < seenOf_.size());
+            unsigned long long seen = 0;
+            if (mirrored) seen = (unsigned long long)seenOf_[w];
+            if (mirrored) {
+                std::fprintf(stderr,
+                    "POOL_WORKER worker=%zu eligible=%d seen=%llu\n",
+                    w, (active_ != 0 && w < active_) ? 1 : 0, seen);
+            } else {
+                std::fprintf(stderr,
+                    "POOL_WORKER worker=%zu eligible=%d seen=NA\n",
+                    w, (active_ != 0 && w < active_) ? 1 : 0);
+            }
         }
         std::fflush(stderr);
     }
@@ -823,7 +835,19 @@ std::condition_variable cv_done_;
     // Per-worker `seen` watermark, mirrored so DumpState can report it without
     // reaching into a worker that owns the authoritative copy. Index is the
     // worker id assigned at creation and never reused.
-    std::vector<uint64_t> seenOf_{8, 0};
+    //
+    // RAWRXD_POOL_STATE_DUMP_002: this was brace-initialised, which selects
+    // vector(initializer_list<uint64_t>) -- so `{8, 0}` built a TWO-element
+    // vector holding {8, 0}, not eight zeros. Worker's `id < seenOf_.size()`
+    // guard then excluded every worker with id >= 2, and DumpState read
+    // seenOf_[w] for w < threads_.size() past the end of a two-element buffer.
+    // The over-read is what produced the garbage watermarks
+    // (27303570963497028, 9799848659912978135, ...) that looked like stale
+    // generations. Parenthesised init: count-then-value, as intended.
+    // `= std::vector<uint64_t>(8, 0)` rather than `seenOf_(8, 0)`: the bare
+    // parenthesised form in a class body is parsed as a function declaration
+    // by MSVC (C2059), which then makes every `seenOf_.` use a syntax error.
+    std::vector<uint64_t> seenOf_ = std::vector<uint64_t>(8, 0);
     // RAWRXD_WORKERPOOL_STALE_DECREMENT_001: generation that pending_ is
     // currently armed for. A worker that is still running when the bounded wait
     // times out will finish its slice afterwards and decrement whatever budget

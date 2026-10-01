@@ -1,0 +1,10 @@
+^F:\~DEV\RAWRXD\CERTBUILD\CMAKEFILES\8B73480E35A3FB9D87B350FDDF7727F3\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/rawrxd/certbuild --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file F:/~dev/rawrxd/certbuild/RawrXD.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

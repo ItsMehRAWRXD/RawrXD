@@ -507,6 +507,11 @@ public:
     // the dominant type and its share are reported together rather than the
     // type alone implying uniformity.
     double loadedWeightTypeDominancePercent() const noexcept;
+    // Compact histogram of projection/FFN tensor types, e.g. "Q6_K=27 Q8_0=3".
+    // Reported alongside dominance so a low dominance percentage is
+    // interpretable: it distinguishes "the model really is mixed" from "type is
+    // unpopulated on most tensors", which look identical in a single number.
+    std::string loadedWeightTypeHistogram() const;
 
     // Get engine info
     bool isInitialized() const { return initialized; }
@@ -1095,6 +1100,22 @@ public:
 
     void disableParityProbe();
 
+    // ───────────────── RAWRXD_DEBUG_EXPOSE_LOGITS_001 ─────────────────
+    // In-process logits capture for the cross-route divergence harness.
+    //
+    // The public API intentionally does not expose logits. That is the right
+    // product decision, but it also meant a route that produced the wrong token
+    // could only be caught at the token, which is the last symptom rather than
+    // the cause. These accessors exist so a debug harness can compare the
+    // final projection between two routes and locate WHERE they part.
+    //
+    // Gated on DEEP2_DEBUG_EXPOSE_LOGITS=1 and read-only. debugLogitsStep()
+    // increments on every capture, so a harness can prove the vector it is
+    // comparing was produced by the step it thinks it was.
+    bool debugLogitsEnabled() const;
+    const std::vector<float>& debugLastLogits() const { return debugLastLogits_; }
+    uint64_t debugLogitsStep() const { return debugLogitsStep_; }
+
 private:
     PreparedSpecWindow preparedSpec_[2]{};
     uint64_t specGeneration_=0;
@@ -1104,6 +1125,12 @@ private:
 
     struct ParityProbe;
     ParityProbe* parityProbe_ = nullptr;  // owned; only when enabled
+
+    // RAWRXD_DEBUG_EXPOSE_LOGITS_001: debug-only logits capture. Empty unless
+    // DEEP2_DEBUG_EXPOSE_LOGITS=1, so an unflagged run carries no extra state
+    // and no per-step copy cost.
+    std::vector<float> debugLastLogits_;
+    uint64_t debugLogitsStep_ = 0;
 
     // Internal probe emission (called by forward paths).
     void parityEmit(ParityCheckpoint cp, const float* v, size_t n);

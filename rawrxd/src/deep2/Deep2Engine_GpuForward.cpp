@@ -83,19 +83,43 @@ uint64_t WeightKey(const WeightTensor& wt) {
     return h;
 }
 
+// RAWRXD_B73_Q5K_ROUTING_DEFECT_001
+//
+// Q5_K (13) was listed here but has NO native kernel:
+//
+//   PackedQuant            admits  8, 10, 11, 12, 13, 14
+//   DispatchGemvQuant      admits  8, 10, 11, 12, 14        (vulkan_compute.cpp)
+//   deep2_qgemv.comp      decodes 8, 10, 11, 12, 14
+//
+// The two lists disagreed by exactly one type. For a Q5_K weight this function
+// returned true, routing the weight into the native packed branch, where
+// DispatchGemvQuant immediately returned false. The fused QKV path treated that
+// as fatal:
+//
+//   GPU_FORWARD_FAIL_STAGE=GEMV_QKV layer=0 op=qkvOverlap3
+//   GPU_FORWARD_FAIL_STAGE=RANGE_OR_MULTIMAP
+//   COMMITTED_FALLBACK_BLOCKED=1 STRICT_NATIVE_ABORT=1 VERDICT=FAIL
+//
+// observed on Codestral-22B-Q4_K_M at prefill token 0, where attn_v is type 13
+// while attn_q/attn_k are type 12. The model is otherwise well-formed; it was
+// rejected by a routing table entry that pointed at a kernel which does not
+// exist.
+//
+// FIX: remove Q5_K so it routes to the prepared-F32 path, which is correct for
+// it. This is a routing correction, NOT a clamp, NaN sanitization, fallback
+// kernel, or backend switch -- no arithmetic changed, and no gate is satisfied
+// by hiding the failure.
+//
+// The three lists above must stay in agreement. If a type is added to one, it
+// must be added to all three.
 bool PackedQuant(const WeightTensor& wt) {
     if (!wt.data || !wt.sizeBytes) return false;
     const int t = wt.type;
-    return t == (int)GGMLType::GGML_TYPE_Q8_0 ||
-           t == (int)GGMLType::GGML_TYPE_Q2_K ||
-           // RAWRXD_B65_NATIVE_Q3K_GEMV_001: Q3_K added. It was absent, so every Q3_K
-           // weight fell through to EnsureF32 and was prepared as F32 (84
-           // preparations, 4.23 GB on llama3.2-3b). The shader branch passed
-           // host block parity in q3k_block_diff.exe before being admitted.
-           t == (int)GGMLType::GGML_TYPE_Q3_K ||
-           t == (int)GGMLType::GGML_TYPE_Q4_K ||
-           t == (int)GGMLType::GGML_TYPE_Q5_K ||
-           t == (int)GGMLType::GGML_TYPE_Q6_K;
+    return t == (int)GGMLType::GGML_TYPE_Q8_0 ||        // 8  shader: q8_0_weight
+           t == (int)GGMLType::GGML_TYPE_Q2_K ||        // 10 shader: q2k_weight
+           t == (int)GGMLType::GGML_TYPE_Q3_K ||        // 11 shader: q3k_weight
+           t == (int)GGMLType::GGML_TYPE_Q4_K ||        // 12 shader: q4k_weight
+           t == (int)GGMLType::GGML_TYPE_Q6_K;          // 14 shader: q6k_weight
 }
 
 // OVERFLOW_SAFE: compute dense F32 byte count from tensor metadata if
@@ -386,6 +410,123 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         kvLayers);
     return vc->ApplyWeightWindowPolicy(maxB, budget, ov, arena);
 }
+
+// RAWRXD_VULKAN_BODY_PARITY_GRID_001
+// The Vulkan forward emitted five checkpoints against the CPU's 499, so the
+// bisection tool was blind: a divergence could be located no more precisely
+// than "somewhere in the transformer body". This adds the same grid on the GPU
+// side so the first mismatching layer and operator becomes a measured fact.
+//
+// Record format is BYTE-IDENTICAL to Deep2Engine::parityEmitCount:
+//   STEP=<n> CP=<NAME> COUNT=<n> MIN=.. MAX=.. MEAN=.. L2=.. FIRST8=.. HASH=<hex>
+// and the hash is the same FNV-1a 64 over raw float bytes, so CPU and GPU lines
+// are directly comparable by a single parser. Reusing the CPU's own hash
+// function is the point: a different hash would make every line look different
+// and tell us nothing.
+//
+// Gated on RAWRXD_VULKAN_PARITY_GRID=1, default OFF. It is deliberately a
+// separate flag from the attention-head hash probe so that neither can be
+// enabled by accident, and it must never run during a TPS gate: each
+// checkpoint forces a device->host readback and would dominate the timing it
+// claims to measure.
+namespace {
+struct VulkanParityGrid {
+    bool     on = false;
+    std::FILE* f = nullptr;
+    int      step = 0;
+    unsigned emittedMask[4] = {0,0,0,0};
+
+    static uint64_t hash(const float* v, size_t n) {
+        uint64_t h = 1469598103934665603ull;   // FNV-1a 64 offset basis
+        const auto* b = reinterpret_cast<const uint8_t*>(v);
+        for (size_t i = 0; i < n * sizeof(float); ++i) { h ^= b[i]; h *= 1099511628211ull; }
+        return h;
+    }
+
+    static VulkanParityGrid& instance() {
+        static VulkanParityGrid g;
+        static bool init = false;
+        if (!init) {
+            init = true;
+            const char* e = std::getenv("RAWRXD_VULKAN_PARITY_GRID");
+            if (e && (e[0] == '1' || e[0] == 't' || e[0] == 'T')) {
+                const char* out = std::getenv("RAWRXD_VULKAN_PARITY_GRID_OUT");
+                g.f = std::fopen(out && *out ? out : "vulkan_parity_grid.txt", "wb");
+                g.on = (g.f != nullptr);
+                if (g.on) {
+                    std::fprintf(stderr, "[VULKAN_PARITY_GRID] ON out=%s "
+                                 "(device->host readback per checkpoint; NOT for TPS gates)\n",
+                                 out && *out ? out : "vulkan_parity_grid.txt");
+                }
+            }
+        }
+        return g;
+    }
+
+    // Emits one checkpoint. `stageId` is a stable per-layer index so a stage is
+    // emitted once per layer per step even if the layer is re-entered.
+    //
+    // Takes the DeviceBuf handle rather than a raw pointer because that is what
+    // the arenas return and what DownloadVector consumes; taking float* would
+    // silently invite a caller to pass something that is not a device arena.
+    void emit(VulkanCompute* vc, unsigned layer, unsigned stageId,
+              const char* name, const VulkanCompute::DeviceBuf& arena, size_t count) {
+        if (!on || !f || !vc || count == 0) return;
+        const unsigned slot = (stageId < 32) ? (stageId >> 5) : 0;
+        const unsigned bit  = 1u << (stageId & 31u);
+        if (emittedMask[slot] & bit) return;
+        emittedMask[slot] |= bit;
+
+        std::vector<float> host(count);
+        if (!vc->DownloadVector(arena, host.data(), count)) {
+            // A failed readback is reported as an explicit gap, not as a
+            // silently omitted checkpoint: a missing line would read as
+            // "never reached" when the truth is "could not be read".
+            std::fprintf(f, "STEP=%d CP=LAYER_%u_%s COUNT=%zu READBACK=FAIL\n",
+                         step, layer, name, count);
+            std::fflush(f);
+            return;
+        }
+        double mn = host[0], mx = host[0], sum = 0.0, sq = 0.0;
+        size_t nonFinite = 0;
+        for (size_t i = 0; i < count; ++i) {
+            const double x = (double)host[i];
+            if (!std::isfinite(x)) { ++nonFinite; continue; }
+            if (x < mn) mn = x;
+            if (x > mx) mx = x;
+            sum += x;
+            sq  += x * x;
+        }
+        const double mean = count ? sum / (double)count : 0.0;
+        const double l2   = std::sqrt(sq);
+        std::fprintf(f,
+            "STEP=%d CP=LAYER_%u_%s COUNT=%zu MIN=%.9g MAX=%.9g MEAN=%.9g L2=%.9g "
+            "FIRST8=%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g HASH=%016llx NON_FINITE=%zu\n",
+            step, layer, name, count, mn, mx, mean, l2,
+            count > 0 ? (double)host[0] : 0.0,
+            count > 1 ? (double)host[1] : 0.0,
+            count > 2 ? (double)host[2] : 0.0,
+            count > 3 ? (double)host[3] : 0.0,
+            count > 4 ? (double)host[4] : 0.0,
+            count > 5 ? (double)host[5] : 0.0,
+            count > 6 ? (double)host[6] : 0.0,
+            count > 7 ? (double)host[7] : 0.0,
+            (unsigned long long)hash(host.data(), count), nonFinite);
+        std::fflush(f);
+    }
+
+    // A stage that EXISTS on the CPU but has no device-side counterpart on the
+    // GPU. Recorded as UNAVAILABLE so the comparator reports a named gap rather
+    // than a silent omission.
+    void emitGap(unsigned layer, const char* name) {
+        if (!on || !f) return;
+        std::fprintf(f, "STEP=%d CP=LAYER_%u_%s UNAVAILABLE=NO_DEVICE_ARENA "
+                        "(fused into DispatchAttnDecode; not a reachability failure)\n",
+                     step, layer, name);
+        std::fflush(f);
+    }
+};
+} // namespace
 
 bool Deep2Engine::forwardLayerGpuResident(
     uint32_t layer, unsigned slot, bool uploadEntry, bool downloadExit)
@@ -720,6 +861,9 @@ bool Deep2Engine::forwardLayerGpuResident(
                              H, modelWeights.normEps))
         return fail("RMSNORM", "attnNorm");
     ++c.rmsNormOps;
+    // RAWRXD_VULKAN_BODY_PARITY_GRID_001
+    VulkanParityGrid::instance().emit(vc, layer, 0, "INPUT",        vc->ArenaHidden(), H);
+    VulkanParityGrid::instance().emit(vc, layer, 1, "RMS_ATTN",     vc->ArenaNormed(),  H);
 
     // RAWRXD_GPU_K_ROPE_BISECT_001: dump the projection input (post-RMSNorm)
     // so it can be diffed against the CPU `input` in LinearW. Requires
@@ -855,8 +999,29 @@ bool Deep2Engine::forwardLayerGpuResident(
     ++c.ropeOps;
     {
         DEEP2_GPU_CHILD_SCOPE(kvScope, KVUpdate);
-        if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return fail("APPEND_KV", "AppendKV");
+            if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return fail("APPEND_KV", "AppendKV");
     }
+    // RAWRXD_VULKAN_BODY_PARITY_GRID_001: post-projection and post-RoPE states.
+    // Emitted here, after the fused window has completed, because the RoPE and
+    // the Q/K/V GEMVs are submitted together -- reading Q before the window
+    // closed would capture pre-RoPE bytes under a post-RoPE label.
+    {
+        auto& pg = VulkanParityGrid::instance();
+        pg.emit(vc, layer, 2, "Q",       vc->ArenaQ(), qDim);
+        pg.emit(vc, layer, 3, "K",       vc->ArenaK(), kvDim);
+        pg.emit(vc, layer, 4, "V",       vc->ArenaV(), kvDim);
+        pg.emit(vc, layer, 5, "Q_ROPE",  vc->ArenaQ(), qDim);
+        pg.emit(vc, layer, 6, "K_ROPE",  vc->ArenaK(), kvDim);
+    }
+    // ATTN_SCORES / ATTN_PROBS / ATTN_VALUE have NO device-side arena on this
+    // path: attention is fused into DispatchAttnDecode, so those intermediates
+    // never exist in memory to be compared. They are reported as an explicit
+    // gap rather than omitted, because a missing line is indistinguishable from
+    // a stage that was never reached, and this whole grid exists to say
+    // precisely which is which.
+    VulkanParityGrid::instance().emitGap(layer, "ATTN_SCORES");
+    VulkanParityGrid::instance().emitGap(layer, "ATTN_PROBS");
+    VulkanParityGrid::instance().emitGap(layer, "ATTN_VALUE");
     // RAWRXD_GPU_KV_HANDOFF_001: measure the physical K/V bytes for the
     // Prefill-written slot (pos 0) at Prefill time, then re-measure the very
     // same slot immediately before Decode's attention dispatch and compare.
@@ -957,10 +1122,16 @@ bool Deep2Engine::forwardLayerGpuResident(
         DEEP2_GPU_CHILD_SCOPE(oProjScope, AttentionOutputProj);
         if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, qDim)) return fail("GEMV_OPROJ", "oProj");
         ++c.oProjOps;
+        // RAWRXD_VULKAN_BODY_PARITY_GRID_001: attention output BEFORE the
+        // residual add, so a divergence here is attributable to attention and
+        // not to the add that follows.
+        VulkanParityGrid::instance().emit(vc, layer, 7, "ATTN_VALUE", vc->ArenaAttn(), H);
+        VulkanParityGrid::instance().emit(vc, layer, 8, "O_PROJ",     vc->ArenaDown(),  H);
         if (!vc->DispatchResidualAdd(vc->ArenaHidden(), vc->ArenaDown(),
                                      vc->ArenaResidual(), H))
             return fail("RESIDUAL", "attnResidual");
         ++c.residualOps;
+        VulkanParityGrid::instance().emit(vc, layer, 9, "ATTN_RESIDUAL", vc->ArenaResidual(), H);
     }
 
     if (!vc->DispatchRmsNorm(vc->ArenaResidual(), *ffnNormBuf, vc->ArenaNormed(),
@@ -968,6 +1139,7 @@ bool Deep2Engine::forwardLayerGpuResident(
         return fail("RMSNORM", "ffnNorm");
 
     ++c.ffnNormOps;
+    VulkanParityGrid::instance().emit(vc, layer, 10, "RMS_FFN", vc->ArenaNormed(), H);
 
     {
         DEEP2_GPU_CHILD_SCOPE(ffnScope, FFN);
@@ -1008,14 +1180,24 @@ bool Deep2Engine::forwardLayerGpuResident(
                    !gemv(lw.wUp, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
             return fail("GEMV_FFN", "wGate");
         c.qkvOps += 2;
+        // RAWRXD_VULKAN_BODY_PARITY_GRID_001: FFN interior, stage by stage.
+        auto& pg = VulkanParityGrid::instance();
+        pg.emit(vc, layer, 11, "FFN_GATE", vc->ArenaGate(), inter);
+        pg.emit(vc, layer, 12, "FFN_UP",   vc->ArenaUp(),   inter);
         if (!vc->DispatchSwiGLU(vc->ArenaGate(), vc->ArenaUp(), vc->ArenaFFNAct(), inter))
             return fail("SWIGLU", "DispatchSwiGLU");
         ++c.ffnActOps;
+        pg.emit(vc, layer, 13, "SWIGLU",   vc->ArenaFFNAct(), inter);
         if (!gemv(lw.wDown, vc->ArenaFFNAct(), vc->ArenaDown(), H, inter)) return fail("GEMV_FFN", "wDown");
+        pg.emit(vc, layer, 14, "FFN_DOWN", vc->ArenaDown(), H);
         if (!vc->DispatchResidualAdd(vc->ArenaResidual(), vc->ArenaDown(),
                                      vc->ArenaHidden(), H))
             return fail("RESIDUAL", "ffnResidual");
         ++c.ffnResidualOps;
+        // The layer's output hidden state. This is the value that must equal the
+        // CPU's per-layer residual; a divergence here but not above localises the
+        // fault to this layer's FFN or its second residual add.
+        pg.emit(vc, layer, 15, "LAYER_RESIDUAL", vc->ArenaHidden(), H);
     }
 
     if (ownFusion && !vc->EndFusedLayer()) return fail("FUSE", "EndFusedLayer");
