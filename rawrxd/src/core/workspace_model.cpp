@@ -32,6 +32,11 @@
 #include <filesystem>
 #include <chrono>
 
+// RAWRXD_WORKSPACE_LOAD_001: the load path is a real parse now, so it needs a
+// real parser. nlohmann::json is already used across the codebase
+// (src/core/settings_persistence.cpp) and ships in 3rdparty.
+#include <nlohmann/json.hpp>
+
 namespace fs = std::filesystem;
 
 namespace RawrXD {
@@ -370,29 +375,132 @@ public:
     }
     
 private:
+    // RAWRXD_WORKSPACE_LOAD_001
+    //
+    // This used to open the file, close it, print "Loaded workspace config",
+    // and return false with the comment "Would parse JSON here". That is the
+    // worst shape a stub can take: it reports success in its own log line while
+    // parsing nothing, and because it returns false, initialize() then took the
+    // "create default" branch and overwrote a real multi-root document with a
+    // single-folder one on every run.
+    //
+    // Now it actually parses. The format is exactly what save() writes, so a
+    // workspace written by any build round-trips through any build.
+    //
+    // Failure policy: a missing file is not an error (first run). A present but
+    // unparsable file is an error and leaves the in-memory config untouched
+    // rather than half-populated, so a later save cannot write a truncated
+    // workspace over a good one.
     bool load() {
+        std::ifstream file(m_configPath);
+        if (!file.is_open()) {
+            return false; // No existing config — a first run, not a failure.
+        }
+
+        nlohmann::json j;
         try {
-            std::ifstream file(m_configPath);
-            if (!file.is_open()) {
-                return false; // No existing config
-            }
-            
-            // Simplified JSON parsing (real impl would use nlohmann::json)
-            // For now, just check if file exists
-            file.close();
-            
-            fprintf(stderr, "[WorkspaceModel] Loaded workspace config: %s\n",
-                    m_configPath.c_str());
-            
-            // Would parse JSON here
-            return false; // Trigger default generation for now
-            
+            file >> j;
         } catch (const std::exception& ex) {
-            fprintf(stderr, "[WorkspaceModel] Load failed: %s\n", ex.what());
+            fprintf(stderr, "[WorkspaceModel] Load failed (unparsable, config left untouched): %s\n",
+                    ex.what());
+            return false;
+        }
+        file.close();
+
+        try {
+            WorkspaceConfig parsed;
+
+            if (j.contains("name") && j["name"].is_string()) {
+                parsed.name = j["name"].get<std::string>();
+            }
+
+            if (j.contains("folders") && j["folders"].is_array()) {
+                for (const auto& f : j["folders"]) {
+                    if (!f.is_object() || !f.contains("path") || !f["path"].is_string()) {
+                        fprintf(stderr, "[WorkspaceModel] skipping folder entry without a string path\n");
+                        continue;
+                    }
+                    WorkspaceFolder folder;
+                    folder.path  = f["path"].get<std::string>();
+                    folder.name  = f.value("name", std::string());
+                    folder.isRoot = f.value("isRoot", false);
+                    if (folder.name.empty()) {
+                        // Derive a display name so the explorer has something to
+                        // label a secondary root with.
+                        fs::path p(folder.path);
+                        folder.name = p.filename().string();
+                        if (folder.name.empty()) folder.name = folder.path;
+                    }
+                    parsed.folders.push_back(folder);
+                }
+            }
+
+            if (j.contains("openFiles") && j["openFiles"].is_array()) {
+                for (const auto& f : j["openFiles"]) {
+                    if (!f.is_object() || !f.contains("path") || !f["path"].is_string()) continue;
+                    EditorState e;
+                    e.filePath      = f["path"].get<std::string>();
+                    e.cursorLine    = f.value("line", 0);
+                    e.cursorColumn  = f.value("column", 0);
+                    e.scrollPosition = f.value("scroll", 0);
+                    e.isPinned      = f.value("pinned", false);
+                    parsed.openFiles.push_back(e);
+                }
+            }
+
+            if (j.contains("layout") && j["layout"].is_object()) {
+                const auto& l = j["layout"];
+                parsed.layout.explorerVisible  = l.value("explorerVisible", true);
+                parsed.layout.terminalVisible  = l.value("terminalVisible", false);
+                parsed.layout.outputVisible    = l.value("outputVisible", false);
+                parsed.layout.debugVisible     = l.value("debugVisible", false);
+                parsed.layout.explorerWidth    = l.value("explorerWidth", 250);
+                parsed.layout.terminalHeight   = l.value("terminalHeight", 200);
+            }
+
+            if (j.contains("activeBuildConfig") && j["activeBuildConfig"].is_string()) {
+                parsed.activeBuildConfig = j["activeBuildConfig"].get<std::string>();
+            }
+            if (j.contains("activeDebugConfig") && j["activeDebugConfig"].is_string()) {
+                parsed.activeDebugConfig = j["activeDebugConfig"].get<std::string>();
+            }
+            if (j.contains("expandedFolders") && j["expandedFolders"].is_array()) {
+                for (const auto& p : j["expandedFolders"]) {
+                    if (p.is_string()) parsed.expandedFolders.insert(p.get<std::string>());
+                }
+            }
+
+            // A workspace with no folders is not a workspace. Keeping the
+            // previous state is safer than adopting an empty document.
+            if (parsed.folders.empty()) {
+                fprintf(stderr, "[WorkspaceModel] Load found zero folders, config left untouched\n");
+                return false;
+            }
+
+            parsed.lastOpened = std::chrono::system_clock::now();
+
+            // Commit only after a complete parse, under the lock.
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_config = std::move(parsed);
+                m_dirty = false;
+            }
+
+            size_t rootCount = 0;
+            for (const auto& f : m_config.folders) if (f.isRoot) ++rootCount;
+
+            fprintf(stderr, "[WorkspaceModel] Loaded workspace config: %s (folders=%zu roots=%zu openFiles=%zu)\n",
+                    m_configPath.c_str(), m_config.folders.size(), rootCount,
+                    m_config.openFiles.size());
+            return true;
+
+        } catch (const std::exception& ex) {
+            fprintf(stderr, "[WorkspaceModel] Load failed (schema, config left untouched): %s\n",
+                    ex.what());
             return false;
         }
     }
-    
+
     std::string escapeJson(const std::string& str) const {
         std::string result;
         result.reserve(str.size() + 10);

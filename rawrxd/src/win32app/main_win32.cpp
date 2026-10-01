@@ -37,6 +37,7 @@
 #include "BP1BraidStreamer.h"
 #include "deep2/AgentToolRegistry.hpp"
 #include "deep2/AgentToolAuthority.hpp"
+#include "agentic/GitSafetyAuthorityTools.h"
 #include "W8LifecycleAuthority.h"
 #include "Win32IDE_MCPHooks.h"
 #include "Win32IDE_ChatPanel.h"
@@ -184,6 +185,11 @@ static std::string getExeDir();
 // lives in Win32IDE_Settings.h. writeSettingsStatus() is defined next to
 // writeChatEngineStatus() below; both are used from WndProc.
 #include "Win32IDE_Settings.h"
+
+// RAWRXD_SESSION_PERSISTENCE_001 — same defect class as settings, fixed here.
+// Session_SetPath() had zero callers, so the session code was linked and could
+// not read or write anything.
+#include "Win32IDE_Session.h"
 
 // Stable receipt spelling for GenerationStatus so gate parsing does not depend
 // on enum ordinals.
@@ -579,6 +585,45 @@ static void chatWorkerThread(std::string prompt) {
             }
         }
 
+        // RAWRXD_GIT_SAFETY_AUTHORITY_001
+        //
+        // The twelve git capabilities are installed into the SAME registry the
+        // chat panel dispatches through, so the model can reach the gate in the
+        // GUI and not only over HTTP. Installing the tools is not permission to
+        // use them: the policy is derived from RAWRXD_GIT_ROOT / RAWRXD_GIT_SCOPE
+        // / RAWRXD_GIT_ALLOW_*, and the defaults deny every mutating call. With
+        // no configuration the agent can still read git state, which is the
+        // useful and safe half, and cannot commit, branch, checkout, stash,
+        // stage, worktree or roll back anything.
+        //
+        // The fallback root is the process working directory, so a developer who
+        // launches the IDE inside a repository gets read-only git without any
+        // configuration at all.
+        static bool git_installed = false;
+        if (!git_installed) {
+            git_installed = true;
+            const GitBindingReport gitReport = InstallGitSafetyIdeSurface(registry, ".");
+            // Logged, not printed to the chat transcript: a gate that announces
+            // itself in a model-visible channel teaches the model to retry.
+            OutputDebugStringA(("rawrxd git safety: installed=" +
+                                std::string(gitReport.installed ? "1" : "0") +
+                                " session=" + std::string(gitReport.sessionOpened ? "1" : "0") +
+                                " root=" + (gitReport.repositoryRoot.empty() ? "<none>"
+                                                                          : gitReport.repositoryRoot) +
+                                " capabilities=0x" + [&] {
+                                    char buf[16];
+                                    std::snprintf(buf, sizeof buf, "%08x",
+                                                  gitReport.capabilitiesGranted);
+                                    return std::string(buf);
+                                }() +
+                                " scope=" + std::to_string(gitReport.scopePrefixes) +
+                                (gitReport.refusalName.empty()
+                                     ? std::string()
+                                     : " refusal=" + gitReport.refusalName) +
+                                "\n")
+                                   .c_str());
+        }
+
         RawrXD::Inference::StreamingInferenceEngine sEngine;
         sEngine.setEngine(g_chatEngine.get());
 
@@ -924,11 +969,26 @@ static void writeSettingsStatus(const char* phase)
     r += std::string("SETTINGS_PROBE_VALUE=") + probeVal + "\r\n";
     r += std::string("SETTINGS_LAST_ERROR=") + d.lastError + "\r\n";
 
+    // RAWRXD_SETTINGS_AUTHORITY_001 — schema + migration
+    r += std::string("SETTINGS_VALIDATION_RAN=") + (d.validationRan ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_VALIDATION_VALID=") + (d.validationValid ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_VALIDATION_ERRORS=") + std::to_string(d.validationErrors) + "\r\n";
+    r += std::string("SETTINGS_VALIDATION_WARNINGS=") + std::to_string(d.validationWarnings) + "\r\n";
+    r += std::string("SETTINGS_UNKNOWN_KEYS=") + std::to_string(d.unknownKeys) + "\r\n";
+    for (const auto& k : d.rejectedKeys) r += std::string("SETTINGS_UNKNOWN_KEY=") + k + "\r\n";
+    r += std::string("SETTINGS_MIGRATION_RAN=") + (d.migrationRan ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_MIGRATION_CHANGED_KEYS=") + (d.migrationChangedKeys ? "1" : "0") + "\r\n";
+    r += std::string("SETTINGS_VERSION_FOUND=") + std::to_string(d.versionFound) + "\r\n";
+    r += std::string("SETTINGS_VERSION_WRITTEN=") + std::to_string(d.versionWritten) + "\r\n";
+    for (const auto& m : d.migratedKeys) r += std::string("SETTINGS_MIGRATED_KEY=") + m + "\r\n";
+    r += std::string("SETTINGS_SAVE_BLOCKED_BY_VALIDATION=") + (d.saveBlockedByValidation ? "1" : "0") + "\r\n";
+
     // Verdict is derived, never asserted. The startup phase only has to prove
     // the load path ran; the shutdown phase only has to prove a real file was
     // written.
-    const bool startupOk  = d.loadCalled && d.pathResolved;
-    const bool shutdownOk = d.saveWroteFile && fileExistsNow && fileBytesNow > 0;
+    const bool startupOk  = d.loadCalled && d.pathResolved && d.validationRan;
+    const bool shutdownOk = d.saveWroteFile && fileExistsNow && fileBytesNow > 0
+                            && !d.saveBlockedByValidation;
     const bool isShutdown = (std::string(phase) == "shutdown");
     const char* verdict = isShutdown
                         ? (shutdownOk ? "PASS" : "FAIL")
@@ -940,6 +1000,62 @@ static void writeSettingsStatus(const char* phase)
     if (dir.empty()) return;
     dir += "\\";
     std::string out = dir + "ide_settings_status.txt";
+    HANDLE h = CreateFileA(out.c_str(), GENERIC_WRITE, 0, NULL,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) return;
+    DWORD written = 0;
+    WriteFile(h, r.data(), (DWORD)r.size(), &written, NULL);
+    CloseHandle(h);
+}
+
+// RAWRXD_SESSION_PERSISTENCE_001
+//
+// Measured session persistence receipt. Same construction as the settings
+// receipt: every field comes from Session_Diagnostics() or a real filesystem
+// probe, and the verdict is derived rather than asserted.
+static void writeSessionStatus(const char* phase)
+{
+    const auto& d = RawrXD::IDE::Session_Diagnostics();
+
+    bool fileExistsNow = false;
+    unsigned long long fileBytesNow = 0;
+    if (!d.resolvedPath.empty()) {
+        WIN32_FILE_ATTRIBUTE_DATA fad{};
+        if (GetFileAttributesExA(d.resolvedPath.c_str(), GetFileExInfoStandard, &fad)) {
+            fileExistsNow = true;
+            fileBytesNow = ((unsigned long long)fad.nFileSizeHigh << 32) | fad.nFileSizeLow;
+        }
+    }
+
+    std::string r;
+    r += "=== RAWRXD_IDE_SESSION_STATUS ===\r\n";
+    r += std::string("PHASE=") + phase + "\r\n";
+    r += std::string("SESSION_PATH=") + (d.resolvedPath.empty() ? std::string("<unresolved>") : d.resolvedPath) + "\r\n";
+    r += std::string("SESSION_PATH_RESOLVED=") + (d.pathResolved ? "1" : "0") + "\r\n";
+    r += std::string("SESSION_LOAD_CALLED=") + (d.loadCalled ? "1" : "0") + "\r\n";
+    r += std::string("SESSION_FILE_EXISTED=") + (d.fileExisted ? "1" : "0") + "\r\n";
+    r += std::string("SESSION_LINES_READ=") + std::to_string(d.linesRead) + "\r\n";
+    r += std::string("SESSION_LINES_REJECTED=") + std::to_string(d.linesRejected) + "\r\n";
+    r += std::string("SESSION_FILES_IN_SESSION=") + std::to_string(d.filesInSession) + "\r\n";
+    r += std::string("SESSION_FILES_TRACKED=") + std::to_string(d.filesTracked) + "\r\n";
+    r += std::string("SESSION_SAVE_CALLED=") + (d.saveCalled ? "1" : "0") + "\r\n";
+    r += std::string("SESSION_SAVE_WROTE_FILE=") + (d.saveWroteFile ? "1" : "0") + "\r\n";
+    r += std::string("SESSION_SAVE_BYTES=") + std::to_string(d.saveBytesWritten) + "\r\n";
+    r += std::string("SESSION_FILE_EXISTS_NOW=") + (fileExistsNow ? "1" : "0") + "\r\n";
+    r += std::string("SESSION_FILE_BYTES_NOW=") + std::to_string(fileBytesNow) + "\r\n";
+    r += std::string("SESSION_LAST_ERROR=") + d.lastError + "\r\n";
+
+    const bool isShutdown = (std::string(phase) == "shutdown");
+    const bool startupOk  = d.loadCalled && d.pathResolved;
+    const bool shutdownOk = d.saveWroteFile && fileExistsNow && fileBytesNow > 0;
+    r += std::string("VERDICT=") + (isShutdown ? (shutdownOk ? "PASS" : "FAIL")
+                                               : (startupOk ? "PASS" : "FAIL")) + "\r\n";
+    r += "=== RECEIPT_END ===\r\n";
+
+    std::string dir = getExeDir();
+    if (dir.empty()) return;
+    dir += "\\";
+    std::string out = dir + "ide_session_status.txt";
     HANDLE h = CreateFileA(out.c_str(), GENERIC_WRITE, 0, NULL,
                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (h == INVALID_HANDLE_VALUE) return;
@@ -1674,6 +1790,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RawrXD::IDE::Settings_EnsureLoaded();
         writeSettingsStatus("startup");
 
+        // RAWRXD_SESSION_PERSISTENCE_001: same shape as the settings fix. The
+        // session file is resolved next to the settings file, so both are one
+        // configuration location. Session_Load is a no-op on a first run.
+        RawrXD::IDE::Session_Load();
+        writeSessionStatus("startup");
+
         // Full IDE shell layout (sidebar, editor, chat, agent, terminal, git, search)
         RawrXD::IDE::ShellLayout_RegisterAll(hInst);
         RawrXD::IDE::ShellLayout_CreateAll(hWnd, hInst);
@@ -1869,6 +1991,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         recordShutdownReason(ShutdownReason::WmClose);
         RawrXD::IDE::Settings_Persist();
         writeSettingsStatus("shutdown");
+        RawrXD::IDE::Session_Persist();
+        writeSessionStatus("shutdown");
         g_chatCancelled = true;
         if (g_chatThread.joinable()) g_chatThread.join();
         DestroyWindow(hWnd);
@@ -2336,6 +2460,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             else if (arg == L"--ide-cert-receipt" && i + 1 < argc) {
                 char buf[1024] = {0};
                 WideCharToMultiByte(CP_UTF8, 0, argv[++i], -1, buf, sizeof(buf) - 1, nullptr, nullptr);
+                g_startupOptions.ideCertReceiptPath = buf;
+            }
+            else if (arg.rfind(L"--ide-cert-receipt=", 0) == 0) {
+                // RAWRXD_IDE_RUNTIME_CERT_001: the first run of this gate wrote
+                // its receipt to the DEFAULT path instead of the requested one,
+                // because only the space-separated form was handled. An
+                // automation flag that silently ignores its own argument is the
+                // same defect class as a gate that silently ignores a failure.
+                char buf[1024] = {0};
+                WideCharToMultiByte(CP_UTF8, 0, arg.c_str() + 18, -1,
+                                    buf, sizeof(buf) - 1, nullptr, nullptr);
                 g_startupOptions.ideCertReceiptPath = buf;
             }
             else if (arg == L"--cert-duration-sec" && i + 1 < argc) {

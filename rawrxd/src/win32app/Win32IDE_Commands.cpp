@@ -15,6 +15,11 @@
 
 #pragma comment(lib, "comdlg32.lib")
 
+// RAWRXD_SESSION_PERSISTENCE_001: real declaration for the tracked-file call in
+// DoFileOpen. Previously this TU declared nothing, and the whole session
+// subsystem had no callers at all.
+#include "Win32IDE_Session.h"
+
 namespace RawrXD::IDE {
     std::string FileOps_OpenDialog(HWND parent, const std::string& filter);
     std::string FileOps_SaveDialog(HWND parent, const std::string& defaultName, const std::string& filter);
@@ -183,6 +188,11 @@ static void DoFileOpen() {
     std::string path = FileOps_OpenDialog(g_hwndMain, "All Files\0*.*\0C/C++ Files\0*.c;*.cpp;*.h;*.hpp\0");
     if (!path.empty()) {
         TabManager_OpenFile(path);
+        // RAWRXD_SESSION_PERSISTENCE_001: an opened file is a tracked session
+        // entry, so the next Session_Persist writes it. This is the call that
+        // makes Session_AddFile reachable at all; before this pass the whole
+        // session subsystem had zero callers.
+        Session_AddFile(path, 0, 0);
         AddToRecent(path);
         UpdateTitle();
         PushInitialSnapshot();
