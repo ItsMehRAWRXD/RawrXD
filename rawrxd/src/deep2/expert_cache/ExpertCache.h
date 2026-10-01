@@ -44,6 +44,16 @@ struct ExpertCacheStats {
     size_t budgetBytes = 0;
     size_t inflightBytes = 0;
     uint64_t transferMicros = 0;
+
+    // RAWRXD_DEEP2_BOUNDED_STREAM_001 residency lease accounting.
+    uint64_t leasesAcquired = 0;
+    uint64_t leasesReleased = 0;
+    uint64_t leasesOutstanding = 0;   // acquired - released, sampled live
+    uint64_t leaseRejections = 0;     // not resident, or evicted under a pin
+    uint64_t evictionsBlockedByPin = 0;
+    uint64_t doubleRelease = 0;
+    uint64_t unknownLeaseRelease = 0;
+    uint64_t residencyPromotions = 0; // times an entry became resident
 };
 
 // No-dependency transport surface. Deep2/Vulkan implements these four callbacks.
@@ -98,6 +108,31 @@ struct ExpertLease {
     explicit operator bool() const noexcept { return deviceHandle != nullptr; }
 };
 
+// RAWRXD_DEEP2_BOUNDED_STREAM_001
+//
+// A residency lease pins one resident allocation and returns its pointer in the
+// same critical section, so the pointer cannot be invalidated between the
+// residency check and the pin.
+//
+// The alternative -- isResident(), then residentHandle(), then a separate
+// pin() -- is racy. Eviction can free the device allocation in the window
+// between the check and the pin, after which the pinned pointer is already
+// dangling. tryAcquireResident() collapses check and pin into one operation
+// under the cache mutex, and bumps a per-entry pin count that eviction refuses
+// to cross.
+//
+// residencyGeneration increments every time an entry becomes resident. It is
+// the cache's own identity for the current allocation, distinct from the
+// producer's prediction sequence, and the consumer uses it to detect a pointer
+// that no longer matches the entry it thinks it holds.
+struct ResidentLease {
+    const void* weights = nullptr;
+    size_t bytes = 0;
+    uint64_t residencyGeneration = 0;
+    uint64_t leaseId = 0;
+    ExpertKey key{};
+};
+
 class ExpertCache final {
 public:
     ExpertCache(ExpertCacheConfig cfg, ExpertTransport transport);
@@ -114,6 +149,30 @@ public:
 
     // Non-binding prefetch: same residency operation, but tracked separately.
     bool prefetch(ExpertKey key, uint64_t tokenIndex);
+
+    // RAWRXD_DEEP2_BOUNDED_STREAM_001 residency lease.
+    //
+    // Atomically verifies the entry is resident AND pins it, returning the
+    // consumable pointer in the same critical section. Use this instead of
+    // isResident() followed by residentHandle(); that sequence has a window in
+    // which eviction can free the allocation, leaving the caller holding a
+    // pointer that is already dangling.
+    //
+    // Never blocks and never performs I/O. If the entry is not resident the
+    // call fails; the caller is expected to have issued prefetch() earlier and
+    // to come back on a later pass.
+    bool tryAcquireResident(ExpertKey key, ResidentLease& out) noexcept;
+
+    // Release a lease taken by tryAcquireResident(). Idempotent per leaseId:
+    // a second release of the same id is counted as a violation and ignored.
+    // Unknown ids are counted and ignored.
+    bool releaseResident(uint64_t leaseId) noexcept;
+
+    // True when the entry is resident and carries at least one live lease.
+    // Eviction refuses to reclaim a pinned entry; this is how the policy layer
+    // can tell that a refusal happened rather than silently choosing a
+    // different victim.
+    bool isPinned(ExpertKey key) const;
 
     // Update predicted reuse probability from the router. 0..1.
     void notePrediction(ExpertKey key, float probability, uint64_t tokenIndex);
@@ -141,7 +200,22 @@ private:
         bool loading = false;
         uint64_t uploadTicket = 0;
         uint64_t uploadStartMicros = 0;
+
+        // RAWRXD_DEEP2_BOUNDED_STREAM_001 lease state.
+        // pinCount > 0 forbids eviction. residencyGeneration changes on every
+        // transition to resident, so a stale pointer is detectable.
+        uint32_t pinCount = 0;
+        uint64_t residencyGeneration = 0;
     };
+
+    // A live lease. Keyed by leaseId so release is O(1) and a double release
+    // is detectable rather than silently decrementing a pin count.
+    struct LiveLease {
+        ExpertKey key{};
+        uint64_t residencyGeneration = 0;
+    };
+    std::unordered_map<uint64_t, LiveLease> leases_;
+    uint64_t nextLeaseId_ = 1;
 
     float scoreLocked(const Entry& e, uint64_t nowToken) const;
     bool ensureSpaceLocked(size_t bytesNeeded, uint64_t tokenIndex, const ExpertKey* protectedKey);

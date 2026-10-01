@@ -40,6 +40,7 @@
 #include "CycloneScheduler.hpp"
 #include "Deep2LivePath.hpp"
 #include "RouterPrefetchTelemetry.hpp"
+#include "Deep2PredictiveRouter.hpp"
 #include "ProductionProfiler.hpp"
 #include "VramStreamingController.hpp"
 #include "StreamEngine.h"
@@ -421,9 +422,14 @@ public:
         const GenerationOptions& options,
         TokenCallback callback);
 
-    // Dynamic model metadata from GGUF
-    struct ModelMetadata { std::string name; uint32_t version = 0; };
-    const ModelMetadata& getModelMetadata() const;
+    // RAWRXD_DEEP2_MODEL_REGISTRY_001: the former
+    //   struct ModelMetadata { std::string name; uint32_t version = 0; };
+    //   const ModelMetadata& getModelMetadata() const;
+    // were removed here. getModelMetadata() had no definition in any
+    // translation unit and no call site anywhere in the tree, so the type
+    // carried no data and could not be observed. The live model metadata
+    // type is Deep2::ModelMetadata in src/deep2/Deep2ModelRegistry.hpp,
+    // which is parsed from GGUF geometry and carries no such tag.
 
     // Public bridge for the extern "C" Deep2_Forward C-API to drive a single
     // transformer layer forward pass without exposing internal buffers.
@@ -460,6 +466,16 @@ public:
     
     // Model architecture from GGUF metadata (populated after loadModel succeeds)
     const std::string& modelArchitecture() const noexcept { return modelArchitecture_; }
+
+    // RAWRXD_DEEP2_BATCH5_CANONICAL_INFERENCE_001: geometry read accessors.
+    // The canonical-inference gate must size decode buffers and bound a sampled
+    // token id against the real vocabulary; without these it would have to guess
+    // or skip the finiteness check. Read-only views of already-parsed metadata,
+    // not new state.
+    std::size_t hiddenDim() const noexcept { return modelWeights.hiddenDim; }
+    std::size_t vocabSize() const noexcept { return modelWeights.vocabSize; }
+    std::size_t numLayers() const noexcept { return modelWeights.numLayers; }
+    std::size_t headDim() const noexcept { return modelWeights.headDim; }
 
     // Get engine info
     bool isInitialized() const { return initialized; }
@@ -533,6 +549,21 @@ public:
     bool isResidencyTelemetryEnabled() const { return telemetryEnabled_; }
     RouterPrefetchTelemetry* getResidencyTelemetry() const { return residencyTelemetry_.get(); }
     void printResidencyTelemetryReport() const;
+
+    // RAWRXD_DEEP2_PREDICTIVE_ROUTER_ADOPTION_001: measured runtime evidence
+    // that the routing-heat predictor is reachable from real MoE inference and
+    // not merely compiled. All counters are incremented on live paths only.
+    struct ExpertPredictorTelemetry {
+        uint64_t observations = 0;
+        uint64_t predictedQueries = 0;
+        uint64_t predictedKeys = 0;
+        uint64_t notesEmitted = 0;
+        uint64_t matchesNextLayer = 0;
+        uint64_t liveRoutes = 0;
+        uint64_t prefetchesIssued = 0;
+    };
+    ExpertPredictorTelemetry getExpertPredictorTelemetry() const;
+    void resetExpertPredictor();
 
     // Async Vulkan prefetch state management
     void setAsyncPrefetchEnabled(bool enable) { asyncPrefetchEnabled_ = enable; }
@@ -1153,6 +1184,22 @@ private:
     std::vector<std::unique_ptr<rawrxd::deep2::ExpertCache>> expertCaches_;
     std::vector<std::unique_ptr<rawrxd::deep2::VulkanExpertTransport>> expertTransports_;
     std::vector<std::vector<char>> expertStagingBuffers_;
+
+    // RAWRXD_DEEP2_PREDICTIVE_ROUTER_ADOPTION_001: routing-heat authority. Fed
+    // from the actual MoE route in computeMoEFFN; its predictions drive
+    // ExpertCache::notePrediction so EMA-LFU eviction scores on the real router
+    // distribution instead of recency alone. Performance policy only: it never
+    // changes which experts the router selects.
+    Deep2::Roofline::PredictiveRouter expertPredictor_;
+    struct ExpertPredictorCounters {
+        uint64_t observations = 0;      // routes observed
+        uint64_t liveRoutes = 0;        // MoE FFN invocations that carried a valid route
+        uint64_t predictedQueries = 0;  // prefetch prediction rounds issued
+        uint64_t predictedKeys = 0;     // expert keys predicted
+        uint64_t notesEmitted = 0;      // notePrediction calls accepted
+        uint64_t matchesNextLayer = 0;  // predictions overlapping the real route
+        uint64_t prefetchesIssued = 0;  // ExpertCache::prefetch calls on the live route
+    } expertPredictorCounters_{};
 
     // Cyclone: temporal prediction over Elastic (live generate)
     std::unique_ptr<CycloneScheduler> cyclone_;

@@ -63,6 +63,10 @@ bool ExpertCache::finishAsyncLocked(Entry& e, bool wait) {
     if (t1 >= e.uploadStartMicros) stats_.stallMicros += (t1 - e.uploadStartMicros);
     e.loading = false;
     e.resident = true;
+    // New allocation identity. Any lease issued before this point refers to
+    // bytes that no longer exist.
+    ++e.residencyGeneration;
+    ++stats_.residencyPromotions;
     e.uploadTicket = 0;
     e.uploadStartMicros = 0;
     return true;
@@ -76,6 +80,10 @@ bool ExpertCache::ensureSpaceLocked(size_t bytesNeeded, uint64_t tokenIndex, con
         for (auto it = entries_.begin(); it != entries_.end(); ++it) {
             if (!it->second.resident && !it->second.loading) continue;
             if (protectedKey && it->first == *protectedKey) continue;
+            // Pinned entries are not eviction candidates at all. Skipping them
+            // here rather than relying on evictLocked() to refuse keeps the
+            // policy layer from selecting a victim it can never take.
+            if (it->second.pinCount > 0) continue;
             const float s = scoreLocked(it->second, tokenIndex);
             if (s < victimScore) { victimScore = s; victimIt = it; }
         }
@@ -167,6 +175,8 @@ bool ExpertCache::loadLocked(const ExpertKey& key, Entry& e, uint64_t tokenIndex
     const uint64_t t1 = transport_.nowMicros ? transport_.nowMicros(transport_.user) : 0;
     e.deviceHandle = h;
     e.resident = true;
+    ++e.residencyGeneration;
+    ++stats_.residencyPromotions;
     e.lastUsedToken = tokenIndex;
     stats_.residentBytes += e.loc.bytes;
     stats_.bytesUploaded += e.loc.bytes;
@@ -208,6 +218,72 @@ void ExpertCache::notePrediction(ExpertKey key, float probability, uint64_t toke
     e.lastUsedToken = std::max(e.lastUsedToken, tokenIndex);
 }
 
+bool ExpertCache::tryAcquireResident(ExpertKey key, ResidentLease& out) noexcept {
+    std::lock_guard<std::mutex> lock(mu_);
+    out = ResidentLease{};
+
+    auto it = entries_.find(key);
+    if (it == entries_.end()) { ++stats_.leaseRejections; return false; }
+    Entry& e = it->second;
+
+    if (e.loading) {
+        // A prefetch is in flight. Polling it here would put DMA completion on
+        // the caller's critical path, which is exactly what this path exists to
+        // avoid. The producer is expected to call again on a later pass.
+        ++stats_.leaseRejections;
+        return false;
+    }
+    if (!e.resident || !e.deviceHandle) { ++stats_.leaseRejections; return false; }
+
+    const uint64_t leaseId = nextLeaseId_++;
+    leases_[leaseId] = LiveLease{key, e.residencyGeneration};
+    ++e.pinCount;
+
+    out.weights = e.deviceHandle;
+    out.bytes = e.loc.bytes;
+    out.residencyGeneration = e.residencyGeneration;
+    out.leaseId = leaseId;
+    out.key = key;
+
+    ++stats_.leasesAcquired;
+    stats_.leasesOutstanding = stats_.leasesAcquired - stats_.leasesReleased;
+    return true;
+}
+
+bool ExpertCache::releaseResident(uint64_t leaseId) noexcept {
+    std::lock_guard<std::mutex> lock(mu_);
+    if (leaseId == 0) { ++stats_.unknownLeaseRelease; return false; }
+
+    auto it = leases_.find(leaseId);
+    if (it == leases_.end()) {
+        // Either a double release or a release of something this cache never
+        // issued. Counted, not silently absorbed: a leaked or duplicated pin
+        // would otherwise show up much later as unexplained memory growth.
+        ++stats_.unknownLeaseRelease;
+        ++stats_.doubleRelease;
+        return false;
+    }
+
+    const LiveLease lease = it->second;
+    leases_.erase(it);
+
+    auto eit = entries_.find(lease.key);
+    if (eit != entries_.end()) {
+        Entry& e = eit->second;
+        if (e.pinCount > 0) --e.pinCount;
+    }
+
+    ++stats_.leasesReleased;
+    stats_.leasesOutstanding = stats_.leasesAcquired - stats_.leasesReleased;
+    return true;
+}
+
+bool ExpertCache::isPinned(ExpertKey key) const {
+    std::lock_guard<std::mutex> lock(mu_);
+    auto it = entries_.find(key);
+    return it != entries_.end() && it->second.pinCount > 0;
+}
+
 size_t ExpertCache::warmStart(const std::vector<ExpertKey>& keys, uint64_t tokenIndex) {
     size_t loaded = 0;
     for (const auto& k : keys) if (prefetch(k, tokenIndex)) ++loaded;
@@ -217,12 +293,22 @@ size_t ExpertCache::warmStart(const std::vector<ExpertKey>& keys, uint64_t token
 bool ExpertCache::evictLocked(const ExpertKey&, Entry& e) {
     if (!e.resident && !e.loading) return true;
     if (!transport_.freeDevice) return false;
+    // A live lease means the consumer is reading these bytes right now. Freeing
+    // them would hand it a dangling pointer, so eviction declines and the caller
+    // selects a different victim.
+    if (e.pinCount > 0) {
+        ++stats_.evictionsBlockedByPin;
+        return false;
+    }
     if (e.loading && !finishAsyncLocked(e, true)) return false;
     transport_.freeDevice(transport_.user, e.deviceHandle, cfg_.deviceOrdinal);
     e.deviceHandle = nullptr;
     e.resident = false;
     e.loading = false;
     e.uploadTicket = 0;
+    // Any lease issued against the old allocation is now invalid. A correctly
+    // paired consumer has already released; anything still outstanding is
+    // recorded by the residencyGeneration mismatch on its own release.
     if (stats_.residentBytes >= e.loc.bytes) stats_.residentBytes -= e.loc.bytes;
     else stats_.residentBytes = 0;
     ++stats_.evictions;

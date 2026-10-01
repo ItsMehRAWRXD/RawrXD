@@ -44,6 +44,15 @@ static const QuantTypeDesc kQuantTypeTable[] = {
     { 13, "Q5_K",  sizeof(block_q5_K),   256, true,  true,  true  },
     { 14, "Q6_K",  sizeof(block_q6_K),   256, true,  false, true  },
     { 15, "Q8_K",  sizeof(block_q8_K),   256, true,  false, true  },
+    { 16, "IQ2_XXS", 32,                   32, true,  false, true  },
+    { 17, "IQ2_XS",  34,                   32, true,  false, true  },
+    { 18, "IQ2_S",   34,                   32, true,  false, true  },
+    { 19, "IQ2_M",   36,                   32, true,  false, true  },
+    { 20, "IQ3_XXS", 66,                   32, true,  false, true  },
+    { 21, "IQ3_S",   44,                   32, true,  false, true  },
+    { 22, "IQ3_M",   46,                   32, true,  false, true  },
+    { 23, "IQ4_NL",  18,                   32, true,  false, true  },
+    { 24, "IQ4_XS",  22,                   32, true,  false, true  },
     { 30, "BF16",  sizeof(uint16_t),       1, false, false, false },
 };
 

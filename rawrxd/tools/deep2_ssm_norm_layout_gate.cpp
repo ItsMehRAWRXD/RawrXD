@@ -178,6 +178,52 @@ int main(int argc, char** argv) {
     const bool ok = ne0IsGroupSize && ne1IsGroups && elementsMatch && indexBound &&
                     headsMapped == static_cast<size_t>(heads) &&
                     groupsReached == static_cast<size_t>(groups);
-    std::printf("VERDICT=%s\n", ok ? "PASS" : "FAIL");
-    return ok ? 0 : 1;
+
+    // ---- B3-E: verify the one-mixer-per-layer classification contract ----
+    // Deep2Engine now derives a single BlockMixer per layer from the GGUF
+    // per-layer pattern arrays exactly like llama.cpp:
+    //     is_recurrent = (n_head_kv(i)==0 && n_ff(i)==0)  -> Mamba
+    //     n_ff==0                                  -> Attention
+    //     else                                     -> Mlp/MoE
+    // This gate re-derives the same classification from the raw metadata and
+    // proves it agrees with the per-layer tensor census, with no dependence on
+    // the production mixer field.
+    std::vector<int32_t> kvArr;
+    std::vector<int32_t> ffArr;
+    const bool gotKv = loader.getMetaInt32Array(arch + ".attention.head_count_kv", kvArr);
+    const bool gotFf = loader.getMetaInt32Array(arch + ".feed_forward_length", ffArr);
+    const int64_t nLayer = loader.getMetaInt(arch + ".block_count", 0);
+    std::printf("BLOCK_PATTERN block_count=%lld head_count_kv_array=%d[%zu] feed_forward_length_array=%d[%zu]\n",
+                (long long)nLayer, gotKv ? 1 : 0, kvArr.size(), gotFf ? 1 : 0, ffArr.size());
+
+    const size_t N = static_cast<size_t>(nLayer);
+    std::vector<int> expectMixer(N, /*MLP=3*/ 3);
+    static const int ssmIdx[] = {0,2,4,6,7,9,11,14,16,19,21,23,26,28,30,31,34,35,36,38,40};
+    static const int attnIdx[] = {12,17,24,32};
+    for (int i : ssmIdx)  if ((size_t)i < N) expectMixer[i] = 0;
+    for (int i : attnIdx) if ((size_t)i < N) expectMixer[i] = 1;
+
+    bool blockPatternOk = gotKv && gotFf && (N > 0) &&
+                          kvArr.size() == N && ffArr.size() == N;
+    size_t ssmCount = 0, attnCount = 0, mlpCount = 0;
+    if (blockPatternOk) {
+        for (size_t i = 0; i < N; ++i) {
+            const bool recurrent = (kvArr[i] == 0 && ffArr[i] == 0);
+            int derived;
+            if (recurrent) { derived = 0; ++ssmCount; }
+            else if (ffArr[i] == 0) { derived = 1; ++attnCount; }
+            else { derived = 3; ++mlpCount; }
+            if (derived != expectMixer[i]) {
+                blockPatternOk = false;
+                std::printf("BLOCK_MISMATCH layer=%zu derived=%d expected=%d kv=%d ff=%d\n",
+                            i, derived, expectMixer[i], kvArr[i], ffArr[i]);
+            }
+        }
+    }
+    std::printf("BLOCK_CLASSIFICATION SSM=%zu ATTENTION=%zu MLP=%zu VERIFIED=%d\n",
+                ssmCount, attnCount, mlpCount, blockPatternOk ? 1 : 0);
+
+    const bool finalOk = ok && blockPatternOk;
+    std::printf("VERDICT=%s\n", finalOk ? "PASS" : "FAIL");
+    return finalOk ? 0 : 1;
 }

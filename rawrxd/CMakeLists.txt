@@ -1304,6 +1304,37 @@ if(WIN32)
     message(STATUS "RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured")
 
     # =====================================================================
+    # RAWRXD_DEEP2_EXPERT_CONTROL_PLANE_CERT_001 — runtime reachability cert
+    # for the adopted expert control plane. Executable, not linked into any
+    # product binary; its verdict is measured at runtime and never asserted by
+    # the build.
+    # =====================================================================
+    add_executable(deep2_expert_control_plane_cert
+        tools/deep2_expert_control_plane_cert.cpp
+    )
+    target_link_libraries(deep2_expert_control_plane_cert PRIVATE InferenceEngine)
+    set_target_properties(deep2_expert_control_plane_cert PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(deep2_expert_control_plane_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/expert_cache
+    )
+    target_link_libraries(deep2_expert_control_plane_cert PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET deep2_expert_control_plane_cert APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "DEEP2_EXPERT_CONTROL_PLANE_CERT_001: harness configured")
+
+    # =====================================================================
     # RAWRXD_LOCAL_AGENT_FLEET_001 — per-model Deep2-only fleet gate
     # =====================================================================
     add_executable(fleet_gate
@@ -4404,6 +4435,33 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/expert_cache/ExpertCache.cpp
     src/deep2/expert_cache/VulkanExpertTransport.cpp
     src/deep2/expert_cache/HostStagingRing.cpp
+    # RAWRXD_DEEP2_EXPERT_SCHEDULER_ADOPTION_001: cost-based expert placement
+    # (ExpertScheduler::choose) and the multi-device authority above the
+    # per-device ExpertCache were written but never listed in this target, so
+    # ExpertScheduler/DDeep2MultiGpuExpertCache/Deep2ExpertCacheBridge were dead
+    # code: they compiled nowhere in the product link. PackedExpertSlicer and
+    # ExpertTensorCatalog are prerequisites of the bridge's catalog import.
+    src/deep2/expert_cache/ExpertScheduler.cpp
+    src/deep2/expert_cache/PackedExpertSlicer.cpp
+    src/deep2/expert_cache/ExpertTensorCatalog.cpp
+    src/deep2/expert_cache/Deep2ExpertCacheBridge.cpp
+    src/deep2/expert_cache/Deep2MultiGpuExpertCache.cpp
+    src/deep2/expert_cache/Deep2StackGuard.cpp
+    # RAWRXD_DEEP2_ROOFLINE_ADOPTION_001: the Deep2::Roofline control plane
+    # (governor, per-GPU expert residency, predictive router, persistent decode,
+    # command batching, dual-GPU balancer, certification) was self-contained --
+    # every translation unit includes only its own header plus Deep2RooflineCommon
+    # -- yet zero of these appeared in any build target. Adding the whole closed
+    # cluster here; nothing outside Deep2Roofline* is required.
+    src/deep2/Deep2RooflineGovernor.cpp
+    src/deep2/Deep2DualGpuBalancer.cpp
+    src/deep2/Deep2ExpertResidency.cpp
+    src/deep2/Deep2PredictiveRouter.cpp
+    src/deep2/Deep2PersistentDecode.cpp
+    src/deep2/Deep2CommandBatch.cpp
+    src/deep2/Deep2RooflineCert.cpp
+    src/deep2/Deep2RooflineRatchet.cpp
+    src/deep2/Deep2RooflineRuntime.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -4414,6 +4472,13 @@ set(INFERENCE_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
+    # RAWRXD_DEEP2_MODEL_REGISTRY_001: Deep2Engine::loadModel now calls
+    # Deep2::ModelRegistry::admit(), so ModelRegistry.cpp must be in this target
+    # or admission fails to link. QuantKernelRegistry.cpp is already above (same
+    # target), which is required because admission measures quant capability
+    # through it. Deliberately NOT linked as rawrxd_deep2_model_registry here:
+    # that library also carries QuantKernelRegistry.cpp and would collide.
+    src/deep2/ModelRegistry.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -16613,4 +16678,165 @@ if(TARGET InferenceEngine)
     set_target_properties(deep2_ssm_norm_layout_gate PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME deep2_ssm_norm_layout_gate)
+endif()
+
+# ============================================================================
+# RAWRXD_DEEP2_MODEL_REGISTRY_001 — model admission authority
+#
+# src/deep2/ModelRegistry.cpp was previously a one-line "// STUB" file. That
+# mattered: Deep2::ModelRegistry was declared in Deep2ModelRegistry.hpp and had
+# NO definition anywhere in the build graph, so every resolve() call site had no
+# linkable implementation and architecture dispatch could not fail closed —
+# because it could not run at all.
+#
+# This target makes the registry a real, compiled authority:
+#   - ModelRegistry::resolve(metadata) keys OFF PARSED GGUF METADATA ONLY.
+#     It never derives an architecture from a filename or a model-name
+#     substring. resolve(name) exists for diagnostics and does exact lookup only.
+#   - ModelRegistry::admit(...) is the enforcement path: architecture known,
+#     forward family runnable, geometry coherent, required tensor roles present,
+#     quantization executable on the requested device.
+#   - quantExecutable() is measured from QuantKernelRegistry's actually
+#     registered GEMV/dequant pointers. A format that parses but has no linked
+#     kernel (every IQ type, since RegisterIQKernels() is an empty stub) reports
+#     false. BF16 reports true because dequant_bf16 + gemv_bf16_scalar really
+#     are registered — measured, not assumed from parseability.
+#   - Unknown architecture, no registered implementation, structurally
+#     incomplete tensors, and SpecialGraph architectures all FAIL CLOSED.
+#
+# Deliberately links only QuantKernelRegistry.cpp. It does NOT link
+# InferenceEngine: the registry is the gate that runs BEFORE an engine exists,
+# and binding it to the engine would make it unable to reject.
+# ============================================================================
+add_library(rawrxd_deep2_model_registry STATIC
+    src/deep2/ModelRegistry.cpp
+    src/deep2/QuantKernelRegistry.cpp)
+
+target_include_directories(rawrxd_deep2_model_registry PUBLIC
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include)
+
+# ModelRegistry.cpp reaches QuantKernelRegistry.hpp, which requires GGUFLoader.hpp
+# to be included first, and GGUFLoader.hpp transitively pulls in
+# src/deep2/vulkan_compute.h. That means the admission gate inherits a COMPILE-TIME
+# dependency on the Vulkan SDK headers even when it is deciding whether to use
+# Vulkan at all. Recorded as coupling finding COUPLING-001; not fixed here,
+# because removing it means narrowing the quant-capability interface, which is
+# Batch 6 work.
+if(DEFINED RAWR_VULKAN_INCLUDE)
+    target_include_directories(rawrxd_deep2_model_registry PRIVATE
+        "${RAWR_VULKAN_INCLUDE}")
+endif()
+
+if(MSVC)
+    target_compile_features(rawrxd_deep2_model_registry PUBLIC cxx_std_20)
+    target_compile_options(rawrxd_deep2_model_registry PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4)
+endif()
+
+set_target_properties(rawrxd_deep2_model_registry PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# Quant capability must be MEASURED, so the registry that owns the real kernels
+# is compiled into this target rather than linked from a separate target.
+# There is no `QuantKernelRegistry` CMake target in this tree (verified: the
+# target does not exist), so QuantKernelRegistry.cpp is a source of this library
+# directly. Without it, quantExecutable() reports false for every format and the
+# admission gate would reject every model — fail-closed, but useless.
+message(STATUS "[Deep2] Model registry: QuantKernelRegistry.cpp compiled in for measured quant capability")
+
+# RAWRXD_DEEP2_MODEL_REGISTRY_001 admission + registry gate.
+#
+# This is a REAL test, not a placeholder: every gate field it prints is derived
+# from a counter that is incremented only when the corresponding assertion holds
+# against the real ModelRegistry code. There are no literal PASS strings.
+#
+# Contrast with the 26 no-op "cert" targets in this file whose sources are
+# `int main(){ return 0; }` — those exit 0 having tested nothing.
+add_executable(deep2_model_registry_admission_test
+    tools/deep2_model_registry_admission_test.cpp)
+
+target_link_libraries(deep2_model_registry_admission_test PRIVATE
+    rawrxd_deep2_model_registry)
+
+target_include_directories(deep2_model_registry_admission_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include)
+
+# Same transitive-Vulkan coupling as the registry library, reached here through
+# Deep2ModelRegistry.hpp -> Deep2Engine.h. See COUPLING-001 above.
+if(DEFINED RAWR_VULKAN_INCLUDE)
+    target_include_directories(deep2_model_registry_admission_test PRIVATE
+        "${RAWR_VULKAN_INCLUDE}")
+endif()
+
+if(MSVC)
+    target_compile_options(deep2_model_registry_admission_test PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+endif()
+
+set_target_properties(deep2_model_registry_admission_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME deep2_model_registry_admission_test
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+message(STATUS "[Deep2] Model registry admission gate: deep2_model_registry_admission_test")
+
+# RAWRXD_DEEP2_MODEL_REGISTRY_001 — real load-path admission probe.
+#
+# The admission gate above registers its OWN fixture architectures and therefore
+# proves registry logic only. This probe links InferenceEngine and calls
+# Deep2Engine::loadModel() on a real GGUF, which is what proves
+# MODEL_REGISTRY_CALLED_BY_LOADER. It links InferenceEngine (not
+# rawrxd_deep2_model_registry) because ModelRegistry.cpp and QuantKernelRegistry.cpp
+# are already sources of InferenceEngine; linking both would duplicate symbols.
+if(TARGET InferenceEngine)
+    add_executable(deep2_loader_admission_probe
+        tools/deep2_loader_admission_probe.cpp)
+    target_link_libraries(deep2_loader_admission_probe PRIVATE InferenceEngine)
+    target_include_directories(deep2_loader_admission_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    if(DEFINED RAWR_VULKAN_INCLUDE)
+        target_include_directories(deep2_loader_admission_probe PRIVATE
+            "${RAWR_VULKAN_INCLUDE}")
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_loader_admission_probe PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /std:c++20)
+    endif()
+    set_target_properties(deep2_loader_admission_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_loader_admission_probe)
+    message(STATUS "[Deep2] Loader admission probe: deep2_loader_admission_probe")
+
+    # RAWRXD_DEEP2_BATCH5_CANONICAL_INFERENCE_001
+    #
+    # Drives the real model through loadModel -> admit -> weight bind ->
+    # tokenize -> prefill -> decode -> logits -> sample -> token. No synthetic
+    # forward and no fixture architecture: it links InferenceEngine and uses the
+    # production primitives (forwardSpeculativeBlock, computeLogits,
+    # sampleCommittedToken, generateStream).
+    add_executable(deep2_canonical_inference_probe
+        tools/deep2_canonical_inference_probe.cpp)
+    target_link_libraries(deep2_canonical_inference_probe PRIVATE InferenceEngine)
+    target_include_directories(deep2_canonical_inference_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    if(DEFINED RAWR_VULKAN_INCLUDE)
+        target_include_directories(deep2_canonical_inference_probe PRIVATE
+            "${RAWR_VULKAN_INCLUDE}")
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_canonical_inference_probe PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /std:c++20)
+    endif()
+    set_target_properties(deep2_canonical_inference_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_canonical_inference_probe)
+    message(STATUS "[Deep2] Canonical inference probe: deep2_canonical_inference_probe")
 endif()

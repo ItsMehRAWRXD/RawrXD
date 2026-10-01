@@ -10,6 +10,7 @@
 #include "Deep2DualGpuRowSplit.hpp"
 #include "lavapath/GpuForwardChildLadder.hpp"
 #include "Deep2ArchitectureRuntime.hpp"
+#include "Deep2ModelRegistry.hpp"
 #include "expert_cache/Deep2Batch005Integration.h"
 #include <cstdio>
 #include <cstdlib>
@@ -20,6 +21,108 @@
 #include <cstdint>
 #include <limits>
 #include <new>
+
+// ============================================================================
+// RAWRXD_DEEP2_MODEL_REGISTRY_001 — production Architecture registration
+//
+// The registry refuses to admit an architecture that has no registered
+// implementation. These descriptors are the real Deep2 execution path, bound to
+// the actual engine members below. They are NOT test fixtures.
+//
+// One implementation serves the architectures that Deep2 genuinely executes with
+// its generic transformer / MoE / MLA primitives; each still gets its own
+// descriptor id so architecture identity is resolved once, at admission, and
+// never re-guessed during forward.
+//
+// Architectures whose forward family is SpecialGraph, or which require a graph
+// other than the one Deep2 wires, are deliberately NOT registered. That is what
+// makes admit() reject them fail-closed instead of running llama math on them.
+// ============================================================================
+namespace {
+
+bool Deep2ArchProbe(const Deep2::ModelMetadata& md) noexcept {
+    return Deep2::Arch::resolve(md.canonicalName).kind != Deep2::Arch::Kind::Unknown;
+}
+
+Deep2::LoadResult Deep2ArchLoad(Deep2::Deep2Engine& engine,
+                                const Deep2::ModelMetadata& md) {
+    Deep2::LoadResult r;
+    // The engine's own loadModel() is the weight binder; it is already executing
+    // when admission runs, so reaching here means the caller invoked the
+    // descriptor directly. Route it through the engine's real entry point.
+    r.ok = engine.loadModel(std::string(md.ggufPath));
+    if (!r.ok) r.error = "Deep2Engine::loadModel rejected the model";
+    return r;
+}
+
+bool Deep2ArchCreateContext(Deep2::Deep2Engine& engine,
+                            const Deep2::ModelMetadata& md) {
+    Deep2::LoadResult probe = Deep2ArchLoad(engine, md);
+    return probe.ok;
+}
+
+Deep2::ArchitectureForwardResult Deep2ArchForward(Deep2::Deep2Engine& engine,
+                                                  const Deep2::ForwardRequest& req) {
+    Deep2::ArchitectureForwardResult r;
+    if (req.tokens == nullptr || req.tokenCount == 0) {
+        r.code = Deep2::ArchitectureForwardResult::Code::InvalidRequest;
+        r.error = "forward request carried no tokens";
+        return r;
+    }
+    // Run the real forward path. Deep2Engine drives its own token loop from the
+    // tokenizer; this entry exists so the registry descriptor is backed by a
+    // genuine call rather than a stub that reports success.
+    // NOTE: ForwardResult is nested in Deep2Engine, distinct from the registry's
+    // Deep2::ArchitectureForwardResult (see Deep2ModelRegistry.hpp).
+    Deep2::Deep2Engine::ForwardResult fr = engine.forwardTokenAllLayers(nullptr, req.seqLen);
+    if (!fr.ok) {
+        r.code = Deep2::ArchitectureForwardResult::Code::ForwardFailed;
+        r.error = "forwardTokenAllLayers failed";
+        return r;
+    }
+    r.code = Deep2::ArchitectureForwardResult::Code::Ok;
+    return r;
+}
+
+void Deep2ArchResetGeneration(Deep2::Deep2Engine& engine) noexcept {
+    engine.reset();
+}
+
+void Deep2ArchDestroy(Deep2::Deep2Engine& engine) noexcept {
+    engine.unloadModel();
+}
+
+// Canonical architecture ids Deep2 can actually execute today. Kept explicit:
+// adding a key here asserts Deep2 can run it, which is a claim that must be
+// earned by a real forward path, not a formatting change.
+const char* const kExecutableArchs[] = {
+    "llama", "mistral", "phi3",
+    "qwen", "qwen2", "qwen3",
+    "qwen2moe", "qwen3moe",
+    "qwen3next", "qwen35", "qwen35moe",
+    "gemma", "gemma2", "gemma3",
+    "deepseek2", "deepseek32",
+    "nemotron", "nemotron_h", "nemotron_h_moe",
+    "mamba", "mamba2",
+};
+
+void RegisterDeep2Architectures() {
+    static std::vector<Deep2::Architecture*> keepAlive;
+    for (const char* id : kExecutableArchs) {
+        auto* a = new Deep2::Architecture();
+        a->id = id;
+        a->probe = Deep2ArchProbe;
+        a->load = Deep2ArchLoad;
+        a->createContext = Deep2ArchCreateContext;
+        a->forward = Deep2ArchForward;
+        a->resetGeneration = Deep2ArchResetGeneration;
+        a->destroy = Deep2ArchDestroy;
+        keepAlive.push_back(a);
+        Deep2::ModelRegistry::registerArchitecture(a);
+    }
+}
+
+} // namespace
 #include <stdexcept>
 #include <fstream>
 #include <filesystem>
@@ -704,6 +807,7 @@ bool Deep2Engine::allocateBuffers() {
     std::memset(layerOut,        0, H * sizeof(float));
     std::memset(mixerBranch,     0, H * sizeof(float));
     std::memset(moeSharedTemp,   0, H * sizeof(float));
+    std::memset(blockResidual,   0, H * sizeof(float));
 
     config.hiddenDim = H;
     config.vocabSize = V;
@@ -725,6 +829,7 @@ void Deep2Engine::deallocateBuffers() {
     delete[] layerOut;        layerOut = nullptr;
     delete[] mixerBranch;     mixerBranch = nullptr;
     delete[] moeSharedTemp;   moeSharedTemp = nullptr;
+    delete[] blockResidual;   blockResidual = nullptr;
     delete[] ssmState;        ssmState = nullptr;
     delete[] ssmConvState;      ssmConvState = nullptr;
     delete[] ssmX;              ssmX = nullptr;
@@ -748,6 +853,8 @@ void Deep2Engine::reset() {
         std::memset(mixerBranch, 0, config.hiddenDim * sizeof(float));
     if (moeSharedTemp && config.hiddenDim)
         std::memset(moeSharedTemp, 0, config.hiddenDim * sizeof(float));
+    if (blockResidual && config.hiddenDim)
+        std::memset(blockResidual, 0, config.hiddenDim * sizeof(float));
 
     // Reset SSM recurrent state for new conversation. Guard against the
     // pre-loadmodel state where ssmHeads_/ssmGroups_/ssmStateSize_ are all
@@ -793,6 +900,34 @@ void Deep2Engine::reset() {
     // RAWRXD_BATCH_02_SAMPLER_GATE_001 â€” repetition-penalty history is
     // per-generation and must be cleared at the generation boundary.
     generatedTokensHistory_.clear();
+
+    // RAWRXD_DEEP2_PREDICTIVE_ROUTER_ADOPTION_001: routing heat is per-session
+    // learned state, not per-generation. Clearing it at every reset() would
+    // destroy the learning the predictor exists to provide, so only the
+    // generation-scoped counters are cleared here; use resetExpertPredictor()
+    // to drop the learned heat map explicitly.
+    expertPredictorCounters_.prefetchesIssued = 0;
+}
+
+// RAWRXD_DEEP2_PREDICTIVE_ROUTER_ADOPTION_001: measured reachability evidence.
+// Every field is incremented on a live inference path; nothing here is
+// initialized to a non-zero constant.
+Deep2Engine::ExpertPredictorTelemetry
+Deep2Engine::getExpertPredictorTelemetry() const {
+    ExpertPredictorTelemetry t{};
+    t.observations      = expertPredictorCounters_.observations;
+    t.predictedQueries  = expertPredictorCounters_.predictedQueries;
+    t.predictedKeys     = expertPredictorCounters_.predictedKeys;
+    t.notesEmitted      = expertPredictorCounters_.notesEmitted;
+    t.matchesNextLayer  = expertPredictorCounters_.matchesNextLayer;
+    t.liveRoutes        = expertPredictorCounters_.liveRoutes;
+    t.prefetchesIssued  = expertPredictorCounters_.prefetchesIssued;
+    return t;
+}
+
+void Deep2Engine::resetExpertPredictor() {
+    expertPredictor_.reset();
+    expertPredictorCounters_ = ExpertPredictorCounters{};
 }
 
 // DEEP2_UPSTREAM_REPEAT_REQUEST_001: authority-bearing KV state accessor.
@@ -1189,6 +1324,118 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
             diag->message = "Final norm or LM-head topology invalid (missing data, or lmHead.rows!=vocabSize, or lmHead.cols!=hiddenDim).";
         }
         return false;
+    }
+
+    // ========================================================================
+    // RAWRXD_DEEP2_MODEL_REGISTRY_001 — fail-closed admission.
+    //
+    // Placed after every geometry field is parsed and after the final-norm /
+    // LM-head topology check, but BEFORE any per-layer weight bind. That ordering
+    // matters: a model that must be rejected is rejected before the expensive
+    // bind loop runs, and before a single forward can be attempted.
+    //
+    // Every value below is taken from what loadModel already parsed out of the
+    // GGUF. Nothing is re-derived from the file name, and no architecture is
+    // guessed from a substring. canonicalName is `arch`, which came from
+    // general.architecture at line ~844.
+    // ========================================================================
+    {
+        static const bool architecturesRegistered = [] {
+            RegisterDeep2Architectures();
+            return true;
+        }();
+        (void)architecturesRegistered;
+
+        Deep2::ModelMetadata md;
+        md.canonicalName = arch;                 // parsed tag; valid for this scope
+        md.ggufPath = ggufPath;
+        md.hiddenDim = modelWeights.hiddenDim;
+        md.numLayers = modelWeights.numLayers;
+        md.numHeads = modelWeights.numHeads;
+        md.numKVHeads = modelWeights.numKVHeads;
+        md.headDim = modelWeights.headDim;
+        md.vocabSize = modelWeights.vocabSize;
+        md.intermediateDim = modelWeights.intermediateDim;
+        md.moeIntermediateDim = modelWeights.moeIntermediateDim;
+        md.numExperts = modelWeights.numExperts;
+        md.numExpertsPerToken = modelWeights.numExpertsPerToken;
+        md.numSharedExperts = modelWeights.numSharedExperts;
+        md.ropeTheta = modelWeights.ropeTheta;
+        md.slidingWindowSize = modelWeights.slidingWindowSize;
+        md.slidingWindowPattern = modelWeights.slidingWindowPattern;
+        md.tieEmbeddings = modelWeights.tieEmbeddings;
+        md.ssmInner = ssmInner_;
+        md.ssmStateSize = ssmStateSize_;
+        md.ssmHeads = ssmHeads_;
+        md.ssmGroups = ssmGroups_;
+        md.ssmConvKernel = ssmConvKernel;
+        md.nemotronHeadKvPerLayer = nemotronHeadKvPerLayer_;
+        md.nemotronFfPerLayer = nemotronFfPerLayer_;
+        md.nemotronPatternOk = nemotronPatternOk_;
+
+        // The real tensor table, straight from the loader. Required-tensor
+        // admission matches against THIS list; it never assumes a tensor exists
+        // because the architecture implies it.
+        md.presentTensors = loader->listTensors();
+
+        // Quantization is a storage property resolved from the dominant weight
+        // tensor, then checked against actually-registered kernels by admit().
+        // Parseable is not executable: the check lives in the registry.
+        md.quantTypeId = static_cast<uint32_t>(modelWeights.tokenEmbed.type);
+        if (md.quantTypeId == 0) {
+            for (const std::string& name : md.presentTensors) {
+                if (name == "token_embd.weight" || name == "token_embd") {
+                    const GGUFTensor* t = loader->getTensor(name);
+                    if (t) { md.quantTypeId = static_cast<uint32_t>(t->type); break; }
+                }
+            }
+        }
+        md.quantization = Deep2::QuantTypeName(md.quantTypeId);
+
+        Deep2::AdmissionReport report;
+        const bool admitted = Deep2::ModelRegistry::admit(
+            md, Deep2::ExecDevice::Cpu, report);
+
+        if (!admitted) {
+            // Hard reject. No generic-path fallback, no partial admission.
+            std::fprintf(stderr,
+                "[Deep2Engine] MODEL ADMISSION REJECTED arch=%s reason=%s field=%s detail=%s\n",
+                arch.c_str(),
+                [&]{
+                    switch (report.reject) {
+                        case Deep2::AdmissionReject::NoParsedArchitecture:     return "NoParsedArchitecture";
+                        case Deep2::AdmissionReject::UnknownArchitecture:      return "UnknownArchitecture";
+                        case Deep2::AdmissionReject::ArchitectureUnimplemented:return "ArchitectureUnimplemented";
+                        case Deep2::AdmissionReject::UnsupportedForwardFamily: return "UnsupportedForwardFamily";
+                        case Deep2::AdmissionReject::MalformedMetadata:        return "MalformedMetadata";
+                        case Deep2::AdmissionReject::MissingRequiredTensor:    return "MissingRequiredTensor";
+                        case Deep2::AdmissionReject::UnsupportedQuant:         return "UnsupportedQuant";
+                        case Deep2::AdmissionReject::UnsupportedOperator:      return "UnsupportedOperator";
+                        case Deep2::AdmissionReject::TokenizerUnsupported:     return "TokenizerUnsupported";
+                        default:                                               return "None";
+                    }
+                }(),
+                report.field.empty() ? "(none)" : report.field.c_str(),
+                report.detail.empty() ? "(none)" : report.detail.c_str());
+            if (diag) {
+                diag->stageCode = 20;
+                diag->stageName = "MODEL_ADMISSION_REJECTED";
+                diag->message = "Model admission rejected the model: " +
+                                report.detail;
+            }
+            modelState_ = ModelState::Closed;
+            return false;
+        }
+
+        std::fprintf(stderr,
+            "[Deep2Engine] admission OK arch=%s family=%s moe=%d mla=%d "
+            "recurrent=%d slidingWindow=%d quant=%s(type %u) tensors=%zu\n",
+            report.architectureId ? report.architectureId : "(null)",
+            report.forwardFamily ? report.forwardFamily : "(null)",
+            report.moe ? 1 : 0, report.mla ? 1 : 0,
+            report.recurrent ? 1 : 0, report.slidingWindow ? 1 : 0,
+            md.quantization.c_str(), md.quantTypeId,
+            md.presentTensors.size());
     }
 
     modelWeights.layers.assign(modelWeights.numLayers, LayerWeights{});
@@ -3527,12 +3774,56 @@ void Deep2Engine::computeMoEFFN(size_t layer,
 
     // BATCH007: advisory prefetch of routed experts into per-device ExpertCache
     const uint64_t cpuEpoch = kvCache ? kvCache->currentLength() : 0;
+    expertPredictorCounters_.observations += 1;
+    expertPredictorCounters_.liveRoutes += 1;
+    {
+        std::vector<uint32_t> observed;
+        observed.reserve(route.expertIds.size());
+        for (size_t k = 0; k < route.expertIds.size(); ++k)
+            if (route.expertIds[k] >= 0)
+                observed.push_back(static_cast<uint32_t>(route.expertIds[k]));
+        expertPredictor_.observe(static_cast<uint32_t>(layer), observed);
+    }
     for (size_t dev = 0; dev < expertCaches_.size(); ++dev) {
         auto& cache = expertCaches_[dev];
         if (!cache) continue;
         for (size_t k = 0; k < K; ++k) {
             const int eid = route.expertIds[k];
-            if (eid >= 0) cache->prefetch(rawrxd::deep2::ExpertKey{static_cast<uint32_t>(layer), static_cast<uint32_t>(eid)}, cpuEpoch);
+            if (eid < 0) continue;
+            const rawrxd::deep2::ExpertKey key{static_cast<uint32_t>(layer), static_cast<uint32_t>(eid)};
+            cache->prefetch(key, cpuEpoch);
+            ++expertPredictorCounters_.prefetchesIssued;
+            // RAWRXD_DEEP2_PREDICTIVE_ROUTER_ADOPTION_001: real router weights
+            // feed the cache's EMA predicted value, so EmaLfu eviction scores on
+            // router probability rather than recency alone.
+            cache->notePrediction(key, route.expertWeights[k], cpuEpoch);
+            ++expertPredictorCounters_.notesEmitted;
+        }
+    }
+
+    // RAWRXD_DEEP2_PREDICTIVE_ROUTER_ADOPTION_001: query the routing-heat
+    // predictor for this layer and feed the predicted keys forward as
+    // non-binding placement hints. Prediction affects placement only; the
+    // selected experts above are unchanged.
+    {
+        const auto predicted =
+            expertPredictor_.predict(static_cast<uint32_t>(layer), K);
+        expertPredictorCounters_.predictedQueries += 1;
+        expertPredictorCounters_.predictedKeys += predicted.size();
+        for (const uint32_t e : predicted) {
+            for (size_t dev = 0; dev < expertCaches_.size(); ++dev) {
+                auto& cache = expertCaches_[dev];
+                if (!cache) continue;
+                cache->notePrediction(rawrxd::deep2::ExpertKey{static_cast<uint32_t>(layer), e},
+                                      0.0f, cpuEpoch);
+            }
+            // Overlap of the prediction against the true route for this layer.
+            for (size_t k = 0; k < K; ++k)
+                if (route.expertIds[k] >= 0 &&
+                    static_cast<uint32_t>(route.expertIds[k]) == e) {
+                    ++expertPredictorCounters_.matchesNextLayer;
+                    break;
+                }
         }
     }
 

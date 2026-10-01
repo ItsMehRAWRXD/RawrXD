@@ -504,7 +504,6 @@ std::optional<Lease> staleLeaseRecovery(
     }
 
     const std::int64_t now = unixNow();
-    const bool tooOld = (now - existing->acquiredUnixSeconds) > maxAgeSeconds;
     const bool holderDead = !isProcessLive(existing->pid);
 
     // HEAD mismatch: detect by checking the lease's expected_head against
@@ -514,7 +513,26 @@ std::optional<Lease> staleLeaseRecovery(
     bool headOk = runGitCapture(repoRoot, "rev-parse HEAD", headOut);
     const bool headMoved = !headOk || headOut != existing->expectedHead;
 
-    if (tooOld && holderDead && headMoved) {
+    // A dead holder is the load-bearing predicate. It is what makes recovery
+    // safe and it is directly checkable: isProcessLive answers it. A holder that
+    // is still running can never satisfy it, so no value of any other term can
+    // evict a live owner. The live-owner guarantee is carried here alone.
+    //
+    // headMoved is corroborating evidence, not a requirement. It was previously
+    // a required conjunct, which made legitimate recovery impossible in the
+    // ordinary case: a writer that acquires a lease and then commits nothing
+    // leaves HEAD exactly where it was, so headMoved stays false and the dead
+    // holder's lease can never be recovered. The only remaining exit was to
+    // delete the lease file by hand, which is the action the authority exists to
+    // prevent.
+    //
+    // It still does work. A moved HEAD proves the lease is definitively
+    // orphaned, so the age requirement is waived; an unmoved HEAD must serve the
+    // full maxAgeSeconds before a dead holder is displaced.
+    const std::int64_t requiredAge = headMoved ? std::int64_t{0} : maxAgeSeconds;
+    const bool tooOld = (now - existing->acquiredUnixSeconds) > requiredAge;
+
+    if (tooOld && holderDead) {
         // Safe to recover: take the file down, then acquire fresh.
         std::error_code ec;
         std::filesystem::remove(existing->leaseFile, ec);
