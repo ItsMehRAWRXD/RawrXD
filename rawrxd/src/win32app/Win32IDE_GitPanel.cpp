@@ -1,17 +1,32 @@
 // Win32IDE_GitPanel.cpp — git status, diff, log, and commit UI
+#include "agentic/GitSafetyAuthorityTools.h"
 #include <windows.h>
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <filesystem>
 #include <functional>
 #include <cstdio>
 
 namespace RawrXD::IDE {
 
+// RAWRXD_GIT_SAFETY_AUTHORITY_001 — the panel's commit path goes through the
+// gate, not around it. Declared before RunGit so the read-only panel helpers
+// above and below keep working unchanged.
+bool GitPanel_CommitThroughAuthority(const std::string& repoDir, const std::string& message);
+
 HFONT IDECore_MonoFont();
 HFONT IDECore_UIFont();
 
-// ── Run a git command, capture stdout ────────────────────────────────────────
+// RAWRXD_GIT_SAFETY_AUTHORITY_001
+//
+// RunGit takes an already-formatted ARGUMENT STRING and pastes it after "git ",
+// so any caller that concatenates user text into it is quoting by hand. The
+// read-only callers (status --porcelain, diff, log) pass literals and are
+// unchanged. The commit path no longer uses this at all: it calls the gate.
+//
+// Kept because the read-only panel helpers still use it, and because removing
+// it would mean rewriting them for no safety gain.
 static std::string RunGit(const std::string& args, const std::string& repoDir)
 {
     std::string cmd = "git " + args;
@@ -192,9 +207,34 @@ static LRESULT CALLBACK GitWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             char buf[1024] = {};
             GetWindowTextA(g_git.hCommitMsg, buf, sizeof(buf));
             std::string msg2(buf);
-            if (!msg2.empty() && !g_git.repoDir.empty()) {
-                RunGit("add -A", g_git.repoDir);
-                RunGit("commit -m \"" + msg2 + "\"", g_git.repoDir);
+            if (msg2.empty() || g_git.repoDir.empty()) break;
+
+            // RAWRXD_GIT_SAFETY_AUTHORITY_001
+            //
+            // This used to be:
+            //
+            //     RunGit("add -A", g_git.repoDir);
+            //     RunGit("commit -m \"" + msg2 + "\"", g_git.repoDir);
+            //
+            // Two defects, both serious.
+            //
+            // 1. `add -A` stages EVERYTHING, including whatever the user had
+            //    already staged. A commit that follows it publishes all of it
+            //    under this message, so clicking Commit could silently publish
+            //    unrelated work. The gate refuses a commit whose index holds a
+            //    path outside the caller's scope for exactly this reason.
+            // 2. The message was concatenated into a command string handed to
+            //    CreateProcessA. CreateProcess does not invoke a shell, so this
+            //    was not the injection it looks like — but the quoting is still
+            //    wrong, and `commit -m "a" && b` would pass the literal text
+            //    `a" && b` to git as the message. The message is now one argv
+            //    element.
+            //
+            // The button now goes through the gate. If the gate refuses, the
+            //    panel says why and the message box is NOT cleared, so a
+            //    refused commit is visible rather than looking like a success.
+            bool committed = GitPanel_CommitThroughAuthority(g_git.repoDir, msg2);
+            if (committed) {
                 SetWindowTextA(g_git.hCommitMsg, "");
                 GitPanel_Refresh();
                 if (g_git.onCommit) g_git.onCommit(msg2);
@@ -250,6 +290,72 @@ void GitPanel_SetRepo(const std::string& dir)
 {
     g_git.repoDir = dir;
     GitPanel_Refresh();
+}
+
+// RAWRXD_GIT_SAFETY_AUTHORITY_001
+//
+// The panel's commit button routes here instead of running `git add -A` and
+// `git commit -m "<message>"` directly. Three behaviours change, all
+// deliberate:
+//
+//   1. No `add -A`. The old code staged everything in the repository, including
+//      work the user had already staged, and the following commit published all
+//      of it under the message typed in the box. Now the index is left alone
+//      and the gate refuses if it holds anything outside the caller's scope.
+//
+//   2. The message is one argv element, not a fragment of a command string.
+//
+//   3. A refusal is visible. Returns false with the measured reason, so the
+//      caller keeps the message box populated and does not refresh. The
+//      previous code cleared the box and called onCommit unconditionally, which
+//      made a refused or failed commit look exactly like a success.
+//
+// Returns true only when the gate reports the commit actually happened.
+bool GitPanel_CommitThroughAuthority(const std::string& repoDir, const std::string& message)
+{
+    if (repoDir.empty() || message.empty()) return false;
+
+    // The panel may target a different repository than the process-wide
+    // session, so a session is opened for THIS repository before asking. A
+    // session for another root must not be reused: its baseline fingerprints
+    // describe the wrong files, so the unrelated-work guarantee would be
+    // measured against the wrong repository.
+    const rawrxd::agentic::GitPolicy policy = rawrxd::agentic::GitSafetyPolicyFromEnvironment(repoDir);
+    if (policy.repositoryRoots.empty()) {
+        MessageBoxA(g_git.hwnd,
+                    "RAWRXD_GIT_SAFETY_AUTHORITY_001 refused this commit.\n\n"
+                    "No repository root is configured for the git gate, so the "
+                    "authority cannot establish a baseline and cannot certify "
+                    "that unrelated work survives.\n\nSet RAWRXD_GIT_ROOT.",
+                    "Git commit refused", MB_ICONWARNING | MB_OK);
+        return false;
+    }
+    rawrxd::agentic::BindGitSafetySession(policy, std::filesystem::path(repoDir));
+
+    auto& reg = rawrxd::agentic::ToolRegistry::Instance();
+    if (!reg.HasTool("git_commit")) {
+        MessageBoxA(g_git.hwnd,
+                    "RAWRXD_GIT_SAFETY_AUTHORITY_001 refused this commit.\n\n"
+                    "The git safety gate is not installed in this process, so no "
+                    "authority is deciding whether this commit is allowed. It is "
+                    "not performed.",
+                    "Git commit refused", MB_ICONWARNING | MB_OK);
+        return false;
+    }
+
+    std::unordered_map<std::string, std::string> params;
+    params["message"] = message;
+    const auto r = reg.Execute("git_commit", params);
+    if (!r.success) {
+        MessageBoxA(g_git.hwnd,
+                    ("RAWRXD_GIT_SAFETY_AUTHORITY_001 refused this commit:\n\n" +
+                     r.error + "\n\nNothing was committed. Your working tree is "
+                     "unchanged.")
+                        .c_str(),
+                    "Git commit refused", MB_ICONWARNING | MB_OK);
+        return false;
+    }
+    return true;
 }
 
 void GitPanel_Refresh()

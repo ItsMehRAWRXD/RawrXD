@@ -479,12 +479,17 @@ private:
 
             parsed.lastOpened = std::chrono::system_clock::now();
 
-            // Commit only after a complete parse, under the lock.
-            {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                m_config = std::move(parsed);
-                m_dirty = false;
-            }
+            // Commit the fully parsed document. No lock is taken here on
+            // purpose: load() is private and its only caller is initialize(),
+            // which already holds m_mutex across the call (workspace_model.cpp
+            // initialize() -> std::lock_guard<std::mutex> lock(m_mutex); then
+            // load()). Taking it again here is a recursive lock on a
+            // non-recursive std::mutex, which throws
+            // std::system_error(resource_deadlock_would_occur) and turns every
+            // load into a silent failure to restore. That is what the first
+            // runtime run of this path actually did.
+            m_config = std::move(parsed);
+            m_dirty = false;
 
             size_t rootCount = 0;
             for (const auto& f : m_config.folders) if (f.isRoot) ++rootCount;

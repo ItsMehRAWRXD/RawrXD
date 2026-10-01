@@ -37,6 +37,7 @@
 #include "BP1BraidStreamer.h"
 #include "deep2/AgentToolRegistry.hpp"
 #include "deep2/AgentToolAuthority.hpp"
+#include "agentic/AgentToolRegistry.h"
 #include "agentic/GitSafetyAuthorityTools.h"
 #include "W8LifecycleAuthority.h"
 #include "Win32IDE_MCPHooks.h"
@@ -602,24 +603,59 @@ static void chatWorkerThread(std::string prompt) {
         static bool git_installed = false;
         if (!git_installed) {
             git_installed = true;
-            const GitBindingReport gitReport = InstallGitSafetyIdeSurface(registry, ".");
+            // RAWRXD_GIT_REGISTRY_AUTHORITY_001: the registry passed here is the
+            // canonical process-wide singleton, rawrxd::agentic::ToolRegistry::
+            // Instance() (src/agentic/AgentToolRegistry.cpp:290) — the same one
+            // the agent tool orchestrator and the HTTP feature_handlers route
+            // dispatch through. The call site previously named an undeclared
+            // `registry`; declaring one here would have produced a SECOND
+            // registry, and the IDE's git tools would then be invisible to the
+            // model-facing surface that already exists. One registry, not two.
+            // BOTH registries get the gate, because this process reaches git
+            // through two of them:
+            //
+            //   1. `registry` above is RawrXD::Agentic::AgentToolRegistry, the
+            //      one the chat panel's StreamingCommandHandler and
+            //      AgenticModelStreamerBridge dispatch through. This is the
+            //      model-facing surface, and it had exactly one tool
+            //      (read_file) before this change.
+            //   2. rawrxd::agentic::ToolRegistry::Instance() is the sandboxed
+            //      authority, used by the git.* command handlers in
+            //      feature_handlers.cpp and by the tool orchestrator. The
+            //      !git_commit command dispatches through THIS one.
+            //
+            // Installing into only one leaves the other ungated, so both are
+            // installed and both share one GitSafetyAuthority — a refusal reads
+            // the same either way.
+            //
+            // Defaults are deny. With no RAWRXD_GIT_ROOT the fallback is the
+            // process working directory, so read-only git works with no
+            // configuration; without RAWRXD_GIT_SCOPE and the per-capability
+            // RAWRXD_GIT_ALLOW_* grants, every mutating call refuses.
+            const rawrxd::agentic::GitBindingReport ideGit =
+                rawrxd::ide_git_safety::InstallIdeSurface(registry, ".");
+            const rawrxd::agentic::GitBindingReport sandboxGit =
+                rawrxd::agentic::InstallGitSafetyFromEnvironment(
+                    ::rawrxd::agentic::ToolRegistry::Instance(), ".");
             // Logged, not printed to the chat transcript: a gate that announces
             // itself in a model-visible channel teaches the model to retry.
-            OutputDebugStringA(("rawrxd git safety: installed=" +
-                                std::string(gitReport.installed ? "1" : "0") +
-                                " session=" + std::string(gitReport.sessionOpened ? "1" : "0") +
-                                " root=" + (gitReport.repositoryRoot.empty() ? "<none>"
-                                                                          : gitReport.repositoryRoot) +
+            OutputDebugStringA(("rawrxd git safety: ide_installed=" +
+                                std::string(ideGit.installed ? "1" : "0") +
+                                " sandbox_installed=" +
+                                std::string(sandboxGit.installed ? "1" : "0") +
+                                " session=" + std::string(ideGit.sessionOpened ? "1" : "0") +
+                                " root=" + (ideGit.repositoryRoot.empty() ? "<none>"
+                                                                        : ideGit.repositoryRoot) +
                                 " capabilities=0x" + [&] {
                                     char buf[16];
                                     std::snprintf(buf, sizeof buf, "%08x",
-                                                  gitReport.capabilitiesGranted);
+                                                  ideGit.capabilitiesGranted);
                                     return std::string(buf);
                                 }() +
-                                " scope=" + std::to_string(gitReport.scopePrefixes) +
-                                (gitReport.refusalName.empty()
+                                " scope=" + std::to_string(ideGit.scopePrefixes) +
+                                (ideGit.refusalName.empty()
                                      ? std::string()
-                                     : " refusal=" + gitReport.refusalName) +
+                                     : " refusal=" + ideGit.refusalName) +
                                 "\n")
                                    .c_str());
         }
