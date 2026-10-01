@@ -23,6 +23,7 @@
 // The legacy direct-process registry is deliberately NOT re-enabled to make a
 // link succeed; the real authority is strictly better and is already built.
 #include "agentic/AgentToolRegistry.h"
+#include "agentic/GitSafetyAuthorityTools.h"
 // RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001: the checkpoint/rollback authority
 // behind /api/agent/transaction. It is the same implementation the IDE calls at
 // startup, not a second copy of "write the file and hope".
@@ -896,6 +897,29 @@ static void handleConnection(SOCKET clientSock,
             }
             reg.SetPolicy(p);
             reg.InstallBuiltinTools();
+
+            // RAWRXD_GIT_SAFETY_AUTHORITY_001
+            //
+            // The twelve git capabilities are installed into THIS registry, so
+            // /api/agent/execute-tool and /api/cli reach the gate with no route
+            // change and no second, ungated path. The policy is derived from the
+            // environment by the shared derivation, so the desktop app and this
+            // server cannot disagree about what is permitted.
+            //
+            // Defaults are deny: without RAWRXD_GIT_ROOT there is no session and
+            // without both RAWRXD_GIT_SCOPE and a per-capability
+            // RAWRXD_GIT_ALLOW_* every mutating tool refuses.
+            const GitBindingReport git =
+                InstallGitSafetyFromEnvironment(reg, canonicalRoot);
+            std::fprintf(stderr,
+                         "[server] git safety: installed=%d session=%d root=%s "
+                         "capabilities=0x%08x scope=%zu%s%s\n",
+                         git.installed ? 1 : 0, git.sessionOpened ? 1 : 0,
+                         git.repositoryRoot.empty() ? "<none>" : git.repositoryRoot.c_str(),
+                         git.capabilitiesGranted, git.scopePrefixes,
+                         git.refusalName.empty() ? "" : " refusal=",
+                         git.refusalName.empty() ? "" : git.refusalName.c_str());
+
             std::fprintf(stderr,
                          "[server] tool authority: %zu tools, root=%s write=%d execute=%d "
                          "writeProfile=%s requireTx=%d\n",

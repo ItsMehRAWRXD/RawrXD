@@ -45,6 +45,67 @@ std::string LastErrorText(const std::string& prefix) {
     return prefix + " (win32=" + buf + ")";
 }
 
+// RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001
+// A path that starts with a drive ("C:\dir\file") is already absolute: joining
+// it to the root produces "F:\ws\C:\dir\file", which is not under the root by
+// any reading. It must be canonicalised on its own and then held to the same
+// containment check, so an absolute in-root path works and an absolute
+// out-of-root path is refused BY THE SANDBOX rather than by the filesystem
+// happening to reject the nonsense name later.
+bool IsAbsoluteDrivePath(const std::string& s) {
+    if (s.size() < 3 || s[1] != ':') return false;
+    if (!std::isalpha(static_cast<unsigned char>(s[0]))) return false;
+    return s[2] == '\\' || s[2] == '/';
+}
+
+// A colon anywhere else -- "file:", "\\\\.\\pipe:", "name:stream", "http://" --
+// is a device, stream or URL scheme and is refused outright.
+//
+// The previous test read the two characters BEFORE the colon and demanded
+// scheme[1] == '\\', which no well-formed path can satisfy: for "F:\dir" the
+// colon is at index 1, so scheme is the single character "F" and the size test
+// fails; for "AB:\dir" scheme is "AB" and scheme[1] is 'B'. The effect was that
+// EVERY absolute Windows path was rejected as a "device, stream or non-drive
+// scheme". It stayed invisible while the only caller passed root-relative
+// candidates, and it broke the moment the transactional write profile had to
+// canonicalise an absolute RAWRXD_TOOL_ROOT, refusing every tool with "path
+// rejected by sandbox".
+bool HasNonDriveColon(const std::string& s) {
+    const std::size_t colon = s.find(':');
+    return colon != std::string::npos && !IsAbsoluteDrivePath(s);
+}
+
+// Rejects a canonical path that reaches its target through a reparse point.
+//
+// GetFullPathNameW normalises LEXICALLY. It does not follow junctions, symlinks
+// or mount points, so "F:\ws\link\a.txt" canonicalises to itself, satisfies the
+// prefix test against the root "F:\ws", and then opens whatever "link" points
+// at -- which can be anywhere on any drive, including a path the policy never
+// authorised. That is a read escape today and a WRITE escape the moment
+// write_file is enabled, so it is checked here, once, for every tool.
+//
+// The walk starts BELOW the root: a reparse point at the configured root itself
+// is the operator's choice and is accepted. A component that does not exist yet
+// is accepted (it is the file being created); a missing intermediate component
+// is accepted too, because the open that follows will fail on its own.
+bool CrossesReparsePoint(const std::wstring& canonical, const std::size_t fromOffset) {
+    std::size_t i = fromOffset;
+    while (i < canonical.size()) {
+        while (i < canonical.size() && (canonical[i] == L'\\' || canonical[i] == L'/')) ++i;
+        std::size_t end = i;
+        while (end < canonical.size() && canonical[end] != L'\\' && canonical[end] != L'/') ++end;
+        if (end > i) {
+            std::wstring prefix(canonical.begin(), canonical.begin() + static_cast<long>(end));
+            const DWORD attrs = ::GetFileAttributesW(prefix.c_str());
+            if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_REPARSE_POINT)) {
+                return true;
+            }
+        }
+        i = end;
+    }
+    return false;
+}
+
 // Joins `root` and `leaf` then canonicalises, rejecting traversal by requiring
 // the canonical result to still live under the canonical root.
 bool ResolveUnderRoot(const std::string& root, const std::string& leaf, std::wstring& outWide,
@@ -66,18 +127,13 @@ bool ResolveUnderRoot(const std::string& root, const std::string& leaf, std::wst
     std::wstring rootWide = Utf8ToWide(root);
     if (rootWide.empty() || rootWide.back() != L'\\') rootWide.push_back(L'\\');
 
-    const std::size_t colon = leaf.find(':');
-    if (colon != std::string::npos) {
-        const std::string scheme = leaf.substr(0, colon);
-        const bool drive = (scheme.size() == 2 && std::isalpha(static_cast<unsigned char>(scheme[0])) &&
-                            scheme[1] == '\\');
-        if (!drive) {
-            outError = "device, stream and non-drive schemes are not permitted";
-            return false;
-        }
+    if (HasNonDriveColon(leaf)) {
+        outError = "device, stream and non-drive schemes are not permitted";
+        return false;
     }
 
-    const std::wstring full = rootWide + Utf8ToWide(leaf);
+    const std::wstring full =
+        IsAbsoluteDrivePath(leaf) ? Utf8ToWide(leaf) : (rootWide + Utf8ToWide(leaf));
 
     // GetFullPathNameW normalises "." and ".." without touching the filesystem.
     DWORD needed = GetFullPathNameW(full.c_str(), 0, nullptr, nullptr);
@@ -97,6 +153,12 @@ bool ResolveUnderRoot(const std::string& root, const std::string& leaf, std::wst
                                rootWide.c_str(), static_cast<int>(rootWide.size()), TRUE) !=
             CSTR_EQUAL) {
         outError = "resolved path escapes the allowed root";
+        return false;
+    }
+    // Lexical containment is not containment on disk. A junction or symlink
+    // below the root canonicalises to itself and then opens somewhere else.
+    if (CrossesReparsePoint(canonical, rootWide.size())) {
+        outError = "path crosses a reparse point (junction or link) inside the root";
         return false;
     }
     outWide = canonical;
@@ -145,16 +207,9 @@ bool CanonicalizeAbsolute(const std::string& path, std::wstring& outWide, std::s
         outError = "UNC paths are not permitted";
         return false;
     }
-    const std::size_t colon = path.find(':');
-    if (colon != std::string::npos) {
-        const std::string scheme = path.substr(0, colon);
-        const bool drive = (scheme.size() == 2 &&
-                            std::isalpha(static_cast<unsigned char>(scheme[0])) &&
-                            scheme[1] == '\\');
-        if (!drive) {
-            outError = "device, stream and non-drive schemes are not permitted";
-            return false;
-        }
+    if (HasNonDriveColon(path)) {
+        outError = "device, stream and non-drive schemes are not permitted";
+        return false;
     }
     const std::wstring wide = Utf8ToWide(path);
     const DWORD needed = GetFullPathNameW(wide.c_str(), 0, nullptr, nullptr);
@@ -189,9 +244,11 @@ ToolPolicy ToolPolicy::DefaultDenyAll() {
 }
 
 bool IsPathAllowed(const ToolPolicy& policy, const std::string& candidate,
-                   std::string& outCanonical) {
+                   std::string& outCanonical, std::string* outError) {
     outCanonical.clear();
+    if (outError) outError->clear();
     if (policy.allowedRoots.empty()) {
+        if (outError) *outError = "the tool policy has no allowed root";
         return false;
     }
     for (const auto& root : policy.allowedRoots) {
@@ -201,6 +258,7 @@ bool IsPathAllowed(const ToolPolicy& policy, const std::string& candidate,
             outCanonical = WideToUtf8(wide);
             return true;
         }
+        if (outError && outError->empty()) *outError = error;
     }
     return false;
 }
@@ -367,8 +425,9 @@ void ToolRegistry::InstallBuiltinTools() {
                      return r;
                  }
                  std::string canonical;
-                 if (!IsPathAllowed(policy, it->second, canonical)) {
-                     r.error = "path rejected by sandbox: " + it->second;
+                 std::string why;
+                 if (!IsPathAllowed(policy, it->second, canonical, &why)) {
+                     r.error = "path rejected by sandbox: " + it->second + " (" + why + ")";
                      return r;
                  }
                  const std::wstring wide = Utf8ToWide(canonical);
@@ -420,8 +479,9 @@ void ToolRegistry::InstallBuiltinTools() {
                      return r;
                  }
                  std::string canonical;
-                 if (!IsPathAllowed(policy, it->second, canonical)) {
-                     r.error = "path rejected by sandbox: " + it->second;
+                 std::string why;
+                 if (!IsPathAllowed(policy, it->second, canonical, &why)) {
+                     r.error = "path rejected by sandbox: " + it->second + " (" + why + ")";
                      return r;
                  }
                  const std::wstring pattern = Utf8ToWide(canonical) + L"\\*";
@@ -466,13 +526,14 @@ void ToolRegistry::InstallBuiltinTools() {
                  }
                  // Re-implement the scan locally rather than calling Execute on
                  // read_file, so this tool has no dependency on registry state.
-                 std::string canonical;
-                 if (!IsPathAllowed(policy, pathIt->second, canonical)) {
-                     r.error = "path rejected by sandbox: " + pathIt->second;
-                     return r;
-                 }
-                 const std::wstring wide = Utf8ToWide(canonical);
-                 HANDLE h = CreateFileW(wide.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+                  std::string canonical;
+                  std::string why;
+                  if (!IsPathAllowed(policy, pathIt->second, canonical, &why)) {
+                      r.error = "path rejected by sandbox: " + pathIt->second + " (" + why + ")";
+                      return r;
+                  }
+                  const std::wstring wide = Utf8ToWide(canonical);
+                  HANDLE h = CreateFileW(wide.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
                                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
                  if (h == INVALID_HANDLE_VALUE) {
                      r.error = LastErrorText("cannot open " + canonical);
@@ -545,8 +606,9 @@ void ToolRegistry::InstallBuiltinTools() {
                      return r;
                  }
                   std::string canonical;
-                  if (!IsPathAllowed(policy, pathIt->second, canonical)) {
-                      r.error = "path rejected by sandbox: " + pathIt->second;
+                  std::string why;
+                  if (!IsPathAllowed(policy, pathIt->second, canonical, &why)) {
+                      r.error = "path rejected by sandbox: " + pathIt->second + " (" + why + ")";
                       return r;
                   }
                   // RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001
@@ -624,11 +686,12 @@ void ToolRegistry::InstallBuiltinTools() {
                  std::wstring workingDir;
                  const auto cwdIt = p.find("cwd");
                  if (cwdIt != p.end() && !cwdIt->second.empty()) {
-                     std::string canonical;
-                     if (!IsPathAllowed(policy, cwdIt->second, canonical)) {
-                         r.error = "cwd rejected by sandbox: " + cwdIt->second;
-                         return r;
-                     }
+                      std::string canonical;
+                      std::string why;
+                      if (!IsPathAllowed(policy, cwdIt->second, canonical, &why)) {
+                          r.error = "cwd rejected by sandbox: " + cwdIt->second + " (" + why + ")";
+                          return r;
+                      }
                      workingDir = Utf8ToWide(canonical);
                  }
                  DWORD timeout = policy.executeTimeoutMs;
