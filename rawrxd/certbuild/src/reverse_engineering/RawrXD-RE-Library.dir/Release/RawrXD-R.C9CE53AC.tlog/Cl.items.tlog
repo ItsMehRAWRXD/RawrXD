@@ -1,9 +1,0 @@
-F:\~dev\rawrxd\src\reverse_engineering\pe_tools\re_tools.cpp;F:\~dev\rawrxd\certbuild\src\reverse_engineering\RawrXD-RE-Library.dir\Release\re_tools.obj
-F:\~dev\rawrxd\src\reverse_engineering\disassembler.cpp;F:\~dev\rawrxd\certbuild\src\reverse_engineering\RawrXD-RE-Library.dir\Release\disassembler.obj
-F:\~dev\rawrxd\src\reverse_engineering\pe_analyzer.cpp;F:\~dev\rawrxd\certbuild\src\reverse_engineering\RawrXD-RE-Library.dir\Release\pe_analyzer.obj
-F:\~dev\rawrxd\src\reverse_engineering\decompiler.cpp;F:\~dev\rawrxd\certbuild\src\reverse_engineering\RawrXD-RE-Library.dir\Release\decompiler.obj
-F:\~dev\rawrxd\src\reverse_engineering\binary_patcher.cpp;F:\~dev\rawrxd\certbuild\src\reverse_engineering\RawrXD-RE-Library.dir\Release\binary_patcher.obj
-F:\~dev\rawrxd\src\reverse_engineering\re_api_bridge.cpp;F:\~dev\rawrxd\certbuild\src\reverse_engineering\RawrXD-RE-Library.dir\Release\re_api_bridge.obj
-F:\~dev\rawrxd\src\compiler_backend\InstructionEncoderX64.cpp;F:\~dev\rawrxd\certbuild\src\reverse_engineering\RawrXD-RE-Library.dir\Release\InstructionEncoderX64.obj
-F:\~dev\rawrxd\src\compiler_backend\RawrCOFFWriter.cpp;F:\~dev\rawrxd\certbuild\src\reverse_engineering\RawrXD-RE-Library.dir\Release\RawrCOFFWriter.obj
-F:\~dev\rawrxd\src\compiler_backend\RawrPE64Linker.cpp;F:\~dev\rawrxd\certbuild\src\reverse_engineering\RawrXD-RE-Library.dir\Release\RawrPE64Linker.obj
