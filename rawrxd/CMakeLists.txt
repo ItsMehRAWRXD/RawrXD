@@ -463,6 +463,19 @@ if(RAWRXD_BUILD_CLI)
         src/agent/orchestrator_cli_handler.cpp
     )
     set_target_properties(rawrxd-cli-full PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+
+    # RAWRXD_CPU_MATH_ISA_BASELINE_001
+    # This target compiles src/rawrxd_cpu_math.cpp (see the comment beside that
+    # source line) but carried no ISA flag, so the AVX2/AVX-512 blocks in that
+    # file were preprocessed out and the rawrxd::cpu::* kernels ran scalar.
+    # AVX2 only: AVX-512 is not enabled here because this binary is not
+    # guaranteed to run on AVX-512 hardware.
+    if(MSVC)
+        target_compile_options(rawrxd-cli-full PRIVATE /arch:AVX2)
+    else()
+        target_compile_options(rawrxd-cli-full PRIVATE -mavx2 -mfma)
+    endif()
+
     if(MSVC)
         target_link_directories(rawrxd-cli-full PRIVATE ${_RAWR_MSVC_LIBPATHS})
         set(_RAWR_CLI_LIBPATHS "")
@@ -4495,6 +4508,12 @@ set(INFERENCE_ENGINE_SOURCES
     src/rawrxd_transformer_forwardbatch.cpp
     # rawrxd_cpu_math.cpp provides rawrxd::cpu::* used by rawrxd_transformer.cpp.
     src/rawrxd_cpu_math.cpp
+    # RAWRXD_KQUANT_PARITY_HARNESS_001
+    # Differential oracle for src/deep2/k_quant_gemv_avx512.h. Carried in the
+    # engine's source list so the AVX-512 Q4_K GEMV has a build-integrated parity
+    # harness rather than a header that is in no target at all. Its main() is
+    # never pulled into the static library (no undefined symbol references it).
+    kquant_parity_check.cpp
     src/rawrxd_tokenizer.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
@@ -10343,8 +10362,32 @@ endif()
 option(BUILD_RAW_SERVER "Build rawr-server (OpenAI-compatible Deep2 server)" ON)
 if(BUILD_RAW_SERVER AND TARGET InferenceEngine AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_openai_server_main.cpp")
 add_executable(rawr-server
-    src/deep2/deep2_openai_server_main.cpp
-    src/deep2/deep2_openai_server.cpp)
+      src/deep2/deep2_openai_server_main.cpp
+      src/deep2/deep2_openai_server.cpp
+      # RAWRXD_IDE_HTTP_ROUTE_CLOSURE_001: the non-legacy tool authority that
+      # /api/cli and /api/agent/execute-tool dispatch through.
+      #
+      # This used to be RawrXD::Agent::ToolRegistry
+      # (src/agentic/ToolRegistry.h + ToolRegistry.cpp) populated by
+      # IdeToolImplementations.cpp. That path is REMOVED, not extended: it is a
+      # second authority with a different shape (name-dispatched InvokeTool, no
+      # policy object, no path allowlist, no output cap), and
+      # src/agentic/IdeToolImplementations.cpp exists only to feed it. Two
+      # registries, one of them sandboxed and one not, is how /api/cli ended up
+      # passing a shell command into a tool-NAME dispatch and always failing.
+      #
+      # The sole server-side authority is now rawrxd::agentic::ToolRegistry
+      # (include/agentic/AgentToolRegistry.h), which carries ToolPolicy with
+      # DefaultDenyAll, an allowedRoots allowlist, allowWrite/allowExecute
+      # opt-ins, output caps, an execute timeout, and IsPathAllowed() rejecting
+      # traversal/UNC/device/ADS paths.
+      src/agentic/AgentToolRegistry.cpp)
+  # src/core/ToolRegistry.cpp is deliberately NOT added. It is the legacy
+  # direct-process registry and refuses to compile without
+  # RAWRXD_LEGACY_TOOL_REGISTRY_ALLOWED:
+  #   #error "Legacy ToolRegistry.cpp direct-process registry is disabled."
+  # Defining that macro to make a link succeed would reverse a deliberate
+  # quarantine, so the routes use the non-legacy authority instead.
 target_link_libraries(rawr-server PRIVATE InferenceEngine dxgi)
 target_include_directories(rawr-server PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
@@ -14149,6 +14192,18 @@ target_include_directories(rawrxd PRIVATE
     ${CMAKE_SOURCE_DIR}/src/runtime/governance
 )
 
+# RAWRXD_CPU_MATH_ISA_BASELINE_001
+# src/rawrxd_cpu_math.cpp is compiled into this target but carried no ISA flag,
+# so every `#if defined(__AVX512F__)` / `#if defined(__AVX2__)` block in it was
+# preprocessed out and the rawrxd::cpu::* kernels ran scalar. AVX2 is the
+# broadly-available baseline here; AVX-512 is deliberately NOT enabled because it
+# is not portable to every host this binary ships to.
+if(MSVC)
+    target_compile_options(rawrxd PRIVATE /arch:AVX2)
+else()
+    target_compile_options(rawrxd PRIVATE -mavx2 -mfma)
+endif()
+
 # Vulkan SDK support for Sovereign Runtime rawrxd target
 # RAWRXD_VULKAN_TARGET_TRUTH_001
 # This is the second, independent Vulkan wiring chain for the same target (the
@@ -15302,6 +15357,10 @@ set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # rawrxd::cpu::* kernels (Dot, RmsNorm, Softmax, MatMulRow, ApplyRope,
+    # AddInPlace, MulInPlace, WeightedSum, SiluInPlace, ParallelRows) live in
+    # rawrxd_cpu_math.cpp, the sole definition site for rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15379,6 +15438,8 @@ set(B012_AMORTIZATION_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15434,6 +15495,8 @@ set(B013_STABILITY_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15485,6 +15548,8 @@ set(B014_COMPUTE_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15533,6 +15598,8 @@ set(B014_BOUNDARY_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15581,6 +15648,8 @@ set(B014_SINGLE_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15629,6 +15698,8 @@ set(B014_LIFETIME_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15700,6 +15771,8 @@ set(B006_KV_CACHE_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15780,6 +15853,8 @@ set(B007_PERF_BASELINE_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15871,6 +15946,8 @@ set(B010_RESIDENCY_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -15950,6 +16027,8 @@ set(B011_RESIDENCY_OPT_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
@@ -16024,6 +16103,8 @@ set(B015_RESIDENCY_VALIDATION_SOURCES
     tests/b015/b015_residency_validation.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
     src/rawrxd_tokenizer.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
@@ -16100,6 +16181,8 @@ endif()
 add_executable(b015_pool_microbench EXCLUDE_FROM_ALL
     tests/b015/b015_pool_microbench.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
      src/rawrxd_sampler.cpp
@@ -16300,6 +16383,8 @@ set(B009_BATCHED_PREFILL_SOURCES
     tests/b009/b009_batched_prefill_certification.cpp
     tests/b009/b009b_batched_gemm.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
@@ -16370,6 +16455,8 @@ endif()
 add_executable(b009a_fast_validation EXCLUDE_FROM_ALL
     tests/b009/b009a_fast_validation.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
@@ -16436,6 +16523,8 @@ add_executable(b009_t128_certification EXCLUDE_FROM_ALL
     tests/b009/b009_t128_certification.cpp
     tests/b009/b009b_batched_gemm.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
@@ -16504,6 +16593,8 @@ add_executable(b016_gemm_efficiency_probe EXCLUDE_FROM_ALL
     tests/b016/b016_gemm_efficiency_probe.cpp
     tests/b009/b009b_batched_gemm.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
@@ -16572,6 +16663,8 @@ target_link_libraries(b016_gemm_efficiency_probe PRIVATE
 add_executable(b009_t128_instrumented EXCLUDE_FROM_ALL
     tests/b009/b009_t128_instrumented.cpp
     src/rawrxd_transformer.cpp
+    # Sole definition site for rawrxd::cpu::* used by rawrxd_transformer.cpp.
+    src/rawrxd_cpu_math.cpp
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
@@ -17307,6 +17400,74 @@ target_include_directories(prepared_cache_unit PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
 message(STATUS "prepared_cache_unit: CONFIGURED")
+
+# ============================================================================
+# RAWRXD_B77_THREAD_GEOMETRY_PROBE_001
+# Proves what geometry a requested thread count ACTUALLY produces. Needed because
+# "threads=N" is ambiguous: threads==1 runs inline on the caller with zero
+# workers, threads>=2 splits between the caller and N-1 workers. A sweep labelling
+# both on one axis cannot be read.
+# ============================================================================
+add_executable(thread_geometry_probe
+    tools/thread_geometry_probe.cpp
+    src/rawrxd_cpu_math.cpp
+)
+set_target_properties(thread_geometry_probe PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+target_include_directories(thread_geometry_probe PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+# RAWRXD_CPU_MATH_ISA_BASELINE_001
+# src/rawrxd_cpu_math.cpp is this target's only compute TU and carried no ISA
+# flag, so its AVX2 blocks were preprocessed out and the kernels under test ran
+# scalar -- which is precisely the configuration this probe cannot observe the
+# parallel geometry of. AVX2 baseline only, no AVX-512.
+if(MSVC)
+    target_compile_options(thread_geometry_probe PRIVATE /arch:AVX2)
+else()
+    target_compile_options(thread_geometry_probe PRIVATE -mavx2 -mfma)
+endif()
+
+# ============================================================================
+# RAWRXD_KQUANT_PARITY_HARNESS_001
+# Differential oracle for the fused AVX-512 K-quant GEMV kernels in
+# src/deep2/k_quant_gemv_avx512.h. That header was in no target at all, so its
+# vectorized Q4_K path was never compiled and never admitted. This target is the
+# gate that admits it: it builds ONLY when the AVX-512 blocks are live, so the
+# `#if defined(__AVX512F__)` parity comparison inside the harness is the proof
+# rather than a preprocessed-out branch.
+#
+# Real executable, not a stub: compiles the harness TU alone. The header is
+# self-contained (cstddef/cstdint/cstring + immintrin.h), so no registry or
+# engine dependency is needed and none is linked.
+# ============================================================================
+add_executable(kquant_parity EXCLUDE_FROM_ALL
+    kquant_parity_check.cpp
+)
+set_target_properties(kquant_parity PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+)
+target_include_directories(kquant_parity PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_compile_features(kquant_parity PRIVATE cxx_std_20)
+if(MSVC)
+    target_compile_options(kquant_parity PRIVATE /arch:AVX512 /EHsc)
+else()
+    target_compile_options(kquant_parity PRIVATE
+        -mavx512f -mavx512bw -mavx512dq -mavx512vl)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME kquant_parity COMMAND kquant_parity)
+endif()
+message(STATUS "kquant_parity: CONFIGURED (AVX-512 Q4_K GEMV parity oracle)")
+
+message(STATUS "thread_geometry_probe: CONFIGURED")
 
 # ============================================================================
 # RAWRXD_SOURCE_CLOSURE_SUMMARY_001

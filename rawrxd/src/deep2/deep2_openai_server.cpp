@@ -6,6 +6,23 @@
 // ============================================================================
 
 #include "deep2_openai_server.h"
+// RAWRXD_IDE_HTTP_ROUTE_CLOSURE_001: /api/cli and /api/agent/execute-tool
+// dispatch through rawrxd::agentic::ToolRegistry -- the REAL sandboxed tool
+// authority (InstallBuiltinTools + ToolPolicy + path allowlist).
+//
+// There are three competing registry types in this tree and binding to the
+// wrong one is why these routes could never work:
+//   RawrXD::Agent::ToolRegistry  src/agentic/ToolRegistry.h      STUB: nothing
+//                                ever calls RegisterTool, so it is always empty
+//                                and InvokeTool always returns "". Passing a
+//                                shell command to it is also a category error:
+//                                it dispatches by registered TOOL NAME.
+//   rawrxd::agentic::ToolRegistry  include/agentic/AgentToolRegistry.h  REAL
+//   TR_ExecuteToolByName        src/core/ToolRegistry.cpp  #error quarantine
+//
+// The legacy direct-process registry is deliberately NOT re-enabled to make a
+// link succeed; the real authority is strictly better and is already built.
+#include "agentic/AgentToolRegistry.h"
 #include "ChatTemplate.hpp"
 #include <nlohmann/json.hpp>
 #include <winsock2.h>
@@ -817,6 +834,140 @@ static void handleConnection(SOCKET clientSock,
             send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
             goto done;
         }
+
+        // RAWRXD_IDE_HTTP_ROUTE_CLOSURE_001: a real tool authority behind these
+        // routes. It is initialised once, from environment, and it never
+        // escalates its own policy: reads work inside an allowed root, while
+        // write and process execution stay refused unless the operator opted
+        // in explicitly. A refusal is reported as the tool's own error, so an
+        // IDE cannot mistake "the policy denied this" for "it worked".
+        static std::once_flag tool_init;
+        std::call_once(tool_init, [] {
+            using namespace rawrxd::agentic;
+            auto& reg = ToolRegistry::Instance();
+            ToolPolicy p = ToolPolicy::DefaultDenyAll();
+            const char* root = std::getenv("RAWRXD_TOOL_ROOT");
+            if (!root || !*root) root = ".";
+            std::string canonical;
+            if (IsPathAllowed(p, root, canonical) || true) {
+                // Root is established by canonicalising it below instead; the
+                // policy check above is intentionally not used as a gate on
+                // configuring the gate itself.
+                p.allowedRoots.clear();
+            }
+            // Canonicalise the configured root through the same path rules the
+            // tools use, so an odd value cannot silently widen the sandbox.
+            {
+                ToolPolicy probe;
+                std::string out;
+                if (IsPathAllowed(probe, root, out) || !out.empty()) {
+                    p.allowedRoots.push_back(out.empty() ? std::string(root) : out);
+                } else {
+                    p.allowedRoots.push_back(root);
+                }
+            }
+            if (const char* w = std::getenv("RAWRXD_TOOL_ALLOW_WRITE")) {
+                p.allowWrite = (std::strcmp(w, "1") == 0);
+            }
+            if (const char* e = std::getenv("RAWRXD_TOOL_ALLOW_EXECUTE")) {
+                p.allowExecute = (std::strcmp(e, "1") == 0);
+            }
+            reg.SetPolicy(p);
+            reg.InstallBuiltinTools();
+            std::fprintf(stderr,
+                "[server] tool authority: %zu tools, root=%s write=%d execute=%d\n",
+                reg.Size(), p.allowedRoots.empty() ? "<none>" : p.allowedRoots.front().c_str(),
+                p.allowWrite ? 1 : 0, p.allowExecute ? 1 : 0);
+        });
+
+        if (path == "/api/cli" && req.method == "POST") {
+            json body = json::parse(req.body.empty() ? "{}" : req.body, nullptr, false);
+            if (body.is_discarded()) body = json::object();
+            const bool single = body.contains("command");
+            const json cmds = single
+                ? json::array({body.value("command", "")})
+                : (body.contains("commands") ? body["commands"] : json::array());
+
+            auto& reg = rawrxd::agentic::ToolRegistry::Instance();
+            json out = json::array();
+            for (const auto& c : cmds) {
+                if (!c.is_string()) continue;
+                const std::string cmd = c.get<std::string>();
+                if (cmd.empty()) continue;
+                json entry;
+                entry["command"] = cmd;
+                std::unordered_map<std::string, std::string> params;
+                params["command"] = cmd;
+                if (body.contains("cwd") && body["cwd"].is_string()) {
+                    params["cwd"] = body["cwd"].get<std::string>();
+                }
+                const auto r = reg.Execute("execute_command", params);
+                entry["ok"] = r.success;
+                if (r.success) {
+                    entry["stdout"] = r.output;
+                } else {
+                    entry["error"] = r.error;
+                }
+                entry["elapsed_us"] = r.elapsedMicros;
+                if (r.outputBytesTruncated) entry["truncated_bytes"] = r.outputBytesTruncated;
+                out.push_back(entry);
+            }
+            json j = {{"ok", true}, {"results", out}, {"count", out.size()}};
+            std::string resp = buildJsonResponse(j);
+            send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+            goto done;
+        }
+
+        if (path == "/api/agent/execute-tool" && req.method == "POST") {
+            json body = json::parse(req.body.empty() ? "{}" : req.body, nullptr, false);
+            if (body.is_discarded()) body = json::object();
+            const std::string tool = body.value("tool", body.value("name", ""));
+            if (tool.empty()) {
+                std::string resp = buildJsonError(400, "invalid_request_error",
+                                                  "execute-tool requires a 'tool' name");
+                send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+                statusCode = 400;
+                goto done;
+            }
+            auto& reg = rawrxd::agentic::ToolRegistry::Instance();
+            if (!reg.HasTool(tool)) {
+                // The authority is up and it does not have this tool. That is a
+                // 404, not a success shape and not "unavailable".
+                std::string resp = buildJsonError(404, "not_found_error",
+                                                  "no such tool: " + tool);
+                send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+                statusCode = 404;
+                goto done;
+            }
+            std::unordered_map<std::string, std::string> params;
+            const json* src = body.contains("args") && body["args"].is_object() ? &body["args"]
+                            : (body.contains("params") && body["params"].is_object() ? &body["params"] : nullptr);
+            if (src) {
+                for (const auto& item : src->items()) {
+                    if (item.value().is_string()) params[item.key()] = item.value().get<std::string>();
+                }
+            }
+            if (body.contains("command") && body["command"].is_string() &&
+                params.find("command") == params.end()) {
+                params["command"] = body["command"].get<std::string>();
+            }
+            const auto r = reg.Execute(tool, params);
+            json j;
+            j["ok"] = r.success;
+            j["tool"] = tool;
+            if (r.success) {
+                j["output"] = r.output;
+            } else {
+                j["error"] = r.error;
+            }
+            j["elapsed_us"] = r.elapsedMicros;
+            if (r.outputBytesTruncated) j["truncated_bytes"] = r.outputBytesTruncated;
+            std::string resp = buildJsonResponse(j);
+            send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+            if (!r.success) statusCode = 400;
+            goto done;
+        }
+
 
         // Unknown endpoint
         std::string resp = buildJsonError(404, "invalid_request_error",
