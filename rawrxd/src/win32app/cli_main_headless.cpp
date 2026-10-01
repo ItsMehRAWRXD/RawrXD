@@ -159,6 +159,15 @@ static std::string ollamaGenerate(const std::string& model, const std::string& p
 // ----------------------------------------------------------------------------
 // Deep2 GGUF route: load model via Deep2Engine and generate
 // ----------------------------------------------------------------------------
+// RAWRXD_TEARDOWN_VS_INFERENCE_001
+// `engine` is a local inside deep2Generate(), so ~Deep2Engine runs when that
+// function returns -- before main() reaches its printf. If teardown faults,
+// the function never returns and the inference result is lost entirely,
+// making a completed generation look like an empty one. deep2Generate()
+// therefore emits and flushes its result itself while `engine` is still
+// alive, and sets this flag so main() does not print it a second time.
+static bool g_inferenceOutputEmitted = false;
+
 static std::string deep2Generate(const std::string& modelPath, const std::string& prompt, int maxTokens) {
     std::fprintf(stderr, "[CLI_DEEP2] modelPath='%s' prompt='%s' maxTokens=%d\n",
         modelPath.c_str(), prompt.c_str(), maxTokens);
@@ -175,8 +184,19 @@ static std::string deep2Generate(const std::string& modelPath, const std::string
         return "[DEEP2_INIT_FAILED]";
     }
     std::fprintf(stderr, "[CLI_DEEP2] engine initialized OK\n"); std::fflush(stderr);
-    engine.enableVulkan(false);
-    std::fprintf(stderr, "[CLI_DEEP2] Vulkan disabled (CPU-only mode)\n"); std::fflush(stderr);
+    const char* vkEnv = std::getenv("RAWRXD_ENABLE_VULKAN");
+    const bool vkRequested = vkEnv && (vkEnv[0] == '1' || vkEnv[0] == 't' || vkEnv[0] == 'T');
+    engine.enableVulkan(vkRequested);
+    std::fprintf(stderr,
+        "[CLI_DEEP2] Vulkan requested=%d enabled=%d initialized=%d devices=%zu\n",
+        vkRequested ? 1 : 0,
+        engine.isVulkanEnabled() ? 1 : 0,
+        engine.isVulkanInitialized() ? 1 : 0,
+        vkRequested ? (size_t)0 : (size_t)0);
+    std::fflush(stderr);
+    if (!vkRequested)
+        std::fprintf(stderr, "[CLI_DEEP2] Vulkan disabled (CPU-only mode)\n");
+    std::fflush(stderr);
 
     Deep2::ModelLoadDiag diag{};
     if (!engine.loadModel(modelPath, &diag)) {
@@ -207,6 +227,15 @@ static std::string deep2Generate(const std::string& modelPath, const std::string
 
     if (result.completed) {
         std::fprintf(stderr, "[CLI_DEEP2] SUCCESS: %zu chars generated\n", generatedText.size()); std::fflush(stderr);
+        // RAWRXD_TEARDOWN_VS_INFERENCE_001: `engine` is a local in this
+        // function, so ~Deep2Engine runs before main() can print the result.
+        // A destructor fault therefore destroys the output as collateral and
+        // makes a completed generation look like an empty one. Emit and flush
+        // the inference result HERE, while `engine` is still alive, so a future
+        // teardown defect can never mask inference that already succeeded.
+        std::printf("%s\n", generatedText.c_str());
+        std::fflush(stdout);
+        g_inferenceOutputEmitted = true;
         return generatedText;
     }
     std::fprintf(stderr, "[CLI_DEEP2] FAIL: generation incomplete cancelled=%d failureDetail='%s'\n",
@@ -342,8 +371,11 @@ int main(int argc, char* argv[]) {
             return 1;
     }
 
-    // Print generated text to stdout
-    if (!output.empty()) {
+    // Print generated text to stdout.
+    // RAWRXD_TEARDOWN_VS_INFERENCE_001: the DEEP2 route already emitted and
+    // flushed its result inside deep2Generate(), before ~Deep2Engine runs.
+    // Do not print it twice.
+    if (!output.empty() && !g_inferenceOutputEmitted) {
         std::printf("%s\n", output.c_str());
     }
 

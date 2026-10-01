@@ -194,6 +194,36 @@ public:
                       uint32_t pos, float theta);
     bool AppendKV(DeviceBuf& k, DeviceBuf& v, uint32_t kvDim,
                   uint32_t pos, uint32_t layer);
+    // RAWRXD_GPU_KV_HANDOFF_001: read-only measurement of the K/V cache bytes
+    // belonging to one (layer, pos) slot. Used to compare the bytes Prefill
+    // wrote against the bytes Decode1 consumes, so a physical handoff defect
+    // can be separated from a defect inside the attention kernel. Performs no
+    // writes and does not alter cache state.
+    struct KvSlotBytes {
+        uint32_t layer = 0;      // absolute layer as passed by the caller
+        uint32_t relLayer = 0;   // layer after kvLayerBase_ mapping
+        uint32_t pos = 0;        // KV position within the slot
+        uint32_t kvDim = 0;
+        uint32_t maxSeq = 0;
+        VkDeviceSize kOffset = 0; // byte offset of this slot inside K cache
+        VkDeviceSize vOffset = 0; // byte offset of this slot inside V cache
+        uint64_t kHash = 0;        // FNV-1a over the first nBytes of K
+        uint64_t vHash = 0;        // FNV-1a over the first nBytes of V
+        uint32_t nBytes = 0;
+        bool kRead = false;
+        bool vRead = false;
+    };
+    bool ProbeKvSlotBytes(uint32_t layer, uint32_t pos, uint32_t nBytes,
+                          KvSlotBytes* out);
+    // Companion to ProbeKvSlotBytes: returns the first nFloats values of the
+    // K and V bytes stored in one (layer, pos) slot. Read-only.
+    bool ProbeKvSlotFloats(uint32_t layer, uint32_t pos, uint32_t nFloats,
+                           float* kOut, float* vOut);
+    // RAWRXD_GPU_K_ROPE_BISECT_001: read nFloats from an arbitrary device
+    // buffer at a float offset. Read-only. Used to capture ArenaK before and
+    // after DispatchRope.
+    bool ProbeDeviceFloats(DeviceBuf& buf, uint32_t floatOffset,
+                           uint32_t nFloats, float* out);
     bool DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
                             DeviceBuf& out, uint32_t headDim,
                             uint32_t heads, uint32_t kvHeads,

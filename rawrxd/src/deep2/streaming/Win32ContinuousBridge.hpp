@@ -5,7 +5,7 @@
 #endif
 
 #include "ContinuousExecution.hpp"
-#include "ContinuousEventLedger.hpp"
+#include "EventLedger.hpp"
 #include <atomic>
 #include <memory>
 #include <thread>
@@ -35,8 +35,11 @@ public:
 
     void start();
     void stop();
-    // Replay events from ledger that the UI may have missed
-    void replaySince(uint64_t sequence, HWND target);
+    // Replay events for one run that the UI may have missed.
+    // The canonical ledger is per-run (RAWRXD_CONTINUOUS_STREAM_REALITY_001),
+    // so the run id is explicit. It was absent from the previous signature
+    // because the retired flat-sequence ledger was global.
+    void replaySince(uint64_t runId, uint64_t fromSequence, HWND target);
 
 private:
     void pump();

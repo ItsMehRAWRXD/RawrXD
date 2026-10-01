@@ -181,6 +181,9 @@ struct GGUFModel {
     int32_t  n_experts = 8;
     int32_t  n_experts_used = 2;
     float    rms_norm_eps = 1e-5f;
+    // GGUF: general.alignment is authoritative for the tensor-data section.
+    size_t   gguf_alignment = 0;
+    std::string gguf_architecture;
 
     struct TensorInfo {
         std::string   name;
@@ -200,9 +203,9 @@ struct GGUFModel {
         size = mmap.len;
         cursor = 0;
         try {
-            parse_header();
-            parse_metadata();
-            parse_tensors();
+            phase_ = "header";   parse_header();
+            phase_ = "metadata"; parse_metadata();
+            phase_ = "tensors";  parse_tensors();
             return true;
         } catch (const std::exception& e) {
             std::cerr << "GGUF parse error: " << e.what() << std::endl;
@@ -221,8 +224,44 @@ struct GGUFModel {
         n_kv      = read_u64_le();
     }
 
+    uint64_t peek_u64_le() const {
+        if (cursor + 8 > size) return 0;
+        uint64_t v; memcpy(&v, data + cursor, 8); return v;
+    }
+
+    // Consume exactly one GGUF metadata value of the given type, advancing the
+    // cursor by its true encoded size. GGUF v3 value types are 0..12.
+    //
+    // BUG: the array branch previously switched on the element type with a
+    // `default: break;` that consumed NOTHING. Any array whose elements were
+    // not {uint32,int32,float32,string} -- int8/uint8/int16/uint16/int64/
+    // uint64/float64, or a nested array -- desynchronised the cursor and the
+    // parse eventually died with "Unexpected EOF". The outer switch already
+    // failed closed on unknown types; the inner one failed OPEN.
+    void skip_value(uint32_t type) {
+        switch (type) {
+            case 0: case 1: case 7: read_u8();   return;   // uint8,int8,bool
+            case 2: case 3:         read_u16_le(); return;  // uint16,int16
+            case 4: case 5:         read_u32_le(); return;  // uint32,int32
+            case 6:                 read_f32_le(); return;  // float32
+            case 8:                 read_string(); return;  // string
+            case 10: case 11:       read_u64_le(); return;  // uint64,int64
+            case 12:                read_f64_le(); return;  // float64
+            case 9: {                              // array
+                uint32_t elem = read_u32_le();
+                uint64_t n    = read_u64_le();
+                for (uint64_t i = 0; i < n; ++i) skip_value(elem);
+                return;
+            }
+            default:
+                throw std::runtime_error(
+                    "unsupported GGUF metadata value type: " + std::to_string(type));
+        }
+    }
+
     void parse_metadata() {
         for (uint64_t i = 0; i < n_kv; i++) {
+            kv_index_ = i;
             std::string key = read_string();
             uint32_t type = read_u32_le();
             // Parse value based on type
@@ -248,6 +287,7 @@ struct GGUFModel {
                     else if (key == "llama.attention.head_count_kv") n_rot = (int32_t)v;
                     else if (key == "llama.expert_count") n_experts = (int32_t)v;
                     else if (key == "llama.expert_used_count") n_experts_used = (int32_t)v;
+                    else if (key == "general.alignment") gguf_alignment = (size_t)v;
                     break;
                 }
                 case 5: { // int32
@@ -270,13 +310,7 @@ struct GGUFModel {
                     uint32_t arr_type = read_u32_le();
                     uint64_t arr_len = read_u64_le();
                     for (uint64_t j = 0; j < arr_len; j++) {
-                        switch (arr_type) {
-                            case 4: read_u32_le(); break;
-                            case 5: read_u32_le(); break;
-                            case 6: read_f32_le(); break;
-                            case 8: read_string(); break;
-                            default: break;
-                        }
+                        skip_value(arr_type);
                     }
                     break;
                 }
@@ -296,8 +330,11 @@ struct GGUFModel {
     }
 
     void parse_tensors() {
-        // Alignment to 32 bytes
-        size_t alignment = 32;
+        // GGUF: general.alignment is authoritative. Hardcoding 32 put the
+        // tensor table at the wrong byte whenever a file declared anything
+        // else, and the first read_string() then read a garbage length and
+        // threw "Unexpected EOF".
+        size_t alignment = gguf_alignment ? gguf_alignment : 32;
         size_t padding = (alignment - (cursor % alignment)) % alignment;
         cursor += padding;
 
@@ -313,20 +350,26 @@ struct GGUFModel {
             }
             ti.type   = read_u32_le();
             ti.offset = read_u64_le();
-            
-            // Calculate element size based on type
+
             size_t elem_size = gguf_type_size(ti.type);
             ti.size_bytes *= elem_size;
-            
-            // Point directly into mapped memory
-            if (ti.offset + ti.size_bytes <= size) {
-                ti.data_ptr = data + ti.offset;
+
+            tensor_map[ti.name] = tensors.size();
+            tensors.push_back(ti);
+        }
+
+        // GGUF: tensor offsets are relative to the start of the tensor-data
+        // section, which only exists once the whole info table is parsed.
+        // Treating offset as an absolute file offset silently pointed every
+        // tensor at the wrong bytes while still passing a bounds check.
+        const size_t tensor_data_base = cursor;
+
+        for (auto& ti : tensors) {
+            if (ti.offset + ti.size_bytes <= size - tensor_data_base) {
+                ti.data_ptr = data + tensor_data_base + ti.offset;
             } else {
                 ti.data_ptr = nullptr;
             }
-            
-            tensor_map[ti.name] = tensors.size();
-            tensors.push_back(ti);
         }
     }
 
@@ -407,7 +450,22 @@ struct GGUFModel {
         return s;
     }
 
-    void check(size_t n) { if (cursor + n > size) throw std::runtime_error("Unexpected EOF"); }
+    // BUG (diagnostic): "Unexpected EOF" carried no position, so a cursor
+    // desync could not be located. Record the phase and the cursor so the
+    // next failure names where the stream went wrong.
+    const char* phase_ = "none";
+    size_t      kv_index_ = 0;
+
+    void check(size_t n) {
+        if (cursor + n > size) {
+            throw std::runtime_error(
+                std::string("Unexpected EOF in ") + phase_ +
+                " at cursor=" + std::to_string(cursor) +
+                " need=" + std::to_string(n) +
+                " size=" + std::to_string(size) +
+                " kv_index=" + std::to_string(kv_index_));
+        }
+    }
 };
 
 // =================== 3. EMBEDDED BPE TOKENIZER ======================

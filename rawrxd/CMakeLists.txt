@@ -639,6 +639,41 @@ if(RAWRXD_BUILD_CLI)
         message(STATUS "vulkan_compute_diagnostic: Vulkan compute diagnostic test configured")
 
         # =====================================================================
+        # RAWRXD_Q4K_GEMV_PARITY_001
+        # Isolated Q4_K/Q6_K GEMV parity gate. Links the REAL
+        # InferenceEngine.lib (the same object code rawrxd executes) so the
+        # harness cannot accidentally prove a different build of
+        # VulkanCompute than the one the model uses.
+        # =====================================================================
+        add_executable(q4k_gemv_parity
+            tools/q4k_gemv_parity.cpp
+        )
+        set_target_properties(q4k_gemv_parity PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        target_include_directories(q4k_gemv_parity PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${RAWR_VULKAN_INCLUDE}
+        )
+        target_link_libraries(q4k_gemv_parity PRIVATE
+            ${RAWR_VULKAN_LIB}
+            ${CMAKE_BINARY_DIR}/Release/InferenceEngine.lib
+            kernel32.lib user32.lib gdi32.lib
+        )
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+            set_property(TARGET q4k_gemv_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+            set_property(TARGET q4k_gemv_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+        endif()
+        if(DEFINED _MSVC_ROOT)
+            set_property(TARGET q4k_gemv_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+        endif()
+        message(STATUS "q4k_gemv_parity: Q4_K GEMV parity gate configured")
+
+        # =====================================================================
         # Vulkan Tensor Upload + Readback Verification Test
         # Proves: staging buffer +�-�+�-�+�-� device-local buffer +�-�+�-�+�-� readback +�-�+�-�+�-� verification
         # =====================================================================
@@ -1497,7 +1532,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
     add_executable(test_gguf_metadata_bounds
         tests/test_gguf_metadata_bounds.cpp
     )
-    set_target_properties(test_gguf_metadata_bounds PROPERTIES
+        set_target_properties(test_gguf_metadata_bounds PROPERTIES
         EXCLUDE_FROM_ALL TRUE
         EXCLUDE_FROM_DEFAULT_BUILD TRUE
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
@@ -10166,7 +10201,12 @@ message(STATUS "[Deep2] OpenAI-compatible server target: rawr-server (port 11435
 endif()
 
 # RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 +�-�-� run/chat/agent/steer/resume + certs
-include(${CMAKE_SOURCE_DIR}/cmake/RawrAgenticCli.fragment.cmake)
+# Q2 / RAWRXD_AGENTIC_CLI_QUARANTINE_001: the previous include of
+# cmake/RawrAgenticCli.fragment.cmake is removed. That fragment declared 63
+# nonexistent sources and 25 nonexistent cert targets and then skipped itself
+# silently via `if(EXISTS)`, converting architectural absence into a successful
+# configure. Canonical agent authority is src/rawr_agent.cpp -> rawr_monolith.
+include(${CMAKE_SOURCE_DIR}/cmake/RawrAgenticCliQuarantine.cmake)
 
 # Deep2 Gateway cert island +�-�-� Win32 only (no Ship / no C++23)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2GatewayCertStandalone.fragment.cmake)
@@ -16839,4 +16879,48 @@ if(TARGET InferenceEngine)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME deep2_canonical_inference_probe)
     message(STATUS "[Deep2] Canonical inference probe: deep2_canonical_inference_probe")
+endif()
+
+# =========================================================================
+# RAWRXD_Q4K_GEMV_PARITY_001
+# Isolated Q4_K/Q6_K GEMV parity gate. Defined at TOP LEVEL, outside the
+# RAWRXD_BUILD_CLI block: this gate must stay buildable even when the CLI
+# target is disabled, because it is the authority that decides whether the
+# quantized GEMV the CLI depends on is numerically correct.
+#
+# Links the REAL InferenceEngine.lib -- the same object code rawrxd executes
+# -- so the harness cannot accidentally prove a different build of
+# VulkanCompute than the one the live model path uses.
+# =========================================================================
+if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_SDK_ROOT
+   AND EXISTS "${CMAKE_BINARY_DIR}/Release/InferenceEngine.lib")
+    add_executable(q4k_gemv_parity
+        tools/q4k_gemv_parity.cpp
+    )
+    set_target_properties(q4k_gemv_parity PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(q4k_gemv_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${RAWR_VULKAN_INCLUDE}
+    )
+    target_link_libraries(q4k_gemv_parity PRIVATE
+        ${RAWR_VULKAN_LIB}
+        ${CMAKE_BINARY_DIR}/Release/InferenceEngine.lib
+        kernel32.lib user32.lib gdi32.lib
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET q4k_gemv_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET q4k_gemv_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET q4k_gemv_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "q4k_gemv_parity: Q4_K GEMV parity gate configured")
+else()
+    message(STATUS "q4k_gemv_parity: SKIPPED (needs RAWR_ENABLE_VULKAN + built InferenceEngine.lib)")
 endif()

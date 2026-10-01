@@ -48,6 +48,21 @@ add_executable(rawr_monolith
     rawrxd/src/deep2/mars/MARSController.cpp
     rawrxd/src/deep2/streaming/ContinuousExecution.cpp
     rawrxd/src/deep2/streaming/Win32ContinuousBridge.cpp
+    # Q2.5 link-authority repair. Deep2Engine.cpp / Deep2Engine_SsVkDecodeBind.cpp /
+    # Deep2Engine_GpuForward.cpp reference symbols whose definitions live in these
+    # translation units. They were listed ONLY in the deep2_benchmark target, so
+    # rawr_monolith compiled every object and then failed at link with 20 LNK2019s.
+    # A compile-clean target that cannot link is not a passing target.
+    rawrxd/src/deep2/Beaconism.cpp
+    rawrxd/src/deep2/GpuScheduler.cpp
+    rawrxd/src/deep2/TimeReverseDigest.cpp
+    rawrxd/src/deep2/ModelRegistry.cpp
+    rawrxd/src/deep2/Deep2PredictiveRouter.cpp
+    rawrxd/src/deep2/streaming/EventLedger.cpp
+    rawrxd/src/deep2/lavapath/DualStickEnvSnap.cpp
+    rawrxd/src/deep2/lavapath/DualStickStreamWindow.cpp
+    rawrxd/src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
+    rawrxd/src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
     src/deep2/Classify.asm
     rawrxd/src/rawr_classifier_scalar.asm
     rawrxd/src/rawr_classifier_avx2.asm
@@ -140,10 +155,29 @@ add_executable(deep2_benchmark
     rawrxd/src/deep2/Beaconism.cpp
     rawrxd/src/deep2/GpuScheduler.cpp
     rawrxd/src/deep2/TimeReverseDigest.cpp
-    rawrxd/src/deep2/RealGGUFParity.cpp
+    # Q2.6 entry-point authority: RealGGUFParity.cpp is
+    # RAWRXD_REAL_GGUF_PARITY_001, a standalone E2E parity harness with its own
+    # main(). It already has a dedicated executable target
+    # (rawrxd/CMakeLists.txt -> rawrxd_real_gguf_parity). Listing it here as a
+    # source of deep2_benchmark put two main() definitions in one target
+    # (LNK2005/LNK1169), so this target could never link.
     rawrxd/src/deep2/streaming/ContinuousExecution.cpp
     rawrxd/src/deep2/streaming/Win32ContinuousBridge.cpp
-    rawrxd/src/deep2/streaming/ContinuousEventLedger.cpp
+    # Q2.5 / EventLedger authority: the canonical
+    # RAWRXD_CONTINUOUS_STREAM_REALITY_001 per-run durable ledger. The stale
+    # ContinuousEventLedger.cpp (a second class also named
+    # rawrxd::continuous::EventLedger, flat global sequence, different event
+    # type) is quarantined under rawrxd/src/deep2/streaming/quarantine/.
+    rawrxd/src/deep2/streaming/EventLedger.cpp
+    # Q2.5 link-authority parity with rawr_monolith: these TUs define symbols
+    # referenced by Deep2Engine.cpp and friends. Every target that compiles those
+    # objects must list them, or the target compiles clean and then fails to link.
+    rawrxd/src/deep2/ModelRegistry.cpp
+    rawrxd/src/deep2/Deep2PredictiveRouter.cpp
+    rawrxd/src/deep2/lavapath/DualStickEnvSnap.cpp
+    rawrxd/src/deep2/lavapath/DualStickStreamWindow.cpp
+    rawrxd/src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
+    rawrxd/src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
     src/deep2/Classify.asm
     rawrxd/src/rawr_classifier_scalar.asm
     rawrxd/src/rawr_classifier_avx2.asm

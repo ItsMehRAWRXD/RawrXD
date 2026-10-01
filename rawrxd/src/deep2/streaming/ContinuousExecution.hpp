@@ -1,5 +1,11 @@
 #pragma once
-#include "ContinuousEventLedger.hpp"
+// No ledger header is included here on purpose. EventLedger is used only as a
+// pointer in this header, so the forward declaration below is sufficient, and
+// EventLedger.hpp includes this header. The previous
+// `#include "ContinuousEventLedger.hpp"` pulled in a SECOND, competing class
+// also named rawrxd::continuous::EventLedger (flat global sequence, different
+// event type), which was an ODR violation. That header is quarantined under
+// streaming/quarantine/ as part of the Q2.5 authority repair.
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
@@ -149,8 +155,27 @@ public:
                  std::string_view arguments,
                  std::string& result,
                  std::string& error) const;
+
+    // B3 / RAWRXD_TOOL_AUTHORITY_SINGLE_001
+    //
+    // This class used to be an independent tool table, which would have made
+    // it the THIRD competing tool authority alongside
+    // RawrXD::Agentic::AgentToolRegistry and agentic/ToolRegistry. It is now a
+    // thin adapter: when canonical mode is enabled every execute() forwards to
+    // the process-wide authority obtained from
+    // RawrXD::Agentic::RequireAgentToolAuthority(), which throws if unbound.
+    //
+    // Consequences that are deliberate:
+    //   * there is no silent fallback - an unbound authority is a hard failure;
+    //   * canonical invocations are counted and receipted by the authority;
+    //   * add() is rejected in canonical mode, so tools cannot be registered
+    //     behind the authority's back.
+    void use_canonical_authority(bool enabled) noexcept { canonical_ = enabled; }
+    bool uses_canonical_authority() const noexcept { return canonical_; }
+
 private:
     std::unordered_map<std::string, Fn> tools_;
+    bool canonical_ = false;
 };
 
 struct Request {
@@ -161,7 +186,10 @@ struct Request {
     std::uint64_t max_output_tokens{0};
 };
 
-class ToolRegistry final;
+// Forward declarations. `final` is illegal on a forward declaration (C3197);
+// it belongs on the definition. ToolRegistry and EventLedger are each defined
+// in their own headers, which include this one, so the cycle is broken here.
+class ToolRegistry;
 class EventLedger;
 
 class Session final {

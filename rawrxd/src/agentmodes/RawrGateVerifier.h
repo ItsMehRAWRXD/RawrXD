@@ -30,6 +30,13 @@ struct GateCheck {
     std::vector<std::string> backingSources;   // files that implement this gate
     std::vector<std::string> requiredFields;   // fields a PASS must contain
 
+    // A gate that does not declare its measurement contract cannot be shown to
+    // have been measured. Defaults to true so that omitting `requiredFields`
+    // fails closed rather than silently falling back to "any numeric field in
+    // the receipt counts as evidence". Set false ONLY for gates that genuinely
+    // assert nothing measurable, and never to rescue a PASS.
+    bool     requireMeasuredFields = true;
+
     // Measured results
     bool     receiptExists       = false;
     bool     sourceBackingChecked = false;

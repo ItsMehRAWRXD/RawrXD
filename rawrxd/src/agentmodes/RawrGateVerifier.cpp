@@ -39,25 +39,47 @@ GateCheck verify(const GateCheck& req) {
     c.declaredVerdict = (dv != r.fields.end()) ? dv->second : std::string("(none)");
 
     // --- 2. Required fields must be present and measured. ---------------
+    //
+    // Q1 CORRECTION. The previous version did this:
+    //
+    //     if (!c.requiredFields.empty()) { ...validate... }
+    //     else {
+    //         for (const auto& k : c.requiredFields) (void)k;   // iterates EMPTY
+    //         for (auto& kv : r.fields) { ...count anything numeric... }
+    //     }
+    //
+    // The else branch therefore (a) executed a no-op loop over the empty
+    // vector, and (b) counted ANY numeric-looking field anywhere in the
+    // receipt as "measured". A fabricated receipt containing nothing but
+    // `VERDICT=PASS` and `FAKE_TOOL_RESULTS=0` scored measuredFields=1 and
+    // passed. c.missingFields was never set on that path, so the
+    // missingFields>0 branch could not catch it either.
+    //
+    // The measurement contract is now mandatory. An empty `requiredFields`
+    // list on a gate that requires measurement is a missing contract, not a
+    // licence to accept unverified numbers.
+    if (c.requiredFields.empty() && c.requireMeasuredFields) {
+        c.verdict = Verdict::ReceiptMissing;
+        c.sourceRuntimeMismatch = true;
+        c.rationale =
+            "gate '" + c.gateName + "' declares no requiredFields, so it states no "
+            "measurement contract; an unmeasured receipt cannot be verified and "
+            "must not be passed. Previously this case fell back to counting any "
+            "numeric-looking field in the receipt, which accepted fabricated "
+            "counters. Declare the fields a PASS must contain, or set "
+            "requireMeasuredFields=false if the gate truly measures nothing.";
+        return c;
+    }
+
     if (!c.requiredFields.empty()) {
         const receiptcheck::Validation val = receiptcheck::validate(
             c.gateName, c.receiptPath, c.requiredFields);
         c.missingFields    = (int)val.missing.size();
         c.measuredFields   = val.measuredFields;
     } else {
-        int measured = 0;
-        for (const auto& k : c.requiredFields) (void)k;
-        for (const auto& kv : r.fields) {
-            if (kv.second == "0" || kv.second == "1") ++measured;
-            else {
-                bool numeric = !kv.second.empty();
-                for (char ch : kv.second) {
-                    if (!std::isdigit(static_cast<unsigned char>(ch)) && ch != '.' && ch != '-') { numeric = false; break; }
-                }
-                if (numeric) ++measured;
-            }
-        }
-        c.measuredFields = measured;
+        // requireMeasuredFields == false: nothing is claimed, so nothing can be
+        // counted as evidence. Leave measuredFields at 0 deliberately.
+        c.measuredFields = 0;
     }
 
     // --- 3. The backing source must be free of stub markers. -------------

@@ -658,7 +658,11 @@ namespace {
     rawrxd::Batch005Runtime s_expertCacheRuntime; // keeps expert_cache objects alive
 }
 Deep2Engine::Deep2Engine() {}
-Deep2Engine::~Deep2Engine() { unloadModel(); }
+Deep2Engine::~Deep2Engine() {
+    std::fprintf(stderr, "[CLEANUP_STAGE] ~Deep2Engine enter\n"); std::fflush(stderr);
+    unloadModel();
+    std::fprintf(stderr, "[CLEANUP_STAGE] ~Deep2Engine unloadModel done\n"); std::fflush(stderr);
+}
 
 // =================== INITIALIZE ====================
 bool Deep2Engine::initialize(const EngineConfig& cfg) {
@@ -2370,7 +2374,25 @@ void Deep2Engine::unloadModel() {
     modelWeights = {};
     ggufResult = {};
     specWs_.clear();
-    specKvMirrorReset();
+    // RAWRXD_D2_LIFECYCLE_001_HOTFIX (2nd site): the same ungated
+    // specKvMirrorReset() that reset() gates at line ~893 is also reached here
+    // via ~Deep2Engine -> unloadModel(). On the GPU path the spec K/V mirrors
+    // are allocated, so ResetSpecKvMirror() runs destroyBuffer() during
+    // teardown and faults (0xC0000005) before stdout is flushed. The reset()
+    // hotfix documented this crash but only covered one of the two call sites.
+    // Same gate, same default (OFF) until InferenceEngine_patched.lib is
+    // rebuilt with the real fix.
+    {
+        static const char* enableSpecKvResetEnv =
+            std::getenv("RAWRXD_ENABLE_SPEC_KV_RESET");
+        const bool enableSpecKvReset =
+            enableSpecKvResetEnv && (enableSpecKvResetEnv[0] == '1' ||
+                                     enableSpecKvResetEnv[0] == 't' ||
+                                     enableSpecKvResetEnv[0] == 'T');
+        if (enableSpecKvReset) {
+            specKvMirrorReset();
+        }
+    }
     kvCache = std::make_unique<KVCache>();
     clearCancel();
     gpuFwd_ = {};
@@ -3472,7 +3494,23 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             if(bk) for(size_t i=0;i<kvDim;++i) kProj[i]+=bk[i];
             if(bv) for(size_t i=0;i<kvDim;++i) vProj[i]+=bv[i];
         } else {
-            LinearW(lw.wq, input, bq, qProj, qDim);
+            // RAWRXD_GPU_K_ROPE_BISECT_001: the projection input itself. If this
+    // already differs from ArenaNormed on the GPU, the Q4_K GEMV is innocent
+    // and the divergence is upstream in RMSNorm.
+    {
+        static const bool normInEnabled = [](){
+            const char* v = std::getenv("RAWRXD_KV_PARITY_DUMP");
+            return v && v[0] && v[0] != '0';
+        }();
+        static bool normInDone = false;
+        if (normInEnabled && !normInDone && layer == 0 && input) {
+            normInDone = true;
+            std::fprintf(stderr, "[NORMIN] CPU L=0 IN8=%g %g %g %g %g %g %g %g\n",
+                input[0],input[1],input[2],input[3],input[4],input[5],input[6],input[7]);
+            std::fflush(stderr);
+        }
+    }
+    LinearW(lw.wq, input, bq, qProj, qDim);
             LinearW(lw.wk, input, bk, kProj, kvDim);
             LinearW(lw.wv, input, bv, vProj, kvDim);
         }
@@ -3531,6 +3569,13 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         throw std::runtime_error("attention: sequence/KV position mismatch");
     }
 
+    // RAWRXD_GPU_KV_NUMERIC_PARITY_001 / RAWRXD_GPU_K_ROPE_BISECT_001
+    // (opt-in; read-only, dumps only).
+    static const bool kvParityDumpEnabled = [](){
+        const char* v = std::getenv("RAWRXD_KV_PARITY_DUMP");
+        return v && v[0] && v[0] != '0';
+    }();
+
     if (config.useRoPE) {
         const float theta = ropeThetaForLayer(layer);
         const float scaling = modelWeights.ropeScaling > 0.0f
@@ -3544,14 +3589,59 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
                          layer, theta, isLocalLayer ? "yes" : "no");
             std::fflush(stderr);
         }
+        // RAWRXD_GPU_K_ROPE_BISECT_001: capture K immediately before and after
+        // applyRoPE so the CPU side of the K bisect is available. At pos=0
+        // RoPE must be ~identity, so K_PRE ~= K_POST is the expected control.
+        std::vector<float> kPreDump, qPreDump;
+        if (kvParityDumpEnabled && layer == 0 && (pos == 0 || pos == 1)) {
+            kPreDump.assign(kProj, kProj + kvDim);
+            qPreDump.assign(qProj, qProj + qDim);
+        }
         applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads,
                   pos, theta, scaling);
+        if (kvParityDumpEnabled && layer == 0 && (pos == 0 || pos == 1) &&
+            kPreDump.size() == kvDim) {
+            std::fprintf(stderr,
+                "[ROPEBISECT] CPU L=0 pos=%zu headDim=%zu nHeads=%zu nKV=%zu theta=%g\n",
+                pos, headDim, numHeads, numKVHeads, (double)theta);
+            for (size_t kh = 0; kh < numKVHeads && kh < 2; ++kh) {
+                const size_t b0 = kh*headDim;
+                std::fprintf(stderr, "[ROPEBISECT] CPU L=0 kh=%zu K_PRE =%g %g %g %g %g %g %g %g\n",
+                    kh, kPreDump[b0+0],kPreDump[b0+1],kPreDump[b0+2],kPreDump[b0+3],
+                    kPreDump[b0+4],kPreDump[b0+5],kPreDump[b0+6],kPreDump[b0+7]);
+                std::fprintf(stderr, "[ROPEBISECT] CPU L=0 kh=%zu K_POST=%g %g %g %g %g %g %g %g\n",
+                    kh, kProj[b0+0],kProj[b0+1],kProj[b0+2],kProj[b0+3],
+                    kProj[b0+4],kProj[b0+5],kProj[b0+6],kProj[b0+7]);
+                float dmax = 0.0f;
+                for (size_t d = 0; d < headDim; ++d) {
+                    const float df = kProj[b0+d] - kPreDump[b0+d];
+                    if (std::fabs(df) > dmax) dmax = std::fabs(df);
+                }
+                std::fprintf(stderr, "[ROPEBISECT] CPU L=0 kh=%zu ROPE_DELTA_CPU=%g\n", kh, dmax);
+            }
+            // Q is Q4_K like K. If Q is ALSO wrong, the defect is the Q4_K
+            // GEMV/dequant path in general, not anything K-specific.
+            std::fprintf(stderr, "[QBISECT] CPU L=0 pos=%zu h0 Q_PRE =%g %g %g %g %g %g %g %g\n",
+                pos, qPreDump[0],qPreDump[1],qPreDump[2],qPreDump[3],
+                qPreDump[4],qPreDump[5],qPreDump[6],qPreDump[7]);
+            std::fprintf(stderr, "[QBISECT] CPU L=0 pos=%zu h0 Q_POST=%g %g %g %g %g %g %g %g\n",
+                pos, qProj[0],qProj[1],qProj[2],qProj[3],
+                qProj[4],qProj[5],qProj[6],qProj[7]);
+            float qd = 0.0f;
+            for (size_t d = 0; d < headDim; ++d) {
+                const float df = qProj[d] - qPreDump[d];
+                if (std::fabs(df) > qd) qd = std::fabs(df);
+            }
+            std::fprintf(stderr, "[QBISECT] CPU L=0 pos=%zu h0 ROPE_DELTA_CPU=%g\n", pos, qd);
+            std::fflush(stderr);
+        }
         parityEmit(ParityCheckpoint::Q_Rope, qProj, qDim);
         parityEmit(ParityCheckpoint::K_Rope, kProj, kvDim);
         parityEmitLayer(static_cast<int>(layer), "Q_ROPE", qProj, qDim);
         parityEmitLayer(static_cast<int>(layer), "K_ROPE", kProj, kvDim);
     }
 
+    // RAWRXD_GPU_KV_NUMERIC_PARITY_001 (opt-in; read-only, dumps only).
     for (size_t h = 0; h < numKVHeads; ++h) {
         float* kd = kvCache->keyPtr(layer, h, pos);
         float* vd = kvCache->valuePtr(layer, h, pos);
@@ -3564,6 +3654,26 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
     // One parity record per layer over the full kvDim span (post-RoPE K,
     // raw V) matching the reference cache layout [kvHead][headDim].
     parityEmitKvWrite(static_cast<int>(layer), kProj, vProj, kvDim);
+
+    // RAWRXD_GPU_KV_NUMERIC_PARITY_001: dump the CPU reference K/V for this
+    // slot immediately after the prefill write and BEFORE decode1 can touch
+    // it. Dumped post-RoPE on purpose -- matching the pre-RoPE projection
+    // would not exonerate the value actually stored in the cache.
+    // Layout is [kvHead][headDim], identical ordering to the GPU slot.
+    if (kvParityDumpEnabled && (pos == 0 || pos == 1) &&
+        (layer == 0 || layer + 1 == config.numLayers)) {
+        std::fprintf(stderr, "[KVPAR] CPU layer=%zu pos=%zu headDim=%zu kvHeads=%zu\n",
+            layer, pos, headDim, numKVHeads);
+        for (size_t kh = 0; kh < numKVHeads; ++kh) {
+            const float* kk = kvCache->keyPtr(layer, kh, pos);
+            const float* vv = kvCache->valuePtr(layer, kh, pos);
+            std::fprintf(stderr, "[KVPAR] CPU L=%zu p=%zu kh=%zu K8=%g %g %g %g %g %g %g %g\n",
+                layer, pos, kh, kk[0],kk[1],kk[2],kk[3],kk[4],kk[5],kk[6],kk[7]);
+            std::fprintf(stderr, "[KVPAR] CPU L=%zu p=%zu kh=%zu V8=%g %g %g %g %g %g %g %g\n",
+                layer, pos, kh, vv[0],vv[1],vv[2],vv[3],vv[4],vv[5],vv[6],vv[7]);
+        }
+        std::fflush(stderr);
+    }
 
     const size_t attend = pos + 1;
     const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
@@ -4626,6 +4736,16 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     diag.setBackendRoute(isVulkanInitialized() ? "vulkan" : "cpu");
     diag.beginSession(static_cast<uint32_t>(promptLen));
 
+    // RAWRXD_DECODE_STEP_TRACE_001: opt-in, one line per decode step.
+    // Deliberately independent of RAWRXD_TRACE_PROFILE, which was observed
+    // to change sampler behaviour and therefore cannot be used to observe
+    // the sampler. Read-only diagnostics: it must not perturb the path it
+    // is measuring.
+    static const bool decodeStepTrace = [](){
+        const char* v = std::getenv("RAWRXD_DECODE_STEP_TRACE");
+        return v && v[0] && v[0] != '0';
+    }();
+
     while(generated<decodeLimit) {        if(cancelRequested_.load(std::memory_order_acquire)) {            break;
         }
 
@@ -4657,6 +4777,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             if (profiler_) profiler_->recordCpuOverhead(
                 static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tEmb1 - tEmb0).count()));
             const size_t seq=(kvCache?kvCache->currentLength():promptLen)+1;
+            if (decodeStepTrace) {
+                std::fprintf(stderr, "[DTRACE] step=%zu IN token=%d seq=%zu kvBefore=%zu\n",
+                    generated, pendingToken, seq,
+                    kvCache ? kvCache->currentLength() : (size_t)0);
+                std::fflush(stderr);
+            }
             auto tFwd0 = std::chrono::steady_clock::now();
             if (vramStreamingController_) vramStreamingController_->beginTokenMeasurement(promptLen + generated);
             {
@@ -4674,6 +4800,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 }
             }
             auto tFwd1 = std::chrono::steady_clock::now();
+            if (decodeStepTrace) {
+                std::fprintf(stderr, "[DTRACE] step=%zu FWD_OK seq=%zu kvAfter=%zu\n",
+                    generated, seq, kvCache ? kvCache->currentLength() : (size_t)0);
+                std::fflush(stderr);
+            }
             diag.record(Deep2::DiagStage::Forward,
                 static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tFwd1 - tFwd0).count()),
                 static_cast<uint32_t>(generated));
@@ -4830,6 +4961,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         const int nextTok = sampleToken(logits);
         if (deep2ForwardTraceEnabled()) { std::fprintf(stderr, "SAMPLER_RESULT token=%d vocab=%zu\n", nextTok, (size_t)config.vocabSize); std::fflush(stderr); }
         auto tSample1 = std::chrono::steady_clock::now();
+        if (decodeStepTrace) {
+            std::fprintf(stderr, "[DTRACE] step=%zu SAMPLED token=%d\n", generated, nextTok);
+            std::fflush(stderr);
+        }
         diag.record(Deep2::DiagStage::Sampler,
             static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tSample1 - tSample0).count()),
             static_cast<uint32_t>(generated));

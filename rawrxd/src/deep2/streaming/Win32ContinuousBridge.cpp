@@ -29,14 +29,15 @@ void Win32EventBridge::stop() {
     if (thread_.joinable()) thread_.join();
 }
 
-void Win32EventBridge::replaySince(uint64_t sequence, HWND target) {
-    if (!ledger_) return;
-    auto evs = ledger_->replaySince(sequence);
-    for (auto& ev : evs) {
+void Win32EventBridge::replaySince(uint64_t runId, uint64_t fromSequence, HWND target) {
+    if (!ledger_ || !target) return;
+    auto records = ledger_->replay(runId, fromSequence);
+    for (auto& rec : records) {
         auto* heap_event = new Event();
-        heap_event->run_id = ev.runId;
-        heap_event->sequence = ev.sequence;
-        heap_event->text = std::move(ev.payload);
+        heap_event->run_id = rec.runId;
+        heap_event->sequence = rec.sequence;
+        heap_event->kind = rec.kind;
+        heap_event->text = rec.payload;
         if (!::PostMessageW(target, message_, 0,
                             reinterpret_cast<LPARAM>(heap_event))) {
             // Keep in ledger; do not delete authoritative copy
@@ -49,23 +50,13 @@ void Win32EventBridge::pump() {
     while (!stop_.load(std::memory_order_acquire) && pipe_->wait_pop(ev, stop_)) {
         if (stop_.load(std::memory_order_acquire)) break;
 
-        // Authoritative commit to ledger first
+        // Authoritative commit to ledger first. The canonical ledger takes the
+        // native Event, so the previous hand-rolled LedgerEvent construction and
+        // its EventKind -> LedgerEventKind switch (which had no default case and
+        // would silently produce an uninitialized kind for any new EventKind)
+        // are no longer needed.
         if (ledger_) {
-            LedgerEvent le;
-            le.runId = ev.run_id;
-            le.sequence = ev.sequence;
-            switch (ev.kind) {
-                case EventKind::StateChanged: le.kind = LedgerEventKind::StateChanged; break;
-                case EventKind::Progress: le.kind = LedgerEventKind::Progress; break;
-                case EventKind::TextDelta: le.kind = LedgerEventKind::TextDelta; break;
-                case EventKind::ToolCall: le.kind = LedgerEventKind::ToolCall; break;
-                case EventKind::ToolResult: le.kind = LedgerEventKind::ToolResult; break;
-                case EventKind::FinalText: le.kind = LedgerEventKind::FinalText; break;
-                case EventKind::Completed: le.kind = LedgerEventKind::Completed; break;
-                case EventKind::Error: le.kind = LedgerEventKind::Error; break;
-            }
-            le.payload = ev.text;
-            ledger_->append(std::move(le));
+            ledger_->append(ev.run_id, ev);
         }
 
         auto* heap_event = new Event(std::move(ev));

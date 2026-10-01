@@ -550,6 +550,28 @@ bool Deep2Engine::forwardLayerGpuResident(
                 else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) ++c.q2kPackedOps;
             };
             bumpQ(qa); bumpQ(qb); bumpQ(qc);
+            // RAWRXD_QKV_PREFETCH_ALIAS_001 diagnostic: strictly serialise the
+            // three QKV prefetch+compute steps. PrefetchWeight already gives
+            // each call its own buffer, so this is NOT expected to change the
+            // result; it is here to falsify the slot-reuse theory quickly.
+            // If K is still wrong with full serialisation, weight delivery
+            // timing is exonerated and the defect is inside the Q4_K kernel.
+            static const bool serialQkv = [](){
+                const char* v = std::getenv("RAWRXD_QKV_SERIALIZE");
+                return v && v[0] && v[0] != '0';
+            }();
+            if (serialQkv) {
+                uint32_t s0 = 0, s1 = 0, s2 = 0;
+                if (!vc->PrefetchWeight(qa.data, qa.sizeBytes, s0)) return false;
+                if (!vc->SubmitGemvPrefetch(s0, in, outA, rA, cols, qa.sizeBytes, qa.type)) return false;
+                if (!vc->WaitWeightCompute(s0)) return false;
+                if (!vc->PrefetchWeight(qb.data, qb.sizeBytes, s1)) return false;
+                if (!vc->SubmitGemvPrefetch(s1, in, outB, rB, cols, qb.sizeBytes, qb.type)) return false;
+                if (!vc->WaitWeightCompute(s1)) return false;
+                if (!vc->PrefetchWeight(qc.data, qc.sizeBytes, s2)) return false;
+                if (!vc->SubmitGemvPrefetch(s2, in, outC, rC, cols, qc.sizeBytes, qc.type)) return false;
+                return vc->WaitWeightCompute(s2);
+            }
             if (!vc->FlushWeightComputes()) return false;
             uint32_t sa = 0, sb = 0, sc = 0;
             if (!vc->PrefetchWeight(qa.data, qa.sizeBytes, sa)) return false;
@@ -600,7 +622,68 @@ bool Deep2Engine::forwardLayerGpuResident(
         return fail("RMSNORM", "attnNorm");
     ++c.rmsNormOps;
 
+    // RAWRXD_GPU_K_ROPE_BISECT_001: dump the projection input (post-RMSNorm)
+    // so it can be diffed against the CPU `input` in LinearW. Requires
+    // breaking the fused window, else this reads pre-RMSNorm bytes.
+    {
+        static const bool normInEnabled = [](){
+            const char* v = std::getenv("RAWRXD_WK_BINDING");
+            return v && v[0] && v[0] != '0';
+        }();
+        static bool normInDone = false;
+        if (normInEnabled && !normInDone && layer == 0u) {
+            normInDone = true;
+            const bool wasFused = vc->FusedRecording();
+            if (wasFused && !vc->EndFusedLayer())
+                return fail("NORMIN", "EndFusedLayer");
+            float nf[8] = {0};
+            const bool ok = vc->ProbeDeviceFloats(vc->ArenaNormed(), 0u, 8u, nf);
+            if (wasFused && !vc->BeginFusedLayer())
+                return fail("NORMIN", "BeginFusedLayer");
+            if (ok) {
+                std::fprintf(stderr, "[NORMIN] GPU L=0 IN8=%g %g %g %g %g %g %g %g\n",
+                    nf[0],nf[1],nf[2],nf[3],nf[4],nf[5],nf[6],nf[7]);
+                std::fflush(stderr);
+            }
+        }
+    }
+
     const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
+    // RAWRXD_GPU_WK_BINDING_001: audit the three QKV projection bindings side
+    // by side at layer 0. V is the positive control (numerically ~correct)
+    // and K is the failing sibling on the same input and kernel family, so
+    // any field where K differs from V is the candidate defect.
+    {
+        static const bool wkBindEnabled = [](){
+            const char* v = std::getenv("RAWRXD_WK_BINDING");
+            return v && v[0] && v[0] != '0';
+        }();
+        if (wkBindEnabled && layer == 0u) {
+            auto dump=[&](const char* tag, const WeightTensor& w){
+                std::fprintf(stderr,
+                    "[WKBIND] %s name=%s ptr=%p type=%d\n",
+                    tag, w.name.c_str(), w.data, w.type);
+                std::fprintf(stderr,
+                    "[WKBIND] %s rows=%zu cols=%zu sizeBytes=%zu fileOff=%llu shard=%u hasFile=%d\n",
+                    tag, w.rows, w.cols, w.sizeBytes,
+                    (unsigned long long)w.fileOffset, w.shardId,
+                    w.hasFileBacking ? 1 : 0);
+            };
+            dump("WQ", lw.wq); dump("WK", lw.wk); dump("WV", lw.wv);
+            // The invariants that decide the gate.
+            const bool rowsOk   = (lw.wk.rows == kvDim) && (lw.wv.rows == kvDim);
+            const bool colsOk   = (lw.wk.cols == H)      && (lw.wv.cols == H);
+            const bool ptrDiff  = (lw.wk.data != lw.wv.data);
+            const bool offDiff  = (lw.wk.fileOffset != lw.wv.fileOffset);
+            const bool sizeEqKQ = (lw.wk.sizeBytes == lw.wq.sizeBytes);
+            std::fprintf(stderr,
+                "[WKBIND] CHECK expectKV=%u expectH=%u | rows_ok=%d cols_ok=%d "
+                "k_ptr_ne_v=%d k_off_ne_v=%d k_size_eq_q_size=%d\n",
+                kvDim, H, rowsOk?1:0, colsOk?1:0, ptrDiff?1:0, offDiff?1:0,
+                sizeEqKQ?1:0);
+            std::fflush(stderr);
+        }
+    }
     {
         DEEP2_GPU_CHILD_SCOPE(qkvScope, QKV);
         if (!gemvOverlap3(lw.wq, lw.wk, lw.wv, vc->ArenaNormed(),
@@ -608,13 +691,157 @@ bool Deep2Engine::forwardLayerGpuResident(
             return fail("GEMV_QKV", "qkvOverlap3");
         c.qkvOps += 3;
     }
-    if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
-                          modelWeights.ropeTheta))
+    // RAWRXD_GPU_K_ROPE_BISECT_001: capture ArenaK immediately before and
+    // immediately after DispatchRope for layer 0, to separate "K projection is
+    // wrong" from "RoPE corrupted K". This REQUIRES ending the fused
+    // recording window first: inside the window nothing has been submitted,
+    // so a probe reads pre-GEMV bytes and would report a false mismatch.
+    // Diagnostic only -- it changes submission boundaries, not arithmetic.
+    static bool ropeBisectDone = false;
+    static const bool ropeBisectEnabled = [](){
+        const char* v = std::getenv("RAWRXD_K_ROPE_BISECT");
+        return v && v[0] && v[0] != '0';
+    }();
+    if (ropeBisectEnabled && !ropeBisectDone && layer == 0u) {
+        ropeBisectDone = true;
+        const bool wasFused = vc->FusedRecording();
+        if (wasFused && !vc->EndFusedLayer())
+            return fail("ROPE_BISECT", "EndFusedLayer");
+        std::vector<float> kPre(kvDim, 0.0f), kPost(kvDim, 0.0f);
+        std::vector<float> qPre(qDim, 0.0f), qPost(qDim, 0.0f);
+        const bool preOk = vc->ProbeDeviceFloats(vc->ArenaK(), 0u, kvDim, kPre.data());
+        const bool qPreOk = vc->ProbeDeviceFloats(vc->ArenaQ(), 0u, qDim, qPre.data());
+        if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
+                              modelWeights.ropeTheta))
+            return fail("ROPE", "DispatchRope");
+        const bool postOk = vc->ProbeDeviceFloats(vc->ArenaK(), 0u, kvDim, kPost.data());
+        const bool qPostOk = vc->ProbeDeviceFloats(vc->ArenaQ(), 0u, qDim, qPost.data());
+        if (wasFused && !vc->BeginFusedLayer())
+            return fail("ROPE_BISECT", "BeginFusedLayer");
+        if (qPreOk && qPostOk) {
+            std::fprintf(stderr, "[QBISECT] L=0 pos=%u h0 Q_PRE =%g %g %g %g %g %g %g %g\n",
+                pos, qPre[0],qPre[1],qPre[2],qPre[3],qPre[4],qPre[5],qPre[6],qPre[7]);
+            std::fprintf(stderr, "[QBISECT] L=0 pos=%u h0 Q_POST=%g %g %g %g %g %g %g %g\n",
+                pos, qPost[0],qPost[1],qPost[2],qPost[3],qPost[4],qPost[5],qPost[6],qPost[7]);
+        }
+        if (preOk && postOk) {
+            std::fprintf(stderr,
+                "[ROPEBISECT] L=0 pos=%u headDim=%u nHeads=%u nKv=%u theta=%g\n",
+                pos, headDim, nHeads, nKv, (double)modelWeights.ropeTheta);
+            for (uint32_t kh = 0; kh < nKv && kh < 2u; ++kh) {
+                const uint32_t b0 = kh*headDim;
+                std::fprintf(stderr, "[ROPEBISECT] L=0 kh=%u K_PRE =%g %g %g %g %g %g %g %g\n",
+                    kh, kPre[b0+0],kPre[b0+1],kPre[b0+2],kPre[b0+3],
+                    kPre[b0+4],kPre[b0+5],kPre[b0+6],kPre[b0+7]);
+                std::fprintf(stderr, "[ROPEBISECT] L=0 kh=%u K_POST=%g %g %g %g %g %g %g %g\n",
+                    kh, kPost[b0+0],kPost[b0+1],kPost[b0+2],kPost[b0+3],
+                    kPost[b0+4],kPost[b0+5],kPost[b0+6],kPost[b0+7]);
+                float dmax = 0.0f;
+                for (uint32_t d = 0; d < headDim; ++d) {
+                    const float df = kPost[b0+d] - kPre[b0+d];
+                    if (std::fabs(df) > dmax) dmax = std::fabs(df);
+                }
+                std::fprintf(stderr, "[ROPEBISECT] L=0 kh=%u ROPE_DELTA_GPU=%g\n", kh, dmax);
+            }
+            std::fflush(stderr);
+        } else {
+            std::fprintf(stderr, "[ROPEBISECT] probe_failed pre=%d post=%d\n",
+                preOk ? 1 : 0, postOk ? 1 : 0);
+            std::fflush(stderr);
+        }
+    } else if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
+                                 modelWeights.ropeTheta)) {
         return fail("ROPE", "DispatchRope");
+    }
     ++c.ropeOps;
     {
         DEEP2_GPU_CHILD_SCOPE(kvScope, KVUpdate);
         if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return fail("APPEND_KV", "AppendKV");
+    }
+    // RAWRXD_GPU_KV_HANDOFF_001: measure the physical K/V bytes for the
+    // Prefill-written slot (pos 0) at Prefill time, then re-measure the very
+    // same slot immediately before Decode's attention dispatch and compare.
+    // Probing slot 0 is safe here because AppendKV writes slot `pos`, and
+    // pos>=1 on every decode step, so Decode's own write cannot land on the
+    // slot being compared.
+    {
+        static const bool kvHandoffEnabled = [](){
+            const char* v = std::getenv("RAWRXD_GPU_KV_HANDOFF");
+            return v && v[0] && v[0] != '0';
+        }();
+        if (kvHandoffEnabled && (layer == 0u || layer + 1u == (uint32_t)config.numLayers)) {
+            // Slot 0 = layer 0, slot 1 = the last layer.
+            const int slotIdx = (layer == 0u) ? 0 : 1;
+            static uint64_t s_writeK[2] = {0, 0};
+            static uint64_t s_writeV[2] = {0, 0};
+            static bool     s_haveWrite[2] = {false, false};
+            const uint32_t probeBytes = 64u;
+            VulkanCompute::KvSlotBytes b{};
+            if (!vc->ProbeKvSlotBytes(layer, 0u, probeBytes, &b)) {
+                std::fprintf(stderr, "[KVH] FAIL L=%u pos=0\n", layer);
+            } else if (pos >= 2u) {
+                // RAWRXD_GPU_KV_NUMERIC_PARITY_001: dump the GPU slot the same
+                // way the CPU dump does -- per kvHead, first 8 floats, so the
+                // two logs can be diffed element-for-element. Taken at
+                // decode2 so that BOTH the prefill slot (0) and decode1's own
+                // slot (1) have had their fused AppendKV submitted and waited.
+                // Reading at decode1 would race decode1's own fused write.
+                for (uint32_t dpos = 0; dpos <= 1u; ++dpos) {
+                    std::vector<float> kAll(kvDim, 0.0f), vAll(kvDim, 0.0f);
+                    if (!vc->ProbeKvSlotFloats(layer, dpos, kvDim,
+                                               kAll.data(), vAll.data()))
+                        continue;
+                    std::fprintf(stderr, "[KVPAR] GPU layer=%u pos=%u headDim=%u kvHeads=%u\n",
+                        layer, dpos, headDim, nKv);
+                    for (uint32_t kh = 0; kh < nKv; ++kh) {
+                        const uint32_t base = kh * headDim;
+                        std::fprintf(stderr, "[KVPAR] GPU L=%u p=%u kh=%u K8=%g %g %g %g %g %g %g %g\n",
+                            layer, dpos, kh,
+                            kAll[base+0],kAll[base+1],kAll[base+2],kAll[base+3],
+                            kAll[base+4],kAll[base+5],kAll[base+6],kAll[base+7]);
+                        std::fprintf(stderr, "[KVPAR] GPU L=%u p=%u kh=%u V8=%g %g %g %g %g %g %g %g\n",
+                            layer, dpos, kh,
+                            vAll[base+0],vAll[base+1],vAll[base+2],vAll[base+3],
+                            vAll[base+4],vAll[base+5],vAll[base+6],vAll[base+7]);
+                    }
+                    std::fflush(stderr);
+                }
+            }
+            if (pos != 0u) {
+                float kf[8] = {0}, vf[8] = {0};
+                vc->ProbeKvSlotFloats(layer, 0u, 8u, kf, vf);
+                if (pos == 0u) {
+                    // Prefill. AppendKV is fused here (recorded, not yet
+                    // submitted), so the cache does not contain this write
+                    // yet. Probing now reads stale/zero bytes and would
+                    // manufacture a false handoff mismatch. Skip it: the
+                    // first trustworthy observation is decode1.
+                } else if (!s_haveWrite[slotIdx]) {
+                    // First observation of the Prefill-written slot happens on
+                    // the first DECODE step, not at Prefill time: AppendKV is
+                    // fused (recorded, not submitted), so a probe issued in
+                    // the same window reads the cache BEFORE the copy runs and
+                    // reports zeros. That is a probe artefact, not a defect.
+                    s_writeK[slotIdx] = b.kHash; s_writeV[slotIdx] = b.vHash;
+                    s_haveWrite[slotIdx] = true;
+                    std::fprintf(stderr, "[KVH] BASE L=%u R=%u decodePos=%u off=%llu k=%016llx v=%016llx kmatch=vmatch=1\n",
+                        b.layer, b.relLayer, pos, (unsigned long long)b.kOffset,
+                        (unsigned long long)b.kHash, (unsigned long long)b.vHash);
+                    std::fprintf(stderr, "[KVH] BASEF L=%u K=[%g %g %g %g %g %g %g %g]\n",
+                        b.layer, kf[0],kf[1],kf[2],kf[3],kf[4],kf[5],kf[6],kf[7]);
+                    std::fprintf(stderr, "[KVH] BASEF L=%u V=[%g %g %g %g %g %g %g %g]\n",
+                        b.layer, vf[0],vf[1],vf[2],vf[3],vf[4],vf[5],vf[6],vf[7]);
+                } else {
+                    const bool kMatch = s_writeK[slotIdx] == b.kHash;
+                    const bool vMatch = s_writeV[slotIdx] == b.vHash;
+                    std::fprintf(stderr, "[KVH] CMP L=%u R=%u decodePos=%u off=%llu k=%016llx v=%016llx kmatch=%d vmatch=%d\n",
+                        b.layer, b.relLayer, pos, (unsigned long long)b.kOffset,
+                        (unsigned long long)b.kHash, (unsigned long long)b.vHash,
+                        kMatch ? 1 : 0, vMatch ? 1 : 0);
+                }
+                std::fflush(stderr);
+            }
+        }
     }
     {
         DEEP2_GPU_CHILD_SCOPE(attnScope, DeviceAttention);

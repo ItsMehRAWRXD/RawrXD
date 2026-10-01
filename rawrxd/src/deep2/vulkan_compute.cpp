@@ -80,6 +80,7 @@ VulkanCompute::VulkanCompute(uint32_t physicalOrdinal)
 
 VulkanCompute::~VulkanCompute() {
     cleanup();
+    std::fprintf(stderr, "[CLEANUP_STAGE] ~VulkanCompute body done\n"); std::fflush(stderr);
 }
 
 uint64_t VulkanCompute::nowNs() {
@@ -1122,9 +1123,15 @@ bool VulkanCompute::createBuffer(
     bi.size = bytes;
     bi.usage = usage;
     bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    VkResult rcb = vkCreateBuffer(device_, &bi, nullptr, &out.buffer);
+VkResult rcb = vkCreateBuffer(device_, &bi, nullptr, &out.buffer);
     if (rcb != VK_SUCCESS) {
-        fprintf(stderr, "[CB_FAIL] vkCreateBuffer failed bytes=%zu rc=%d\n", (size_t)bytes, (int)rcb);
+        std::fprintf(stderr, "[CB_FAIL] vkCreateBuffer failed bytes=%zu rc=%d\n", (size_t)bytes, (int)rcb);
+        fprintf(stderr,
+            "CB_ALLOC_FAIL stage=CREATE_BUFFER rc=%d requestBytes=%zu infoDeviceLocalBytes=%zu "
+            "memoryBudgetAvailable=%d weightCacheBytes=%zu\n",
+            (int)rcb, (size_t)bytes,
+            (size_t)(info_.deviceLocalBytes ? info_.deviceLocalBytes : 0),
+            (int)memoryBudgetAvailable_, weightCacheBytes_);
         return false;
     }
 
@@ -1147,6 +1154,38 @@ bool VulkanCompute::createBuffer(
     if (ram != VK_SUCCESS) {
         fprintf(stderr, "[CB_FAIL] vkAllocateMemory failed bytes=%zu allocSize=%zu mt=%u rc=%d\n",
                 (size_t)bytes, (size_t)mr.size, mt, (int)ram);
+
+        VkPhysicalDeviceMemoryProperties mp{};
+        vkGetPhysicalDeviceMemoryProperties(physical_, &mp);
+
+        VkPhysicalDeviceMemoryBudgetPropertiesEXT budget{};
+        budget.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT;
+        VkPhysicalDeviceMemoryProperties2 mp2{};
+        mp2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
+        mp2.pNext = &budget;
+        vkGetPhysicalDeviceMemoryProperties2(physical_, &mp2);
+
+        const uint32_t selHeap = (mt < mp.memoryTypeCount) ? mp.memoryTypes[mt].heapIndex : 0;
+        const uint32_t selFlags = (mt < mp.memoryTypeCount) ? mp.memoryTypes[mt].propertyFlags : 0;
+
+        fprintf(stderr,
+            "CB_ALLOC_FAIL stage=ALLOCATE_MEMORY rc=%d requestBytes=%zu allocationSize=%zu "
+            "memoryTypeBits=0x%x selectedMemoryType=%u selectedHeapIndex=%u selectedTypeFlags=0x%x "
+            "heapSize=%zu heapFlags=0x%x memoryBudgetAvailable=%d heapBudget=%zu heapUsage=%zu "
+            "heapHeadroom=%llu infoDeviceLocalBytes=%zu weightCacheBytes=%zu "
+            "memoryTypeCount=%u memoryHeapCount=%u\n",
+            (int)ram, (size_t)bytes, (size_t)mr.size,
+            mr.memoryTypeBits, mt, selHeap, (unsigned)selFlags,
+            (selHeap < mp.memoryHeapCount) ? (size_t)mp.memoryHeaps[selHeap].size : (size_t)0,
+            (selHeap < mp.memoryHeapCount) ? (unsigned)mp.memoryHeaps[selHeap].flags : 0u,
+            (int)memoryBudgetAvailable_,
+            (selHeap < mp.memoryHeapCount) ? (size_t)budget.heapBudget[selHeap] : (size_t)0,
+            (selHeap < mp.memoryHeapCount) ? (size_t)budget.heapUsage[selHeap] : (size_t)0,
+            (unsigned long long)deviceLocalHeapHeadroom(),
+            (size_t)(info_.deviceLocalBytes ? info_.deviceLocalBytes : 0),
+            weightCacheBytes_,
+            mp.memoryTypeCount, mp.memoryHeapCount);
+
         vkDestroyBuffer(device_, out.buffer, nullptr);
         out = {};
         return false;
@@ -2471,6 +2510,29 @@ bool VulkanCompute::DispatchSwiGLU(
     return n && dispatchOps(gate,up,out,out,p,(n+63u)/64u);
 }
 
+bool VulkanCompute::ProbeDeviceFloats(DeviceBuf& buf, uint32_t floatOffset,
+                                      uint32_t nFloats, float* out)
+{
+    // RAWRXD_GPU_K_ROPE_BISECT_001.
+    if (!buf || !out || !nFloats) return false;
+    const VkDeviceSize off =
+        static_cast<VkDeviceSize>(floatOffset)*sizeof(float);
+    const size_t bytes = static_cast<size_t>(nFloats)*sizeof(float);
+    if (off + bytes > buf.size) return false;
+    DeviceBuf* staging = nullptr;
+    void* mapped = nullptr;
+    if (!ensureMappedStaging(false, bytes, staging, mapped)) return false;
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if (!beginCommand(cmd, query, true)) return false;
+    if (!recordCopy(cmd, buf, *staging, bytes, off, 0)) return false;
+    if (!endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer, bytes,
+                       workEpoch_, nullptr))
+        return false;
+    std::memcpy(out, mapped, bytes);
+    return true;
+}
+
 bool VulkanCompute::DispatchRope(
     DeviceBuf& q, DeviceBuf& k, uint32_t headDim,
     uint32_t heads, uint32_t kvHeads, uint32_t pos, float theta)
@@ -2516,6 +2578,121 @@ bool VulkanCompute::AppendKV(
     if (!own) return true;
     return endSubmitWait(cmd,query,GpuWorkKind::ModelCompute,
                          bytes*2,workEpoch_,nullptr);
+}
+
+bool VulkanCompute::ProbeKvSlotBytes(uint32_t layer, uint32_t pos,
+                                    uint32_t nBytes, KvSlotBytes* out)
+{
+    // RAWRXD_GPU_KV_HANDOFF_001. The offset expression below is deliberately a
+    // literal copy of the one in AppendKV so that a divergence between the
+    // measured offset and the written offset is itself observable. Do not
+    // "simplify" this into a shared helper -- the duplication IS the probe.
+    if (!out) return false;
+    *out = KvSlotBytes{};
+    out->layer = layer;
+    out->pos = pos;
+    out->kvDim = kvDim_;
+    out->maxSeq = maxSeq_;
+    out->nBytes = nBytes;
+
+    const uint32_t relLayer =
+        layer >= kvLayerBase_ ? layer - kvLayerBase_ : 0u;
+    out->relLayer = relLayer;
+    if (relLayer >= kvArenaLayers_) return false;
+    if (pos >= maxSeq_ || !nBytes) return false;
+
+    const uint64_t elemOff =
+        (static_cast<uint64_t>(relLayer)*maxSeq_ + pos)*kvDim_;
+    out->kOffset = static_cast<VkDeviceSize>(elemOff*sizeof(float));
+    out->vOffset = out->kOffset;
+    if (out->kOffset + nBytes > arenaKCache_.size ||
+        out->kOffset + nBytes > arenaVCache_.size)
+        return false;
+
+    // FNV-1a over raw bytes; deliberately NOT float-normalised so that a bit
+    // difference cannot be hidden by a tolerant numeric compare.
+    auto hashBytes=[](const unsigned char* p,size_t n)->uint64_t{
+        uint64_t h=1469598103934665603ULL;
+        for(size_t i=0;i<n;++i){ h^=p[i]; h*=1099511628211ULL; }
+        return h;
+    };
+
+    DeviceBuf* kStaging = nullptr;
+    void* kMapped = nullptr;
+    if (!ensureMappedStaging(false, nBytes, kStaging, kMapped)) return false;
+    VkCommandBuffer kCmd{};
+    VkQueryPool kQuery{};
+    if (!beginCommand(kCmd, kQuery, true)) return false;
+    if (!recordCopy(kCmd, arenaKCache_, *kStaging, nBytes, out->kOffset, 0))
+        return false;
+    if (!endSubmitWait(kCmd, kQuery, GpuWorkKind::ModelTransfer,
+                       nBytes, workEpoch_, nullptr))
+        return false;
+    // Hash K immediately, from its own staging buffer. A previous revision
+    // issued the K and V copies into ONE staging range and hashed after
+    // both, so the "K" hash was really V's -- K and V hashes came out
+    // bit-identical for every sample, which is impossible for real data.
+    out->kHash = hashBytes(static_cast<unsigned char*>(kMapped), nBytes);
+    out->kRead = true;
+
+    DeviceBuf* vStaging = nullptr;
+    void* vMapped = nullptr;
+    if (!ensureMappedStaging(false, nBytes, vStaging, vMapped)) return false;
+    VkCommandBuffer vCmd{};
+    VkQueryPool vQuery{};
+    if (!beginCommand(vCmd, vQuery, true)) return false;
+    if (!recordCopy(vCmd, arenaVCache_, *vStaging, nBytes, out->vOffset, 0))
+        return false;
+    if (!endSubmitWait(vCmd, vQuery, GpuWorkKind::ModelTransfer,
+                       nBytes, workEpoch_, nullptr))
+        return false;
+    out->vHash = hashBytes(static_cast<unsigned char*>(vMapped), nBytes);
+    out->vRead = true;
+    return true;
+}
+
+bool VulkanCompute::ProbeKvSlotFloats(uint32_t layer, uint32_t pos,
+                                      uint32_t nFloats, float* kOut, float* vOut)
+{
+    // RAWRXD_GPU_KV_HANDOFF_001. Offset math mirrors AppendKV exactly.
+    if (!kOut || !vOut || !nFloats) return false;
+    const uint32_t relLayer =
+        layer >= kvLayerBase_ ? layer - kvLayerBase_ : 0u;
+    if (relLayer >= kvArenaLayers_ || pos >= maxSeq_) return false;
+    const uint64_t elemOff =
+        (static_cast<uint64_t>(relLayer)*maxSeq_ + pos)*kvDim_;
+    const VkDeviceSize off = static_cast<VkDeviceSize>(elemOff*sizeof(float));
+    const size_t bytes = static_cast<size_t>(nFloats)*sizeof(float);
+    if (off + bytes > arenaKCache_.size || off + bytes > arenaVCache_.size)
+        return false;
+
+    float* host = nullptr;
+    DeviceBuf* staging = nullptr;
+    void* mapped = nullptr;
+    if (!ensureMappedStaging(false, bytes, staging, mapped)) return false;
+    host = static_cast<float*>(mapped);
+
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if (!beginCommand(cmd, query, true)) return false;
+    if (!recordCopy(cmd, arenaKCache_, *staging, bytes, off, 0)) return false;
+    if (!endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer, bytes,
+                       workEpoch_, nullptr))
+        return false;
+    std::memcpy(kOut, host, bytes);
+
+    DeviceBuf* staging2 = nullptr;
+    void* mapped2 = nullptr;
+    if (!ensureMappedStaging(false, bytes, staging2, mapped2)) return false;
+    VkCommandBuffer cmd2{};
+    VkQueryPool query2{};
+    if (!beginCommand(cmd2, query2, true)) return false;
+    if (!recordCopy(cmd2, arenaVCache_, *staging2, bytes, off, 0)) return false;
+    if (!endSubmitWait(cmd2, query2, GpuWorkKind::ModelTransfer, bytes,
+                       workEpoch_, nullptr))
+        return false;
+    std::memcpy(vOut, mapped2, bytes);
+    return true;
 }
 
 bool VulkanCompute::DispatchAttnDecode(
@@ -6113,6 +6290,10 @@ bool VulkanCompute::DownloadVerifiedHidden(
         verifiedHidden_,dst,(size_t)hiddenWidth*sizeof(float));
 }
 void VulkanCompute::cleanup() {
+#define RAWRXD_CLEANUP_STAGE(s) do { \
+    std::fprintf(stderr, "[CLEANUP_STAGE] %s\n", (s)); std::fflush(stderr); \
+} while (0)
+    RAWRXD_CLEANUP_STAGE("enter");
     if (device_) vkDeviceWaitIdle(device_);
     ResetDownloadRing();
     ResetAsyncCmdRing();
@@ -6122,7 +6303,9 @@ void VulkanCompute::cleanup() {
 
     ResetSpecBatchArena();
 
+    RAWRXD_CLEANUP_STAGE("ResetSpecKvMirror");
     ResetSpecKvMirror();
+    RAWRXD_CLEANUP_STAGE("ResetSpecKvMirror.done");
     ResetResidentBatchInput();
     ResetResidentGroupOutputs();
     ResetResidentFullOutput();
@@ -6131,7 +6314,9 @@ void VulkanCompute::cleanup() {
     // device idle — drop the lock-free lane and every heap-stable
     // resident object without reader-grace spinning.
     ResetHotLane();
+    RAWRXD_CLEANUP_STAGE("ResetHotLane.done");
     ReclaimAllResidents();
+    RAWRXD_CLEANUP_STAGE("ReclaimAllResidents.done");
     ++deviceGeneration_; // stale async promotions can never publish
 
     if(device_ && reusableFusedFence_)
@@ -6157,6 +6342,7 @@ void VulkanCompute::cleanup() {
 
     prefetch_.clear();
     clearWeightCache();
+    RAWRXD_CLEANUP_STAGE("clearWeightCache.done");
     // Device idle: any ranged sets still queued are GPU-unused — free
     // them before the descriptor pool dies (endurance fix).
     drainPendingDescriptorFrees();
@@ -6165,6 +6351,7 @@ void VulkanCompute::cleanup() {
 
     for (auto& b : scratch_) destroyBuffer(b);
     scratch_.clear();
+    RAWRXD_CLEANUP_STAGE("scratch.done");
     destroyBuffer(mlaKCache_);
     destroyBuffer(mlaVCache_);
     mlaCacheHeads_=mlaCacheKeyLen_=mlaCacheValueLen_=0;
@@ -6217,7 +6404,10 @@ void VulkanCompute::cleanup() {
     if(device_ && descriptorPool_) vkDestroyDescriptorPool(device_,descriptorPool_,nullptr);
     if(device_ && commandPool_) vkDestroyCommandPool(device_,commandPool_,nullptr);
     if(device_) vkDestroyDevice(device_,nullptr);
+    RAWRXD_CLEANUP_STAGE("vkDestroyDevice.done");
     if(instance_) vkDestroyInstance(instance_,nullptr);
+    RAWRXD_CLEANUP_STAGE("exit");
+#undef RAWRXD_CLEANUP_STAGE
 
     instance_=VK_NULL_HANDLE;physical_=VK_NULL_HANDLE;device_=VK_NULL_HANDLE;
     queue_=VK_NULL_HANDLE;commandPool_=VK_NULL_HANDLE;descriptorPool_=VK_NULL_HANDLE;

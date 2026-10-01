@@ -1,4 +1,9 @@
 #include "ContinuousExecution.hpp"
+// Session/Controller hold an EventLedger* and call append() on it, so the
+// complete type is required here. EventLedger.hpp includes this header, so the
+// cycle is already broken by the forward declaration in ContinuousExecution.hpp.
+#include "EventLedger.hpp"
+#include "../AgentToolAuthority.hpp"
 
 #include <algorithm>
 #include <exception>
@@ -64,6 +69,13 @@ void ToolRegistry::add(std::string name, Fn fn) {
     if (name.empty() || !fn) {
         throw std::invalid_argument("ToolRegistry::add requires a name and real function");
     }
+    if (canonical_) {
+        // Registering into the private table while the canonical authority is
+        // selected would create a second, unaccounted execution path.
+        throw std::logic_error(
+            "ToolRegistry::add rejected: canonical tool authority is selected. "
+            "Register tools on RawrXD::Agentic::AgentToolRegistry instead.");
+    }
     tools_.insert_or_assign(std::move(name), std::move(fn));
 }
 
@@ -71,6 +83,35 @@ bool ToolRegistry::execute(std::string_view name,
                            std::string_view arguments,
                            std::string& result,
                            std::string& error) const {
+    if (canonical_) {
+        // B3: forward to the ONE canonical authority. RequireAgentToolAuthority
+        // throws when unbound, so an unbound authority is a hard failure and
+        // never a silent fallback to the private table below.
+        try {
+            auto& registry = RawrXD::Agentic::RequireAgentToolAuthority();
+            RawrXD::Agentic::ToolRequest request;
+            request.surface = RawrXD::Agentic::AgentToolSurface::LocalServer;
+            request.tool_id = std::string(name);
+            request.args.emplace_back(arguments);
+
+            RawrXD::Agentic::ToolContext context;
+            context.cancelled = [] { return false; };
+
+            const auto r = registry.invoke(std::move(request), std::move(context));
+            if (!r.ok()) {
+                error = r.stderr_text.empty()
+                            ? ("canonical tool failed, exit_code=" + std::to_string(r.exit_code))
+                            : r.stderr_text;
+                return false;
+            }
+            result = r.stdout_text;
+            return true;
+        } catch (const std::exception& e) {
+            error = std::string("canonical tool authority unavailable: ") + e.what();
+            return false;
+        }
+    }
+
     const auto it = tools_.find(std::string(name));
     if (it == tools_.end()) {
         error = "tool not registered: " + std::string(name);
