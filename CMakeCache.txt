@@ -41,6 +41,9 @@ BUILD_DEEP2_CHAT_TEMPLATE_UNIT:BOOL=ON
 //Build DEEP2_DEEPSEEK_LIVE_GEN_PERF_001 cert
 BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT:BOOL=ON
 
+//Build Deep2 end-to-end streaming benchmark
+BUILD_DEEP2_END_TO_END_BENCH:BOOL=OFF
+
 //Build DEEP2_ENGINE_SSVK_DECODE_BIND_001
 BUILD_DEEP2_ENGINE_SSVK_DECODE_BIND_CERT:BOOL=ON
 
@@ -440,6 +443,9 @@ BUILD_RAWR_PRODUCT_LAYER:BOOL=ON
 //ChatGPT/Codex/Cursor style layer
 BUILD_RAWR_REMAINING_STYLE_CLI:BOOL=ON
 
+//Build rawr-server (OpenAI-compatible Deep2 server)
+BUILD_RAW_SERVER:BOOL=ON
+
 //Build RKC_CODE_WORLD_001
 BUILD_RKC_CODE_WORLD_CERT:BOOL=ON
 
@@ -702,8 +708,11 @@ CMAKE_INSTALL_SYSCONFDIR:PATH=etc
 //Linker
 CMAKE_LINKER:FILEPATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/link.exe
 
-//Program used to build from build.ninja files.
-CMAKE_MAKE_PROGRAM:FILEPATH=C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/ninja.exe
+//Tool that can launch the native build system. The value may be
+// the full path to an executable or just the tool name if it is
+// expected to be in the PATH. The tool selected depends on the
+// CMAKE_GENERATOR used to configure the project:
+CMAKE_MAKE_PROGRAM:UNINITIALIZED=ninja
 
 //Flags used by the linker during the creation of modules during
 // all build types.
@@ -855,6 +864,9 @@ FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
 //Enables UPDATE_DISCONNECTED behavior just for population of nlohmann_json
 FETCHCONTENT_UPDATES_DISCONNECTED_NLOHMANN_JSON:BOOL=OFF
 
+//Git command line client
+GIT_EXECUTABLE:FILEPATH=C:/Program Files/Git/cmd/git.exe
+
 //Build the unit tests when BUILD_TESTING is enabled.
 JSON_BuildTests:BOOL=OFF
 
@@ -902,6 +914,9 @@ RAWRXD_BUILD_CLI:BOOL=OFF
 
 //Build RawrXD-Script DAP adapter for VS Code extension
 RAWRXD_BUILD_DAP_ADAPTER:BOOL=ON
+
+//Build legacy certification and test targets
+RAWRXD_BUILD_LEGACY_CERTS:BOOL=OFF
 
 //Build RawrXD-Script LSP server for VS Code extension
 RAWRXD_BUILD_LSP_SERVER:BOOL=ON
@@ -1270,6 +1285,8 @@ CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 CMAKE_WARN_DEPRECATED:INTERNAL=ON
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
+//ADVANCED property for variable: GIT_EXECUTABLE
+GIT_EXECUTABLE-ADVANCED:INTERNAL=1
 NLOHMANN_JSON_CONFIG_INSTALL_DIR:INTERNAL=share/cmake/nlohmann_json
 //STRINGS property for variable: RAWR_SSOT_PROVIDER
 RAWR_SSOT_PROVIDER-STRINGS:INTERNAL=CORE;EXT;AUTO;STUBS;FEATURES

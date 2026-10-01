@@ -1,0 +1,129 @@
+RAWRXD_IDE_CMAKE_FULL_AUDIT_001 / BATCH_0_RECEIPT.txt
+========================================================
+
+Authority
+  AUDIT                = RAWRXD_IDE_CMAKE_FULL_AUDIT_001
+  SOURCE_MUTATION      = 0
+  CMAKE_SOURCE_MUTATION= 0
+  STAGING              = 0
+  COMMIT               = 0
+  PUSH                 = 0
+  BUILD_OUTPUT_MUTATION= 1
+  TEMP_AUDIT_FILES     = 1
+  LOG_CAPTURE          = 1
+  RECEIPT_GENERATION   = 1
+  DEEP2_LIFECYCLE_REPAIR = HOLD
+  AGENT_REWRITE        = 0
+  FEATURE_EXPANSION    = 0
+  CLASSIFICATIONS      = DONE,PARTIAL,BROKEN,UNBOUND,STUB,NOT_PRESENT
+
+Paths
+  REPO  = F:\~dev\rawrxd
+  AUDIT = F:\~dev\rawrxd\build_ide_audit        (not created; configure blocked)
+  LOGS  = F:\~dev\rawrxd\audit\RAWRXD_IDE_CMAKE_FULL_AUDIT_001
+
+Preflight truth (verified against source tree)
+  HEAD                = a078e3b87be6b22ed1fa6fce6a20bfdd980e4441   PINNED
+  BRANCH              = model-correctness
+  STAGED              = 0
+  WORKTREE_MODIFIED   = 12
+  WORKTREE_DELETED    = 25
+  WORKTREE_UNTRACKED  = 78
+  UNTRACKED_UNDER_SRC = 15
+  PIN_HEAD            = STILL_PINNED
+  WORKTREE            = DIRTY
+
+Toolchain truth
+  cmake               = C:\Program Files\CMake\bin\cmake.exe
+  cmake --version     = cmake version 4.4.2
+  cl                  = (not on PATH)
+  link                = (not on PATH)
+  msbuild             = (not on PATH)
+  ninja               = C:\...\ninja.exe, C:\...\Links\ninja.exe
+
+Artifacts captured
+  00_preflight.log   = F:\~dev\rawrxd\audit\RAWRXD_IDE_CMAKE_FULL_AUDIT_001\00_preflight.log
+  00b_diag.log       = F:\~dev\rawrxd\audit\RAWRXD_IDE_CMAKE_FULL_AUDIT_001\00b_diag.log
+
+BATCH_00_PREFLIGHT  = PASS_partial
+  HEAD/origin/staged verified; toolchain partial (no MSVC on PATH);
+  worktree materially dirty.
+
+Significant worktree changes that affect the audit baseline
+  Deep2 deletions (17):
+    Deep2APIServer.cpp, Deep2Benchmark.cpp, Deep2Discovery.cpp,
+    Deep2InferenceGateway.cpp, Deep2Integration.cpp,
+    Deep2LocalServer.cpp, GGUFDiagnostics.cpp,
+    MultiGPU/GPUDeviceRegistry.cpp, MultiGPU/MultiGPUScheduler.cpp,
+    MultiGPU/VRAMAllocator.cpp, ScaleQuality.cpp,
+    deep2_http_gateway.cpp, gpu/Deep2GPUBackend.cpp,
+    mcp_bridge.cpp, production/Deep2ProductionRuntime.cpp
+  Full-agentic-IDE deletions (3):
+    AgenticIOCPBridge.cpp, AgenticPlanningOrchestrator.cpp,
+    FullAgenticIDE.cpp
+  IDE deletions (5):
+    ANSIColorParser.cpp, Deep2Bridge.cpp, FindReplaceDialog.cpp,
+    GitCommitDialog.cpp, GitDiffViewer.cpp
+  Inference deletions (2):
+    ai_model_caller_real.cpp, inference_engine_real.cpp
+  Worktree-modified (6):
+    CMakeLists.txt, src/deep2/rawr_run.cpp,
+    src/deep2/rawrxd_run_modelname_001.cpp,
+    src/agentmodes/RawrCertAuthority.{cpp,h},
+    src/cli/RawrDumpAuthority.cpp,
+    src/models/ModelCatalogAuthority.{cpp,h}
+  Untracked source (15):
+    src/agent/AgentCore.{cpp,h}
+    src/agent/ResponseCodedAgent.{cpp,h}
+    src/agentmodes/ImmutableReceiptAuthority.{cpp,h}
+    src/agentmodes/WriterLeaseAuthority.{cpp,h}
+    src/agentmodes/friends/
+    src/authority/                            (whole directory)
+    src/cli/RawrDumpAuthority.cpp.new
+
+Verdict and decision
+  BATCH_01_TOPOLOGY = NOT_RUN
+  BATCH_02_CONFIGURE = NOT_RUN
+  BATCH_03_TARGETS = NOT_RUN
+
+  DECISION = HOLD_AFTER_BATCH_0
+
+  RATIONALE:
+    1. The directive states "Any staged files or unexpected HEAD
+       movement means HOLD, not automatic cleanup."  HEAD literal is
+       pinned, but the worktree is dirty in a way that changes what
+       CMake would compile (25 deletes, 78 untracked, 12 modified).
+       Configure results would not be reproducible against any
+       committed state.
+    2. The MSVC toolchain (cl/link/msbuild) is not on PATH; the
+       directive's -G "Visual Studio 17 2022" generator cannot be
+       satisfied in this shell without vcvars.
+    3. Deep2 lifecycle (D2/D1/D3) remains HOLD regardless of audit
+       progress; the audit is explicitly not a repair pass.
+
+  NEXT_ACTION_REQUIRES_HUMAN_AUTHORIZATION:
+    Reconcile the worktree (revert + drop untracked, OR stage and
+    commit the concurrent writer's restructure), OR audit against a
+    detached worktree of the pinned HEAD literal:
+        git worktree add F:\~dev\rawrxd_audit HEAD
+    and run the entire Batches 1..20 sequence from that detached
+    worktree.
+
+Repair ladder (frozen, untouched by this audit)
+  D2_KV_RESET_BETWEEN_GENERATIONS = DEFECT_BLOCKING
+  D1_RESULT_CONTRACT              = DEFECT
+  D3_EOS_STOP_HANDLING            = DEFECT
+  MODEL_QUALITY                   = UNDETERMINED
+  GROUNDEDNESS                    = NOT_TESTABLE_YET
+  REPAIR_ORDER                    = D2 -> D1 -> D3
+  REPAIR_SCOPE                    = RAWRXD_DEEP2_GENERATION_LIFECYCLE_001
+  CURRENT_LEASE                   = PID=23572 / SCOPE=RAWRXD_STUB_RECONCILIATION_001
+                                     (does NOT cover engine edits)
+
+Notes
+  * No source mutation occurred during this batch.
+  * No CMake configure was attempted.
+  * No build artifact was produced.
+  * No staging, no commit, no push.
+  * This receipt itself is a build_output_mutation=1 artifact, captured
+    in the audit directory, outside any tracked path.

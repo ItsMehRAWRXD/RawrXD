@@ -13,8 +13,68 @@
 #include <fstream>
 #include <algorithm>
 #include <iterator>
+#include <cstdarg>
+#include <exception>
+#include <typeinfo>
 
 namespace fs = std::filesystem;
+
+// RAWRXD_RAWR_CLI_RESOLVE_TRACE_001
+//
+// Resolution walks the filesystem: the Ollama store discovery sweeps drive
+// roots, and the search-directory pass recurses without a depth bound. When
+// that walk dies, the last thing printed was "MODEL_RESOLUTION: resolving
+// 'x'" every single time, so "which stage failed" was unanswerable from the
+// output. These checkpoints make the last surviving line the boundary, and the
+// terminate handler turns the process-level abort into a named exception.
+// Opt-in via RAWRXD_RESOLVE_TRACE=1; a failed resolution still reports its
+// outcome without it.
+static std::chrono::steady_clock::time_point g_traceT0;
+static bool g_traceStarted = false;
+static bool g_traceEnabled = false;
+
+static void traceStart() {
+    g_traceT0 = std::chrono::steady_clock::now();
+    g_traceStarted = true;
+    const char* on = std::getenv("RAWRXD_RESOLVE_TRACE");
+    g_traceEnabled = on && on[0] && std::strcmp(on, "0") != 0;
+}
+
+static void trace(const char* fmt, ...) {
+    if (!g_traceStarted || !g_traceEnabled) return;
+    const double sec = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - g_traceT0).count();
+    char    body[1024];
+    va_list ap;
+    va_start(ap, fmt);
+    const int n = vsnprintf(body, sizeof(body), fmt, ap);
+    va_end(ap);
+    if (n < 0) return;
+    std::fprintf(stderr, "[resolve t=%8.3fs] %s\n", sec, body);
+    std::fflush(stderr);
+}
+
+// An escaped exception terminates the process through abort(), which on this
+// CRT surfaces only as a bare 0xC0000409 with no indication of what was
+// thrown. Naming it here is the difference between a diagnosis and a code.
+static void resolveTerminateHandler() {
+    std::fprintf(stderr, "[resolve] UNCAUGHT_EXCEPTION=YES\n");
+    if (auto ep = std::current_exception()) {
+        try {
+            std::rethrow_exception(ep);
+        } catch (const std::filesystem::filesystem_error& fe) {
+            std::fprintf(stderr, "[resolve] EXCEPTION=std::filesystem::filesystem_error\n"
+                                "[resolve] WHAT=%s\n",
+                         fe.what());
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "[resolve] EXCEPTION=%s\n[resolve] WHAT=%s\n",
+                         typeid(e).name(), e.what());
+        } catch (...) {
+            std::fprintf(stderr, "[resolve] EXCEPTION=unknown-non-std\n");
+        }
+    }
+    std::fflush(stderr);
+}
 
 // ---------------------------------------------------------------------------
 // Small string helpers
@@ -80,6 +140,18 @@ static std::string lookupModelAlias(const std::string& name) {
 // with JSON manifests at manifests\registry.ollama.ai\<ns>\<repo>\<tag> that
 // reference GGUF blobs at blobs\sha256-<hex>. This lets `rawr run <any ollama
 // model>` work for every entry shown by `ollama list`, with no hardcoding.
+//
+// The store is located by its STRUCTURAL SIGNATURE (a directory containing
+// manifests\registry.ollama.ai) rather than by guessing directory names.
+// Name-guessing fails on relocated stores: a store at F:\ollama\blobs matches
+// none of the conventional names, and the old "first candidate that merely
+// exists" fallback silently returned an empty ~/.ollama\models instead,
+// masking the real store. A store that is not found must report as not found.
+static bool hasOllamaLayout(const fs::path& p) {
+    std::error_code ec;
+    return !p.empty() && fs::exists(p / "manifests" / "registry.ollama.ai", ec);
+}
+
 static fs::path ollamaModelsRoot() {
     std::vector<fs::path> candidates;
     if (const char* om = std::getenv("OLLAMA_MODELS"); om && om[0])
@@ -88,21 +160,71 @@ static fs::path ollamaModelsRoot() {
         candidates.emplace_back(rom);
     if (const char* home = std::getenv("USERPROFILE"); home && home[0])
         candidates.emplace_back(fs::path(home) / ".ollama" / "models");
-    // Auto-discover the Ollama store wherever it lives (relocated stores are
-    // common for large models). Scan fixed drives for the standard layout.
+
+    // Conventional names first (cheap), for every mounted drive.
     for (char d = 'C'; d <= 'Z'; ++d) {
         const std::string root = std::string(1, d) + ":\\";
+        std::error_code dec;
+        if (!fs::exists(fs::path(root), dec)) continue;
         candidates.emplace_back(fs::path(root) / "OllamaModels");
         candidates.emplace_back(fs::path(root) / ".ollama" / "models");
+        candidates.emplace_back(fs::path(root) / "ollama" / "blobs");
+        candidates.emplace_back(fs::path(root) / "ollama");
+        candidates.emplace_back(fs::path(root) / "models" / "blobs");
     }
-    std::error_code ec;
-    // Prefer a candidate that actually contains manifests.
-    for (const auto& c : candidates)
-        if (fs::exists(c / "manifests" / "registry.ollama.ai", ec)) return c;
-    // Otherwise the first candidate that exists at all.
-    for (const auto& c : candidates)
-        if (fs::exists(c, ec)) return c;
+    for (const auto& c : candidates) if (hasOllamaLayout(c)) {
+        trace("ollama_store conventional_hit path=%s", c.string().c_str());
+        return c;
+    }
+
+    // Structural discovery: bounded-depth sweep of each drive root for any
+    // directory that actually carries the Ollama manifest layout. This is what
+    // makes a relocated store discoverable at all.
+    for (char d = 'C'; d <= 'Z'; ++d) {
+        const fs::path drive = fs::path(std::string(1, d) + ":\\");
+        std::error_code ec;
+        if (!fs::exists(drive, ec)) continue;
+        trace("ollama_store sweep_drive=%c", d);
+        unsigned long long visited = 0;
+        for (auto it = fs::recursive_directory_iterator(
+                 drive, fs::directory_options::skip_permission_denied, ec);
+             it != fs::recursive_directory_iterator(); it.increment(ec)) {
+            if (++visited % 20000 == 0) trace("ollama_store drive=%c visited=%llu",
+                                             d, visited);
+            if (ec) { ec.clear(); continue; }
+            if (it.depth() > 3) { it.disable_recursion_pending(); continue; }
+            if (!it->is_directory(ec)) continue;
+            if (hasOllamaLayout(it->path())) {
+                trace("ollama_store structural_hit path=%s", it->path().string().c_str());
+                return it->path();
+            }
+        }
+        trace("ollama_store drive=%c exhausted visited=%llu", d, visited);
+    }
+
+    // No store found. Reporting an arbitrary existing directory here is what
+    // previously made a populated store look empty, so return nothing instead.
+    trace("ollama_store not_found");
     return {};
+}
+
+// RAWRXD_RAWR_CLI_RESOLVE_BUDGET_001
+//
+// The fuzzy directory walk below has neither a depth nor a breadth bound, so
+// resolving one unrecognised name descended whole source trees. Measured on
+// this machine: 116,795 entries under F:\~dev and more than 950,000 under
+// G:\~dev for a name that exists in none of them, before the walk died inside
+// the filesystem layer. A budget makes that work bounded and reported; it
+// cannot silently pass for "searched everywhere and found nothing".
+static const unsigned long long kSearchVisitBudget = 400000;
+static bool g_searchBudgetExhausted = false;
+
+// Discovery is the same answer for every caller in a process, and the answer
+// costs a drive sweep. Compute it once so the search ordering below can use it
+// without paying for it a second time.
+static const fs::path& ollamaModelsRootCached() {
+    static const fs::path cached = ollamaModelsRoot();
+    return cached;
 }
 
 // Reconstruct an "[ns/]repo:tag" name from a manifest path relative to
@@ -121,7 +243,7 @@ static std::string ollamaNameFromManifestRel(const fs::path& rel) {
 
 // Resolve an Ollama model reference "[ns/]name[:tag]" to its GGUF blob path.
 static std::string resolveOllamaModel(const std::string& refIn) {
-    const fs::path root = ollamaModelsRoot();
+    const fs::path root = ollamaModelsRootCached();
     if (root.empty()) return {};
     std::error_code ec;
     if (!fs::exists(root, ec)) return {};
@@ -181,7 +303,8 @@ static std::string resolveOllamaModel(const std::string& refIn) {
 //   - absolute path to a .gguf file
 //   - relative path to a .gguf file (resolved from cwd)
 //   - bare model name: searched in RAWRXD_MODEL_DIR env var, then common dirs
-static std::string resolveModelPath(const std::string& nameOrPath) {
+static std::string resolveModelPathImpl(const std::string& nameOrPath) {
+    trace("resolve_model enter name=%s", nameOrPath.c_str());
     // Alias first: a matched alias may map directly to an existing file, or to
     // another bare name that continues through the normal search below.
     std::string effective = nameOrPath;
@@ -192,22 +315,32 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
         if (fs::exists(ap, ec) && fs::is_regular_file(ap, ec)) return ap.string();
         effective = aliasVal;
     }
+    trace("resolve_model alias_stage_done effective=%s", effective.c_str());
 
     // Direct path
     if (effective.size() > 5 &&
         effective.substr(effective.size() - 5) == ".gguf") {
+        std::error_code pec;
         fs::path p(effective);
-        if (fs::exists(p)) return p.string();
+        if (fs::exists(p, pec)) return p.string();
         // Try relative to cwd
-        fs::path rel = fs::current_path() / p;
-        if (fs::exists(rel)) return rel.string();
+        std::error_code cec;
+        const fs::path cwd = fs::current_path(cec);
+        if (!cec) {
+            std::error_code rec;
+            const fs::path rel = cwd / p;
+            if (fs::exists(rel, rec)) return rel.string();
+        }
     }
 
     // Ollama store: resolve any `ollama list` model by name/tag, unless this
     // looks like a filesystem path or an explicit .gguf.
     if (effective.find('\\') == std::string::npos &&
         !(effective.size() > 5 && effective.substr(effective.size() - 5) == ".gguf")) {
+        trace("resolve_model ollama_store_stage_enter");
         std::string ollama = resolveOllamaModel(effective);
+        trace("resolve_model ollama_store_stage_done hit=%d",
+              ollama.empty() ? 0 : 1);
         if (!ollama.empty()) return ollama;
     }
 
@@ -217,6 +350,20 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
     // 1. RAWRXD_MODEL_DIR (if set)
     const char* modelDir = std::getenv("RAWRXD_MODEL_DIR");
     if (modelDir && modelDir[0]) searchDirs.emplace_back(modelDir);
+
+    // 1b. The Ollama store that was just located structurally. It is a known
+    // model location, and it has to come before the broad directory walks: as
+    // ordered below, the walk of G:\~dev consumed more than five seconds and
+    // over 950,000 visited entries before the store was even considered, so a
+    // model that was present all along could lose to a tree that was not.
+    {
+        const fs::path& store = ollamaModelsRootCached();
+        if (!store.empty()) {
+            trace("resolve_model search_store_root path=%s", store.string().c_str());
+            searchDirs.emplace_back(store);
+            searchDirs.emplace_back(store / "blobs");
+        }
+    }
 
     // 2. Common local model locations (all drives, all common dirs)
     searchDirs.emplace_back("F:\\models");
@@ -241,7 +388,11 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
     if (home) searchDirs.emplace_back(fs::path(home) / ".ollama");
 
     // 5. Current working directory
-    searchDirs.emplace_back(fs::current_path());
+    {
+        std::error_code cec;
+        const fs::path cwd = fs::current_path(cec);
+        if (!cec) searchDirs.emplace_back(cwd);
+    }
 
     // 6. Walk all drive roots for .gguf files if nothing found yet
     // (covers G:\, F:\, D:\, C:\, E:\, H:\ — any mounted drive)
@@ -250,14 +401,28 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
     };
 
     for (const fs::path& dir : searchDirs) {
-        if (!fs::exists(dir)) continue;
+        std::error_code dex;
+        if (!fs::exists(dir, dex)) continue;
+        trace("resolve_model search_dir_enter path=%s", dir.string().c_str());
         // Exact filename match
         fs::path exact = dir / (effective + ".gguf");
-        if (fs::exists(exact)) return exact.string();
+        {
+            std::error_code dex2;
+            if (fs::exists(exact, dex2)) return exact.string();
+        }
         // Fuzzy: walk dir, find first .gguf whose stem contains effective
         std::error_code ec;
+        unsigned long long visited = 0;
         for (const auto& entry : fs::recursive_directory_iterator(dir, ec)) {
             if (ec) break;
+            if (visited >= kSearchVisitBudget) {
+                g_searchBudgetExhausted = true;
+                trace("resolve_model search_dir_budget_exhausted path=%s budget=%llu",
+                      dir.string().c_str(), kSearchVisitBudget);
+                break;
+            }
+            if (++visited % 50000 == 0) trace("resolve_model search_dir path=%s visited=%llu",
+                                             dir.string().c_str(), visited);
             if (!entry.is_regular_file()) continue;
             const std::string stem = entry.path().stem().string();
             const std::string ext  = entry.path().extension().string();
@@ -269,6 +434,8 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
             if (stemLow.find(nameLow) != std::string::npos)
                 return entry.path().string();
         }
+        trace("resolve_model search_dir_done path=%s visited=%llu",
+              dir.string().c_str(), visited);
     }
 
     // 6. Last resort: scan all drive roots for any .gguf matching the name.
@@ -278,6 +445,7 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
         fs::path rootPath(root);
         std::error_code ec;
         if (!fs::exists(rootPath, ec)) continue;
+        trace("resolve_model drive_root_enter path=%s", root.c_str());
         // Check root level
         for (const auto& entry : fs::directory_iterator(rootPath, ec)) {
             if (ec) break;
@@ -307,8 +475,72 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
             }
         }
     }
+    trace("resolve_model not_found");
     return {};
 }
+
+// RAWRXD_RAWR_CLI_RESOLVE_CONTAINMENT_001
+//
+// The filesystem layer throws. On this machine a single unresolved name walked
+// G:\~dev until it entered a directory whose name has no representation in the
+// active ANSI code page, at which point the walk raised
+// std::system_error("No mapping for the Unicode character exists in the target
+// multi-byte code page."). Nothing caught it: the exception left the resolver,
+// left the run entry point, and left main, so the process died through
+// std::terminate -> abort() and surfaced as a bare 0xC0000409 with a WER
+// "BEX64" bucket that names neither the stage nor the cause. A name the user
+// simply got wrong therefore killed the process instead of being reported as
+// not found.
+//
+// The resolver is now sealed. A failed resolution is a reportable outcome, and
+// it is reported as such.
+static std::string resolveModelPath(const std::string& nameOrPath) {
+    g_searchBudgetExhausted = false;
+    std::string resolved;
+    try {
+        resolved = resolveModelPathImpl(nameOrPath);
+    } catch (const std::filesystem::filesystem_error& fe) {
+        trace("resolve_model sealed filesystem_error what=%s", fe.what());
+        std::fprintf(stderr,
+            "[rawr run] MODEL_RESOLUTION=FAIL  filesystem error while resolving '%s': %s\n",
+            nameOrPath.c_str(), fe.what());
+        std::fflush(stderr);
+    } catch (const std::exception& e) {
+        trace("resolve_model sealed exception=%s what=%s", typeid(e).name(), e.what());
+        std::fprintf(stderr,
+            "[rawr run] MODEL_RESOLUTION=FAIL  error while resolving '%s': %s\n",
+            nameOrPath.c_str(), e.what());
+        std::fflush(stderr);
+    } catch (...) {
+        trace("resolve_model sealed unknown_exception");
+        std::fprintf(stderr,
+            "[rawr run] MODEL_RESOLUTION=FAIL  unknown error while resolving '%s'\n",
+            nameOrPath.c_str());
+        std::fflush(stderr);
+    }
+    // Reported on both the thrown path and the plain "ran out of places to look"
+    // path, because the two are indistinguishable from the exit code and the
+    // truncated search must never read as an exhaustive one.
+    if (resolved.empty() && g_searchBudgetExhausted) {
+        std::fprintf(stderr,
+            "[rawr run] MODEL_RESOLUTION=INCONCLUSIVE  per-directory search budget of %llu "
+            "entries was reached; deeper locations were not examined. "
+            "Set RAWRXD_MODEL_DIR or pass an absolute .gguf path.\n",
+            kSearchVisitBudget);
+        std::fflush(stderr);
+    }
+    return resolved;
+}
+
+// Expose the shared resolver so the agent core resolves models through exactly
+// the same path the CLI uses, instead of a second, divergent heuristic. The rest
+// of this translation unit is at global scope, so the exported wrapper is
+// explicitly namespaced to match its declaration.
+namespace rawrxd { namespace deep2 {
+std::string resolveModelPathForAgent(const std::string& nameOrPath) {
+    return resolveModelPath(nameOrPath);
+}
+}} // namespace rawrxd::deep2
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -318,6 +550,9 @@ int rawrxd_run_modelname_001(const char* modelNameOrPath,
                               uint32_t    maxTokens,
                               bool        vulkanEnabled,
                               bool        strictVulkan) {
+    std::set_terminate(resolveTerminateHandler);
+    traceStart();
+
     if (!modelNameOrPath || !modelNameOrPath[0]) {
         std::fprintf(stderr, "[rawr run] ERROR: no model specified\n");
         return 1;
@@ -478,7 +713,7 @@ int rawrxd_list_models_001() {
         "Selectable models  (use: rawr run <name-or-alias-or-path> \"<prompt>\")\n\n");
 
     // 1) Ollama store models
-    const fs::path oroot = ollamaModelsRoot();
+    const fs::path oroot = ollamaModelsRootCached();
     std::error_code ec;
     const fs::path omanifests =
         oroot.empty() ? fs::path{} : (oroot / "manifests" / "registry.ollama.ai");

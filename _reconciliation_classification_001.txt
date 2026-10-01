@@ -1,0 +1,302 @@
+GATE=RAWRXD_RECONCILIATION_CLASSIFICATION_001
+TIMESTAMP=2026-09-29
+HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+PREVIOUS_FREEZE_HEAD=323f5aaba1ea0e4866e0be76d702c7f109d29eaf
+
+# This file is an UNCOMMITTED diagnostic artifact. It does NOT mutate
+# the working tree, stage any file, or create a commit. It records the
+# read-only classification of state introduced while the freeze was
+# nominally in effect.
+
+# ============================================================================
+# FREEZE VIOLATION
+# ============================================================================
+FREEZE_VIOLATED_BY=ca8ff4f5b,a078e3b87
+FREEZE_VIOLATED_HEAD_DELTA=323f5aaba -> a078e3b87
+FREEZE_VIOLATION_COMMITS=2
+  ca8ff4f5b = MIGRATION_BATCH_1 (W8 immutable API adoption)
+  a078e3b87 = RECONCILIATION_MIGRATION_BATCH_1_001 (legacy mirror marked NON_AUTHORITATIVE)
+
+# Per the freeze rule, no W8 / receipt-adoption / dump / GPU / further
+# ledger cleanup work was permitted between 323f5aaba and the present.
+# Two commits were pushed anyway. They are preserved for evidence; the
+# freeze violation itself is recorded here without corrective action.
+
+# ============================================================================
+# CLASSIFICATION OF ca8ff4f5b
+# ============================================================================
+COMMIT_CA8FF4F5B=MIGRATION_BATCH_1
+FILES_COMMITTED=3
+TARGETED_STAGING=1
+W8_IMMUTABLE_MIGRATION=IMPLEMENTED
+W8_VERDICT_DERIVED_FROM_RUNTIME_STATE=1
+W8_IMMUTABLE_RUN_RECEIPT=IMPLEMENTED
+W8_VERDICT_FORMULA=ranFullDuration && naturalShutdown
+W8_MEASURED_FIELDS=CERT_TIMER_EXPIRED,DURATION_TARGET_SEC,DURATION_ACTUAL_SEC,SHUTDOWN_REASON_CODE,RAN_FULL_DURATION,NATURAL_SHUTDOWN
+UNRELATED_FILES_STAGED=0
+W8_HARDCODED_VERDICT=0
+
+CA8FF4F5B_PROVENANCE_PROVED=HEAD(t-check) == expected
+CA8FF4F5B_PROVENANCE_NOT_PROVED=exclusive writer ownership throughout batch
+CA8FF4F5B_CODE_REVIEW_STATE=IMPLEMENTED_UNCERTIFIED
+CA8FF4F5B_PROVENANCE_STATE=UNTRUSTED_UNTIL_RECONCILED
+
+# ============================================================================
+# CLASSIFICATION OF a078e3b87 (reconciliation)
+# ============================================================================
+COMMIT_A078E3B87=RECONCILIATION_MIGRATION_BATCH_1_001
+RECONCILED_GATE=ca8ff4f5b
+MIRROR_MARKED_NON_AUTHORITATIVE=1
+LEGACY_MIRROR_ALLOWED_TO_CERTIFY=0
+LEGACY_MIRROR_ALLOWED_AS_RAWGATE_INPUT=0
+
+# Mirror headers emitted (from src at HEAD):
+#   AUTHORITY=NON_AUTHORITATIVE_MIRROR
+#   DEPRECATED=1
+#   MIRROR_FORBIDDEN_TO_CERTIFY=1
+#   MIRROR_FORBIDDEN_AS_RAWGATE_INPUT=1
+#   AUTHORITATIVE_ARTIFACT=<runPath or "<failed>">
+#   ... IMMUTABLE_RUN_PATH=<runPath> ...
+#   VERDICT=<PASS|FAIL>          <-- DANGEROUS: still bare VERDICT= line
+
+# ============================================================================
+# REMAINING GAPS vs. the user's required mirror schema
+# ============================================================================
+REQUIRED_MIRROR_FIELD_RECEIPT_ROLE=LEGACY_COMPATIBILITY_MIRROR
+PRESENT_RECEIPT_ROLE=0
+REQUIRED_MIRROR_FIELD_AUTHORITATIVE=0
+PRESENT_AUTHORITATIVE_FIELD=0  # AUTHORITY= is present, not AUTHORITATIVE=
+REQUIRED_MIRROR_FIELD_CERTIFICATION_INPUT_ALLOWED=0
+PRESENT_CERTIFICATION_INPUT_ALLOWED_FIELD=0
+REQUIRED_MIRROR_FIELD_IMMUTABLE_RUN_SHA256=<sha256>
+PRESENT_IMMUTABLE_RUN_SHA256_FIELD=0  # only IMMUTABLE_RUN_PATH is present
+REQUIRED_BARE_VERDICT_LINE_REMOVED=1
+PRESENT_BARE_VERDICT_LINE_REMOVED=0  # the mirror still emits VERDICT=PASS
+REQUIRED_MIRRORED_EXECUTION_VERDICT_FIELD=1
+PRESENT_MIRRORED_EXECUTION_VERDICT_FIELD=0
+
+# Older tooling that searches for "VERDICT=PASS" can still accidentally
+# promote a mutable artifact. The bare VERDICT= line in the mirror is the
+# most actionable gap.
+
+# ============================================================================
+# MISSING ENFORCEMENT
+# ============================================================================
+RAWGATE_REJECTS_NON_AUTHORITATIVE_RECEIPT=0
+EXPECTED_RAWGATE_RULE=
+  if (receiptRole == "LEGACY_COMPATIBILITY_MIRROR" ||
+      authoritative == false ||
+      certificationInputAllowed == false) {
+      return FAIL_NON_AUTHORITATIVE_RECEIPT;
+  }
+
+# The rule is documented but not implemented. Without RawrGate
+# enforcement, the mirror's designation is documentation, not enforcement.
+
+# ============================================================================
+# WORKING TREE (read-only)
+# ============================================================================
+WORKTREE_MAIN_WIN32_MODIFIED=0
+WORKTREE_DOCS_MODIFIED=0
+WORKTREE_RAWRCERT_MODIFIED=1
+WORKTREE_RAWRDUMP_MODIFIED=1
+WORKTREE_MODELCATALOG_MODIFIED=1
+WORKTREE_QUICKJS_SUBMODULE_DIRTY=1
+WORKTREE_UNTRACKED_FILES=_rawr_dump_cpu_only_receipt.txt,_rawr_dump_receipt.txt,src/agentmodes/ImmutableReceiptAuthority.{cpp,h},src/agentmodes/WriterLeaseAuthority.{cpp,h},src/agentmodes/friends/{FriendTypes,LocalFriendProvider}.{cpp,h},src/cli/RawrDumpAuthority.cpp.new
+
+# The earlier "M src/win32app/main_win32.cpp" that prompted the
+# inspection request was resolved into the reconciliation commit
+# a078e3b87. There is no longer an uncommitted modification of that
+# file. All other working-tree changes are pre-existing (from before
+# ca8ff4f5b) and remain uncommitted pending SINGLE_WRITER.
+
+# ============================================================================
+# FREEZE STATE
+# ============================================================================
+RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001=RETRACTED_FALSE_PASS
+RAWRXD_SINGLE_WRITER_AUTHORITY_001=FAIL_RECURRING
+
+MIGRATION_BATCH_1=IMPLEMENTED_NOT_CERTIFIED
+MIGRATION_BATCH_2=BLOCKED
+
+SAFE_TO_PROMOTE_W8_MIGRATION=0
+SAFE_TO_START_BATCH_2=0
+SAFE_TO_GPU=0
+SAFE_TO_W8_CERTIFY=0
+SAFE_TO_PROMOTE_IMMUTABILITY=0
+SAFE_TO_PROMOTE_RECEIPT_IMMUTABILITY=0
+
+NEXT_GATE=RAWRXD_SINGLE_WRITER_AUTHORITY_001
+NEXT_GATE_PROOF_REQUIRED=enforceable_lease_check
+NEXT_GATE_ADVERSARIAL_TESTS=second_writer_rejected,head_moved_rejected
+
+HEAD_STABILITY=UNTRUSTED
+COMMIT_AUTHORITY=UNTRUSTED
+CERTIFICATION_PROVENANCE=UNTRUSTED
+
+# ============================================================================
+# CRITICAL PATH (unchanged)
+# ============================================================================
+#   RAWRXD_SINGLE_WRITER_AUTHORITY_001
+#     -> adversarial lease PASS
+#     -> reconcile/verify ca8ff4f5b + a078e3b87 under controlled state
+#     -> prove W8 immutable artifact authoritative
+#     -> gap closure:
+#         * remove bare VERDICT= line from mirror
+#         * add RECEIPT_ROLE / AUTHORITATIVE / CERTIFICATION_INPUT_ALLOWED
+#         * add IMMUTABLE_RUN_SHA256
+#         * add MIRRORED_EXECUTION_VERDICT
+#         * implement RawrGate FAIL_NON_AUTHORITATIVE_RECEIPT rule
+#     -> MIGRATION_BATCH_2: StrictCertificationAuthority
+#     -> measured immutability regression
+#     -> RawrGate meta-verification
+#     -> W8 schema v2 + 1800s
+#     -> GPU
+
+# ============================================================================
+# DEFINITION OF AUTHORITATIVE (for the next reconciliation)
+# ============================================================================
+#   legacy mirror
+#     |
+#     +-- points to --> immutable run receipt
+#                             |
+#                             +-- authoritative
+#                             +-- content hashed
+#                             +-- append/index recorded
+#                             +-- eligible for RawrGate
+#
+#   and never the reverse.
+#
+#   The mirror may never be the source of a PASS verdict. The mirror may
+#   never satisfy a RawrGate input predicate.
+
+# ============================================================================
+# NEXT ACTION (no commit)
+# ============================================================================
+NEXT_ACTION=wait_for_RAWRXD_SINGLE_WRITER_AUTHORITY_001_adversarial_pass
+SAFE_TO_MUTATE=0
+SAFE_TO_RECONCILE_GAPS=0  # even the mirror gaps must wait for the lease
+
+VERDICT=FAIL
+# ============================================================================
+# CORRECTED CLASSIFICATION (this file is the later, authoritative ledger)
+# ============================================================================
+# The earlier "freeze holds" assertion in this receipt is operationally
+# false. a078e3b87 is itself a source mutation, commit, and push performed
+# during a window that the governing state said certification mutations
+# were frozen until the single-writer authority existed.
+
+CORRECTED_CLASSIFICATION=1
+
+FREEZE_OPERATIONALLY_HELD=0
+FREEZE_VIOLATION_COMMITS=ca8ff4f5b,a078e3b87
+A078E3B87_COMMITTED_DURING_FREEZE=1
+A078E3B87_WRITER_LEASE_PRESENT=0
+A078E3B87_PROVENANCE_CERTIFIED=0
+
+# The reasoning that this commit "doesn't violate the freeze because
+# it's behavior tightening" must NOT become precedent. A freeze based
+# on mutation provenance has to apply to beneficial fixes too.
+# Otherwise every writer can classify its own change as
+# reconciliation / hardening and bypass the authority.
+
+# a078e3b87 is PRESERVED, not reverted. Reverting it would just
+# produce another uncontrolled mutation.
+CA8FF4F5B=PRESERVE_UNCERTIFIED
+A078E3B87=PRESERVE_UNCERTIFIED
+
+# ============================================================================
+# FREEZE DEFINITION (hardened)
+# ============================================================================
+# FREEZE means:
+#   no source mutation
+#   no documentation mutation
+#   no staging
+#   no commit
+#   no push
+# except:
+#   the explicitly authorized work required to establish
+#   RAWRXD_SINGLE_WRITER_AUTHORITY_001
+
+FREEZE_APPLIES_TO_BENEFICIAL_FIXES=1
+FREEZE_EXEMPTION_CRITERION=only mutation permitted is the work required
+  to establish RAWRXD_SINGLE_WRITER_AUTHORITY_001
+
+# ============================================================================
+# MIRROR POLICY: declared vs enforced
+# ============================================================================
+MIRROR_POLICY_DECLARED=1
+MIRROR_POLICY_ENFORCED_BY_RAWGATE=0
+# MIRROR_FORBIDDEN_AS_RAWGATE_INPUT=1 in the mirror file is documentation.
+# RawrGate eventually needs to reject the artifact based on its parsed
+# role. Until that exists, demotion is policy, not enforcement.
+
+# ============================================================================
+# STABLE STOPPING POINT
+# ============================================================================
+HEAD=a078e3b87
+HEAD_FREEZE_POINT=a078e3b87
+
+NEXT_GATE=RAWRXD_SINGLE_WRITER_AUTHORITY_001
+ONLY_AUTHORIZED_MUTATION=IMPLEMENT_SINGLE_WRITER_AUTHORITY
+
+W8_WORK=BLOCKED
+STRICT_MIGRATION=BLOCKED
+GPU=BLOCKED
+
+# ============================================================================
+# THREE-LAYER ARCHITECTURE FOR SINGLE_WRITER
+# ============================================================================
+# The authority needs three layers:
+#
+#   OS exclusive lease
+#        |
+#        v
+#   Git optimistic concurrency check
+#        |
+#        v
+#   staging-scope enforcement
+#
+# Layer 1 (OS exclusive lease): a process-level lock (file, named mutex,
+#   flock) prevents two writers from claiming writer-of-record at once.
+# Layer 2 (Git OCC): a pre-commit HEAD(t) == expected HEAD(t-1) check
+#   proves the local repo was not moved under the writer between acquire
+#   and commit.
+# Layer 3 (staging-scope enforcement): the writer's index contains only
+#   paths it was authorized to stage. Foreign staged paths block commit.
+
+# ============================================================================
+# ADVERSARIAL ACCEPTANCE TESTS (extended)
+# ============================================================================
+# The single-writer gate must pass these derived checks:
+
+EXCLUSIVE_LEASE_ACQUIRE=PASS                # derived
+SECOND_WRITER_ACQUIRE_BLOCKED=PASS          # derived (adversarial Test A)
+COMMIT_WITHOUT_LEASE_BLOCKED=PASS           # derived
+COMMIT_AFTER_HEAD_MOVED_BLOCKED=PASS        # derived (adversarial Test B)
+UNAUTHORIZED_STAGED_PATH_BLOCKED=PASS       # derived (Layer 3)
+FOREIGN_LEASE_RELEASE_BLOCKED=PASS          # derived
+STALE_LEASE_RECOVERY=PASS                   # derived
+
+# New test, justified by what actually happened:
+BENEFICIAL_FIX_BYPASS_ATTEMPT_BLOCKED=PASS  # derived
+# The authority must not care whether a mutation describes itself as
+# a fix, reconciliation, documentation update, receipt correction, or
+# hardening. Mutation is mutation.
+
+VERDICT_DERIVED_FROM_CHECKS=1
+HARDCODED_VERDICT=0
+
+# ============================================================================
+# STABLE EQUATION (unchanged shape, more inputs)
+# ============================================================================
+#   const bool pass =
+#       leaseAcquiredExclusively &&
+#       secondWriterAcquireBlocked &&
+#       commitWithoutLeaseBlocked &&
+#       commitAfterHeadMovedBlocked &&
+#       unauthorizedStagedPathBlocked &&
+#       foreignLeaseReleaseBlocked &&
+#       staleLeaseRecoveryTested &&
+#       beneficialFixBypassAttemptBlocked;
+#   const char* verdict = pass ? "PASS" : "FAIL";

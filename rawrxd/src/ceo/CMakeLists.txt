@@ -34,6 +34,20 @@ add_executable(rawrxd_ceo_cli
     main.cpp
     # Lightweight subsystem API (CEOAgent uses this for mode dispatch)
     ${CMAKE_SOURCE_DIR}/src/core/rawrxd_subsystem_api.cpp
+    # Definitions for the 19 *Mode / AD_ProcessGGUF entry points that
+    # rawrxd_subsystem_api.cpp declares and dispatches to. Without these the
+    # link failed with 19 x LNK2019 unresolved external symbol. They were
+    # dropped from the build by commit 7a73ec687 ("GROUP B: remove 16 *Mode
+    # stubs from subsystem_api") to clear LNK4006 duplicates, which removed the
+    # symbols rather than the duplication.
+    #
+    # These three files define the mode entry points once and do not overlap
+    # with each other. src/core/subsystem_mode_impl.cpp is deliberately NOT
+    # added here: it defines the same symbols again plus ~100 asm_* stubs, and
+    # it is the file that produced the original duplicate-symbol collisions.
+    ${CMAKE_SOURCE_DIR}/src/core/rawrxd_subsys_modes_a.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/rawrxd_subsys_modes_b.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/rawrxd_subsys_modes_c.cpp
     # Stubs for subsystems not needed by CEO CLI
     ${CMAKE_SOURCE_DIR}/src/ceo/disk_recovery_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/ceo/ceo_link_stubs.cpp

@@ -281,7 +281,7 @@ if(RAWRXD_BUILD_CLI)
         src/rawrxd_model_loader.cpp
         src/rawrxd_tokenizer.cpp
         src/rawrxd_transformer.cpp
-        src/rawrxd_sampler.cpp
+         src/rawrxd_sampler.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/core/swarm_scheduler.cpp
@@ -344,8 +344,8 @@ if(RAWRXD_BUILD_CLI)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         src/cli/swarm_orchestrator.cpp
-        src/full_agentic_ide/AgenticIOCPBridge.cpp
-        src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
+          # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/full_agentic_ide/AgenticIOCPBridge.cpp
+          # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
         # src/full_agentic_ide/FullAgenticIDE.cpp  # excluded: depends on Win32IDE
         # Agentic components for CLI Ollama testing
         src/agentic/FIMPromptBuilder.cpp
@@ -1201,7 +1201,7 @@ if(WIN32)
     # VAL-051.7: Residency Baseline / Fixture Gate
     # =====================================================================
     add_executable(val_051_7_residency_baseline
-        tests/val_051_7_residency_baseline.cpp
+         tests/val_051_7_residency_baseline.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(val_051_7_residency_baseline PRIVATE InferenceEngine)
@@ -2116,7 +2116,7 @@ set(SOURCES
     # AUTO-REMOVED: stub file
     B014/build/b014_profiler.cpp
     src/rawrxd_tokenizer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -2843,7 +2843,7 @@ set(SOURCES
     # AUTO-REMOVED: stub file
     src/deep2/Deep2ModelRuntime.cpp
     # AUTO-REMOVED: stub file
-    src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
     src/deep2/Deep2Engine_Speculative.cpp
     src/deep2/Sampler.cpp
     src/deep2/Tokenizer.cpp
@@ -2853,7 +2853,7 @@ set(SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
-    src/deep2/ElasticResidencyManager.cpp
+     src/deep2/ElasticResidencyManager.cpp
     # AUTO-REMOVED: stub file
     src/deep2/CycloneScheduler.cpp
     # AUTO-REMOVED: stub file
@@ -2917,7 +2917,7 @@ set(SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/CompressedKVCache.cpp
+     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -3230,11 +3230,11 @@ list(APPEND RAWR_ENGINE_SOURCES
     # +�-�+�-�+�-�+�-�+�-�+�-� Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) +�-�+�-�+�-�+�-�+�-�+�-�
     src/deep2/Chamber.cpp
     src/deep2/PlasmaGovernor.cpp
-    src/deep2/SovereignOutOfCoreRuntime.cpp
+     src/deep2/SovereignOutOfCoreRuntime.cpp
     # AUTO-REMOVED: stub file
     src/deep2/BP16Streamer.cpp
     # AUTO-REMOVED: stub file
-    src/deep2/ToroidalKVCache.cpp
+     src/deep2/ToroidalKVCache.cpp
     # AUTO-REMOVED: stub file
     src/vulkan_compute.cpp
 
@@ -3506,7 +3506,7 @@ if(NOT RAWR_ENGINE_LANE_B)
     # rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "EXT" OR RAWR_SSOT_PROVIDER_UPPER STREQUAL "STUBS")
         if(TARGET RawrEngine)
-        target_sources(RawrEngine PRIVATE src/core/auto_feature_stub_impl.cpp)
+         target_sources(RawrEngine PRIVATE src/core/auto_feature_stub_impl.cpp)
         endif()
     endif()
 endif()
@@ -3650,7 +3650,7 @@ else()
     # src/core/ssot_handlers_ext_isolated.cpp
     )
     list(APPEND GOLD_UNDERSCORE_SOURCES
-        src/core/auto_feature_stub_impl.cpp
+         src/core/auto_feature_stub_impl.cpp
         src/core/missing_handler_stubs.cpp
     )
     set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 0)
@@ -3748,8 +3748,8 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     src/deep2/Chamber.cpp
     src/deep2/PlasmaGovernor.cpp
     # AUTO-REMOVED: stub file
-    src/deep2/SovereignOutOfCoreRuntime.cpp
-    src/deep2/ToroidalKVCache.cpp
+     src/deep2/SovereignOutOfCoreRuntime.cpp
+     src/deep2/ToroidalKVCache.cpp
 )
 # Remove duplicate stub files that are already in SOURCES or have real implementations
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/deep2_link_stubs\\.cpp$")
@@ -3891,7 +3891,7 @@ target_sources(RawrXD_Gold PRIVATE
     # AUTO-REMOVED: stub file
     src/agentic/ErrorRecoveryManager.cpp
     # Link closure for unified/ssot lanes: implementations live outside main SOURCES or were stripped.
-    tests/gguf_link_impl.cpp
+     tests/gguf_link_impl.cpp
     # REMOVED: src/core/rawrengine_command_handlers.cpp - references UpdateSignatureVerifier, PerfTelemetry (unresolved)
     # AUTO-REMOVED: stub file
     # src/core/native_gguf_loader_link_impl.cpp
@@ -4201,7 +4201,7 @@ if(MSVC)
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NanoQuant_Engine.asm")
 
     add_library(RawrXD_NanoQuant STATIC
-        src/ggml/ggml_nanoquant.cpp
+         src/ggml/ggml_nanoquant.cpp
         src/agentic/agent_tool_quantize.cpp
     )
     # Set MSVC runtime library to match RawrEngine (static CRT)
@@ -4321,7 +4321,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/rawrxd_transformer.cpp
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_tokenizer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     # AUTO-REMOVED: stub file
@@ -4397,7 +4397,7 @@ set(INFERENCE_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # Deep2 core +�-�+�-�+�-� unified into InferenceEngine for canonical local inference
-    src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
     src/deep2/Deep2Engine_Speculative.cpp
     src/deep2/strict_gpu_violations.cpp
     src/deep2/VramStreamingController.cpp
@@ -4442,7 +4442,7 @@ set(INFERENCE_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/CompressedKVCache.cpp
+     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -4565,13 +4565,13 @@ set(INFERENCE_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/deep2/Chamber.cpp
-    src/deep2/ToroidalKVCache.cpp
+     src/deep2/ToroidalKVCache.cpp
     src/deep2/PlasmaGovernor.cpp
     # AUTO-REMOVED: stub file
-    src/deep2/SovereignOutOfCoreRuntime.cpp
+     src/deep2/SovereignOutOfCoreRuntime.cpp
     src/deep2/BP16Streamer.cpp
     # AUTO-REMOVED: stub file
-    src/deep2/ElasticResidencyManager.cpp
+     src/deep2/ElasticResidencyManager.cpp
     # AUTO-REMOVED: stub file
     src/deep2/CycloneScheduler.cpp
     # AUTO-REMOVED: stub file
@@ -5011,8 +5011,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/inference/ai_model_caller_real.cpp
-        src/inference/inference_engine_real.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/inference/ai_model_caller_real.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/inference/inference_engine_real.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -5088,9 +5088,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_ReverseEngineering.cpp
         src/win32app/Win32IDE_Logger.cpp
         src/win32app/Win32IDE_AgenticBridge.cpp
-        src/full_agentic_ide/FullAgenticIDE.cpp
-        src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
-        src/full_agentic_ide/AgenticIOCPBridge.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/full_agentic_ide/FullAgenticIDE.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/full_agentic_ide/AgenticIOCPBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
         src/win32app/Win32IDE_TabManager.cpp
         src/win32app/Win32IDE_Settings.cpp
@@ -5113,8 +5113,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         src/compression/zlib_runtime_loader.cpp
-        src/deep2/Deep2APIServer.cpp
-        src/deep2/production/Deep2ProductionRuntime.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2APIServer.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/production/Deep2ProductionRuntime.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         src/inference/NegativeSpaceProfiler.cpp
@@ -5126,12 +5126,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_GhostText.cpp
         # Deep2 completion provider and bridge +�-�+�-�+�-� real local inference for ghost text
         src/ai_completion_real.cpp
-        src/ide/Deep2Bridge.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/ide/Deep2Bridge.cpp
         # AUTO-REMOVED: stub file
-        src/ide/ANSIColorParser.cpp
-        src/ide/FindReplaceDialog.cpp
-        src/ide/GitCommitDialog.cpp
-        src/ide/GitDiffViewer.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/ide/ANSIColorParser.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/ide/FindReplaceDialog.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/ide/GitCommitDialog.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/ide/GitDiffViewer.cpp
         src/win32app/Win32IDE_OutlinePanel.cpp
         src/win32app/Win32IDE_RenamePreview.cpp
         src/win32app/Win32IDE_Tier2Cosmetics.cpp
@@ -5317,7 +5317,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/rawrxd_model_loader.cpp
         src/rawrxd_transformer.cpp
         src/rawrxd_tokenizer.cpp
-        src/rawrxd_sampler.cpp
+         src/rawrxd_sampler.cpp
         src/modules/engine_manager.cpp
         src/cpu_inference_engine.cpp
         src/core/swarm_scheduler.cpp
@@ -6081,7 +6081,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # AgenticExecutor real implementation now provides these members.
     # Keep the link stub out of Win32IDE to avoid duplicate definitions.
     list(REMOVE_ITEM WIN32IDE_SOURCES
-        src/core/agentic_executor_link_stub.cpp
+         src/core/agentic_executor_link_stub.cpp
         src/core/beacon_link_stub.cpp
     )
 
@@ -6255,7 +6255,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             src/core/stubs.cpp
             src/core/universal_stub.cpp
             src/core/link_stubs_final.cpp
-            src/core/link_stubs_remaining_classes.cpp
+             src/core/link_stubs_remaining_classes.cpp
         )
         message(STATUS "[Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)")
     endif()
@@ -6519,7 +6519,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/runtime/memory/CapacityManager.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         B014/build/b014_profiler.cpp
-        src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
         src/deep2/CycloneScheduler.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -6540,7 +6540,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         src/deep2/PlasmaGovernor.cpp
-        src/deep2/ElasticResidencyManager.cpp
+         src/deep2/ElasticResidencyManager.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -6576,7 +6576,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
@@ -6607,47 +6607,47 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ScaleQuality.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/ScaleQuality.cpp
         # AUTO-REMOVED: stub file
-        src/deep2/TheDualityExample.cpp
-        src/deep2/Deep2Discovery.cpp
-        src/deep2/Deep2Benchmark.cpp
+         src/deep2/TheDualityExample.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2Discovery.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2Benchmark.cpp
         src/deep2/Deep2InferenceEndpoint.cpp
-        src/deep2/Deep2InferenceGateway.cpp
-        src/deep2/Deep2Integration.cpp
-        src/deep2/Deep2LocalServer.cpp
-        src/deep2/Deep2Server_Minimal.cpp
-        src/deep2/Deep2Server_Sovereign.cpp
-        src/deep2/Deep2APIServer.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2InferenceGateway.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2Integration.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2LocalServer.cpp
+         src/deep2/Deep2Server_Minimal.cpp
+         src/deep2/Deep2Server_Sovereign.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2APIServer.cpp
         # AUTO-REMOVED: stub file
-        src/deep2/GGUFDiagnostics.cpp
-        src/deep2/GGUFLoader_Fixed.cpp
-        src/deep2/GGUFVerifier.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/GGUFDiagnostics.cpp
+         src/deep2/GGUFLoader_Fixed.cpp
+         src/deep2/GGUFVerifier.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/mcp_bridge.cpp
-        src/deep2/gpu/Deep2GPUBackend.cpp
-        src/deep2/MultiGPU/GPUDeviceRegistry.cpp
-        src/deep2/MultiGPU/MultiGPUScheduler.cpp
-        src/deep2/MultiGPU/VRAMAllocator.cpp
-        src/deep2/production/Deep2ProductionRuntime.cpp
-        src/deep2/dump_tensors.cpp
-        src/deep2/deep2_http_gateway.cpp
-        src/deep2/Deep2Engine_KernelTest.cpp
-        src/deep2/moe_microbench.cpp
-        src/deep2/moe_simple_bench.cpp
-        src/deep2/moe_test.cpp
-        src/deep2/moe_validation_test.cpp
-        src/deep2/router_bench.cpp
-        src/deep2/router_latency_test.cpp
-        src/deep2/test_api_server.cpp
-        src/deep2/test_real_gguf_load.cpp
-        src/deep2/test_real_gguf_validate.cpp
-        src/deep2/test_tool_limit_hotpatch.cpp
-        src/deep2/VAL063_Deep2Certification.cpp
-        src/deep2/VAL038_Benchmark_Harness.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/mcp_bridge.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/gpu/Deep2GPUBackend.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/MultiGPU/GPUDeviceRegistry.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/MultiGPU/MultiGPUScheduler.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/MultiGPU/VRAMAllocator.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/production/Deep2ProductionRuntime.cpp
+         src/deep2/dump_tensors.cpp
+           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/deep2_http_gateway.cpp
+         src/deep2/Deep2Engine_KernelTest.cpp
+         src/deep2/moe_microbench.cpp
+         src/deep2/moe_simple_bench.cpp
+         src/deep2/moe_test.cpp
+         src/deep2/moe_validation_test.cpp
+         src/deep2/router_bench.cpp
+         src/deep2/router_latency_test.cpp
+         src/deep2/test_api_server.cpp
+         src/deep2/test_real_gguf_load.cpp
+         src/deep2/test_real_gguf_validate.cpp
+         src/deep2/test_tool_limit_hotpatch.cpp
+         src/deep2/VAL063_Deep2Certification.cpp
+         src/deep2/VAL038_Benchmark_Harness.cpp
         src/deep2/deep2_end_to_end_bench.cpp
-        src/deep2/deep2_moe_bench_standalone.cpp
+         src/deep2/deep2_moe_bench_standalone.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -6765,7 +6765,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # OMEGA-1 Engine Server - IPC Server for IDE integration
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     list(APPEND RAWR_ENGINE_SOURCES
-        src/engine/Omega1Engine_Server.cpp
+         src/engine/Omega1Engine_Server.cpp
     )
 
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
@@ -6774,29 +6774,29 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # LNK1120+�-�-�+�-�334; those need symbol-level dedupe, not TU deletion.
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     list(REMOVE_ITEM WIN32IDE_SOURCES
-        src/deep2/TheDualityExample.cpp
-        src/deep2/Deep2Server_Minimal.cpp
-        src/deep2/Deep2Server_Sovereign.cpp
+         src/deep2/TheDualityExample.cpp
+         src/deep2/Deep2Server_Minimal.cpp
+         src/deep2/Deep2Server_Sovereign.cpp
         # AUTO-REMOVED: stub file
-        src/deep2/GGUFVerifier.cpp
-        src/deep2/GGUFLoader_Fixed.cpp
+         src/deep2/GGUFVerifier.cpp
+         src/deep2/GGUFLoader_Fixed.cpp
         # keep MASMKernelStubs.cpp +�-�+�-�+�-� provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
-        src/deep2/dump_tensors.cpp
-        src/deep2/Deep2Engine_KernelTest.cpp
-        src/deep2/moe_microbench.cpp
-        src/deep2/moe_simple_bench.cpp
-        src/deep2/moe_test.cpp
-        src/deep2/moe_validation_test.cpp
-        src/deep2/router_bench.cpp
-        src/deep2/router_latency_test.cpp
-        src/deep2/test_api_server.cpp
-        src/deep2/test_real_gguf_load.cpp
-        src/deep2/test_real_gguf_validate.cpp
-        src/deep2/test_tool_limit_hotpatch.cpp
-        src/deep2/VAL063_Deep2Certification.cpp
-        src/deep2/VAL038_Benchmark_Harness.cpp
+         src/deep2/dump_tensors.cpp
+         src/deep2/Deep2Engine_KernelTest.cpp
+         src/deep2/moe_microbench.cpp
+         src/deep2/moe_simple_bench.cpp
+         src/deep2/moe_test.cpp
+         src/deep2/moe_validation_test.cpp
+         src/deep2/router_bench.cpp
+         src/deep2/router_latency_test.cpp
+         src/deep2/test_api_server.cpp
+         src/deep2/test_real_gguf_load.cpp
+         src/deep2/test_real_gguf_validate.cpp
+         src/deep2/test_tool_limit_hotpatch.cpp
+         src/deep2/VAL063_Deep2Certification.cpp
+         src/deep2/VAL038_Benchmark_Harness.cpp
         src/deep2/deep2_end_to_end_bench.cpp
-        src/deep2/deep2_moe_bench_standalone.cpp
+         src/deep2/deep2_moe_bench_standalone.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
     )
@@ -6828,6 +6828,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # BATCH B (W3): AgentOllamaClient real implementation TU (replaces the
     # 24B stub from all git history; WinHTTP client, fail-closed timeouts).
     list(APPEND WIN32IDE_SOURCES src/agentic/AgentOllamaClient.cpp)
+    # RAWRXD_STUB_RECONCILIATION_001 / BATCH_N: WIRED_FIX, zero source changes.
+    # src/deep2/ReceiptAuthority.cpp defines rawrxd::receipt::beginImmutableGate,
+    # writeImmutableKeyValue, writeImmutableKeyValueInt and endImmutableGate.
+    # src/win32app/main_win32.cpp calls all four at the W8 lifecycle gate, but
+    # the defining TU was listed only in the `rawr` target, so RawrXD-Win32IDE
+    # failed to link with LNK1120 4 unresolved externals and the shipping product
+    # did not build. bcrypt is already in this target's link line, so this is
+    # purely target composition.
+    list(APPEND WIN32IDE_SOURCES src/deep2/ReceiptAuthority.cpp)
     # BATCH C (W3): IDELogger real implementation (OutputDebugString +
     # timestamped stderr; callers: enterprise_license, IDE UI).
     list(APPEND WIN32IDE_SOURCES src/win32app/IDELogger.cpp)
@@ -7777,7 +7786,7 @@ message(STATUS "[Deep2] Tokenizer test: test_tokenizer")
 option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" OFF)
 if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     add_executable(test_q4k_gemv_parity
-        src/deep2/test_q4k_gemv_parity.cpp
+         src/deep2/test_q4k_gemv_parity.cpp
     )
     target_link_libraries(test_q4k_gemv_parity PRIVATE InferenceEngine)
     if(MSVC)
@@ -7795,7 +7804,7 @@ if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     message(STATUS "[Deep2] Q4_K GEMV parity harness: test_q4k_gemv_parity")
 
     add_executable(test_q_elemdiff
-        src/deep2/test_q_elemdiff.cpp
+         src/deep2/test_q_elemdiff.cpp
     )
     target_link_libraries(test_q_elemdiff PRIVATE InferenceEngine)
     if(MSVC)
@@ -7813,7 +7822,7 @@ if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     message(STATUS "[Deep2] Q element-diff harness: test_q_elemdiff")
 
     add_executable(test_embed_q4k_token
-        src/deep2/test_embed_q4k_token.cpp
+         src/deep2/test_embed_q4k_token.cpp
     )
     target_link_libraries(test_embed_q4k_token PRIVATE InferenceEngine)
     if(MSVC)
@@ -7835,7 +7844,7 @@ endif()
 option(BUILD_DEEP2_CHAT_TEMPLATE "Build chat template test" OFF)
 if(BUILD_DEEP2_CHAT_TEMPLATE)
     add_executable(test_chat_template
-        src/deep2/test_chat_template.cpp
+         src/deep2/test_chat_template.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(test_chat_template PRIVATE InferenceEngine)
@@ -7859,7 +7868,7 @@ endif()
 option(BUILD_DEEP2_CHAT_TEMPLATE_UNIT "Build chat template unit tests" OFF)
 if(BUILD_DEEP2_CHAT_TEMPLATE_UNIT)
     add_executable(test_chat_template_unit
-        src/deep2/test_chat_template_unit.cpp
+         src/deep2/test_chat_template_unit.cpp
     )
     target_link_libraries(test_chat_template_unit PRIVATE InferenceEngine)
     if(MSVC)
@@ -7881,7 +7890,7 @@ endif()
 option(BUILD_DEEP2_STREAMING "Build streaming generation test" OFF)
 if(BUILD_DEEP2_STREAMING)
     add_executable(test_streaming
-        src/deep2/test_streaming.cpp
+         src/deep2/test_streaming.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(test_streaming PRIVATE InferenceEngine)
@@ -7906,8 +7915,8 @@ endif()
 option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" OFF)
 if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
-        src/deep2/deep2_streamer_cert.cpp
-        src/deep2/StreamerGpuSoloGate.cpp
+         src/deep2/deep2_streamer_cert.cpp
+         src/deep2/StreamerGpuSoloGate.cpp
     )
     target_link_libraries(deep2_streamer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7931,10 +7940,10 @@ endif()
 option(BUILD_DEEP2_STREAMER_PARITY "Build Deep2 Ollama-parity streamer" OFF)
 if(BUILD_DEEP2_STREAMER_PARITY)
     add_executable(deep2_streamer_parity
-        src/deep2/deep2_streamer_parity.cpp
-        src/deep2/StreamerParity_Harness.cpp
-        src/deep2/StreamerParity_Post.cpp
-        src/deep2/Deep2StreamApi.cpp
+         src/deep2/deep2_streamer_parity.cpp
+         src/deep2/StreamerParity_Harness.cpp
+         src/deep2/StreamerParity_Post.cpp
+         src/deep2/Deep2StreamApi.cpp
     )
     target_link_libraries(deep2_streamer_parity PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7958,9 +7967,9 @@ endif()
 option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 SingleGpu device gate" OFF)
 if(BUILD_DEEP2_GPU_SOLO_CERT)
     add_executable(deep2_gpu_solo_cert
-        src/deep2/deep2_gpu_solo_cert.cpp
-        src/deep2/StreamerGpuSoloGate.cpp
-        src/deep2/StreamerGpuSoloVk.cpp
+         src/deep2/deep2_gpu_solo_cert.cpp
+         src/deep2/StreamerGpuSoloGate.cpp
+         src/deep2/StreamerGpuSoloVk.cpp
         src/deep2/Deep2DeviceManager.cpp
     # AUTO-REMOVED: stub file
         src/asm/Deep2Device_Score.asm
@@ -7995,7 +8004,7 @@ endif()
 option(BUILD_DEEP2_GPU_SOLO_DECODE_CERT "Build SingleGpu GGUF decode cert" OFF)
 if(BUILD_DEEP2_GPU_SOLO_DECODE_CERT)
     add_executable(deep2_gpu_solo_decode_cert
-        src/deep2/deep2_gpu_solo_decode_cert.cpp
+         src/deep2/deep2_gpu_solo_decode_cert.cpp
     )
     target_link_libraries(deep2_gpu_solo_decode_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8018,7 +8027,7 @@ endif()
 option(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT "Build 0/1/N DeviceManager portability cert" OFF)
 if(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT)
     add_executable(deep2_topology_portability_cert
-        src/deep2/deep2_topology_portability_cert.cpp
+         src/deep2/deep2_topology_portability_cert.cpp
     )
     target_link_libraries(deep2_topology_portability_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8041,7 +8050,7 @@ endif()
 option(BUILD_DEEP2_MULTI_GPU_LAYER_CERT "Build contiguous multi-GPU layer placement cert" OFF)
 if(BUILD_DEEP2_MULTI_GPU_LAYER_CERT)
     add_executable(deep2_multi_gpu_layer_cert
-        src/deep2/deep2_multi_gpu_layer_cert.cpp
+         src/deep2/deep2_multi_gpu_layer_cert.cpp
     )
     target_link_libraries(deep2_multi_gpu_layer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8064,7 +8073,7 @@ endif()
 option(BUILD_DEEP2_HYBRID_ALL_HW_CERT "Build CPU+GPU hybrid planned-layer cert" OFF)
 if(BUILD_DEEP2_HYBRID_ALL_HW_CERT)
     add_executable(deep2_hybrid_all_hw_cert
-        src/deep2/deep2_hybrid_all_hw_cert.cpp
+         src/deep2/deep2_hybrid_all_hw_cert.cpp
     )
     target_link_libraries(deep2_hybrid_all_hw_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8087,7 +8096,7 @@ endif()
 option(BUILD_DEEP2_GPU_FORWARD_OPS_CERT "Build STREAMER_GPU_FORWARD_OPS_001 cert" OFF)
 if(BUILD_DEEP2_GPU_FORWARD_OPS_CERT)
     add_executable(deep2_gpu_forward_ops_cert
-        src/deep2/deep2_gpu_forward_ops_cert.cpp
+         src/deep2/deep2_gpu_forward_ops_cert.cpp
     )
     target_link_libraries(deep2_gpu_forward_ops_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8110,7 +8119,7 @@ endif()
 option(BUILD_DEEP2_GPU_RESIDENT_DECODE_CERT "Build STREAMER_GPU_RESIDENT_DECODE_001 cert" OFF)
 if(BUILD_DEEP2_GPU_RESIDENT_DECODE_CERT)
     add_executable(deep2_gpu_resident_decode_cert
-        src/deep2/deep2_gpu_resident_decode_cert.cpp
+         src/deep2/deep2_gpu_resident_decode_cert.cpp
     )
     target_link_libraries(deep2_gpu_resident_decode_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8133,7 +8142,7 @@ endif()
 option(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT "Build STREAMER_GPU_WEIGHT_WINDOW_001 cert" OFF)
 if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     add_executable(deep2_gpu_transfer_counter_cert
-        src/deep2/deep2_gpu_transfer_counter_cert.cpp
+         src/deep2/deep2_gpu_transfer_counter_cert.cpp
     )
     target_link_libraries(deep2_gpu_transfer_counter_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8151,7 +8160,7 @@ if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     message(STATUS "[Deep2] GPU transfer counter gate: deep2_gpu_transfer_counter_cert")
 
     add_executable(deep2_gpu_transfer_overlap_cert
-        src/deep2/deep2_gpu_transfer_overlap_cert.cpp
+         src/deep2/deep2_gpu_transfer_overlap_cert.cpp
     )
     target_link_libraries(deep2_gpu_transfer_overlap_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8173,7 +8182,7 @@ if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     message(STATUS "[Deep2] GPU transfer overlap gate: deep2_gpu_transfer_overlap_cert")
 
     add_executable(deep2_gpu_weight_window_cert
-        src/deep2/deep2_gpu_weight_window_cert.cpp
+         src/deep2/deep2_gpu_weight_window_cert.cpp
     )
     target_link_libraries(deep2_gpu_weight_window_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8196,7 +8205,7 @@ endif()
 option(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT "Build STREAMER_GPU_WEIGHT_PREFETCH_001 cert" OFF)
 if(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT)
     add_executable(deep2_gpu_weight_prefetch_cert
-        src/deep2/deep2_gpu_weight_prefetch_cert.cpp
+         src/deep2/deep2_gpu_weight_prefetch_cert.cpp
     )
     target_link_libraries(deep2_gpu_weight_prefetch_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8219,7 +8228,7 @@ endif()
 option(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT "Build STREAMER_GPU_NUMERIC_PARITY_001 cert" OFF)
 if(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT)
     add_executable(deep2_gpu_numeric_parity_cert
-        src/deep2/deep2_gpu_numeric_parity_cert.cpp
+         src/deep2/deep2_gpu_numeric_parity_cert.cpp
     )
     target_link_libraries(deep2_gpu_numeric_parity_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8242,7 +8251,7 @@ endif()
 option(BUILD_DEEP2_GPU_Q4K_GEMV_CERT "Build STREAMER_GPU_Q4K_GEMV_001 cert" OFF)
 if(BUILD_DEEP2_GPU_Q4K_GEMV_CERT)
     add_executable(deep2_gpu_q4k_gemv_cert
-        src/deep2/deep2_gpu_q4k_gemv_cert.cpp
+         src/deep2/deep2_gpu_q4k_gemv_cert.cpp
     )
     target_link_libraries(deep2_gpu_q4k_gemv_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8265,7 +8274,7 @@ endif()
 option(BUILD_DEEP2_GPU_Q6K_GEMV_CERT "Build STREAMER_GPU_Q6K_GEMV_001 cert" OFF)
 if(BUILD_DEEP2_GPU_Q6K_GEMV_CERT)
     add_executable(deep2_gpu_q6k_gemv_cert
-        src/deep2/deep2_gpu_q6k_gemv_cert.cpp
+         src/deep2/deep2_gpu_q6k_gemv_cert.cpp
     )
     target_link_libraries(deep2_gpu_q6k_gemv_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8288,7 +8297,7 @@ endif()
 option(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT "Build STREAMER_GPU Q5/Q3/Q2/Q8 GEMV cert" OFF)
 if(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT)
     add_executable(deep2_gpu_quant_family_cert
-        src/deep2/deep2_gpu_quant_family_cert.cpp
+         src/deep2/deep2_gpu_quant_family_cert.cpp
     )
     target_link_libraries(deep2_gpu_quant_family_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8311,7 +8320,7 @@ endif()
 option(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT "Build STREAMER_GPU packed-forward gates 6-15" OFF)
 if(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT)
     add_executable(deep2_gpu_packed_forward_cert
-        src/deep2/deep2_gpu_packed_forward_cert.cpp
+         src/deep2/deep2_gpu_packed_forward_cert.cpp
     )
     target_link_libraries(deep2_gpu_packed_forward_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8358,7 +8367,7 @@ endif()
 option(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT "Build STREAMER_GPU_DYNAMIC_WINDOW_001 cert" OFF)
 if(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT)
     add_executable(deep2_gpu_dynamic_window_cert
-        src/deep2/deep2_gpu_dynamic_window_cert.cpp
+         src/deep2/deep2_gpu_dynamic_window_cert.cpp
     )
     target_link_libraries(deep2_gpu_dynamic_window_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8381,7 +8390,7 @@ endif()
 option(BUILD_DEEP2_RUNTIME_BATCH1_CERT "Build DEEP2_RUNTIME batch-1 cert (loader..policy)" OFF)
 if(BUILD_DEEP2_RUNTIME_BATCH1_CERT)
     add_executable(deep2_runtime_batch1_cert
-        src/deep2/deep2_runtime_batch1_cert.cpp
+         src/deep2/deep2_runtime_batch1_cert.cpp
     )
     target_link_libraries(deep2_runtime_batch1_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8404,7 +8413,7 @@ endif()
 option(BUILD_DEEP2_RUNTIME_BATCH2_CERT "Build DEEP2_RUNTIME batch-2 cert (large/k2/ds/soak)" OFF)
 if(BUILD_DEEP2_RUNTIME_BATCH2_CERT)
     add_executable(deep2_runtime_batch2_cert
-        src/deep2/deep2_runtime_batch2_cert.cpp
+         src/deep2/deep2_runtime_batch2_cert.cpp
     )
     target_link_libraries(deep2_runtime_batch2_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8427,7 +8436,7 @@ endif()
 option(BUILD_DEEP2_RUNTIME_BATCH3_CERT "Build DEEP2_RUNTIME batch-3 cert (quant/fusion/window)" OFF)
 if(BUILD_DEEP2_RUNTIME_BATCH3_CERT)
     add_executable(deep2_runtime_batch3_cert
-        src/deep2/deep2_runtime_batch3_cert.cpp
+         src/deep2/deep2_runtime_batch3_cert.cpp
     )
     if(MSVC)
         target_compile_options(deep2_runtime_batch3_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -8443,7 +8452,7 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT "Build DEEP2_K2_LIVE_GEN_PERF_001 cert" OFF)
 if(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT)
     add_executable(deep2_k2_live_gen_perf_cert
-        src/deep2/deep2_k2_live_gen_perf_cert.cpp
+         src/deep2/deep2_k2_live_gen_perf_cert.cpp
     )
     target_link_libraries(deep2_k2_live_gen_perf_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8465,7 +8474,7 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT "Build K2_LIVE_POLICY_CROSSOVER_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT)
     add_executable(deep2_k2_live_policy_crossover_cert
-        src/deep2/deep2_k2_live_policy_crossover_cert.cpp
+         src/deep2/deep2_k2_live_policy_crossover_cert.cpp
     )
     target_link_libraries(deep2_k2_live_policy_crossover_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8491,7 +8500,7 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT "Build K2_LIVE_POLICY_E2E_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT)
     add_executable(deep2_k2_live_policy_e2e_cert
-        src/deep2/deep2_k2_live_policy_e2e_cert.cpp
+         src/deep2/deep2_k2_live_policy_e2e_cert.cpp
     )
     target_link_libraries(deep2_k2_live_policy_e2e_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8517,7 +8526,7 @@ endif()
 option(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT "Build K2_GPU_STREAM_COPY_001" OFF)
 if(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT)
     add_executable(deep2_k2_gpu_stream_copy_cert
-        src/deep2/deep2_k2_gpu_stream_copy_cert.cpp
+         src/deep2/deep2_k2_gpu_stream_copy_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_stream_copy_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8543,7 +8552,7 @@ endif()
 option(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT "Build K2_GPU_COPY_COMPUTE_OVERLAP_001" OFF)
 if(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT)
     add_executable(deep2_k2_gpu_copy_compute_overlap_cert
-        src/deep2/deep2_k2_gpu_copy_compute_overlap_cert.cpp
+         src/deep2/deep2_k2_gpu_copy_compute_overlap_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_copy_compute_overlap_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8569,7 +8578,7 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT "Build K2_LIVE_GPU_STREAM_E2E_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT)
     add_executable(deep2_k2_live_gpu_stream_e2e_cert
-        src/deep2/deep2_k2_live_gpu_stream_e2e_cert.cpp
+         src/deep2/deep2_k2_live_gpu_stream_e2e_cert.cpp
     )
     target_link_libraries(deep2_k2_live_gpu_stream_e2e_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8595,7 +8604,7 @@ endif()
 option(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT "Build K2_GPU_STREAM_COMPUTE_001" OFF)
 if(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT)
     add_executable(deep2_k2_gpu_stream_compute_cert
-        src/deep2/deep2_k2_gpu_stream_compute_cert.cpp
+         src/deep2/deep2_k2_gpu_stream_compute_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_stream_compute_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8621,7 +8630,7 @@ endif()
 option(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT "Build K2_GPU_STREAM_MLA_001" OFF)
 if(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT)
     add_executable(deep2_k2_gpu_stream_mla_cert
-        src/deep2/deep2_k2_gpu_stream_mla_cert.cpp
+         src/deep2/deep2_k2_gpu_stream_mla_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_stream_mla_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8647,7 +8656,7 @@ endif()
 option(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT "Build K2_GPU_MLA_FULL_001" OFF)
 if(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT)
     add_executable(deep2_k2_gpu_mla_full_cert
-        src/deep2/deep2_k2_gpu_mla_full_cert.cpp
+         src/deep2/deep2_k2_gpu_mla_full_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_mla_full_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8673,7 +8682,7 @@ endif()
 option(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT "Build K2_GPU_MLA_FULL_DEPTH_001" OFF)
 if(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT)
     add_executable(deep2_k2_gpu_mla_full_depth_cert
-        src/deep2/deep2_k2_gpu_mla_full_depth_cert.cpp
+         src/deep2/deep2_k2_gpu_mla_full_depth_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_mla_full_depth_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8699,7 +8708,7 @@ endif()
 option(BUILD_DEEP2_K2_GPU_MLA_RE_CERT "Build K2_GPU_MLA_RE_001" OFF)
 if(BUILD_DEEP2_K2_GPU_MLA_RE_CERT)
     add_executable(deep2_k2_gpu_mla_re_cert
-        src/deep2/deep2_k2_gpu_mla_re_cert.cpp
+         src/deep2/deep2_k2_gpu_mla_re_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_mla_re_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8725,7 +8734,7 @@ endif()
 option(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT "Build K2_STREAM_MISS_REALITY_001" OFF)
 if(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT)
     add_executable(deep2_k2_stream_miss_reality_cert
-        src/deep2/deep2_k2_stream_miss_reality_cert.cpp
+         src/deep2/deep2_k2_stream_miss_reality_cert.cpp
     )
     target_link_libraries(deep2_k2_stream_miss_reality_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8751,7 +8760,7 @@ endif()
 option(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT "Build DEEP2_DEEPSEEK_LIVE_GEN_PERF_001 cert" OFF)
 if(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT)
     add_executable(deep2_deepseek_live_gen_perf_cert
-        src/deep2/deep2_deepseek_live_gen_perf_cert.cpp
+         src/deep2/deep2_deepseek_live_gen_perf_cert.cpp
     )
     target_link_libraries(deep2_deepseek_live_gen_perf_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8773,7 +8782,7 @@ endif()
 option(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001 "Build LOCAL_AGENT_AUDIT_001 cert" OFF)
 if(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001)
     add_executable(deep2_local_agent_audit_001
-        src/deep2/deep2_local_agent_audit_001.cpp
+         src/deep2/deep2_local_agent_audit_001.cpp
     )
     target_link_libraries(deep2_local_agent_audit_001 PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8797,7 +8806,7 @@ endif()
 option(BUILD_P0_PROCESS_ALIVE_001 "Build P0_PROCESS_ALIVE_001 cert" OFF)
 if(BUILD_P0_PROCESS_ALIVE_001)
     add_executable(p0_process_alive_001
-        src/deep2/p0_process_alive_001.cpp
+         src/deep2/p0_process_alive_001.cpp
     )
     if(MSVC)
         target_compile_options(p0_process_alive_001 PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -8814,7 +8823,7 @@ endif()
 option(BUILD_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_RANGE_CONTRACT_001)
     add_executable(vwa_range_contract_001
-        src/deep2/vwa_range_contract_001.cpp
+         src/deep2/vwa_range_contract_001.cpp
     )
     target_include_directories(vwa_range_contract_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -8834,7 +8843,7 @@ endif()
 option(BUILD_K2_LOGITS_VWA_LINEAGE_001 "Build K2 logits VWA lineage cert" OFF)
 if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     add_executable(deep2_k2_logits_vwa_lineage_001
-        src/deep2/deep2_k2_logits_vwa_lineage_001.cpp
+         src/deep2/deep2_k2_logits_vwa_lineage_001.cpp
         # AUTO-REMOVED: stub file
     )
     target_include_directories(deep2_k2_logits_vwa_lineage_001 PRIVATE
@@ -8857,7 +8866,7 @@ endif()
 option(BUILD_VWA_ADDRESS_CONTRACT_001 "Build VWA_ADDRESS_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_ADDRESS_CONTRACT_001)
     add_executable(vwa_address_contract_001
-        src/deep2/vwa_address_contract_001.cpp
+         src/deep2/vwa_address_contract_001.cpp
     )
     target_include_directories(vwa_address_contract_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -8886,7 +8895,7 @@ if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
         COMMENT "Assembling VwaRangeX64.asm (POC-1)"
         VERBATIM)
     add_executable(vwa_poc_1_001
-        src/deep2/vwa_poc_1_001.cpp
+         src/deep2/vwa_poc_1_001.cpp
         # AUTO-REMOVED: stub file
         ${_VWA_POC_ASM_OBJ}
     )
@@ -8967,8 +8976,8 @@ endif()
 option(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT "Build DEEP2_OUTER_ENGINE_BRIDGE_001" OFF)
 if(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT)
     add_executable(deep2_outer_engine_bridge_cert
-        src/deep2/deep2_outer_engine_bridge_cert.cpp
-        src/deep2/Deep2OuterEngineBridge.cpp
+         src/deep2/deep2_outer_engine_bridge_cert.cpp
+         src/deep2/Deep2OuterEngineBridge.cpp
         ${DEEP2_OUTER_RUNTIME_ASM}
     )
     target_link_libraries(deep2_outer_engine_bridge_cert PRIVATE InferenceEngine dxgi kernel32)
@@ -8994,7 +9003,7 @@ endif()
 option(BUILD_DEEP2_LIVE_PATH_EFFECTIVENESS_CERT "Build LIVE_PATH_EFFECTIVENESS_001" OFF)
 if(BUILD_DEEP2_LIVE_PATH_EFFECTIVENESS_CERT)
     add_executable(deep2_live_path_effectiveness_cert
-        src/deep2/deep2_live_path_effectiveness_cert.cpp)
+         src/deep2/deep2_live_path_effectiveness_cert.cpp)
     target_link_libraries(deep2_live_path_effectiveness_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_live_path_effectiveness_cert PRIVATE
@@ -9013,8 +9022,8 @@ endif()
 option(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT "Build LIVE_PATH_FUSED_CONTROL_001" OFF)
 if(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT)
     add_executable(deep2_live_path_fused_control_cert
-        src/deep2/deep2_live_path_fused_control_cert.cpp
-        src/deep2/LivePathFusedCert_Arm.cpp
+         src/deep2/deep2_live_path_fused_control_cert.cpp
+         src/deep2/LivePathFusedCert_Arm.cpp
         # AUTO-REMOVED: stub file
         )
     target_link_libraries(deep2_live_path_fused_control_cert PRIVATE InferenceEngine dxgi)
@@ -9034,7 +9043,7 @@ endif()
 option(BUILD_DEEP2_LIVE_PATH_INTERACTION_BOUNDS_CERT "Build LIVE_PATH_INTERACTION_BOUNDS_001" OFF)
 if(BUILD_DEEP2_LIVE_PATH_INTERACTION_BOUNDS_CERT)
     add_executable(deep2_live_path_interaction_bounds_cert
-        src/deep2/deep2_live_path_interaction_bounds_cert.cpp)
+         src/deep2/deep2_live_path_interaction_bounds_cert.cpp)
     target_link_libraries(deep2_live_path_interaction_bounds_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_live_path_interaction_bounds_cert PRIVATE
@@ -9053,7 +9062,7 @@ endif()
 option(BUILD_DEEP2_K2_FULL_DEPTH_EFFECTIVENESS_CERT "Build K2_FULL_DEPTH_EFFECTIVENESS_001" OFF)
 if(BUILD_DEEP2_K2_FULL_DEPTH_EFFECTIVENESS_CERT)
     add_executable(deep2_k2_full_depth_effectiveness_cert
-        src/deep2/deep2_k2_full_depth_effectiveness_cert.cpp)
+         src/deep2/deep2_k2_full_depth_effectiveness_cert.cpp)
     target_link_libraries(deep2_k2_full_depth_effectiveness_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_full_depth_effectiveness_cert PRIVATE
@@ -9072,9 +9081,9 @@ endif()
 option(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT "Build K2_FULL_DEPTH_COMBINED_POLICY_001" OFF)
 if(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT)
     add_executable(deep2_k2_full_depth_combined_policy_cert
-        src/deep2/deep2_k2_full_depth_combined_policy_cert.cpp
-        src/deep2/K2FullDepthCombined_Arm.cpp
-        src/deep2/K2FullDepthCombined_Proof.cpp)
+         src/deep2/deep2_k2_full_depth_combined_policy_cert.cpp
+         src/deep2/K2FullDepthCombined_Arm.cpp
+         src/deep2/K2FullDepthCombined_Proof.cpp)
     target_link_libraries(deep2_k2_full_depth_combined_policy_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_full_depth_combined_policy_cert PRIVATE
@@ -9094,8 +9103,8 @@ option(BUILD_DEEP2_K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_CERT
        "Build K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_001" OFF)
 if(BUILD_DEEP2_K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_CERT)
     add_executable(deep2_k2_full_depth_trampoline_promotion_cert
-        src/deep2/deep2_k2_full_depth_trampoline_promotion_cert.cpp
-        src/deep2/K2FullDepthCombined_Arm.cpp)
+         src/deep2/deep2_k2_full_depth_trampoline_promotion_cert.cpp
+         src/deep2/K2FullDepthCombined_Arm.cpp)
     target_link_libraries(deep2_k2_full_depth_trampoline_promotion_cert
         PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -9116,8 +9125,8 @@ option(BUILD_DEEP2_K2_FULL_DEPTH_FUSED_REBENCH_CERT
        "Build K2_FULL_DEPTH_FUSED_REBENCH_001" OFF)
 if(BUILD_DEEP2_K2_FULL_DEPTH_FUSED_REBENCH_CERT)
     add_executable(deep2_k2_full_depth_fused_rebench_cert
-        src/deep2/deep2_k2_full_depth_fused_rebench_cert.cpp
-        src/deep2/K2FullDepthCombined_Arm.cpp)
+         src/deep2/deep2_k2_full_depth_fused_rebench_cert.cpp
+         src/deep2/K2FullDepthCombined_Arm.cpp)
     target_link_libraries(deep2_k2_full_depth_fused_rebench_cert
         PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -9137,7 +9146,7 @@ endif()
 option(BUILD_DEEP2_K2_TRAMPOLINE_FULL_DEPTH_OPT_CERT "Build K2_TRAMPOLINE_FULL_DEPTH_OPT_001" OFF)
 if(BUILD_DEEP2_K2_TRAMPOLINE_FULL_DEPTH_OPT_CERT)
     add_executable(deep2_k2_trampoline_full_depth_opt_cert
-        src/deep2/deep2_k2_trampoline_full_depth_opt_cert.cpp)
+         src/deep2/deep2_k2_trampoline_full_depth_opt_cert.cpp)
     target_link_libraries(deep2_k2_trampoline_full_depth_opt_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_trampoline_full_depth_opt_cert PRIVATE
@@ -9157,7 +9166,7 @@ endif()
 option(BUILD_DEEP2_K2_AUTO_WORKLOAD_POLICY_CERT "Build K2_AUTO_WORKLOAD_POLICY_001" OFF)
 if(BUILD_DEEP2_K2_AUTO_WORKLOAD_POLICY_CERT)
     add_executable(deep2_k2_auto_workload_policy_cert
-        src/deep2/deep2_k2_auto_workload_policy_cert.cpp)
+         src/deep2/deep2_k2_auto_workload_policy_cert.cpp)
     target_link_libraries(deep2_k2_auto_workload_policy_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_auto_workload_policy_cert PRIVATE
@@ -9178,7 +9187,7 @@ endif()
 option(BUILD_DEEP2_K2_E2E_MODEL_SIZE_MATRIX_CERT "Build K2_E2E_MODEL_SIZE_MATRIX_001" OFF)
 if(BUILD_DEEP2_K2_E2E_MODEL_SIZE_MATRIX_CERT)
     add_executable(deep2_k2_e2e_model_size_matrix_cert
-        src/deep2/deep2_k2_e2e_model_size_matrix_cert.cpp)
+         src/deep2/deep2_k2_e2e_model_size_matrix_cert.cpp)
     target_link_libraries(deep2_k2_e2e_model_size_matrix_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_e2e_model_size_matrix_cert PRIVATE
@@ -9196,7 +9205,7 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_GENERATE_POLICY_CERT "Build K2_LIVE_GENERATE_POLICY_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_GENERATE_POLICY_CERT)
     add_executable(deep2_k2_live_generate_policy_cert
-        src/deep2/deep2_k2_live_generate_policy_cert.cpp)
+         src/deep2/deep2_k2_live_generate_policy_cert.cpp)
     target_link_libraries(deep2_k2_live_generate_policy_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_live_generate_policy_cert PRIVATE
@@ -9215,7 +9224,7 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_POLICY_SPLIT_CERT "Build K2_LIVE_POLICY_SPLIT_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_POLICY_SPLIT_CERT)
     add_executable(deep2_k2_live_policy_split_cert
-        src/deep2/deep2_k2_live_policy_split_cert.cpp)
+         src/deep2/deep2_k2_live_policy_split_cert.cpp)
     target_link_libraries(deep2_k2_live_policy_split_cert PRIVATE InferenceEngine)
     if(MSVC)
         target_compile_options(deep2_k2_live_policy_split_cert PRIVATE
@@ -9234,7 +9243,7 @@ endif()
 option(BUILD_DEEP2_K2_POLICY_HYSTERESIS_CERT "Build K2_POLICY_HYSTERESIS_001" OFF)
 if(BUILD_DEEP2_K2_POLICY_HYSTERESIS_CERT)
     add_executable(deep2_k2_policy_hysteresis_cert
-        src/deep2/deep2_k2_policy_hysteresis_cert.cpp)
+         src/deep2/deep2_k2_policy_hysteresis_cert.cpp)
     target_link_libraries(deep2_k2_policy_hysteresis_cert PRIVATE InferenceEngine)
     if(MSVC)
         target_compile_options(deep2_k2_policy_hysteresis_cert PRIVATE
@@ -9257,7 +9266,7 @@ endif()
 option(BUILD_DEEP2_K2_MLA_REBENCH_PROMOTE_CERT "Build K2_MLA_REBENCH_PROMOTE_001" OFF)
 if(BUILD_DEEP2_K2_MLA_REBENCH_PROMOTE_CERT)
     add_executable(deep2_k2_mla_rebench_promote_cert
-        src/deep2/deep2_k2_mla_rebench_promote_cert.cpp)
+         src/deep2/deep2_k2_mla_rebench_promote_cert.cpp)
     target_link_libraries(deep2_k2_mla_rebench_promote_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_mla_rebench_promote_cert PRIVATE
@@ -9276,7 +9285,7 @@ endif()
 option(BUILD_DEEP2_K2_MLA_REUSE_PROMOTE_CERT "Build K2_MLA_REUSE_PROMOTE_001" OFF)
 if(BUILD_DEEP2_K2_MLA_REUSE_PROMOTE_CERT)
     add_executable(deep2_k2_mla_reuse_promote_cert
-        src/deep2/deep2_k2_mla_reuse_promote_cert.cpp)
+         src/deep2/deep2_k2_mla_reuse_promote_cert.cpp)
     target_link_libraries(deep2_k2_mla_reuse_promote_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_mla_reuse_promote_cert PRIVATE
@@ -9295,7 +9304,7 @@ endif()
 option(BUILD_DEEP2_K2_MLA_FULL_DEPTH_SOAK_CERT "Build K2_MLA_FULL_DEPTH_SOAK_001" OFF)
 if(BUILD_DEEP2_K2_MLA_FULL_DEPTH_SOAK_CERT)
     add_executable(deep2_k2_mla_full_depth_soak_cert
-        src/deep2/deep2_k2_mla_full_depth_soak_cert.cpp)
+         src/deep2/deep2_k2_mla_full_depth_soak_cert.cpp)
     target_link_libraries(deep2_k2_mla_full_depth_soak_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_mla_full_depth_soak_cert PRIVATE
@@ -9315,7 +9324,7 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT "Build K2_LIVE_DECODE_MLA_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT)
     add_executable(deep2_k2_live_decode_mla_cert
-        src/deep2/deep2_k2_live_decode_mla_cert.cpp)
+         src/deep2/deep2_k2_live_decode_mla_cert.cpp)
     target_link_libraries(deep2_k2_live_decode_mla_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_live_decode_mla_cert PRIVATE
@@ -9356,7 +9365,7 @@ endif()
 option(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT "Build K2_MLA_FUSED_Q4KT_001" OFF)
 if(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT)
     add_executable(deep2_k2_mla_fused_q4kt_cert
-        src/deep2/deep2_k2_mla_fused_q4kt_cert.cpp)
+         src/deep2/deep2_k2_mla_fused_q4kt_cert.cpp)
     target_link_libraries(deep2_k2_mla_fused_q4kt_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_mla_fused_q4kt_cert PRIVATE
@@ -9376,7 +9385,7 @@ endif()
 option(BUILD_DEEP2_K2_SHARD_ATTN_RESIDENCY_CERT "Build K2_SHARD_ATTN_RESIDENCY_001" OFF)
 if(BUILD_DEEP2_K2_SHARD_ATTN_RESIDENCY_CERT)
     add_executable(deep2_k2_shard_attn_residency_cert
-        src/deep2/deep2_k2_shard_attn_residency_cert.cpp)
+         src/deep2/deep2_k2_shard_attn_residency_cert.cpp)
     target_link_libraries(deep2_k2_shard_attn_residency_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_shard_attn_residency_cert PRIVATE
@@ -9396,7 +9405,7 @@ endif()
 option(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT "Build K2_LOGITS_Q6K_RESIDENT_001" OFF)
 if(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT)
     add_executable(deep2_k2_logits_q6k_resident_cert
-        src/deep2/deep2_k2_logits_q6k_resident_cert.cpp)
+         src/deep2/deep2_k2_logits_q6k_resident_cert.cpp)
     target_link_libraries(deep2_k2_logits_q6k_resident_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_logits_q6k_resident_cert PRIVATE
@@ -9416,7 +9425,7 @@ endif()
 option(BUILD_DEEP2_K2_MLA_KV_EXPAND_CERT "Build K2_MLA_KV_EXPAND_001" OFF)
 if(BUILD_DEEP2_K2_MLA_KV_EXPAND_CERT)
     add_executable(deep2_k2_mla_kv_expand_cert
-        src/deep2/deep2_k2_mla_kv_expand_cert.cpp)
+         src/deep2/deep2_k2_mla_kv_expand_cert.cpp)
     target_link_libraries(deep2_k2_mla_kv_expand_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_mla_kv_expand_cert PRIVATE
@@ -9436,7 +9445,7 @@ endif()
 option(BUILD_DEEP2_K2_MLA_KV_EXPAND_OPT_CERT "Build K2_MLA_KV_EXPAND_OPT_001" OFF)
 if(BUILD_DEEP2_K2_MLA_KV_EXPAND_OPT_CERT)
     add_executable(deep2_k2_mla_kv_expand_opt_cert
-        src/deep2/deep2_k2_mla_kv_expand_opt_cert.cpp)
+         src/deep2/deep2_k2_mla_kv_expand_opt_cert.cpp)
     target_link_libraries(deep2_k2_mla_kv_expand_opt_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_mla_kv_expand_opt_cert PRIVATE
@@ -9456,7 +9465,7 @@ endif()
 option(BUILD_DEEP2_K2_MLA_QKV_PROJ_CERT "Build K2_MLA_QKV_PROJ_001" OFF)
 if(BUILD_DEEP2_K2_MLA_QKV_PROJ_CERT)
     add_executable(deep2_k2_mla_qkv_proj_cert
-        src/deep2/deep2_k2_mla_qkv_proj_cert.cpp)
+         src/deep2/deep2_k2_mla_qkv_proj_cert.cpp)
     target_link_libraries(deep2_k2_mla_qkv_proj_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_mla_qkv_proj_cert PRIVATE
@@ -9476,7 +9485,7 @@ endif()
 option(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT "Build K2_MLA_QA_CRITICAL_001" OFF)
 if(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT)
     add_executable(deep2_k2_mla_qa_critical_cert
-        src/deep2/deep2_k2_mla_qa_critical_cert.cpp)
+         src/deep2/deep2_k2_mla_qa_critical_cert.cpp)
     target_link_libraries(deep2_k2_mla_qa_critical_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_mla_qa_critical_cert PRIVATE
@@ -9496,7 +9505,7 @@ endif()
 option(BUILD_DEEP2_UCF_BOUNCE_SMOKE "Build UCF BounceChain smoke" OFF)
 if(BUILD_DEEP2_UCF_BOUNCE_SMOKE)
     add_executable(deep2_ucf_bounce_smoke
-        src/deep2/deep2_ucf_bounce_smoke.cpp)
+         src/deep2/deep2_ucf_bounce_smoke.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_bounce_smoke PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9515,7 +9524,7 @@ option(BUILD_DEEP2_UCF_NO_STALE_DISPATCH_001
     "Build UCF_NO_STALE_DISPATCH_001" OFF)
 if(BUILD_DEEP2_UCF_NO_STALE_DISPATCH_001)
     add_executable(deep2_ucf_no_stale_dispatch_001
-        src/deep2/deep2_ucf_no_stale_dispatch_001.cpp)
+         src/deep2/deep2_ucf_no_stale_dispatch_001.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_no_stale_dispatch_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9534,7 +9543,7 @@ option(BUILD_DEEP2_UCF_READ_CONVERGE_001
     "Build UCF_READ_CONVERGE_001" OFF)
 if(BUILD_DEEP2_UCF_READ_CONVERGE_001)
     add_executable(deep2_ucf_read_converge_001
-        src/deep2/deep2_ucf_read_converge_001.cpp)
+         src/deep2/deep2_ucf_read_converge_001.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_read_converge_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9553,7 +9562,7 @@ option(BUILD_DEEP2_UCF_LOGITS_RANGE_BOUNCE_001
     "Build UCF_LOGITS_RANGE_BOUNCE_001" OFF)
 if(BUILD_DEEP2_UCF_LOGITS_RANGE_BOUNCE_001)
     add_executable(deep2_ucf_logits_range_bounce_001
-        src/deep2/deep2_ucf_logits_range_bounce_001.cpp)
+         src/deep2/deep2_ucf_logits_range_bounce_001.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_logits_range_bounce_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9571,7 +9580,7 @@ endif()
 option(BUILD_DEEP2_UCF_SEMANTIC_ABI_V1 "Build UCF_SEMANTIC_ABI_V1" OFF)
 if(BUILD_DEEP2_UCF_SEMANTIC_ABI_V1)
     add_executable(deep2_ucf_semantic_abi_v1_cert
-        src/deep2/deep2_ucf_semantic_abi_v1_cert.cpp)
+         src/deep2/deep2_ucf_semantic_abi_v1_cert.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_semantic_abi_v1_cert PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9590,7 +9599,7 @@ option(BUILD_DEEP2_UCF_GENERATION_TICKET_001
     "Build UCF_GENERATION_TICKET_001" OFF)
 if(BUILD_DEEP2_UCF_GENERATION_TICKET_001)
     add_executable(deep2_ucf_generation_ticket_001
-        src/deep2/deep2_ucf_generation_ticket_001.cpp)
+         src/deep2/deep2_ucf_generation_ticket_001.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_generation_ticket_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9608,7 +9617,7 @@ endif()
 option(BUILD_DEEP2_UCF_GPU_READY_E2E "Build UCF_GPU_READY_E2E / GPU_READY_E2E" OFF)
 if(BUILD_DEEP2_UCF_GPU_READY_E2E)
     add_executable(deep2_ucf_gpu_ready_e2e
-        src/deep2/deep2_ucf_gpu_ready_e2e.cpp)
+         src/deep2/deep2_ucf_gpu_ready_e2e.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_gpu_ready_e2e PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9627,7 +9636,7 @@ option(BUILD_DEEP2_UCF_BOUNCEHOUSE_TRACE
     "Build UCF_BOUNCEHOUSE_TRACE_001 observational smoke" OFF)
 if(BUILD_DEEP2_UCF_BOUNCEHOUSE_TRACE)
     add_executable(deep2_ucf_bouncehouse_example
-        src/deep2/deep2_ucf_bouncehouse_example.cpp)
+         src/deep2/deep2_ucf_bouncehouse_example.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_bouncehouse_example PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9645,7 +9654,7 @@ endif()
 option(BUILD_DEEP2_UCF_HALO_SPARK_001 "Build UCF_HALO_SPARK_001" OFF)
 if(BUILD_DEEP2_UCF_HALO_SPARK_001)
     add_executable(deep2_ucf_halo_spark_001
-        src/deep2/deep2_ucf_halo_spark_001.cpp)
+         src/deep2/deep2_ucf_halo_spark_001.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_halo_spark_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9663,7 +9672,7 @@ endif()
 option(BUILD_DEEP2_RMV_MOUNT_001 "Build RMV_MOUNT_001" OFF)
 if(BUILD_DEEP2_RMV_MOUNT_001)
     add_executable(deep2_rmv_mount_001
-        src/deep2/deep2_rmv_mount_001.cpp)
+         src/deep2/deep2_rmv_mount_001.cpp)
     if(MSVC)
         target_compile_options(deep2_rmv_mount_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9682,9 +9691,9 @@ endif()
 option(BUILD_DEEP2_VWA_E2E_001 "Build legacy VWA_E2E_001 (non-authority)" OFF)
 if(BUILD_DEEP2_VWA_E2E_001)
     add_executable(deep2_vwa_e2e_001
-        src/deep2/deep2_vwa_e2e_001.cpp
-        src/deep2/vwa/VwaScheduler_Fulfill.cpp
-        src/deep2/vwa/VwaScheduler_Lease.cpp)
+         src/deep2/deep2_vwa_e2e_001.cpp
+         src/deep2/vwa/VwaScheduler_Fulfill.cpp
+         src/deep2/vwa/VwaScheduler_Lease.cpp)
     if(MSVC)
         target_compile_options(deep2_vwa_e2e_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9701,7 +9710,7 @@ endif()
 option(BUILD_DEEP2_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001" OFF)
 if(BUILD_DEEP2_VWA_RANGE_CONTRACT_001)
     add_executable(deep2_vwa_range_contract_001
-        src/deep2/deep2_vwa_range_contract_001.cpp)
+         src/deep2/deep2_vwa_range_contract_001.cpp)
     if(MSVC)
         target_compile_options(deep2_vwa_range_contract_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9728,7 +9737,7 @@ if(BUILD_DEEP2_VWA_POC_1_001 AND WIN32 AND MSVC)
         COMMENT "Assembling VwaRangeX64.asm"
         VERBATIM)
     add_executable(deep2_vwa_poc_1_001
-        src/deep2/deep2_vwa_poc_1_001.cpp
+         src/deep2/deep2_vwa_poc_1_001.cpp
         ${_VWA_ASM_OBJ})
     target_compile_options(deep2_vwa_poc_1_001 PRIVATE
         $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9751,7 +9760,7 @@ endif()
 option(BUILD_DEEP2_VWA_IOCP_RANGE_001 "Build VWA_IOCP_RANGE_001" OFF)
 if(BUILD_DEEP2_VWA_IOCP_RANGE_001 AND WIN32 AND MSVC)
     add_executable(deep2_vwa_iocp_range_001
-        src/deep2/deep2_vwa_iocp_range_001.cpp
+         src/deep2/deep2_vwa_iocp_range_001.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         )
@@ -9773,7 +9782,7 @@ endif()
 option(BUILD_DEEP2_UCF_MOBILITY_FAULT_001 "Build UCF_MOBILITY_FAULT_001" OFF)
 if(BUILD_DEEP2_UCF_MOBILITY_FAULT_001)
     add_executable(deep2_ucf_mobility_fault_001
-        src/deep2/deep2_ucf_mobility_fault_001.cpp)
+         src/deep2/deep2_ucf_mobility_fault_001.cpp)
     if(MSVC)
         target_compile_options(deep2_ucf_mobility_fault_001 PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -9791,7 +9800,7 @@ endif()
 option(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT "Build K2_SEMANTIC_SEAL_001" OFF)
 if(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT)
     add_executable(deep2_k2_semantic_seal_cert
-        src/deep2/deep2_k2_semantic_seal_cert.cpp)
+         src/deep2/deep2_k2_semantic_seal_cert.cpp)
     target_link_libraries(deep2_k2_semantic_seal_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_semantic_seal_cert PRIVATE
@@ -9811,7 +9820,7 @@ endif()
 option(BUILD_DEEP2_K2_SERVERLESS_STREAM_LATENCY_CERT "Build K2_SERVERLESS_STREAM_LATENCY_001" OFF)
 if(BUILD_DEEP2_K2_SERVERLESS_STREAM_LATENCY_CERT)
     add_executable(deep2_k2_serverless_stream_latency_cert
-        src/deep2/deep2_k2_serverless_stream_latency_cert.cpp)
+         src/deep2/deep2_k2_serverless_stream_latency_cert.cpp)
     target_link_libraries(deep2_k2_serverless_stream_latency_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_serverless_stream_latency_cert PRIVATE
@@ -9831,7 +9840,7 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT "Build K2_LIVE_DECODE_SUSTAINED_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT)
     add_executable(deep2_k2_live_decode_sustained_cert
-        src/deep2/deep2_k2_live_decode_sustained_cert.cpp)
+         src/deep2/deep2_k2_live_decode_sustained_cert.cpp)
     target_link_libraries(deep2_k2_live_decode_sustained_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_live_decode_sustained_cert PRIVATE
@@ -9851,7 +9860,7 @@ endif()
 option(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT "Build K2_WALL_ATTRIBUTION_001" OFF)
 if(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT)
     add_executable(deep2_k2_wall_attribution_cert
-        src/deep2/deep2_k2_wall_attribution_cert.cpp)
+         src/deep2/deep2_k2_wall_attribution_cert.cpp)
     target_link_libraries(deep2_k2_wall_attribution_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_wall_attribution_cert PRIVATE
@@ -9871,7 +9880,7 @@ endif()
 option(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT "Build K2_LOGITS_CLIMB_001" OFF)
 if(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT)
     add_executable(deep2_k2_logits_climb_cert
-        src/deep2/deep2_k2_logits_climb_cert.cpp)
+         src/deep2/deep2_k2_logits_climb_cert.cpp)
     target_link_libraries(deep2_k2_logits_climb_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_logits_climb_cert PRIVATE
@@ -9891,7 +9900,7 @@ endif()
 option(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT "Build K2_TRYGPU_LOGITS_SPLIT_001" OFF)
 if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
     add_executable(deep2_k2_trygpu_logits_split_cert
-        src/deep2/deep2_k2_trygpu_logits_split_cert.cpp)
+         src/deep2/deep2_k2_trygpu_logits_split_cert.cpp)
     target_link_libraries(deep2_k2_trygpu_logits_split_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_trygpu_logits_split_cert PRIVATE
@@ -9909,7 +9918,7 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
 
     # C1 live +�-�-� fulfilled+�-�-�TryGpuHot range attribution under BOUNDED_STREAM
     add_executable(deep2_k2_logits_gpu_range_attribution_001
-        src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp)
+         src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp)
     target_link_libraries(deep2_k2_logits_gpu_range_attribution_001
         PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -9977,6 +9986,9 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         src/models/OllamaCatalogReader.cpp
         src/models/GgufMetadataProbe.cpp
         src/models/RawrDumpRules.cpp
+        src/agentmodes/ImmutableReceiptAuthority.cpp
+        src/agent/AgentCore.cpp
+        src/agent/ResponseCodedAgent.cpp
         src/agentmodes/AgentModeRegistry.cpp
         src/agentmodes/RawrAuditAuthority.cpp
         src/agentmodes/RawrReceiptValidator.cpp
@@ -9998,20 +10010,9 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
         OUTPUT_NAME rawr
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_k2_useful_tps_001.cpp")
-    add_executable(deep2_k2_useful_tps_001 src/deep2/deep2_k2_useful_tps_001.cpp)
-    target_link_libraries(deep2_k2_useful_tps_001 PRIVATE InferenceEngine dxgi)
+     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_k2_useful_tps_001.cpp")
     if(MSVC)
-        target_compile_options(deep2_k2_useful_tps_001 PRIVATE
-            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
     endif()
-    target_include_directories(deep2_k2_useful_tps_001 PRIVATE
-        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
-        ${CMAKE_SOURCE_DIR}/include)
-    set_target_properties(deep2_k2_useful_tps_001 PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        OUTPUT_NAME deep2_k2_useful_tps_001
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif()
 
     # AUTO-REMOVED: rawrxd_normal_gguf_final_001 removed (stub-only sources)
@@ -10031,6 +10032,30 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     #     OUTPUT_NAME rawrxd_normal_gguf_final_001
     #     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     message(STATUS "[Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL")
+endif()
+
+# RAWRXD_SAMPLER_COMBINED_OOB_001 — regression gate for an out-of-bounds read in
+# CombinedSampler::sample (vocab ids used as subscripts into a topK-sized
+# probability vector). Deliberately standalone: it compiles Sampler.cpp directly
+# and does not depend on InferenceEngine, so it stays buildable even while the
+# engine is mid-change.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/certs/rawrxd_sampler_combined_oob_001.cpp")
+add_executable(rawrxd_sampler_combined_oob_001
+    certs/rawrxd_sampler_combined_oob_001.cpp
+    src/deep2/Sampler.cpp)
+target_include_directories(rawrxd_sampler_combined_oob_001 PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(rawrxd_sampler_combined_oob_001 PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+endif()
+set_target_properties(rawrxd_sampler_combined_oob_001 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME rawrxd_sampler_combined_oob_001
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+else()
+    message(STATUS "[RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_sampler_combined_oob_001: missing certs/rawrxd_sampler_combined_oob_001.cpp")
 endif()
 
 # OpenAI-compatible Deep2 server (for Cursor/tunnel integration) - DEEP2_SERVER_BIND_AUTHORITY_001
@@ -10098,7 +10123,7 @@ endif()
 option(BUILD_DEEP2_K2_TPS_RAINBOW_CERT "Build K2_TPS_RAINBOW_001" OFF)
 if(BUILD_DEEP2_K2_TPS_RAINBOW_CERT)
     add_executable(deep2_k2_tps_rainbow_cert
-        src/deep2/deep2_k2_tps_rainbow_cert.cpp)
+         src/deep2/deep2_k2_tps_rainbow_cert.cpp)
     target_link_libraries(deep2_k2_tps_rainbow_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_k2_tps_rainbow_cert PRIVATE
@@ -10118,7 +10143,7 @@ endif()
 option(BUILD_DEEP2_K2_GPU_MLA_SLOT_REUSE_CERT "Build K2_GPU_MLA_SLOT_REUSE_001" OFF)
 if(BUILD_DEEP2_K2_GPU_MLA_SLOT_REUSE_CERT)
     add_executable(deep2_k2_gpu_mla_slot_reuse_cert
-        src/deep2/deep2_k2_gpu_mla_slot_reuse_cert.cpp)
+         src/deep2/deep2_k2_gpu_mla_slot_reuse_cert.cpp)
     target_link_libraries(deep2_k2_gpu_mla_slot_reuse_cert PRIVATE InferenceEngine)
     if(MSVC)
         target_compile_options(deep2_k2_gpu_mla_slot_reuse_cert PRIVATE
@@ -10143,7 +10168,7 @@ endif()
 option(BUILD_DEEP2_NU_LIVE_CONSUMER_CERT "Build NU_LIVE_CONSUMER_001" OFF)
 if(BUILD_DEEP2_NU_LIVE_CONSUMER_CERT)
     add_executable(deep2_nu_live_consumer_cert
-        src/deep2/deep2_nu_live_consumer_cert.cpp)
+         src/deep2/deep2_nu_live_consumer_cert.cpp)
     target_link_libraries(deep2_nu_live_consumer_cert PRIVATE InferenceEngine)
     if(MSVC)
         target_compile_options(deep2_nu_live_consumer_cert PRIVATE
@@ -10168,7 +10193,7 @@ endif()
 option(BUILD_DEEP2_K2_MLA_NU_BRIDGE_CERT "Build K2_GPU_MLA_NU_BRIDGE_001" OFF)
 if(BUILD_DEEP2_K2_MLA_NU_BRIDGE_CERT)
     add_executable(deep2_k2_gpu_mla_nu_bridge_cert
-        src/deep2/deep2_k2_gpu_mla_nu_bridge_cert.cpp)
+         src/deep2/deep2_k2_gpu_mla_nu_bridge_cert.cpp)
     target_link_libraries(deep2_k2_gpu_mla_nu_bridge_cert PRIVATE InferenceEngine)
     if(MSVC)
         target_compile_options(deep2_k2_gpu_mla_nu_bridge_cert PRIVATE
@@ -10192,8 +10217,8 @@ endif()
 
 option(BUILD_DEEP2_NU_PERF_CERT "Build NU_PERF_001" OFF)
 if(BUILD_DEEP2_NU_PERF_CERT)
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_nu_perf_cert.cpp")
-    add_executable(deep2_nu_perf_cert src/deep2/deep2_nu_perf_cert.cpp)
+     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_nu_perf_cert.cpp")
+     add_executable(deep2_nu_perf_cert src/deep2/deep2_nu_perf_cert.cpp)
     target_link_libraries(deep2_nu_perf_cert PRIVATE InferenceEngine)
     endif()
     if(MSVC)
@@ -10219,7 +10244,7 @@ endif()
 option(BUILD_DEEP2_NU_GEMV_PARITY_CERT "Build NU_GEMV_PARITY_001" OFF)
 if(BUILD_DEEP2_NU_GEMV_PARITY_CERT)
     add_executable(deep2_nu_gemv_parity_cert
-        src/deep2/deep2_nu_gemv_parity_cert.cpp)
+         src/deep2/deep2_nu_gemv_parity_cert.cpp)
     target_link_libraries(deep2_nu_gemv_parity_cert PRIVATE InferenceEngine)
     if(MSVC)
         target_compile_options(deep2_nu_gemv_parity_cert PRIVATE
@@ -10245,7 +10270,7 @@ endif()
 option(BUILD_DEEP2_NU_GPU_GEMV_CERT "Build NU_GPU_GEMV_001" OFF)
 if(BUILD_DEEP2_NU_GPU_GEMV_CERT)
     add_executable(deep2_nu_gpu_gemv_cert
-        src/deep2/deep2_nu_gpu_gemv_cert.cpp)
+         src/deep2/deep2_nu_gpu_gemv_cert.cpp)
     target_link_libraries(deep2_nu_gpu_gemv_cert PRIVATE InferenceEngine)
     if(MSVC)
         target_compile_options(deep2_nu_gpu_gemv_cert PRIVATE
@@ -10270,7 +10295,7 @@ endif()
 option(BUILD_DEEP2_NU_PACK_FORMAT_CERT "Build NU_PACK_FORMAT_001" OFF)
 if(BUILD_DEEP2_NU_PACK_FORMAT_CERT)
     add_executable(deep2_nu_pack_format_cert
-        src/deep2/deep2_nu_pack_format_cert.cpp
+         src/deep2/deep2_nu_pack_format_cert.cpp
         # AUTO-REMOVED: stub file
         )
     if(MSVC)
@@ -10414,7 +10439,7 @@ endif()
 option(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT "Build DEEP2_GIANT_MOE_PARAGRAPH_PERF_001" OFF)
 if(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT)
     add_executable(deep2_giant_moe_paragraph_perf_cert
-        src/deep2/deep2_giant_moe_paragraph_perf_cert.cpp
+         src/deep2/deep2_giant_moe_paragraph_perf_cert.cpp
     )
     target_link_libraries(deep2_giant_moe_paragraph_perf_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -10460,7 +10485,7 @@ endif()
 option(BUILD_DEEP2_PLACEMENT_COST_CERT "Build STREAMER_PLACEMENT_COST_001 cert" OFF)
 if(BUILD_DEEP2_PLACEMENT_COST_CERT)
     add_executable(deep2_placement_cost_cert
-        src/deep2/deep2_placement_cost_cert.cpp
+         src/deep2/deep2_placement_cost_cert.cpp
     )
     target_link_libraries(deep2_placement_cost_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -10485,7 +10510,7 @@ endif()
 option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" OFF)
 if(BUILD_DEEP2_MARS_E2E)
     add_executable(deep2_mars_e2e
-        src/deep2/deep2_mars_e2e.cpp
+         src/deep2/deep2_mars_e2e.cpp
     )
     target_link_libraries(deep2_mars_e2e PRIVATE InferenceEngine)
     if(MSVC)
@@ -10506,7 +10531,7 @@ endif()
 option(BUILD_TEST_MARS_CONTROLLER "Build standalone MARS controller unit smoke" OFF)
 if(BUILD_TEST_MARS_CONTROLLER)
     add_executable(test_mars_controller
-        src/deep2/mars/test_mars_controller.cpp
+         src/deep2/mars/test_mars_controller.cpp
         src/deep2/mars/MARSController.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -10530,7 +10555,7 @@ endif()
 option(BUILD_DEEP2_EXECUTION_POLICY_SMOKE "Build ExecutionPolicy smoke harness" OFF)
 if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     add_executable(deep2_execution_policy_smoke
-        src/deep2/deep2_execution_policy_smoke.cpp
+         src/deep2/deep2_execution_policy_smoke.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -10554,7 +10579,7 @@ endif()
 option(BUILD_P1_IDE_EXEC_POLICY_APPLY "Build P1_IDE_EXEC_POLICY_APPLY_001 harness" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     add_executable(p1_ide_exec_policy_apply_001
-        src/deep2/p1_ide_exec_policy_apply_001.cpp
+         src/deep2/p1_ide_exec_policy_apply_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_ide_exec_policy_apply_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10577,7 +10602,7 @@ endif()
 option(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF "Build P1_IDE_EXEC_POLICY_LIVE_GGUF_001" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     add_executable(p1_ide_exec_policy_live_gguf_001
-        src/deep2/p1_ide_exec_policy_live_gguf_001.cpp
+         src/deep2/p1_ide_exec_policy_live_gguf_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_ide_exec_policy_live_gguf_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10600,7 +10625,7 @@ endif()
 option(BUILD_P1_REAL_SPEEDUP "Build P1_REAL_SPEEDUP_001 gate" OFF)
 if(BUILD_P1_REAL_SPEEDUP)
     add_executable(p1_real_speedup_001
-        src/deep2/p1_real_speedup_001.cpp
+         src/deep2/p1_real_speedup_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_real_speedup_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10624,7 +10649,7 @@ option(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG
     "Build P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001" OFF)
 if(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG)
     add_executable(p1_repeatability_trial_validity_diag_001
-        src/deep2/p1_repeatability_trial_validity_diag_001.cpp
+         src/deep2/p1_repeatability_trial_validity_diag_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_repeatability_trial_validity_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10647,7 +10672,7 @@ option(BUILD_P1_POLICY_SHA_LIFECYCLE_DIAG
     "Build P1_POLICY_SHA_LIFECYCLE_DIAG_001" OFF)
 if(BUILD_P1_POLICY_SHA_LIFECYCLE_DIAG)
     add_executable(p1_policy_sha_lifecycle_diag_001
-        src/deep2/p1_policy_sha_lifecycle_diag_001.cpp
+         src/deep2/p1_policy_sha_lifecycle_diag_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_policy_sha_lifecycle_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10670,7 +10695,7 @@ option(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG
     "Build P1_REPEATABILITY_STATE_DRIFT_DIAG_001" OFF)
 if(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG)
     add_executable(p1_repeatability_state_drift_diag_001
-        src/deep2/p1_repeatability_state_drift_diag_001.cpp
+         src/deep2/p1_repeatability_state_drift_diag_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_repeatability_state_drift_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10773,7 +10798,7 @@ endif()
 option(BUILD_DEEP2_PARITY_CERT "Build Deep2 parity certification harness (Deep2-only)" OFF)
 if(BUILD_DEEP2_PARITY_CERT)
     add_executable(deep2_parity_cert
-        src/deep2/deep2_parity_cert.cpp
+         src/deep2/deep2_parity_cert.cpp
     )
     target_link_libraries(deep2_parity_cert PRIVATE InferenceEngine)
     if(MSVC)
@@ -10858,7 +10883,7 @@ endif()
 option(BUILD_DETERMINISTIC_REPLAY "Build deterministic replay certification gate" OFF)
 if(BUILD_DETERMINISTIC_REPLAY)
     add_executable(test_deterministic_replay
-        src/deep2/test_deterministic_replay.cpp
+         src/deep2/test_deterministic_replay.cpp
     )
     target_link_libraries(test_deterministic_replay PRIVATE InferenceEngine)
     if(MSVC)
@@ -10881,7 +10906,7 @@ endif()
 option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" OFF)
 if(BUILD_DUMP_QWEN35_META)
     add_executable(dump_qwen35_meta
-        src/deep2/dump_qwen35_meta.cpp
+         src/deep2/dump_qwen35_meta.cpp
         # AUTO-REMOVED: stub file
     )
     target_link_libraries(dump_qwen35_meta PRIVATE InferenceEngine)
@@ -10936,7 +10961,7 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] RawrXD sovereign agentic runtime: RawrXD-Agentic (+HexMag repeat)")
 
     add_executable(hexmag_repeat_tuner_cert
-        tests/hexmag_repeat_tuner_cert.cpp
+         tests/hexmag_repeat_tuner_cert.cpp
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     target_include_directories(hexmag_repeat_tuner_cert PRIVATE
@@ -10953,7 +10978,7 @@ if(BUILD_RAWRXD_AGENTIC)
 
     # HEXMAG_IDE_E2E_001 +�-�+�-�+�-� Copilot send path +�-�+�-�+�-� controller +�-�+�-�+�-� tuner +�-�+�-�+�-� FinalizePolicy
     add_executable(hexmag_ide_e2e_cert
-        tests/hexmag_ide_e2e_cert.cpp
+         tests/hexmag_ide_e2e_cert.cpp
     # src/core/hexmag_runtime_controller.cpp
     # src/core/hexmag_control_plane.cpp
     # src/core/hexmag_oracle_binder.cpp
@@ -10978,7 +11003,7 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] HexMag IDE E2E cert: hexmag_ide_e2e_cert")
 
     add_executable(hexmag_runtime_controller_cert
-        tests/hexmag_runtime_controller_cert.cpp
+         tests/hexmag_runtime_controller_cert.cpp
     # src/core/hexmag_runtime_controller.cpp
         src/agent/hexmag_client.cpp
     # src/core/hexmag_control_plane.cpp
@@ -11007,7 +11032,7 @@ endif()
 option(BUILD_LAYER_HARNESS "Build single-layer Qwen3.5 correctness harness" OFF)
 if(BUILD_LAYER_HARNESS)
     add_executable(layer_harness
-        src/deep2/layer_harness.cpp
+         src/deep2/layer_harness.cpp
     )
     target_link_libraries(layer_harness PRIVATE InferenceEngine)
     if(MSVC)
@@ -11025,7 +11050,7 @@ if(BUILD_LAYER_HARNESS)
     message(STATUS "[Deep2] Single-layer harness: layer_harness")
 
     add_executable(test_l10_ffn_inp_same_source
-        src/deep2/test_l10_ffn_inp_same_source.cpp
+         src/deep2/test_l10_ffn_inp_same_source.cpp
         # AUTO-REMOVED: stub file
     )
     target_include_directories(test_l10_ffn_inp_same_source PRIVATE
@@ -11047,7 +11072,7 @@ endif()
 option(BUILD_QWEN35_ATTN_CONTRACT "Build Qwen3.5 attention contract harness" OFF)
 if(BUILD_QWEN35_ATTN_CONTRACT)
     add_executable(qwen35_attn_contract
-        src/deep2/qwen35_attn_contract.cpp
+         src/deep2/qwen35_attn_contract.cpp
         # AUTO-REMOVED: stub file
     )
     target_link_libraries(qwen35_attn_contract PRIVATE InferenceEngine)
@@ -11071,7 +11096,7 @@ endif()
 option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" OFF)
 if(BUILD_VAL_051_3)
     add_executable(test_val_051_3_multi_token
-        src/deep2/test_val_051_3_multi_token.cpp
+         src/deep2/test_val_051_3_multi_token.cpp
     )
     if(MSVC)
         target_compile_options(test_val_051_3_multi_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11098,7 +11123,7 @@ endif()
 option(BUILD_VAL_051_5 "Build VAL-051.5 15-token KV stability gate" OFF)
 if(BUILD_VAL_051_5)
     add_executable(val_051_5_fifteen_token
-        tests/val_051_5_fifteen_token.cpp
+         tests/val_051_5_fifteen_token.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_fifteen_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11125,8 +11150,8 @@ endif()
 option(BUILD_VAL_051_5_DIAG "Build VAL-051.5 1-token diagnostic harness" OFF)
 if(BUILD_VAL_051_5_DIAG)
     add_executable(val_051_5_diag_1_token
-        tests/val_051_5_diag_1_token.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_5_diag_1_token.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11150,7 +11175,7 @@ if(BUILD_VAL_051_5_DIAG)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11162,8 +11187,8 @@ if(BUILD_VAL_051_5_DIAG)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11205,8 +11230,8 @@ endif()
 option(BUILD_VAL_BP16_INT "Build BP16 +�-�+�-�+�-� Deep2 integration test" OFF)
 if(BUILD_VAL_BP16_INT)
     add_executable(val_bp16_int_1_token
-        tests/val_bp16_int_1_token.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_bp16_int_1_token.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11230,7 +11255,7 @@ if(BUILD_VAL_BP16_INT)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11242,8 +11267,8 @@ if(BUILD_VAL_BP16_INT)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11281,7 +11306,7 @@ endif()
 option(BUILD_VAL_051_5_Q6K "Build VAL-051.5 Q6_K synthetic correctness test" OFF)
 if(BUILD_VAL_051_5_Q6K)
     add_executable(val_051_5_q6k_synthetic
-        tests/val_051_5_q6k_synthetic.cpp
+         tests/val_051_5_q6k_synthetic.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q6k_synthetic PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11303,7 +11328,7 @@ endif()
 option(BUILD_VAL_051_5_BP16_STREAMER "Build VAL-051.5 BP16 streamer test" OFF)
 if(BUILD_VAL_051_5_BP16_STREAMER)
     add_executable(val_051_5_bp16_streamer
-        tests/val_051_5_bp16_streamer.cpp
+         tests/val_051_5_bp16_streamer.cpp
         # AUTO-REMOVED: stub file
         src/deep2/BP16Streamer.cpp
     )
@@ -11327,8 +11352,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_E2E "Build VAL-051.5 BP16 end-to-end inference test" OFF)
 if(BUILD_VAL_051_5_BP16_E2E)
     add_executable(val_051_5_bp16_e2e
-        tests/val_051_5_bp16_e2e.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_5_bp16_e2e.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11352,7 +11377,7 @@ if(BUILD_VAL_051_5_BP16_E2E)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11364,8 +11389,8 @@ if(BUILD_VAL_051_5_BP16_E2E)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11403,8 +11428,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_COMPARE "Build VAL-051.5 BP16 comparison test" OFF)
 if(BUILD_VAL_051_5_BP16_COMPARE)
     add_executable(val_051_5_bp16_compare
-        tests/val_051_5_bp16_compare.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_5_bp16_compare.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11428,7 +11453,7 @@ if(BUILD_VAL_051_5_BP16_COMPARE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
@@ -11447,8 +11472,8 @@ if(BUILD_VAL_051_5_BP16_COMPARE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11486,8 +11511,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_WEIGHTS "Build VAL-051.5 BP16 weights test" OFF)
 if(BUILD_VAL_051_5_BP16_WEIGHTS)
     add_executable(val_051_5_bp16_weights
-        tests/val_051_5_bp16_weights.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_5_bp16_weights.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11511,7 +11536,7 @@ if(BUILD_VAL_051_5_BP16_WEIGHTS)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11523,8 +11548,8 @@ if(BUILD_VAL_051_5_BP16_WEIGHTS)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11562,7 +11587,7 @@ endif()
 option(BUILD_VAL_051_5_BP16_VERIFY "Build VAL-051.5 BP16 verify test" OFF)
 if(BUILD_VAL_051_5_BP16_VERIFY)
     add_executable(val_051_5_bp16_verify
-        tests/val_051_5_bp16_verify.cpp
+         tests/val_051_5_bp16_verify.cpp
         # AUTO-REMOVED: stub file
         src/deep2/BP16Streamer.cpp
         # AUTO-REMOVED: stub file
@@ -11591,8 +11616,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_LOGITS "Build VAL-051.5 BP16 logits equivalence test" OFF)
 if(BUILD_VAL_051_5_BP16_LOGITS)
     add_executable(val_051_5_bp16_logits
-        tests/val_051_5_bp16_logits.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_5_bp16_logits.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11616,7 +11641,7 @@ if(BUILD_VAL_051_5_BP16_LOGITS)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11628,8 +11653,8 @@ if(BUILD_VAL_051_5_BP16_LOGITS)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11667,8 +11692,8 @@ endif()
 option(BUILD_VAL_051_6_BP16_PERF "Build VAL-051.6 BP16 performance benchmark" OFF)
 if(BUILD_VAL_051_6_BP16_PERF)
     add_executable(val_051_6_bp16_perf
-        tests/val_051_6_bp16_perf.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_6_bp16_perf.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11692,7 +11717,7 @@ if(BUILD_VAL_051_6_BP16_PERF)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11704,8 +11729,8 @@ if(BUILD_VAL_051_6_BP16_PERF)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11743,8 +11768,8 @@ endif()
 option(BUILD_VAL_051_7_BP16_PROFILE "Build VAL-051.7 BP16 forward profiling" OFF)
 if(BUILD_VAL_051_7_BP16_PROFILE)
     add_executable(val_051_7_bp16_profile
-        tests/val_051_7_bp16_profile.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_7_bp16_profile.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11768,7 +11793,7 @@ if(BUILD_VAL_051_7_BP16_PROFILE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11780,8 +11805,8 @@ if(BUILD_VAL_051_7_BP16_PROFILE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11819,8 +11844,8 @@ endif()
 option(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE "Build VAL-051.7 lightweight profile" OFF)
 if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     add_executable(val_051_7_bp16_lightweight_profile
-        tests/val_051_7_bp16_lightweight_profile.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_7_bp16_lightweight_profile.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11844,7 +11869,7 @@ if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11856,8 +11881,8 @@ if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11894,8 +11919,8 @@ endif()
 option(BUILD_MINIMAL_1TOKEN_PROFILER "Build minimal 1-token profiler" OFF)
 if(BUILD_MINIMAL_1TOKEN_PROFILER)
     add_executable(minimal_1token_profiler
-        tests/minimal_1token_profiler.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/minimal_1token_profiler.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11919,7 +11944,7 @@ if(BUILD_MINIMAL_1TOKEN_PROFILER)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11931,8 +11956,8 @@ if(BUILD_MINIMAL_1TOKEN_PROFILER)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11969,8 +11994,8 @@ endif()
 option(BUILD_QUICK_1LAYER_PROFILER "Build quick 1-layer profiler" OFF)
 if(BUILD_QUICK_1LAYER_PROFILER)
     add_executable(quick_1layer_profiler
-        tests/quick_1layer_profiler.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/quick_1layer_profiler.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -11994,7 +12019,7 @@ if(BUILD_QUICK_1LAYER_PROFILER)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12006,8 +12031,8 @@ if(BUILD_QUICK_1LAYER_PROFILER)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12045,7 +12070,7 @@ endif()
 option(BUILD_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_Q4K_GEMV_BENCH)
     add_executable(q4k_gemv_bench
-        tests/q4k_gemv_bench.cpp
+         tests/q4k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(q4k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12067,7 +12092,7 @@ endif()
 option(BUILD_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_Q5K_GEMV_BENCH)
     add_executable(q5k_gemv_bench
-        tests/q5k_gemv_bench.cpp
+         tests/q5k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(q5k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12089,8 +12114,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_DIAG "Build VAL-051.5 BP16 diagnostic" OFF)
 if(BUILD_VAL_051_5_BP16_DIAG)
     add_executable(val_051_5_bp16_diag
-        tests/val_051_5_bp16_diag.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_5_bp16_diag.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12114,7 +12139,7 @@ if(BUILD_VAL_051_5_BP16_DIAG)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12126,8 +12151,8 @@ if(BUILD_VAL_051_5_BP16_DIAG)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12166,8 +12191,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_BENCH "Build VAL-051.5 BP16 benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_BENCH)
     add_executable(val_051_5_bp16_bench
-        tests/val_051_5_bp16_bench.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_5_bp16_bench.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12191,7 +12216,7 @@ if(BUILD_VAL_051_5_BP16_BENCH)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12203,8 +12228,8 @@ if(BUILD_VAL_051_5_BP16_BENCH)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12243,7 +12268,7 @@ endif()
 option(BUILD_VAL_051_5_BP16_LOADBENCH "Build VAL-051.5 BP16 load benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_LOADBENCH)
     add_executable(val_051_5_bp16_loadbench
-        tests/val_051_5_bp16_loadbench.cpp
+         tests/val_051_5_bp16_loadbench.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         src/deep2/BP16Streamer.cpp
@@ -12273,7 +12298,7 @@ endif()
 option(BUILD_VAL_051_5_Q4K_FUSED_VERIFY "Build Q4_K fused kernel correctness test" OFF)
 if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     add_executable(val_051_5_q4k_fused_verify
-        tests/val_051_5_q4k_fused_verify.cpp
+         tests/val_051_5_q4k_fused_verify.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q4k_fused_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12291,7 +12316,7 @@ endif()
 option(BUILD_VAL_051_5_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     add_executable(val_051_5_q4k_gemv_bench
-        tests/val_051_5_q4k_gemv_bench.cpp
+         tests/val_051_5_q4k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q4k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12312,7 +12337,7 @@ endif()
 option(BUILD_VAL_051_5_Q2K_GEMV_VERIFY "Build Q2_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     add_executable(val_051_5_q2k_gemv_verify
-        tests/val_051_5_q2k_gemv_verify.cpp
+         tests/val_051_5_q2k_gemv_verify.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q2k_gemv_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12330,7 +12355,7 @@ endif()
 option(BUILD_VAL_051_5_Q2K_GEMV_BENCH "Build Q2_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     add_executable(val_051_5_q2k_gemv_bench
-        tests/val_051_5_q2k_gemv_bench.cpp
+         tests/val_051_5_q2k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q2k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12348,7 +12373,7 @@ endif()
 option(BUILD_VAL_051_5_Q5K_GEMV_VERIFY "Build Q5_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     add_executable(val_051_5_q5k_gemv_verify
-        tests/val_051_5_q5k_gemv_verify.cpp
+         tests/val_051_5_q5k_gemv_verify.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q5k_gemv_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12366,7 +12391,7 @@ endif()
 option(BUILD_VAL_051_5_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     add_executable(val_051_5_q5k_gemv_bench
-        tests/val_051_5_q5k_gemv_bench.cpp
+         tests/val_051_5_q5k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q5k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12384,7 +12409,7 @@ endif()
 option(BUILD_VAL_051_5_Q5K_FORWARD_BENCH "Build Q5_K forward pass benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     add_executable(val_051_5_q5k_forward_bench
-        tests/val_051_5_q5k_forward_bench.cpp
+         tests/val_051_5_q5k_forward_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q5k_forward_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12402,8 +12427,8 @@ endif()
 option(BUILD_VAL_051_8_LINEARW_THREAD_SCALING "Build LinearW thread-scaling benchmark" OFF)
 if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     add_executable(val_051_8_linearw_thread_scaling
-        tests/val_051_8_linearw_thread_scaling.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_8_linearw_thread_scaling.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12427,7 +12452,7 @@ if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12439,8 +12464,8 @@ if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12478,8 +12503,8 @@ endif()
 option(BUILD_VAL_051_8_LAYER_PROFILE "Build full layer profiler" OFF)
 if(BUILD_VAL_051_8_LAYER_PROFILE)
     add_executable(val_051_8_layer_profile
-        tests/val_051_8_layer_profile.cpp
-        src/deep2/Deep2Engine.cpp
+         tests/val_051_8_layer_profile.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12503,7 +12528,7 @@ if(BUILD_VAL_051_8_LAYER_PROFILE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12515,8 +12540,8 @@ if(BUILD_VAL_051_8_LAYER_PROFILE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
+         src/deep2/ResidencyLease.cpp
+         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12554,7 +12579,7 @@ endif()
 option(BUILD_VAL_051_5_Q2K_PROFILE "Build Q2_K GEMV profiling benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_PROFILE)
     add_executable(val_051_5_q2k_profile
-        tests/val_051_5_q2k_profile.cpp
+         tests/val_051_5_q2k_profile.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q2k_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12604,8 +12629,8 @@ endif()
 option(BUILD_HOTPATCHER_TEST "Build HotPatcher production tests" OFF)
 if(BUILD_HOTPATCHER_TEST)
     add_executable(SovereignTest_HotPatcher EXCLUDE_FROM_ALL
-        src/sovereign/patcher/HotPatcher.cpp
-        src/sovereign/tests/SovereignTest_HotPatcher.cpp
+         src/sovereign/patcher/HotPatcher.cpp
+         src/sovereign/tests/SovereignTest_HotPatcher.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_HotPatcher PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -12773,7 +12798,7 @@ endif()
 # Autonomous Agentic Pipeline unit test (Task 5 +�-�+�-�+�-� buildable)
 if(WIN32)
     add_executable(test_autonomous_pipeline
-        tests/test_autonomous_pipeline.cpp
+         tests/test_autonomous_pipeline.cpp
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
     )
     target_include_directories(test_autonomous_pipeline PRIVATE
@@ -12894,7 +12919,7 @@ if(WIN32)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         src/deep2/ProductionProfiler.cpp
-        src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12925,7 +12950,7 @@ if(WIN32)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/CompressedKVCache.cpp
+         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12955,14 +12980,14 @@ if(WIN32)
         src/deep2/sovereign_moe_fused.asm
         src/deep2/Sovereign_Attention_KV_AVX512.asm
         src/deep2/Chamber.cpp
-        src/deep2/ToroidalKVCache.cpp
+         src/deep2/ToroidalKVCache.cpp
         src/deep2/PlasmaGovernor.cpp
         # AUTO-REMOVED: stub file
-        src/deep2/SovereignOutOfCoreRuntime.cpp
+         src/deep2/SovereignOutOfCoreRuntime.cpp
         src/deep2/BP16Streamer.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/deep2/ElasticResidencyManager.cpp
+         src/deep2/ElasticResidencyManager.cpp
         src/deep2/AntiPatcher.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -13010,28 +13035,8 @@ if(WIN32)
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Production Certification Test +�-�+�-�+�-� validates certification framework
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    add_executable(RawrXD-ProductionCertTest EXCLUDE_FROM_ALL
-        tests/test_deep2_production.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    )
-    target_include_directories(RawrXD-ProductionCertTest PRIVATE
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/deep2
-    )
     if(MSVC)
-        target_compile_options(RawrXD-ProductionCertTest PRIVATE /EHsc /W0 /O2)
     endif()
-    target_link_libraries(RawrXD-ProductionCertTest PRIVATE
-        kernel32
-        user32
-    )
-    set_target_properties(RawrXD-ProductionCertTest PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        OUTPUT_NAME RawrXD-ProductionCertTest
-    )
     message(STATUS "[Batch 1] Production cert test target: RawrXD-ProductionCertTest")
 
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
@@ -13729,7 +13734,7 @@ message(STATUS "[AgenticOrchestrator] Smoke test target: agentic_orchestrator_sm
 # Golden Recovery Tests (Mission 2.3: Validation Framework)
 # ============================================================================
 add_executable(RawrXD-GoldenRecoveryTests EXCLUDE_FROM_ALL
-    tests/autonomy/recovery/GoldenRecoveryTests.cpp
+     tests/autonomy/recovery/GoldenRecoveryTests.cpp
     validation/fault_injection/FaultInjector.cpp
     validation/fault_injection/WorkerCrashInjector.cpp
     validation/fault_injection/MemoryPressureInjector.cpp
@@ -13781,7 +13786,7 @@ if(NOT TARGET rawrxd)
         src/rawrxd_model_loader.cpp
         src/rawrxd_tokenizer.cpp
         src/rawrxd_transformer.cpp
-        src/rawrxd_sampler.cpp
+         src/rawrxd_sampler.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/core/inference_witness.cpp
@@ -14169,66 +14174,21 @@ message(STATUS "[Test] Pure MASM inference test: TestMASMInference")
 # ============================================================================
 # Q4_0 Preprocessed Kernel Validation Tests (VAL-Q4.0)
 # ============================================================================
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_fused_pipeline.cpp")
-    add_executable(test_q4_fused_pipeline EXCLUDE_FROM_ALL
-        tests/test_q4_fused_pipeline.cpp
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(test_q4_fused_pipeline PRIVATE cxx_std_20)
-    target_include_directories(test_q4_fused_pipeline PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/memory
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_fused_pipeline.cpp")
     if(WIN32)
-        target_link_libraries(test_q4_fused_pipeline PRIVATE)
     endif()
-    set_target_properties(test_q4_fused_pipeline PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
     message(STATUS "[VAL-Q4.0] Fused pipeline validation: test_q4_fused_pipeline")
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_cache_alignment.cpp")
-    add_executable(test_q4_cache_alignment EXCLUDE_FROM_ALL
-        tests/test_q4_cache_alignment.cpp
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(test_q4_cache_alignment PRIVATE cxx_std_20)
-    target_include_directories(test_q4_cache_alignment PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/memory
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_cache_alignment.cpp")
     if(WIN32)
-        target_link_libraries(test_q4_cache_alignment PRIVATE)
     endif()
-    set_target_properties(test_q4_cache_alignment PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
     message(STATUS "[VAL-Q4.0] Cache alignment validation: test_q4_cache_alignment")
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_asm_debug.cpp")
-    add_executable(test_q4_asm_debug EXCLUDE_FROM_ALL
-        tests/test_q4_asm_debug.cpp
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(test_q4_asm_debug PRIVATE cxx_std_20)
-    target_include_directories(test_q4_asm_debug PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/memory
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_asm_debug.cpp")
     if(WIN32)
-        target_link_libraries(test_q4_asm_debug PRIVATE)
     endif()
-    set_target_properties(test_q4_asm_debug PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
     message(STATUS "[VAL-Q4.0] ASM debug test: test_q4_asm_debug")
 endif()
 
@@ -14247,29 +14207,13 @@ endif()
 # Link tests to the Q4 kernel library (after it's defined)
 if(TARGET q4_preprocessed_avx512)
     if(TARGET test_q4_fused_pipeline)
-        target_link_libraries(test_q4_fused_pipeline PRIVATE q4_preprocessed_avx512)
     endif()
     if(TARGET test_q4_asm_debug)
-        target_link_libraries(test_q4_asm_debug PRIVATE q4_preprocessed_avx512)
     endif()
 endif()
 
 # Scalar SIMD simulation test (no ASM dependency)
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_scalar_simd.cpp")
-    add_executable(test_q4_scalar_simd EXCLUDE_FROM_ALL
-        tests/test_q4_scalar_simd.cpp
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(test_q4_scalar_simd PRIVATE cxx_std_20)
-    target_include_directories(test_q4_scalar_simd PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/memory
-    )
-    set_target_properties(test_q4_scalar_simd PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_scalar_simd.cpp")
     message(STATUS "[VAL-Q4.0] Scalar SIMD simulation: test_q4_scalar_simd")
 endif()
 
@@ -14302,117 +14246,31 @@ message(STATUS "Measurement Framework Tests")
 message(STATUS "========================================")
 
 # 1. Dispatch Overhead Benchmark
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_overhead.cpp")
-    add_executable(benchmark_dispatch_overhead EXCLUDE_FROM_ALL
-        tests/benchmark_dispatch_overhead.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(benchmark_dispatch_overhead PRIVATE cxx_std_20)
-    target_include_directories(benchmark_dispatch_overhead PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/nevm
-        ${CMAKE_SOURCE_DIR}/src/memory
-        ${CMAKE_SOURCE_DIR}/src/kernels
-    )
-    set_target_properties(benchmark_dispatch_overhead PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_overhead.cpp")
     message(STATUS "  [MEASURE] benchmark_dispatch_overhead - RDTSC dispatch latency")
 endif()
 
 # 2. Planner Amortization Benchmark
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_planner_amortization.cpp")
-    add_executable(benchmark_planner_amortization EXCLUDE_FROM_ALL
-        tests/benchmark_planner_amortization.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(benchmark_planner_amortization PRIVATE cxx_std_20)
-    target_include_directories(benchmark_planner_amortization PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/nevm
-        ${CMAKE_SOURCE_DIR}/src/kernels
-    )
-    set_target_properties(benchmark_planner_amortization PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_planner_amortization.cpp")
     message(STATUS "  [MEASURE] benchmark_planner_amortization - Break-even analysis")
 endif()
 
 # 3. End-to-End Validation (Four Gates)
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/validate_end_to_end.cpp")
-    add_executable(validate_end_to_end EXCLUDE_FROM_ALL
-        tests/validate_end_to_end.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(validate_end_to_end PRIVATE cxx_std_20)
-    target_include_directories(validate_end_to_end PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/nevm
-        ${CMAKE_SOURCE_DIR}/src/memory
-        ${CMAKE_SOURCE_DIR}/src/kernels
-    )
-    set_target_properties(validate_end_to_end PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/validate_end_to_end.cpp")
     message(STATUS "  [MEASURE] validate_end_to_end - Four independent gates")
 endif()
 
 # 4. NEVM Determinism Validation
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_determinism_validation.cpp")
-    add_executable(nevm_determinism_validation EXCLUDE_FROM_ALL
-        tests/nevm_determinism_validation.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(nevm_determinism_validation PRIVATE cxx_std_20)
-    target_include_directories(nevm_determinism_validation PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/nevm
-        ${CMAKE_SOURCE_DIR}/src/kernels
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_determinism_validation.cpp")
     if(WIN32)
-        target_link_libraries(nevm_determinism_validation PRIVATE psapi)
     endif()
-    set_target_properties(nevm_determinism_validation PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
     message(STATUS "  [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a hashing")
 endif()
 
 # 5. NEVM Stress Test
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_stress_test.cpp")
-    add_executable(nevm_stress_test EXCLUDE_FROM_ALL
-        tests/nevm_stress_test.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(nevm_stress_test PRIVATE cxx_std_20)
-    target_include_directories(nevm_stress_test PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/nevm
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_stress_test.cpp")
     if(WIN32)
-        target_link_libraries(nevm_stress_test PRIVATE psapi)
     endif()
-    set_target_properties(nevm_stress_test PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
     message(STATUS "  [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring")
 endif()
 
@@ -14448,29 +14306,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/flame_graph.cpp")
 endif()
 
 # 7. PMC Dispatch Benchmark
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp")
-    add_executable(benchmark_dispatch_pmc EXCLUDE_FROM_ALL
-        tests/benchmark_dispatch_pmc.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-    )
-    target_compile_features(benchmark_dispatch_pmc PRIVATE cxx_std_20)
-    target_include_directories(benchmark_dispatch_pmc PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/nevm
-        ${CMAKE_SOURCE_DIR}/src/memory
-        ${CMAKE_SOURCE_DIR}/src/kernels
-        ${CMAKE_SOURCE_DIR}/src/profiling
-    )
+ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp")
     if(TARGET pmc_profiler)
-        target_link_libraries(benchmark_dispatch_pmc PRIVATE pmc_profiler)
     endif()
-    set_target_properties(benchmark_dispatch_pmc PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
     message(STATUS "  [MEASURE] benchmark_dispatch_pmc - PMC profiling")
 endif()
 
@@ -14567,9 +14405,9 @@ endif()
 # add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 # endif()
 
-add_executable(test_llama_native tests/test_llama_native.cpp
+ add_executable(test_llama_native tests/test_llama_native.cpp
     # AUTO-REMOVED: stub file
-    src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14585,7 +14423,7 @@ add_executable(test_llama_native tests/test_llama_native.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/CompressedKVCache.cpp
+     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
@@ -14598,7 +14436,7 @@ add_executable(test_llama_native tests/test_llama_native.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    tests/deep2_link_stubs.cpp
+     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     # AUTO-REMOVED: stub file
@@ -14613,7 +14451,7 @@ target_link_libraries(test_llama_native PRIVATE InferenceEngine)
 add_test(NAME test_llama_native COMMAND test_llama_native WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-001 Runtime Validation Gate
-add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
+ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14621,7 +14459,7 @@ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14642,7 +14480,7 @@ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/CompressedKVCache.cpp
+     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
@@ -14666,7 +14504,7 @@ add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECT
 
 # Q4_K Block Decoder Verification Test
 # Must pass before Q4_K GEMV is re-enabled in K2-003 Gate 6b
-add_executable(test_q4k_decoder tests/test_q4k_decoder.cpp
+ add_executable(test_q4k_decoder tests/test_q4k_decoder.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14678,28 +14516,21 @@ add_test(NAME test_q4k_decoder COMMAND test_q4k_decoder WORKING_DIRECTORY "${CMA
 
 # Q6_K ASM Kernel Synthetic Certification
 # Certifies sovereign_q6_k_gemv.asm against C++ reference with deterministic blocks
-add_executable(test_q6k_asm_certification tests/test_q6k_asm_certification.cpp
-    src/deep2/sovereign_q6_k_gemv.asm)
-set_target_properties(test_q6k_asm_certification PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-add_test(NAME test_q6k_asm_certification COMMAND test_q6k_asm_certification WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # Quant Dequantization Cross-Check
 # Validates all K-quant dequantizers against canonical GGML reference implementations
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_quant_dequant_crosscheck.cpp")
-add_executable(test_quant_dequant_crosscheck tests/test_quant_dequant_crosscheck.cpp)
-set_target_properties(test_quant_dequant_crosscheck PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-add_test(NAME test_quant_dequant_crosscheck COMMAND test_quant_dequant_crosscheck WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_quant_dequant_crosscheck.cpp")
 endif()
 
 # K2-002 Native Deep2 Runtime Smoke Test
 # Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency
-add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
+ add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
     # AUTO-REMOVED: stub file
@@ -14718,7 +14549,7 @@ add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/CompressedKVCache.cpp
+     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
@@ -14741,7 +14572,7 @@ target_link_libraries(k2_native_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-002: Bounded Tensor Streaming Validation
-add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
+ add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14749,7 +14580,7 @@ add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
@@ -14769,7 +14600,7 @@ add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/CompressedKVCache.cpp
+     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
@@ -14779,7 +14610,7 @@ add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    tests/deep2_link_stubs.cpp
+     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     # AUTO-REMOVED: stub file
@@ -14790,7 +14621,7 @@ target_link_libraries(k2_002_tensor_streaming PRIVATE InferenceEngine)
 add_test(NAME k2_002_tensor_streaming COMMAND k2_002_tensor_streaming WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-003: Native Deep2 Layer Execution
-add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
+ add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14798,7 +14629,7 @@ add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
@@ -14818,7 +14649,7 @@ add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/CompressedKVCache.cpp
+     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
@@ -14828,7 +14659,7 @@ add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    tests/deep2_link_stubs.cpp
+     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     # AUTO-REMOVED: stub file
@@ -14840,7 +14671,7 @@ add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRE
 
 # K2-003B: Native GEMV Validation Against Real K2 Q4_K Weights
 # Must pass after K2-003A (Q4_K decoder certified) before full layer execution
-add_executable(k2_003b_native_gemv_validation tests/k2_003b_native_gemv_validation.cpp
+ add_executable(k2_003b_native_gemv_validation tests/k2_003b_native_gemv_validation.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14854,7 +14685,7 @@ add_test(NAME k2_003b_native_gemv_validation COMMAND k2_003b_native_gemv_validat
 
 # K2-003C: Single-Layer Forward with Real K2 Weights (Bounded)
 # Proves one complete transformer layer executes on real Q4_K weights
-add_executable(k2_003c_single_layer_forward tests/k2_003c_single_layer_forward.cpp
+ add_executable(k2_003c_single_layer_forward tests/k2_003c_single_layer_forward.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14867,7 +14698,7 @@ target_link_libraries(k2_003c_single_layer_forward PRIVATE InferenceEngine)
 add_test(NAME k2_003c_single_layer_forward COMMAND k2_003c_single_layer_forward WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-004: Bounded Multi-Layer Prefill
-add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
+ add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14875,7 +14706,7 @@ add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
@@ -14895,7 +14726,7 @@ add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/CompressedKVCache.cpp
+     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
@@ -14905,7 +14736,7 @@ add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    tests/deep2_link_stubs.cpp
+     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     # AUTO-REMOVED: stub file
@@ -14917,7 +14748,7 @@ add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRE
 
 # K2-004B: Bounded Multi-Layer Prefill (stream one layer at a time)
 # Proves scalability from 003C single-layer to multi-layer with bounded memory
-add_executable(k2_004_bounded_multi_layer_prefill tests/k2_004_bounded_multi_layer_prefill.cpp
+ add_executable(k2_004_bounded_multi_layer_prefill tests/k2_004_bounded_multi_layer_prefill.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14931,7 +14762,7 @@ add_test(NAME k2_004_bounded_multi_layer_prefill COMMAND k2_004_bounded_multi_la
 
 # K2-005: Bounded Autoregressive Decode with KV Cache
 # Proves KV cache correctly stores/retrieves K/V across decode steps
-add_executable(k2_005_autoregressive_kv_cache tests/k2_005_autoregressive_kv_cache.cpp
+ add_executable(k2_005_autoregressive_kv_cache tests/k2_005_autoregressive_kv_cache.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14946,7 +14777,7 @@ add_test(NAME k2_005_autoregressive_kv_cache COMMAND k2_005_autoregressive_kv_ca
 
 # K2-006: Bounded Autoregressive Token Generation
 # Proves logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� decode +�-�+�-�+�-� repeat pipeline works
-add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
+ add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14962,7 +14793,7 @@ add_test(NAME k2_006_bounded_token_generation COMMAND k2_006_bounded_token_gener
 # K2-007: Real Output Projection (Q4_K streamed)
 # Proves output.weight can be streamed row-by-row to produce logits
 # without unbounded allocation. Independent of K2-006 synthetic baseline.
-add_executable(k2_007_real_output_projection tests/k2_007_real_output_projection.cpp
+ add_executable(k2_007_real_output_projection tests/k2_007_real_output_projection.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14974,16 +14805,13 @@ add_test(NAME k2_007_real_output_projection COMMAND k2_007_real_output_projectio
 
 # K2-007A: GGUF Tokenizer Metadata Extraction
 # Proves tokenizer.ggml.* arrays are readable from GGUF without external deps.
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/k2_007a_tokenizer_metadata.cpp")
-add_executable(k2_007a_tokenizer_metadata tests/k2_007a_tokenizer_metadata.cpp)
-set_target_properties(k2_007a_tokenizer_metadata PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-add_test(NAME k2_007a_tokenizer_metadata COMMAND k2_007a_tokenizer_metadata WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/k2_007a_tokenizer_metadata.cpp")
 endif()
 
 # K2-007B: Projection +�-�+�-�+�-� Logits Interface
 # Narrow integration gate: proves real output projection produces a valid
 # logits vector consumable by deterministic argmax. Reuses K2-007 streaming.
-add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
+ add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -14997,7 +14825,7 @@ add_test(NAME k2_007b_projection_logits_interface COMMAND k2_007b_projection_log
 # Proves tokenizer + real output projection communicate end-to-end:
 # text +�-�+�-�+�-� tokens +�-�+�-�+�-� real K2 inference +�-�+�-�+�-� logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� text.
 # Independent of K2-006 synthetic baseline.
-add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
+ add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -15012,17 +14840,11 @@ add_test(NAME k2_008_end_to_end_semantic_generation COMMAND k2_008_end_to_end_se
 
 # K2-TLS: Time-Limited Serving Smoke Test
 # Proves scheduler-level inference budget primitives work correctly.
-add_executable(k2_tls_smoke_test tests/k2_tls_smoke_test.cpp
-    # AUTO-REMOVED: stub file
-    )
-set_target_properties(k2_tls_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-target_link_libraries(k2_tls_smoke_test PRIVATE InferenceEngine)
-add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-009: Real Token Embedding Lookup
 # Proves token_embd.weight can be streamed row-by-row without loading
 # the full ~918 MiB matrix. Reuses Q6_K dequantization from K2-007.
-add_executable(k2_009_token_embedding_lookup tests/k2_009_token_embedding_lookup.cpp
+ add_executable(k2_009_token_embedding_lookup tests/k2_009_token_embedding_lookup.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -15034,13 +14856,13 @@ target_link_libraries(k2_009_token_embedding_lookup PRIVATE InferenceEngine)
 add_test(NAME k2_009_token_embedding_lookup COMMAND k2_009_token_embedding_lookup WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
-    tests/b004_transformer_router_streaming_integration.cpp
+     tests/b004_transformer_router_streaming_integration.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15117,7 +14939,7 @@ set(B012_AMORTIZATION_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15172,7 +14994,7 @@ set(B013_STABILITY_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15223,7 +15045,7 @@ set(B014_COMPUTE_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15264,14 +15086,14 @@ endif()
 # B014-BoundaryProbe: Isolate first failure point
 # ============================================================================
 set(B014_BOUNDARY_SOURCES
-    B014/build/b014_boundary_probe.cpp
+     B014/build/b014_boundary_probe.cpp
     B014/build/b014_profiler.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15312,14 +15134,14 @@ endif()
 # B014-SingleBoundary: Test one boundary per invocation
 # ============================================================================
 set(B014_SINGLE_SOURCES
-    B014/build/b014_single_boundary.cpp
+     B014/build/b014_single_boundary.cpp
     B014/build/b014_profiler.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15360,14 +15182,14 @@ endif()
 # B014-LifetimeProbe: Pinpoint exact destructor/cleanup failure
 # ============================================================================
 set(B014_LIFETIME_SOURCES
-    B014/build/b014_lifetime_probe.cpp
+     B014/build/b014_lifetime_probe.cpp
     B014/build/b014_profiler.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15408,7 +15230,7 @@ endif()
 # B005: Canonical Model Certification
 # ============================================================================
 set(B005_CANONICAL_MODEL_SOURCES
-    tests/b005_canonical_model_certification.cpp
+     tests/b005_canonical_model_certification.cpp
     src/canonical/gguf_adapter.cpp
     src/canonical/unified_model_loader.cpp
 )
@@ -15432,13 +15254,13 @@ endif()
 # B006: KV Cache Verification
 # ============================================================================
 set(B006_KV_CACHE_SOURCES
-    tests/b006_kv_cache_verification.cpp
+     tests/b006_kv_cache_verification.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15512,13 +15334,13 @@ endif()
 # B007: Performance Baseline Certification
 # ============================================================================
 set(B007_PERF_BASELINE_SOURCES
-    tests/b007_performance_baseline.cpp
+     tests/b007_performance_baseline.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15592,23 +15414,11 @@ endif()
 # B008: Build / CI Integration Gate
 # ============================================================================
 set(B008_CI_SOURCES
-    tests/b008_ci_integration.cpp
+     tests/b008_ci_integration.cpp
 )
 
-add_executable(b008_ci_integration EXCLUDE_FROM_ALL
-    ${B008_CI_SOURCES}
-)
-target_include_directories(b008_ci_integration PRIVATE
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/include/core
-)
-target_compile_features(b008_ci_integration PRIVATE cxx_std_20)
 
 if(BUILD_TESTING)
-    add_test(NAME b008_ci_integration
-             COMMAND b008_ci_integration)
 endif()
 
 # ============================================================================
@@ -15621,7 +15431,7 @@ set(B010_RESIDENCY_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15694,13 +15504,13 @@ endif() # EXISTS b010_weight_residency_profile.cpp
 # B011: Targeted Weight Residency Optimization
 # ============================================================================
 set(B011_RESIDENCY_OPT_SOURCES
-    tests/b011_weight_residency_optimization.cpp
+     tests/b011_weight_residency_optimization.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15775,7 +15585,7 @@ set(B015_RESIDENCY_VALIDATION_SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/rawrxd_tokenizer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -15852,7 +15662,7 @@ add_executable(b015_pool_microbench EXCLUDE_FROM_ALL
     src/rawrxd_transformer.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -16053,7 +15863,7 @@ set(B009_BATCHED_PREFILL_SOURCES
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -16123,7 +15933,7 @@ add_executable(b009a_fast_validation EXCLUDE_FROM_ALL
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -16189,7 +15999,7 @@ add_executable(b009_t128_certification EXCLUDE_FROM_ALL
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -16257,7 +16067,7 @@ add_executable(b016_gemm_efficiency_probe EXCLUDE_FROM_ALL
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -16325,7 +16135,7 @@ add_executable(b009_t128_instrumented EXCLUDE_FROM_ALL
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
-    src/rawrxd_sampler.cpp
+     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/core/inference_witness.cpp
@@ -16386,7 +16196,7 @@ target_link_libraries(b009_t128_instrumented PRIVATE
 add_executable(certification_harness EXCLUDE_FROM_ALL
     certification/CertificationHarness.cpp
     src/tokenizer/gguf_embedded_tokenizer.cpp
-    src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -16410,7 +16220,7 @@ add_executable(certification_harness EXCLUDE_FROM_ALL
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    src/deep2/CompressedKVCache.cpp
+     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -16676,3 +16486,131 @@ if(TARGET InferenceEngine)
 endif()
 
 
+# ============================================================================
+# RAWRXD_SINGLE_WRITER_AUTHORITY_001 — canonical implementation
+#
+# src/authority/SingleWriterAuthority.{h,cpp} is the canonical mechanism:
+#   - the authorized path set is PERSISTED in the lease file, not held in a
+#     process-global, so a second process reading the lease back sees the same
+#     scope;
+#   - the lease is published with MoveFileExW and no MOVEFILE_REPLACE_EXISTING,
+#     so a writer that lost the create race fails instead of overwriting;
+#   - checkWrite() and validateStagingScope() consume the same predicate,
+#     pathAuthorized(), and the same resolver, relativeToRepo().
+#
+# It was previously referenced by ZERO build targets, which is why the stronger
+# implementation was the uncompiled one.
+# ============================================================================
+add_library(rawrxd_single_writer STATIC
+    src/authority/SingleWriterAuthority.cpp)
+
+target_include_directories(rawrxd_single_writer PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include)
+
+if(MSVC)
+    target_compile_features(rawrxd_single_writer PUBLIC cxx_std_20)
+    # isProcessLive uses OpenProcess, and the lease publish path uses
+    # MoveFileExW; neither pulls a library that needs naming.
+endif()
+
+set_target_properties(rawrxd_single_writer PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# ============================================================================
+# RAWRXD_SINGLE_WRITER_AUTHORITY_001 — legacy implementation, SUPERSEDED
+#
+# src/agentmodes/WriterLeaseAuthority.{h,cpp} is retained for provenance and is
+# NOT in the build graph. It was the only implementation that compiled, and it
+# is strictly weaker: its authorized path set is process-global, so the scope is
+# not persisted with the lease. Its measured production caller count was 0; the
+# only consumer was tools/single_writer_adversarial_test.cpp, which now links
+# rawrxd_single_writer instead. Kept in the tree, out of the build, and labelled
+# so a later reader cannot mistake it for the live mechanism.
+# ============================================================================
+
+add_executable(single_writer_adversarial_test
+    tools/single_writer_adversarial_test.cpp)
+
+target_link_libraries(single_writer_adversarial_test PRIVATE
+    rawrxd_single_writer)
+
+target_include_directories(single_writer_adversarial_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/agentmodes)
+
+if(MSVC)
+    target_compile_features(single_writer_adversarial_test PRIVATE cxx_std_20)
+endif()
+
+set_target_properties(single_writer_adversarial_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME single_writer_adversarial_test)
+
+# ============================================================================
+# RAWRXD_IDE_CMAKE_FULL_AUDIT_001 / Batch 2-3 lifecycle gate driver.
+# DEEP2_GENERATION_LIFECYCLE_001 is the certification test for Batch 3: model
+# load, N sequential generations on one engine, EOS termination, cancellation,
+# clean shutdown, and zero heap corruption. It was previously linked by an
+# ad-hoc command outside CMake, so a rebuild could silently relink stale
+# objects. The target below makes the driver reproducible from the same build
+# graph that produces InferenceEngine.
+#
+# RAWRXD_DEEP2_SSM_NUMERIC_DIAG: root-cause stage telemetry. OFF by default so
+# the certification run executes the production path with no diagnostic output.
+# ============================================================================
+option(RAWRXD_DEEP2_SSM_NUMERIC_DIAG
+    "Compile DEEP2_SSM_CONV_NUMERICAL_INSTABILITY_001 stage telemetry into InferenceEngine" OFF)
+
+if(TARGET InferenceEngine)
+    add_executable(deep2_generation_lifecycle_test
+        tools/deep2_generation_lifecycle_test.cpp)
+    target_link_libraries(deep2_generation_lifecycle_test PRIVATE
+        InferenceEngine)
+    target_include_directories(deep2_generation_lifecycle_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    if(MSVC)
+        target_compile_options(deep2_generation_lifecycle_test PRIVATE
+            /EHsc /std:c++20 /O2)
+        set_property(TARGET deep2_generation_lifecycle_test PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+    set_target_properties(deep2_generation_lifecycle_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_generation_lifecycle_test)
+
+    if(RAWRXD_DEEP2_SSM_NUMERIC_DIAG)
+        target_compile_definitions(InferenceEngine PRIVATE
+            RAWRXD_DEEP2_SSM_NUMERIC_DIAG)
+        message(STATUS "[Deep2] DEEP2 SSM numeric stage telemetry: ENABLED")
+    else()
+        message(STATUS "[Deep2] DEEP2 SSM numeric stage telemetry: OFF")
+    endif()
+endif()
+
+# ============================================================================
+# DEEP2_SSM_NORM_LAYOUT_001 / DEEP2_MIXER_PRENORM_001 dimensional oracle.
+# Reads the GGUF directly and proves the ssm_norm index mapping and the
+# pre-mixer norm tensor from model metadata. See tool source for the
+# derivation; the tool never consults production indexing.
+# ============================================================================
+if(TARGET InferenceEngine)
+    add_executable(deep2_ssm_norm_layout_gate
+        tools/deep2_ssm_norm_layout_gate.cpp)
+    target_link_libraries(deep2_ssm_norm_layout_gate PRIVATE
+        InferenceEngine)
+    target_include_directories(deep2_ssm_norm_layout_gate PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    if(MSVC)
+        target_compile_options(deep2_ssm_norm_layout_gate PRIVATE
+            /EHsc /std:c++20 /O2)
+        set_property(TARGET deep2_ssm_norm_layout_gate PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+    set_target_properties(deep2_ssm_norm_layout_gate PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ssm_norm_layout_gate)
+endif()

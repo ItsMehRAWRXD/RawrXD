@@ -1,0 +1,4 @@
+deep2_generation_lifecycle_test.cpp
+LIFECYCLE_COMPILE_OK
+LINK : fatal error LNK1181: cannot open input file 'kernel32.lib'
+LINK_FAIL 

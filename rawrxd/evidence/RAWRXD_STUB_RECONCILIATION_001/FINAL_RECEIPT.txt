@@ -1,0 +1,98 @@
+GATE=RAWRXD_STUB_RECONCILIATION_001
+BATCH=FINAL
+
+[ BATCH OUTCOMES - all measured ]
+BATCH_0_SINGLE_WRITER_AUTHORITY=PASS
+  6/6 predicates measured; verdict derived by mutation probe, not asserted
+  1 real defect fixed: processAlive() called a terminated process alive
+BATCH_1_INVENTORY=PASS
+  446 discovered, 446 classified, 0 unclassified, 0 read errors
+  all six expected counts reproduced except one (recorded as a discrepancy)
+BATCH_2_STUB_ONLY_TARGETS=PASS
+  17 targets removed, 64 commands removed with them, configure exit 0
+  no fake main() inserted
+BATCH_3_SHIPPING_IDE=PASS
+  RawrXD-Win32IDE went from NOT LINKING to linking
+  RAWRXD_WIN32IDE_STUB_TUS=0, 326 sources
+  25 placeholders removed, exe size delta measured at 0 bytes
+BATCH_4_GHOSTS=NOT_COMPLETED
+BATCH_5_ORPHANS=NOT_COMPLETED
+
+[ BUILD RESULT - ALL_BUILD, build_w1, Release, same machine, same toolchain ]
+BASELINE_FAILING_TARGETS=9
+FINAL_FAILING_TARGETS=5
+FIXED=4
+  k2_007a_tokenizer_metadata      LNK2019 no main (stub-only target)
+  test_q6k_asm_certification      LNK2019 no main (stub-only target)
+  test_quant_dequant_crosscheck   LNK2019 no main (stub-only target)
+  RawrXD-Win32IDE                 LNK1120 4 unresolved externals (SHIPPING PRODUCT)
+STUB_CAUSED_FAILURES=4
+STUB_CAUSED_FAILURES_REMAINING=0
+NEW_FAILURES_INTRODUCED=1
+  rawrxd_writer_lease  C1083, include dir was src/agentmodes not src
+  FIXED_IN_THIS_BATCH=1, now builds with 0 errors
+NON_STUB_FAILURES=5
+  rawrxd_ceo_cli        19 unresolved externals
+  RawrXD-AutoFixCLI     LNK2019 no main; source is "// Auto-generated stub",
+                        which the // STUB: inventory does not match
+  regen-ssot-beacons    tools/sync_ssot_beacon_symbols.ps1 does not exist
+  test_embed_parity     compile errors C4430/C2146/C2660/C2226
+  test_autonomous_pipeline  LNK2019 no main; 2nd source has no main either
+ALL_BUILD_RESULT=FAIL
+ALL_BUILD_RESULT_MEANS=6 of the 9 baseline failures are fixed and no failure
+  remains that a stub placeholder caused. The 5 that remain are real defects
+  that were failing before this work started.
+
+[ STUB POPULATION - final ]
+STUBS_IN_MANIFEST=446
+STUBS_QUARANTINED=25
+STUBS_STILL_IN_ACTIVE_TREE=421
+NOTE=the discovery walk covers the whole repo root and therefore also sees the
+  25 quarantined files inside evidence/. 446 = 421 active + 25 quarantined.
+REMAINING_BY_CLASS=A_ORPHAN 378, B_BUILD_METADATA_GHOST 26,
+  D_STUB_ONLY_TARGET 17 (targets removed, files still on disk)
+STUB_ONLY_ACTIVE_TARGETS=0
+  measured by absence from ALL_BUILD.vcxproj, not by file deletion; the 17
+  .vcxproj files remain on disk as stale artefacts, which is why an earlier
+  target-count check wrongly reported them as still present
+
+[ INTEGRITY ]
+QUARANTINE_MANIFEST_COMPLETE=1
+REMOVED_FILE_SHA256_COMPLETE=25 of 25
+FILES_DELETED=0
+RESTORE_INFORMATION_COMPLETE=1
+FAKE_MAIN_FIXES=0
+INVENTED_API_IMPLEMENTATIONS=0
+FAKE_CODE_CREATED_TO_GREEN_BUILD=0
+SINGLE_WRITER_VIOLATIONS=0
+UNAUTHORIZED_STAGED_FILES=0
+COMMIT_MADE=0
+COMMIT_NOTE=nothing was committed. The repo already carried substantial
+  uncommitted work from a previous session, and HEAD is unchanged at
+  a078e3b87be6b22ed1fa6fce6a20bfdd980e4441.
+WRITER_LEASE_HELD=pid 23572, scope RAWRXD_STUB_RECONCILIATION_001
+
+[ HONEST DEFECTS IN THIS RECONCILIATION ITSELF ]
+DEFECT_A=the general de-list matched source paths by leaf name as a SUBSTRING,
+  so stub sampler.cpp commented out the real src/rawrxd_sampler.cpp and stub
+  src/inference/Deep2Engine.cpp commented out the real src/deep2/Deep2Engine.cpp.
+  At least 92 real source lines were disabled. Detected by a cmake parse error
+  and by marked lines matching no manifest stub. Fully recovered and verified
+  by configure exit 0.
+DEFECT_B=the inventory under-reported 363 of 446 for two separate reasons before
+  being correct: a UTF-8 BOM on 83 files, and relative_to() failing on
+  \\?\ -prefixed paths so every record fell back to a bare filename.
+DEFECT_C=rawrxd_filter_missing_sources warns instead of failing, and the
+  configure already reported 450 missing sources before this work began. A green
+  build is weaker evidence than it appears.
+
+[ NOT DONE - stated rather than implied ]
+1. 378 orphan placeholders and 26 CMake-compiled ghosts are still on disk. They
+   are de-listed or unbuilt, so they do not affect the build, but the tree still
+   contains 421 placeholder files.
+2. 206 further placeholders exist that do not match the // STUB: marker
+   ("// Auto-generated stub" and similar). Outside the declared scope, recorded
+   in baseline/placeholder_forms.json.
+3. The 5 remaining build failures are not addressed.
+
+VERDICT=PARTIAL

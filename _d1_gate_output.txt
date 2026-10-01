@@ -1,0 +1,35 @@
+_d1_failure_gate.cpp
+BUILD_OK
+=== RAWRXD_BATCH_02_D1_FAILURE_GATE_001 ===
+build_unix=1790815874
+  [INFO] context-exhaustion: status=3 completed=0 generatedTokens=0 failureDetail="prompt length 4096 >= maxSeqLen 4096" cancelled=0
+ASSERT=PASS msg="contract invariant holds for failure path"
+ASSERT=PASS msg="completed=false for non-Completed status"
+ASSERT=PASS msg="context-exhaustion: failureDetail non-empty"
+  [INFO] empty-prompt: status=3 completed=0 generatedTokens=0 failureDetail="empty prompt" cancelled=0
+ASSERT=PASS msg="contract invariant holds for failure path"
+ASSERT=PASS msg="completed=false for non-Completed status"
+  [INFO] uninitialized-engine: status=4 completed=0 generatedTokens=0 failureDetail="engine not initialized" cancelled=0
+ASSERT=PASS msg="contract invariant holds for failure path"
+ASSERT=PASS msg="completed=false for non-Completed status"
+  [INFO] cancellation: status=1 completed=0 generatedTokens=7 failureDetail="" cancelled=1
+ASSERT=PASS msg="contract invariant holds for failure path"
+ASSERT=PASS msg="completed=false for non-Completed status"
+ASSERT=PASS msg="cancellation: generatedTokens reflects emitted"
+  [INFO] forward-failure: status=5 completed=0 generatedTokens=0 failureDetail="cpu_forward_exception at prefill token 0" cancelled=0
+ASSERT=PASS msg="contract invariant holds for failure path"
+ASSERT=PASS msg="completed=false for non-Completed status"
+  [INFO] happy-path: status=0 completed=1 generatedTokens=8 failureDetail="" cancelled=0
+ASSERT=PASS msg="contract invariant holds for failure path"
+ASSERT=PASS msg="Completed status has completed=true"
+  [INFO] end-of-sequence: status=2 completed=0 generatedTokens=0 failureDetail="" cancelled=0
+ASSERT=PASS msg="contract invariant holds for failure path"
+ASSERT=PASS msg="completed=false for non-Completed status"
+ASSERT=PASS msg="EndOfSequence is legitimate"
+ASSERT=PASS msg="EndOfSequence must not carry failureDetail"
+  [INFO] contract-violation: contractHolds=0 (should be 0)
+ASSERT=PASS msg="contract-violation correctly flagged"
+=== SUMMARY: 19 / 19 tests PASSED ===
+=== CONTRACT INVARIANT ===
+completed == (status == Completed)
+FALSE_SUCCESS=0 SILENT_FAILURE=0 UNCONTROLLED_ABORT=0 (engine guards enforce)

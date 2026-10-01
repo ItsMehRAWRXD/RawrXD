@@ -1,0 +1,3 @@
+@echo off
+set PROMPT=You have tools. git_status (no args) returns branch and dirty state. list_files (path) lists files. read_file (path) reads a file. When you need a tool, respond with EXACTLY one line: RAWR_TOOL name=git_status. Otherwise respond with text only. Question: What branch am I on and is the worktree clean?
+"F:\~dev\rawrxd\bin\deep2_generation_lifecycle_test.exe" "F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3" --generations 1 --max-tokens 64 --eos-max-tokens 64 --prompt "%PROMPT%" > "F:\~dev\_batch3d_inference1.txt" 2>&1

@@ -25,6 +25,9 @@ struct ITokenizer {
     virtual std::string decode(const std::vector<int>& tokens) = 0;
     virtual std::string decode(int token) = 0;
     virtual size_t vocabSize() const = 0;
+    // D3 — EOS termination. Default is "no EOS"; subclasses that own
+    // tokenizer metadata override. RAWRXD_DEEP2_GENERATION_LIFECYCLE_001.
+    virtual bool isEos(int /*token*/) const { return false; }
 };
 
 class BPETokenizer : public ITokenizer {

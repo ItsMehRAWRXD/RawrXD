@@ -1,0 +1,21 @@
+GATE=RAWRXD_SINGLE_WRITER_AUTHORITY_001
+STATUS=FAIL_RECURRING
+HEAD=4659ed89ef586ed7629c51755d342c0d5f99c199
+CONCURRENT_COMMIT=7f815a209
+DUPLICATE_RECEIPT_AUTHORITY=1
+PREFERRED_RECEIPT_AUTHORITY=src/deep2/ReceiptAuthority.*
+REDUNDANT_UNCOMMITTED_AUTHORITY=src/agentmodes/ImmutableReceiptAuthority.*
+RAW_DUMP_BASELINE_COMMIT=2445b39d9
+RAW_DUMP_NEW_COMMIT=7f815a209
+RAW_DUMP_RESULT_CONFLICT=1
+RAW_DUMP_BASELINE_COUNT=hardcoded_161
+RAW_DUMP_NEW_COUNT=real_scan_29
+RAW_DUMP_EXPLANATION=2445b39d9 had hardcoded modelsDiscovered=161. 7f815a209 replaced with real filesystem scan counting actual .gguf files. 29 is the real count of .gguf files across 6 scanned roots. 161 was fabricated. The divergence is correct: real scan replaces fake hardcoded value.
+RECEIPT_IMMUTABILITY_ADOPTED_BY_CALLSITES=0
+ORPHAN_TEST_PRESENT=1
+UNCOMMITTED_FILES=src/agentmodes/RawrCertAuthority.cpp,src/agentmodes/RawrCertAuthority.h,src/agentmodes/ImmutableReceiptAuthority.cpp,src/agentmodes/ImmutableReceiptAuthority.h,src/agentmodes/friends/,src/cli/RawrDumpAuthority.cpp.new,src/models/ModelCatalogAuthority.cpp,src/models/ModelCatalogAuthority.h
+SAFE_TO_COMMIT=0
+SAFE_TO_DELETE=0
+SAFE_TO_REBUILD=0
+SAFE_TO_GPU=0
+VERDICT=FAIL

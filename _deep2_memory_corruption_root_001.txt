@@ -1,0 +1,154 @@
+GATE=DEEP2_MEMORY_CORRUPTION_ROOT_001
+DATE_UTC=2026-10-01T02:05Z
+HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441 (+ uncommitted worktree)
+
+================================================================================
+[ 1. ROOT CAUSE - PROVEN ]
+================================================================================
+
+DEFECT_ID=DEEP2_SSM_SCRATCH_UNDERSIZED_001
+CLASS=HEAP_BUFFER_OVERFLOW_WRITE
+FILE=rawrxd/src/deep2/Deep2Engine.cpp
+
+allocateBuffers():
+  L597  const size_t convChannels = ssmInner_ + 2 * groupBC;
+  L599  ssmX = new (std::nothrow) float[ssmInner_];     // UNDER-ALLOCATED
+  L600  ssmY = new (std::nothrow) float[ssmInner_];     // UNDER-ALLOCATED
+
+computeSSM() consumes both as [convChannels]:
+  L3418 float* convIn  = ssmX;  // comment states [convChannels]
+  L3419 std::copy_n(x0, inner, convIn);
+  L3420 std::copy_n(B0, 2 * groupBC, convIn + inner);   // writes past end
+  L3443 float* convOut = ssmY;  // comment states [convChannels]
+  L3446 for (i = 0; i < convChannels; ++i) convOut[i] = silu(convOut[i]);
+
+OVERFLOW_BYTES_PER_LAYER = 2 * groupBC * sizeof(float)   (per buffer)
+MAX_INDEX_WRITTEN = inner + 2*groupBC - 1 = convChannels - 1
+OVERWRITTEN_ELEMENT_COUNT = convChannels - ssmInner_ = 2 * groupBC > 0
+
+FIX_APPLIED=L599,L600 now allocate float[convChannels]
+  The L3483 reuse `float* yPtr = ssmX;` needs only [inner], which is a subset of
+  the new size, so enlarging is safe for that site. No other site reads these
+  buffers.
+
+WHY_DESTRUCTION_WAS_THE_CRASH_SITE: the overwrite lands in adjacent heap
+  allocator metadata. The guard byte / free-list check fires later, at the
+  first free() that walks the damaged chunk. Deep2Engine::~Deep2Engine calls
+  unloadModel() -> deallocateBuffers(), which deletes these exact buffers, so
+  the destructor is where detection occurred. The destructor was the DETECTOR,
+  not the CORRUPTOR.
+
+================================================================================
+[ 2. MEASURED EVIDENCE - three runs, same binary family, same arguments ]
+================================================================================
+
+BUILD_PROVENANCE
+  ALL header-consuming TUs recompiled from one snapshot into
+  rawrxd/build_memcorrupt_001/. No stale object from build_ide_audit was
+  linked for the 7 header-consuming members.
+  FLAGS = /nologo /std:c++17 /EHsc /Od /Zi /RTC1 /GS /sdl /W3 /MT /Gy /Gd
+          /Zp8 /Zc:__cplusplus
+  LINKER = /DEBUG
+  CRT = /MT for both the fresh objects and the library members
+         (dumpbin /directives confirmed /DEFAULTLIB:LIBCMT on Deep2Engine.obj)
+
+MIXED_ABI_DEFECT_FOUND_AND_ELIMINATED
+  repPenaltyProcessor_ and generatedTokensHistory_ had been added MID-CLASS at
+  Deep2Engine.h:1033-1034, which shifts every later member's offset. The
+  library members compiled at 14:52 predated that header edit (21:20), so the
+  library and Deep2Engine.cpp disagreed on class layout. That was a real
+  defect. It was NOT the cause of the corruption: rebuilding every
+  header-consuming TU from one snapshot reproduced 0xC0000374 unchanged.
+
+RUN_002  pre-fix, --generations 2 --max-tokens 16
+  ROOT:J_PRE_RETURN_MAIN      = 1
+  ROOT:K_BEFORE_ENGINE_DELETE = 1
+  ROOT:L_AFTER_ENGINE_DELETE  = 0   <-- dies inside ~Deep2Engine
+  PROCESS_EXIT_CODE = -1073740940
+  NTSTATUS          = 0xC0000374  STATUS_HEAP_CORRUPTION
+
+RUN_003  post-fix, identical arguments
+  ROOT:J_PRE_RETURN_MAIN      = 1
+  ROOT:K_BEFORE_ENGINE_DELETE = 1
+  ROOT:L_AFTER_ENGINE_DELETE  = 1   <-- destructor completes
+  PROCESS_EXIT_CODE = 1              (the test's own return value)
+  HEAP_CORRUPTION  = 0
+  FAST_FAIL        = 0
+
+MEMORY_CORRUPTION=ELIMINATED
+PROOF=the same two failure signatures are gone under identical arguments, and
+  the fenced destructor now runs to completion instead of aborting inside it.
+
+================================================================================
+[ 3. NEW DEFECT EXPOSED - NOT a PASS ]
+================================================================================
+
+Running002_pre_fix_generation = Completed, 16/16 tokens, finite logits
+  (output.weight inputMax=33.5)
+Running003_post_fix_generation = ForwardFailure at prefill token 0/1
+  failureDetail=prefill forward failed at token 0 stage=cpu_forward_exception
+  cause=computeSSM: selective scan produced non-finite output
+  observed magnitude at the failing layer:
+    LINEAR_CPU_BEGIN ... ssm_in.weight inputMin=-3.9452926e+10
+                                  inputMax= 1.14551366e+11
+
+INTERPRETATION - stated, not assumed
+  Before the fix, convOut + inner (the B channel) and convOut + inner +
+  groupBC (the C channel) pointed PAST the end of ssmY and therefore read
+  whatever heap bytes followed. Those reads returned values that happened to
+  keep the scan finite, so generation "succeeded" on uninitialized memory.
+  After the fix those channels read the genuinely computed conv1d output, and
+  that output explodes to ~1e11.
+  The buffer overflow was therefore MASKING a real numerical defect in the
+  SSM conv path. The pre-fix VERDICT=PASS in run002 was not merely invalid
+  because the process crashed; the generations themselves were reading out of
+  bounds.
+
+NUMERICAL_DEFECT=DEEP2_SSM_CONV_NUMERICAL_INSTABILITY_001
+  LOCATION=conv1d output or its dequantization, not yet narrowed
+  NOT_PROVEN=which of convIn/convOut/dequant/convK is responsible
+  STATUS=OPEN
+
+================================================================================
+[ 4. INCIDENTAL DEFECT FIXED EN PASSANT ]
+================================================================================
+DEFECT=Deep2Engine.cpp L143 fprintf passed 27 variadic arguments against 25
+  format placeholders (warning C4474). An unconsumed-argument mismatch in a
+  variadic call is undefined behaviour.
+  FIXED=L119 malformed "%,}" JSONL format string completed; L129 format string
+  extended to 27 placeholders and L142 argument types made explicit.
+
+================================================================================
+[ 5. STATUS - honest ]
+================================================================================
+MEMORY_CORRUPTION_ROOT_CAUSE            = PROVEN_AND_FIXED
+DEEP2_SSM_SCRATCH_UNDERSIZED_001        = FIXED
+DEEP2_SSM_CONV_NUMERICAL_INSTABILITY_001= OPEN
+RAWRXD_DEEP2_LIFECYCLE_OUTPUT           = OBSERVED
+LIFECYCLE_GATE                         = FAIL
+PRIOR_PASS_RECEIPT                     = INVALIDATED_BY_NONZERO_PROCESS_EXIT
+PROCESS_EXIT_CODE_ZERO                  = NOT_YET (exit 1 is a real test FAIL)
+GENERATION_RESULTS_VALID                = FAIL
+
+The exit code moved from 0xC0000374 to 1. That is progress from a crash to an
+honest failure, NOT a pass. The lifecycle acceptance criteria are unmet.
+
+[ ACCEPTANCE - still required ]
+B_OBSERVATIONS=4
+D_OBSERVATIONS=1
+GENERATION_RESULTS_VALID=PASS
+PROCESS_EXIT_CODE=0
+HEAP_CORRUPTION=0
+FAST_FAIL=0
+LIFECYCLE_DESTRUCTION=PASS
+VERDICT=PASS
+
+ITEMS_10_AND_12_REMAIN=OPEN
+
+[ INSTRUMENTATION LEFT IN TREE - deliberate, not production ]
+  tools/deep2_generation_lifecycle_test.cpp carries ROOT:A-L stderr fences and
+  an engine-owner unique_ptr so the destruction boundary stays observable.
+  ROOT:K/ROOT:L are a diagnostic pair, not a leak workaround. Remove or gate
+  them before this file is treated as a product test.
+
+VERDICT=FAIL

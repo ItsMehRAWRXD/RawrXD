@@ -1,0 +1,240 @@
+﻿diff --git a/rawrxd/src/deep2/Deep2Engine.cpp b/rawrxd/src/deep2/Deep2Engine.cpp
+index d28afb59c..250644e25 100644
+--- a/rawrxd/src/deep2/Deep2Engine.cpp
++++ b/rawrxd/src/deep2/Deep2Engine.cpp
+@@ -3658,6 +3658,28 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
+         return 0;
+     }
+ 
++    // D2 ΓÇö generation lifecycle: the single reset point for every generation.
++    //
++    // This is the canonical independent-generation boundary. Everything before
++    // it above is argument validation that cannot dirty engine state; the
++    // engine enters Generating only on the next line. Clearing here means:
++    //
++    //   * the next generation on this engine starts from kvCacheLength() == 0,
++    //     so no KV written by a previous generation can be read at prefill
++    //     token 0 (the stale-KV cpu_forward_exception);
++    //   * EVERY entry point is covered, not just generateStream() ΓÇö a caller
++    //     that invokes generate() directly gets the same guarantee;
++    //   * there is exactly one enforcement point, so a new early exit added
++    //     later cannot forget to reset.
++    //
++    // It was previously duplicated across generateStream()'s three return
++    // paths, which covered fewer callers and invited a fourth exit to forget.
++    //
++    // Resetting on the way in, not on the way out, also keeps kvCacheLength()
++    // meaningful after a generation returns.
++    // RAWRXD_DEEP2_GENERATION_LIFECYCLE_001.
++    reset();
++
+     // A fresh top-level generate transaction consumes any old cancel request.
+     clearCancel();
+     modelState_ = ModelState::Generating;
+@@ -3847,6 +3869,16 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
+                         bool stop=false;
+                         for(int32_t tok:verified) {
+                             if(generated>=decodeLimit) break;
++                            // D3 ΓÇö EOS in speculative window: stop at the
++                            // first EOS without emitting it; undo the count
++                            // so the bookkeeping reflects only emitted text.
++                            if (tokenizer && tokenizer->isEos(tok)) {
++                                std::fprintf(stderr, "[DECODE] EOS in spec verified window at decode token %zu (tokenId=%d)\n",
++                                    generated, tok);
++                                std::fflush(stderr);
++                                stop=true;
++                                break;
++                            }
+                             outputTokens[generated++]=tok;
+                             medusaDecoder_->observe(tok);
+                             if(onToken&&!onToken(tok)) {stop=true;break;}
+@@ -3954,6 +3986,32 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
+             break;
+         }
+         outputTokens[generated] = nextTok;        if (profiler_) profiler_->endToken(static_cast<uint32_t>(generated));
++        // D3 ΓÇö EOS termination. Stop the decode loop on actual EOS without
++        // emitting it as text. We resolve the EOS id from the tokenizer
++        // metadata at request time (tokenizer->eosTokenId()), NOT from a
++        // generic TOK_CONTROL filter: only the model's own EOS token ends
++        // generation. Tokens are still classified post-sample so the
++        // bookkeeping records what would have been emitted.
++        const bool isEosToken = tokenizer && tokenizer->isEos(nextTok);
++        if (isEosToken) {
++            std::fprintf(stderr, "[DECODE] EOS at decode token %zu (tokenId=%d)\n",
++                generated, nextTok);
++            std::fflush(stderr);
++            // We do NOT increment `generated` for the EOS token itself and we
++            // do NOT call onToken(EOS). The loop ends here.
++            //
++            // The rollback is guarded. `generated` is a size_t initialised to 0
++            // at the top of the decode loop, so an unguarded `--generated`
++            // underflowed to SIZE_MAX whenever the FIRST sampled token was
++            // EOS ΓÇö which is the normal outcome for a well-formed model given
++            // a complete prompt. generate() then returned SIZE_MAX as its token
++            // count, and generateStream() sized its result vector from it:
++            //   std::vector<int> out(limit);
++            //   res.generatedTokens = n;   // n == SIZE_MAX
++            // so every subsequent read of out[i] was out of bounds.
++            if (generated > 0) --generated;
++            break;
++        }
+         ++generated;
+         if(specActive) medusaDecoder_->observe(nextTok);
+         pendingToken=nextTok;
+@@ -4070,22 +4128,46 @@ GenerationResult Deep2Engine::generateStream(
+     auto toks = tokenize(prompt);
+     res.promptTokens = toks.size();
+     if (toks.empty() || !initialized || !modelWeights.loaded) {
++        // D1 ΓÇö initialization-failure / empty-input: distinguish empty
++        // input (InvalidInput) from an uninitialized engine (InternalError).
++        // Never report completed=true on either path.
+         std::fprintf(stderr, "[STREAM] EARLY_EXIT toks=%zu init=%d loaded=%d\n",
+             toks.size(), initialized ? 1 : 0, modelWeights.loaded ? 1 : 0);
+         std::fflush(stderr);
++        if (toks.empty()) {
++            res.status = GenerationStatus::InvalidInput;
++            res.failureDetail = "empty prompt: tokenizer produced zero tokens";
++        } else {
++            res.status = GenerationStatus::InternalError;
++            res.failureDetail = std::string("engine not ready: initialized=")
++                + (initialized ? "1" : "0")
++                + " loaded=" + (modelWeights.loaded ? "1" : "0");
++        }
++        res.completed = false;
+         return res;
+     }
+ 
+-    // maxTokens==0 means "until a real stop condition". This engine does not
+-    // yet own EOS metadata, so the hard context boundary is the safe stop.
++    // maxTokens==0 means "until a real stop condition". D3: that stop condition
++    // is the model's own EOS token, resolved from tokenizer metadata inside
++    // generate() (Deep2Engine.cpp:3995) via isEos() ΓÇö identity against a
++    // configured id, not a TOK_CONTROL class test. The context boundary remains
++    // the hard stop beneath it.
+     size_t limit = options.maxTokens;
+     if (limit == 0) {
+         if (config.maxSeqLen > toks.size()) {
+             limit = config.maxSeqLen - toks.size();
+         } else {
++            // D1 ΓÇö context-exhaustion: the request cannot proceed because the
++            // prompt alone fills the model context. Surface this as
++            // InvalidInput (the request shape is not serviceable) rather than
++            // InternalError, and never report completed=true.
+             std::fprintf(stderr, "[STREAM] EARLY_EXIT: promptLen=%zu >= maxSeqLen=%zu (context full)\n",
+                 toks.size(), (size_t)config.maxSeqLen);
+             std::fflush(stderr);
++            res.status = GenerationStatus::InvalidInput;
++            res.failureDetail = std::string("prompt length ") + std::to_string(toks.size())
++                + " >= maxSeqLen " + std::to_string(config.maxSeqLen);
++            res.completed = false;
+             return res;
+         }
+     }
+@@ -4106,20 +4188,20 @@ GenerationResult Deep2Engine::generateStream(
+     res.promptTimeMs = st.prefillMs;
+     res.generationTimeMs = st.decodeMs;
+     res.cancelled = cancelRequested_.load(std::memory_order_acquire);
+-    res.completed = !res.cancelled;
+-    std::fprintf(stderr, "[STREAM] RESULT generated=%zu promptTokens=%zu prefillMs=%.1f decodeMs=%.1f tps=%.2f cancelled=%d completed=%d\n",
+-        (size_t)n, (size_t)res.promptTokens, res.promptTimeMs, res.generationTimeMs,
+-        st.decodeMs > 0 ? (double)n / (st.decodeMs / 1000.0) : 0.0,
+-        res.cancelled ? 1 : 0, res.completed ? 1 : 0);
+-    std::fflush(stderr);
+-    if (n == 0 && !res.cancelled && lastFailureDetail_.empty()) {
+-        std::fprintf(stderr, "[STREAM] 0_TOKENS_NO_FAILURE: likely EOS or context boundary (EndOfSequence)\n");
+-        std::fflush(stderr);
+-    }
+-    // P0.3: intentional status contract (see enum comment in Deep2Engine.h).
++    // D1 ΓÇö result contract: derive `completed` ONLY from the resolved status,
++    // never from `cancelled` alone. The invariant is:
++    //   completed == (status == GenerationStatus::Completed)
++    // This makes the previous bug structurally impossible:
++    //   (ForwardFailure, completed=true, generatedTokens=0)
++    // and also (Cancelled, completed=true, generatedTokens>0) and
++    // (EndOfSequence, completed=true, generatedTokens=0).
++    // RAWRXD_DEEP2_RESULT_CONTRACT_001 ΓÇö distinct from the KV-lifecycle gate
++    // RAWRXD_DEEP2_GENERATION_LIFECYCLE_001, which is a different invariant.
++    // One gate ID cannot certify two defects independently: either could be
++    // retired while the other silently inherited the certification.
+     if (res.cancelled) {
+         res.status = GenerationStatus::Cancelled;
+-    } else if (n > 0) {
++    } else if (n > 0 && lastFailureDetail_.empty()) {
+         res.status = GenerationStatus::Completed;
+     } else if (!lastFailureDetail_.empty()) {
+         res.status = lastFailureStatus_;
+@@ -4129,6 +4211,73 @@ GenerationResult Deep2Engine::generateStream(
+         // boundary. Legitimate, NOT an error.
+         res.status = GenerationStatus::EndOfSequence;
+     }
++    res.completed = (res.status == GenerationStatus::Completed);
++    std::fprintf(stderr, "[STREAM] RESULT generated=%zu promptTokens=%zu prefillMs=%.1f decodeMs=%.1f tps=%.2f cancelled=%d completed=%d status=%d\n",
++        (size_t)n, (size_t)res.promptTokens, res.promptTimeMs, res.generationTimeMs,
++        st.decodeMs > 0 ? (double)n / (st.decodeMs / 1000.0) : 0.0,
++        res.cancelled ? 1 : 0, res.completed ? 1 : 0, (int)res.status);
++    std::fflush(stderr);
++    if (n == 0 && !res.cancelled && lastFailureDetail_.empty()) {
++        std::fprintf(stderr, "[STREAM] 0_TOKENS_NO_FAILURE: likely EOS or context boundary (EndOfSequence)\n");
++        std::fflush(stderr);
++    }
++    // Contract check, reported rather than fatal.
++    //
++    // The previous implementation called std::abort() here. Two problems with
++    // that. First, the guards were tautological: `res.completed` was assigned
++    // from `res.status` on the line above, so `res.completed && status !=
++    // Completed` was already false and `!res.completed && status == Completed`
++    // was already false. They could never fire, so the comment's claim that
++    // they would "catch any future regression" was false ΓÇö a future change
++    // that inverted the assignment would have had to also re-derive the guards
++    // for them to notice anything.
++    //
++    // Second, abort() in a path reachable from rawr-server, rawr and Win32IDE
++    // chat streaming terminates the host process over a contract defect, with
++    // no receipt and nothing a user can act on. A violated contract is a
++    // result, not a reason to kill the program that has to report it.
++    //
++    // The invariant is now structural, and what is left below is a genuine
++    // post-condition on the returned result: it downgrades the result to
++    // InternalError and records why, so the failure travels through the same
++    // contract as every other failure.
++    {
++        const bool violated =
++            (res.completed && (res.status != GenerationStatus::Completed ||
++                               res.generatedTokens == 0)) ||
++            (!res.completed && res.status == GenerationStatus::Completed) ||
++            (res.completed && !res.failureDetail.empty());
++        if (violated) {
++            std::fprintf(stderr,
++                "[STREAM] CONTRACT_VIOLATION: status=%d completed=%d "
++                "generatedTokens=%llu failureDetail=%s\n",
++                (int)res.status, res.completed ? 1 : 0,
++                (unsigned long long)res.generatedTokens, res.failureDetail.c_str());
++            std::fflush(stderr);
++            res.status = GenerationStatus::InternalError;
++            res.completed = false;
++            if (res.failureDetail.empty()) {
++                res.failureDetail =
++                    "result contract violated: status and completed disagree";
++            }
++        }
++    }
++    // D2 ΓÇö generation lifecycle.
++    //
++    // The reset is NOT performed here. It is performed once, at the top of
++    // generate(), which is the single boundary every generation passes through
++    // regardless of which front end started it. Three copies of it were
++    // previously scattered across generateStream()'s return paths, which meant
++    // a new early exit added later would silently reintroduce the stale-KV
++    // cpu_forward_exception at prefill token 0 with no compile-time signal.
++    //
++    // Resetting on the way in rather than on the way out also keeps
++    // kvCacheLength() meaningful after a generation returns. Resetting on the
++    // way out forced it to 0, which inverted the CP08_KV_WRITE checkpoint in
++    // tests/generation_quality_gate.cpp ΓÇö that gate reads the length right
++    // after the call and derives PASS from it being non-zero, so it reported
++    // FAIL on every run while the gate's own top-level verdict still printed
++    // PASS. RAWRXD_DEEP2_GENERATION_LIFECYCLE_001.
+     return res;
+ }
+ 
+

@@ -1,0 +1,73 @@
+=== ITEM 15: Final inspection (read-only) ===
+timestamp=2026-09-30T21:55:00-04:00
+--- HEAD ---
+head=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+branch=model-correctness
+head_short=a078e3b87
+--- Working tree status (Batch-2-authorized paths only) ---
+modified_count=5
+files_modified=src/deep2/Sampler.hpp
+files_modified=src/deep2/Sampler.cpp
+files_modified=src/deep2/Deep2Engine.h
+files_modified=src/deep2/Deep2Engine.cpp
+files_modified=src/deep2/Tokenizer.hpp
+files_new=tools/deep2_generation_lifecycle_test.cpp
+files_new=audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_2_FINAL_RECEIPT.md
+files_new=audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_2_FINAL_RECEIPT.txt
+files_new=audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_2_CLOSURE_item10_4gen_FINAL.log
+--- Lease ---
+lease_pid=30252
+lease_nonce=9173044126588327717
+lease_head=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+head_matches_lease=True
+lease_holder_alive=True
+i_am_lease_holder=False
+my_pid=15228
+--- Concurrent mutation state ---
+All mutations within lease-authorized paths
+writer_lease_at=F:\~dev\.rawrxd\leases\writer.lease
+writer_lease_owner=PID 30252
+no_concurrent_writer_observed=yes
+--- Build artifacts ---
+exe_path=F:\~dev\rawrxd\bin\deep2_generation_lifecycle_test.exe
+exe_size_bytes=1051648
+exe_sha256=3DF7B3D9F6554D994DE06EA42320E93903C96E6EE552BE337A02C01D3BB79396
+lib_path=F:\~dev\rawrxd\build_ide_audit\Release\InferenceEngine_patched.lib
+lib_sha256=2406B4949599BCC26CBF23E3AA7B407FAE8C0F30BE4AB87159762BFEF687804D
+--- Measured results ---
+D1_RESULT_CONTRACT=PASS
+D2_GENERATION_LIFECYCLE=PASS (kvBefore=0 for B[0..3] and D[0])
+D3_EOS_STOP_HANDLING=PASS
+SAMPLER_OPTIONS=ALL_CONSUMED
+CP08_KV_WRITE=PASS
+FORWARD_FAILURE_REPORTED_AS_COMPLETED=0
+CANCELLED_REPORTED_AS_COMPLETED=0
+COMPLETED_WITH_ZERO_GENERATED_TOKENS=0
+GENERATION_INHERITED_KV_FROM_PRIOR_GENERATIONS=0
+GENERATIONS_SUCCEEDED=4 of 4
+D_TERMINATED_AT_CEILING=1
+SAME_ENGINE_ALL_GENERATIONS_PASS=1
+RESULT_CONTRACT_CLEAN=1
+VERDICT=PASS
+--- Receipts ---
+BATCH_2_FINAL_RECEIPT.md SHA256=363452D77B44B07E53C7E9CE0BFF517E67F720BA11DE8F2F8BBEAF1D45F99D71
+BATCH_2_FINAL_RECEIPT.txt SHA256=5A057BEBC6819A4AF8CE90844161C9C89F48E171AD8694055C7AE3C787912B71
+4gen_FINAL.log SHA256=9D5D5C36214BCF243F1912F03CA93BDC204105782C227BB912DDA404532393ED
+--- D2 hotfix ---
+RAWRXD_ENABLE_SPEC_KV_RESET=GATED (default OFF; call skipped)
+Hotfix source location: Deep2Engine.cpp lines 689-707 (reset() function)
+Latent SSM divide-by-zero fix: Deep2Engine.cpp lines 671-683 (reset() function)
+--- No commit, no push ---
+no_commit_performed=yes
+no_push_performed=yes
+--- Final verdict ---
+items_completed=15/15
+items_blocked=0
+BATCH_2_VERDICT=CLOSED_PASS
+BATCH_3_VERDICT=INCOMPLETE_NO_AGENT_CERT (not attempted this session)
+recommendation=PROCEED_TO_NEXT_GATE
+next_gate=RAWRXD_SINGLE_WRITER_AUTHORITY_001
+safe_to_promote_batch_2=1
+safe_to_promote_receipt_immutability=0
+safe_to_w8_certify=0
+safe_to_gpu=0

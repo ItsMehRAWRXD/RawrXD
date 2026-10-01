@@ -1,0 +1,30 @@
+Sampler.cpp
+_sampler_gate.cpp
+BUILD_OK
+=== RAWRXD_BATCH_02_SAMPLER_GATE_001 ===
+build_unix=1790815151
+  [INFO] determinism: match=1 firstDiffStep=-1
+FIELD=seed STATUS=PASS msg="same seed + same logits + same options -> identical sequence across 50 steps"
+  [INFO] seed sensitivity: differ=1 firstDiffStep=1
+FIELD=seed STATUS=PASS msg="different seeds with stochastic CombinedSampler must differ within 100 steps"
+  [INFO] temp=0.1 max_prob=0.1728, temp=5.0 max_prob=0.1259
+FIELD=temperature STATUS=PASS msg="temp=0.1 vs temp=5.0 produce different softmax probabilities (field reaches sampler)"
+  [INFO] CombinedSampler topK=2 vs 8: differ=1 firstDiff=0
+FIELD=topK STATUS=PASS msg="CombinedSampler topK=2 vs 8 must produce different sequence"
+  [INFO] logits=[2.0,1.2,-3,-3] halfP=0.5 token0_sel=1000, wideP=0.99 token0_sel=697
+  [INFO] halfP all-zero=1, wideP has-non-zero=1
+FIELD=topP STATUS=PASS msg="topP=0.5 nucleus={0}: token0 always selected"
+FIELD=topP STATUS=PASS msg="topP=0.99 nucleus={0,1,2,3}: non-0 tokens selected sometimes"
+  [INFO] minP=0.5: token0 selected 1000 / 1000 (only token0 above 0.5*maxP=0.333)
+FIELD=minP STATUS=PASS msg="minP=0.5 with p0=0.666 maxP=0.666 -> only token0 above threshold"
+  [INFO] minP=0.01: non-token0 selections = 165 / 1000 (all tokens above 0.01*maxP=0.00666)
+FIELD=minP STATUS=PASS msg="minP=0.01 must allow tokens below 0.5*maxP threshold"
+FIELD=repeatPenalty STATUS=PASS msg="penalty=1.0 must report active()==false"
+  [INFO] penalty=1.5 with prior=[0], logits=[0.5,2,2,2]: after apply l=[0.333,2.000,2.000,2.000] argmax=1
+FIELD=repeatPenalty STATUS=PASS msg="penalty=1.5 suppresses token0; argmax must be != 0"
+FIELD=repeatPenalty STATUS=PASS msg="penalty=1.5 divides token0 logit by 1.5 (measured l[0] = 0.333)"
+  [INFO] CombinedSampler topP=0.5 vs 0.99 (curated logits): differ=1
+FIELD=topP STATUS=PASS msg="CombinedSampler topP=0.5 vs 0.99 on curated logits must differ"
+  [INFO] CombinedSampler minP=0.05 vs 0.30 (curated logits): differ=0
+FIELD=minP STATUS=FAIL msg="CombinedSampler minP=0.05 vs 0.30 on curated logits must differ"
+=== SUMMARY: 12 / 13 tests PASSED ===

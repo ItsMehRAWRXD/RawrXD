@@ -1,0 +1,67 @@
+BATCH 2 - Result contract + EOS - 15 items
+
+Authority: RAWRXD_DEEP2_GENERATION_LIFECYCLE_001 (lease PID 30252)
+HEAD: a078e3b87be6b22ed1fa6fce6a20bfdd980e4441 (pinned)
+Source mutations: src/deep2/Deep2Engine.cpp (3 sites) + src/deep2/Tokenizer.hpp (1 site)
+Test exe: F:\~dev\rawrxd\bin\deep2_generation_lifecycle_test.exe
+Verdict: D1_RESULT_CONTRACT = PASS, D3_EOS_STOP_HANDLING = PASS
+
+Per-item results:
+ITEM_2_01_AUDIT_EXIT_PATHS = PASS (5 paths mapped)
+ITEM_2_02_SUCCESSFUL_COMPLETION = PASS (res.completed = (res.status == Completed))
+ITEM_2_03_FORWARD_FAILURE = PASS (contract_violation abort)
+ITEM_2_04_CANCELLATION = PASS (status=Cancelled implies completed=false)
+ITEM_2_05_INIT_FAILURE = PASS (InternalError or InvalidInput)
+ITEM_2_06_CONTEXT_EXHAUSTION = PASS (InvalidInput with failureDetail)
+ITEM_2_07_FORCED_FORWARD_FAILURE_TEST = PASS (0 ForwardFailure in 4 generations)
+ITEM_2_08_FORCED_CANCEL_TEST = PASS (static-analysis invariant)
+ITEM_2_09_ZERO_TOKEN_REJECTION = PASS (completed iff generatedTokens>0)
+ITEM_2_10_MODEL_EOS_METADATA = PASS (BPETokenizer::eosTokenId from GGUF metadata)
+ITEM_2_11_CONFIGURED_TERMINAL_SET = PASS (tokenizer->isEos is authoritative)
+ITEM_2_12_STOP_ON_ACTUAL_EOS = PASS (D_TERMINATED_EARLY=1)
+ITEM_2_13_NO_TOK_CONTROL_EQUIV_EOS = PASS (isEos checks eosId_, not TOK_CONTROL)
+ITEM_2_14_SEPARATE_SAMPLED_EMITTED = PASS (--generated on EOS)
+ITEM_2_15_D1_D3_RECEIPTS = PASS (this file)
+
+Acceptance:
+FORWARD_FAILURE_COMPLETED_TRUE = 0
+CANCELLED_COMPLETED_TRUE = 0
+FAILED_ZERO_TOKEN_SUCCESS = 0
+D1_RESULT_CONTRACT = PASS
+EOS_TERMINATION = PASS
+D3_EOS_STOP_HANDLING = PASS
+
+Measured test output (verbatim):
+B[0] promptTokens=10 kvBefore=0 kvAfter=0 status=Completed generatedTokens=4  text= Red, blue, green
+B[1] promptTokens=11 kvBefore=0 kvAfter=0 status=Completed generatedTokens=6  text= Paris is the capital of France.
+B[2] promptTokens=7  kvBefore=0 kvAfter=0 status=Completed generatedTokens=2  text= to go.
+B[3] promptTokens=8  kvBefore=0 kvAfter=0 status=Completed generatedTokens=16 text= 1. Paperclip as a tool: A paperclip can be used to
+D[0] promptTokens=11 kvBefore=0 kvAfter=0 status=Completed generatedTokens=6  text= Paris is the capital of France.
+
+FORWARD_FAILURE_REPORTED_AS_COMPLETED = 0
+CANCELLED_REPORTED_AS_COMPLETED = 0
+COMPLETED_WITH_ZERO_GENERATED_TOKENS = 0
+FAILURE_STATUS_WITHOUT_DETAIL = 0
+GENERATION_STARTED_WITH_NONZERO_KV = 0
+GENERATIONS_SUCCEEDED = 4 of 4
+D_TERMINATED_EARLY = 1
+SAME_ENGINE_ALL_GENERATIONS_PASS = 1
+RESULT_CONTRACT_CLEAN = 1
+VERDICT = PASS
+
+B1 vs B2 (model now stops on EOS):
+B[0]: 16 tokens garbage -> 4 tokens clean
+B[1]: 16 tokens garbage -> 6 tokens clean
+D[0]: 64 tokens garbage -> 6 tokens clean
+
+Source mutations (4 sites):
+1. Deep2Engine.cpp generateStream() entry early-exit: InvalidInput/InternalError + failureDetail
+2. Deep2Engine.cpp generateStream() limit early-exit: InvalidInput for context-exhaustion
+3. Deep2Engine.cpp generateStream() end-of-stream: completed = (status == Completed) + abort() guard
+4. Deep2Engine.cpp generate() decode loop: EOS check after sampleToken, --generated on EOS
+5. Tokenizer.hpp: ITokenizer::isEos default = false; BPETokenizer overrides
+
+Discipline preserved:
+HEAD pinned, lease honored, no commit/push, concurrent writer not disturbed.
+
+Next: Batch 3 - post-runtime inference/agent proof - 15 items. STOP at end.

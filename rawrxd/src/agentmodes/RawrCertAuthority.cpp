@@ -85,6 +85,12 @@ struct Sha256 {
 
 } // namespace
 
+std::string sha256Bytes(const void* data, size_t len) {
+    Sha256 s;
+    if (data && len) s.update(static_cast<const uint8_t*>(data), len);
+    return s.hex();
+}
+
 std::string sha256File(const std::string& path) {
     std::FILE* f = nullptr;
     if (fopen_s(&f, path.c_str(), "rb") != 0 || !f) return std::string();

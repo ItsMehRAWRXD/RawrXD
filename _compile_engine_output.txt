@@ -1,0 +1,5 @@
+Deep2Engine.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(119): warning C4476: 'fprintf' : unknown type field character ',' in format specifier
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(142): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(142): note: placeholders and their parameters expect 25 variadic arguments, but 27 were provided
+COMPILE_OK

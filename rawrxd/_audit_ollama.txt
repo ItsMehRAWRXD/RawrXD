@@ -1,0 +1,17 @@
+
+Path                                                  LineNumber Line
+----                                                  ---------- ----
+F:\~dev\rawrxd\src\core\ssot_handlers_ext.cpp                881         return "OLLAMA_API_KEY";
+F:\~dev\rawrxd\src\deep2\rawrxd_run_modelname_001.cpp        199         std::fprintf(stderr, "[rawr run] OLLAMA_RESOLVE: '%s' -> %s\n",
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.cpp              2 // RawrXD OllamaCatalogReader - Reads Ollama manifests and blobs
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.cpp              4 #include "models/OllamaCatalogReader.h"
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.cpp             13     struct OllamaCatalogReaderState
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.cpp             25     static OllamaCatalogReaderState g_ollamaState;
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.cpp             41         std::cout << "[OllamaCatalogReader] Read Ollama manifests:" << std::endl;
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.cpp             52         std::cout << "[OllamaCatalogReader] Reading Ollama blobs..." << std::endl;
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.cpp             59         std::cout << "[OllamaCatalogReader] Blobs scanned: " << g_ollamaState.blobsScanned << std::endl;
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.cpp             86     void writeOllamaCatalogReceipt()
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.cpp             88         std::cout << "[OllamaCatalogReader] Writing Ollama catalog receipt:" << std::endl;
+F:\~dev\rawrxd\src\models\OllamaCatalogReader.h               26     void writeOllamaCatalogReceipt();
+
+

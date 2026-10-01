@@ -1,0 +1,66 @@
+GATE=RAWRXD_STATE_FREEZE_001
+TIMESTAMP=2026-09-29
+HEAD=323f5aaba1ea0e4866e0be76d702c7f109d29eaf
+
+FALSE_PASS_COMMIT=4659ed89e
+FIRST_RETRACTION=366b6d81c
+SECOND_RETRACTION=37685e71b
+RETRACTION_DUPLICATED=1
+THIRD_RETRACTION_CREATED=0
+
+RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001=RETRACTED_FALSE_PASS
+RAWRXD_SINGLE_WRITER_AUTHORITY_001=FAIL_RECURRING
+RAWRXD_RAWR_DUMP_CPU_ONLY_AUTHORITY_001=IMPLEMENTED_REPORTED_NOT_CHAIN_CERTIFIED
+
+LEDGER_RELATIONSHIP_DOCUMENTED=1
+SAFE_TO_CONTINUE_CERT_MUTATIONS=0
+SAFE_TO_W8_CERTIFY=0
+SAFE_TO_GPU=0
+STRICT_CERT=NOT_COMPLETE
+
+# Committed history is frozen here. No further commits until the
+# single-writer authority is enforceable.
+
+NEXT_BATCH=RAWRXD_SINGLE_WRITER_AUTHORITY_001
+NEXT_BATCH_MUTATION_ALLOWED=0
+NEXT_BATCH_PROOF_REQUIRED=enforceable_lease_check
+
+# The single-writer acceptance equation is derived, not asserted:
+#   const bool pass =
+#       leaseAcquiredExclusively &&
+#       secondWriterAcquireBlocked &&
+#       commitWithoutLeaseBlocked &&
+#       commitAfterHeadMovedBlocked &&
+#       unauthorizedStagedPathBlocked &&
+#       foreignLeaseReleaseBlocked &&
+#       staleLeaseRecoveryTested;
+#   const char* verdict = pass ? "PASS" : "FAIL";
+
+SECOND_WRITER_ACQUIRE_BLOCKED=0
+COMMIT_WITHOUT_LEASE_BLOCKED=0
+COMMIT_AFTER_HEAD_MOVED_BLOCKED=0
+UNAUTHORIZED_STAGED_PATH_BLOCKED=0
+FOREIGN_LEASE_RELEASE_BLOCKED=0
+STALE_LEASE_RECOVERY_TESTED=0
+
+VERDICT_DERIVED_FROM_CHECKS=0
+HARDCODED_VERDICT=0
+
+# Most valuable adversarial tests:
+#   Writer A acquires lease at HEAD=X
+#     -> Writer B attempts mutation/commit
+#     -> Writer B MUST be rejected
+#   Writer A owns lease
+#     -> HEAD nevertheless changes X->Y
+#     -> Writer A MUST refuse commit
+#     -> gate FAIL
+
+HEAD_STABILITY=UNTRUSTED
+COMMIT_AUTHORITY=UNTRUSTED
+CERTIFICATION_PROVENANCE=UNTRUSTED
+
+# Until single-writer is enforceable, this file is an uncommitted
+# diagnostic artifact. It is NOT committed and is NOT a third
+# corrective record. It records the stopping point only.
+
+VERDICT=FAIL

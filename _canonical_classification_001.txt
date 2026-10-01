@@ -1,0 +1,114 @@
+GATE=RAWRXD_SINGLE_WRITER_CANONICAL_CLASSIFICATION_001
+TIMESTAMP=2026-09-29
+HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+PRE_FLIGHT=PASS
+
+# ============================================================================
+# CLASSIFICATION
+# ============================================================================
+# The bootstrap aborted at Step 4 because a competing writer declared a
+# different allowlist before staging. That is a SUCCESSFUL DETECTION of
+# the exact condition the bootstrap is designed to eliminate.
+#
+# The implementation itself passed isolated adversarial tests (8/8 measured
+# predicates, verdict derived, never hardcoded). But the correct status
+# remains PROVEN_IN_ISOLATION_NOT_ENFORCED, because the authority did not
+# itself block the competing writer; a human observed and stopped it.
+
+RAWRXD_SINGLE_WRITER_AUTHORITY_001=PROVEN_IN_ISOLATION_NOT_ENFORCED
+ISOLATED_ADVERSARIAL_TEST=PASS
+REQUIRED_PREDICATES=8
+REQUIRED_PREDICATES_PASSED=8
+VERDICT_DERIVED_FROM_CHECKS=1
+HARDCODED_VERDICT=0
+
+BOOTSTRAP_COMMIT=ABORTED_FOREIGN_WRITER
+STAGED_COUNT=0
+COMMITTED=0
+PUSHED=0
+
+# This is NOT an 18th acceptance predicate. Empirical evidence of a foreign-
+# writer abort is excellent, but until the authority itself blocks the
+# foreign writer (not a human observer), the status remains
+# PROVEN_IN_ISOLATION_NOT_ENFORCED.
+
+# ============================================================================
+# CANONICAL CHOICE (operator decision, NOT bootstrap-authorized)
+# ============================================================================
+# Based on accumulated evidence, the operator-level canonical
+# implementation is:
+#
+#   src/agentmodes/WriterLeaseAuthority.h
+#   src/agentmodes/WriterLeaseAuthority.cpp
+#   tools/single_writer_adversarial_test.cpp
+#
+# Reason: this implementation carries the stronger 17-check adversarial
+# coverage, including PID-reuse/process-creation-time handling and
+# proven-dead stale recovery via GetExitCodeProcess/STILL_ACTIVE.
+# SingleWriterAuthority (rawrxd::authority) has a good 8/8 harness but
+# discarding the stronger tested implementation would create another
+# parallel authority.
+#
+# This is an OPERATOR CHOICE, not bootstrap authorization.
+# It does NOT authorize deletion of src/authority/SingleWriterAuthority.*.
+
+CANONICAL_IMPLEMENTATION=src/agentmodes/WriterLeaseAuthority.*
+ALTERNATIVE_PRESERVED=src/authority/SingleWriterAuthority.*
+PARALLEL_AUTHORITIES_FORBIDDEN=1
+
+# ============================================================================
+# UNRESOLVED (must be resolved before any bootstrap commit)
+# ============================================================================
+# 1. Which implementation is canonical?         (operator decided above)
+# 2. How is the alternative reconciled?        (NOT resolved)
+#    - PRESERVED for future reference?
+#    - MOVED to a non-conflicting namespace?
+#    - DELETED in a separate controlled commit?
+# 3. What is the allowlist that exactly matches
+#    the canonical implementation?             (NOT resolved here)
+# 4. Is the CMakeLists.txt wiring of the
+#    canonical implementation correct?         (NOT verified)
+# 5. Does the canonical build produce a binary
+#    that passes the 17-check adversarial run? (NOT re-run)
+
+# ============================================================================
+# CORRECT NEXT OPERATION (operator-controlled, not bootstrap-internal)
+# ============================================================================
+# The next controlled window is a RECONCILIATION BOOTSTRAP, not ordinary
+# implementation work:
+#
+#   1. Verify HEAD/origin still equal a078e3b87.
+#   2. Acquire an external/operator-enforced exclusive writer window.
+#   3. Declare WriterLeaseAuthority as canonical.
+#   4. Treat SingleWriterAuthority as preserved conflicting work.
+#   5. Re-run the canonical 17-check harness from clean sources.
+#   6. Wire only the canonical implementation into CMake.
+#   7. Prove the built target is the source that passed the tests.
+#   8. Recheck HEAD and staged scope.
+#   9. Bootstrap-commit only the canonical authority + test + bounded
+#      CMake wiring.
+#  10. Immediately begin enforcing that authority for every subsequent
+#      mutation.
+#
+# Until steps 1-2 are performed, NO bootstrap commit is authorized.
+
+NEXT_OPERATION=RECONCILIATION_BOOTSTRAP
+NEXT_OPERATION_REQUIRES=operator_enforced_exclusive_window
+SAFE_TO_BOOTSTRAP=0
+SAFE_TO_COMMIT=0
+SAFE_TO_PUSH=0
+
+# ============================================================================
+# FREEZE BOUNDARY (still in effect)
+# ============================================================================
+W8_WORK=BLOCKED
+STRICT_MIGRATION=BLOCKED
+GPU=BLOCKED
+
+# Everything else from the prior ledger remains:
+# - ca8ff4f5b PRESERVE_UNCERTIFIED
+# - a078e3b87 PRESERVE_UNCERTIFIED
+# - RAWRXD_RECEIPT_IMMUTABILITY_AUTHORITY_001 RETRACTED_FALSE_PASS
+# - HEAD_STABILITY UNTRUSTED until WriterLeaseAuthority is wired and proven
+
+VERDICT=FAIL

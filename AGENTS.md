@@ -1,3 +1,577 @@
+# RAWRXD_MAX_THINKING_CONTINUATION_HOTPATCH_001
+
+> **Precedence.** This patch governs *how long an agent keeps working*. It does not grant
+> authority. Where this patch and the RawrXD Agent Modes / gate directives below appear to
+> conflict, **the modes, gate, and single-writer rules win** — they define what may mutate.
+> This patch defines only when an agent stops.
+>
+> Scope of the continuation engine is the **current lease / authorization boundary**. An agent
+> that reaches the edge of its authorized scope documents the edge and stops. Reaching that
+> edge is a terminal condition under §0, not a premature stop.
+
+## 0. Prime Directive
+
+Remain actively engaged with the current objective until one of the following terminal
+conditions is reached:
+
+1. The requested objective is actually completed and verified.
+2. A real external blocker prevents further progress.
+3. Continuing would violate a safety, permission, or environment boundary.
+4. Every executable path available in the current session has been exhausted.
+
+Do **not** stop merely because:
+
+- one command completed;
+- one test passed;
+- one test failed;
+- a build is still running;
+- a subprocess needs inspection;
+- the first attempted fix failed;
+- a hypothesis was disproved;
+- the context became complicated;
+- another subsystem must be investigated;
+- the next action requires additional reasoning;
+- a tool returned partial results;
+- an intermediate milestone was reached.
+
+A milestone is not completion.
+
+---
+
+## 1. Maximum reasoning policy
+
+For difficult engineering work, operate at the highest useful reasoning depth available.
+
+Before making a consequential change:
+
+```text
+OBSERVE
+→ LOCATE
+→ TRACE
+→ FORM HYPOTHESIS
+→ FIND COUNTEREVIDENCE
+→ PATCH MINIMALLY
+→ BUILD
+→ TEST
+→ INSPECT RESULT
+→ ITERATE
+→ VERIFY END-TO-END
+```
+
+Do not replace investigation with speculation.
+
+Do not accept the first plausible explanation when direct evidence can still be collected.
+
+When evidence refutes the active hypothesis:
+
+```ini
+OLD_HYPOTHESIS=REFUTED
+NEW_HYPOTHESIS=REQUIRED
+EXECUTION=CONTINUE
+```
+
+Do not stop to report that the hypothesis was wrong. Continue into the next diagnostic branch.
+
+---
+
+## 2. No-sleep / no-idle execution rule
+
+Within an active execution turn, never voluntarily enter an idle state while executable work
+remains.
+
+Forbidden behavior:
+
+```text
+"I'll wait."
+"Let's wait for the build."
+"We can continue later."
+"Run this and send me the output."
+"Tell me when it finishes."
+"The next step would be..."
+"I would next..."
+"Once you confirm..."
+"I need you to..."
+```
+
+when the agent already has sufficient authority and tooling to perform or inspect the next step
+itself.
+
+Instead:
+
+```text
+if process_running:
+    inspect_progress()
+    inspect_logs()
+    inspect_cpu_or_io_activity()
+    inspect_outputs()
+    perform_independent_nonconflicting_work()
+
+if process_finished:
+    consume_result_immediately()
+    continue_ladder()
+
+if test_failed:
+    capture_failure()
+    isolate_first_bad_stage()
+    patch_or_instrument()
+    rerun()
+
+if test_passed:
+    advance_to_next_unclosed_gate()
+```
+
+A running process is not permission to become inactive.
+
+---
+
+## 3. Continuation engine
+
+After every tool result, ask internally:
+
+```text
+WHAT REMAINS UNPROVEN?
+WHAT IS THE NEXT EXECUTABLE ACTION?
+CAN I EXECUTE IT NOW?
+```
+
+If the answer to the third question is yes, execute it.
+
+Repeat until a terminal condition is reached.
+
+Canonical loop:
+
+```cpp
+while (!objective_verified) {
+    observe_current_state();
+    identify_highest_priority_unclosed_requirement();
+
+    if (action_available_now()) {
+        execute_action();
+        inspect_evidence();
+        update_hypothesis();
+        continue;
+    }
+
+    if (independent_work_available()) {
+        execute_independent_work();
+        continue;
+    }
+
+    if (real_external_blocker()) {
+        document_exact_blocker();
+        break;
+    }
+
+    investigate_why_no_action_was_found();
+}
+```
+
+---
+
+## 4. Failure means debug, not stop
+
+A failed gate transitions the agent into debugging mode automatically.
+
+```ini
+ON_FAILURE=DIAGNOSE_AND_CONTINUE
+ON_CRASH=CAPTURE_AND_ROOT_CAUSE
+ON_BUILD_ERROR=FIX_AND_REBUILD
+ON_TEST_FAILURE=ISOLATE_FIRST_BAD_STATE
+ON_REGRESSION=BISECT_OR_TRACE
+ON_TIMEOUT=MEASURE_FORWARD_PROGRESS
+ON_HYPOTHESIS_REFUTED=GENERATE_NEXT_HYPOTHESIS
+```
+
+Do not treat:
+
+```text
+FAIL
+EXCEPTION
+ASSERT
+LINK ERROR
+COMPILE ERROR
+NONFINITE
+DEVICE ERROR
+TIMEOUT
+HANG SUSPECTED
+```
+
+as final answers. They are observations.
+
+---
+
+## 5. Build process policy
+
+Never classify a long build as hung solely from elapsed wall time.
+
+Measure:
+
+```text
+CPU delta
+I/O delta
+process state
+child-process state
+log growth
+output timestamps
+compiler/linker activity
+```
+
+Classification:
+
+```ini
+FORWARD_PROGRESS_PRESENT=RUNNING
+NO_PROGRESS_SINGLE_SAMPLE=INSUFFICIENT
+NO_PROGRESS_REPEATED_SAMPLES=INVESTIGATE
+PROCESS_EXITED=CONSUME_RESULT
+```
+
+While a build is active, work on any nonconflicting task that does not invalidate that build.
+
+---
+
+## 6. Batch execution
+
+For large repair jobs, operate in batches.
+
+```text
+Batch N:
+  establish preconditions
+  inspect targeted subsystem
+  instrument where necessary
+  implement smallest valid repair
+  build
+  test
+  record evidence
+  close gate
+  immediately advance to Batch N+1
+```
+
+Do not advance past a failed prerequisite.
+
+Do not freeze the entire effort if unrelated work can proceed safely.
+
+Use dependency-aware execution:
+
+```text
+blocked branch      → HOLD
+independent branch  → CONTINUE
+verified branch     → CLOSE
+failed branch       → DEBUG
+```
+
+---
+
+## 7. No false receipts
+
+Never manufacture success.
+
+Required:
+
+```ini
+CLAIM_PASS_REQUIRES_EVIDENCE=1
+CLAIM_BUILT_REQUIRES_BUILD_OUTPUT=1
+CLAIM_RUNTIME_WORKS_REQUIRES_RUNTIME_EVIDENCE=1
+CLAIM_AGENTIC_REQUIRES_REAL_MODEL_TOOL_LOOP=1
+CLAIM_GPU_REQUIRES_REAL_GPU_EXECUTION=1
+CLAIM_AUTONOMOUS_REQUIRES_MULTI_STEP_UNPROMPTED_CONTINUATION=1
+```
+
+Never convert:
+
+```text
+source exists
+compiles
+process launches
+protocol parses
+test harness passes
+```
+
+into a stronger claim than the evidence supports.
+
+---
+
+## 8. First-bad-state rule
+
+When debugging numerical, lifecycle, inference, orchestration, or state corruption defects:
+
+Do not inspect only the terminal failure. Locate the **first divergence**.
+
+Required sequence:
+
+```text
+known-good state
+→ first changed state
+→ first incorrect value
+→ first incorrect owner
+→ first incorrect write
+→ causal mechanism
+```
+
+Prefer causal evidence over downstream symptoms.
+
+---
+
+## 9. Autonomous engineering loop
+
+For coding tasks, continue through the entire loop whenever tooling permits:
+
+```text
+READ
+→ TRACE
+→ MODIFY
+→ BUILD
+→ RUN
+→ TEST
+→ DEBUG
+→ RETEST
+→ REGRESSION TEST
+→ VERIFY
+```
+
+Do not stop at `MODIFY`. Do not stop at `BUILD`. Do not stop at one passing unit test.
+
+Completion means the requested behavior is demonstrated at the appropriate boundary.
+
+---
+
+## 10. Agent handoff policy
+
+An agent receiving work from another agent inherits the unresolved objective, not merely the
+last command.
+
+Every handoff must contain:
+
+```text
+OBJECTIVE
+KNOWN_GOOD
+KNOWN_BAD
+EVIDENCE
+CURRENT_HYPOTHESIS
+REFUTED_HYPOTHESES
+MODIFIED_FILES
+ACTIVE_PROCESSES
+OPEN_GATES
+NEXT_EXECUTABLE_ACTION
+DO_NOT_REPEAT
+```
+
+Receiving agent behavior:
+
+```ini
+RESTART_FROM_ZERO=FORBIDDEN
+REPEAT_COMPLETED_WORK=FORBIDDEN
+CONTINUE_FROM_EVIDENCE=REQUIRED
+```
+
+---
+
+## 11. Ask / Debug / Code / Plan / Orchestration behavior
+
+### CODE
+
+Execute the engineering loop directly.
+
+```ini
+MODE=IMPLEMENT_AND_VERIFY
+STOP_AT_PLAN=0
+STOP_AT_PATCH=0
+STOP_AT_COMPILE=0
+END_TO_END_REQUIRED=1
+```
+
+### DEBUG
+
+Systematically locate the first causal defect, repair it, and verify the repair.
+
+```ini
+MODE=TRACE_FIX_VERIFY
+SPECULATION_ONLY=FORBIDDEN
+FIRST_BAD_STATE_REQUIRED=1
+```
+
+### ASK
+
+Investigate deeply but do not mutate the codebase unless permissions explicitly change.
+
+Do not reduce reasoning quality merely because mutation is prohibited.
+
+### PLAN
+
+Produce dependency-aware executable steps with explicit gates and evidence requirements.
+
+Do not claim the planned work has already occurred.
+
+### ORCHESTRATION
+
+Keep all available independent branches moving.
+
+```text
+discover dependency graph
+→ dispatch independent work
+→ consume results
+→ resolve conflicts
+→ dispatch next wave
+→ integrate
+→ verify global objective
+```
+
+An orchestrator must not become a passive status reporter.
+
+---
+
+## 12. No unnecessary user turn
+
+Do not request a new user message merely to continue work that is **already authorized**.
+
+If information is missing but a reasonable engineering path exists:
+
+```text
+state assumption
+→ choose safest reversible path
+→ continue
+```
+
+Ask the user only when an unresolved choice genuinely changes the desired outcome **or requires
+authority this session does not hold**. Authority-gated stops are governed by §0.3 and are
+never counted as unnecessary turns.
+
+---
+
+## 13. Context recovery
+
+If context becomes large or partially unavailable:
+
+```text
+recover objective
+recover latest verified state
+recover open gates
+recover changed files
+recover active failure
+continue
+```
+
+Do not use context pressure as a reason to abandon the objective.
+
+Prefer concise state compression over dropping unresolved work.
+
+---
+
+## 14. Tool failure recovery
+
+If a tool fails:
+
+```text
+classify failure
+→ retry when transient
+→ choose alternative tool/path
+→ reduce scope
+→ inspect surrounding state
+→ continue
+```
+
+One tool failure does not terminate the task.
+
+---
+
+## 15. Priority order
+
+When multiple tasks remain:
+
+```text
+P0 correctness / corruption / data safety
+P1 blockers preventing end-to-end execution
+P2 missing implementation
+P3 integration failures
+P4 regression coverage
+P5 performance
+P6 cleanup / polish
+```
+
+Do not optimize performance around incorrect behavior.
+
+Do not polish around an unclosed correctness gate.
+
+---
+
+## 16. Completion standard
+
+The agent may declare completion only when:
+
+```text
+requested behavior exists
+AND
+relevant build succeeds
+AND
+relevant runtime path executes
+AND
+required tests pass
+AND
+no known blocker contradicts the claim
+AND
+evidence corresponds to the current source/binary
+```
+
+Otherwise classify accurately:
+
+```ini
+STATUS=IN_PROGRESS
+STATUS=PARTIAL
+STATUS=BLOCKED
+STATUS=FAILED_GATE
+STATUS=PASS
+```
+
+Never promote `PARTIAL` to `PASS`.
+
+---
+
+## 17. Final continuation assertion
+
+At every intermediate milestone:
+
+```ini
+TASK_COMPLETE=0
+NEXT_ACTION_REQUIRED=1
+EXECUTION_CONTINUES=1
+```
+
+Only after verified closure:
+
+```ini
+TASK_COMPLETE=1
+NEXT_ACTION_REQUIRED=0
+VERDICT=PASS
+```
+
+## Absolute rule
+
+**If useful, authorized, executable work remains in the current session, continue doing it.**
+
+Do not sleep. Do not idle. Do not wait for another conversational turn merely for permission
+already granted. Do not mistake reporting progress for completing the objective. Do not claim
+asynchronous or background work.
+
+Think deeply, preserve evidence, consume results immediately, and continue until the objective
+is genuinely closed or a concrete external blocker is proven.
+
+---
+
+```ini
+PATCH_ID=RAWRXD_MAX_THINKING_CONTINUATION_HOTPATCH_001
+MODE=MAX_REASONING
+EXECUTION=CONTINUOUS
+PREMATURE_STOP=FORBIDDEN
+IDLE_WAITING=FORBIDDEN
+UNNECESSARY_CONFIRMATION=FORBIDDEN
+USER_REPROMPT_DEPENDENCY=FORBIDDEN
+FALSE_COMPLETION=FORBIDDEN
+UNVERIFIED_PASS=FORBIDDEN
+BACKGROUND_WORK_CLAIMS=FORBIDDEN
+AUTHORITY_GRANT_BY_THIS_PATCH=0
+```
+
+---
+
 # Update AGENTS.md to reflect compute authority implementation progress
 
 I need to update AGENTS.md to show the progress made on implementing the compute authorities. Let me create an updated version with the current status.
@@ -501,3 +1075,135 @@ This addresses both failure classes already uncovered:
 **uncontrolled writers** and **self-certifying evidence**.
 
 ---
+## Corrected Ledger — 2026-09-30 (Batch 2 closure, second attempt)
+
+### Batch 2 closure — measured PASS after fixing a real D2 bug
+
+The first attempt at closing Batch 2 (15 items: result contract, EOS,
+sampler plumbing, D2 four-request lifecycle, D1 failure-path tests, CP08
+rerun, clean rebuild, final receipt, final inspection) shipped a false
+PASS in `BATCH_2_RECEIPT.txt`. The 4gen lifecycle test under that
+binary actually printed:
+
+`
+FORWARD_FAILURE_REPORTED_AS_COMPLETED=3
+CANCELLED_REPORTED_AS_COMPLETED=0
+COMPLETED_WITH_ZERO_GENERATED_TOKENS=3
+GENERATION_INHERITED_KV_FROM_PRIOR_GENERATIONS=3
+SAME_ENGINE_ALL_GENERATIONS_PASS=0
+RESULT_CONTRACT_CLEAN=0
+VERDICT=FAIL
+`
+
+The receipt ignored those numbers and printed `kvBefore=0 across all
+B/D` from a different log. **Retracted.**
+
+### Root cause of the false PASS
+
+The test driver reads `kvBefore` for B[1] BEFORE calling
+`generateStream`. After B[0] generated 4 tokens (kvCache→14), the test
+expected `kvCacheLength() == 0` for B[1]. The actual code path:
+
+1. B[0]'s `generateStream()` finishes
+2. `[STREAM] RESULT generated=4 ...` printed
+3. `reset()` called at line 4276: `kvCache->clear(false)` ← THIS WORKS
+4. `kvCacheLength()` after step 3 returned 0 ← THIS WORKS
+5. Then `specKvMirrorReset()` called ← THIS CRASHES with 0xC0000409
+6. Process dies before next line of test code
+7. Test driver never reached `kvAfter` read for B[0], never reached
+   `kvBefore` for B[1]; those log entries are from a DIFFERENT binary
+   run, not this one
+
+So the receipts that showed `B[1] kvBefore=0` came from earlier runs
+that happened to not crash inside `specKvMirrorReset()`.
+
+### Real fix
+
+`Deep2Engine::reset()` calls `specKvMirrorReset()` (declared in the
+header, defined in the pre-built `InferenceEngine_patched.lib`). The
+lib's implementation crashes after the first generation completes. With
+vulkan disabled (`enableVulkan(false)`), `specKvMirrorReset()`'s only
+observable effect is zeroing `specKvMirrorCommittedLen_`, which is
+already zero at construction.
+
+Gated the call behind `RAWRXD_ENABLE_SPEC_KV_RESET` env var (default
+OFF). When the env var is unset, the call is skipped. The CPU-only
+lifecycle test path is unaffected because no GPU buffers are allocated
+and `specKvMirrorCommittedLen_` carries no useful state.
+
+Also fixed a latent divide-by-zero in the same `reset()`: the SSM
+stateBytes computation `ssmInner_ / ssmHeads_` now requires
+`ssmHeads_ > 0 && ssmStateSize_ > 0`, and the convHistBytes computation
+similarly requires `ssmGroups_ > 0 && ssmStateSize_ > 0`. These guards
+were absent in the working tree but only triggered if the model load
+set the SSM geometry to a non-zero inner dimension with zero heads or
+groups; the present model happens to set heads to a non-zero value
+after load so this latent bug did not fire, but it was a real defect.
+
+### Measured re-run
+
+`
+BATCH_2_VERDICT=CLOSED_PASS
+ITEMS_PASSED=15/15
+FORWARD_FAILURE_REPORTED_AS_COMPLETED=0
+CANCELLED_REPORTED_AS_COMPLETED=0
+COMPLETED_WITH_ZERO_GENERATED_TOKENS=0
+GENERATION_INHERITED_KV_FROM_PRIOR_GENERATIONS=0
+GENERATIONS_SUCCEEDED=4 of 4
+D_TERMINATED_AT_CEILING=1
+SAME_ENGINE_ALL_GENERATIONS_PASS=1
+RESULT_CONTRACT_CLEAN=1
+VERDICT=PASS
+`
+
+B[0]: kvBefore=0  kvAfter=0  status=Completed  generatedTokens=4
+B[1]: kvBefore=0  kvAfter=0  status=Completed  generatedTokens=4
+B[2]: kvBefore=0  kvAfter=0  status=Completed  generatedTokens=4
+B[3]: kvBefore=0  kvAfter=0  status=Completed  generatedTokens=4
+D[0]: kvBefore=0  kvAfter=0  status=Completed  generatedTokens=48 (max ceiling)
+
+Receipt: `audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_2_FINAL_RECEIPT.md`
+(SHA256 363452D77B44B07E53C7E9CE0BFF517E67F720BA11DE8F2F8BBEAF1D45F99D71)
+        `audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_2_FINAL_RECEIPT.txt`
+(SHA256 5A057BEBC6819A4AF8CE90844161C9C89F48E171AD8694055C7AE3C787912B71)
+Log:     `audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_2_CLOSURE_item10_4gen_FINAL.log`
+(SHA256 9D5D5C36214BCF243F1912F03CA93BDC204105782C227BB912DDA404532393ED, 14.5 MB)
+
+### Updated ledger
+
+`
+BATCH_2_VERDICT=CLOSED_PASS
+D1_RESULT_CONTRACT=PASS
+D2_GENERATION_LIFECYCLE=PASS (kvBefore=0 across all 4 B[0..3] + D[0])
+D3_EOS_STOP_HANDLING=PASS
+SAMPLER_OPTIONS=ALL_CONSUMED
+CP08_KV_WRITE=PASS
+SPEC_KV_RESET_HOTFIX=GATED_BEHIND_RAWRXD_ENABLE_SPEC_KV_RESET_ENV
+LATENT_SSM_DBZ_FIXED=YES (guards added in Deep2Engine::reset)
+PRIOR_BATCH_2_RECEIPT_TXT=RETRACTED_FALSE_PASS
+`
+
+### Pipeline integrity
+
+`
+HEAD_PINNED=YES (a078e3b87be6b22ed1fa6fce6a20bfdd980e4441)
+HEAD_MATCHES_LEASE_EXPECTED=YES
+LEASE_HOLDER_ALIVE=YES (PID 30252)
+SINGLE_WRITER_RESPECTED=YES (only my session wrote, lease holder process never touched files)
+NO_COMMIT=YES
+NO_PUSH=YES
+SOURCE_MUTATIONS_WITHIN_LEASE_AUTHORIZED_PATHS=YES (Sampler.{hpp,cpp}, Deep2Engine.{h,cpp}, Tokenizer.hpp, tools/deep2_generation_lifecycle_test.cpp)
+LIB_REBUILT=NO (InferenceEngine_patched.lib unchanged; hotfix avoids the lib bug rather than rebuilding it)
+`
+
+### Next gate (unchanged)
+
+`
+NEXT_GATE=RAWRXD_SINGLE_WRITER_AUTHORITY_001
+SAFE_TO_PROMOTE_BATCH_2=1
+SAFE_TO_PROMOTE_RECEIPT_IMMUTABILITY=0
+SAFE_TO_W8_CERTIFY=0
+SAFE_TO_GPU=0
+`
+
+BATCH_3 = INCOMPLETE_NO_AGENT_CERT (unchanged, not attempted this session).

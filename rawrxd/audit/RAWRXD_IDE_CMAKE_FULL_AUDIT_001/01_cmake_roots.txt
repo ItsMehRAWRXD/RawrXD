@@ -1,0 +1,408 @@
+=== IN-SCOPE CMAKE ENTRYPOINTS (F:\~dev and F:\~dev\rawrxd, excluding build dirs) ===
+ROOT=F:\~dev\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\ceo\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\core\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\core\executor\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\core\policy\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\core\router\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\core\scheduler\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\generation\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\repository\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\reverse_engineering\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\src\runtime\os\CMakeLists.txt
+ROOT=F:\~dev\rawrxd\win32ide_strict\CMakeLists.txt
+IN_SCOPE_CMAKE_ROOT_COUNT=13
+=== cmake_minimum_required ===
+F:\~dev\CMakeLists.txt:1: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\CMakeLists.txt:2: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\src\ceo\CMakeLists.txt:6: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\src\core\CMakeLists.txt:6: cmake_minimum_required(VERSION 3.16)
+F:\~dev\rawrxd\src\core\executor\CMakeLists.txt:4: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\src\core\policy\CMakeLists.txt:4: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\src\core\router\CMakeLists.txt:4: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\src\core\scheduler\CMakeLists.txt:4: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\src\generation\CMakeLists.txt:1: cmake_minimum_required(VERSION 3.10)
+F:\~dev\rawrxd\src\repository\CMakeLists.txt:6: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\src\reverse_engineering\CMakeLists.txt:24: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\src\runtime\os\CMakeLists.txt:4: cmake_minimum_required(VERSION 3.20)
+F:\~dev\rawrxd\win32ide_strict\CMakeLists.txt:14: cmake_minimum_required(VERSION 3.20)
+=== who declares RawrXD-Win32IDE / rawr ===
+9 [F:\~dev\CMakeLists.txt] add_executable(rawr_monolith
+86 [F:\~dev\CMakeLists.txt] add_library(rawrxd_screenpilot_e2e STATIC
+105 [F:\~dev\CMakeLists.txt] add_executable(deep2_benchmark
+266 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rawrxd
+473 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rawrxd-serve
+564 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(bp1_smoke_test
+615 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(vulkan_compute_diagnostic
+645 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(vulkan_tensor_upload_test
+675 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(vulkan_gemm_test
+706 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(vulkan_gemv_isolated_test
+740 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(vulkan_real_gemm_test
+771 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(vulkan_transformer_gemm_test
+829 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(elastic_path_validation_test
+886 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(fused_qkv_gguf_validation
+948 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_2_a_real_token
+1002 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(smoke_k3c_e2e
+1045 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_cpu_loadmodel_harness
+1097 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_32_token_kv_stability
+1150 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_6_15_token_kv
+1203 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_7_residency_baseline
+1257 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(residency_ab_cert
+1309 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(fleet_gate
+1361 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(validate_val051_evidence
+1384 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_gguf_tokenizer_bounds
+1416 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_parseheader_bounds
+1441 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_parseheader_fuzz
+1466 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_gguf_metadata_bounds
+1491 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_gguf_tensor_bounds
+1523 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(dual_gpu_smoke_test
+1574 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(gguf_inspector
+1591 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(comprehensive_dual_gpu_test
+1642 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_omega1_bridge
+1699 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(Deep2Engine_RouterSmokeTest
+1744 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(GGUF_Alignment_Diagnostic
+1788 [F:\~dev\rawrxd\CMakeLists.txt] #     add_executable(Q4_0_GEMV_Certification
+3301 [F:\~dev\rawrxd\CMakeLists.txt] # add_library(Omega1Engine STATIC ${OMEGA1_SOURCES} ${OMEGA1_HEADERS})
+3331 [F:\~dev\rawrxd\CMakeLists.txt] add_library(RawrXD_Compression STATIC ${RAWRXD_COMPRESSION_SOURCES})
+3366 [F:\~dev\rawrxd\CMakeLists.txt] add_subdirectory(src/reverse_engineering)
+3371 [F:\~dev\rawrxd\CMakeLists.txt] add_subdirectory(src/ceo)
+3376 [F:\~dev\rawrxd\CMakeLists.txt] add_subdirectory(src/repository)
+3377 [F:\~dev\rawrxd\CMakeLists.txt] add_subdirectory(src/generation)
+3382 [F:\~dev\rawrxd\CMakeLists.txt] add_subdirectory(rguf_source)
+3400 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
+3764 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
+4203 [F:\~dev\rawrxd\CMakeLists.txt] add_library(RawrXD_NanoQuant STATIC
+4760 [F:\~dev\rawrxd\CMakeLists.txt] add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
+4784 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
+4796 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-Generate EXCLUDE_FROM_ALL
+4961 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(rawrxd-monaco-gen
+5053 [F:\~dev\rawrxd\CMakeLists.txt] # (single add_executable + full source/link configuration).
+5958 [F:\~dev\rawrxd\CMakeLists.txt] add_library(RawrXD_MultiWindow_Kernel SHARED
+6000 [F:\~dev\rawrxd\CMakeLists.txt] add_library(RawrXD_DynamicPromptEngine SHARED ${_RAWRXD_PROMPT_ENGINE_EXCLUDE}
+6659 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(Deep2Engine_IntegrationTest ...)
+6668 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(Deep2Engine_MetadataRegressionTest ...)
+6896 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
+7066 [F:\~dev\rawrxd\CMakeLists.txt] add_library(quickjs_static STATIC ${QUICKJS_SOURCES})
+7392 [F:\~dev\rawrxd\CMakeLists.txt] add_library(RawrXD-Crypto SHARED
+7461 [F:\~dev\rawrxd\CMakeLists.txt] add_library(ssot_stub_lane_objs OBJECT
+7570 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(SovereignTest_Suite EXCLUDE_FROM_ALL
+7601 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(SovereignTest_VAL038_E2E EXCLUDE_FROM_ALL
+7630 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(Deep2_Batch_Test EXCLUDE_FROM_ALL
+7658 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_generate_one_token
+7681 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_generate_313_tokens
+7702 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_q2k_single_tensor_oracle
+7722 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_embed_parity
+7746 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(generation_quality_gate
+7766 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_tokenizer
+7788 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_q4k_gemv_parity
+7806 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_q_elemdiff
+7824 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_embed_q4k_token
+7846 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_chat_template
+7870 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_chat_template_unit
+7892 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_streaming
+7917 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_streamer_cert
+7942 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_streamer_parity
+7969 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_solo_cert
+8006 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_solo_decode_cert
+8029 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_topology_portability_cert
+8052 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_multi_gpu_layer_cert
+8075 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_hybrid_all_hw_cert
+8098 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_forward_ops_cert
+8121 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_resident_decode_cert
+8144 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_transfer_counter_cert
+8162 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_transfer_overlap_cert
+8184 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_weight_window_cert
+8207 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_weight_prefetch_cert
+8230 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_numeric_parity_cert
+8253 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_q4k_gemv_cert
+8276 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_q6k_gemv_cert
+8299 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_quant_family_cert
+8322 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_packed_forward_cert
+8345 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_engine_ssvk_decode_bind_cert
+8369 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_gpu_dynamic_window_cert
+8392 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_runtime_batch1_cert
+8415 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_runtime_batch2_cert
+8438 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_runtime_batch3_cert
+8454 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_live_gen_perf_cert
+8476 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_live_policy_crossover_cert
+8502 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_live_policy_e2e_cert
+8528 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_gpu_stream_copy_cert
+8554 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_gpu_copy_compute_overlap_cert
+8580 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_live_gpu_stream_e2e_cert
+8606 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_gpu_stream_compute_cert
+8632 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_gpu_stream_mla_cert
+8658 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_gpu_mla_full_cert
+8684 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_gpu_mla_full_depth_cert
+8710 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_gpu_mla_re_cert
+8736 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_stream_miss_reality_cert
+8762 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_deepseek_live_gen_perf_cert
+8784 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_local_agent_audit_001
+8808 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p0_process_alive_001
+8825 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(vwa_range_contract_001
+8845 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_logits_vwa_lineage_001
+8868 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(vwa_address_contract_001
+8897 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(vwa_poc_1_001
+8952 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_r1_decode_smoke ${DEEP2_R1_DECODE_ASM} src/asm/Deep2R1_Smoke.asm)
+8965 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_outer_smoke ${DEEP2_OUTER_RUNTIME_ASM} src/asm/Deep2OuterSmoke.asm)
+8978 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_outer_engine_bridge_cert
+9005 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_live_path_effectiveness_cert
+9024 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_live_path_fused_control_cert
+9045 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_live_path_interaction_bounds_cert
+9064 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_full_depth_effectiveness_cert
+9083 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_full_depth_combined_policy_cert
+9105 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_full_depth_trampoline_promotion_cert
+9127 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_full_depth_fused_rebench_cert
+9148 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_trampoline_full_depth_opt_cert
+9168 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_auto_workload_policy_cert
+9189 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_e2e_model_size_matrix_cert
+9207 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_live_generate_policy_cert
+9226 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_live_policy_split_cert
+9245 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_policy_hysteresis_cert
+9268 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_mla_rebench_promote_cert
+9287 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_mla_reuse_promote_cert
+9306 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_mla_full_depth_soak_cert
+9326 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_live_decode_mla_cert
+9347 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(mla_cert_001 certs/mla_cert_001.cpp)
+9367 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_mla_fused_q4kt_cert
+9387 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_shard_attn_residency_cert
+9407 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_logits_q6k_resident_cert
+9427 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_mla_kv_expand_cert
+9447 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_mla_kv_expand_opt_cert
+9467 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_mla_qkv_proj_cert
+9487 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_mla_qa_critical_cert
+9507 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_bounce_smoke
+9526 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_no_stale_dispatch_001
+9545 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_read_converge_001
+9564 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_logits_range_bounce_001
+9582 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_semantic_abi_v1_cert
+9601 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_generation_ticket_001
+9619 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_gpu_ready_e2e
+9638 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_bouncehouse_example
+9656 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_halo_spark_001
+9674 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_rmv_mount_001
+9693 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_vwa_e2e_001
+9712 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_vwa_range_contract_001
+9739 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_vwa_poc_1_001
+9762 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_vwa_iocp_range_001
+9784 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_ucf_mobility_fault_001
+9802 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_semantic_seal_cert
+9822 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_serverless_stream_latency_cert
+9842 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_live_decode_sustained_cert
+9862 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_wall_attribution_cert
+9882 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_logits_climb_cert
+9902 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_trygpu_logits_split_cert
+9920 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_logits_gpu_range_attribution_001
+9961 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rawrxd_run_modelname_001
+9977 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rawr
+10019 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(rawrxd_normal_gguf_final_001
+10040 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rawr-server
+10101 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_tps_rainbow_cert
+10121 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_gpu_mla_slot_reuse_cert
+10146 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_nu_live_consumer_cert
+10171 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_k2_gpu_mla_nu_bridge_cert
+10197 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_nu_perf_cert src/deep2/deep2_nu_perf_cert.cpp)
+10222 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_nu_gemv_parity_cert
+10248 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_nu_gpu_gemv_cert
+10273 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_nu_pack_format_cert
+10294 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rkc_deep2_model_authority_cert
+10313 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rkc_model_inventory_cert src/rkc/rkc_model_inventory_cert.cpp)
+10330 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rkc_negative_knowledge_cert src/rkc/rkc_negative_knowledge_cert.cpp)
+10347 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rkc_minimal_source_cert src/rkc/rkc_minimal_source_cert.cpp)
+10364 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rkc_code_world_cert src/rkc/rkc_code_world_cert.cpp)
+10381 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rkc_smoke src/rkc/rkc_smoke.cpp)
+10397 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rkc_product_context_smoke src/rkc/rkc_product_context_smoke.cpp)
+10417 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_giant_moe_paragraph_perf_cert
+10440 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(agent_runtime_batch1_cert
+10463 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_placement_cost_cert
+10488 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_mars_e2e
+10509 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_mars_controller
+10533 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_execution_policy_smoke
+10557 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_ide_exec_policy_apply_001
+10580 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_ide_exec_policy_live_gguf_001
+10603 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_real_speedup_001
+10627 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_repeatability_trial_validity_diag_001
+10650 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_policy_sha_lifecycle_diag_001
+10673 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_repeatability_state_drift_diag_001
+10696 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_ui_encoding_cert
+10718 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_ui_menu_e2e_cert
+10737 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_ui_sidebar_encoding_cert
+10755 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(p1_ui_menu_lifetime_cert
+10776 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_parity_cert
+10801 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(deep2_end_to_end_bench
+10829 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(ide_agent_loop_cert
+10861 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_deterministic_replay
+10884 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(dump_qwen35_meta
+10909 [F:\~dev\rawrxd\CMakeLists.txt] add_library(rawrxd_hexmag_repeat OBJECT
+10919 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-Agentic
+10939 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(hexmag_repeat_tuner_cert
+10956 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(hexmag_ide_e2e_cert
+10981 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(hexmag_runtime_controller_cert
+11010 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(layer_harness
+11028 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_l10_ffn_inp_same_source
+11050 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(qwen35_attn_contract
+11074 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_val_051_3_multi_token
+11101 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_fifteen_token
+11128 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_diag_1_token
+11208 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_bp16_int_1_token
+11284 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_q6k_synthetic
+11306 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_bp16_streamer
+11330 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_bp16_e2e
+11406 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_bp16_compare
+11489 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_bp16_weights
+11565 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_bp16_verify
+11594 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_bp16_logits
+11670 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_6_bp16_perf
+11746 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_7_bp16_profile
+11822 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_7_bp16_lightweight_profile
+11897 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(minimal_1token_profiler
+11972 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(quick_1layer_profiler
+12048 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(q4k_gemv_bench
+12070 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(q5k_gemv_bench
+12092 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_bp16_diag
+12169 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_bp16_bench
+12246 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_bp16_loadbench
+12276 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_q4k_fused_verify
+12294 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_q4k_gemv_bench
+12315 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_q2k_gemv_verify
+12333 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_q2k_gemv_bench
+12351 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_q5k_gemv_verify
+12369 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_q5k_gemv_bench
+12387 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_q5k_forward_bench
+12405 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_8_linearw_thread_scaling
+12481 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_8_layer_profile
+12557 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(val_051_5_q2k_profile
+12576 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(SovereignTest_PatchRegistry EXCLUDE_FROM_ALL
+12607 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(SovereignTest_HotPatcher EXCLUDE_FROM_ALL
+12639 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(SovereignTest_AutonomousAgent EXCLUDE_FROM_ALL
+12689 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(SovereignTest_AntiHallucination EXCLUDE_FROM_ALL
+12759 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(RawrXD-InferenceRoutingTest
+12776 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_autonomous_pipeline
+12790 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-AutoFixCLI
+12822 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(hotpatch_stress_test EXCLUDE_FROM_ALL
+12842 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(hotpatch_e2e_test EXCLUDE_FROM_ALL
+12865 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(arch_cert_tensor_inventory EXCLUDE_FROM_ALL
+12876 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(fwd_cert_001 EXCLUDE_FROM_ALL
+12891 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
+13023 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-Benchmark EXCLUDE_FROM_ALL
+13071 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-FusedBenchmark EXCLUDE_FROM_ALL
+13105 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-KVBenchmark EXCLUDE_FROM_ALL
+13137 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(Fix3_NHWC_Benchmark EXCLUDE_FROM_ALL ...)
+13145 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(Fix4_FlashAttention_Benchmark EXCLUDE_FROM_ALL
+13175 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(Fix5_FusedQuantized_Benchmark EXCLUDE_FROM_ALL
+13205 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(VAL032_SpeculativeDecoding_Benchmark EXCLUDE_FROM_ALL
+13235 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(VAL032_AVX512_Benchmark EXCLUDE_FROM_ALL
+13266 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(tree_attention_bench_simple EXCLUDE_FROM_ALL
+13292 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(tree_attention_profiled EXCLUDE_FROM_ALL
+13317 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(tree_attention_aligned EXCLUDE_FROM_ALL
+13342 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(tree_attention_tiled EXCLUDE_FROM_ALL
+13367 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(tree_attention_vectorized EXCLUDE_FROM_ALL
+13392 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(tree_attention_sparse EXCLUDE_FROM_ALL
+13417 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(tree_attention_fused_sparse EXCLUDE_FROM_ALL
+13442 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(tree_attention_tree_specialized EXCLUDE_FROM_ALL
+13466 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(tree_attention_masm_val038 EXCLUDE_FROM_ALL
+13494 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(VAL038_FusedAttention_Benchmark EXCLUDE_FROM_ALL
+13521 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(VAL038_Validation_Benchmark EXCLUDE_FROM_ALL
+13545 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL
+13580 [F:\~dev\rawrxd\CMakeLists.txt] add_library(RawrXD-ModelAnalysisLib STATIC EXCLUDE_FROM_ALL
+13601 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(RawrXD-ModelAnalysis EXCLUDE_FROM_ALL
+13635 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(SwarmSmokeTest EXCLUDE_FROM_ALL
+13657 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(BackendOrchestratorShardSmoke EXCLUDE_FROM_ALL
+13678 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(agentic_orchestrator_smoke_test EXCLUDE_FROM_ALL
+13712 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-GoldenRecoveryTests EXCLUDE_FROM_ALL
+13753 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rawrxd
+13892 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(address_resolver_native EXCLUDE_FROM_ALL
+13978 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD_LSPServer
+14006 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXDScriptDAPAdapter
+14031 [F:\~dev\rawrxd\CMakeLists.txt] add_subdirectory(src/runtime)
+14036 [F:\~dev\rawrxd\CMakeLists.txt] add_subdirectory(tests)
+14042 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(TestSovereignBridge EXCLUDE_FROM_ALL
+14064 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(TestDebugBridgeTelemetry EXCLUDE_FROM_ALL
+14076 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(TestMASMInference EXCLUDE_FROM_ALL
+14111 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(stress_target EXCLUDE_FROM_ALL
+14119 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(stress_memory EXCLUDE_FROM_ALL
+14132 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(test_simulator EXCLUDE_FROM_ALL
+14174 [F:\~dev\rawrxd\CMakeLists.txt] add_library(q4_preprocessed_avx512 STATIC
+14197 [F:\~dev\rawrxd\CMakeLists.txt] add_subdirectory(src/tools)
+14202 [F:\~dev\rawrxd\CMakeLists.txt] add_subdirectory(src/validation)
+14208 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(witness_system_test EXCLUDE_FROM_ALL
+14255 [F:\~dev\rawrxd\CMakeLists.txt] add_library(pmc_profiler STATIC
+14269 [F:\~dev\rawrxd\CMakeLists.txt] add_library(flame_graph_profiler STATIC
+14359 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(RawrXD-SoloIDE WIN32 ${SOLOIDE_SOURCES} ${SOLOIDE_HEADERS})
+14378 [F:\~dev\rawrxd\CMakeLists.txt] # add_executable(test_generation tests/test_generation.cpp ...)
+14384 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_llama_native tests/test_llama_native.cpp
+14430 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
+14483 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_q4k_decoder tests/test_q4k_decoder.cpp
+14503 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
+14551 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
+14600 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
+14650 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_003b_native_gemv_validation tests/k2_003b_native_gemv_validation.cpp
+14664 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_003c_single_layer_forward tests/k2_003c_single_layer_forward.cpp
+14677 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
+14727 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_004_bounded_multi_layer_prefill tests/k2_004_bounded_multi_layer_prefill.cpp
+14741 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_005_autoregressive_kv_cache tests/k2_005_autoregressive_kv_cache.cpp
+14756 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
+14772 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_007_real_output_projection tests/k2_007_real_output_projection.cpp
+14790 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
+14804 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
+14823 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(k2_009_token_embedding_lookup tests/k2_009_token_embedding_lookup.cpp
+14873 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b004_transformer_router_streaming_integration EXCLUDE_FROM_ALL
+14890 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b004_transformer_router_streaming_integration_cpu EXCLUDE_FROM_ALL
+14937 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b012_amortization_test EXCLUDE_FROM_ALL
+14992 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b013_stability_test EXCLUDE_FROM_ALL
+15043 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b014_compute_decomposition EXCLUDE_FROM_ALL
+15091 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b014_boundary_probe EXCLUDE_FROM_ALL
+15139 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b014_single_boundary EXCLUDE_FROM_ALL
+15187 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b014_lifetime_probe EXCLUDE_FROM_ALL
+15214 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b005_canonical_model_certification EXCLUDE_FROM_ALL
+15257 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b006_kv_cache_verification EXCLUDE_FROM_ALL
+15337 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b007_performance_baseline EXCLUDE_FROM_ALL
+15429 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b010_weight_residency_profile EXCLUDE_FROM_ALL
+15507 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b011_weight_residency_optimization EXCLUDE_FROM_ALL
+15584 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b015_residency_validation EXCLUDE_FROM_ALL
+15636 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b015_pool_microbench EXCLUDE_FROM_ALL
+15703 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b015_pool_direct_test EXCLUDE_FROM_ALL
+15753 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b015_dequant_certification EXCLUDE_FROM_ALL
+15786 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b010_b011_fast_experiment EXCLUDE_FROM_ALL
+15863 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b009_batched_prefill_certification EXCLUDE_FROM_ALL
+15906 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b009a_fast_validation EXCLUDE_FROM_ALL
+15971 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b009_t128_certification EXCLUDE_FROM_ALL
+16039 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b016_gemm_efficiency_probe EXCLUDE_FROM_ALL
+16108 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(b009_t128_instrumented EXCLUDE_FROM_ALL
+16172 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(certification_harness EXCLUDE_FROM_ALL
+16265 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(native_toolchain_cert EXCLUDE_FROM_ALL
+16306 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_v_proj_parity
+16325 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(rawrxd_real_gguf_parity
+16344 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_attn_out_bisect src/deep2/test_attn_out_bisect.cpp)
+16356 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_o_proj_gemv src/deep2/test_o_proj_gemv.cpp)
+16368 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(test_o_proj_mulmat_002 src/deep2/test_o_proj_mulmat_002.cpp)
+16382 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(_probe_chat_quality src/deep2/_probe_chat_quality.cpp)
+16392 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(ev512_ide_gui_lifecycle_smoke
+16411 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(ev512_ops_remaining_smoke
+16429 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(ev512_ide_workflow_smoke
+16447 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(ev512_ide_restore_reload_fault_smoke
+16473 [F:\~dev\rawrxd\CMakeLists.txt] add_library(rawrxd_writer_lease STATIC
+16486 [F:\~dev\rawrxd\CMakeLists.txt] add_executable(single_writer_adversarial_test
+9 [F:\~dev\rawrxd\src\ceo\CMakeLists.txt] add_library(rawrxd_ceo STATIC
+33 [F:\~dev\rawrxd\src\ceo\CMakeLists.txt] add_executable(rawrxd_ceo_cli
+60 [F:\~dev\rawrxd\src\ceo\CMakeLists.txt] add_executable(test_ceo_agent
+18 [F:\~dev\rawrxd\src\core\CMakeLists.txt] add_library(WebView2Container STATIC ${WEBVIEW2_SOURCES})
+56 [F:\~dev\rawrxd\src\core\CMakeLists.txt] add_executable(WebView2Example example_usage.cpp)
+19 [F:\~dev\rawrxd\src\core\executor\CMakeLists.txt] add_library(RawrXD-Executor STATIC ${EXECUTOR_SOURCES} ${EXECUTOR_HEADERS})
+19 [F:\~dev\rawrxd\src\core\policy\CMakeLists.txt] add_library(RawrXD-Policy STATIC ${POLICY_SOURCES} ${POLICY_HEADERS})
+15 [F:\~dev\rawrxd\src\core\router\CMakeLists.txt] add_library(RawrXD-Router STATIC
+58 [F:\~dev\rawrxd\src\core\router\CMakeLists.txt] add_executable(router_test
+15 [F:\~dev\rawrxd\src\core\scheduler\CMakeLists.txt] add_library(RawrXD-Scheduler STATIC
+58 [F:\~dev\rawrxd\src\core\scheduler\CMakeLists.txt] add_executable(scheduler_test
+19 [F:\~dev\rawrxd\src\generation\CMakeLists.txt] add_library(RawrXDGeneration INTERFACE)
+9 [F:\~dev\rawrxd\src\repository\CMakeLists.txt] add_library(rawrxd_repository STATIC
+53 [F:\~dev\rawrxd\src\reverse_engineering\CMakeLists.txt] add_library(RawrXD-RE-Library STATIC ${RE_CPP_SOURCES})
+7 [F:\~dev\rawrxd\src\runtime\os\CMakeLists.txt] add_library(RawrXD_OSRuntime STATIC)
+21 [F:\~dev\rawrxd\win32ide_strict\CMakeLists.txt] add_executable(${PROJECT_NAME} WIN32)
+164 [F:\~dev\rawrxd\win32ide_strict\CMakeLists.txt] add_executable(RawrXD-Win32IDE-Tests
+175 [F:\~dev\rawrxd\win32ide_strict\CMakeLists.txt] add_executable(RawrXD-Layer0-Final-Evidence
+196 [F:\~dev\rawrxd\win32ide_strict\CMakeLists.txt] add_executable(RawrXD-ProductionProfiler-Test
+255 [F:\~dev\rawrxd\win32ide_strict\CMakeLists.txt] add_executable(test_q2k_single_tensor_oracle
+=== shipping CMakeCache CMAKE_HOME_DIRECTORY ===
+F:\~dev\build\CMakeCache.txt :: CMAKE_HOME_DIRECTORY:INTERNAL=F:/~dev :: CMAKE_GENERATOR:INTERNAL=Visual Studio 17 2022
+F:\~dev\rawrxd\build_w1\CMakeCache.txt :: CMAKE_HOME_DIRECTORY:INTERNAL=F:/~dev/rawrxd :: CMAKE_GENERATOR:INTERNAL=Visual Studio 17 2022

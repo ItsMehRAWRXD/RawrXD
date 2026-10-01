@@ -1,0 +1,43 @@
+BATCH_3_PROGRESS=2026-09-30T19:40:11.4394859-04:00
+=== 3A ===
+=== Batch 3 Sub-A: model blob verification ===
+HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+model=nemotron-3.5-lightning:30b path=F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3 size=25430738944 size_gb=23.68 sha256=5C19F6282F4FC51CB114CB6C876D70CA2FC3B9CF0FBD0A018D9908F4FE1F63B3
+model=qwen3-next:80b path=F:\OllamaModels\blobs\sha256-8476acca2ca7dc4dd86ad2e069cb270fdbd44287d9ff3006d86e9a54cc19acd1 size=50351320736 size_gb=46.89 sha256=8476ACCA2CA7DC4DD86AD2E069CB270FDBD44287D9FF3006D86E9A54CC19ACD1
+=== Ollama tags cross-check ===
+=== 3B ===
+=== Batch 3 Sub-B: nemotron load + 1 generation, 16 tokens ===
+HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+model=F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+size_gb=23.68
+=== run (load + 1 generation + EOS probe, time-bounded) ===
+=== 3B.2 RESULT LINES ===
+model=F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+MODEL=F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+PLANNED_GENERATIONS=1
+MAX_TOKENS_PER_GENERATION=64
+EOS_PROBE_MAX_TOKENS=64
+MODEL_LOAD=PASS loadMs=1992 kvAtLoad=0
+B[0] promptTokens=107 kvBefore=0 kvAfter=0 status=Completed completed=1 cancelled=0 generatedTokens=64 callbackInvocations=64 callbackEmptyPieces=0 wallMs=662974
+B[0] maxTokens=64 failureDetail=(empty)
+B[0] text=ing Innov Innov subs Innov photoseles more more wereferastrs'sation innovative innovcendoing ("vy HexY more more more all    as as as power specificPolyPoly at Daniels Daniels the Deutschesescence/dev Daniels Daniels se three somes possible some some some Perform performance ALL on_m on} whites
+GENERATION_INHERITED_KV_FROM_PRIOR_GENERATIONS=0
+D[0] promptTokens=11 kvBefore=0 kvAfter=0 status=Completed completed=1 cancelled=0 generatedTokens=64 callbackInvocations=64 callbackEmptyPieces=0 wallMs=299889
+D[0] maxTokens=64 failureDetail=(empty)
+D[0] text= at \{ranranControlAF H00! Secondly Secondly feeding at Innovationh Those first Julius performance Perform-g-search ΓÇÜ ΓÇÜOperations ΓÇÜ ΓÇÜ Werken pro pro pro pro pro pro pro pro responsethey The pro pro pro pro pro prozeni proy in proà ┬½**ies ┬½** on simpleyyPolySpielberichtSpielbericht subs
+D_TERMINATED_AT_CEILING=1
+D_TERMINATED_EARLY=0
+=== 3C ===
+=== Batch 3 Sub-C: real git_status observation (independent) ===
+HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+=== git status capture ===
+## model-correctness...origin/model-correctness
+ M CMakeCache.txt
+ M CMakeFiles/CMakeConfigureLog.yaml
+ M _rawr_dump_receipt.txt
+ M rawrxd/3rdparty/quickjs
+=== 3D CURRENT ===
+=== Batch 3 Sub-D v3: agent cycle (nemotron, Start-Process) ===
+model=F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+=== INFERENCE #1: ask model which tool to use ===
+prompt1=You have these tools: git_status (no args): returns branch and dirty state. list_files (path): lists files. read_file (path): reads a file. When you need a tool, respond with EXACTLY one line: RAWR_TOOL name=<tool>. Otherwise respond with text only. Question: What branch am I on and is the worktree clean?

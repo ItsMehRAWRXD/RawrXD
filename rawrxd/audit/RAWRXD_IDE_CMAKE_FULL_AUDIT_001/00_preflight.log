@@ -1,0 +1,135 @@
+=== AUTHORITY/PREFLIGHT ===
+AUDIT=RAWRXD_IDE_CMAKE_FULL_AUDIT_001
+UTC=2026-09-30T18:47:21.3030528Z
+REPO=F:\~dev\rawrxd
+HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+BRANCH=model-correctness
+GIT_ROOT=F:/~dev
+STAGED=0
+UNMERGED=0
+--- toolchain ---
+CMAKE_VERSION=cmake version 4.4.2
+CMAKE_PATH=C:\Program Files\CMake\bin\cmake.exe
+NINJA_PATH=C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Packages\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe\ninja.exe
+MSBUILD_PATH=
+CL_ON_PATH=False
+LINK_ON_PATH=False
+VS_INSTALL_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools
+MSVC_TOOLSET=14.44.35207
+VULKAN_SDK_PRESENT=True
+--- worktree status (short) ---
+ M ../CMakeCache.txt
+ M ../CMakeFiles/CMakeConfigureLog.yaml
+ M ../_rawr_dump_receipt.txt
+ m 3rdparty/quickjs
+ M CMakeLists.txt
+ M src/agentmodes/RawrCertAuthority.cpp
+ M src/agentmodes/RawrCertAuthority.h
+ M src/cli/RawrDumpAuthority.cpp
+ D src/deep2/Deep2APIServer.cpp
+ D src/deep2/Deep2Benchmark.cpp
+ D src/deep2/Deep2Discovery.cpp
+ D src/deep2/Deep2InferenceGateway.cpp
+ D src/deep2/Deep2Integration.cpp
+ D src/deep2/Deep2LocalServer.cpp
+ D src/deep2/GGUFDiagnostics.cpp
+ D src/deep2/MultiGPU/GPUDeviceRegistry.cpp
+ D src/deep2/MultiGPU/MultiGPUScheduler.cpp
+ D src/deep2/MultiGPU/VRAMAllocator.cpp
+ D src/deep2/ScaleQuality.cpp
+ D src/deep2/deep2_http_gateway.cpp
+ D src/deep2/gpu/Deep2GPUBackend.cpp
+ D src/deep2/mcp_bridge.cpp
+ D src/deep2/production/Deep2ProductionRuntime.cpp
+ M src/deep2/rawr_run.cpp
+ M src/deep2/rawrxd_run_modelname_001.cpp
+ D src/full_agentic_ide/AgenticIOCPBridge.cpp
+ D src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
+ D src/full_agentic_ide/FullAgenticIDE.cpp
+ D src/ide/ANSIColorParser.cpp
+ D src/ide/Deep2Bridge.cpp
+ D src/ide/FindReplaceDialog.cpp
+ D src/ide/GitCommitDialog.cpp
+ D src/ide/GitDiffViewer.cpp
+ D src/inference/ai_model_caller_real.cpp
+ D src/inference/inference_engine_real.cpp
+ M src/models/ModelCatalogAuthority.cpp
+ M src/models/ModelCatalogAuthority.h
+?? ../.kilo/plans/1790713570795-rawrxd-single-writer-enforcement-plan.md
+?? ../.rawrxd/
+?? ../_audit_preflight_diag.ps1
+?? ../_bootstrap_step2_001.txt
+?? ../_bootstrap_step2_pause_001.txt
+?? ../_canonical_classification_001.txt
+?? ../_dump_fix2_done.txt
+?? ../_dump_fix_done.txt
+?? ../_dump_honesty_recheck.txt
+?? ../_false_pass_retraction_receipt.txt
+?? ../_rawr_local_agent_e2e_receipt.txt
+?? ../_rawr_response_coded_agent_receipt.txt
+?? ../_receipt_immutability_regression_receipt.txt
+?? ../_reconciliation_classification_001.txt
+?? ../_regtest_build.txt
+?? ../_regtest_build_err.txt
+?? ../_single_writer_audit_receipt.txt
+?? ../_state_freeze_001.txt
+?? New-RawrXDBeyondParity.ps1
+?? RAWRXD_BEYOND_PARITY_MANIFEST.md
+?? _RawrResponseAgent.ps1
+?? _audit_cli_dispatch.txt
+?? _audit_ollama.txt
+?? _beyond_parity_dryrun.log
+?? _beyond_parity_generate.log
+?? _local_agent_e2e_receipt.txt
+?? _ollama_tags.json
+?? _probe1_one_shot.log
+?? _probe2_observation_copy.log
+?? _probe3_agent_shaped.log
+?? _rawr_dump_cpu_only_receipt.txt
+?? _rawr_dump_receipt.txt
+?? _rawr_run_evidence.log
+?? audit/
+?? evidence/RAWRXD_STUB_RECONCILIATION_001/
+?? receipts/RAWRXD_AGENT_AUTHORITY_001/
+?? receipts/RAWRXD_AGENT_RECEIPTS_001/
+?? receipts/RAWRXD_ASK_AGENT_001/
+?? receipts/RAWRXD_BEYOND_PARITY_001/
+?? receipts/RAWRXD_BUILD_AGENT_001/
+?? receipts/RAWRXD_CODE_AGENT_001/
+?? receipts/RAWRXD_CODE_INDEX_001/
+?? receipts/RAWRXD_COMPLETION_001/
+?? receipts/RAWRXD_CONTEXT_ENGINE_001/
+?? receipts/RAWRXD_DEBUG_AGENT_001/
+?? receipts/RAWRXD_DIAGNOSTICS_001/
+?? receipts/RAWRXD_EDIT_AUTHORITY_001/
+?? receipts/RAWRXD_FILESYSTEM_AGENT_001/
+?? receipts/RAWRXD_FOUNDATION_001/
+?? receipts/RAWRXD_GIT_AGENT_001/
+?? receipts/RAWRXD_IDE_CHAT_001/
+?? receipts/RAWRXD_INLINE_CODE_001/
+?? receipts/RAWRXD_LONG_TASK_AGENT_001/
+?? receipts/RAWRXD_MODEL_ROUTER_001/
+?? receipts/RAWRXD_ORCHESTRATION_001/
+?? receipts/RAWRXD_PLAN_AGENT_001/
+?? receipts/RAWRXD_RESPONSE_CODED_AGENT_001/
+?? receipts/RAWRXD_SESSION_AUTHORITY_001/
+?? receipts/RAWRXD_TERMINAL_AUTHORITY_001/
+?? receipts/RAWRXD_TEST_AGENT_001/
+?? receipts/RAWRXD_TOOL_AUTHORITY_001/
+?? src/agent/AgentCore.cpp
+?? src/agent/AgentCore.h
+?? src/agent/ResponseCodedAgent.cpp
+?? src/agent/ResponseCodedAgent.h
+?? src/agentmodes/ImmutableReceiptAuthority.cpp
+?? src/agentmodes/ImmutableReceiptAuthority.h
+?? src/agentmodes/WriterLeaseAuthority.cpp
+?? src/agentmodes/WriterLeaseAuthority.h
+?? src/agentmodes/friends/
+?? src/authority/
+?? src/cli/RawrDumpAuthority.cpp.new
+?? tests/test_single_writer_authority.cpp
+?? tools/New-RawrResponseAgent.ps1
+?? tools/deep2_generation_lifecycle_test.cpp
+?? tools/rawr_response_agent.ps1
+?? tools/rawr_response_agent.template.ps1
+?? tools/single_writer_adversarial_test.cpp

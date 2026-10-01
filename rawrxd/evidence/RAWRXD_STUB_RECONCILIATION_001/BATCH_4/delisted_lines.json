@@ -1,0 +1,1897 @@
+[
+ {
+  "line": 284,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 1204,
+  "path": "tests/val_051_7_residency_baseline.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 2119,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 2846,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 2856,
+  "path": "src/deep2/ResidencyManager.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 2920,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 3233,
+  "path": "src/deep2/OutOfCoreRuntime.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 3237,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 3509,
+  "path": "src/core/auto_feature_stub_impl.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 3653,
+  "path": "src/core/auto_feature_stub_impl.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 3751,
+  "path": "src/deep2/OutOfCoreRuntime.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 3752,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 3894,
+  "path": "tests/gguf_link_impl.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 4204,
+  "path": "src/ggml/ggml_nanoquant.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 4324,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 4400,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 4445,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 4568,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 4571,
+  "path": "src/deep2/OutOfCoreRuntime.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 4574,
+  "path": "src/deep2/ResidencyManager.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 5320,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6084,
+  "path": "src/core/agentic_executor_link_stub.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6258,
+  "path": "src/core/link_stubs_remaining_classes.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6522,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6543,
+  "path": "src/deep2/ResidencyManager.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6579,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6612,
+  "path": "src/deep2/TheDualityExample.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6619,
+  "path": "src/deep2/Deep2Server_Minimal.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6620,
+  "path": "src/deep2/Deep2Server_Sovereign.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6624,
+  "path": "src/deep2/GGUFLoader_Fixed.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6625,
+  "path": "src/deep2/GGUFVerifier.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6634,
+  "path": "src/deep2/dump_tensors.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6636,
+  "path": "src/deep2/Deep2Engine_KernelTest.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6637,
+  "path": "src/deep2/moe_microbench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6638,
+  "path": "src/deep2/moe_simple_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6639,
+  "path": "src/deep2/moe_test.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6640,
+  "path": "src/deep2/moe_validation_test.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6641,
+  "path": "src/deep2/router_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6642,
+  "path": "src/deep2/router_latency_test.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6643,
+  "path": "src/deep2/test_api_server.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6644,
+  "path": "src/deep2/test_real_gguf_load.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6645,
+  "path": "src/deep2/test_real_gguf_validate.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6646,
+  "path": "src/deep2/test_tool_limit_hotpatch.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6647,
+  "path": "src/deep2/VAL063_Deep2Certification.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6648,
+  "path": "src/deep2/VAL038_Benchmark_Harness.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6650,
+  "path": "src/deep2/deep2_moe_bench_standalone.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6768,
+  "path": "src/engine/Omega1Engine_Server.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6777,
+  "path": "src/deep2/TheDualityExample.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6778,
+  "path": "src/deep2/Deep2Server_Minimal.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6779,
+  "path": "src/deep2/Deep2Server_Sovereign.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6781,
+  "path": "src/deep2/GGUFVerifier.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6782,
+  "path": "src/deep2/GGUFLoader_Fixed.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6784,
+  "path": "src/deep2/dump_tensors.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6785,
+  "path": "src/deep2/Deep2Engine_KernelTest.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6786,
+  "path": "src/deep2/moe_microbench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6787,
+  "path": "src/deep2/moe_simple_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6788,
+  "path": "src/deep2/moe_test.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6789,
+  "path": "src/deep2/moe_validation_test.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6790,
+  "path": "src/deep2/router_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6791,
+  "path": "src/deep2/router_latency_test.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6792,
+  "path": "src/deep2/test_api_server.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6793,
+  "path": "src/deep2/test_real_gguf_load.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6794,
+  "path": "src/deep2/test_real_gguf_validate.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6795,
+  "path": "src/deep2/test_tool_limit_hotpatch.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6796,
+  "path": "src/deep2/VAL063_Deep2Certification.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6797,
+  "path": "src/deep2/VAL038_Benchmark_Harness.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 6799,
+  "path": "src/deep2/deep2_moe_bench_standalone.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7789,
+  "path": "src/deep2/test_q4k_gemv_parity.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7807,
+  "path": "src/deep2/test_q_elemdiff.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7825,
+  "path": "src/deep2/test_embed_q4k_token.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7847,
+  "path": "src/deep2/test_chat_template.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7871,
+  "path": "src/deep2/test_chat_template_unit.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7893,
+  "path": "src/deep2/test_streaming.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7918,
+  "path": "src/deep2/deep2_streamer_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7919,
+  "path": "src/deep2/StreamerGpuSoloGate.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7943,
+  "path": "src/deep2/deep2_streamer_parity.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7944,
+  "path": "src/deep2/StreamerParity_Harness.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7945,
+  "path": "src/deep2/StreamerParity_Post.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7946,
+  "path": "src/deep2/Deep2StreamApi.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7970,
+  "path": "src/deep2/deep2_gpu_solo_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7971,
+  "path": "src/deep2/StreamerGpuSoloGate.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 7972,
+  "path": "src/deep2/StreamerGpuSoloVk.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8007,
+  "path": "src/deep2/deep2_gpu_solo_decode_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8030,
+  "path": "src/deep2/deep2_topology_portability_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8053,
+  "path": "src/deep2/deep2_multi_gpu_layer_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8076,
+  "path": "src/deep2/deep2_hybrid_all_hw_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8099,
+  "path": "src/deep2/deep2_gpu_forward_ops_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8122,
+  "path": "src/deep2/deep2_gpu_resident_decode_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8145,
+  "path": "src/deep2/deep2_gpu_transfer_counter_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8163,
+  "path": "src/deep2/deep2_gpu_transfer_overlap_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8185,
+  "path": "src/deep2/deep2_gpu_weight_window_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8208,
+  "path": "src/deep2/deep2_gpu_weight_prefetch_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8231,
+  "path": "src/deep2/deep2_gpu_numeric_parity_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8254,
+  "path": "src/deep2/deep2_gpu_q4k_gemv_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8277,
+  "path": "src/deep2/deep2_gpu_q6k_gemv_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8300,
+  "path": "src/deep2/deep2_gpu_quant_family_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8323,
+  "path": "src/deep2/deep2_gpu_packed_forward_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8370,
+  "path": "src/deep2/deep2_gpu_dynamic_window_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8393,
+  "path": "src/deep2/deep2_runtime_batch1_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8416,
+  "path": "src/deep2/deep2_runtime_batch2_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8439,
+  "path": "src/deep2/deep2_runtime_batch3_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8455,
+  "path": "src/deep2/deep2_k2_live_gen_perf_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8477,
+  "path": "src/deep2/deep2_k2_live_policy_crossover_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8503,
+  "path": "src/deep2/deep2_k2_live_policy_e2e_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8529,
+  "path": "src/deep2/deep2_k2_gpu_stream_copy_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8555,
+  "path": "src/deep2/deep2_k2_gpu_copy_compute_overlap_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8581,
+  "path": "src/deep2/deep2_k2_live_gpu_stream_e2e_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8607,
+  "path": "src/deep2/deep2_k2_gpu_stream_compute_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8633,
+  "path": "src/deep2/deep2_k2_gpu_stream_mla_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8659,
+  "path": "src/deep2/deep2_k2_gpu_mla_full_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8685,
+  "path": "src/deep2/deep2_k2_gpu_mla_full_depth_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8711,
+  "path": "src/deep2/deep2_k2_gpu_mla_re_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8737,
+  "path": "src/deep2/deep2_k2_stream_miss_reality_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8763,
+  "path": "src/deep2/deep2_deepseek_live_gen_perf_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8785,
+  "path": "src/deep2/deep2_local_agent_audit_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8809,
+  "path": "src/deep2/p0_process_alive_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8826,
+  "path": "src/deep2/vwa_range_contract_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8846,
+  "path": "src/deep2/deep2_k2_logits_vwa_lineage_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8869,
+  "path": "src/deep2/vwa_address_contract_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8898,
+  "path": "src/deep2/vwa_poc_1_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8979,
+  "path": "src/deep2/deep2_outer_engine_bridge_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 8980,
+  "path": "src/deep2/Deep2OuterEngineBridge.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9006,
+  "path": "src/deep2/deep2_live_path_effectiveness_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9025,
+  "path": "src/deep2/deep2_live_path_fused_control_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9026,
+  "path": "src/deep2/LivePathFusedCert_Arm.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9046,
+  "path": "src/deep2/deep2_live_path_interaction_bounds_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9065,
+  "path": "src/deep2/deep2_k2_full_depth_effectiveness_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9084,
+  "path": "src/deep2/deep2_k2_full_depth_combined_policy_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9085,
+  "path": "src/deep2/K2FullDepthCombined_Arm.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9086,
+  "path": "src/deep2/K2FullDepthCombined_Proof.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9106,
+  "path": "src/deep2/deep2_k2_full_depth_trampoline_promotion_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9107,
+  "path": "src/deep2/K2FullDepthCombined_Arm.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9128,
+  "path": "src/deep2/deep2_k2_full_depth_fused_rebench_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9129,
+  "path": "src/deep2/K2FullDepthCombined_Arm.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9149,
+  "path": "src/deep2/deep2_k2_trampoline_full_depth_opt_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9169,
+  "path": "src/deep2/deep2_k2_auto_workload_policy_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9190,
+  "path": "src/deep2/deep2_k2_e2e_model_size_matrix_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9208,
+  "path": "src/deep2/deep2_k2_live_generate_policy_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9227,
+  "path": "src/deep2/deep2_k2_live_policy_split_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9246,
+  "path": "src/deep2/deep2_k2_policy_hysteresis_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9269,
+  "path": "src/deep2/deep2_k2_mla_rebench_promote_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9288,
+  "path": "src/deep2/deep2_k2_mla_reuse_promote_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9307,
+  "path": "src/deep2/deep2_k2_mla_full_depth_soak_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9327,
+  "path": "src/deep2/deep2_k2_live_decode_mla_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9368,
+  "path": "src/deep2/deep2_k2_mla_fused_q4kt_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9388,
+  "path": "src/deep2/deep2_k2_shard_attn_residency_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9408,
+  "path": "src/deep2/deep2_k2_logits_q6k_resident_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9428,
+  "path": "src/deep2/deep2_k2_mla_kv_expand_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9448,
+  "path": "src/deep2/deep2_k2_mla_kv_expand_opt_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9468,
+  "path": "src/deep2/deep2_k2_mla_qkv_proj_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9488,
+  "path": "src/deep2/deep2_k2_mla_qa_critical_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9508,
+  "path": "src/deep2/deep2_ucf_bounce_smoke.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9527,
+  "path": "src/deep2/deep2_ucf_no_stale_dispatch_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9546,
+  "path": "src/deep2/deep2_ucf_read_converge_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9565,
+  "path": "src/deep2/deep2_ucf_logits_range_bounce_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9583,
+  "path": "src/deep2/deep2_ucf_semantic_abi_v1_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9602,
+  "path": "src/deep2/deep2_ucf_generation_ticket_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9620,
+  "path": "src/deep2/deep2_ucf_gpu_ready_e2e.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9639,
+  "path": "src/deep2/deep2_ucf_bouncehouse_example.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9657,
+  "path": "src/deep2/deep2_ucf_halo_spark_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9675,
+  "path": "src/deep2/deep2_rmv_mount_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9694,
+  "path": "src/deep2/deep2_vwa_e2e_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9695,
+  "path": "src/deep2/vwa/VwaScheduler_Fulfill.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9696,
+  "path": "src/deep2/vwa/VwaScheduler_Lease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9713,
+  "path": "src/deep2/deep2_vwa_range_contract_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9740,
+  "path": "src/deep2/deep2_vwa_poc_1_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9763,
+  "path": "src/deep2/deep2_vwa_iocp_range_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9785,
+  "path": "src/deep2/deep2_ucf_mobility_fault_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9803,
+  "path": "src/deep2/deep2_k2_semantic_seal_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9823,
+  "path": "src/deep2/deep2_k2_serverless_stream_latency_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9843,
+  "path": "src/deep2/deep2_k2_live_decode_sustained_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9863,
+  "path": "src/deep2/deep2_k2_wall_attribution_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9883,
+  "path": "src/deep2/deep2_k2_logits_climb_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9903,
+  "path": "src/deep2/deep2_k2_trygpu_logits_split_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 9921,
+  "path": "src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10010,
+  "path": "src/deep2/deep2_k2_useful_tps_001.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 10099,
+  "path": "src/deep2/deep2_k2_tps_rainbow_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10119,
+  "path": "src/deep2/deep2_k2_gpu_mla_slot_reuse_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10144,
+  "path": "src/deep2/deep2_nu_live_consumer_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10169,
+  "path": "src/deep2/deep2_k2_gpu_mla_nu_bridge_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10193,
+  "path": "src/deep2/deep2_nu_perf_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10194,
+  "path": "src/deep2/deep2_nu_perf_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10220,
+  "path": "src/deep2/deep2_nu_gemv_parity_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10246,
+  "path": "src/deep2/deep2_nu_gpu_gemv_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10271,
+  "path": "src/deep2/deep2_nu_pack_format_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10415,
+  "path": "src/deep2/deep2_giant_moe_paragraph_perf_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10461,
+  "path": "src/deep2/deep2_placement_cost_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10486,
+  "path": "src/deep2/deep2_mars_e2e.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10507,
+  "path": "src/deep2/mars/test_mars_controller.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10531,
+  "path": "src/deep2/deep2_execution_policy_smoke.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10555,
+  "path": "src/deep2/p1_ide_exec_policy_apply_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10578,
+  "path": "src/deep2/p1_ide_exec_policy_live_gguf_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10601,
+  "path": "src/deep2/p1_real_speedup_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10625,
+  "path": "src/deep2/p1_repeatability_trial_validity_diag_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10648,
+  "path": "src/deep2/p1_policy_sha_lifecycle_diag_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10671,
+  "path": "src/deep2/p1_repeatability_state_drift_diag_001.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10774,
+  "path": "src/deep2/deep2_parity_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10859,
+  "path": "src/deep2/test_deterministic_replay.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10882,
+  "path": "src/deep2/dump_qwen35_meta.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10937,
+  "path": "tests/hexmag_repeat_tuner_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10954,
+  "path": "tests/hexmag_ide_e2e_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 10979,
+  "path": "tests/hexmag_runtime_controller_cert.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11008,
+  "path": "src/deep2/layer_harness.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11026,
+  "path": "src/deep2/test_l10_ffn_inp_same_source.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11048,
+  "path": "src/deep2/qwen35_attn_contract.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11072,
+  "path": "src/deep2/test_val_051_3_multi_token.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11099,
+  "path": "tests/val_051_5_fifteen_token.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11126,
+  "path": "tests/val_051_5_diag_1_token.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11127,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11151,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11163,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11164,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11206,
+  "path": "tests/val_bp16_int_1_token.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11207,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11231,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11243,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11244,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11282,
+  "path": "tests/val_051_5_q6k_synthetic.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11304,
+  "path": "tests/val_051_5_bp16_streamer.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11328,
+  "path": "tests/val_051_5_bp16_e2e.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11329,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11353,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11365,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11366,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11404,
+  "path": "tests/val_051_5_bp16_compare.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11405,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11429,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11448,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11449,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11487,
+  "path": "tests/val_051_5_bp16_weights.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11488,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11512,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11524,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11525,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11563,
+  "path": "tests/val_051_5_bp16_verify.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11592,
+  "path": "tests/val_051_5_bp16_logits.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11593,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11617,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11629,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11630,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11668,
+  "path": "tests/val_051_6_bp16_perf.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11669,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11693,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11705,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11706,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11744,
+  "path": "tests/val_051_7_bp16_profile.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11745,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11769,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11781,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11782,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11820,
+  "path": "tests/val_051_7_bp16_lightweight_profile.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11821,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11845,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11857,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11858,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11895,
+  "path": "tests/minimal_1token_profiler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11896,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11920,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11932,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11933,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11970,
+  "path": "tests/quick_1layer_profiler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11971,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 11995,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12007,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12008,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12046,
+  "path": "tests/q4k_gemv_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12068,
+  "path": "tests/q5k_gemv_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12090,
+  "path": "tests/val_051_5_bp16_diag.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12091,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12115,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12127,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12128,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12167,
+  "path": "tests/val_051_5_bp16_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12168,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12192,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12204,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12205,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12244,
+  "path": "tests/val_051_5_bp16_loadbench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12274,
+  "path": "tests/val_051_5_q4k_fused_verify.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12292,
+  "path": "tests/q4k_gemv_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12313,
+  "path": "tests/val_051_5_q2k_gemv_verify.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12331,
+  "path": "tests/val_051_5_q2k_gemv_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12349,
+  "path": "tests/val_051_5_q5k_gemv_verify.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12367,
+  "path": "tests/q5k_gemv_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12385,
+  "path": "tests/val_051_5_q5k_forward_bench.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12403,
+  "path": "tests/val_051_8_linearw_thread_scaling.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12404,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12428,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12440,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12441,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12479,
+  "path": "tests/val_051_8_layer_profile.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12480,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12504,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12516,
+  "path": "src/deep2/ResidencyLease.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12517,
+  "path": "src/deep2/VAL0517BaselineFixture.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12555,
+  "path": "tests/val_051_5_q2k_profile.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12605,
+  "path": "src/deep2/HotPatcher.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12606,
+  "path": "src/deep2/HotPatcher.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12774,
+  "path": "tests/test_autonomous_pipeline.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 12895,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12926,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12956,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12959,
+  "path": "src/deep2/OutOfCoreRuntime.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 12963,
+  "path": "src/deep2/ResidencyManager.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 13710,
+  "path": "tests/autonomy/recovery/GoldenRecoveryTests.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 13762,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14150,
+  "path": "tests/test_q4_fused_pipeline.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14156,
+  "path": "tests/test_q4_cache_alignment.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14162,
+  "path": "tests/test_q4_asm_debug.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14189,
+  "path": "tests/test_q4_scalar_simd.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14222,
+  "path": "tests/benchmark_dispatch_overhead.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14227,
+  "path": "tests/benchmark_planner_amortization.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14232,
+  "path": "tests/validate_end_to_end.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14237,
+  "path": "tests/nevm_determinism_validation.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14244,
+  "path": "tests/nevm_stress_test.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14282,
+  "path": "tests/benchmark_dispatch_pmc.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14381,
+  "path": "tests/test_llama_native.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14383,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14399,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14412,
+  "path": "tests/deep2_link_stubs.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14427,
+  "path": "tests/k2_runtime_validation.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14435,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14456,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14480,
+  "path": "tests/test_q4k_decoder.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14495,
+  "path": "tests/test_quant_dequant_crosscheck.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14500,
+  "path": "tests/k2_native_smoke_test.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14506,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14525,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14548,
+  "path": "tests/k2_002_tensor_streaming.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14556,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14576,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14586,
+  "path": "tests/deep2_link_stubs.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14597,
+  "path": "tests/k2_003_layer_execution.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14605,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14625,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14635,
+  "path": "tests/deep2_link_stubs.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14647,
+  "path": "tests/k2_003b_native_gemv_validation.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14661,
+  "path": "tests/k2_003c_single_layer_forward.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14674,
+  "path": "tests/k2_004_bounded_prefill.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14682,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14702,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14712,
+  "path": "tests/deep2_link_stubs.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14724,
+  "path": "tests/k2_004_bounded_multi_layer_prefill.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14738,
+  "path": "tests/k2_005_autoregressive_kv_cache.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14753,
+  "path": "tests/k2_006_bounded_token_generation.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14769,
+  "path": "tests/k2_007_real_output_projection.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14781,
+  "path": "tests/k2_007a_tokenizer_metadata.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 14787,
+  "path": "tests/k2_007b_projection_logits_interface.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14801,
+  "path": "tests/k2_008_end_to_end_semantic_generation.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14820,
+  "path": "tests/k2_009_token_embedding_lookup.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14832,
+  "path": "tests/b004_transformer_router_streaming_integration.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 14838,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14915,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 14970,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15021,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15062,
+  "path": "tests/b014_boundary_probe.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15069,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15110,
+  "path": "tests/b014_single_boundary.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15117,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15158,
+  "path": "tests/b014_lifetime_probe.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15165,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15206,
+  "path": "tests/b005_canonical_model_certification.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 15230,
+  "path": "tests/b006_kv_cache_verification.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 15236,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15310,
+  "path": "tests/b007_performance_baseline.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 15316,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15390,
+  "path": "tests/b008_ci_integration.cpp",
+  "class": "D_STUB_ONLY_TARGET"
+ },
+ {
+  "line": 15407,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15480,
+  "path": "tests/b011_weight_residency_optimization.cpp",
+  "class": "B_BUILD_METADATA_GHOST"
+ },
+ {
+  "line": 15486,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15561,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15638,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15839,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15909,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 15975,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 16043,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 16111,
+  "path": "src/engine/sampler.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 16172,
+  "path": "src/inference/Deep2Engine.cpp",
+  "class": "A_ORPHAN"
+ },
+ {
+  "line": 16196,
+  "path": "src/deep2/KVCache.cpp",
+  "class": "A_ORPHAN"
+ }
+]

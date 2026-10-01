@@ -1,3 +1,22 @@
+// test_embed_parity.cpp -- EMBED_PARITY_001
+// Compares canonical float dequantization vs Deep2Engine::embedToken output
+// for token_embd.weight tensor.
+//
+// The include block comes first. It used to sit below the first two local
+// copies, which use uint8_t / uint16_t; with no header above them the compiler
+// reported "missing type specifier" on the first field and then produced a
+// ~22-error syntax cascade from the broken declarations.
+#include "Deep2Engine.h"
+#include "QuantKernelRegistry.hpp"
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <vector>
+#include <limits>
+#include <string>
+#include <algorithm>
+
 // Local copy of unpack_q4_k_scales from QuantKernelRegistry.cpp
 static inline void unpack_q4_k_scales(const uint8_t s[12], uint8_t scales[8], uint8_t mins[8]) {
     scales[0] = s[0] & 0x3F;
@@ -25,18 +44,6 @@ struct block_q4_K_local {
     uint8_t  scales[12];
     uint8_t  qs[128];
 };
-// test_embed_parity.cpp -- EMBED_PARITY_001
-// Compares canonical float dequantization vs Deep2Engine::embedToken output
-// for token_embd.weight tensor.
-#include "Deep2Engine.h"
-#include "QuantKernelRegistry.hpp"
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
-#include <vector>
-#include <limits>
-#include <string>
-#include <algorithm>
 
 // Local copy of fp16->fp32 conversion (same as QuantKernelRegistry.cpp)
 static inline float f16_to_f32(uint16_t h) {
@@ -105,12 +112,23 @@ static void dequant_f16_ref(const uint8_t* src, float* dst, size_t n) {
     for (size_t i = 0; i < n; ++i) dst[i] = f16_to_f32(s[i]);
 }
 
+// Q8_0 block: an fp16 scale followed by 32 int8 weights. This used to be an
+// anonymous struct declared inline inside the reinterpret_cast below, which
+// MSVC rejects with C2226 / C2143 / C2059 and which therefore did not compile
+// at all. Hoisting it to a named type also makes the layout assertable.
+struct q8_0_ref_block {
+    uint16_t d;
+    int8_t  qs[32];
+};
+static_assert(sizeof(q8_0_ref_block) == 34, "Q8_0 block must be 2 + 32 bytes");
+
 // Q8_0 dequant (from QuantKernelRegistry.cpp)
 static void dequant_q8_0_ref(const uint8_t* src, float* dst, size_t n) {
     constexpr size_t kBlk = 34;
     const size_t numBlocks = (n + 31) / 32;
     for (size_t b = 0; b < numBlocks; ++b) {
-        const auto* blk = reinterpret_cast<const struct { uint16_t d; int8_t qs[32]; }*>(src + b * kBlk);
+        const q8_0_ref_block* blk =
+            reinterpret_cast<const q8_0_ref_block*>(src + b * kBlk);
         float d = f16_to_f32(blk->d);
         const size_t base = b * 32;
         const size_t elems = (b == numBlocks - 1 && (n % 32) != 0) ? (n % 32) : 32;

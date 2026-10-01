@@ -1,0 +1,49 @@
+=== Batch 2.01 — GenerationResult exit path audit ===
+=== GenerationResult struct ===
+  L311: // DEEP2_HTTP_FAILURE_SEMANTICS_001 — intentional status contract for
+  L313: //   Completed/EndOfSequence -> 200 (immediate EOS may legitimately
+  L318: //   Cancelled               -> 200 (partial output is the honest result)
+  L319: enum class GenerationStatus : uint8_t {
+  L320:     Completed = 0,
+  L322:     Cancelled = 2,
+  L328: struct GenerationResult {
+  L330:     uint64_t generatedTokens = 0;
+  L335:     bool cancelled = false;
+  L336:     bool completed = false;
+  L337:     // P0.3: precise outcome; failureDetail carries the engine's reason
+  L339:     GenerationStatus status = GenerationStatus::InternalError;
+  L340:     std::string failureDetail;
+  L812:     void printHotPatcherStatus();
+  L1056:     std::string lastFailureDetail_;
+  L1057:     GenerationStatus lastFailureStatus_ = GenerationStatus::InternalError;
+  L1309:     // Per-token GPU telemetry (last completed token)
+=== GenerationStatus enum ===
+  enum class GenerationStatus : uint8_t {
+=== ALL sites that return a GenerationResult ===
+  L1936:     return result;
+  L4059:     return result;
+  L4063: GenerationResult Deep2Engine::generateStream(
+  L4076:         return res;
+  L4089:             return res;
+  L4108:     res.cancelled = cancelRequested_.load(std::memory_order_acquire);
+  L4109:     res.completed = !res.cancelled;
+  L4121:         res.status = GenerationStatus::Cancelled;
+  L4123:         res.status = GenerationStatus::Completed;
+  L4125:         res.status = lastFailureStatus_;
+  L4130:         res.status = GenerationStatus::EndOfSequence;
+  L4142:     return res;
+=== Sites that write lastFailureStatus_ or lastFailureDetail_ ===
+  L3683:             lastFailureDetail_ = "embedToken failed for prefill token " + std::to_string(p);
+  L3684:             lastFailureStatus_ = GenerationStatus::InternalError;
+  L3707:                 lastFailureStatus_ = GenerationStatus::ForwardFailure;
+  L3708:                 lastFailureDetail_ = std::string("prefill forward failed at token ")
+  L3765:                 lastFailureDetail_ = "embedToken failed for decode token " + std::to_string(generated);
+  L3766:                 lastFailureStatus_ = GenerationStatus::InternalError;
+  L3790:                     lastFailureStatus_ = GenerationStatus::ForwardFailure;
+  L3791:                     lastFailureDetail_ = std::string("decode forward failed at token ")
+  L3889:             lastFailureStatus_ = GenerationStatus::InternalError;
+  L3890:             lastFailureDetail_ = std::string("computeLogits failed at token ")
+  L4035:     lastFailureStatus_ = GenerationStatus::Completed;
+=== Sites that write res.generatedTokens or res.promptTokens ===
+  L4071:     res.promptTokens = toks.size();
+  L4105:     res.generatedTokens = n;

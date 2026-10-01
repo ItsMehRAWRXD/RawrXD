@@ -25,6 +25,9 @@ struct CertResult {
     std::string              rationale;
 };
 
+// SHA-256 of a memory range, lowercase hex. Empty string never returned.
+std::string sha256Bytes(const void* data, size_t len);
+
 // SHA-256 of a file, lowercase hex. Empty string when unreadable.
 std::string sha256File(const std::string& path);
 

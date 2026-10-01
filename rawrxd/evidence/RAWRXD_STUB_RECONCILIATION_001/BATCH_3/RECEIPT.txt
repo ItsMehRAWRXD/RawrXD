@@ -1,0 +1,120 @@
+GATE=RAWRXD_STUB_RECONCILIATION_001
+BATCH=BATCH_3_SHIPPING_IDE_PLACEHOLDER_TUS
+TARGET=RawrXD-Win32IDE
+
+[ WHY THIS BATCH RAN FIRST ]
+The shipping product did not link at all. RawrXD-Win32IDE failed with
+LNK1120 4 unresolved externals. That blocked every shipping-target measurement.
+
+[ ROOT CAUSE - measured, not inferred ]
+UNRESOLVED_SYMBOLS=rawrxd::receipt::beginImmutableGate,
+  rawrxd::receipt::writeImmutableKeyValue,
+  rawrxd::receipt::writeImmutableKeyValueInt,
+  rawrxd::receipt::endImmutableGate
+DEFINED_IN=src/deep2/ReceiptAuthority.cpp (line 65 onward)
+CALLED_FROM=src/win32app/main_win32.cpp (line 1933 onward, W8 lifecycle gate)
+WHY_MISSING=that TU was listed only in the `rawr` target, never in
+  WIN32IDE_SOURCES. No generated project compiled it.
+CLASSIFICATION=WIRED_FIX
+
+[ WHAT A WRONG FIX WOULD HAVE LOOKED LIKE ]
+src/agentmodes/ImmutableReceiptAuthority.cpp was the obvious-looking suspect: it
+is new, untracked, and its header describes immutable receipts. Wiring it in
+would have changed nothing. It declares rawrxd::imreceipt::ImmutableReceipt::set
+and ::commit as class members in a different namespace, and defines none of the
+four missing free functions. The fix was located by searching for the symbol
+definitions, not by the filename.
+
+[ CHANGE - CMake composition only, zero source changes ]
+CHANGE_1=list(APPEND WIN32IDE_SOURCES src/deep2/ReceiptAuthority.cpp)
+CHANGE_2=29 CMake lines naming the 25 placeholders by FULL PATH commented out
+SOURCE_FILES_MODIFIED=0
+BCRYPT_ALREADY_LINKED=yes, line 7241 of CMakeLists.txt
+
+[ PER-FILE DETERMINATION REQUIRED BY SPEC 2E ]
+STUBS_IN_SHIPPING_TARGET_BEFORE=25
+HAS_REQUIRED_SYMBOLS=0 for all 25
+HAS_CALLERS=0 for all 25
+HAS_DECLARED_API=0 for all 25
+HAS_RUNTIME_RESPONSIBILITY=0 for all 25
+REMOVAL_CHANGES_LINK=0
+REMOVAL_CHANGES_LINK_MEASURED_BY=full relink of RawrXD-Win32IDE after the change
+
+[ BLAST RADIUS - measured by diffing every generated target ]
+TARGETS_TOTAL=153
+TARGETS_CHANGED=1
+TARGETS_CHANGED_NAMES=RawrXD-Win32IDE
+SOURCES_REMOVED=25
+SOURCES_ADDED=0
+OTHER_TARGETS_AFFECTED=0
+NOTE=lines 347/348 were deliberately NOT touched. They sit inside
+  add_executable(rawrxd ...) and were a false positive of the naive list-owner
+  scan. No generated target consumes them, so changing them would have been a
+  change with no measured effect.
+NOTE_2=Correction. Those two lines WERE eventually commented, when the de-list
+  was re-applied by full path in BATCH_4 recovery. At that point the underlying
+  files were already quarantined, so the alternative was leaving a CMake line
+  pointing at a path that no longer exists.
+
+[ INCIDENT - recorded rather than quietly fixed ]
+INCIDENT=the first generalisation of this de-list matched source paths by leaf
+  name as a SUBSTRING. That produced false matches against real sources:
+  stub sampler.cpp matched src/rawrxd_sampler.cpp, and stub
+  src/inference/Deep2Engine.cpp matched src/deep2/Deep2Engine.cpp.
+REAL_SOURCES_COMMENTED_OUT=at least 92 lines
+DETECTED_BY=cmake configure reporting a parse error, and by 92 de-listed lines
+  whose "was:" text matched no manifest stub
+RECOVERY=all 406 marked lines were restored to their original text. The restore
+  was deterministic: the earlier paren repair appended a run of n parens where
+  n was the original line's paren imbalance, so n = |net(current text)| / 2 and
+  stripping that many trailing parens recovers the original exactly.
+RECOVERY_VERIFIED_BY=cmake configure exit 0, 0 errors
+RECOVERY_VERIFIED_FULL_PATH_STUBS=0 stubs lost their only line
+POST_RECOVERY_STATE=the product link fix and all 17 stub-only target removals
+  survived; RAWRXD_WIN32IDE_STUB_TUS remained 0 with 326 sources
+LESSON=path matching must be on the full path, never on a basename substring.
+  A basename is not unique and a substring match is not a match.
+
+[ BUILD RESULT - RawrXD-Win32IDE ]
+BUILD_RESULT=PASS
+ERROR_COUNT=0
+EXE_SIZE_BEFORE_STUB_REMOVAL=20457984
+EXE_SIZE_AFTER_STUB_REMOVAL=20457984
+EXE_SIZE_DELTA=0
+EXE_SIZE_DELTA_MEASURED=0
+NOTE=the 25 removed translation units are empty and changed the output image by
+  exactly zero bytes. That is the strongest available evidence they were dead.
+
+[ ACCEPTANCE ]
+RAWRXD_WIN32IDE_STUB_TUS=0
+RAWRXD_WIN32IDE_TOTAL_SOURCES=326
+RAWRXD_WIN32IDE_RESOLUTION=PROVEN_DEAD_REMOVED_FROM_TARGET (25 of 25)
+REAL_IMPLEMENTATION_ADDED=0
+INVENTED_API_IMPLEMENTATIONS=0
+FAKE_MAIN_FIXES=0
+FAKE_CODE_CREATED_TO_GREEN_BUILD=0
+
+[ QUARANTINE ]
+FILES_QUARANTINED=25
+FILES_DELETED=0
+GIT_TRACKED_AMONG_THE_25=0
+IMPORTANT=not one of the 25 was ever committed to git. The spec's assumption
+  that "git history remains the authoritative copy of removed source" is false
+  for this batch, so the content was MOVED, not deleted, into
+  evidence/RAWRXD_STUB_RECONCILIATION_001/stub-quarantine/payload/<original path>
+  and restore instructions recorded per file in stub-quarantine/removed.jsonl.
+REMOVED_FILE_SHA256_COMPLETE=25 of 25
+RESTORE_INFORMATION_COMPLETE=1
+
+[ ADJACENT FINDING - not caused by this batch, not fixed by it ]
+RAWRXD_FILTER_MISSING_SOURCES_WARNINGS=450
+RAWRXD_FILTER_MISSING_SOURCES_WARNINGS_BEFORE_BATCH=450
+NEW_MISSING_SOURCE_WARNINGS_INTRODUCED=0
+SEVERITY=the build is silently dropping roughly 300 source files that
+  CMakeLists references but that do not exist on disk, via
+  rawrxd_filter_missing_sources, which warns instead of failing. A green build
+  is therefore weaker evidence than it looks, and this predates this work.
+
+VERDICT=PASS
+VERDICT_MEANS=the shipping target now links, and contains no placeholder
+  translation unit

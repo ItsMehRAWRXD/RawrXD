@@ -1,0 +1,37 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file F:\~dev\rawrxd\build_ide_audit\bin\Release\RawrXD-Win32IDE.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Image has the following dependencies:
+
+    vulkan-1.dll
+    COMCTL32.dll
+    COMDLG32.dll
+    SHELL32.dll
+    ole32.dll
+    dbghelp.dll
+    WINHTTP.dll
+    WS2_32.dll
+    WINMM.dll
+    GDI32.dll
+    USER32.dll
+    dxgi.dll
+    ADVAPI32.dll
+    bcrypt.dll
+    pdh.dll
+    KERNEL32.dll
+    ntdll.dll
+
+  Summary
+
+      7B4000 .data
+        1000 .fptable
+       8D000 .pdata
+      1BF000 .rdata
+        5000 .reloc
+        1000 .rsrc
+      9F7000 .text

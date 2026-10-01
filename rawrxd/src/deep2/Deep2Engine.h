@@ -18,6 +18,7 @@
 #include "BP16Streamer.hpp"
 #include "Tokenizer.hpp"
 #include "../sampling/advanced_sampler.hpp"
+#include "Sampler.hpp"
 #include "MoERouter.hpp"
 #include "MoEWeightProxy.hpp"
 #include "MedusaDecoder.hpp"
@@ -94,7 +95,7 @@ struct WeightTensor {
         return n;
     }
 
-    // Physical backing (VWA/RMV) — absolute offset from GGUF; lost ⇒ mount FAIL
+    // Physical backing (VWA/RMV) ΓÇö absolute offset from GGUF; lost ΓçÆ mount FAIL
     uint32_t    shardId        = 0;
     uint64_t    fileOffset     = 0;
     bool        hasFileBacking = false;
@@ -125,13 +126,13 @@ struct LayerWeights {
     WeightTensor attnPostNorm;  // [hiddenDim] RMSNorm weights
     WeightTensor ffnPostNorm;   // [hiddenDim] RMSNorm weights
 
-    // MLA (Multi-Latent Attention) — K2 factorized attention
-    // Q-path: hidden → q_a (GEMV) → RMSNorm → q_b (GEMV)
+    // MLA (Multi-Latent Attention) ΓÇö K2 factorized attention
+    // Q-path: hidden ΓåÆ q_a (GEMV) ΓåÆ RMSNorm ΓåÆ q_b (GEMV)
     WeightTensor attnQ_a;        // [qLoraRank, hiddenDim]
     WeightTensor attnQ_a_norm;   // [qLoraRank] RMSNorm weights
     WeightTensor attnQ_b;        // [numHeads * headDim, qLoraRank]
-    // KV-path: hidden → kv_a_mqa (GEMV) → split → [compressed_kv | k_pe]
-    //          → RMSNorm → kv_b (GEMV) → k_b / v_b
+    // KV-path: hidden ΓåÆ kv_a_mqa (GEMV) ΓåÆ split ΓåÆ [compressed_kv | k_pe]
+    //          ΓåÆ RMSNorm ΓåÆ kv_b (GEMV) ΓåÆ k_b / v_b
     WeightTensor attnKV_a_mqa;   // [kvLoraRank + qkRopeHeadDim, hiddenDim]
     WeightTensor attnKV_a_norm;  // [kvLoraRank] RMSNorm weights
     WeightTensor attnK_b;        // [numHeads * qkNopeHeadDim, kvLoraRank]
@@ -154,20 +155,35 @@ struct LayerWeights {
     WeightTensor moeSharedUp;    // [sharedIntermediate, hiddenDim]
     WeightTensor moeSharedDown;  // [hiddenDim, sharedIntermediate]
 
-    // SSM / Mamba (State Space Model) — hybrid architecture support
-    WeightTensor ssmA;          // [ssmStateDim] — SSM state transition parameters (F32)
-    WeightTensor ssmAlpha;      // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
-    WeightTensor ssmBeta;       // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
+    // SSM / Mamba (State Space Model) ΓÇö hybrid architecture support
+    WeightTensor ssmA;          // [ssmStateDim] ΓÇö SSM state transition parameters (F32)
+    WeightTensor ssmAlpha;      // [ssmStateDim, hiddenDim] ΓÇö input projection to state (Q4_K)
+    WeightTensor ssmBeta;       // [ssmStateDim, hiddenDim] ΓÇö input projection to state (Q4_K)
     WeightTensor ssmIn;         // Nemotron-H: blk.N.ssm_in.weight
     WeightTensor ssmD;          // Nemotron-H: blk.N.ssm_d skip scale
-    WeightTensor ssmConv1d;     // [convKernelSize, channels] — causal conv1d weights
+    WeightTensor ssmConv1d;     // [convKernelSize, channels] ΓÇö causal conv1d weights
     WeightTensor ssmConv1dBias; // Nemotron-H: blk.N.ssm_conv1d.bias
-    WeightTensor ssmDtBias;     // [ssmStateDim] — delta_t bias (F32)
+    WeightTensor ssmDtBias;     // [ssmStateDim] ΓÇö delta_t bias (F32)
     WeightTensor ssmNorm;       // SSM path RMSNorm
     WeightTensor ssmOut;        // SSM output projection
     bool         hasSSM = false; // true when SSM tensors are populated
     bool         hasAttn = true; // true when attention tensors are present
     bool         hasFFN  = true; // true when FFN tensors are present
+
+    // Nemotron-H / Nemotron-3 block mixer. A Nemotron-H layer runs EXACTLY ONE
+    // mixer, selected from the GGUF per-layer pattern, never a sequence of
+    // them. Reference: llm_build_nemotron_h (llama.cpp src/models/nemotron-h.cpp)
+    // computes one norm, then one of mamba2 / attention / ffn, then exactly one
+    // residual add.
+    //
+    // Selection rule (llama.cpp llama-model.cpp, nemotron_h hparams):
+    //   recurrent  = (n_head_kv(i) == 0 && n_ff(i) == 0)  -> Mamba
+    //   n_ff(i)==0                                       -> Attention
+    //   otherwise                                        -> Mlp / MoE
+    enum class BlockMixer : uint8_t { None = 0, Mamba, Attention, Mlp, MoE };
+    BlockMixer  mixer = BlockMixer::None;
+    int64_t     nHeadKv = -1;   // per-layer attention.head_count_kv
+    int64_t     nFf     = -1;   // per-layer feed_forward_length
 };
 
 // ============================================================================
@@ -221,7 +237,7 @@ struct ModelWeights {
 // Engine Configuration
 // ============================================================================
 struct EngineConfig {
-    // Model architecture — zeros until GgufResolveDynamicGeometry (no static geometry)
+    // Model architecture ΓÇö zeros until GgufResolveDynamicGeometry (no static geometry)
     size_t hiddenDim = 0;
     size_t numLayers = 0;
     size_t numHeads = 0;
@@ -308,7 +324,7 @@ struct GenerationOptions {
     uint64_t seed = 0;
 };
 
-// DEEP2_HTTP_FAILURE_SEMANTICS_001 — intentional status contract for
+// DEEP2_HTTP_FAILURE_SEMANTICS_001 ΓÇö intentional status contract for
 // generation outcomes. HTTP mapping lives in the server layer:
 //   Completed/EndOfSequence -> 200 (immediate EOS may legitimately
 //                               produce zero tokens)
@@ -399,7 +415,7 @@ public:
                              const std::string& systemPrompt = "",
                              size_t maxTokens = 256);
 
-    // Native streaming generation — token-by-token with cancellation
+    // Native streaming generation ΓÇö token-by-token with cancellation
     GenerationResult generateStream(
         const std::string& prompt,
         const GenerationOptions& options,
@@ -424,7 +440,7 @@ public:
     // Unload model and free weight memory
     void unloadModel();
 
-    // Switch to another GGUF (unload → load → re-init from metadata)
+    // Switch to another GGUF (unload ΓåÆ load ΓåÆ re-init from metadata)
     bool switchModel(const std::string& ggufPath);
 
     // Grow KV / hidden buffers to a larger max sequence length (reuse existing prefix)
@@ -597,7 +613,7 @@ public:
     };
     ForwardResult forwardTokenAllLayers(float* hidden, size_t seqLen);
 
-    // RAWRXD_CONTINUOUS_STREAM_REALITY_001 — the only live decode primitive.
+    // RAWRXD_CONTINUOUS_STREAM_REALITY_001 ΓÇö the only live decode primitive.
     // There is no other generation path for chat, agentic, swarm, or tool-resume mode.
     struct DecodeCursor {
         int pendingToken = -1;
@@ -906,7 +922,7 @@ public:
         const WeightTensor* const* w,float* const* out,size_t weightCount,
         const float* input,size_t count);
 
-    // DEEP2_ENGINE_SSVK_DECODE_BIND_001 — product decode transaction surface
+    // DEEP2_ENGINE_SSVK_DECODE_BIND_001 ΓÇö product decode transaction surface
     int sampleCommittedToken(const float* logits);
     bool advancePersistentKv();
     size_t persistentKvLength() const;
@@ -921,7 +937,7 @@ public:
     void disableMARS();
     bool isMARSEnabled() const { return marsEnabled_; }
     bool isMARSStandby() const { return marsStandby_; }
-    /* HOST_RESIDENT_DENSE only; K2_STREAM_AUTHORITY → STANDBY by law. */
+    /* HOST_RESIDENT_DENSE only; K2_STREAM_AUTHORITY ΓåÆ STANDBY by law. */
     bool marsHostResidentAuthorityOk() const;
     void standdownMARSEmptyPlacement(const char* reason);
     Deep2::MARSController* getMARSController() { return marsController_.get(); }
@@ -960,7 +976,7 @@ public:
     // Handle GPU failure (migrate all tensors off)
     bool handleGPUFailure(int gpu);
 
-    // ONE_LOCAL_MODEL_AUTHORITY — sealed on loadModel (SSOT for ProductRuntime).
+    // ONE_LOCAL_MODEL_AUTHORITY ΓÇö sealed on loadModel (SSOT for ProductRuntime).
     const rawr::olma::AuthorityBundle& sessionAuthority() const { return sessionAuth_; }
     bool sessionAuthorityPass() const { return sessionAuth_.PASS != 0; }
 
@@ -1029,6 +1045,8 @@ private:
     std::unique_ptr<ThreadPool> threadPool;
     std::unique_ptr<KVCache> kvCache;
     std::unique_ptr<rawrxd::sampling::ISampler> sampler;
+    std::unique_ptr<rawrxd::sampling::RepetitionPenaltyProcessor> repPenaltyProcessor_;
+    std::vector<int> generatedTokensHistory_; // for repetition penalty
     bool deterministicGreedy_ = false;
     std::vector<float> speculativeHiddenScratch_;
     struct SpecWorkspace {
@@ -1127,7 +1145,7 @@ private:
     std::unique_ptr<ResidencyManager> residencyManager_;
     bool residencyEnabled_ = false;
 
-    // Batch 15: ElasticResidencyManager — representation-aware, async prefetch
+    // Batch 15: ElasticResidencyManager ΓÇö representation-aware, async prefetch
     std::unique_ptr<ElasticResidencyManager> elasticResidency_;
     bool elasticResidencyEnabled_ = false;
 
@@ -1240,6 +1258,14 @@ private:
     float* upBuf = nullptr;
     float* layerTemp = nullptr;  // Dedicated temp buffer for forwardLayer()
     float* layerOut = nullptr;   // Layer output buffer (must NOT alias layerTemp)
+    float* mixerBranch = nullptr; // [hiddenDim] mixer branch output; must not alias
+                                   // the residual it is accumulated into (B3-B)
+    float* blockResidual = nullptr; // [hiddenDim] Nemotron-H block residual, captured
+                                     // BEFORE the pre-mixer norm so that
+                                     // output = residual + mixer(normed) is exact
+                                     // and provably non-aliasing
+    float* moeSharedTemp = nullptr; // [hiddenDim] shared-expert staging buffer;
+                                   // must not alias the MoE FFN input (B3-C)
     float* attnHeadScratch_ = nullptr; // [numHeads*headDim] pre-O concat
 
     // MLA (K2) buffers
@@ -1256,7 +1282,7 @@ private:
     float* ssmY = nullptr;
     float* ssmTemp = nullptr;  /* proj scratch [ssmInRows_] */
 
-    // Per-layer SSM dequant caches — replaces process-static globals in computeSSM()
+    // Per-layer SSM dequant caches ΓÇö replaces process-static globals in computeSSM()
     struct SSMLayerRuntimeCache {
         std::vector<float> convK;
         std::vector<float> convB;
@@ -1271,17 +1297,27 @@ private:
     size_t ssmStateDim = 32;   /* legacy; Nemotron uses ssmStateSize_=128 */
     size_t ssmConvKernel = 4;
     size_t ssmInner_ = 0;
-    size_t ssmStateSize_ = 0;  /* 128 — not heads(96) */
+    size_t ssmStateSize_ = 0;  /* 128 ΓÇö not heads(96) */
     size_t ssmConvDim_ = 0;
     size_t ssmInRows_ = 0;
     size_t ssmHeads_ = 0;
     size_t ssmHeadDimM_ = 0;
     size_t ssmGroups_ = 0;
     int nemotronGeoOk_ = 0;
+
+    // Nemotron-H per-layer hybrid pattern metadata. These are ARRAYS in the
+    // GGUF (one entry per block), which is why a scalar getMetaInt() read of
+    // the same key silently yields 0 and used to classify every layer as
+    // recurrent. Nemotron-3-Nano-4B: attention.head_count_kv has 42 entries
+    // (8 at the four attention blocks, 0 elsewhere) and feed_forward_length
+    // has 42 entries (0 at recurrent and attention blocks).
+    std::vector<int32_t> nemotronHeadKvPerLayer_;
+    std::vector<int32_t> nemotronFfPerLayer_;
+    bool nemotronPatternOk_ = false;
     size_t ssmRealCalls_ = 0;
     size_t ssmIdentityCalls_ = 0;
     size_t ssmHybridLayers_ = 0;
-    /* Nemotron-H Mamba2 experimental scratch (≠ CERT). */
+    /* Nemotron-H Mamba2 experimental scratch (Γëá CERT). */
     float* ssmMambaProj_ = nullptr;
     float* ssmMambaY_ = nullptr;
     float* ssmMambaState_ = nullptr;

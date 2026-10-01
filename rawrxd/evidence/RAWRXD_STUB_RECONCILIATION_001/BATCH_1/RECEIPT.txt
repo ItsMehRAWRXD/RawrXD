@@ -1,0 +1,99 @@
+GATE=RAWRXD_STUB_RECONCILIATION_001
+BATCH=BATCH_1_INVENTORY
+
+[ INVENTORY - measured, not derived from comments or prior receipts ]
+TOTAL_STUBS_DISCOVERED=446
+TOTAL_STUBS_EXPECTED=446
+CMAKE_COMPILED=68
+CMAKE_COMPILED_EXPECTED=68
+NEVER_COMPILED=378
+NEVER_COMPILED_EXPECTED=378
+SHIPPING_IDE_STUBS=25
+SHIPPING_IDE_EXPECTED=25
+STUB_ONLY_TARGETS=17
+STUB_ONLY_TARGETS_EXPECTED=17
+LNK2019_MAIN_FAILURES_IN_INVENTORY=4
+LNK2019_MAIN_FAILURES_EXPECTED=5
+READ_ERRORS=0
+
+[ DISCREPANCY 1 - resolved, inventory was wrong twice before it was right ]
+D1=First generator reported 363 of 446. Cause: 83 files carry a UTF-8 BOM, so
+  the first-line match missed them. Reader corrected to utf-8-sig.
+D2=After the BOM fix the path column was still wrong: os.walk yields \\?\
+  prefixed paths, so relative_to(ROOT) failed for every file and fell back to a
+  bare filename. A normalizing helper was added. This would have produced a
+  manifest of 446 correct rows with 446 wrong paths.
+
+[ DISCREPANCY 2 - measured value disagrees with the expected value ]
+LNK2019_MAIN_FAILURES_MEASURED=4
+LNK2019_MAIN_FAILURES_EXPECTED=5
+DISCREPANCY_ROOT_CAUSE=The fifth failure, target RawrXD-AutoFixCLI, is caused by
+  src/cpu_inference_engine_autofix_stub.cpp whose entire content is
+  "// Auto-generated stub". That marker is not "// STUB:" so the file is not in
+  the inventory at all. The live measurement is used; the expected value of 5
+  is wrong for the // STUB: inventory and correct for "translation units that
+  cannot supply main".
+
+[ DISCREPANCY 3 - the inventory does not cover the whole problem ]
+COMMENT_ONLY_TRANSLATION_UNITS_MEASURED=652
+MARKER_//_STUB:=446
+MARKER_//_Auto-generated_stub=167
+PLACEHOLDERS_MISSED_BY_STUB_PATTERN=206
+NOTE=206 translation units are placeholders that the "// STUB:" pattern does not
+  match. They are recorded in baseline/placeholder_forms.json and are NOT
+  actioned by this reconciliation, whose declared scope is the 446.
+
+[ BASELINE BUILD - ALL_BUILD on an untouched tree, build_w1, Release ]
+BASELINE_ALL_BUILD=FAIL
+BASELINE_FAILING_TARGETS=9
+FAIL_rawrxd_ceo_cli=19 unresolved externals (non-stub)
+FAIL_RawrXD-AutoFixCLI=LNK2019 unresolved main (non-stub placeholder source)
+FAIL_RawrXD-Win32IDE=LNK1120 4 unresolved externals (non-stub)
+FAIL_k2_007a_tokenizer_metadata=LNK2019 unresolved main (stub)
+FAIL_test_autonomous_pipeline=LNK2019 unresolved main (stub)
+FAIL_test_q6k_asm_certification=LNK2019 unresolved main (stub)
+FAIL_test_quant_dequant_crosscheck=LNK2019 unresolved main (stub)
+FAIL_test_embed_parity=compile errors C4430/C2146/C2660 (non-stub)
+FAIL_regen-ssot_beacons=MSB8066, tools/sync_ssot_beacon_symbols.ps1 missing
+
+[ STUB_CAUSED_FAILURES=4 ]
+[ NON_STUB_FAILURES=5 ]
+[ NEW_FAILURES_INTRODUCED=0 - nothing was modified before this build ]
+
+[ CRITICAL FINDING - the shipping product does not link ]
+RAWRXD_WIN32IDE_LINKS=0
+RAWRXD_WIN32IDE_UNRESOLVED=receipt::beginImmutableGate,
+  receipt::writeImmutableKeyValue, receipt::writeImmutableKeyValueInt,
+  receipt::endImmutableGate
+RAWRXD_WIN32IDE_ROOT_CAUSE=src/agentmodes/ImmutableReceiptAuthority.cpp defines
+  those four symbols. The file exists on disk and is untracked in git, but it
+  is named in no CMake source list, so it is never compiled. main_win32.cpp
+  calls the API. The product target is therefore left with unresolved externals.
+CLASSIFICATION=WIRED_FIX (add the source to the target; zero source changes)
+
+[ CLASSIFICATION ]
+CLASS_A_ORPHAN=378
+CLASS_B_BUILD_METADATA_GHOST=26
+CLASS_D_STUB_ONLY_TARGET=17
+CLASS_E_SHIPPING_STUB=25
+TOTAL_CLASSIFIED=446
+UNCLASSIFIED_STUBS=0
+
+[ ACTION / BATCH LOAD ]
+BATCH_2_STUB_ONLY_TARGETS=17
+BATCH_3_SHIPPING_IDE_TUS=25
+BATCH_4_CMAKE_COMPILED_GHOSTS=26
+BATCH_5_ORPHANS=378
+BLOCKED_SPEC_REQUIRED=0
+INVENTED_API_IMPLEMENTATIONS=0
+FAKE_MAIN_FIXES=0
+
+[ QUARANTINE ]
+QUARANTINE_MANIFEST_COMPLETE=1
+REMOVED_FILE_SHA256_COMPLETE=446 of 446 recorded
+REMOVED_AT_COMMIT=pending for all 446 - this batch removed nothing
+RESTORE_INFORMATION_COMPLETE=1
+REMOVED_FILE_SHA256_COMPLETE_MEASURED=1
+
+VERDICT=PASS
+VERDICT_MEANS=inventory is complete and measured; NO stub has been removed yet

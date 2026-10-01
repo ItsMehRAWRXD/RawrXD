@@ -49,3 +49,39 @@ tmp_*.txt
 # Deep2 closure artifacts (not source)
 _deep2_closure/
 qwen2.5-coder-1.5b-base.gguf
+
+# Multi-megabyte generated runtime/debug logs (certifier run output, not source).
+# Measured 2026-10-01: 23 files / 248.07 MB excluded. Milestone receipts stay tracked.
+_memcorrupt_run*.txt
+_memcorrupt_run*.txt.err
+_memcorrupt_run*.err
+!_memcorrupt_run*.exitcode.txt
+_batch3d_*.txt
+_batch3d_*.txt.err
+_b3ab_run*.log
+_probe*_*.log
+_lifecycle_test_run*.log
+rawrxd/_probe*.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_3B2_nemotron_tooling.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_2_CLOSURE_item10_4gen_FINAL.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_2_CLOSURE_item10_4gen_diag.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_3_PROBE_12_continuation.log
+*nemotron_load.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_3_PROBE_3_agent_shaped.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_3_PROBE_2_semantic_copy.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_3_PROBE_1_one_shot.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/BATCH_2_CLOSURE_item10_d2_4req.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/batches/BATCH_02_d3_eos_llama32.log
+rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/batches/BATCH_01_d2_run_tinyllama.log
+
+# Generated crash dumps
+*.dmp
+*.dump
+*.binlog
+*.stacktrace
+*.corelog
+
+# Additional build output trees
+out/
+bin/
+obj/

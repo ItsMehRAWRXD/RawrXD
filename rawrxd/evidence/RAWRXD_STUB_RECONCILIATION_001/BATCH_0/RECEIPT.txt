@@ -1,0 +1,65 @@
+GATE=RAWRXD_STUB_RECONCILIATION_001
+BATCH=BATCH_0_SINGLE_WRITER_AUTHORITY
+
+[ PREDICATES - all measured by performing the action and observing the refusal ]
+SECOND_WRITER_ACQUIRE_BLOCKED=1
+COMMIT_WITHOUT_LEASE_BLOCKED=1
+COMMIT_AFTER_HEAD_MOVED_BLOCKED=1
+UNAUTHORIZED_STAGED_PATH_BLOCKED=1
+FOREIGN_LEASE_RELEASE_BLOCKED=1
+STALE_LEASE_RECOVERY_TESTED=1
+VERDICT_DERIVED_FROM_CHECKS=1
+HARDCODED_VERDICT=0
+RAWRXD_SINGLE_WRITER_AUTHORITY_001=PASS
+
+[ HOW MEASURED - throwaway git repo under TEMP; the real repo is not mutated ]
+SCRATCH_REPO=C:\Users\Garrett\AppData\Local\Temp\rawr_lease_scratch
+C1_SECOND_ACQUIRE_REFUSAL=HeldByLiveProcess
+C1_FOREIGN_LIVE_REFUSAL=HeldByLiveProcess
+C2_NO_LEASE_REFUSAL=NoLease
+C3_HEAD_MOVED_REFUSAL=HeadMoved
+C4_SCOPE_REFUSAL=StagedScopeExpanded
+C4_CONTROL_OK=1
+C5_RELEASE_RETURNED_TRUE=0
+C6_RECOVERY_OUTCOME=StaleRecovered
+VERDICT_PREDICATES_DEPENDENT=6
+VERDICT_DISTINGUISHES_INPUTS=1
+
+[ DEFECT FOUND AND FIXED BY THIS GATE ]
+DEFECT_1=processAlive() reported a terminated process as alive
+DEFECT_1_MEASURED_BEFORE=C6_PROCESSALIVE_REPORTS_ALIVE=1
+DEFECT_1_MEASURED_AFTER=C6_PROCESSALIVE_REPORTS_ALIVE=0
+DEFECT_1_ROOT_CAUSE=WriterLeaseAuthority.cpp processAlive() consulted OpenProcess
+  and GetProcessTimes only. Windows keeps a terminated process openable while
+  any handle remains, so a crashed writer's lease would never be recoverable.
+DEFECT_1_FIX=GetExitCodeProcess + STILL_ACTIVE is now required, in addition to
+  the existing pid+creation-time recycling guard.
+DEFECT_2=debug fprintf contamination in WriterLeaseAuthority.cpp acquire()
+DEFECT_2_FIX=removed 7 unconditional stderr writes from the authority
+SOURCE_CHANGED=src/agentmodes/WriterLeaseAuthority.cpp
+
+[ WRITER LEASE - held by a live resident process ]
+LEASE_OWNER=RAWRXD_STUB_RECONCILIATION_001 (this session)
+LEASE_PID=23572
+LEASE_HOST=RAWRXD
+LEASE_START_HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+LEASE_SCOPE=RAWRXD_STUB_RECONCILIATION_001
+LEASE_STARTED_UTC=2026-09-29T22:15:55Z
+LEASE_EXPIRES_UTC=2026-09-30T06:15:55Z
+LEASE_FILE=F:\~dev\.rawr\lease.lock
+LEASE_OWNER_IS_LIVE_PROCESS=1
+
+[ HONEST NOTES ]
+NOTE_1=The first acquire attempt named a short-lived tool pid that had already
+  exited, which would have left the lease legally recoverable by anyone. It was
+  replaced by a resident holder process; the tool records this as StaleRecovered.
+NOTE_2=WriterLeaseAuthority IS wired into the build, via
+  add_library(rawrxd_writer_lease STATIC src/agentmodes/WriterLeaseAuthority.cpp).
+  An earlier reading of this file wrongly concluded it was only mentioned in a
+  comment. That target was itself failing to compile (C1083) because its include
+  directory was set to src/agentmodes rather than src, and that defect was fixed
+  during the FINAL batch.
+NOTE_3=This receipt is produced by a harness, not by the authority itself. It
+  is evidence for RawrGate, not a promotion.
+
+VERDICT=PASS

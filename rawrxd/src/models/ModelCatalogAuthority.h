@@ -57,6 +57,11 @@ namespace rawrxd::models
     const std::vector<ModelRecord>& catalog();
     const CatalogStats& catalogStats();
 
+    // Roots that existed and were scanned, and roots that were skipped because
+    // they did not exist. Populated by scanModelRoots() / buildCatalogFromScratch().
+    const std::vector<std::string>& scannedRoots();
+    const std::vector<std::string>& skippedRoots();
+
     // Individual stages, exposed for diagnosis. Each one performs real work.
     void scanModelRoots();
     void scanAliases();

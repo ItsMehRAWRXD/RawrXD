@@ -1,0 +1,129 @@
+=== Batch 0 preflight ===
+ITEM_1_HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+ITEM_2_ORIGIN=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+ITEM_2_UPSTREAM=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+ITEM_3_STAGED=0
+=== ITEM_4 git status --short (first 80 lines) ===
+ M CMakeCache.txt
+ M CMakeFiles/CMakeConfigureLog.yaml
+ M _rawr_dump_receipt.txt
+ m rawrxd/3rdparty/quickjs
+ M rawrxd/CMakeLists.txt
+ M rawrxd/src/agentmodes/RawrCertAuthority.cpp
+ M rawrxd/src/agentmodes/RawrCertAuthority.h
+ M rawrxd/src/cli/RawrDumpAuthority.cpp
+ D rawrxd/src/deep2/Deep2APIServer.cpp
+ D rawrxd/src/deep2/Deep2Benchmark.cpp
+ D rawrxd/src/deep2/Deep2Discovery.cpp
+ D rawrxd/src/deep2/Deep2InferenceGateway.cpp
+ D rawrxd/src/deep2/Deep2Integration.cpp
+ D rawrxd/src/deep2/Deep2LocalServer.cpp
+ D rawrxd/src/deep2/GGUFDiagnostics.cpp
+ D rawrxd/src/deep2/MultiGPU/GPUDeviceRegistry.cpp
+ D rawrxd/src/deep2/MultiGPU/MultiGPUScheduler.cpp
+ D rawrxd/src/deep2/MultiGPU/VRAMAllocator.cpp
+ D rawrxd/src/deep2/ScaleQuality.cpp
+ D rawrxd/src/deep2/deep2_http_gateway.cpp
+ D rawrxd/src/deep2/gpu/Deep2GPUBackend.cpp
+ D rawrxd/src/deep2/mcp_bridge.cpp
+ D rawrxd/src/deep2/production/Deep2ProductionRuntime.cpp
+ M rawrxd/src/deep2/rawr_run.cpp
+ M rawrxd/src/deep2/rawrxd_run_modelname_001.cpp
+ D rawrxd/src/full_agentic_ide/AgenticIOCPBridge.cpp
+ D rawrxd/src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
+ D rawrxd/src/full_agentic_ide/FullAgenticIDE.cpp
+ D rawrxd/src/ide/ANSIColorParser.cpp
+ D rawrxd/src/ide/Deep2Bridge.cpp
+ D rawrxd/src/ide/FindReplaceDialog.cpp
+ D rawrxd/src/ide/GitCommitDialog.cpp
+ D rawrxd/src/ide/GitDiffViewer.cpp
+ D rawrxd/src/inference/ai_model_caller_real.cpp
+ D rawrxd/src/inference/inference_engine_real.cpp
+ M rawrxd/src/models/ModelCatalogAuthority.cpp
+ M rawrxd/src/models/ModelCatalogAuthority.h
+?? .kilo/plans/1790713570795-rawrxd-single-writer-enforcement-plan.md
+?? .rawrxd/
+?? Testing/
+?? _audit_preflight_diag.ps1
+?? _bootstrap_step2_001.txt
+?? _bootstrap_step2_pause_001.txt
+?? _canonical_classification_001.txt
+?? _dump_fix2_done.txt
+?? _dump_fix_done.txt
+?? _dump_honesty_recheck.txt
+?? _false_pass_retraction_receipt.txt
+?? _rawr_local_agent_e2e_receipt.txt
+?? _rawr_response_coded_agent_receipt.txt
+?? _receipt_immutability_regression_receipt.txt
+?? _reconciliation_classification_001.txt
+?? _regtest_build.txt
+?? _regtest_build_err.txt
+?? _single_writer_audit_receipt.txt
+?? _state_freeze_001.txt
+?? rawrxd/New-RawrXDBeyondParity.ps1
+?? rawrxd/RAWRXD_BEYOND_PARITY_MANIFEST.md
+?? rawrxd/_RawrResponseAgent.ps1
+?? rawrxd/_audit_cli_dispatch.txt
+?? rawrxd/_audit_ollama.txt
+?? rawrxd/_beyond_parity_dryrun.log
+?? rawrxd/_beyond_parity_generate.log
+?? rawrxd/_local_agent_e2e_receipt.txt
+?? rawrxd/_ollama_tags.json
+?? rawrxd/_probe1_one_shot.log
+?? rawrxd/_probe2_observation_copy.log
+?? rawrxd/_probe3_agent_shaped.log
+?? rawrxd/_rawr_dump_cpu_only_receipt.txt
+?? rawrxd/_rawr_dump_receipt.txt
+?? rawrxd/_rawr_run_evidence.log
+?? rawrxd/audit/
+?? rawrxd/evidence/RAWRXD_STUB_RECONCILIATION_001/
+?? rawrxd/receipts/RAWRXD_AGENT_AUTHORITY_001/
+?? rawrxd/receipts/RAWRXD_AGENT_RECEIPTS_001/
+?? rawrxd/receipts/RAWRXD_ASK_AGENT_001/
+?? rawrxd/receipts/RAWRXD_BEYOND_PARITY_001/
+?? rawrxd/receipts/RAWRXD_BUILD_AGENT_001/
+?? rawrxd/receipts/RAWRXD_CODE_AGENT_001/
+?? rawrxd/receipts/RAWRXD_CODE_INDEX_001/
+ITEM_5_LEASE_FILE=EXISTS
+{
+  "repository_root": "f:/~dev",
+  "pid": 30252,
+  "nonce": 5712953110738933491,
+  "expected_head": "a078e3b87be6b22ed1fa6fce6a20bfdd980e4441",
+  "acquired_unix_seconds": 1790793884,
+  "authorized_paths": ["f:/~dev/rawrxd/src/deep2/deep2engine.h", "f:/~dev/rawrxd/src/deep2/deep2engine.cpp", "f:/~dev/rawrxd/src/deep2/tokenizer.hpp", "f:/~dev/rawrxd/tools/deep2_generation_lifecycle_test.cpp"]
+}
+=== ITEM_4_C_DIRTY_COUNT ===
+WORKTREE_PORCELAIN_COUNT=116
+M_count=12
+D_count=25
+??_count=116
+=== ITEM_6 lease already covers RAWRXD_DEEP2_GENERATION_LIFECYCLE_001 scope ===
+Lease contents:
+{
+  "repository_root": "f:/~dev",
+  "pid": 30252,
+  "nonce": 5712953110738933491,
+  "expected_head": "a078e3b87be6b22ed1fa6fce6a20bfdd980e4441",
+  "acquired_unix_seconds": 1790793884,
+  "authorized_paths": ["f:/~dev/rawrxd/src/deep2/deep2engine.h", "f:/~dev/rawrxd/src/deep2/deep2engine.cpp", "f:/~dev/rawrxd/src/deep2/tokenizer.hpp", "f:/~dev/rawrxd/tools/deep2_generation_lifecycle_test.cpp"]
+}
+=== ITEM_7 verify no competing writer owns the same files ===
+Checking for another lease file in F:\~dev\.rawrxd\leases\
+  lease=writer.lease size=397 mtime=09/30/2026 14:44:44
+=== ITEM_8 freeze unrelated source mutation ===
+Will only modify:
+  - src/deep2/Deep2Engine.h (in lease)
+  - src/deep2/Deep2Engine.cpp (in lease)
+  - src/deep2/Tokenizer.hpp (in lease)
+  - tools/deep2_generation_lifecycle_test.cpp (in lease)
+Will NOT modify agent/gate files outside lease.
+=== ITEM_9 freeze agent/gate changes ===
+Agent-related files observed in untracked list:
+=== ITEM_10 audit/build dir state ===
+Audit dir:
+  audit_files=22
+Build dir:
+  F:\~dev\rawrxd\build_ide_audit : EXISTS
+  F:\~dev\rawrxd\build_response_coded_agent : EXISTS
+  F:\~dev\rawrxd\build : EXISTS

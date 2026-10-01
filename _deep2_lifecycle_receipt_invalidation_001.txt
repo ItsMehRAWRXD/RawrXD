@@ -1,0 +1,77 @@
+GATE=DEEP2_MEMORY_CORRUPTION_ROOT_001
+RECORD=LIFECYCLE_PASS_INVALIDATION
+DATE_UTC=2026-10-01T01:21Z
+
+[ CLASSIFICATION - corrected ]
+RAWRXD_DEEP2_LIFECYCLE_OUTPUT=OBSERVED
+MODEL_GENERATION_RETURNED=YES
+COHERENT_TEXT_PREVIOUSLY_OBSERVED=YES
+
+CURRENT_PROCESS_EXIT=-1073740791
+CURRENT_NTSTATUS=0xC0000409
+PRIOR_PROCESS_EXIT=-1073740940
+PRIOR_NTSTATUS=0xC0000374
+
+PRIOR_NTSTATUS_DECODED=STATUS_HEAP_CORRUPTION
+CURRENT_NTSTATUS_DECODED=STATUS_STACK_BUFFER_OVERRUN_OR_FAIL_FAST
+NOTE_0xC0000409=commonly labelled stack buffer overrun, but Windows also
+  raises this fail-fast for security-check failures. Treated as
+  MEMORY_CORRUPTION_FAST_FAIL evidence, not as proof of a literal
+  local char[] stack buffer overflowing.
+
+MEMORY_CORRUPTION=REPRODUCED_TWO_MANIFESTATIONS
+LIFECYCLE_GATE=FAIL
+PRIOR_PASS_RECEIPT=INVALIDATED_BY_NONZERO_PROCESS_EXIT
+
+[ PRIOR BATCH 2 OUTPUT - retained as inference evidence only ]
+PRIOR_BATCH_2_MODEL_OUTPUT=VALID_EVIDENCE
+PRIOR_BATCH_2_PROCESS_COMPLETION=FAIL
+PRIOR_BATCH_2_LIFECYCLE_VERDICT=INVALIDATED
+REASON=0xC0000374_STATUS_HEAP_CORRUPTION
+NOTE=valid inference evidence is not a valid lifecycle PASS. The process
+  subsequently exited nonzero from detected memory corruption.
+
+[ LOCALIZATION - current, evidence-bounded ]
+CURRENT_RUN_REACHES=[STREAM] RESULT
+CURRENT_RUN_DIES_BEFORE=B[0]
+OBSERVATION=detection localizes to the post-generation portion of runOne()
+  and its return/destruction path.
+NOT_YET_PROVEN=that the Deep2Engine destructor is the corruptor. A stack
+  cookie or heap guard can detect damage significantly later than the write
+  that caused it.
+
+[ SUSPECTS - frozen, none promoted to root cause ]
+ROOT_CAUSE=NOT_YET_PROVEN
+HIGH_PRIORITY_SUSPECT_1=MIXED_OBJECT_ABI_OR_STALE_STATIC_LIBRARY
+HIGH_PRIORITY_SUSPECT_2=HEAP_OR_STACK_OVERWRITE_DURING_GENERATION
+HIGH_PRIORITY_SUSPECT_3=POST_GENERATION_COPY_MOVE_OR_DESTRUCTION
+SAMPLER_CHANGE_CAUSALITY=REFUTED_BY_HEAD_SOURCE_REPRO
+DESTRUCTOR_CAUSALITY=NOT_PROVEN
+
+[ OBSERVED EVIDENCE CONFLICT - unresolved, recorded not reconciled ]
+_ACTUAL_FILE_STATE=_batch3d_inference1.txt ends mid-prefill at
+  "LINEAR_CPU_BEGIN name=blk.4.ssm_out.weight" followed by a literal ^C.
+  No [STREAM] RESULT line and no B[0] line are present in that file.
+_ACTUAL_EXIT_EVIDENCE_IN_FILE=none; the .err file ends the same way.
+CONSEQUENCE=the pasted CURRENT_EXIT=0xC0000409 and
+  PRIOR_EXIT=0xC0000374 values could not be re-verified from the artifacts
+  on disk at the time of this record. They are carried forward as reported
+  operator evidence, not as independently reproduced measurements.
+REQUIRED_BEFORE_ANY_ROOT_CAUSE_CLAIM=rerun the lifecycle test from a single
+  provenance build and capture the raw process exit code to a file.
+
+[ ACCEPTANCE - next acceptable closure, not merely another B[0] ]
+B_OBSERVATIONS=4
+D_OBSERVATIONS=1
+GENERATION_RESULTS_VALID=PASS
+PROCESS_EXIT_CODE=0
+HEAP_CORRUPTION=0
+FAST_FAIL=0
+LIFECYCLE_DESTRUCTION=PASS
+VERDICT=PASS
+
+ITEMS_10_AND_12_REMAIN=OPEN
+
+SOURCE_SNAPSHOT=HEAD a078e3b87be6b22ed1fa6fce6a20bfdd980e4441 plus
+  uncommitted worktree; this record does not claim a clean tree.
+VERDICT=FAIL

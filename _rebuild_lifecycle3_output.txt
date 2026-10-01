@@ -1,0 +1,6 @@
+=== STEP 1: Compile lifecycle test ===
+deep2_generation_lifecycle_test.cpp
+LIFECYCLE_COMPILE_OK
+=== STEP 2: Link with InferenceEngine_patched.lib ===
+LINK : fatal error LNK1104: cannot open file 'libcpmt.lib'
+LINK_FAIL 

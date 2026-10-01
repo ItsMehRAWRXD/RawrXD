@@ -44,27 +44,19 @@ extern "C" void AD_ProcessGGUF(void)
 {
     noteModeCall("AD_ProcessGGUF");
 }
-extern "C" void SO_LoadExecFile(void)
-{
-    noteModeCall("SO_LoadExecFile");
-}
-extern "C" void SO_InitializeVulkan(void)
-{
-    noteModeCall("SO_InitializeVulkan");
-}
-extern "C" void SO_CreateMemoryArena(void)
-{
-    noteModeCall("SO_CreateMemoryArena");
-}
-extern "C" void SO_CreateComputePipelines(void)
-{
-    noteModeCall("SO_CreateComputePipelines");
-}
-extern "C" void SO_PrintStatistics(void)
-{
-    noteModeCall("SO_PrintStatistics");
-}
-extern "C" void SO_InitializeStreaming(void)
-{
-    noteModeCall("SO_InitializeStreaming");
-}
+
+// The six SO_* entry points that used to be defined here are NOT repeated.
+// src/core/rawrxd_subsystem_api.cpp already defines and uses the real ones:
+//
+//   api.cpp:111  int    SO_LoadExecFile(const char*)
+//   api.cpp:123  bool   SO_InitializeVulkan()
+//   api.cpp:128  bool   SO_InitializeStreaming()
+//   api.cpp:137  void*  SO_CreateMemoryArena(uint64_t)
+//   api.cpp:148  void*  SO_CreateComputePipelines(void*, uint64_t)
+//   api.cpp:166  void   SO_PrintStatistics(void)
+//
+// and calls them from api.cpp:523-590. The copies here had different parameter
+// lists, and because they are `extern "C"` the linker compares the bare symbol
+// name only, so the two definitions collided as LNK2005 even though the
+// signatures differ. Nothing is lost by dropping them: the implemented
+// definitions remain, and the mode entry points above are untouched.

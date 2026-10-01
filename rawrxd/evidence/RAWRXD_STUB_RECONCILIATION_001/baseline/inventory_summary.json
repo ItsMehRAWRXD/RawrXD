@@ -1,0 +1,47 @@
+{
+  "MEASURED_TOTAL_STUBS": 446,
+  "EXPECTED_TOTAL_STUBS": 446,
+  "MEASURED_CMAKE_COMPILED": 68,
+  "EXPECTED_CMAKE_COMPILED": 68,
+  "MEASURED_NEVER_COMPILED": 378,
+  "EXPECTED_NEVER_COMPILED": 378,
+  "MEASURED_SHIPPING_IDE": 25,
+  "EXPECTED_SHIPPING_IDE": 25,
+  "MEASURED_STUB_ONLY_TARGETS": 17,
+  "EXPECTED_STUB_ONLY_TARGETS": 17,
+  "MEASURED_LNK2019_MAIN_FAILURES": 4,
+  "EXPECTED_LNK2019_MAIN_FAILURES": 5,
+  "TARGETS_TOTAL_IN_BUILD": 149,
+  "BY_CLASSIFICATION": {
+    "A_ORPHAN": 378,
+    "B_BUILD_METADATA_GHOST": 26,
+    "D_STUB_ONLY_TARGET": 17,
+    "E_SHIPPING_STUB": 25
+  },
+  "BY_ACTION": {
+    "CANDIDATE_PROVEN_DEAD_REMOVED_FROM_TARGET": 25,
+    "QUARANTINE_FROM_ACTIVE_TREE": 378,
+    "REMOVE_FROM_CMAKE_AND_QUARANTINE": 26,
+    "REMOVE_TARGET_FROM_ACTIVE_BUILD_AND_QUARANTINE": 17
+  },
+  "BLOCKED_SPEC_REQUIRED": 0,
+  "STUB_ONLY_TARGET_NAMES": [
+    "RawrXD-ProductionCertTest",
+    "b008_ci_integration",
+    "benchmark_dispatch_overhead",
+    "benchmark_dispatch_pmc",
+    "benchmark_planner_amortization",
+    "deep2_k2_useful_tps_001",
+    "k2_007a_tokenizer_metadata",
+    "k2_tls_smoke_test",
+    "nevm_determinism_validation",
+    "nevm_stress_test",
+    "test_q4_asm_debug",
+    "test_q4_cache_alignment",
+    "test_q4_fused_pipeline",
+    "test_q4_scalar_simd",
+    "test_q6k_asm_certification",
+    "test_quant_dequant_crosscheck",
+    "validate_end_to_end"
+  ]
+}

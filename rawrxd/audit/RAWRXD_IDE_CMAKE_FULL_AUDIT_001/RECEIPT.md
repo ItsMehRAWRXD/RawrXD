@@ -1,0 +1,549 @@
+# RAWRXD_IDE_CMAKE_FULL_AUDIT_001 — receipt
+
+```ini
+AUDIT=RAWRXD_IDE_CMAKE_FULL_AUDIT_001
+UTC=2026-09-30T18:47Z .. 2026-09-30T19:05Z
+REPO=F:\~dev\rawrxd
+GIT_ROOT=F:/~dev
+HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+BRANCH=model-correctness
+STAGED_AT_START=0
+STAGED_AT_END=0
+COMMIT=0
+PUSH=0
+SOURCE_MUTATION_DURING_AUDIT=0
+BUILD_OUTPUT_MUTATION=1        (F:\~dev\rawrxd\build_ide_audit)
+LOG_CAPTURE=1                  (this directory)
+VERDICT_KEYS_ARE_SEPARATE
+  RAWRXD_IDE_CMAKE_FULL_AUDIT_001=IN_PROGRESS   # audit + closure work
+  PRODUCT_COMPLETION=FAIL                       # the product itself
+```
+
+## Authority state at audit start
+
+```ini
+LEASE_AUTHORITY=RAWRXD_SINGLE_WRITER_AUTHORITY_001
+LEASE_FILE=F:\~dev\.rawrxd\leases\writer.lease
+LEASE_PID=30252
+LEASE_NONCE=5712953110738933491
+LEASE_EXPECTED_HEAD=a078e3b87be6b22ed1fa6fce6a20bfdd980e4441
+LEASE_AUTHORIZED_PATHS=4
+  rawrxd/src/deep2/Deep2Engine.h
+  rawrxd/src/deep2/Deep2Engine.cpp
+  rawrxd/src/deep2/Tokenizer.hpp
+  rawrxd/tools/deep2_generation_lifecycle_test.cpp
+DEEP2_LIFECYCLE_REPAIR=HOLD
+PRIOR_LEASE=RELEASED_VIA_ITS_OWN_STOP_FILE (was PID 23572, RAWRXD_STUB_RECONCILIATION_001)
+```
+
+**Disclosure, not a footnote:** `rawrxd/tools/deep2_generation_lifecycle_test.cpp` was written
+*before* the freeze arrived, under the held lease. It is untracked, unreferenced by any CMake
+target, and untouched since. `SOURCE_MUTATION_DURING_AUDIT=0` refers to everything after
+2026-09-30T18:46Z.
+
+**Correction to the prior lease's scope claim:** `lease_tool.exe` prints
+`LEASE_SCOPE=RAWRXD_STUB_RECONCILIATION_001` as a hardcoded literal
+(`evidence/RAWRXD_STUB_RECONCILIATION_001/BATCH_0/lease_tool.cpp:57,94`). That lease carried
+**no authorized-path set at all**. "Scope" was a printed string, not an enforced boundary.
+
+## Batch checklist
+
+- [x] Batch 00 — Preflight and toolchain truth
+- [x] Batch 01 — CMake entrypoints and presets
+- [x] Batch 02 — Target ledger
+- [x] Batch 03 — Clean configure (isolated dir)
+- [x] Batch 04 — Real build graph vs source tree
+- [x] Batch 05 — Foundational library compile (via IDE dependency chain)
+- [x] Batch 06 — Primary IDE link
+- [x] Batch 07 — Source-to-target coverage
+- [x] Batch 08 — Stub-candidate classification
+- [x] Batch 09 — IDE shell / UI surfaces
+- [x] Batch 10 — Model / runtime integration
+- [x] Batch 11 — Agent core
+- [x] Batch 12 — Tool system
+- [x] Batch 13 — Five agent modes
+- [x] Batch 14 — Context / intelligence services
+- [x] Batch 15 — Editing system
+- [x] Batch 16 — Completion / inline AI
+- [x] Batch 17 — Build/test/diagnostics loop
+- [x] Batch 18 — CTest inventory
+- [x] Batch 19 — Strict fallback reachability
+- [x] Batch 20 — Linkage / dependency audit
+- [x] Batch 21 — Runtime smoke (freshly built binary)
+- [x] Batch 22 — Coverage matrix and repair ordering
+
+## Measured build truth
+
+```ini
+CMAKE_VERSION=4.4.2
+GENERATOR=Visual Studio 17 2022
+ARCH=x64
+MSVC_TOOLSET=14.44.35207
+CONFIGURE_EXIT=0
+CONFIGURE_LINES=1828
+CONFIGURE_ERRORS=0
+SLN_PROJECT_COUNT=132
+
+WIN32IDE_SOURCES_DECLARED_THEN_DROPPED_AS_MISSING=225
+OPTIONAL_MASM_SOURCES_OMITTED=46
+WIN32IDE_TRANSLATION_UNITS_COMPILED=326
+WIN32IDE_TU_MISSING_ON_DISK=0
+
+BUILD_EXIT=0
+BUILD_COMPILE_ERRORS=0
+BUILD_LNK_ERRORS=0
+BUILD_WARNINGS=68
+UNRESOLVED_EXTERNALS=0
+
+IDE_EXE=F:\~dev\rawrxd\build_ide_audit\bin\Release\RawrXD-Win32IDE.exe
+IDE_EXE_BYTES=20457984
+IDE_EXE_LASTWRITE_UTC=2026-09-30T19:00:14Z
+IDE_PDB_EXISTS=1
+
+DEPENDENT_DLLS=17   (all Windows system + vulkan-1.dll; no cloud runtime)
+PE_MACHINE=x64
+PE_SUBSYSTEM=Windows GUI
+ENTRY=WinMainCRTStartup
+
+TESTS_DISCOVERED_BY_CTEST=0
+TEST_SOURCE_FILES_ON_DISK=138
+TESTS_CMAKELISTS_EXISTS=0        (add_subdirectory(tests) has no CMakeLists)
+
+RUNTIME_PROCESS_ALIVE=1
+RUNTIME_RESPONDING=1
+RUNTIME_MAIN_WINDOW_HANDLE=26543562
+RUNTIME_MAIN_WINDOW_TITLE=RawrXD Win32 IDE
+RUNTIME_THREADS=5
+RUNTIME_WORKING_SET_MB=19.3
+RUNTIME_UPTIME_SEC=12
+RUNTIME_TERMINATION=FORCED_BY_AUDIT   (clean-exit path NOT measured)
+```
+
+### Two independent CMake projects exist
+
+| Project root | Declares | Built by |
+|---|---|---|
+| `F:\~dev\CMakeLists.txt` | `rawr_monolith`, `rawrxd_screenpilot_e2e`, `deep2_benchmark` | `F:\~dev\build` |
+| `F:\~dev\rawrxd\CMakeLists.txt` | `RawrXD-Win32IDE` (:6896), `rawr` (:9977), `InferenceEngine` (:4760) | `build_w1`, `build_ide_audit` |
+
+The IDE ships from the **second**. The first is a separate top-level project with overlapping
+names; a build invoked against the wrong root measures nothing about the product.
+
+## The dominant structural finding
+
+`rawrxd_filter_missing_sources` (`CMakeLists.txt:172-187`) emits `message(WARNING ...)` at
+line 183 and **silently drops** the entry. Measured on this audit's configure:
+
+- **225** declared `WIN32IDE_SOURCES` entries do not exist on disk.
+- All 225 are untracked at `HEAD a078e3b87` (verified by `git ls-files`) — they are dead
+  names deleted in earlier commits and never removed from `CMakeLists.txt`.
+- Includes `src/win32app/Win32IDE.cpp`, `src/ui/RawrXD_MainLoop.cpp`,
+  `Win32IDE_CommandSurface.cpp`, `Win32IDE_VSCodeUI.cpp`, `Win32IDE_ProblemsPanel.cpp`,
+  `Win32IDE_AgentCommands.cpp`, `Win32IDE_Plugins.cpp`, `Win32IDE_SemanticIndex.cpp`.
+
+**Correction:** project memory records this function as `FATAL_ERROR`. The current source is
+`WARNING`. Repo is fresher than the record.
+
+Consequence: the IDE compiles and links 326 real translation units and ships, while 225
+declared capabilities are absent. The build is green *because* the gap is swallowed.
+
+## Batch 07 — source-to-target coverage
+
+```ini
+TOTAL_IMPLEMENTATION_FILES_ON_DISK=1968     (.cpp 1935, .c 33)
+BOUND=616        named in a source list attached to a target declaration
+UNBOUND=1271     on disk, named in no processed CMake code at all
+AMBIGUOUS=81     named but attached to nothing that configures (30 in dead
+                 variables, 51 named only inside comments)
+MISSING_BOUND=360  named by CMake, absent from disk
+                     (331 resolvable + 29 carrying unexpanded ${...})
+CHECK           616 + 1271 + 81 = 1968
+TARGET_DECLARATIONS_PARSED=364
+```
+
+Largest targets by declared source entries: `RawrXD-Win32IDE` 543 (`:6896`), `RawrXD_Gold` 274
+(`:3764`), `RawrEngine` 253 (`:3400`), `InferenceEngine` 156 (`:4760`), `rawr` 106 (`:9977`).
+
+**BOUND means *named in a source list attached to a target*. It does not mean the file compiles,
+links, or runs.** The build evidence in Batch 06 is the only compile evidence in this audit.
+
+### `rawrxd_filter_missing_sources` drop counts, measured from the configure log
+
+| Call site | Variable | Dropped |
+|---|---|---|
+| `:3396` | `RAWR_ENGINE_SOURCES` | 0 |
+| `:3397` | `RAWR_ENGINE_ASM_SOURCES` | 0 |
+| `:3760` | `GOLD_UNDERSCORE_SOURCES` | 4 |
+| `:3761` | `ASM_KERNEL_SOURCES` | 0 |
+| `:4758` | `INFERENCE_ENGINE_LIBRARY_SOURCES` | 0 |
+| `:4925` | `INFERENCE_ASM_SOURCES` | 0 |
+| **`:6812`** | **`WIN32IDE_SOURCES`** | **225** |
+| `:6813` | `_WIN32IDE_ASM` | 0 |
+
+### Reconciliation of a conflicting static estimate — RESOLVED, 225 is authoritative
+
+A static CMake simulator run independently over the same tree reported **221** `WIN32IDE_SOURCES`
+drops. Direct measurement of the captured configure log settles it:
+
+```ini
+WARNING_LINES=225
+UNIQUE_PATHS=225
+DUPLICATE_OCCURRENCES=0
+OTHER_LISTS_WARNED=0   (every warning in the log is WIN32IDE_SOURCES)
+```
+
+225 warning lines, 225 distinct paths, no repeats. `02_configure.log` is real `cmake` output, not
+a parse. The simulator's figure is a static upper bound and its own first pass read 289 before
+comment masking corrected it to 221; the residual 4-path delta is **UNRESOLVED** — most likely
+tokenizer drift on entries containing parentheses or quotes, but that is a hypothesis and is not
+recorded as a finding.
+
+**Rule for this audit: where a real configure log and a static parse disagree, the configure log
+wins.** Static parsing here cannot evaluate `if()` predicates, so its drop counts are upper bounds
+over all option combinations, not this configuration.
+
+### Where the 360 declared-but-absent sources land
+
+| Population | Count | Guard that hides it |
+|---|---:|---|
+| `WIN32IDE_SOURCES`, dropped with `message(WARNING)` | 225 (221 of the static estimate) | `CMakeLists.txt:6812`, warning only |
+| `RAWR_AGENTIC_SOURCES` — `rawr_main.cpp`, `rawr_commands*.cpp`, `rawr_*_tool.cpp`, `rawr_terminal_*.cpp`, `deep2/Deep2*Audit.cpp`, `deep2/daily/*` | 85 | `cmake/RawrAgenticCli.fragment.cmake:89` — `if(EXISTS .../src/cli/rawr_main.cpp)` fails, so `target_sources(rawr ...)` at `:97` **never runs** |
+| `src/soloide/*` | 14 | `if(Qt6_FOUND)` at `CMakeLists.txt:14358` |
+| Style CLI `src/cli/style/*` | 11 | permanently inside `if(0)` at `RawrRemainingStyleCli.fragment.cmake:21` |
+| `Product100` overlay | 6 | all fail `EXISTS`; downgraded to `message(STATUS ...)` — **not even a WARNING** — `RawrXD_Product100.cmake:22`; `RAWRXD_PRODUCT100` never defined |
+| Background terminals | 7 | `if(0)` at `RawrBackgroundTerminals.fragment.cmake:27` |
+| Others (`RawrXD_LSPServer.cpp`, `intent_config.cpp`, `VwaGpuDma*.cpp`, `link_stubs_gate.cpp`, QuickJS, AntiHallucinationHotPatcher.asm) | 25 | individual `if(EXISTS)` / `if(TARGET)` / `if(0)` guards |
+
+The agentic-CLI population is the second-most consequential after the IDE set: **85 declared
+sources, disabled by the absence of a single file** (`src/cli/rawr_main.cpp`). One missing file
+takes out the entire rawr agentic CLI surface, and the configure log stays clean.
+
+`29 of the 360` carry unexpanded `${...}` (`QUICKJS_DIR`, `CMAKE_CURRENT_LIST_DIR`, …).
+Existence for those is **UNKNOWN** without evaluating variable scope; they are listed, not
+asserted missing.
+
+### `CMakeLists.txt` files that exist but are never processed
+
+Seven entrypoints are unreachable — no `add_subdirectory` ever reaches them — so **17 targets are
+never configured**: `src/core/CMakeLists.txt` (`WebView2Container:18`, `WebView2Example:56`),
+`src/core/executor|policy|router|scheduler/CMakeLists.txt` (`RawrXD-Executor:19`,
+`RawrXD-Policy:19`, `RawrXD-Router:15`, `router_test:58`, `RawrXD-Scheduler:15`,
+`scheduler_test:58`), `src/runtime/os/CMakeLists.txt` (`RawrXD_OSRuntime:7,16,26`),
+`win32ide_strict/CMakeLists.txt` (`:21`, `:164`, `:175`, `:196`, `:255`).
+
+Four `add_subdirectory` calls are permanently dead behind `if(EXISTS .../CMakeLists.txt)` guards
+whose file does not exist: `src/runtime` (`:14031`), `tests` (`:14036`), `src/tools` (`:14197`),
+`src/validation` (`:14202`). Only `src/reverse_engineering` (`:3366`), `src/ceo` (`:3371`),
+`src/repository` (`:3376`), `src/generation` (`:3377`) are genuinely added.
+
+This is why the earlier "TODO: check whether `win32ide_strict/` differs from the root target"
+item is now settled for the root target: **`win32ide_strict/CMakeLists.txt` is not reached by the
+shipping configure at all.** Its five targets are unreachable from `F:\~dev\rawrxd`.
+
+## Coverage matrix
+
+| Subsystem | Source | CMake | Compile | Link | Reachable | Runtime | Status |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|---|
+| Win32 shell / window / menu / msgloop | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **DONE** |
+| IDE binary linkage (x64, GUI, no cloud dep) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **DONE** |
+| Editor surface | ✓ | ✓ | ✓ | ✓ | ✓ | ? | **PARTIAL** — no mouse selection (no `WM_MOUSEMOVE`/`WM_LBUTTONUP`) |
+| Tabs | ✓ | ✓ | ✓ | ✓ | ✓ | ? | **PARTIAL** — switching tabs discards unsaved edits |
+| Sidebar file tree | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **PARTIAL** — `TVN_ITEMEXPANDING` only; `Sidebar_GetSelectedPath` zero callers |
+| Terminal panel | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **PARTIAL** — input `WM_COMMAND` is a no-op; the WM_KEYDOWN subclass it cites does not exist |
+| Output panel | ✓ | ✓ | ✓ | ✓ | ✓ | ? | **PARTIAL** — legacy EDIT, not a registered panel |
+| Status bar | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **PARTIAL** — every setter has zero callers; renders literals forever |
+| Settings GUI | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **UNBOUND** — `SettingsGUI_Show` zero callers, no menu item |
+| Problems / diagnostics panel | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | **NOT_PRESENT** — declared `:5667`, file absent; aggregator has zero callers |
+| Model selection UI | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | **NOT_PRESENT** — only `--model` argv / env |
+| Command dispatch | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** — `Win32IDE_Commands_Route` returns true for any id in `[1000,2000)`, consuming unhandled commands as "handled" |
+| GGUF path resolution | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **DONE** |
+| Ollama manifest/blob resolution | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **DONE** |
+| Model admission / tokenizer / context / weights | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **DONE** |
+| Deep2 same-engine generation lifecycle | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | **BROKEN** — prefill fails at token 0, `cpu_forward_exception` |
+| Streaming callback | ✓ | ✓ | ✓ | ✓ | ✓ | ? | **DONE** (wiring) |
+| Cancellation | ✓ | ✓ | ✓ | ✓ | ✓ | ? | **DONE** (wiring) |
+| Error propagation | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **DONE** |
+| Chat telemetry receipt | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | **STUB** — `CHAT_PANEL=PASS`, `DEEP2_ENGINE=PASS`, `STREAMING_CALLBACK=PASS` written as literals regardless of outcome |
+| Chat panel | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** — reaches the engine; engine produces nothing; `receipts/RAWRXD_IDE_CHAT_001/` holds only a template |
+| AgentCore | ✓ | ✓ | ✓ | ✓ | ✗ (from IDE) | ✗ | **UNBOUND** — bound to `rawr` target only (`:9990`); zero IDE references; run receipt `VERDICT=FAIL_ENGINE_PRODUCED_NO_TOKENS` |
+| ResponseCodedAgent | ✓ | ✓ | ✓ | ✓ | ✗ (from IDE) | ✗ | **UNBOUND** — `:9991`; receipt is all `PENDING` |
+| Agent tool system (`RawrXDAgenticE2E`) | ✓ | ✓ | ✓ | ✓ | ✓ | ? | **PARTIAL** — real, atomic, workspace-confined; **cancellation absent on every tool**; `request.surface` counted, never enforced |
+| Tool registry authority (`src/tools`) | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | **STUB** — `src/tools/CMakeLists.txt` absent, so `:14196` skips it |
+| `ScreenPilotToolAuthorityBridge` | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | **UNBOUND** — full implementation, in no target |
+| `MultiAgentMergeAuthority` (real stale-base rejection) | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | **UNBOUND** |
+| Agent mode registry (Ask/Code/Debug/Plan/Conductor) | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **STUB** — `AgentModeRegistry.cpp` is a contract table; nothing switches on `ModeId` |
+| Read-only agent (AgentCore ReadOnlyToolbox) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **DONE** — structurally cannot mutate: no write/delete/network tool exists |
+| Code mode | ✓ | ✓ | ✓ | ✓ | ✓ | ? | **PARTIAL** — retrieve/edit/build/test real; diagnose/repair/plan/evidence absent |
+| Debug mode | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **STUB** — `AutonomousBuildLoop::GenerateRepair/ApplyRepair` are comment-only returning true |
+| Plan mode | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **STUB** — `generate_plan` returns `success=true` with no `tasks`; zero tasks ever created |
+| Orchestrator | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **STUB** — single-threaded execution, no worker isolation, no authority inheritance |
+| Single-writer enforcement | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | **UNBOUND** — `SingleWriterAuthority` has zero product callers; used only out-of-tree by this audit |
+| Context: symbol extraction | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **PRESENT-UNBOUND** — `rawrxd_repository` links no consumer |
+| Context: definition / reference lookup | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **PRESENT-UNBOUND** |
+| Context: semantic search | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **PRESENT-UNBOUND** |
+| Context: incremental invalidation | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **STUB** — `UpdateFile`/`RemoveFile` have no mtime compare |
+| Context: current-file / selection | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | **NOT_PRESENT** — `selStart/selEnd` exist, nothing exports them |
+| Context: conversation history | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** — message vector renders, but only the raw prompt is ever sent |
+| Context: @-mentions | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | **STUB** — `context_mention_parser.cpp` is a 24-byte comment |
+| Editing: workspace confinement | ✓ | ✓ | ✓ | ✓ | ✓ | ? | **DONE** — rejects absolute paths and `..`, re-checks after canonicalize |
+| Editing: preimage verification | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | **UNBOUND** — the real FNV-1a base-fingerprint check exists in `MultiAgentMergeAuthority` and is in no target |
+| Editing: stale-patch rejection | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | **NOT_PRESENT** — unconditional overwrite |
+| Editing: multi-file / diff preview / accept / reject | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | **NOT_PRESENT** |
+| Editing: undo | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** — 50-deep snapshot stack, but never snapshotted on typing; no Ctrl+Z in the editor wndproc |
+| Editing: concurrent-writer detection | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | **UNBOUND** |
+| INLINE_EDIT | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | **NOT_PRESENT** — no trigger, no key, no symbol |
+| CODE_COMPLETION | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | **STUB** — `GhostText_*` defined and never called; `LSPClient_Start` never called; nothing renders; prefix only, no suffix |
+| Build / diagnostics from IDE | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** — bypasses the tool registry; regex diagnostics parse, no authority check |
+| Test from IDE | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | **NOT_PRESENT** |
+| CTest suite | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | **NOT_PRESENT** — 0 of 138 test sources are registered |
+
+## Repair ordering
+
+```ini
+P0_BUILD_BLOCKERS=0
+    The shipping target configures, compiles and links clean. This is the one
+    strong result in the audit. The blockers are not compiler errors.
+
+P1_CORE_RUNTIME_CORRECTNESS
+    D2_KV_RESET=DEFECT_BLOCKING        generate() never resets KV between generations
+    D1_RESULT_CONTRACT=DEFECT          completed = !cancelled, independent of status
+    D3_EOS_TERMINATION=DEFECT          no stop-token logic in the decode loop at all
+    plus: lastFailureDetail_ is cleared unconditionally at Deep2Engine.cpp:4034,
+          so a DECODE-path forward failure is erased before generateStream reads it
+
+P1b_RECEIPT_HONESTY            (promoted: 10 constructs in the default lane)
+    Fabricated receipt fields that reach a user-visible verdict:
+      main_win32.cpp:1400,1460,1526-1528   GPU gate
+      main_win32.cpp:287-309               chat receipt
+      main_win32.cpp:825-826,869-870       inference receipt
+      ide_inference_gate.cpp:252,504       inference gate verdict conjuncts
+      main_win32.cpp:1943-2004            W8 receipt
+      ide_agentic_gate.cpp:254-255        agentic gate
+      src/serve/rawrxd_serve_main.cpp:1    exit 0, no server
+      src/closure/RawrXDAutoClosure.cpp:1001-1004
+    Plus the two vacuous gates:
+      CMakeLists.txt:6226-6259 filters before :6944 EnforceNoStubs inspects
+      RawrXDStrictShipping.cmake never called; two WinMain definitions survive
+
+P2_USER_TO_MODEL_PATH
+    Chat telemetry receipt literals
+    conversation history never sent
+    problems panel
+    model selection UI
+
+P3_AGENTIC_CORE
+    bind SingleWriterAuthority to a real caller
+    tool cancellation; surface authorization enforcement
+    bind src/tools/ToolRegistryAuthority
+    bind ScreenPilotToolAuthorityBridge, MultiAgentMergeAuthority, rawrxd_repository
+
+P4_IDE_PARITY
+    command-dispatch swallow; Ctrl+F/Ctrl+H/Ctrl+X/Ctrl+C behaviour
+    terminal input dead branch; sidebar/tabs/settings/statusbar wiring
+    preimage verification + stale-patch rejection
+    CODE_COMPLETION trigger/render/accept; INLINE_EDIT
+    register the 138 test sources with CTest
+
+P5_BEYOND_PARITY
+    five agent modes (all STUB today)
+    orchestrator: worker isolation, authority inheritance, aggregation
+    context services: incremental invalidation, selection context, retrieval
+```
+
+## Honesty findings — reporting success without work
+
+1. `Win32IDE_Commands.cpp:331-332` — route returns `true` for any id in `[1000,2000)`,
+   consuming commands no `case` matches.
+2. `Win32IDE_Commands.cpp:280` — `g_findString` is the literal `"TODO"`; Ctrl+F rewrites
+   the window title to "Found" without searching.
+3. `main_win32.cpp:287-309` — chat receipt writes `CHAT_PANEL=PASS`, `SEND_DISPATCH=PASS`,
+   `DEEP2_ENGINE=PASS`, `STREAMING_CALLBACK=PASS`, `STUB_FALLBACKS=0` as literals outside
+   the computed expression.
+4. `main_win32.cpp:1400` — `vulkanInit = "PASS"; // If enableVulkan didn't crash`.
+5. `main_win32.cpp:1526-1529, :1460` — `deviceCount = 1` assumed, not measured.
+6. `main_win32.cpp:1870-1877` + `:2015` — `runAutorunGate` returns 0 regardless of the gate's
+   own verdict, turning `VERDICT=FAIL` into process exit code 0.
+7. `main_win32.cpp:1943-1997` — W8 receipt hardcodes `MODEL_LOADED=0`, `DEEP2_USED=0`,
+   `EXIT_CODE=0`.
+8. `CEOAgent.cpp:383-420` — `generate_plan` returns `success=true` with no `tasks`.
+9. `CEOAgent.cpp:676-687` — `Rollback` returns true unconditionally.
+10. `AutonomousBuildLoop.cpp:335-355` — `GenerateRepair`/`ApplyRepair` are comment-only.
+11. `Win32IDE_MCPHooks.cpp:121-128` — `Initialize` records a handle, installs nothing, returns true.
+12. `ENV{RAWRXD_EMERGENCY_STUB_LINK}` (`CMakeLists.txt:2973,6326`) — when merely *defined*,
+    downgrades the stub `FATAL_ERROR` at `:6329` to `WARNING` at `:6346`, and the build links
+    stubs and succeeds.
+13. `cmake/RawrXDStrictShipping.cmake` — `rawrxd_enforce_shipping_target` is never called; it
+    would have caught the two `WinMain` definitions at
+    `src/core/rawr_engine_link_closure.cpp:3712` and `src/win32app/main_win32.cpp:1589`.
+14. Dead-but-compiled: `IDECore_Layout/RegisterCommand/DispatchCommand/ShowPanel`,
+    `ShellLayout_Toggle*`, `AgentPanel_SetTask/AddStep/SetStepState/Clear`,
+    `GitPanel_SetRepo/Refresh/GetDiff/GetLog`, `SearchPanel_SetRoot/Search/GetResults`,
+    `BuildRunner_GetDiagnostics`, `EditorEngine_ReplaceAll`, `IDECore_Shutdown`.
+
+## Batch 19 — strict fallback reachability: complete verdict table
+
+**Question asked:** can a shipping configuration enter a fallback path and report success?
+**Answer: yes, and in the default `RawrXD-Win32IDE` lane — 10 constructs, none of them
+flag-gated.** The highest-severity *build* paths are gated; the *runtime receipt* paths are not.
+
+### RAWRXD_* options that actually reach the cache
+
+| Option | Default | file:line |
+|---|---|---|
+| `RAWRXD_BUILD_WIN32IDE` | OFF | `CMakeLists.txt:246` |
+| `RAWRXD_BUILD_LEGACY_CERTS` | OFF | `:247` |
+| `RAWRXD_BUILD_CLI` | OFF | `:248` |
+| `RAWRXD_PRODUCTION_STRIP_STUB_SOURCES` | OFF | `:249` |
+| `RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES` | OFF | `:250` |
+| `RAWRXD_ENABLE_MISSING_HANDLER_STUBS` | OFF | `:251` |
+| `RAWRXD_ENABLE_ASAN` | OFF | `:252` |
+| `RAWRXD_ENABLE_VALIDATION` | ON | `:253` |
+| `RAWRXD_BUILD_RAWRENGINE` | ON | `:255` |
+| `RAWRXD_DEEP2_CERT` | OFF | `:4768` |
+| `RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK` | OFF | `:6210-6213` |
+| `RAWRXD_STRICT_AGENTIC_REALITY` | ON | `:6263-6266` |
+| `RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS` | OFF | `:7206-7209` |
+| `RAWRXD_PMASSA` | OFF | `:7438` |
+| `RAWRXD_ENABLE_HEAVY_GATES` | ON | `:7488` |
+| `RAWRXD_BUILD_ADDRESS_RESOLVER_NATIVE` | ON | `:13890` |
+| `RAWRXD_BUILD_LSP_SERVER` | ON | `:13975` |
+| `RAWRXD_BUILD_DAP_ADAPTER` | ON | `:14004` |
+| `RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY` | OFF | `cmake/P1_ProductRuntimeAuthority.cmake:4-6` |
+
+**Do not cite these — declared in files that are never `include()`d:**
+`cmake/RawrXDBuildOptions.cmake:16-44` (`RAWRXD_ENABLE_MASM/AVX512/AMX/VULKAN/CUDA/ROCM/
+OPENCL/METAL/FLASH_ATTENTION/SPECULATIVE/STREAMING/BATCHING/DISTRIBUTED/ENCRYPTION/SANDBOX/
+AUDIT`, `RAWRXD_BUILD_TESTS/BENCHMARKS/EXAMPLES/DOCS`, `RAWRXD_ENABLE_PROFILING/SANITIZERS/
+COVERAGE`) and `cmake/CompilerOptimizations.cmake:93,117,137` (`RAWRXD_ENABLE_PGO/LTO/TSAN`).
+A grep for `include(` over `CMakeLists.txt`, `cmake/` and `win32ide_strict/CMakeLists.txt`
+returns none of them.
+
+**Sole `$ENV{RAWRXD_*}` read in the entire build:** `RAWRXD_EMERGENCY_STUB_LINK`
+(`CMakeLists.txt:2973`, `:6326`).
+
+### Verdict table
+
+| Construct | file:line | Verdict |
+|---|---|---|
+| `rawrxd-serve` main returns 0, no server started | `src/serve/rawrxd_serve_main.cpp:1` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| GPU gate: `vulkanInit="PASS"` from control flow | `main_win32.cpp:1400` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| GPU gate: `deviceCount=1` fabricated from `vulkanInit` | `main_win32.cpp:1460`, `:1526-1528` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| GPU gate: `gpuForwardReached=1` on reaching the line | `main_win32.cpp:1413` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| `stubFallbacks`/`testBackendUsed` never incremented → verdict conjuncts vacuous | `main_win32.cpp:1374-1375`, checked `:1467-1468`, `:1536-1537` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| Chat receipt: 7 PASS/0 literals | `main_win32.cpp:287-289`, `:298`, `:307-309` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| `logitsFinite = true` literal → 7th conjunct of the gate verdict | `ide_inference_gate.cpp:504` → `main_win32.cpp:822`, `:833-835`, `:876` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| `ggufMetadataParseOk = true` literal | `ide_inference_gate.cpp:252` → `main_win32.cpp:812`, `:856` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| `SYNTHETIC_TOKEN_OUTPUT=0`, `STUB_FALLBACKS=0` in inference receipt | `main_win32.cpp:825-826`, `:869-870` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| AutoClosure else-branch sets `pass`/`tokenizerReady`/`forwardPassOk`/`logitsFinite` from `SetupEngine()` alone, skipping `RunFastGate` | `src/closure/RawrXDAutoClosure.cpp:1001-1004` → `:965`, `:967` | `REACHABLE_AND_REPORTS_SUCCESS` (via `--autoclose-worker`) |
+| W8 receipt: `MODEL_LOADED=0`/`DEEP2_USED=0`/`OLLAMA_USED=0`/`EXIT_CODE=0` literals | `main_win32.cpp:1943-1948`, `:1962-1963`, `:1995-1997`, `:2004` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| `channelOpened`/`generationStarted = true` set *before* `runSession()` | `ide_agentic_gate.cpp:254-255` → `main_win32.cpp:1053-1054`, `:1085-1086` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| `rawrxd_filter_missing_sources` drops 225 `WIN32IDE_SOURCES` with `message(WARNING)`; configure exits 0 | `CMakeLists.txt:183`, called `:6812` | `REACHABLE_AND_REPORTS_SUCCESS` |
+| Stub `FATAL_ERROR` downgraded to `WARNING`; configure exits 0 with stubs linked | `CMakeLists.txt:6326`, `:6346` | `REACHABLE_ONLY_IF_FLAG_SET(ENV RAWRXD_EMERGENCY_STUB_LINK, default=unset)` |
+| 116 handlers print a line and `return CommandResult::ok(name)` | `src/core/ssot_missing_handlers_provider.cpp:20`, instantiated 116× at `:64` | `REACHABLE_ONLY_IF_FLAG_SET(RAWRXD_ENABLE_MISSING_HANDLER_STUBS, default=OFF)` |
+| `RAWRXD_PARITY_CPU` synthetic 20-word lexicon → `return true` | `src/core/parity_cpu_fallback.h:28`, `:70-96`; `rawr_inference_pipeline.cpp:198` | `UNREACHABLE_IN_SHIPPING_CONFIG` — `runLocalInferencePipeline` has zero callers repo-wide |
+| `RawrXDStrictWin32IDESourceClosure.cmake` missing-source FATAL + stub strip | `:13`, `:45`, `:62`, `:90-137` | `UNREACHABLE_IN_SHIPPING_CONFIG` — never `include()`d |
+| `rawrxd_enforce_shipping_target` ghost-source / stub-name / single-WinMain gate | `cmake/RawrXDStrictShipping.cmake:40-42`, `:56-59`, `:70-75` | `UNREACHABLE_IN_SHIPPING_CONFIG` — never called |
+| `EnforceLinkStubsGateSizeLimit` reads `src/core/link_stubs_gate.cpp`, which is in no target | `CMakeLists.txt:6355`, called `:6945` | `UNREACHABLE_IN_SHIPPING_CONFIG` |
+| W8 `VERDICT=` from measured duration + shutdown reason | `main_win32.cpp:1925-1928` | `REACHABLE_BUT_REPORTS_FAILURE` when duration short or shutdown forced |
+| `isCommandEnabledRuntime` incomplete-command lane | `unified_command_dispatch.cpp:294-298` | `REACHABLE_BUT_REPORTS_FAILURE` |
+| Whether the 225 dropped units were required by a shipped feature | — | **UNKNOWN** — needs a built-binary symbol cross-reference |
+| `RAWRXD_ALLOW_DEBUG` effect on licence outcome | `runtime_symbol_bridge.cpp:1082` | **UNKNOWN** — needs `:1030-1110` read |
+| `RAWRXD_ENTERPRISE_DEV` unlocking an entitlement | `enterprise_license_v2.cpp:304`, `:655`, `:841` | **UNKNOWN** — needs those three sites read |
+
+### Two enforcement findings that make the gates worse than they look
+
+1. **`EnforceNoStubs` inspects an already-filtered list.** `CMakeLists.txt:6226-6248` and
+   `:6250-6259` `list(FILTER EXCLUDE)` / `list(REMOVE_ITEM)` all stub-named entries *before*
+   `EnforceNoStubs(RawrXD-Win32IDE)` is called at `:6944`. The printed
+   `RawrXD-Win32IDE: No stub policy violations` (`:6349`) is therefore vacuous — it never
+   examines a real provider. This is the same swallow as the 225-source filter, one level up.
+2. **The strict modules that would have caught it are dead code.**
+   `RawrXDStrictShipping.cmake:70-75` requires exactly one WinMain-family definition. It is
+   never called. Had it run, it would have failed on the duplicate entry points
+   `src/win32app/main_win32.cpp:1589 int APIENTRY WinMain(...)` and
+   `src/core/rawr_engine_link_closure.cpp:3712 int __stdcall WinMain(...)`.
+
+### Cleared — constructs examined and found real (no false positives)
+
+- `RawrXDAutoClosure.cpp:293` `r.logitsFinite=true` — **measured**, guarded by the
+  `std::isfinite` scan at `:284-288`.
+- `RawrXDAutoClosure.cpp:328` `r.pass` — computed over measured fields.
+- `unified_command_dispatch.cpp:264-302` — returns `false` with a reason for incomplete
+  commands; reports failure, not success.
+- `ide_agentic_gate.cpp:233` `r.streamerBuilt = true` — assigned after all four objects are
+  constructed (`:225-231`). Defensible.
+
+### Memory correction
+
+`ra_wrxd_source_filtering_strengthened` claims the filter became `FATAL_ERROR` and that "247
+dead source entries" were removed. At HEAD `a078e3b87` it is `message(WARNING)` at
+`CMakeLists.txt:183`, and the measured drop count in a default configure is **225**, all of
+them untracked at HEAD (dead names never removed from the lists, not worktree deletions). The
+earlier record is stale on both figures.
+
+## Artifacts
+
+```ini
+00_preflight.log
+01_cmake_roots.txt
+02_configure.log        1828 lines, 225 dropped sources
+03_targets.csv          132 rows
+06_ide_build.log        651 lines
+18_ctest_inventory.log  Total Tests: 0
+20_dumpbin_dependents.txt
+20_dumpbin_headers.txt
+build_ide_audit/        isolated build tree, not the shipping dir
+```
+
+## What this audit does NOT establish
+
+- Whether the **17 targets** behind the seven unreachable `CMakeLists.txt` files would build.
+  They are not configured by the shipping root, so nothing in this audit says anything about them.
+- Existence of the **29 `${...}`-prefixed** declared-but-absent paths (variable scope not evaluated).
+- Runtime behaviour of the chat panel beyond "reaches the engine". No model was loaded.
+- Clean shutdown. The process was force-terminated by the audit.
+- Anything about `F:\~dev\CMakeLists.txt`'s targets beyond `rawr_monolith` — out of scope.
+- Whether the 225 dropped `WIN32IDE_SOURCES` entries were real implementations or dead debt.
+  They do not exist at HEAD, so there is nothing to read. Settling it requires a symbol
+  cross-reference between the retained sources and the built binary — `dumpbin /SYMBOLS` against
+  `build_ide_audit\bin\Release\RawrXD-Win32IDE.exe`.
+
+## Method notes and limits
+
+- **Configure log beats static parse.** Where the real `cmake` output and a static CMake
+  simulator disagreed (225 vs 221), the log was taken as authoritative after direct measurement.
+  The simulator's own output moved from 289 to 221 across tokenizer versions, so its counts are
+  upper bounds over all option combinations, not this configuration.
+- **`--parallel` deviation, declared.** Batch 06 was built with default MSBuild parallelism
+  rather than `--parallel 1`. Rationale: the audit needed the full compile of 326 translation
+  units, and the build log records `file(line): error C####` per file regardless of concurrency,
+  so error attribution is preserved. `BUILD_COMPILE_ERRORS=0` and `BUILD_LINK_ERRORS=0` were read
+  from that log, not assumed.
+- **Runtime smoke used force termination.** `RUNTIME_TERMINATION=FORCED_BY_AUDIT` means the
+  clean-shutdown path in `WM_CLOSE`/`WM_DESTROY` was never exercised. A first reading that the
+  binary "exited immediately" was a background-process wrapper artifact; it was re-measured
+  directly with `Start-Process` and the corrected figures are the ones recorded.
+- **BOUND ≠ compiles.** Every classification in the coverage matrix that says `Compile` or `Link`
+  is backed by `06_ide_build.log`. Everything else is source reading.
+
+## Bottom line
+
+```ini
+BUILD_IS_GREEN_AND_THAT_IS_NOT_THE_PROBLEM
+THE_BUILD_IS_GREEN_BECAUSE_225_MISSING_SOURCES_ARE_SWALLOWED
+
+PRODUCT_STATUS=PARTIAL
+IDE_SHELL=DONE
+EDITOR=PARTIAL
+MODEL_RESOLUTION=DONE
+DEEP2_GENERATION=BROKEN
+AGENT_MODES=STUB
+COMPLETION=STUB
+INLINE_EDIT=NOT_PRESENT
+TEST_SUITE=NOT_REGISTERED
+CONTEXT_SERVICES=UNBOUND
+CONCURRENT_WRITER_PROTECTION=UNBOUND
+
+SAFE_TO_PROMOTE_ANYTHING=0
+NEXT_MOVE=P1 Deep2 D2 -> D1 -> D3 on a single engine instance
+```

@@ -7,11 +7,13 @@
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <set>
 #include <sstream>
 #include <unordered_set>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -53,17 +55,82 @@ namespace rawrxd::models
         return s;
     }
 
-    // Ollama's store layout: <root>/manifests/<ns>/<name>/<tag> and blobs.
+    // Locate the Ollama store by structural signature: a directory holding
+    // manifests\registry.ollama.ai. Name-guessing misses relocated stores (this
+    // machine keeps one at F:\ollama\blobs) and the previous "exists at all"
+    // fallback returned an empty ~/.ollama\models, making a populated store
+    // look empty.
+    bool hasOllamaLayout(const fs::path& p) {
+        std::error_code ec;
+        return !p.empty() && fs::exists(p / "manifests" / "registry.ollama.ai", ec);
+    }
+
     fs::path ollamaModelsRoot() {
-        if (const char* h = std::getenv("OLLAMA_MODELS")) {
-            if (*h) return fs::path(h);
-        }
-        if (const char* h = std::getenv("USERPROFILE")) {
-            fs::path p = fs::path(h) / ".ollama" / "models";
-            std::error_code ec;
-            if (fs::exists(p, ec)) return p;
-        }
-        return {};
+        // Memoised: the store does not move within a process, and this sits on
+        // the path of every catalog build.
+        static const fs::path cached = [] {
+            if (const char* h = std::getenv("RAWRXD_OLLAMA_MODELS"); h && *h) {
+                if (hasOllamaLayout(fs::path(h))) return fs::path(h);
+            }
+            if (const char* h = std::getenv("OLLAMA_MODELS"); h && *h) {
+                if (hasOllamaLayout(fs::path(h))) return fs::path(h);
+            }
+            if (const char* h = std::getenv("USERPROFILE"); h && *h) {
+                const fs::path p = fs::path(h) / ".ollama" / "models";
+                if (hasOllamaLayout(p)) return p;
+            }
+
+            // Pass 1: every conventional name, on every existing drive. This is
+            // O(drives x names) and covers the layouts actually seen in
+            // practice, including a relocated store such as F:\ollama\blobs.
+            std::vector<fs::path> drives;
+            for (char d = 'C'; d <= 'Z'; ++d) {
+                const fs::path drive = fs::path(std::string(1, d) + ":\\");
+                std::error_code ec;
+                if (fs::exists(drive, ec)) drives.push_back(drive);
+            }
+            for (const fs::path& drive : drives) {
+                for (const fs::path& c : { drive / "OllamaModels", drive / ".ollama" / "models",
+                                           drive / "ollama" / "blobs", drive / "ollama",
+                                           drive / "models" / "blobs" }) {
+                    if (hasOllamaLayout(c)) return c;
+                }
+            }
+
+            // Pass 2: bounded sweep for an unconventional location.
+            //
+            // The previous code recursed every drive C:..Z: to depth 3
+            // unconditionally, and only after trying the fixed candidates for
+            // that single drive — so a store on F: meant walking C:, D: and E:
+            // to completion first. Measured on this machine: C: alone is
+            // 155,735 entries across 34,932 directories, about 17 s, and the
+            // function ran twice per catalog build with no memoisation, which
+            // put `rawr dump` past a minute of pure directory traversal. The
+            // sweep is now a fallback with an explicit time and entry budget,
+            // so an unusual layout degrades to "not found" rather than to a
+            // hang.
+            const auto deadline =
+                std::chrono::steady_clock::now() + std::chrono::seconds(5);
+            const size_t maxEntries = 40000;
+            for (const fs::path& drive : drives) {
+                if (std::chrono::steady_clock::now() > deadline) break;
+                std::error_code ec;
+                size_t visited = 0;
+                for (auto it = fs::recursive_directory_iterator(
+                         drive, fs::directory_options::skip_permission_denied, ec);
+                     it != fs::recursive_directory_iterator(); it.increment(ec)) {
+                    if (ec) { ec.clear(); continue; }
+                    if (it.depth() > 2) { it.disable_recursion_pending(); continue; }
+                    if (++visited > maxEntries) break;
+                    if ((visited & 0x3FF) == 0 &&
+                        std::chrono::steady_clock::now() > deadline) break;
+                    if (!it->is_directory(ec)) continue;
+                    if (hasOllamaLayout(it->path())) return it->path();
+                }
+            }
+            return fs::path();
+        }();
+        return cached;
     }
 
     std::string trimStr(const std::string& s) {
@@ -99,6 +166,8 @@ namespace rawrxd::models
     const std::vector<std::string>& extraRoots() { return extraRootsRef(); }
     const std::vector<ModelRecord>& catalog() { return state().records; }
     const CatalogStats& catalogStats() { return state().stats; }
+    const std::vector<std::string>& scannedRoots() { return state().roots; }
+    const std::vector<std::string>& skippedRoots() { return state().skippedRoots; }
 
     // -------------------------------------------------------------------------
     // Real scanning

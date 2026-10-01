@@ -1,0 +1,18 @@
+_eos_gate.cpp
+BUILD_OK
+=== RAWRXD_BATCH_02_EOS_GATE_001 ===
+build_unix=1790815262
+  [INFO] first-token EOS: generated=0, eos_token=11
+ASSERT=generated == 0 STATUS=PASS msg="Item 8: first-token EOS returns generated=0 (no underflow, no emitted token)"
+ASSERT=tok.isEos(EOS_ID) STATUS=PASS msg="Item 8: stub tokenizer reports isEos(EOS_ID)=true"
+ASSERT=!tok.isEos(42) STATUS=PASS msg="Item 8: stub tokenizer reports isEos(42)=false for non-EOS token"
+  [INFO] interior EOS: generated=1 hitEos=1
+ASSERT=generated == 1 STATUS=PASS msg="Item 9: interior EOS terminates with generated=1 (token 42 only)"
+ASSERT=hitEos STATUS=PASS msg="Item 9: interior EOS detected by isEos()"
+ASSERT=tokensAfterEos == 0 STATUS=PASS msg="Item 9: tokens after EOS = 0 (speculative window does not leak)"
+  [INFO] EOS in spec window: generated=2 hitEos=1
+ASSERT=generated == 2 STATUS=PASS msg="Item 9 (spec window): EOS at step 2 -> only 42,99 emitted, generated=2"
+ASSERT=hitEos STATUS=PASS msg="Item 9 (spec window): EOS detected before speculative emit"
+  [INFO] multiple EOS: generated=1 hitEos=1
+ASSERT=generated == 1 STATUS=PASS msg="Item 9 (multi-EOS): first EOS terminates immediately, generated=1"
+=== SUMMARY: 9 / 9 tests PASSED ===
