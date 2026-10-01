@@ -1,0 +1,1 @@
+{"active":false,"error":"transaction refused: the tool policy has no allowed root","execute_enabled":false,"ok":false,"op":"begin","requires_transaction":true,"write_enabled":true,"write_profile":"transactional"}

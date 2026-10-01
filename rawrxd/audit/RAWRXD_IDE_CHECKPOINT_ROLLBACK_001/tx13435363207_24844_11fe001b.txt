@@ -1,0 +1,14 @@
+RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001
+transaction=tx13435363207_24844_11fe001b
+reason=no COMMIT record in journal (interrupted transaction)
+workspace=C:\Users\Garrett\AppData\Local\Temp\rawrxd_ckpt_ide_startup_15628
+files_restored=1
+files_deleted=1
+files_verified=1
+files_failed=0
+torn_records_discarded=0
+missing_blobs=0
+journal_flushes=1
+identity_before=5b92a65055a84f45b37cb3d6ed3338cd86adddffc2e2636728b0d230d4979394
+identity_after=41d4afa115d9616e3224d5463204f863e518bab0ee92b27779bbf7d2ecefd99f
+verdict=RESTORED

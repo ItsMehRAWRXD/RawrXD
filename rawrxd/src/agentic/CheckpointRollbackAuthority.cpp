@@ -953,6 +953,11 @@ bool Transaction::Rollback(std::string* outError) {
 
 MeasuredCounters Transaction::Counters() { return SnapshotCounters(); }
 
+RecoveryReport Transaction::LastRecovery() {
+    std::lock_guard<std::mutex> lk(activeMutex());
+    return lastRecovery();
+}
+
 // ---------------------------------------------------------------------------
 // Recovery
 // ---------------------------------------------------------------------------
@@ -1187,4 +1192,12 @@ RecoveryReport RecoverWorkspace(const std::string& workspaceRoot, bool writeRece
             << "\n";
         const std::string text = oss.str();
         std::string err;
-        Dura
+        DurablePublish(path, text, &err);
+        r.receiptPath = narrow(path);
+        for (const std::string& tx : r.recoveredTxIds) WriteRecoveryReceipt(rootW, tx, r);
+    }
+    return r;
+}
+
+}  // namespace ckpt
+}  // namespace rawrxd

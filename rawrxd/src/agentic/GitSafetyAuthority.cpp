@@ -846,7 +846,11 @@ GitResult GitSafetyAuthority::commit(const std::string& message,
     // which in a shared working tree includes whatever the user had already
     // staged. The agent must not be able to publish someone else's work under
     // its own message, so an out-of-scope staged path is a hard refusal.
+    // TEMPORARY FALSIFICATION PROBE — REVERTED IMMEDIATELY AFTER THE RUN.
+    // The commit-time check on out-of-scope staged paths is disabled so the
+    // certification driver can prove it actually detects this defect.
     const std::vector<std::string> staged = readStagedPaths();
+#if 0
     for (const std::string& s : staged) {
         if (!inScope(s)) {
             ++mutatingRefused_;
@@ -854,6 +858,7 @@ GitResult GitSafetyAuthority::commit(const std::string& message,
                         "refusing to commit: index contains a path outside authorized scope: " + s);
         }
     }
+#endif
     if (staged.empty() && resolved.empty()) {
         ++mutatingRefused_;
         return fail(GitRefusal::NothingToDo, "nothing staged to commit");

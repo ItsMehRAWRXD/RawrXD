@@ -63,8 +63,9 @@ void RowFill(void* vctx, size_t begin, size_t end) {
 
 // Rows walked per phase. 1 inlines (never reaches the pool), 2 is the smallest
 // split, and the odd values are where ceil-division leaves an empty slice --
-// the partition bug lived exactly there.
-const unsigned kRequested[] = {1, 2, 3, 4, 5, 6, 7, 8};
+// the partition bug lived exactly there. 16 exceeds the 8-entry watermark mirror
+// that used to be fixed-size, so it covers the id >= 8 growth path.
+const unsigned kRequested[] = {1, 2, 3, 4, 5, 6, 7, 8, 12, 16};
 const size_t   kRows[]      = {8, 17, 64, 512, 1376, 4096};
 
 Cell RunCell(unsigned requested, size_t totalRows) {

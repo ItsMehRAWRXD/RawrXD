@@ -300,7 +300,9 @@ std::string resolveRepositoryRoot(const std::string& startDir) {
 Universe buildUniverse(const UniversePolicy& policy) {
     Universe u;
     u.policy = policy;
-    u.narrowed = policy.narrowed;
+    // A restricted walk is a narrowed scope by definition, whether or not the
+    // caller remembered to say so.
+    u.narrowed = policy.narrowed || !policy.restrictToRoots.empty();
 
     std::string root = policy.explicitRoot;
     if (root.empty()) root = resolveRepositoryRoot(policy.startDir);
@@ -316,7 +318,22 @@ Universe buildUniverse(const UniversePolicy& policy) {
     w.rootSlash = root + "\\";
 
     if (u.rootExists) {
-        w.walk(root, std::string());
+        if (policy.restrictToRoots.empty()) {
+            w.walk(root, std::string());
+        } else {
+            // A restricted walk. Each named subtree is still walked in full and
+            // its pruned subtrees are still counted, so the scope is described
+            // precisely rather than merely named.
+            std::vector<std::string> roots = policy.restrictToRoots;
+            std::sort(roots.begin(), roots.end());
+            roots.erase(std::unique(roots.begin(), roots.end()), roots.end());
+            for (const std::string& r : roots) {
+                const std::string sub = root + "\\" + r;
+                if (!directoryExists(sub)) continue;
+                w.walk(sub, toSlashes(r));
+                u.rootsIndexed.push_back(toSlashes(r));
+            }
+        }
         for (const std::string& extra : policy.extraRoots) {
             const std::string sub = root + "\\" + extra;
             if (directoryExists(sub)) {
@@ -326,7 +343,9 @@ Universe buildUniverse(const UniversePolicy& policy) {
         }
     }
 
-    u.rootsIndexed.insert(u.rootsIndexed.begin(), ".");
+    u.rootsIndexed.insert(u.rootsIndexed.begin(), policy.restrictToRoots.empty()
+                                                    ? std::string(".")
+                                                    : std::string("<restricted>"));
     std::sort(u.rootsIndexed.begin(), u.rootsIndexed.end());
     u.rootsIndexed.erase(std::unique(u.rootsIndexed.begin(), u.rootsIndexed.end()),
                          u.rootsIndexed.end());

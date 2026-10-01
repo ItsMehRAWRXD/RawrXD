@@ -1,14 +1,14 @@
 // ============================================================================
-// repo_intelligence_cert.cpp Ã¢â‚¬â€ RAWRXD_REPOSITORY_INTELLIGENCE_001
+// repo_intelligence_cert.cpp ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â RAWRXD_REPOSITORY_INTELLIGENCE_001
 //
 // Measures the repository intelligence authority against RawrXD itself and
 // writes a receipt whose verdict is derived from what it measured. Every field
 // below is computed; none is a constant.
 //
 // The load-bearing experiment is the last one. It reconstructs, byte for byte,
-// the discovery scope that produced this repository's false absences Ã¢â‚¬â€
+// the discovery scope that produced this repository's false absences ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â
 // src/core/ssot_handlers.cpp:1366 enumerated exactly {"src","include","tests",
-// "test"} under a 1600-file cap Ã¢â‚¬â€ runs it here, and reports the disagreement
+// "test"} under a 1600-file cap ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â runs it here, and reports the disagreement
 // with the whole-repository universe. A claim of absence is only meaningful if
 // the universe it was checked against actually covered the repository.
 // ============================================================================
@@ -101,7 +101,8 @@ bool lspExt(const std::string& path) {
 // either, so this is the sorted form of the same walk.
 void legacyCollect(const std::string& root, std::vector<std::string>& out,
                    size_t maxFiles, std::vector<std::string>* allIfNoCap) {
-    if (out.size() >= maxFiles || !dirExists(root)) return;
+    const bool unlimited = (maxFiles == 0);
+    if ((!unlimited && out.size() >= maxFiles) || !dirExists(root)) return;
     WIN32_FIND_DATAA fd{};
     HANDLE           h = FindFirstFileA((root + "\\*").c_str(), &fd);
     if (h == INVALID_HANDLE_VALUE) return;
@@ -122,12 +123,12 @@ void legacyCollect(const std::string& root, std::vector<std::string>& out,
     std::sort(dirs.begin(), dirs.end());
     std::sort(files.begin(), files.end());
     for (const std::string& f : files) {
-        if (out.size() >= maxFiles) return;
+        if (!unlimited && out.size() >= maxFiles) return;
         out.push_back(f);
         if (allIfNoCap) allIfNoCap->push_back(f);
     }
     for (const std::string& d : dirs) {
-        if (out.size() >= maxFiles) break;
+        if (!unlimited && out.size() >= maxFiles) break;
         legacyCollect(d, out, maxFiles, allIfNoCap);
     }
 }
@@ -191,7 +192,7 @@ int main(int argc, char** argv) {
     uint64_t searchHits = 0, rankChunks = 0;
     bool rankMonotonic = true, rankDeterministic = true;
     bool saved = false, loadedOk = false, reloadFileCountMatch = false,
-         reloadQueryIdentical = false;
+         reloadQueryIdentical = false, reloadDefsIdentical = false;
     bool deterministicIdentical = false;
     std::string detHashA;
     bool incrReindexedOne = false, incrFasterThanFull = false;
@@ -205,6 +206,10 @@ int main(int argc, char** argv) {
     policy.extensions = {".cpp", ".c", ".cc", ".cxx", ".h", ".hpp", ".hh",
                          ".hxx", ".inl", ".ipp", ".inc", ".asm", ".cmake",
                          ".ps1", ".py", ".rc", ".json", ".txt", ".md"};
+    // The harness's own output must not be part of the universe it measures,
+    // or a receipt that is still being written reads as a changed file.
+    policy.pruneDirPatterns.push_back(".repo_intel_cache");
+    policy.pruneDirPatterns.push_back("RAWRXD_REPOSITORY_INTELLIGENCE_001");
 
     RepositoryIntelligence idx;
     idx.build(policy, 0);
@@ -350,19 +355,31 @@ int main(int argc, char** argv) {
             line("CALLEE_OF_runAudit=" + callees[i].name);
     }
     {
+        // analyzeSource is three hops deep inside this authority itself:
+        // refresh -> parseAll -> (worker) -> analyzeSource. A traversal that
+        // cannot cross files or follow more than one hop will report zero.
         const std::vector<RankedChunk> hops =
-            idx.reachableFrom("runAudit", 4, 32);
-        kvn("REACHABLE_FROM_runAudit_HOPS4", hops.size());
-        for (size_t i = 0; i < hops.size() && i < 12; ++i)
-            line("REACHABLE=" + hops[i].rel + ":" +
+            idx.reachableFrom("analyzeSource", 5, 64);
+        kvn("REACHABLE_FROM_analyzeSource_HOPS5", hops.size());
+        for (size_t i = 0; i < hops.size() && i < 20; ++i)
+            line("REACHABLE_analyzeSource=" + hops[i].rel + ":" +
                  std::to_string(hops[i].beginLine) + " hops=" +
                  std::to_string(hops[i].hopDistance) + " why=" + hops[i].why);
-        bool multiHop = false;
+        uint32_t deepest = 0;
+        std::set<std::string> reachFiles;
         for (const RankedChunk& h : hops) {
-            if (h.hopDistance >= 2) multiHop = true;
+            if (h.hopDistance > deepest) deepest = h.hopDistance;
+            reachFiles.insert(h.rel);
         }
-        multiHopFound = multiHop;
+        kvn("REACHABLE_analyzeSource_DEEPEST_HOPS", deepest);
+        kvn("REACHABLE_analyzeSource_DISTINCT_FILES", reachFiles.size());
+        multiHopFound = deepest >= 2 && reachFiles.size() >= 2;
         kvB("MULTI_HOP_REACHABILITY_FOUND", multiHopFound);
+
+        const std::vector<RankedChunk> co = idx.coCallersOf("runAudit", 16);
+        kvn("CO_CALLERS_OF_runAudit", co.size());
+        for (size_t i = 0; i < co.size() && i < 8; ++i)
+            line("CO_CALLER=" + co[i].rel + " why=" + co[i].why);
     }
 
     // ------------------------------------------------------- dependency graph
@@ -439,8 +456,9 @@ int main(int argc, char** argv) {
         loadedOk = ok;
         kvB("INDEX_LOADED", loadedOk);
         if (!ok) kv("INDEX_LOAD_ERROR", loadErr);
-        kvB("RELOAD_FILE_COUNT_MATCH",
-           loaded.universeFileCount() == idx.universeFileCount());
+        reloadFileCountMatch =
+            loaded.universeFileCount() == idx.universeFileCount();
+        kvB("RELOAD_FILE_COUNT_MATCH", reloadFileCountMatch);
         kvB("RELOAD_SYMBOL_COUNT_MATCH",
            loaded.symbols().size() == idx.symbols().size());
         kvB("RELOAD_CHUNK_COUNT_MATCH",
@@ -462,7 +480,8 @@ int main(int argc, char** argv) {
             if (da[i].name != db[i].name || da[i].fileIdx != db[i].fileIdx ||
                 da[i].beginLine != db[i].beginLine)
                 dsame = false;
-        kvB("RELOAD_DEFINITIONS_IDENTICAL", dsame);
+        reloadDefsIdentical = dsame;
+        kvB("RELOAD_DEFINITIONS_IDENTICAL", reloadDefsIdentical);
     }
 
     // ------------------------------------------------------ deterministic build
@@ -490,8 +509,11 @@ int main(int argc, char** argv) {
     // ---------------------------------------------------- incremental refresh
     {
         UniversePolicy pr = policy;
+        pr.pruneDirPatterns.push_back(".repo_intel_cache");
         RepositoryIntelligence fresh;
         fresh.build(pr, 0);
+        const double fullBuildMs = fresh.stats().totalMs;
+        kvi("FULL_BUILD_MS", static_cast<long long>(fullBuildMs));
         const IncrementalDelta d = fresh.refresh();
         kvn("INCR_FIRST_REFRESH_filesReindexed", d.reindexed);
         kvn("INCR_FIRST_REFRESH_filesReused", d.reused);
@@ -520,15 +542,15 @@ int main(int argc, char** argv) {
         kvn("INCR_SECOND_REFRESH_added", d2.added);
         kvn("INCR_SECOND_REFRESH_removed", d2.removed);
         kvi("INCR_SECOND_REFRESH_ms", static_cast<long long>(d2.incrMs));
-        kvi("FULL_BUILD_MS", static_cast<long long>(fresh.stats().totalMs));
+        kvi("FULL_BUILD_MS_AGAIN", static_cast<long long>(fresh.stats().totalMs));
         incrReindexedOne = (d2.reindexed == 1);
         incrModified = d2.modified;
         incrReused = d2.reused;
         incrReindexed = d2.reindexed;
         kvB("INCR_REINDEXED_EXACTLY_ONE_FILE", incrReindexedOne);
         kvB("INCR_REUSED_THE_REST", d2.reused > 0 && d2.reused > d2.reindexed);
-        incrFasterThanFull =
-            (d2.incrMs > 0.0 && d2.incrMs < fresh.stats().totalMs);
+        incrFasterThanFull = (d2.incrMs > 0.0 && d2.incrMs < fullBuildMs);
+        kvd("INCR_SPEEDUP_VS_FULL", fullBuildMs > 0.0 ? fullBuildMs / d2.incrMs : 0.0, 2);
         kvB("INCR_FASTER_THAN_FULL", incrFasterThanFull);
 
         if (readBack) {
@@ -681,7 +703,7 @@ int main(int argc, char** argv) {
         narrow.explicitRoot = root;
         narrow.narrowed = true;
         narrow.scopeLabel = "win32app-only, the legacy audit scope";
-        narrow.extraRoots = {"src/win32app"};
+        narrow.restrictToRoots = {"src/win32app"};
         narrow.extensions = {".cpp"};
         RepositoryIntelligence narrowIdx;
         narrowIdx.build(narrow, 0);

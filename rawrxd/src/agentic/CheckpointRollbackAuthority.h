@@ -73,7 +73,14 @@ struct TransactionSpec {
 };
 
 // Counters are incremented at the site of the effect, never predicted.
+// RAWRXD_RECOVERY_REPORT_FORWARD_001
+// Transaction::LastRecovery() returns this by value and is declared before the
+// definition below, so the type must be at least declared here. Without this
+// the build failed with C3646 'LastRecovery': unknown override specifier.
+struct RecoveryReport;
+
 struct MeasuredCounters {
+
     std::uint64_t journalRecords = 0;
     std::uint64_t journalFlushes = 0;
     std::uint64_t blobWrites = 0;
@@ -121,6 +128,11 @@ public:
     // Rollback() reports success as a bool, and a bool cannot distinguish
     // "restored 4 files and verified 4 hashes" from "restored nothing", so a
     // caller that has to certify the rollback reads this instead.
+    //
+    // RecoveryReport is DEFINED below this point, so it needs a forward
+    // declaration for a by-value return to be legal here. A declaration only
+    // needs an incomplete type; the definition needs the complete one, which it
+    // has further down.
     static RecoveryReport LastRecovery();
 
     static WorkingTreeIdentity CaptureIdentity(const std::string& workspaceRoot);

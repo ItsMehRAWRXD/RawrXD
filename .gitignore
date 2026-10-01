@@ -85,3 +85,15 @@ rawrxd/audit/RAWRXD_IDE_CMAKE_FULL_AUDIT_001/batches/BATCH_01_d2_run_tinyllama.l
 out/
 bin/
 obj/
+
+# Scratch trees produced by concurrent lanes. These are build output, not
+# source: cert_agentic/b15_build is a CMake/Ninja tree (25 files: CMakeCache,
+# .ninja_deps, CMakeFiles) that regenerates from cert_agentic/b15_fixture, and
+# the __pycache__ entry is CPython bytecode. The fixture source and the
+# certification scripts themselves remain tracked.
+cert_agentic/b15_build/
+__pycache__/
+
+# Zero-byte scratch probe output from server smoke runs (gate1_srv.*).
+gate1_srv.err
+gate1_srv.out

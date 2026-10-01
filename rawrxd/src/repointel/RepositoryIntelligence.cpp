@@ -214,6 +214,10 @@ bool RepositoryIntelligence::build(const UniversePolicy& policy, uint32_t thread
     m_stats.peakWorkingSetBytes = peakWorkingSetBytes();
     m_stats.totalMs = msSince(tAll);
     m_ready = m_universe.rootExists;
+    // A completed build is an authoritative manifest, so refresh() can diff
+    // against it without a prior save(). That is what makes the incremental
+    // path testable against the same tree the full build just read.
+    snapshotManifest();
     return m_ready;
 }
 
@@ -1310,17 +1314,7 @@ bool RepositoryIntelligence::save(const std::string& path, std::string* err) {
         return false;
     }
     m_stats.indexBytesOnDisk = out.size();
-
-    m_savedRel.clear();
-    m_savedSize.clear();
-    m_savedMtime.clear();
-    m_savedHash.clear();
-    for (const UniverseFile& uf : m_universe.files) {
-        m_savedRel.push_back(uf.rel);
-        m_savedSize.push_back(uf.size);
-        m_savedMtime.push_back(uf.mtime);
-        m_savedHash.push_back(uf.hash);
-    }
+    snapshotManifest();
     return true;
 }
 
@@ -1464,4 +1458,95 @@ bool RepositoryIntelligence::load(const std::string& path, std::string* err) {
             e.resolvedFileIdx = b.u32();
             f.includes.push_back(std::move(e));
         }
-        f.callCou
+        f.callCount = b.u32();
+        f.chunkCount = b.u32();
+        f.symbolCount = b.u32();
+    }
+    if (!b.ok) {
+        if (err) *err = "truncated";
+        return false;
+    }
+    mergeCallGraph();
+    rebuildLookupTables();
+    m_stats.indexBytesOnDisk = raw.size();
+    m_ready = true;
+    return true;
+}
+
+void RepositoryIntelligence::snapshotManifest() {
+    m_savedRel.clear();
+    m_savedSize.clear();
+    m_savedMtime.clear();
+    m_savedHash.clear();
+    m_savedRel.reserve(m_universe.files.size());
+    for (const UniverseFile& uf : m_universe.files) {
+        m_savedRel.push_back(uf.rel);
+        m_savedSize.push_back(uf.size);
+        m_savedMtime.push_back(uf.mtime);
+        m_savedHash.push_back(uf.hash);
+    }
+}
+
+IncrementalDelta RepositoryIntelligence::refresh() {
+    m_delta = IncrementalDelta{};
+    if (m_savedRel.empty()) return m_delta;
+
+    const UniversePolicy p = m_universe.policy;
+    const auto           t0 = Clock::now();
+    m_universe = buildUniverse(p);
+    m_stats = IndexStats{};
+    m_stats.walkMs = msSince(t0);
+    parseAll(true);
+    const auto t1 = Clock::now();
+    mergeParsed();
+    mergeCallGraph();
+    resolveIncludeTargets();
+    finalizeStats();
+    m_stats.mergeMs = msSince(t1);
+    m_stats.totalMs = msSince(t0);
+    m_delta.incrMs = m_stats.totalMs;
+    return m_delta;
+}
+
+RepositoryIntelligence::DeterminismResult
+RepositoryIntelligence::verifyDeterminismRebuild(const UniversePolicy& p,
+                                                const std::string& dirA,
+                                                const std::string& dirB) {
+    DeterminismResult r;
+    const std::string pathA = dirA + "/index.rix";
+    const std::string pathB = dirB + "/index.rix";
+
+    RepositoryIntelligence a;
+    a.build(p);
+    a.save(pathA);
+
+    RepositoryIntelligence b;
+    b.build(p);
+    b.save(pathB);
+
+    std::string ba, bb;
+    if (!readWholeFile(pathA, ba) || !readWholeFile(pathB, bb)) {
+        r.mismatch = "index file unreadable";
+        return r;
+    }
+    r.bytesA = ba.size();
+    r.bytesB = bb.size();
+    r.hashA = contentHash(ba);
+    r.hashB = contentHash(bb);
+    if (ba.size() != bb.size()) {
+        r.mismatch = "payload size differs";
+        return r;
+    }
+    for (size_t i = 0; i < ba.size(); ++i) {
+        if (ba[i] != bb[i]) {
+            r.mismatch = "first byte difference at offset " +
+                         std::to_string(i);
+            return r;
+        }
+    }
+    r.identical = true;
+    return r;
+}
+
+}  // namespace repointel
+}  // namespace rawrxd

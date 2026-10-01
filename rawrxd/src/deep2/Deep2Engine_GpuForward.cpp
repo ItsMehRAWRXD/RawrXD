@@ -478,7 +478,22 @@ struct VulkanParityGrid {
         emittedMask[slot] |= bit;
 
         std::vector<float> host(count);
-        if (!vc->DownloadVector(arena, host.data(), count)) {
+        // RAWRXD_VULKAN_BODY_PARITY_GRID_001
+        // The readback MUST be the synchronized pair, not DownloadVector.
+        // Dispatch* submits are asynchronous, so a plain read of the arena
+        // returned an unwritten buffer: the first run of this grid reported
+        // LAYER_0_RMS_ATTN and everything downstream as all-zero, which
+        // contradicts the engine's own HIDDEN_FINAL (L2=1195) and was therefore
+        // a measurement artefact rather than a finding. An instrument that
+        // reports zeros when the model demonstrably is not producing zeros is
+        // worse than no instrument, so the barrier is now explicit.
+        VulkanCompute::DownloadTicket ticket;
+        const size_t bytes = count * sizeof(float);
+        const bool got = vc->SubmitDownloadAsync(
+                              const_cast<VulkanCompute::DeviceBuf&>(arena), bytes, ticket) &&
+                          vc->WaitDownloadAsync(ticket, host.data(), bytes);
+        if (!got) {
+            vc->CancelDownloadTicket(ticket);
             // A failed readback is reported as an explicit gap, not as a
             // silently omitted checkpoint: a missing line would read as
             // "never reached" when the truth is "could not be read".

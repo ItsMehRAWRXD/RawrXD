@@ -39,6 +39,10 @@ struct UniversePolicy {
                                                  "__pycache__", ".rawrxd_cache"};
     std::vector<std::string> extensions;    // empty == every text file
     std::vector<std::string> extraRoots;    // additional in-root subtrees
+    // Non-empty restricts the walk to exactly these repo-relative subtrees.
+    // This is what a legacy narrow scope is, and setting it forces
+    // `narrowed` so absence claims from the result are refused.
+    std::vector<std::string> restrictToRoots;
     uint32_t                 maxFiles = 0;  // 0 == unlimited
     bool                     includeBuildTrees = false;
     bool                     narrowed = false;   // caller restricted scope

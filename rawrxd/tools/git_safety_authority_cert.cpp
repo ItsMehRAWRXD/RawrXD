@@ -433,22 +433,21 @@ bool DangerousDirtyTreeTest(Cert& cert, const fs::path& repo) {
     // byte-identical and still have been committed. So verify the commit's
     // actual tree contents independently.
     const std::string newHead = HeadOf(repo);
-    const auto committed = CommittedFilesIn(repo, newHead, "");
-    const bool commitTouchedUser = std::find(committed.begin(), committed.end(), kUserFileB) !=
-                                       committed.end() ||
-                                   std::find(committed.begin(), committed.end(), kUserFileA) !=
-                                       committed.end();
-    // kUserFileB existed at the baseline commit too, so presence in the tree is
-    // not evidence of absorption. The evidence is whether the COMMITTED CONTENT
-    // is the user's edit or the original.
+    // Absorption happened iff the committed blob IS the user's edit. The
+    // committed blob being the original baseline is the PASS condition: the
+    // user's work stayed in the working tree where the user left it.
     const std::string committedUserB = GitOut(repo, "show HEAD:" + std::string(kUserFileB));
-    const bool absorbedUserEdit = (committedUserB != userB);
+    const std::string baselineUserB =
+        GitOut(repo, "show HEAD~1:" + std::string(kUserFileB));
+    const bool absorbedUserEdit = (committedUserB == userB);
     cert.check("DIRTY_TREE_011", "the agent's commit did not absorb the user's edit",
-               !absorbedUserEdit,
+               !absorbedUserEdit && committedUserB == baselineUserB,
                "committed profile.ini " +
                    std::string(absorbedUserEdit
-                                   ? "holds the baseline copy, so the user edit was NOT committed"
-                                   : "contains the user's edit bytes verbatim"));
+                                   ? "CONTAINS THE USER'S EDIT, so the agent published their work"
+                                   : (committedUserB == baselineUserB
+                                          ? "still holds the baseline bytes; the user edit stayed uncommitted"
+                                          : "holds neither the baseline nor the user edit")));
 
     const std::string committedNew = GitOut(repo, "show HEAD:" + std::string(kNewFile));
     cert.check("DIRTY_TREE_012", "the agent's own change IS in its commit",
@@ -588,11 +587,20 @@ void CertifyReadOnlyCapabilities(Cert& cert, const fs::path& repo) {
                    " real_dirty_lines=" + std::to_string(realDirty));
 
     const GitResult df = ro.diff(false, 1u << 18);
+    // Compare against git through the SAME normalisation the driver uses
+    // everywhere else (GitOut trims trailing newlines). Comparing the raw
+    // capture against a trimmed one measures a trailing byte, not correctness.
     const std::string gitDiff = GitOut(repo, "diff --no-color");
+    std::string authorityDiff = df.output;
+    while (!authorityDiff.empty() &&
+           (authorityDiff.back() == '\n' || authorityDiff.back() == '\r')) {
+        authorityDiff.pop_back();
+    }
     cert.check("READONLY_002", "diff matches git's own output byte for byte",
-               df.ok && df.output == gitDiff,
-               "authority_bytes=" + std::to_string(df.output.size()) +
-                   " git_bytes=" + std::to_string(gitDiff.size()));
+               df.ok && authorityDiff == gitDiff,
+               "authority_bytes=" + std::to_string(authorityDiff.size()) +
+                   " git_bytes=" + std::to_string(gitDiff.size()) +
+                   " equal=" + std::string(authorityDiff == gitDiff ? "YES" : "NO"));
 
     const GitResult cf = ro.conflicts();
     cert.check("READONLY_003", "conflict detection reports zero on a clean tree",
@@ -713,9 +721,17 @@ void CertifyWorktreeIsolation(Cert& cert, const fs::path& repo) {
         cert.notRun("WORKTREE_001", "worktree operations are isolated and gated", "scratch failed");
         return;
     }
-    GitSafetyAuthority a(AgentPolicy(repo, kAllMutating));
+// The worktree lives under its own prefix, which is deliberately OUTSIDE
+    // src/agent: an isolation worktree that shared the agent's source prefix
+    // would put two checkouts of the same files in one scope. The policy grants
+    // both prefixes so the refusal tests above are about scope, not about the
+    // worktree path happening to collide with a source prefix.
+    GitPolicy wtPolicy = AgentPolicy(repo, kAllMutating);
+    wtPolicy.authorizedPrefixes = {kAgentScope, kWorktreeDir};
+    GitSafetyAuthority a(wtPolicy);
     if (!a.beginSession(repo).ok) {
-        cert.notRun("WORKTREE_001", "worktree operations are isolated and gated", "beginSession failed");
+        cert.notRun("WORKTREE_001", "worktree operations are isolated and gated",
+                    "beginSession failed");
         return;
     }
     const GitResult outside = a.addWorktree("../escape-wt");
@@ -807,21 +823,32 @@ void CertifyConflictDetection(Cert& cert, const fs::path& repo) {
         cert.notRun("CONFLICT_001", "mutation is refused while a conflict is unresolved", "scratch failed");
         return;
     }
-    // Create a genuine conflict: two branches edit the same line.
+    // Create a genuine conflict: two branches edit the same line, then MERGE
+    // one into the other. Merging into a branch whose tip already contains the
+    // merge base fast-forwards instead of conflicting, so the merge direction
+    // matters — `merge left` on top of `right` is the three-way case.
     std::string out, err;
     WriteFile(repo / kAgentFile, "line1\nline2 BASE\nline3\n");
     Git(repo, {"add", "-A"}, out, err);
     Git(repo, {"-c", "user.email=cert@rawrxd.local", "-c", "user.name=cert", "commit", "-q",
                "-m", "base"}, out, err);
-    Git(repo, {"checkout", "-q", "-b", "left"}, out, err);
+    const std::string mergeBase = HeadOf(repo);
+
+    Git(repo, {"checkout", "-q", "-b", "left", mergeBase}, out, err);
     WriteFile(repo / kAgentFile, "line1\nline2 LEFT\nline3\n");
     Git(repo, {"commit", "-q", "-am", "left"}, out, err);
-    Git(repo, {"checkout", "-q", "main"}, out, err);
-    Git(repo, {"checkout", "-q", "-b", "right"}, out, err);
+
+    Git(repo, {"checkout", "-q", "-b", "right", mergeBase}, out, err);
     WriteFile(repo / kAgentFile, "line1\nline2 RIGHT\nline3\n");
     Git(repo, {"commit", "-q", "-am", "right"}, out, err);
-    Git(repo, {"checkout", "-q", "main"}, out, err);
-    Git(repo, {"merge", "left"}, out, err);  // expected to conflict
+
+    // `right` still descends from the merge base, so merging `left` into it is
+    // a true three-way merge over a conflicting line.
+    const int mergeCode = Git(repo, {"merge", "left"}, out, err);
+    cert.check("CONFLICT_000", "the scenario really produced a conflict, not a fast-forward",
+               mergeCode != 0 && GitOut(repo, "diff --name-only --diff-filter=U") == kAgentFile,
+               "git merge exit=" + std::to_string(mergeCode) +
+                   " unmerged=" + GitOut(repo, "diff --name-only --diff-filter=U"));
 
     GitSafetyAuthority a(AgentPolicy(repo, kAllMutating));
     const GitResult opened = a.beginSession(repo);

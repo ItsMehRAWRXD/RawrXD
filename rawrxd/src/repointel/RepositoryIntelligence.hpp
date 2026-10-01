@@ -263,6 +263,7 @@ private:
     void mergeCallGraph();
     void mergeIncludes();
     void rebuildLookupTables();
+    void snapshotManifest();
     void finalizeStats();
     uint32_t internIdent(const std::string& name);
     uint32_t internSearchToken(const std::string& tok);

@@ -414,6 +414,13 @@ public:
             while (threads_.size() < use) {
                 const unsigned id = static_cast<unsigned>(threads_.size());
                 const uint64_t born_at = generation_;
+                // RAWRXD_POOL_STATE_DUMP_003: the watermark mirror must cover
+                // every worker that exists. It was sized 8, so on a 16-logical
+                // core host every worker with id >= 8 was excluded by the
+                // `id < seenOf_.size()` guard in Worker() and never published a
+                // watermark. Grown here, under m_, at the same moment the id is
+                // assigned, so the index is always valid.
+                if (id >= seenOf_.size()) seenOf_.resize(id + 1, 0);
                 threads_.emplace_back([this, id, born_at] { Worker(id, born_at); });
             }
             fn_ = fn;

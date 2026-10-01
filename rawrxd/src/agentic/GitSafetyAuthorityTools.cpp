@@ -34,6 +34,9 @@ namespace {
 struct Binding {
     GitPolicy policy;
     std::shared_ptr<GitSafetyAuthority> authority;
+    // Retained so a failed begin is reportable rather than indistinguishable
+    // from "never bound".
+    GitResult beginResult;
 };
 
 std::mutex g_bindingMutex;
@@ -113,8 +116,10 @@ void BindGitSafetyPolicy(GitPolicy policy, const std::filesystem::path& repoRoot
     b->policy = std::move(policy);
     b->authority = std::make_shared<GitSafetyAuthority>(b->policy);
     // A failed begin leaves authority non-null but the session closed, so the
-    // first tool call reports a measured refusal rather than a crash.
-    b->authority->beginSession(repoRoot);
+    // first tool call reports a measured refusal rather than a crash. The
+    // begin result is retained so a caller can distinguish "no session" from
+    // "session refused"; nothing here swallows it silently.
+    b->beginResult = b->authority->beginSession(repoRoot);
     setBinding(std::move(b));
 }
 
@@ -138,16 +143,19 @@ bool InstallGitTools(ToolRegistry& registry) {
                                        static_cast<std::uint32_t>(GitCapability::Stash) |
                                        static_cast<std::uint32_t>(GitCapability::Worktree) |
                                        static_cast<std::uint32_t>(GitCapability::Rollback);
-    if ((b->policy.granted & mutatingMask) == 0) {
-        // Read-only tools are still installed: status/diff/conflicts do not
-        // change repository state and are useful without a grant. Nothing
-        // that mutates is reachable.
+    if (!b->authority) {
         std::lock_guard<std::mutex> lk(g_bindingMutex);
-        g_binding->authority = std::make_shared<GitSafetyAuthority>(b->policy);
-    } else if (!b->authority) {
-        std::lock_guard<std::mutex> lk(g_bindingMutex);
-        g_binding->authority = std::make_shared<GitSafetyAuthority>(b->policy);
+        if (!g_binding->authority) {
+            g_binding->authority = std::make_shared<GitSafetyAuthority>(b->policy);
+        }
     }
+    // NOTE: an authority that already holds a session is never replaced here.
+    // A previous version rebuilt it unconditionally when no mutating capability
+    // was granted, which discarded the session opened by
+    // BindGitSafetyPolicy(policy, repo) and made every tool report
+    // NOT_A_GIT_REPOSITORY until something re-opened the repository. The
+    // deny-policy case is exactly the case where read-only tools must keep
+    // working.
 
     registry.Register({"git_status",
                        "Read-only working tree status. Cannot change repository state.",

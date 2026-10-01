@@ -23,6 +23,10 @@
 // The legacy direct-process registry is deliberately NOT re-enabled to make a
 // link succeed; the real authority is strictly better and is already built.
 #include "agentic/AgentToolRegistry.h"
+// RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001: the checkpoint/rollback authority
+// behind /api/agent/transaction. It is the same implementation the IDE calls at
+// startup, not a second copy of "write the file and hope".
+#include "agentic/CheckpointRollbackAuthority.h"
 #include "ChatTemplate.hpp"
 #include <nlohmann/json.hpp>
 #include <winsock2.h>
@@ -1155,11 +1159,23 @@ static void handleConnection(SOCKET clientSock,
                 j["ok"] = true;
                 j["rolled_back"] = true;
                 j["active"] = false;
-                // The measured recovery report, verbatim. A rollback that
-                // restored nothing must not be able to say "ok" without these.
-                j["workspace_root"] = policy.allowedRoots.empty()
-                                          ? std::string()
-                                          : policy.allowedRoots.front();
+                // The measured recovery report from the rollback itself. A
+                // rollback that restored nothing must not be able to say "ok"
+                // without these numbers sitting next to it.
+                const auto rep = rawrxd::ckpt::Transaction::LastRecovery();
+                j["workspace_root"] = rep.workspaceRoot;
+                j["journals_scanned"] = rep.journalsScanned;
+                j["closed_transactions"] = rep.closedTransactions;
+                j["incomplete_transactions"] = rep.incompleteTransactions;
+                j["files_restored"] = rep.filesRestored;
+                j["files_deleted"] = rep.filesDeleted;
+                j["files_verified"] = rep.filesVerified;
+                j["files_failed"] = rep.filesFailed;
+                j["torn_records_discarded"] = rep.tornRecordsDiscarded;
+                j["missing_blobs"] = rep.missingBlobs;
+                j["identity_before"] = rep.identityBeforeSha256;
+                j["identity_after"] = rep.identityAfterSha256;
+                j["all_restored"] = rep.AllRestored();
                 sendJson(j, 200);
                 goto done;
             }

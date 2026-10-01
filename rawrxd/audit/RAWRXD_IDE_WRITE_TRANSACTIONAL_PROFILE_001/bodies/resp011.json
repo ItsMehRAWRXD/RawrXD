@@ -1,0 +1,1 @@
+{"active":false,"error":"rollback failed: no active transaction","execute_enabled":false,"ok":false,"op":"rollback","requires_transaction":true,"write_enabled":true,"write_profile":"transactional"}

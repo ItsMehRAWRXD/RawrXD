@@ -1,0 +1,1 @@
+{"active":false,"error":"commit failed: no active transaction","execute_enabled":false,"ok":false,"op":"commit","requires_transaction":true,"write_enabled":true,"write_profile":"transactional"}

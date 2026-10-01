@@ -1,0 +1,1 @@
+{"active":false,"atomic_publishes":0,"blob_writes":0,"execute_enabled":false,"faults_injected":0,"file_deletes":0,"file_writes":0,"journal_flushes":0,"journal_records":0,"ok":true,"op":"status","requires_transaction":true,"tools":["execute_command","list_directory","read_file","search_code","write_file"],"write_enabled":true,"write_profile":"transactional"}
