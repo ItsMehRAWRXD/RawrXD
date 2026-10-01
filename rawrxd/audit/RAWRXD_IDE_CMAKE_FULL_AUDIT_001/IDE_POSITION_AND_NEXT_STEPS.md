@@ -159,6 +159,41 @@ that do not exist anywhere in the tree — `file_watcher.cpp:1`,
 (`Win32IDE_Tasks.cpp:6049`, `Win32IDE_Debugger.cpp:5334`,
 `src/cli/style/rawr_file_watcher.cpp`) with only `message(WARNING)` at `:235`.
 
+### I. Settings persistence — CLOSED (`RAWRXD_SETTINGS_PERSISTENCE_001`)
+
+The highest-severity finding from §2-H has been fixed and measured. Receipt:
+`RAWRXD_SETTINGS_PERSISTENCE_001.md`.
+
+`Settings_Load()` had **zero callers repo-wide**. `g_settingsPath` was assigned
+only inside it, so `Settings_Save()` returned at its first line and every edit
+made through the File > Settings dialog was discarded on exit.
+
+Now: `Settings_EnsureLoaded()` runs at `WM_CREATE`, `Settings_Persist()` runs at
+`WM_CLOSE`, path resolution is deterministic (`RAWRXD_SETTINGS_PATH` →
+`%LOCALAPPDATA%\RawrXD\settings.ini` → exe dir), saves are atomic
+(`ReplaceFileA` with a `MoveFileExA` fallback), and malformed input is counted
+and — when nothing usable parses — quarantined to `<path>.bad` rather than
+overwritten.
+
+Four launches of the built binary, each in its own directory:
+
+```
+SETTINGS_LOAD_CALLED=1          (was 0)
+SETTINGS_PATH_SET=1             (was 0)
+SETTINGS_SAVE_EFFECTIVE=1       (was 0)
+RESTART_VALUE_MATCH=1           (21 seeded -> 21 loaded -> 21 re-written)
+EMPTY_DIR_FIRST_RUN_CREATES=1   (52-byte settings.ini)
+PARTIAL_MALFORMED_COUNTED=1     (3 rejects counted, 1 good key preserved)
+UNRECOVERABLE_QUARANTINED=1     (recovered=1, original preserved)
+RUNS_EXECUTED=4   RUNS_VERDICT_PASS=4
+VERDICT=PASS
+```
+
+Still open, unchanged: settings authority is **fragmented** (`UnifiedConfig` and
+`settings_persistence.cpp` remain orphaned), schema validation is still
+**unreachable**, and `main_win32.cpp` still does not exit after `WM_CLOSE`
+(pre-existing, recorded in the receipt).
+
 ---
 
 ## 3. What is genuinely done
