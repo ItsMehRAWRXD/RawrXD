@@ -523,7 +523,25 @@ InferenceGateResult runLocalInferenceGate()
 DiagnosticGateResult runDiagnosticGate()
 {
     DiagnosticGateResult r{};
+    // RAWRXD_MODEL_ADMISSION_ACTIVE_MODEL_001
+    //
+    // This hardcoded one developer fixture with no override, while the sibling
+    // runLocalInferenceGate() at :199-203 has always honoured RAWRXD_AGENT_MODEL.
+    // The menu item is "Model > Model Admission Diag", which reads as a check on
+    // the model the operator actually has open -- but it could only ever report
+    // on a fixture, so the diagnostic could never confirm admission of a real
+    // model. It also pinned an absolute developer path into shipped source.
+    //
+    // Now honours the same environment override as the sibling, so an IDE
+    // started with --model (which sets RAWRXD_AGENT_MODEL) diagnoses the model it
+    // is actually running. The fixture remains the explicit fallback so the gate
+    // still runs in a bare environment.
     std::string modelPath = "F:\\~dev\\rawrxd\\src\\core\\test_tiny_with_vocab.gguf";
+    const char* envModel = std::getenv("RAWRXD_AGENT_MODEL");
+    if (envModel && envModel[0]) {
+        modelPath = envModel;
+    }
+    r.modelPath = modelPath;   // the tested path must appear in the receipt
 
     // 1. Model discovery
     DWORD attribs = GetFileAttributesA(modelPath.c_str());

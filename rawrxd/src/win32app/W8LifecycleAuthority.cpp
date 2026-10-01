@@ -60,9 +60,29 @@ std::string writeW8Receipt(const std::string& gateName) {
     // permitted at the natural end of life.
     const std::string verdict = shutdownAllowed ? "PASS" : "HOLD";
 
-    // endImmutableGate writes the VERDICT line, computes RECEIPT_SHA256,
-    // refreshes latest.txt, and appends to index.jsonl.
-    (void)rawrxd::receipt::endImmutableGate(runPath, verdict);
+    // RAWRXD_RECEIPT_DIGEST_001: endImmutableGate now seals into a detached
+    // .sha256 sidecar created with CREATE_NEW, and returns EMPTY if the seal
+    // did not happen -- digest computation failed, or the sidecar already
+    // existed. That return used to be discarded with (void), which made a
+    // failed seal completely silent: the receipt looked complete, nothing
+    // indicated it was unsealed, and any later reader would have no digest to
+    // check it against.
+    //
+    // A seal that can fail without being reported is not a seal. The path is
+    // still returned so the caller can see and inspect the receipt, but the
+    // unsealed state is recorded INSIDE the receipt as a measured field rather
+    // than inferred later.
+    const std::string digest = rawrxd::receipt::endImmutableGate(runPath, verdict);
+    const bool sealed = !digest.empty();
+    if (!sealed) {
+        // Appended post-seal-attempt. If this write also fails the receipt is
+        // simply an unsealed FAIL-able artefact and the digest is absent, which
+        // is itself the observable signal.
+        rawrxd::receipt::writeImmutableKeyValue(runPath,
+            "RECEIPT_SEALED", "0");
+        rawrxd::receipt::writeImmutableKeyValue(runPath,
+            "RECEIPT_SEAL_ERROR", "digest_or_sidecar_creation_failed");
+    }
     return runPath;
 }
 }} // namespace rawrxd::lifecycle

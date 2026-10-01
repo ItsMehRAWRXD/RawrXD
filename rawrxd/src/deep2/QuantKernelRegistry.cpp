@@ -132,10 +132,12 @@ extern "C" {
     void Sovereign_Q4K_GEMV_AVX2_V2(const void* q4_weights, const float* input,
                                      float* output, unsigned int num_blocks, unsigned int rows);
 
-    // Q3_K MASM kernel (sovereign_q3_k_gemv.asm). No Q2_K MASM symbol: the
-    // 72-byte-stride sovereign_q2_k_gemv.asm is excluded from every build;
-    // GGUF block_q2_K is 84 bytes.
-    void Deep2_Q3_K_GEMV(const void* weights, const float* input, float* output,
+// RAWRXD_B69_DEAD_Q3K_MASM_REMOVED_001: the Deep2_Q3_K_GEMV extern and its
+    // gemv_q3_k_masm wrapper are deleted. Q3_K resolves to gemv_q3_k_scalar
+    // (see RegisterGEMV), which is the reference the B65 block-parity gate was
+    // measured against. sovereign_q3_k_gemv.asm is an 8-line stub exporting
+    // sovereign_q3_k_gemv_Stub, not Deep2_Q3_K_GEMV, so nothing could link it.
+    void Deep2_Q4_0_GEMV(const void* weights, const float* input, float* output,
                          unsigned int numBlocks, unsigned int outputDim);
 
     // Q4_0 / Q4_1 / Q8_0 / Q5_K / Q6_K MASM kernels
@@ -171,17 +173,26 @@ static void gemv_q4_k_masm(
                                   static_cast<unsigned int>(rows));
 }
 
-// Q3_K wrapper: standard GEMV -> Deep2_Q3_K_GEMV
-static void gemv_q3_k_masm(
-    const uint8_t* RESTRICT w,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    size_t blocksPerRow = (cols + 255) / 256;
-    Deep2_Q3_K_GEMV(w, x, y, static_cast<unsigned int>(blocksPerRow),
-                     static_cast<unsigned int>(rows));
-}
+// RAWRXD_B69_DEAD_Q3K_MASM_REMOVED_001
+//
+// The Q3_K MASM wrapper is REMOVED, not fixed. It was:
+//   * never registered -- grep for gemv_q3_k_masm found exactly one hit, its own
+//     definition. Q3_K is registered to gemv_q3_k_scalar (line ~1937), which is
+//     the reference B65 parity was measured against.
+//   * a hazard: it called Deep2_Q3_K_GEMV, whose only MASM provider is
+//     sovereign_q3_k_gemv.asm -- an 8-line stub that exports
+//     sovereign_q3_k_gemv_Stub and does `xor eax,eax; ret`. It does not export
+//     Deep2_Q3_K_GEMV at all, so registering this wrapper would have been a
+//     link error, and calling it if it somehow linked would silently return
+//     zeros.
+//
+// A stub named like a real kernel, sitting in the build, calling a symbol it
+// does not provide, is a trap for the next reader. Deleting the dead call path
+// is the correct repair; implementing a Q3_K MASM kernel is a separate decision
+// and is not warranted while the GPU native path (B65-B67) and the scalar
+// reference both exist and are verified.
+//
+// The extern declaration for Deep2_Q3_K_GEMV is removed too, for the same reason.
 
 // Q4_0 wrapper
 static void gemv_q4_0_masm(

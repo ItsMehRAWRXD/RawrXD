@@ -3372,7 +3372,11 @@ bool VulkanCompute::DispatchGemvQuant(
     int type,const void* weights,size_t weightBytes,
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols)
 {
-    if(type!=8 && type!=10 && type!=12 && type!=14) return false;
+    // RAWRXD_B65_NATIVE_Q3K_GEMV_001: type 11 (Q3_K) admitted.
+    // Q3_K is 110 bytes / 256 elements (GGUFLoader.hpp:533). The shader
+    // branch is the host-verified transcription that passed
+    // q3k_block_diff.exe with Q3K_BLOCK_PARITY_V2=PASS over 18432 elements.
+    if(type!=8 && type!=10 && type!=11 && type!=12 && type!=14) return false;
     if(!weights||!weightBytes||!rows||!cols||
        rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
         return false;

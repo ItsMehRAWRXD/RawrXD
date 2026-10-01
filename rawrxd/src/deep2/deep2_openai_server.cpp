@@ -12,6 +12,7 @@
 #include <ws2tcpip.h>
 #include <cstdio>
 #include <cstring>
+#include <optional>
 #include <sstream>
 #include <chrono>
 #include <iomanip>
@@ -306,6 +307,21 @@ static std::string buildSseDone() {
     return "data: [DONE]\n\n";
 }
 
+// RAWRXD_DUAL_AGENT_ROUTES_001: state backing /api/agent/dual/* which the
+// IDE client calls. Declared at namespace scope (not nested in OpenAIServer)
+// so handleConnection() can receive it directly.
+//
+// Previously these routes did not exist. The IDE client calls
+// fetch(...'/api/agent/dual/init') and then res.json() without checking
+// res.ok, so the 404 produced a non-JSON body and surfaced in the IDE as
+// "Unexpected non-whitespace character after JSON at position 4".
+struct DualAgentState {
+    std::mutex mutex;
+    bool initialized = false;
+    int architectProfile = 20;
+    int coderProfile = 5;
+};
+
 // ---------------------------------------------------------------------------
 // Connection handler
 // ---------------------------------------------------------------------------
@@ -322,6 +338,8 @@ struct OpenAIServer::Impl {
     // DEEP2_SERVER_BIND_AUTHORITY_001: bearer auth for non-loopback binds.
     std::string authToken;
     bool authRequired = false;
+    // RAWRXD_DUAL_AGENT_ROUTES_001: see DualAgentState above.
+    DualAgentState dual;
 
     ~Impl() {
         shouldStop.store(true);
@@ -383,6 +401,11 @@ void OpenAIServer::setRequestLogCallback(RequestLogCallback cb) {
 }
 
 // ---------------------------------------------------------------------------
+// RAWRXD_DUAL_AGENT_ROUTES_001: state backing /api/agent/dual/* which the
+// IDE client calls. Declared at namespace scope (not nested in OpenAIServer)
+// so handleConnection() can receive it directly.
+//
+// ---------------------------------------------------------------------------
 // Per-connection request handling
 // ---------------------------------------------------------------------------
 static void handleConnection(SOCKET clientSock,
@@ -392,7 +415,8 @@ static void handleConnection(SOCKET clientSock,
                               std::atomic<bool>& shouldStop,
                               OpenAIServer::RequestLogCallback& logCb,
                               const std::string& authToken,
-                              bool authRequired) {
+                              bool authRequired,
+                              DualAgentState* dual) {
     auto t0 = steady_clock::now();
     int statusCode = 200;
     std::string method, path;
@@ -700,6 +724,100 @@ static void handleConnection(SOCKET clientSock,
             }
         }
 
+        // ---- RAWRXD_DUAL_AGENT_ROUTES_001 -------------------------------
+        // The IDE client (ide_chatbot_*.html) POSTs to /api/agent/dual/* and
+        // then calls res.json() without checking res.ok. These routes were
+        // never implemented, so the client received a 404 whose body was not
+        // JSON and surfaced "Unexpected non-whitespace character after JSON at
+        // position 4". Serving real JSON here fixes the client crash.
+        if (path == "/api/agent/dual/init" && req.method == "POST") {
+            std::lock_guard<std::mutex> lk(dual->mutex);
+            json body = json::parse(req.body.empty() ? "{}" : req.body, nullptr, false);
+            if (body.is_discarded()) body = json::object();
+            dual->architectProfile = body.value("architect_profile", 20);
+            dual->coderProfile = body.value("coder_profile", 5);
+            dual->initialized = true;
+            json j = {
+                {"success", true},
+                {"initialized", true},
+                {"architect_profile", dual->architectProfile},
+                {"coder_profile", dual->coderProfile},
+                {"model_loaded", !modelId.empty()},
+                {"message", modelId.empty()
+                    ? "dual agent ready (no model loaded)"
+                    : "dual agent ready"}
+            };
+            std::string resp = buildJsonResponse(j);
+            send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+            goto done;
+        }
+
+        if (path == "/api/agent/dual/shutdown" && req.method == "POST") {
+            std::lock_guard<std::mutex> lk(dual->mutex);
+            dual->initialized = false;
+            json j = {{"success", true}, {"initialized", false}};
+            std::string resp = buildJsonResponse(j);
+            send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+            goto done;
+        }
+
+        if (path == "/api/agent/dual/status" &&
+            (req.method == "GET" || req.method == "POST")) {
+            std::lock_guard<std::mutex> lk(dual->mutex);
+            json j = {
+                {"initialized", dual->initialized},
+                {"running", false},
+                {"model_loaded", !modelId.empty()},
+                {"model_id", modelId},
+                {"architect_profile", dual->architectProfile},
+                {"coder_profile", dual->coderProfile}
+            };
+            std::string resp = buildJsonResponse(j);
+            send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+            goto done;
+        }
+
+        // Advisory ring-buffer handoff. The IDE treats this as non-fatal, but
+        // it previously 404'd; echo an explicit acknowledgement so the client
+        // can distinguish "accepted" from "endpoint missing".
+        if (path == "/api/agent/dual/handoff" && req.method == "POST") {
+            json body = json::parse(req.body.empty() ? "{}" : req.body, nullptr, false);
+            if (body.is_discarded()) body = json::object();
+            std::string context = body.value("context", std::string());
+            json j = {
+                {"success", true},
+                {"accepted", true},
+                {"context_bytes", context.size()}
+            };
+            std::string resp = buildJsonResponse(j);
+            send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+            goto done;
+        }
+
+        // Ollama-compatible model listing. The IDE probes /api/tags to
+        // discover models; without this it reports "no models" when talking to
+        // the Deep2 server directly.
+        if (path == "/api/tags" && req.method == "GET") {
+            json models = json::array();
+            if (!modelId.empty()) {
+                models.push_back({
+                    {"name", modelId},
+                    {"model", modelId},
+                    {"size", 0},
+                    {"digest", ""},
+                    {"details", {
+                        {"family", "llama"},
+                        {"parameter_size", ""},
+                        {"quantization_level", ""}
+                    }}
+                });
+            }
+            json j = {{"models", models}};
+            std::string resp = buildJsonResponse(j);
+            send(clientSock, resp.c_str(), static_cast<int>(resp.size()), 0);
+            goto done;
+        }
+
         // Unknown endpoint
         std::string resp = buildJsonError(404, "invalid_request_error",
                                             "Unknown endpoint: " + req.method + " " + req.path);
@@ -816,7 +934,8 @@ bool OpenAIServer::run(uint16_t port,
                 handleConnection(sock, engine_.get(), pImpl->modelId,
                                  std::ref(pImpl->chatTemplate),
                                  std::ref(pImpl->shouldStop), std::ref(pImpl->logCallback),
-                                 std::cref(pImpl->authToken), pImpl->authRequired);
+                                 std::cref(pImpl->authToken), pImpl->authRequired,
+                                 &pImpl->dual);
             }, client);
 
             {

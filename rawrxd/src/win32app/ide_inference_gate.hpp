@@ -82,6 +82,10 @@ InferenceGateResult runLocalInferenceGate();
 
 // RAWRXD_MODEL_ADMISSION_DIAG_001
 struct DiagnosticGateResult {
+    // RAWRXD_MODEL_ADMISSION_ACTIVE_MODEL_001: the path actually tested. This
+    // gate previously ran against a hardcoded fixture and reported nothing
+    // about WHICH file it judged, so a PASS was unattributable to a model.
+    std::string modelPath;
     bool        modelFound        = false;
     bool        pathReadable      = false;
     bool        extensionOk       = false;

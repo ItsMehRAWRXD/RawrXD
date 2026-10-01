@@ -75,13 +75,16 @@ struct block_q2_K {
 };
 static_assert(sizeof(block_q2_K) == 84, "GGUF block_q2_K must be 84 bytes");
 
-// Q3_K: 256 weights, 12-byte scale packing, hmask — 110 bytes
+// Q3_K: 256 weights, 32-byte hmask, 64-byte qs, 12-byte scales, fp16 d — 110 bytes
+// Field order is load-bearing: it must match the GGUF on-disk layout exactly, or
+// `d` is decoded from quant bytes and every output is garbage.
 struct block_q3_K {
-    uint16_t d;
     uint8_t  hmask[32];   // high-bit mask
     uint8_t  qs[64];      // 3-bit weights
     uint8_t  scales[12];  // packed scales
+    uint16_t d;           // fp16 super-scale
 };
+static_assert(sizeof(block_q3_K) == 110, "GGUF block_q3_K must be 110 bytes");
 
 // Q4_K: 256 weights, 12-byte scales, 128-byte qs — 144 bytes
 struct block_q4_K {
@@ -90,15 +93,18 @@ struct block_q4_K {
     uint8_t  scales[12];  // packed scales/mins
     uint8_t  qs[128];     // 4-bit weights
 };
+static_assert(sizeof(block_q4_K) == 144, "GGUF block_q4_K must be 144 bytes");
 
-// Q5_K: 256 weights, 12-byte scales, 64-byte qs, 32-byte qh — 176 bytes
+// Q5_K: 256 weights, 12-byte scales, 32-byte qh, 128-byte qs, fp16 d/dmin — 176 bytes
+// Field order and `qs` width are both load-bearing (see block_q3_K).
 struct block_q5_K {
-    uint16_t d;
-    uint16_t dmin;
-    uint8_t  scales[12];
-    uint8_t  qs[64];
-    uint8_t  qh[32];      // high bits for 5th bit
+    uint8_t  scales[12];  // packed scales/mins
+    uint8_t  qh[32];      // 5th bit of each weight
+    uint8_t  qs[128];     // low 4 bits of each weight
+    uint16_t d;           // fp16 super-scale
+    uint16_t dmin;        // fp16 super-min
 };
+static_assert(sizeof(block_q5_K) == 176, "GGUF block_q5_K must be 176 bytes");
 
 // Q6_K: 256 weights, 16 signed scales, 128-byte ql, 64-byte qh, fp16 d — 210 bytes
 struct block_q6_K {
@@ -107,6 +113,7 @@ struct block_q6_K {
     int8_t   scales[16];  // signed scales
     uint16_t d;           // fp16 scale
 };
+static_assert(sizeof(block_q6_K) == 210, "GGUF block_q6_K must be 210 bytes");
 
 // Q8_K: 256 int8 weights, 1 fp32 scale, 16 int16 block sums — 292 bytes
 struct block_q8_K {

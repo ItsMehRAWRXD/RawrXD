@@ -12,6 +12,7 @@
 #include "agent/AgentCore.h"
 #include "agent/ResponseCodedAgent.h"
 #include "agentmodes/RawrModesCli.h"
+#include "remote64_bridge.h"
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -227,6 +228,41 @@ int main(int argc, char** argv) {
             return 7;
         }
         return run.verdict == "PASS" ? 0 : 5;
+    }
+
+    // RAWRXD_REMOTE64_PRODUCT_INTEGRATION_001
+    // Makes RemoteSelfTest reachable from a product binary. Before this
+    // subcommand the native remote64 self-tests were only runnable from the
+    // standalone probe programs, so a shipped `rawr` could not demonstrate
+    // that the 64 MASM TUs it links are the ones that actually pass.
+    if (std::strcmp(argv[1], "remote-selftest") == 0 ||
+        std::strcmp(argv[1], "remote") == 0) {
+#if defined(RAWRXD_REMOTE64_LINKED)
+        int32_t self = -999, par = -999, par2 = -999, fin = -999;
+        const bool passed =
+            rawrxd::remote64::runNativeSelfTests(&self, &par, &par2, &fin);
+        std::printf("REMOTE64_TU_COUNT=64\n");
+        std::printf("RemoteSelfTest=%d\n", self);
+        std::printf("RemoteParitySelfTest=%d\n", par);
+        std::printf("RemoteParitySelfTest2=%d\n", par2);
+        std::printf("RemoteFinalSelfTest=%d\n", fin);
+        // Report the Deep2 gate state as observed, not as assumed: a fresh
+        // process must show the gates denying until a session authenticates.
+        std::printf("DEEP2_OBSERVE_GATE=%d\n",
+                    rawrxd::remote64::Deep2RemoteObserveGate());
+        std::printf("DEEP2_CONTROL_GATE=%d\n",
+                    rawrxd::remote64::Deep2RemoteControlGate());
+        std::printf("DEEP2_CONTROL_PERMITTED=%d\n",
+                    rawrxd::remote64::remoteControlPermitted() ? 1 : 0);
+        std::printf("REMOTE_SELFTEST=%s\n", passed ? "PASS" : "FAIL");
+        return passed ? 0 : 8;
+#else
+        std::printf("REMOTE64_TU_COUNT=64\n");
+        std::printf("REMOTE_SELFTEST=UNAVAILABLE\n");
+        std::printf("REASON=rawrxd_remote64 not linked into this build "
+                    "(MASM unavailable or target absent)\n");
+        return 8;
+#endif
     }
 
     // Honesty-gated agent modes: modes / audit / gate / cert.

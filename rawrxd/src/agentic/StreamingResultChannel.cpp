@@ -78,21 +78,65 @@ bool StreamingResultChannel::publish(StreamEvent event) {
     // Assign monotonic sequence
     event.sequence = nextSequence_.fetch_add(1, std::memory_order_acq_rel);
 
+    // RAWRXD_STREAM_MULTICAST_001: `event` is moved into the queue below, so
+    // capture the type and a subscriber copy BEFORE the move. Dispatching
+    // counters off the moved-from object would read indeterminate state.
+    const StreamEventType evType = event.type;
+    const StreamEvent     observerCopy = event;
+
+    std::vector<ObserverCallback> snapshot;
     {
         std::lock_guard<std::mutex> lock(mu_);
         if (closed_.load(std::memory_order_acquire)) return false;
         queue_.push(std::move(event));
+        // Snapshot subscribers under the same lock as the push, then invoke
+        // them after releasing it. Copying std::function may allocate, so it
+        // must not happen on the hot path with mu_ held by a waiting consumer.
+        snapshot.reserve(observers_.size());
+        for (auto& entry : observers_) {
+            if (entry.second) snapshot.push_back(entry.second);
+        }
     }
     cv_.notify_one();
 
     publishedCount_.fetch_add(1, std::memory_order_acq_rel);
-    if (event.type == StreamEventType::Token) {
+    if (evType == StreamEventType::Token) {
         realTokenCount_.fetch_add(1, std::memory_order_acq_rel);
     }
-    if (event.type == StreamEventType::Cancelled) {
+    if (evType == StreamEventType::Cancelled) {
         cancelObservedCount_.fetch_add(1, std::memory_order_acq_rel);
     }
+
+    // Fan out to subscribers. Observers cannot consume, so this cannot starve
+    // the queue that the bridge pump and any existing consumer drain.
+    for (auto& cb : snapshot) {
+        cb(observerCopy);
+    }
     return true;
+}
+
+uint64_t StreamingResultChannel::subscribe(ObserverCallback cb) {
+    if (!cb) return 0;
+    const uint64_t id = nextSubscriptionId_.fetch_add(1, std::memory_order_acq_rel);
+    std::lock_guard<std::mutex> lock(mu_);
+    observers_.emplace_back(id, std::move(cb));
+    return id;
+}
+
+void StreamingResultChannel::unsubscribe(uint64_t subscriptionId) {
+    if (subscriptionId == 0) return;
+    std::lock_guard<std::mutex> lock(mu_);
+    for (auto it = observers_.begin(); it != observers_.end(); ++it) {
+        if (it->first == subscriptionId) {
+            observers_.erase(it);
+            return;
+        }
+    }
+}
+
+size_t StreamingResultChannel::observerCount() const {
+    std::lock_guard<std::mutex> lock(mu_);
+    return observers_.size();
 }
 
 bool StreamingResultChannel::publishTextDelta(std::string_view text) {

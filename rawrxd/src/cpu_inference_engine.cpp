@@ -44,10 +44,17 @@ RawrXD::Expected<void, InferenceError> CPUInferenceEngine::loadModel(const std::
         return RawrXD::unexpected(InferenceError::ModelNotFound);
     }
 
-    // Load tokenizer vocab from GGUF metadata
+    // Load tokenizer vocab from GGUF metadata.
+    // RAWRXD_P0_FAIL_CLOSED_001: this was non-fatal, so loadModel() returned
+    // success and set model_loaded_ = true with an empty vocabulary. Callers
+    // then encoded against nothing and reported a loaded model. A model whose
+    // tokenizer did not load cannot generate text, so this must fail.
     if (!m_impl->tokenizer_.LoadFromGGUF(path)) {
-        // Tokenizer failure is not fatal; we can still run with fallback byte-level encoding
-        m_impl->last_error_ = "Tokenizer::LoadFromGGUF failed; using fallback";
+        m_impl->model_loaded_ = false;
+        m_impl->last_error_ =
+            "Tokenizer::LoadFromGGUF failed; refusing to report a loaded model "
+            "with no vocabulary";
+        return RawrXD::unexpected(InferenceError::TokenizationFailed);
     }
 
     m_impl->model_loaded_ = true;

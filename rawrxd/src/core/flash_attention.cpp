@@ -35,23 +35,37 @@ bool FlashAttentionEngine::Initialize() {
         return false;
     }
 
-    // Step 2: AVX-512 capability check (calls CPUID in ASM)
+    // Step 2: AVX-512 capability check (calls CPUID)
+    //
+    // FlashAttention_Init() performs a real CPUID/XGETBV probe (it used to
+    // `return 1` unconditionally, which meant this branch was unreachable and
+    // the engine claimed an AVX-512 kernel on hosts that had none).
+    //
+    // Note: the forward path is scalar C++ and does not require AVX-512. This
+    // flag currently gates readiness reporting only; it is not a correctness
+    // precondition for the math.
     int32_t avxResult = FlashAttention_Init();
     m_hasAVX512 = (avxResult == 1);
 
     if (!m_hasAVX512) {
-        std::cout << "[FlashAttention] AVX-512 check FAILED — "
-                  << "CPU does not support AVX-512F+BW+VL or OS XSAVE is disabled.\n"
-                  << "[FlashAttention] Flash Attention requires AVX-512. "
-                  << "Falling back to AVX2 inference kernels." << std::endl;
-        m_ready = false;
-        return false;
+        std::cout << "[FlashAttention] Host lacks AVX-512F+DQ+BW+VL (or the OS "
+                     "is not preserving ZMM state).\n"
+                  << "[FlashAttention] Running the portable scalar reference "
+                     "path; AVX-512 kernel is unavailable.\n";
+        m_ready = true;
+        m_scalarFallback = true;
     }
 
-    // Step 3: Report tile configuration
+    // Step 3: Report tile configuration (loop-tile parameters, not a
+    // measurement of a compiled AVX-512 kernel -- see the definition).
     FlashAttentionTileConfig tileCfg = GetTileConfig();
-    std::cout << "[FlashAttention] AVX-512 kernel initialized.\n"
-              << "  Tile M:         " << tileCfg.tileM << "\n"
+    if (m_hasAVX512) {
+        std::cout << "[FlashAttention] AVX-512 host detected (F+DQ+BW+VL, ZMM "
+                     "state enabled).\n";
+    } else {
+        std::cout << "[FlashAttention] Scalar reference path.\n";
+    }
+    std::cout << "  Tile M:         " << tileCfg.tileM << "\n"
               << "  Tile N:         " << tileCfg.tileN << "\n"
               << "  Head Dim:       " << tileCfg.headDim << "\n"
               << "  Scratch bytes:  " << tileCfg.scratchBytes << "\n"
@@ -71,10 +85,14 @@ int32_t FlashAttentionEngine::Forward(FlashAttentionConfig& cfg) {
         return -2;
     }
 
-    // Validate pointer alignment (ZMM requires 64-byte alignment)
+// Validate pointer alignment.
+    // The original check demanded 64 bytes and justified it with "ZMM requires
+    // 64-byte alignment". The forward path is scalar C++ reading floats, so the
+    // real requirement is natural float alignment; demanding 64 rejected
+    // otherwise-valid configs for no reason.
     if (!ValidateAlignment(cfg)) {
         std::cerr << "[FlashAttention] ERROR: Q/K/V/O pointers are not "
-                  << "64-byte aligned. Use _aligned_malloc(size, 64)." << std::endl;
+                     "naturally aligned. Use an aligned allocator." << std::endl;
         return -3;
     }
 
@@ -86,12 +104,9 @@ int32_t FlashAttentionEngine::Forward(FlashAttentionConfig& cfg) {
         return -4;
     }
 
-    // Validate headDim is a multiple of 16 (ZMM register width in floats)
-    if (cfg.headDim % 16 != 0) {
-        std::cerr << "[FlashAttention] ERROR: headDim (" << cfg.headDim
-                  << ") must be a multiple of 16 for AVX-512." << std::endl;
-        return -5;
-    }
+    // No headDim % 16 constraint: the scalar dot-product loop walks headDim
+    // elements at unit stride. That rejection existed only to satisfy a ZMM
+    // kernel this code does not contain.
 
     // Validate GQA: numHeads must be divisible by numKVHeads
     if (cfg.numHeads % cfg.numKVHeads != 0) {
@@ -147,7 +162,12 @@ std::string FlashAttentionEngine::GetStatusString() const {
 // FlashAttentionEngine::ValidateAlignment
 // ============================================================================
 bool FlashAttentionEngine::ValidateAlignment(const FlashAttentionConfig& cfg) {
-    constexpr uintptr_t ALIGN_MASK = 63;  // 64-byte alignment check
+    // Natural alignment for float. This was 63 (64-byte) with the rationale
+    // "ZMM requires 64-byte alignment", but the forward pass contains no ZMM
+    // operands -- it is scalar C++ reading floats -- so the 64-byte demand
+    // rejected valid configs without cause. If an AVX-512 kernel is ever added
+    // this should become a tiered check: 64 bytes only on that path.
+    constexpr uintptr_t ALIGN_MASK = sizeof(float) - 1;
     if (reinterpret_cast<uintptr_t>(cfg.Q) & ALIGN_MASK) return false;
     if (reinterpret_cast<uintptr_t>(cfg.K) & ALIGN_MASK) return false;
     if (reinterpret_cast<uintptr_t>(cfg.V) & ALIGN_MASK) return false;

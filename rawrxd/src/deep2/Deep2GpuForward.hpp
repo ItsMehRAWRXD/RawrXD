@@ -21,6 +21,18 @@ struct GpuForwardCounters {
     uint64_t forwardSlot[8]{};
     uint64_t hostSyncBoundaries = 0;
     uint64_t hostMaterializations = 0;
+    // RAWRXD_GPU_HANDOFF_TOPOLOGY_001: per-site tally of every
+    // hostMaterializations increment. Two rounds of source inference failed to
+    // localize a 31-event discrepancy, so the increment site records itself
+    // instead of being inferred from context. Index is a stable site id:
+    //   1 GpuForward CopyArenaHiddenTo host bounce
+    //   2 MoEMLA explicit row-slice merge
+    //   3 MoEMLA (second site)
+    //   4 MoEMLA (third site)
+    //   5 MoEMLA per-routed-expert vector return
+    //   6 MoEMLA (fifth site)
+    uint64_t hostMatSite[8]{};
+    uint64_t hostMatSiteBytes[8]{};
     // B5_MATERIALIZATION_PROFILE_001: classify every host materialization
     // event + wall time per class. ACCOUNTING_MATCH requires the class sum
     // to equal hostMaterializations exactly.

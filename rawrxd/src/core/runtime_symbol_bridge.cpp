@@ -1183,10 +1183,62 @@ int32_t Streaming_CheckEnterpriseBudget(uint64_t requestedSize) {
 uint64_t g_FlashAttnCalls = 0;
 uint64_t g_FlashAttnTiles = 0;
 
+// Real AVX-512 capability probe.
+//
+// This previously read `return 1;` -- an unconditional claim that the host can
+// run an AVX-512 kernel. FlashAttentionEngine::Initialize() consumes the return
+// as `m_hasAVX512 = (result == 1)` and gates `m_ready` on it, so the "check"
+// could never fail: the engine reported an AVX-512 kernel on a host that had
+// none. That is a fabricated capability claim on a reachable path
+// (runtime_symbol_bridge.cpp is in WIN32IDE_SOURCES).
+//
+// The probe below reports what the host actually has:
+//   CPUID.01H:ECX.OSXSAVE  the OS saves extended state on context switch
+//   XGETBV(0)  bits 1/2     SSE + YMM state actually enabled
+//            bit 5/6/7      opmask + ZMM_Hi256 + Hi16_ZMM enabled
+//   CPUID.07H:EBX           AVX512F(16) AVX512DQ(17) BW(30) VL(31)
+// All of those must hold. Reporting 1 without checking is exactly the class of
+// defect the project ledger records as a retracted false PASS, so this returns
+// measured truth and lets the caller degrade.
 int32_t FlashAttention_Init() {
-    return 1;
+    int regs[4] = {0, 0, 0, 0};
+
+    __cpuid(regs, 0);
+    const int maxLeaf = regs[0];
+    if (maxLeaf < 7) {
+        return 0;  // no leaf 7 => no AVX-512 enumeration at all
+    }
+
+    __cpuid(regs, 1);
+    const bool osxsave = (regs[2] & (1 << 27)) != 0;
+    if (!osxsave) {
+        return 0;  // OSXSAVE clear: XGETBV would fault
+    }
+
+    uint64_t xcr0 = _xgetbv(0);
+    const bool ymmEnabled  = (xcr0 & 0x6ULL) == 0x6ULL;
+    const bool zmmEnabled  = (xcr0 & 0xE0ULL) == 0xE0ULL;
+    if (!ymmEnabled || !zmmEnabled) {
+        return 0;  // OS not preserving the register state the kernel needs
+    }
+
+    __cpuidex(regs, 7, 0);
+    const uint32_t ebx = static_cast<uint32_t>(regs[1]);
+    const bool avx512f = (ebx & (1u << 16)) != 0;
+    const bool avx512dq = (ebx & (1u << 17)) != 0;
+    const bool avx512bw = (ebx & (1u << 30)) != 0;
+    const bool avx512vl = (ebx & (1u << 31)) != 0;
+
+    return (avx512f && avx512dq && avx512bw && avx512vl) ? 1 : 0;
 }
 
+// Tile geometry for the flash-attention reference path.
+//
+// These are the loop-tile parameters the implementation is written against, not
+// a measurement of a compiled AVX-512 kernel: FlashAttention_Forward below is
+// scalar C++ (dot product, stable softmax, GQA head mapping, causal mask) and
+// emits no probe, so nothing here is auto-tuned. They are reported so a caller
+// can see what the code actually iterates with.
 int32_t FlashAttention_GetTileConfig(FlashAttentionTileConfigBridge* out) {
     if (out == nullptr) {
         return 0;

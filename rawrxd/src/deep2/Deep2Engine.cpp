@@ -12,6 +12,9 @@
 #include "Deep2ArchitectureRuntime.hpp"
 #include "Deep2ModelRegistry.hpp"
 #include "expert_cache/Deep2Batch005Integration.h"
+#if defined(RAWRXD_REMOTE64_LINKED)
+#include "remote64_bridge.h"
+#endif
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -662,6 +665,112 @@ Deep2Engine::~Deep2Engine() {
     std::fprintf(stderr, "[CLEANUP_STAGE] ~Deep2Engine enter\n"); std::fflush(stderr);
     unloadModel();
     std::fprintf(stderr, "[CLEANUP_STAGE] ~Deep2Engine unloadModel done\n"); std::fflush(stderr);
+
+    // RAWRXD_B63_PREPARED_WEIGHT_CACHE_001: release the prepared-weight cache
+    // FIRST. Its keys are the model's source tensor pointers, and it must not
+    // outlive the mapping it dereferences during a later dequant.
+    // ReleasePreparedWeights also emits the B63 gate counters.
+    ReleasePreparedWeights();
+
+    // RAWRXD_VULKAN_TRANSPORT_LIFETIME_001
+    //
+    // expertTransports_ holds a VulkanExpertTransport that BORROWS the VkDevice
+    // owned by vulkanCompute_; its destructor calls vkUnmapMemory /
+    // vkDestroyBuffer / vkFreeMemory on that handle. C++ destroys members in
+    // REVERSE declaration order, and both expertCaches_ (Deep2Engine.h:1192)
+    // and expertTransports_ (:1193) are declared BEFORE vulkanCompute_ (:1265),
+    // so implicit destruction would run them AFTER vulkanCompute_ had already
+    // called vkDestroyDevice. That faults with 0xC0000005 immediately after the
+    // "[CLEANUP_STAGE] ~VulkanCompute body done" line.
+    //
+    // Release them explicitly here instead, while vulkanCompute_ is still
+    // alive. Caches go first: each cached allocation is freed through the
+    // transport's freeDevice callback, so the transport must outlive them.
+    expertCaches_.clear();
+    expertTransports_.clear();
+    std::fprintf(stderr, "[CLEANUP_STAGE] ~Deep2Engine expert transport released\n");
+    std::fflush(stderr);
+}
+
+// =================== WEIGHT TYPE INTROSPECTION ====================
+// RAWRXD_WEIGHT_TYPE_FROM_TENSORS_001
+// These read the GGML type off the tensors that were actually loaded. The
+// existing config_.weightQuant cannot answer this: it is a config field that is
+// never assigned from the model, so it reports FP32 for every model, including
+// Q6_K ones. A receipt built on that field would be reporting a default.
+namespace {
+// Weight-counted, not byte-counted: dominance over tensor instances is the
+// honest question ("what type are the projections"), and a single F32 norm
+// vector must not outvote 8 Q6_K projections just by being counted.
+void Accum(const WeightTensor& t, int& n, std::vector<int>& hist) {
+    if (!t.data) return;
+    ++n;
+    const int ty = t.type;
+    if (ty >= 0 && static_cast<size_t>(ty) < hist.size()) ++hist[ty];
+}
+} // namespace
+
+int Deep2Engine::loadedWeightType() const noexcept {
+    if (!modelWeights.loaded) return -1;
+    // The lm_head is the tensor every model has and that is stored in the
+    // model's own weight quantization, so it is the most representative probe.
+    // token_embed is the fallback for architectures that share or omit lm_head.
+    if (modelWeights.lmHead.data)   return modelWeights.lmHead.type;
+    if (modelWeights.tokenEmbed.data) return modelWeights.tokenEmbed.type;
+    if (!modelWeights.layers.empty() && modelWeights.layers[0].wq.data)
+        return modelWeights.layers[0].wq.type;
+    return -1;
+}
+
+const char* Deep2Engine::loadedWeightTypeName() const noexcept {
+    switch (loadedWeightType()) {
+    case  0: return "F32";
+    case  1: return "F16";
+    case  2: return "Q4_0";
+    case  3: return "Q4_1";
+    case  6: return "Q5_0";
+    case  7: return "Q5_1";
+    case  8: return "Q8_0";
+    case 10: return "Q2_K";
+    case 11: return "Q3_K";
+    case 12: return "Q4_K";
+    case 13: return "Q5_K";
+    case 14: return "Q6_K";
+    case 15: return "Q8_K";
+    case 24: return "I8";
+    case 25: return "I16";
+    case 26: return "I32";
+    case 27: return "I64";
+    case 28: return "F64";
+    case 30: return "BF16";
+    default: return "UNKNOWN";
+    }
+}
+
+double Deep2Engine::loadedWeightTypeDominancePercent() const noexcept {
+    if (!modelWeights.loaded) return 0.0;
+    int n = 0;
+    std::vector<int> hist(64, 0);
+    Accum(modelWeights.lmHead, n, hist);
+    Accum(modelWeights.tokenEmbed, n, hist);
+    for (const LayerWeights& lw : modelWeights.layers) {
+        // Projections and FFN only. Norms and biases are conventionally F32 in
+        // a quantized model and are not evidence of the weight format.
+        Accum(lw.wq, n, hist); Accum(lw.wk, n, hist);
+        Accum(lw.wv, n, hist); Accum(lw.wo, n, hist);
+        Accum(lw.wqkv, n, hist);
+        Accum(lw.wGate, n, hist); Accum(lw.wUp, n, hist); Accum(lw.wDown, n, hist);
+        Accum(lw.attnO, n, hist);
+        Accum(lw.attnQ_b, n, hist); Accum(lw.attnK_b, n, hist);
+        Accum(lw.attnV_b, n, hist);
+        for (const WeightTensor& g : lw.moeGate)  Accum(g, n, hist);
+        for (const WeightTensor& u : lw.moeUp)    Accum(u, n, hist);
+        for (const WeightTensor& d : lw.moeDown)  Accum(d, n, hist);
+    }
+    if (n == 0) return 0.0;
+    const int want = loadedWeightType();
+    if (want < 0 || static_cast<size_t>(want) >= hist.size()) return 0.0;
+    return 100.0 * static_cast<double>(hist[want]) / static_cast<double>(n);
 }
 
 // =================== INITIALIZE ====================
@@ -676,7 +785,9 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     config = cfg;
 
     clearCancel();
-    gpuFwd_ = {};
+    // RAWRXD_REAL_GPU_FORWARD_002: route through the witness so every reset
+    // site is visible in the trace.
+    resetGpuForwardCounters();
     gpuFwdCommitted_ = false;
     modelState_ = ModelState::Closed;
 
@@ -692,6 +803,28 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     tokenizer = std::make_unique<BPETokenizer>();
     sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
     deterministicGreedy_ = true;
+
+    // RAWRXD_REMOTE64_PRODUCT_INTEGRATION_001
+    // Production consumption of src/remote64/deep2_bridge.asm. initialize() is
+    // the single point every Deep2 client passes through, so it is where the
+    // native remote authority is brought to a known state and sampled. This
+    // reads the assembly; it does not gate decode, and it does not alter the
+    // forward path or any TPS measurement.
+#if defined(RAWRXD_REMOTE64_LINKED)
+    {
+        rawrxd::remote64::initRemoteAuthority();
+        remoteObservePermitted_ = rawrxd::remote64::remoteObservePermitted();
+        remoteControlPermitted_  = rawrxd::remote64::remoteControlPermitted();
+        std::fprintf(stderr, "[INIT] remote64 authority linked observe=%d control=%d\n",
+                     remoteObservePermitted_ ? 1 : 0,
+                     remoteControlPermitted_ ? 1 : 0);
+    }
+#else
+    remoteObservePermitted_ = false;
+    remoteControlPermitted_ = false;
+    std::fprintf(stderr, "[INIT] remote64 authority NOT linked (build has no rawrxd_remote64)\n");
+#endif
+    std::fflush(stderr);
     QuantKernelRegistry::Instance().Initialize();
     std::fprintf(stderr, "[INIT] KVCache+tokenizer+sampler created\n"); std::fflush(stderr);
 
@@ -899,7 +1032,10 @@ void Deep2Engine::reset() {
     }
 
     gpuFwdCommitted_ = false;
-    gpuFwd_ = {};
+    // RAWRXD_REAL_GPU_FORWARD_002: the generation-boundary reset. This is the
+    // site that used to erase the evidence a gate needed; the receipt is now
+    // captured inside the forward, before this runs.
+    resetGpuForwardCounters();
 
     // RAWRXD_BATCH_02_SAMPLER_GATE_001 â€” repetition-penalty history is
     // per-generation and must be cleared at the generation boundary.
@@ -2395,7 +2531,8 @@ void Deep2Engine::unloadModel() {
     }
     kvCache = std::make_unique<KVCache>();
     clearCancel();
-    gpuFwd_ = {};
+    // RAWRXD_REAL_GPU_FORWARD_002: model-unload reset, witnessed.
+    resetGpuForwardCounters();
     gpuFwdCommitted_ = false;
     lmHeadPinned_[0] = false;
     lmHeadPinned_[1] = false;
@@ -4996,12 +5133,20 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             std::fflush(stderr);
             // We do NOT increment `generated` for the EOS token itself and we
             // do NOT call onToken(EOS). The loop ends here. Status will be
-            // set to EndOfSequence in generateStream() when n == 0... wait,
-            // n is the number of tokens OUTPUT so far; with EOS, we need to
-            // also undo the speculative forward that advanced the KV cache.
-            // The simplest correct behavior: decrement `generated` (we did
-            // not emit the EOS) and stop.
-            --generated;
+            // set to EndOfSequence in generateStream() when n == 0.
+            // outputTokens[generated] was written with the EOS id above;
+            // truncating the returned count discards it.
+            //
+            // RAWRXD_EOS_ZERO_TOKEN_UNDERFLOW_001: decrement only when
+            // `generated > 0`. EOS on the very first decode step leaves
+            // generated == 0, and an unconditional `--generated` wraps a
+            // size_t to SIZE_MAX (18446744073709551615). That value was then
+            // reported as a successful Completed generation with ~1.8e19
+            // tokens, and the D1 contract guard did not catch it because both
+            // of its clauses were false-negative for a nonzero count.
+            if (generated > 0) {
+                --generated;
+            }
             break;
         }
         ++generated;
@@ -5222,6 +5367,21 @@ GenerationResult Deep2Engine::generateStream(
         std::fprintf(stderr, "[STREAM] CONTRACT_VIOLATION: completed=false but status=Completed\n");
         std::fflush(stderr);
         std::abort();
+    }
+    // RAWRXD_EOS_ZERO_TOKEN_UNDERFLOW_001: a generated count can never exceed
+    // the requested ceiling. `generate()` indexes outputTokens[generated] with
+    // generated < decodeLimit, so a result above the limit proves the counter
+    // was corrupted (the EOS-at-token-0 underflow produced SIZE_MAX here).
+    // This must be treated as a defect, never as a large successful run.
+    if (res.generatedTokens > limit) {
+        std::fprintf(stderr, "[STREAM] CONTRACT_VIOLATION: generatedTokens=%llu exceeds limit=%zu\n",
+            (unsigned long long)res.generatedTokens, limit);
+        std::fflush(stderr);
+        res.status = GenerationStatus::InternalError;
+        res.failureDetail = "generated token count exceeds requested limit: "
+            + std::to_string(res.generatedTokens) + " > " + std::to_string(limit);
+        res.completed = false;
+        res.generatedTokens = 0;
     }
     // D2 â€” generation lifecycle: at the end of every independent generation,
     // clear the KV cache and per-generation state so the NEXT independent

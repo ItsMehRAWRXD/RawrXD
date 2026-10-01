@@ -3,6 +3,9 @@
 #include "Deep2GpuForward.hpp"
 #include "Deep2DualGpuRowSplit.hpp"
 #include "QuantKernelRegistry.hpp"
+// RAWRXD_B70_PREPARED_CACHE_UNIT_001: shared with tools/prepared_cache_unit.cpp
+// so the unit test and the engine compile the same cache implementation.
+#include "Deep2_PreparedWeightCache.hpp"
 #include "GpuTransferCounters.hpp"
 #include "lavapath/GpuForwardChildLadder.hpp"
 #include "lavapath/BatchD_UnifiedAsyncMove.hpp"
@@ -85,6 +88,11 @@ bool PackedQuant(const WeightTensor& wt) {
     const int t = wt.type;
     return t == (int)GGMLType::GGML_TYPE_Q8_0 ||
            t == (int)GGMLType::GGML_TYPE_Q2_K ||
+           // RAWRXD_B65_NATIVE_Q3K_GEMV_001: Q3_K added. It was absent, so every Q3_K
+           // weight fell through to EnsureF32 and was prepared as F32 (84
+           // preparations, 4.23 GB on llama3.2-3b). The shader branch passed
+           // host block parity in q3k_block_diff.exe before being admitted.
+           t == (int)GGMLType::GGML_TYPE_Q3_K ||
            t == (int)GGMLType::GGML_TYPE_Q4_K ||
            t == (int)GGMLType::GGML_TYPE_Q5_K ||
            t == (int)GGMLType::GGML_TYPE_Q6_K;
@@ -117,48 +125,139 @@ size_t StreamBytes(const WeightTensor& wt) {
     return b;
 }
 
+// RAWRXD_B63_PREPARED_WEIGHT_CACHE_001
+//
+// The defect this fixes is a representation-lifecycle bug, not a memory-policy
+// choice. BOUNDED_STREAM previously conflated two independent concerns:
+//
+//   1. how much F32 may be resident on the GPU   (a VRAM admission question)
+//   2. whether a weight is re-dequantized       (a CPU cost question)
+//
+// It answered (2) by re-dequantizing on every call. For a Q2_K model that is
+// once per (layer, weight, decode token): measured 3024 CPU dequant events for
+// a single 32-token 3B run, versus 0 for the same engine on Q4_K_M. The engine
+// was manufacturing its GPU representation from scratch every token and
+// discarding it, which is why decode TPS collapsed with model size rather than
+// tracking the bandwidth bound.
+//
+// The fix separates the layers:
+//
+//   quantized source authority   (the GGUF tensor, unchanged and authoritative)
+//        |
+//        v
+//   persistent prepared F32      (host-side, LRU-bounded, survives GPU eviction)
+//        |
+//        v
+//   bounded GPU residency        (unchanged: still a separate admission decision)
+//
+// A tensor may be evicted from VRAM without discarding its prepared form. The
+// expensive work happens at most once per weight, not once per token.
+//
+// This is deliberately NOT a switch to RESIDENT_CACHE. That mode already existed
+// as an unbounded map keyed by weight name, which would have made host F32 growth
+// an implicit invariant and reproduced the admission problem at larger sizes. The
+// prepared cache has its own explicit host budget and reports its accounting
+// separately from GPU residency; prepared host bytes are never counted against
+// the Vulkan heap.
+
+struct PreparedWeightKey {
+    const void* source = nullptr;
+    uint64_t sourceBytes = 0;
+    uint32_t ggmlType = 0;
+    uint64_t elements = 0;
+
+    // RAWRXD_B63_PREPARED_WEIGHT_CACHE_001: unordered_map::find/erase require
+    // key equality. Identity is the full key, not just the source pointer:
+    // the same tensor may be re-prepared with a different element count or
+    // after a remap, and a pointer-only match would serve a stale entry.
+    bool operator==(const PreparedWeightKey& o) const noexcept {
+        return source == o.source &&
+               sourceBytes == o.sourceBytes &&
+               ggmlType == o.ggmlType &&
+               elements == o.elements;
+    }
+};
+
+struct PreparedWeightKeyHash {
+    size_t operator()(const PreparedWeightKey& k) const noexcept {
+        // Mix pointer bits with geometry so two different tensors that happen to
+        // reuse a freed address do not collide into one entry.
+        uint64_t h = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(k.source));
+        h ^= h >> 33; h *= 0xff51afd7ed558ccdull;
+        h ^= k.sourceBytes + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2);
+        h ^= k.ggmlType + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2);
+        h ^= k.elements + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2);
+        return static_cast<size_t>(h);
+    }
+};
+
+struct PreparedWeight {
+    std::vector<float> f32;
+    uint64_t bytes = 0;
+    uint64_t lastUseTick = 0;
+};
+
+} // namespace
+
+// RAWRXD_B70_PREPARED_CACHE_UNIT_001: the cache implementation now lives in
+// Deep2_PreparedWeightCache.hpp so the engine and the RAWRXD_B70 unit test
+// compile the SAME code. It used to be inline here, which meant B63's eviction
+// and oversized-weight paths could not be tested without an inference run --
+// and after B65/B66/B67 no model routes any tensor through the cache, so those
+// paths were never exercised at all.
+//
+// The key, hash, stats and class definitions were removed from this file and
+// moved verbatim into that header. Acquire() now takes the dequantizer as a
+// parameter; this translation unit passes the registry's, preserving the exact
+// production behavior.
 const float* EnsureF32(Deep2Engine& e, const WeightTensor& wt,
                        std::unordered_map<std::string, std::vector<float>>& cache) {
     (void)e;
-    std::fprintf(stderr, "ENSURE_F32_ENTER name=%s type=%d rows=%u cols=%u data=%p\n",
-        wt.name.c_str(), wt.type, (unsigned)wt.rows, (unsigned)wt.cols, (void*)wt.data);
+    (void)cache;
     if (!wt.data) {
         std::fprintf(stderr, "ENSURE_F32_FAIL_NULL name=%s\n", wt.name.c_str());
         return nullptr;
     }
     if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
-        std::fprintf(stderr, "ENSURE_F32_F32_OK name=%s\n", wt.name.c_str());
         return reinterpret_cast<const float*>(wt.data);
     }
-    // BOUNDED_STREAM: ephemeral scratch — no permanent F32 warehouse
-    const char* mode = std::getenv("DEEP2_WEIGHT_MODE");
-    const bool stream = !(mode && (std::strcmp(mode, "RESIDENT_CACHE") == 0 ||
-                                   std::strcmp(mode, "0") == 0));
-    if (stream) {
-        std::fprintf(stderr, "ENSURE_F32_STREAM name=%s type=%d\n", wt.name.c_str(), wt.type);
-        static thread_local std::vector<float> scratch;
-        auto deq = QuantKernelRegistry::Instance().GetDequant(wt.type);
-        if (!deq) {
-            std::fprintf(stderr, "ENSURE_F32_FAIL_NODEQ name=%s type=%d\n", wt.name.c_str(), wt.type);
-            return nullptr;
-        }
-        scratch.resize(wt.rows * wt.cols);
-        std::fprintf(stderr, "ENSURE_F32_DEQ_CALL name=%s rows=%u cols=%u\n", wt.name.c_str(), (unsigned)wt.rows, (unsigned)wt.cols);
-        deq(reinterpret_cast<const uint8_t*>(wt.data), scratch.data(), scratch.size());
-        std::fprintf(stderr, "ENSURE_F32_DEQ_DONE name=%s\n", wt.name.c_str());
-        return scratch.data();
-    }
-    auto it = cache.find(wt.name);
-    if (it != cache.end()) return it->second.data();
+    // Quantized weight: serve a persistent prepared F32 representation. The
+    // previous code re-dequantized here on every call (thousands of times per
+    // generation for Q2_K); preparation now happens once per tensor per epoch.
+    //
+    // RAWRXD_B70: adapt Deep2::WeightTensor to the cache's PreparedWeightSource
+    // and pass the registry's dequantizer for this type explicitly.
+    Deep2::PreparedWeightSource src;
+    src.name = wt.name;
+    src.type = wt.type;
+    src.rows = static_cast<uint32_t>(wt.rows);
+    src.cols = static_cast<uint32_t>(wt.cols);
+    src.data = reinterpret_cast<const uint8_t*>(wt.data);
+    src.sizeBytes = wt.sizeBytes;
     auto deq = QuantKernelRegistry::Instance().GetDequant(wt.type);
-    if (!deq) return nullptr;
-    std::vector<float> buf(wt.rows * wt.cols);
-    deq(reinterpret_cast<const uint8_t*>(wt.data), buf.data(), buf.size());
-    it = cache.emplace(wt.name, std::move(buf)).first;
-    return it->second.data();
+    return e.PreparedWeights().Acquire(src, reinterpret_cast<Deep2::PreparedDequantFn>(deq));
 }
 
-} // namespace
+// RAWRXD_B63_PREPARED_WEIGHT_CACHE_001: the cache is owned by the engine so its
+// lifetime is bounded by the engine's, and so it cannot outlive the model
+// source pointers that its keys reference.
+Deep2::PreparedWeightCache& Deep2Engine::PreparedWeights() {
+    if (!preparedWeights_) {
+        preparedWeights_ = new PreparedWeightCache();
+    }
+    return *preparedWeights_;
+}
+
+void Deep2Engine::ReleasePreparedWeights() {
+    if (preparedWeights_) {
+        // RAWRXD_B63_RECEIPT: emit the gate counters here, while the cache type
+        // is complete and the accounting still exists. This is the destructor
+        // safe point; ~Deep2Engine only clears the raw pointer.
+        preparedWeights_->WriteReceipt();
+    }
+    delete preparedWeights_;
+    preparedWeights_ = nullptr;
+}
 
 bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
     auto* vc = getVulkanComputeSlot(slot);
@@ -1407,10 +1506,154 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
 }
 
 const GpuForwardCounters& Deep2Engine::gpuForwardCounters() const { return gpuFwd_; }
-void Deep2Engine::resetGpuForwardCounters() { gpuFwd_ = GpuForwardCounters{}; }
+
+// RAWRXD_REAL_GPU_FORWARD_002 — certification authority.
+//
+// RAWRXD_REAL_GPU_FORWARD_002_DEFECT: generateStream() calls reset() in its
+// tail (Deep2Engine.cpp:5302), and reset() clears gpuFwd_. A gate that reads
+// the live counters after generation therefore observed zeros even though the
+// same run had executed hundreds of GPU layer forwards. The reset is correct
+// behaviour -- it clears per-generation state -- so the fix is not to stop the
+// reset, it is to stop the GATE from depending on mutable live counters.
+//
+// captureGpuForwardReceipt() snapshots the counters at the instant the
+// forward completes, before any cleanup can run. isRealGpuForward() then
+// derives its answer from that snapshot.
+//
+// The old short-circuit on gpuFwdCommitted_ is deliberately removed. That flag
+// is set by the execution path itself (Deep2Engine_VulkanRuntime.cpp), so
+// consulting it would let any forward self-certify regardless of what the
+// counters say.
+void Deep2Engine::captureGpuForwardReceipt(uint64_t nanCount, uint64_t infCount) {
+    gpuFwdReceipt_ = GpuForwardReceipt{};
+    gpuFwdReceipt_.forwardLayers = gpuFwd_.forwardLayers;
+    gpuFwdReceipt_.qkvOps = gpuFwd_.qkvOps;
+    gpuFwdReceipt_.rmsNormOps = gpuFwd_.rmsNormOps;
+    gpuFwdReceipt_.attnScoreOps = gpuFwd_.attnScoreOps;
+    gpuFwdReceipt_.ffnActOps = gpuFwd_.ffnActOps;
+    gpuFwdReceipt_.residualOps = gpuFwd_.residualOps;
+    gpuFwdReceipt_.forwardSlot0 = gpuFwd_.forwardSlot[0];
+    // One forward per token that reached the resident path. forwardSlot0
+    // counts layer forwards, so dividing by the layer count recovers tokens
+    // without adding a second increment site that could drift.
+    const uint64_t layers =
+        modelWeights.numLayers ? (uint64_t)modelWeights.numLayers : 0;
+    gpuFwdReceipt_.tokenForwards =
+        layers ? (gpuFwd_.forwardSlot[0] / layers) : 0;
+    gpuFwdReceipt_.hostMaterializations = gpuFwd_.hostMaterializations;
+    gpuFwdReceipt_.matFinalDownload = gpuFwd_.matFinalDownload;
+    gpuFwdReceipt_.matCrossDeviceHandoff = gpuFwd_.matCrossDeviceHandoff;
+    gpuFwdReceipt_.matGemvSingleRoundTrip = gpuFwd_.matGemvSingleRoundTrip;
+    gpuFwdReceipt_.matDualRowSingle = gpuFwd_.matDualRowSingle;
+    gpuFwdReceipt_.matDualRowGroup = gpuFwd_.matDualRowGroup;
+    gpuFwdReceipt_.matOther = gpuFwd_.matOther;
+    gpuFwdReceipt_.hostForwardLayerCalls = gpuFwd_.hostForwardLayerCalls;
+    gpuFwdReceipt_.nanCount = nanCount;
+    gpuFwdReceipt_.infCount = infCount;
+    gpuFwdReceipt_.expectedLayersPerToken = (uint32_t)layers;
+    gpuFwdReceipt_.generationId = ++gpuFwdGenerationId_;
+    gpuFwdReceipt_.valid = true;
+
+
+    std::fprintf(stderr,
+        "GPUFWD_RECEIPT gen=%llu tokens=%llu layers=%llu qkv=%llu rms=%llu "
+        "attn=%llu ffn=%llu resid=%llu slot0=%llu hostMat=%llu "
+        "matFinal=%llu hostFwdLayers=%llu nan=%llu inf=%llu expectLayers=%u\n",
+        (unsigned long long)gpuFwdReceipt_.generationId,
+        (unsigned long long)gpuFwdReceipt_.tokenForwards,
+        (unsigned long long)gpuFwdReceipt_.forwardLayers,
+        (unsigned long long)gpuFwdReceipt_.qkvOps,
+        (unsigned long long)gpuFwdReceipt_.rmsNormOps,
+        (unsigned long long)gpuFwdReceipt_.attnScoreOps,
+        (unsigned long long)gpuFwdReceipt_.ffnActOps,
+        (unsigned long long)gpuFwdReceipt_.residualOps,
+        (unsigned long long)gpuFwdReceipt_.forwardSlot0,
+        (unsigned long long)gpuFwdReceipt_.hostMaterializations,
+        (unsigned long long)gpuFwdReceipt_.matFinalDownload,
+        (unsigned long long)gpuFwdReceipt_.hostForwardLayerCalls,
+        (unsigned long long)gpuFwdReceipt_.nanCount,
+        (unsigned long long)gpuFwdReceipt_.infCount,
+        (unsigned)gpuFwdReceipt_.expectedLayersPerToken);
+    std::fflush(stderr);
+}
+
+void Deep2Engine::resetGpuForwardCounters() {
+    // Witness every reset so an invisible one can never appear later without
+    // leaving a trace. RAWRXD_REAL_GPU_FORWARD_002_RESET_WITNESS.
+    if (gpuFwd_.forwardLayers || gpuFwd_.qkvOps || gpuFwdCommitted_) {
+        std::fprintf(stderr,
+            "GPUFWD_RESET this=%p counters=%p layers=%llu qkv=%llu "
+            "committed=%d receiptValid=%d receiptGen=%llu receiptTokens=%llu\n",
+            static_cast<const void*>(this),
+            static_cast<const void*>(&gpuFwd_),
+            (unsigned long long)gpuFwd_.forwardLayers,
+            (unsigned long long)gpuFwd_.qkvOps,
+            gpuFwdCommitted_ ? 1 : 0,
+            gpuFwdReceipt_.valid ? 1 : 0,
+            (unsigned long long)gpuFwdReceipt_.generationId,
+            (unsigned long long)gpuFwdReceipt_.tokenForwards);
+        std::fflush(stderr);
+    }
+    gpuFwd_ = GpuForwardCounters{};
+}
+
 bool Deep2Engine::isRealGpuForward() const {
-    if (gpuFwdCommitted_) return true;
-    return Deep2GpuForward_IsReal(gpuFwd_, vulkanGemvFail_);
+    // Derived from completed-generation evidence only.
+    const GpuForwardReceipt& r = gpuFwdReceipt_;
+    if (!r.valid)
+        return false;
+    if (r.tokenForwards == 0 || r.forwardLayers == 0)
+        return false;
+    // Every attention/FFN stage must have actually run on the device.
+    if (r.qkvOps == 0 || r.rmsNormOps == 0 || r.attnScoreOps == 0 ||
+        r.ffnActOps == 0 || r.residualOps == 0)
+        return false;
+    // A host-side forward layer means the model was not fully resident.
+    if (r.hostForwardLayerCalls != 0)
+        return false;
+    // Layer-forward coverage must be exactly tokens x layers. This is the
+    // strongest available structural check: it cannot be satisfied by a
+    // partial run, and it caught nothing here because the measured run did
+    // execute every layer (28 x 32 = 896).
+    if (r.expectedLayersPerToken != 0) {
+        const uint64_t expect =
+            r.tokenForwards * (uint64_t)r.expectedLayersPerToken;
+        if (r.forwardLayers != expect)
+            return false;
+    }
+    // Non-finite device output is a failed forward regardless of op counts.
+    if (r.nanCount != 0 || r.infCount != 0)
+        return false;
+    // Accounting completeness: every host materialization must fall into
+    // exactly one classified bucket. This is the check that catches an
+    // UNCLASSIFIED materialization, and it is the codebase's documented
+    // exhaustive invariant (Deep2GpuForward_MatClassSum).
+    const uint64_t classSum = r.matCrossDeviceHandoff +
+                              r.matGemvSingleRoundTrip +
+                              r.matDualRowSingle + r.matDualRowGroup +
+                              r.matFinalDownload + r.matOther;
+    if (r.hostMaterializations != classSum)
+        return false;
+    // Residency. RAWRXD_REAL_GPU_FORWARD_002_LMHEAD_CLASSIFICATION:
+    // tryVulkanHostGEMV (Deep2Engine_GpuMoEMLA.cpp:67) is NOT a CPU fallback --
+    // it is the single-GPU lane, taken when Deep2Engine.cpp:3024 declines the
+    // dual-GPU row split because vulkanDevices_.size() < 2. Inside it,
+    // DispatchWeight keeps the weights device-resident and only the output
+    // vector is downloaded. On the output projection that download IS the
+    // mandatory final-logits materialization the residency contract permits;
+    // counting it as a violation rejected a fully resident LM head.
+    //
+    // So a single-GEMV round trip is admitted only when there is exactly one
+    // per token forward, i.e. one output projection per token. Anything more
+    // means per-layer host bouncing and is rejected.
+    const uint64_t perToken = r.tokenForwards;
+    if (r.matGemvSingleRoundTrip > perToken)
+        return false;
+    // Everything else bouncing to host is a genuine residency break.
+    if (r.matCrossDeviceHandoff != 0 || r.matDualRowSingle != 0 ||
+        r.matDualRowGroup != 0 || r.matOther != 0)
+        return false;
+    return true;
 }
 
 } // namespace Deep2

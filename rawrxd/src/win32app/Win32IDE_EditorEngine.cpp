@@ -1,5 +1,6 @@
 // Win32IDE_EditorEngine.cpp — native code editor with line numbers, syntax highlight, cursor, selection
 #include <windows.h>
+#include <windowsx.h>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -18,13 +19,29 @@ COLORREF IDECore_ColBg();
 COLORREF IDECore_ColText();
 COLORREF IDECore_ColAccent();
 
+// ── Forward declarations to the ghost-text engine ────────────────────────────
+// RAWRXD_IDE_GHOSTTEXT_RENDER_001: EditorPaint calls GhostText_Paint, and the
+// window procedure calls GhostText_Accept/GhostText_Dismiss on Tab/Escape.
+// Defined in Win32IDE_GhostText.cpp.
+void GhostText_Paint(HDC hdc, int cursorX, int cursorY, int charH, int charW);
+std::string GhostText_Accept();
+void        GhostText_Dismiss();
+void        GhostText_RequestCompletion(const std::string& linePrefix, int line, int col);
+
 // ── Editor state ─────────────────────────────────────────────────────────────
+// RAWRXD_IDE_EDITOR_SELECTION_001
+// selStart/selEnd form an ordered range. The fixed anchor is selStart; a caret
+// move with SHIFT held moves selEnd, and a mouse drag moves selEnd too. Every
+// mutation deletes an active selection first, so typing over a highlighted
+// range behaves like a real editor instead of appending to it.
 struct EditorState {
     std::vector<std::string> lines;
     int  cursorLine  = 0;
     int  cursorCol   = 0;
     int  selStartLine = -1, selStartCol = -1;
     int  selEndLine   = -1, selEndCol   = -1;
+    int  anchorLine   = -1, anchorCol   = -1;
+    bool dragging     = false;
     int  scrollLine  = 0;
     int  scrollCol   = 0;
     bool modified    = false;
@@ -35,6 +52,104 @@ struct EditorState {
 };
 
 static EditorState g_editor;
+
+// RAWRXD_IDE_UNDO_COVERAGE_001
+// The editor notifies the undo owner after every content mutation. The owner
+// (Win32IDE_Commands) coalesces a burst of keystrokes into one snapshot via a
+// short timer, so undo is fed by typing instead of only by Cut/Paste.
+static void (*g_mutationHook)() = nullptr;
+
+// Debounce window, in ms, before a keystroke burst becomes one undo snapshot.
+static const UINT_PTR kUndoDebounceTimerId = 1;
+static const UINT     kUndoDebounceMs     = 250;
+
+static void EditorNotifyMutation()
+{
+    if (g_editor.hwnd)
+        SetTimer(g_editor.hwnd, kUndoDebounceTimerId, kUndoDebounceMs, nullptr);
+}
+
+void EditorEngine_RegisterMutationHook(void (*fn)())
+{
+    g_mutationHook = fn;
+}
+
+// ── Selection helpers ────────────────────────────────────────────────────────
+static bool EditorHasSelection()
+{
+    return g_editor.selStartLine >= 0 && g_editor.selEndLine >= 0 &&
+           (g_editor.selStartLine != g_editor.selEndLine ||
+            g_editor.selStartCol  != g_editor.selEndCol);
+}
+
+static void EditorOrderSelection()
+{
+    if (!EditorHasSelection()) return;
+    const int sL = g_editor.selStartLine, sC = g_editor.selStartCol;
+    const int eL = g_editor.selEndLine,   eC = g_editor.selEndCol;
+    if (eL < sL || (eL == sL && eC < sC)) {
+        g_editor.selStartLine = eL; g_editor.selStartCol = eC;
+        g_editor.selEndLine   = sL; g_editor.selEndCol   = sC;
+    }
+}
+
+static void EditorClearSelection()
+{
+    g_editor.selStartLine = -1; g_editor.selStartCol = -1;
+    g_editor.selEndLine   = -1; g_editor.selEndCol   = -1;
+    g_editor.anchorLine   = -1; g_editor.anchorCol   = -1;
+}
+
+// ── Caret movement ───────────────────────────────────────────────────────────
+// shiftExtend==true anchors a selection at the current caret and drags its end
+// to the destination; otherwise any existing selection is discarded first.
+static void EditorMoveCaret(int line, int col, bool shiftExtend)
+{
+    if (g_editor.lines.empty()) g_editor.lines.push_back("");
+    line = std::max(0, std::min(line,  (int)g_editor.lines.size() - 1));
+    col  = std::max(0, std::min(col,   (int)g_editor.lines[line].size()));
+
+    if (shiftExtend) {
+        if (g_editor.anchorLine < 0) {
+            g_editor.anchorLine   = g_editor.cursorLine;
+            g_editor.anchorCol    = g_editor.cursorCol;
+            g_editor.selStartLine = g_editor.anchorLine;
+            g_editor.selStartCol  = g_editor.anchorCol;
+        }
+        g_editor.selEndLine = line;
+        g_editor.selEndCol  = col;
+    } else {
+        EditorClearSelection();
+    }
+    g_editor.cursorLine = line;
+    g_editor.cursorCol  = col;
+    EditorOrderSelection();
+}
+
+// Deletes the active selection and leaves the caret at its start.
+// Returns true when a selection was actually removed.
+static bool EditorDeleteSelection()
+{
+    if (!EditorHasSelection()) return false;
+    EditorOrderSelection();
+    int sl = g_editor.selStartLine, sc = g_editor.selStartCol;
+    int el = g_editor.selEndLine,   ec = g_editor.selEndCol;
+    if (sl < 0 || sl >= (int)g_editor.lines.size()) { EditorClearSelection(); return false; }
+    ec = std::min(ec, (int)g_editor.lines[el].size());
+    sc = std::min(sc, (int)g_editor.lines[sl].size());
+
+    std::string tail = g_editor.lines[el].substr(ec);
+    g_editor.lines[sl].resize(sc);
+    g_editor.lines[sl] += tail;
+    if (el > sl)
+        g_editor.lines.erase(g_editor.lines.begin() + sl + 1,
+                             g_editor.lines.begin() + el + 1);
+    g_editor.cursorLine = sl;
+    g_editor.cursorCol  = sc;
+    EditorClearSelection();
+    g_editor.modified   = true;
+    return true;
+}
 
 // ── Syntax token types ────────────────────────────────────────────────────────
 enum class TokType { Normal, Keyword, String, Comment, Number, Preprocessor };
@@ -197,6 +312,17 @@ static void EditorPaint(HWND hwnd)
             FillRect(memDC, &curRc, curBrush);
             DeleteObject(curBrush);
         }
+        // RAWRXD_IDE_GHOSTTEXT_RENDER_001
+        // The ghost-text suggestion is produced by the LSP/AI bridge and stored
+        // by the ghost-text engine, but nothing ever drew it: GhostText_Paint()
+        // had zero callers, so the flagship inline-completion feature was
+        // computed and then never appeared on screen. Draw it inline at the
+        // caret, on the caret's row, after the tokens so it reads as trailing
+        // suggestion text rather than buffer content.
+        if (li == g_editor.cursorLine) {
+            int gx = g_editor.lineNumW + (g_editor.cursorCol - g_editor.scrollCol) * g_editor.charW;
+            GhostText_Paint(memDC, gx, y, g_editor.charH, g_editor.charW);
+        }
     }
 
     SelectObject(memDC, oldFont);
@@ -208,19 +334,26 @@ static void EditorPaint(HWND hwnd)
 }
 
 // ── Input handling ────────────────────────────────────────────────────────────
+// RAWRXD_IDE_UNDO_COVERAGE_001
+// Every mutating path below calls EditorNotifyMutation(). The undo stack used
+// to be fed only by Cut and Paste, so one Ctrl+Z after typing reverted the
+// whole buffer to the file-open snapshot — silent data loss, not a cosmetic gap.
 static void EditorInsertChar(char c)
 {
     if (g_editor.lines.empty()) g_editor.lines.push_back("");
+    if (EditorDeleteSelection()) { /* replaced the range */ }
     auto& line = g_editor.lines[g_editor.cursorLine];
     int col = std::min(g_editor.cursorCol, (int)line.size());
     line.insert(line.begin() + col, c);
     ++g_editor.cursorCol;
     g_editor.modified = true;
+    EditorNotifyMutation();
 }
 
 static void EditorNewLine()
 {
-    if (g_editor.lines.empty()) { g_editor.lines.push_back(""); return; }
+    if (g_editor.lines.empty()) { g_editor.lines.push_back(""); EditorNotifyMutation(); return; }
+    if (EditorDeleteSelection()) { /* replaced the range */ }
     auto& line = g_editor.lines[g_editor.cursorLine];
     int col = std::min(g_editor.cursorCol, (int)line.size());
     std::string rest = line.substr(col);
@@ -229,23 +362,45 @@ static void EditorNewLine()
     ++g_editor.cursorLine;
     g_editor.cursorCol = 0;
     g_editor.modified = true;
+    EditorNotifyMutation();
 }
 
 static void EditorBackspace()
 {
     if (g_editor.lines.empty()) return;
+    if (EditorDeleteSelection()) { EditorNotifyMutation(); return; }
     if (g_editor.cursorCol > 0) {
         auto& line = g_editor.lines[g_editor.cursorLine];
         int col = std::min(g_editor.cursorCol, (int)line.size());
-        if (col > 0) { line.erase(line.begin() + col - 1); --g_editor.cursorCol; }
+        if (col > 0) { line.erase(line.begin() + col - 1); --g_editor.cursorCol; g_editor.modified = true; }
     } else if (g_editor.cursorLine > 0) {
         std::string cur = g_editor.lines[g_editor.cursorLine];
         g_editor.lines.erase(g_editor.lines.begin() + g_editor.cursorLine);
         --g_editor.cursorLine;
         g_editor.cursorCol = (int)g_editor.lines[g_editor.cursorLine].size();
         g_editor.lines[g_editor.cursorLine] += cur;
+        g_editor.modified = true;
     }
-    g_editor.modified = true;
+    EditorNotifyMutation();
+}
+
+static void EditorDeleteForward()
+{
+    if (g_editor.lines.empty()) return;
+    if (EditorDeleteSelection()) { EditorNotifyMutation(); return; }
+    if (!g_editor.lines.empty()) {
+        auto& line = g_editor.lines[g_editor.cursorLine];
+        int col = std::min(g_editor.cursorCol, (int)line.size());
+        if (col < (int)line.size()) {
+            line.erase(line.begin() + col);
+            g_editor.modified = true;
+        } else if (g_editor.cursorLine + 1 < (int)g_editor.lines.size()) {
+            line += g_editor.lines[g_editor.cursorLine + 1];
+            g_editor.lines.erase(g_editor.lines.begin() + g_editor.cursorLine + 1);
+            g_editor.modified = true;
+        }
+    }
+    EditorNotifyMutation();
 }
 
 static void EditorScrollToCursor(HWND hwnd)
@@ -287,69 +442,130 @@ static LRESULT CALLBACK EditorWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             EditorInsertChar((char)wParam);
         }
         EditorScrollToCursor(hwnd);
+        // RAWRXD_IDE_GHOSTTEXT_RENDER_001: ask the completion engine for a
+        // suggestion anchored at the new caret position.
+        if (g_editor.cursorLine < (int)g_editor.lines.size())
+            GhostText_RequestCompletion(g_editor.lines[g_editor.cursorLine],
+                                        g_editor.cursorLine, g_editor.cursorCol);
         InvalidateRect(hwnd, nullptr, FALSE);
         return 0;
 
+    case WM_TIMER:
+        // RAWRXD_IDE_UNDO_COVERAGE_001: the debounce window after a keystroke
+        // burst closed, so it is now one undo step rather than many.
+        if (wParam == kUndoDebounceTimerId) {
+            KillTimer(hwnd, kUndoDebounceTimerId);
+            if (g_mutationHook) g_mutationHook();
+            return 0;
+        }
+        break;
+
     case WM_KEYDOWN:
+    {
+        // RAWRXD_IDE_EDITOR_SELECTION_001: shift-extended caret movement.
+        // Without this, nothing but SelectAll/Find could ever produce a
+        // selection, so Cut/Copy had no range to act on.
+        const bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+        int nl = g_editor.cursorLine, nc = g_editor.cursorCol;
+
         switch (wParam) {
         case VK_UP:
-            if (g_editor.cursorLine > 0) {
-                --g_editor.cursorLine;
-                g_editor.cursorCol = std::min(g_editor.cursorCol,
-                    (int)g_editor.lines[g_editor.cursorLine].size());
-            }
+            if (nl > 0) { --nl; nc = std::min(nc, (int)g_editor.lines[nl].size()); }
             break;
         case VK_DOWN:
-            if (g_editor.cursorLine + 1 < (int)g_editor.lines.size()) {
-                ++g_editor.cursorLine;
-                g_editor.cursorCol = std::min(g_editor.cursorCol,
-                    (int)g_editor.lines[g_editor.cursorLine].size());
+            if (nl + 1 < (int)g_editor.lines.size()) {
+                ++nl; nc = std::min(nc, (int)g_editor.lines[nl].size());
             }
             break;
         case VK_LEFT:
-            if (g_editor.cursorCol > 0) --g_editor.cursorCol;
-            else if (g_editor.cursorLine > 0) {
-                --g_editor.cursorLine;
-                g_editor.cursorCol = (int)g_editor.lines[g_editor.cursorLine].size();
-            }
+            if (nc > 0) --nc;
+            else if (nl > 0) { --nl; nc = (int)g_editor.lines[nl].size(); }
             break;
         case VK_RIGHT:
-            if (!g_editor.lines.empty() &&
-                g_editor.cursorCol < (int)g_editor.lines[g_editor.cursorLine].size())
-                ++g_editor.cursorCol;
-            else if (g_editor.cursorLine + 1 < (int)g_editor.lines.size()) {
-                ++g_editor.cursorLine; g_editor.cursorCol = 0;
-            }
+            if (!g_editor.lines.empty() && nc < (int)g_editor.lines[nl].size())
+                ++nc;
+            else if (nl + 1 < (int)g_editor.lines.size()) { ++nl; nc = 0; }
             break;
-        case VK_HOME: g_editor.cursorCol = 0; break;
+        case VK_HOME: nc = 0; break;
         case VK_END:
-            if (!g_editor.lines.empty())
-                g_editor.cursorCol = (int)g_editor.lines[g_editor.cursorLine].size();
+            if (!g_editor.lines.empty()) nc = (int)g_editor.lines[nl].size();
             break;
         case VK_PRIOR: // Page Up
-            g_editor.cursorLine = std::max(0, g_editor.cursorLine - 20);
+            nl = std::max(0, nl - 20);
+            nc = std::min(nc, (int)g_editor.lines[nl].size());
             break;
         case VK_NEXT: // Page Down
-            g_editor.cursorLine = std::min((int)g_editor.lines.size() - 1,
-                                           g_editor.cursorLine + 20);
+            nl = std::min((int)g_editor.lines.size() - 1, nl + 20);
+            nc = std::min(nc, (int)g_editor.lines[nl].size());
             break;
         case VK_DELETE:
-            if (!g_editor.lines.empty()) {
+            EditorDeleteForward();
+            EditorScrollToCursor(hwnd);
+            InvalidateRect(hwnd, nullptr, FALSE);
+            return 0;
+
+        // RAWRXD_IDE_GHOSTTEXT_RENDER_001: Tab accepts the inline suggestion,
+        // Escape dismisses it. Both previously did nothing at all.
+        case VK_TAB: {
+            std::string s = GhostText_Accept();
+            if (!s.empty()) {
+                if (EditorDeleteSelection()) { /* replaced the range */ }
                 auto& line = g_editor.lines[g_editor.cursorLine];
                 int col = std::min(g_editor.cursorCol, (int)line.size());
-                if (col < (int)line.size()) {
-                    line.erase(line.begin() + col);
-                    g_editor.modified = true;
-                } else if (g_editor.cursorLine + 1 < (int)g_editor.lines.size()) {
-                    line += g_editor.lines[g_editor.cursorLine + 1];
-                    g_editor.lines.erase(g_editor.lines.begin() + g_editor.cursorLine + 1);
-                    g_editor.modified = true;
-                }
+                line.insert(col, s);
+                g_editor.cursorCol += (int)s.size();
+                g_editor.modified = true;
+                EditorNotifyMutation();
             }
-            break;
+            EditorScrollToCursor(hwnd);
+            InvalidateRect(hwnd, nullptr, FALSE);
+            return 0;
         }
+        case VK_ESCAPE:
+            GhostText_Dismiss();
+            InvalidateRect(hwnd, nullptr, FALSE);
+            return 0;
+        }
+
+        if (nl != g_editor.cursorLine || nc != g_editor.cursorCol ||
+            (shift && wParam != VK_TAB && wParam != VK_ESCAPE))
+            EditorMoveCaret(nl, nc, shift);
         EditorScrollToCursor(hwnd);
         InvalidateRect(hwnd, nullptr, FALSE);
+        return 0;
+    }
+
+    case WM_MOUSEMOVE: {
+        // RAWRXD_IDE_EDITOR_SELECTION_001: drag extends the selection.
+        if (!(wParam & MK_LBUTTON)) break;
+        int mx = GET_X_LPARAM(lParam), my = GET_Y_LPARAM(lParam);
+        int li = g_editor.scrollLine + my / std::max(1, g_editor.charH);
+        int col = (mx - g_editor.lineNumW) / std::max(1, g_editor.charW) + g_editor.scrollCol;
+        li  = std::max(0, std::min(li,  (int)g_editor.lines.size() - 1));
+        col = std::max(0, std::min(col, (int)g_editor.lines[li].size()));
+        g_editor.anchorLine   = g_editor.cursorLine;
+        g_editor.anchorCol    = g_editor.cursorCol;
+        g_editor.selStartLine = g_editor.anchorLine;
+        g_editor.selStartCol  = g_editor.anchorCol;
+        g_editor.selEndLine   = li;
+        g_editor.selEndCol    = col;
+        g_editor.dragging     = true;
+        EditorOrderSelection();
+        InvalidateRect(hwnd, nullptr, FALSE);
+        return 0;
+    }
+
+    case WM_LBUTTONUP:
+        if (g_editor.dragging) {
+            g_editor.dragging = false;
+            ReleaseCapture();
+            if (!EditorHasSelection()) EditorClearSelection();
+            InvalidateRect(hwnd, nullptr, FALSE);
+        }
+        return 0;
+
+    case WM_CAPTURECHANGED:
+        g_editor.dragging = false;
         return 0;
 
     case WM_MOUSEWHEEL: {
@@ -362,13 +578,29 @@ static LRESULT CALLBACK EditorWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     }
 
     case WM_LBUTTONDOWN: {
-        int mx = LOWORD(lParam), my = HIWORD(lParam);
+        int mx = GET_X_LPARAM(lParam), my = GET_Y_LPARAM(lParam);
         int li = g_editor.scrollLine + my / std::max(1, g_editor.charH);
         int col = (mx - g_editor.lineNumW) / std::max(1, g_editor.charW) + g_editor.scrollCol;
         li  = std::max(0, std::min(li,  (int)g_editor.lines.size() - 1));
         col = std::max(0, std::min(col, (int)g_editor.lines[li].size()));
-        g_editor.cursorLine = li;
-        g_editor.cursorCol  = col;
+        if (GetKeyState(VK_SHIFT) & 0x8000) {
+            // Shift-click extends the existing anchor.
+            if (g_editor.anchorLine < 0) {
+                g_editor.anchorLine   = g_editor.cursorLine;
+                g_editor.anchorCol    = g_editor.cursorCol;
+                g_editor.selStartLine = g_editor.anchorLine;
+                g_editor.selStartCol  = g_editor.anchorCol;
+            }
+            g_editor.selEndLine = li;
+            g_editor.selEndCol  = col;
+            EditorOrderSelection();
+        } else {
+            EditorClearSelection();
+            g_editor.cursorLine = li;
+            g_editor.cursorCol  = col;
+            g_editor.dragging   = true;
+            SetCapture(hwnd);
+        }
         SetFocus(hwnd);
         InvalidateRect(hwnd, nullptr, FALSE);
         return 0;
@@ -407,20 +639,38 @@ HWND EditorEngine_Create(HWND parent, int x, int y, int w, int h, HINSTANCE hIns
 
 bool EditorEngine_OpenFile(const std::string& path)
 {
-    std::ifstream f(path);
+    // RAWRXD_IDE_EDITOR_BINARY_IO_001
+    // std::ifstream in text mode plus a non-binary write path meant the editor
+    // could not round-trip a file: CRLF was translated on write and stripped on
+    // read, and a file containing a 0x1A (^Z) byte was silently truncated on
+    // write. Both sides are now binary, and line endings are preserved
+    // verbatim by the \n-splitting reader.
+    std::ifstream f(path, std::ios::binary);
     if (!f) return false;
+    std::ostringstream ss;
+    ss << f.rdbuf();
     g_editor.lines.clear();
-    std::string line;
-    while (std::getline(f, line)) {
+    std::string   all = ss.str(), line;
+    size_t        pos = 0;
+    while (pos <= all.size()) {
+        size_t nl = all.find('\n', pos);
+        if (nl == std::string::npos) {
+            if (pos < all.size()) g_editor.lines.push_back(all.substr(pos));
+            break;
+        }
+        line = all.substr(pos, nl - pos);
         if (!line.empty() && line.back() == '\r') line.pop_back();
         g_editor.lines.push_back(line);
+        pos = nl + 1;
     }
     if (g_editor.lines.empty()) g_editor.lines.push_back("");
     g_editor.filePath    = path;
     g_editor.cursorLine  = 0;
     g_editor.cursorCol   = 0;
     g_editor.scrollLine  = 0;
+    g_editor.scrollCol   = 0;
     g_editor.modified    = false;
+    EditorClearSelection();
     if (g_editor.hwnd) InvalidateRect(g_editor.hwnd, nullptr, FALSE);
     return true;
 }
@@ -429,12 +679,17 @@ bool EditorEngine_SaveFile(const std::string& path)
 {
     std::string p = path.empty() ? g_editor.filePath : path;
     if (p.empty()) return false;
-    std::ofstream f(p);
+    // Binary, and CRLF written explicitly: see the open path for why.
+    std::ofstream f(p, std::ios::binary | std::ios::trunc);
     if (!f) return false;
-    for (auto& line : g_editor.lines) f << line << "\n";
-    g_editor.modified = false;
-    if (!path.empty()) g_editor.filePath = path;
-    return true;
+    for (auto& line : g_editor.lines) f << line << "\r\n";
+    f.flush();
+    bool ok = f.good();
+    if (ok) {
+        g_editor.modified = false;
+        if (!path.empty()) g_editor.filePath = path;
+    }
+    return ok;
 }
 
 void EditorEngine_SetText(const std::string& text)
@@ -480,10 +735,104 @@ void EditorEngine_AppendText(const std::string& text)
     }
 }
 
+// RAWRXD_IDE_CLIPBOARD_SELECTION_001
+// Paste used to append to lines.back(), i.e. end-of-document, so Ctrl+V ignored
+// the caret. This inserts at the caret instead, replacing the selection when
+// one is active.
+void EditorEngine_InsertTextAtCursor(const std::string& text)
+{
+    if (g_editor.lines.empty()) g_editor.lines.push_back("");
+    if (EditorDeleteSelection()) { /* replaced the range */ }
+    if (text.empty()) { EditorNotifyMutation(); return; }
+
+    std::vector<std::string> parts;
+    std::string   line, all = text;
+    size_t        pos = 0;
+    while (pos <= all.size()) {
+        size_t nl = all.find('\n', pos);
+        if (nl == std::string::npos) { parts.push_back(all.substr(pos)); break; }
+        line = all.substr(pos, nl - pos);
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        parts.push_back(line);
+        pos = nl + 1;
+    }
+    if (parts.empty()) return;
+
+    auto& cur = g_editor.lines[g_editor.cursorLine];
+    int col   = std::min(g_editor.cursorCol, (int)cur.size());
+    if (parts.size() == 1) {
+        cur.insert(col, parts[0]);
+        g_editor.cursorCol = col + (int)parts[0].size();
+    } else {
+        std::string head = cur.substr(0, col);
+        std::string tail = cur.substr(col);
+        cur = head + parts[0];
+        g_editor.lines.insert(g_editor.lines.begin() + g_editor.cursorLine + 1,
+                              parts.begin() + 1, parts.end());
+        int last = g_editor.cursorLine + (int)parts.size() - 1;
+        g_editor.lines[last] = parts.back() + tail;
+        g_editor.cursorLine = last;
+        g_editor.cursorCol  = (int)parts.back().size();
+    }
+    g_editor.modified = true;
+    EditorNotifyMutation();
+    if (g_editor.hwnd) {
+        EditorScrollToCursor(g_editor.hwnd);
+        InvalidateRect(g_editor.hwnd, nullptr, FALSE);
+    }
+}
+
+// RAWRXD_IDE_CLIPBOARD_SELECTION_001: selection-aware clipboard surface.
+// Copy/Cut previously operated on EditorEngine_GetText(), the entire buffer,
+// regardless of whether anything was selected.
+bool EditorEngine_HasSelection()      { return EditorHasSelection(); }
+
+std::string EditorEngine_GetSelectionText()
+{
+    if (!EditorHasSelection()) return {};
+    EditorOrderSelection();
+    int sl = g_editor.selStartLine, sc = g_editor.selStartCol;
+    int el = g_editor.selEndLine,   ec = g_editor.selEndCol;
+    if (sl < 0 || el >= (int)g_editor.lines.size()) return {};
+    sc = std::min(sc, (int)g_editor.lines[sl].size());
+    ec = std::min(ec, (int)g_editor.lines[el].size());
+    if (sl == el) return g_editor.lines[sl].substr(sc, ec - sc);
+
+    std::string out = g_editor.lines[sl].substr(sc);
+    for (int i = sl + 1; i < el; ++i) { out += "\n"; out += g_editor.lines[i]; }
+    out += "\n";
+    out += g_editor.lines[el].substr(0, ec);
+    return out;
+}
+
+bool EditorEngine_DeleteSelection()
+{
+    if (!EditorDeleteSelection()) return false;
+    EditorNotifyMutation();
+    if (g_editor.hwnd) InvalidateRect(g_editor.hwnd, nullptr, FALSE);
+    return true;
+}
+
+void EditorEngine_GetCaret(int* line, int* col)
+{
+    if (line) *line = g_editor.cursorLine;
+    if (col)  *col  = g_editor.cursorCol;
+}
+
+void EditorEngine_SetCaret(int line, int col)
+{
+    if (g_editor.lines.empty()) g_editor.lines.push_back("");
+    g_editor.cursorLine = std::max(0, std::min(line, (int)g_editor.lines.size() - 1));
+    g_editor.cursorCol  = std::max(0, std::min(col,  (int)g_editor.lines[g_editor.cursorLine].size()));
+    if (g_editor.hwnd) InvalidateRect(g_editor.hwnd, nullptr, FALSE);
+}
+
 bool EditorEngine_IsModified() { return g_editor.modified; }
 const std::string& EditorEngine_FilePath() { return g_editor.filePath; }
 
 // ── Selection / Find / Replace ───────────────────────────────────────────────
+// RAWRXD_IDE_EDITOR_SELECTION_001: SelectAll sets the anchor at the start so a
+// following shift-arrow or drag extends from the document head.
 void EditorEngine_SelectAll()
 {
     if (g_editor.lines.empty()) return;
@@ -491,6 +840,8 @@ void EditorEngine_SelectAll()
     g_editor.selStartCol  = 0;
     g_editor.selEndLine   = (int)g_editor.lines.size() - 1;
     g_editor.selEndCol    = (int)g_editor.lines.back().size();
+    g_editor.anchorLine   = 0;
+    g_editor.anchorCol    = 0;
     g_editor.cursorLine   = g_editor.selEndLine;
     g_editor.cursorCol    = g_editor.selEndCol;
     if (g_editor.hwnd) InvalidateRect(g_editor.hwnd, nullptr, FALSE);
@@ -524,8 +875,11 @@ bool EditorEngine_Find(const std::string& what, bool matchCase)
             g_editor.selStartCol  = (int)pos;
             g_editor.selEndLine   = li;
             g_editor.selEndCol    = (int)(pos + what.size());
+            g_editor.anchorLine   = g_editor.selEndLine;
+            g_editor.anchorCol    = g_editor.selEndCol;
             g_editor.cursorLine   = g_editor.selEndLine;
             g_editor.cursorCol    = g_editor.selEndCol;
+            EditorNotifyMutation();
             if (g_editor.hwnd) {
                 EditorScrollToCursor(g_editor.hwnd);
                 InvalidateRect(g_editor.hwnd, nullptr, FALSE);
@@ -558,9 +912,12 @@ bool EditorEngine_Replace(const std::string& what, const std::string& replacemen
             g_editor.selStartCol  = (int)pos;
             g_editor.selEndLine   = li;
             g_editor.selEndCol    = (int)(pos + replacement.size());
+            g_editor.anchorLine   = g_editor.selEndLine;
+            g_editor.anchorCol    = g_editor.selEndCol;
             g_editor.cursorLine   = g_editor.selEndLine;
             g_editor.cursorCol    = g_editor.selEndCol;
             g_editor.modified = true;
+            EditorNotifyMutation();
             if (g_editor.hwnd) {
                 EditorScrollToCursor(g_editor.hwnd);
                 InvalidateRect(g_editor.hwnd, nullptr, FALSE);

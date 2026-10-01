@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <cstdio>
+#include <cstring>
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -297,6 +298,39 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 }
 
 // ?? Public API ????????????????????????????????????????????????????????????????
+// RAWRXD_IDE_SETTINGS_WIRING_001
+// SettingsGUI_Show() passed a NULL dialog template to DialogBoxParamA, so it
+// could never have displayed anything even if it had been reachable -- and it
+// had no caller either, leaving all 13 controls dead. The template below is a
+// real, empty framed window: SettingsDlgProc creates the tab control, the four
+// pages and the OK/Cancel/Apply buttons itself in WM_INITDIALOG.
+static const BYTE* BuildSettingsTemplate(std::vector<BYTE>& buf)
+{
+    buf.clear();
+    auto putDword = [&](DWORD v) { const BYTE* p = (const BYTE*)&v; buf.insert(buf.end(), p, p + 4); };
+    auto putWord  = [&](WORD  v) { const BYTE* p = (const BYTE*)&v; buf.insert(buf.end(), p, p + 2); };
+    auto putShort = [&](short v) { putWord((WORD)v); };
+    auto putStr   = [&](const char* s) {
+        size_t n = strlen(s) + 1;
+        const BYTE* p = (const BYTE*)s;
+        buf.insert(buf.end(), p, p + n);
+    };
+
+    // DS_SETFONT|DS_MODALFRAME|WS_POPUP|WS_CAPTION|WS_SYSMENU|DS_CENTER
+    putDword(0x40u | 0x00000080u | 0x80000000u | 0x00C00000u | 0x00080000u | 0x00040000u);
+    putDword(0);            // dwExtendedStyle
+    putWord(0);             // cdit: no template items, all controls are created in code
+    putShort(0); putShort(0);
+    putShort(520);          // cx
+    putShort(420);          // cy
+    putWord(0x0000);        // menu: none
+    putWord(0xFFFF);        // class: default
+    putStr("RawrXD Settings");
+    putWord(9);             // point size (DS_SETFONT)
+    putStr("MS Shell Dlg");
+    return buf.data();
+}
+
 void SettingsGUI_Show(HWND parent)
 {
     // Ensure common controls are initialized
@@ -305,7 +339,11 @@ void SettingsGUI_Show(HWND parent)
     icc.dwICC = ICC_TAB_CLASSES;
     InitCommonControlsEx(&icc);
 
-    DialogBoxParamA(GetModuleHandle(nullptr), nullptr, parent, SettingsDlgProc, 0);
+    std::vector<BYTE> tmpl;
+    BuildSettingsTemplate(tmpl);
+    DialogBoxIndirectParamA(GetModuleHandle(nullptr),
+                            (LPCDLGTEMPLATEA)tmpl.data(),
+                            parent, SettingsDlgProc, 0);
 }
 
 } // namespace RawrXD::IDE

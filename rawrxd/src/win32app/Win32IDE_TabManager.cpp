@@ -236,4 +236,25 @@ std::string TabManager_ActivePath()
     return "";
 }
 
+// RAWRXD_IDE_SAVEALL_CLOSE_001
+// File -> Save All needs to know what else is open. The tab list is the only
+// place that state exists, so expose read-only views of it instead of
+// pretending Save All is an alias for Save.
+std::vector<std::string> TabManager_OpenPaths()
+{
+    std::vector<std::string> out;
+    out.reserve(g_tabs.tabs.size());
+    for (auto& t : g_tabs.tabs) out.push_back(t.filePath);
+    return out;
+}
+
+bool TabManager_IsModified(const std::string& path)
+{
+    for (auto& t : g_tabs.tabs)
+        if (t.filePath == path) return t.modified;
+    return false;
+}
+
+size_t TabManager_Count() { return g_tabs.tabs.size(); }
+
 } // namespace RawrXD::IDE

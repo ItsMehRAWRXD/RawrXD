@@ -8,15 +8,34 @@
 #include <cstdarg>
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 #include <thread>
 #include <io.h>
 #include <fcntl.h>
 #include "ide_inference_gate.hpp"
 #include "ide_agentic_gate.hpp"
+// RAWRXD_TOOLCHAIN_RESULT_ODR_001: this TU previously re-declared
+// RawrXD::IDE::ToolchainResult locally instead of including the header that
+// owns it. That is legal only while the two definitions stay byte-identical, so
+// any future field added to one and not the other would produce a silent
+// layout/ABI mismatch with no compiler diagnostic — runNativeToolchainGate()
+// returns the header's type across a TU boundary, and this file would be
+// reading it through a different declaration. Including the owning header makes
+// a divergence a compile error instead of a runtime mystery.
+#include "ide_toolchain_gate.hpp"
 #include "closure/RawrXDAutoClosure.hpp"
 #include "agentic/RawrXDAgenticE2E.hpp"
 #include "deep2/Deep2Engine.h"
 #include "deep2/ReceiptAuthority.h"
+// RAWRXD_IDE_AGENTIC_WIRING_001 — the agentic streaming pipeline. Same five
+// objects the certified gate drives (ide_agentic_gate.cpp:207-263).
+#include "StreamingResultChannel.h"
+#include "streaming_inference_engine.h"
+#include "agentic_model_streamer_bridge.h"
+#include "streaming_command_handler.h"
+#include "BP1BraidStreamer.h"
+#include "deep2/AgentToolRegistry.hpp"
+#include "deep2/AgentToolAuthority.hpp"
 #include "W8LifecycleAuthority.h"
 #include "Win32IDE_MCPHooks.h"
 #include "Win32IDE_ChatPanel.h"
@@ -30,25 +49,24 @@ extern "C" void Win32IDE_Commands_SetEditorWindow(HWND hwnd);
 extern "C" bool Win32IDE_Commands_Route(int commandId);
 extern "C" void Win32IDE_Commands_Register(int id, void (*fn)());
 
+// RAWRXD_IDE_MODEL_OPEN_001: GGUF picker for the chat engine. Declared here
+// rather than through a header because Win32IDE_FileOps.cpp publishes none.
+namespace RawrXD::IDE { std::string FileOps_OpenDialog(HWND parent, const std::string& filter); }
+
+// RAWRXD_IDE_AGENTIC_WIRING_001: Win32IDE_AgentPanel.cpp publishes no header,
+// so these two entry points are declared here. Before this change both had zero
+// callers — the panel window was created and never fed.
+namespace RawrXD::IDE {
+void AgentPanel_SetTask(const std::string& task);
+void AgentPanel_AddStep(const std::string& label);
+}
+
 namespace RawrXD::IDE {
     void ShellLayout_RegisterAll(HINSTANCE hInst);
     void ShellLayout_CreateAll(HWND parent, HINSTANCE hInst);
     void ShellLayout_Resize(int W, int H);
     HWND ShellLayout_GetEditor();
     HWND ShellLayout_GetTerminal();
-}
-
-// Forward declarations for gate modules
-namespace RawrXD::IDE {
-    struct ToolchainResult {
-        bool jitOk      = false;
-        bool coffOk     = false;
-        bool peOk       = false;
-        bool helloRunOk = false;
-        std::string exePath;
-        std::string diagnostics;
-    };
-    ToolchainResult runNativeToolchainGate();
 }
 
 // ---------------------------------------------------------------------------
@@ -142,6 +160,9 @@ static std::atomic<bool> g_chatCancelled{false};
 static HWND g_hMainWnd = nullptr;
 static std::string g_chatModelPath;
 static std::string g_chatEngineStatus = "not-attempted";
+// RAWRXD_IDE_DPI_001: which DPI awareness mode was actually granted, recorded
+// at process start so the receipt states measured state instead of an assumption.
+static std::string g_dpiAwarenessMode;
 
 #define WM_CHAT_TOKEN     (WM_APP + 200)
 #define WM_CHAT_DONE      (WM_APP + 201)
@@ -206,6 +227,20 @@ struct ChatRunTelemetry {
     float       actualTopP        = 0.95f;
     uint32_t    actualTopK        = 40;
     uint64_t    actualSeed        = 0;
+
+    // RAWRXD_IDE_AGENTIC_WIRING_001 — whether this run actually went through the
+    // tool-capable pipeline, and what the Tool Authority actually did. Every
+    // value is read from AgenticModelStreamerBridge::BridgeCounters or from the
+    // braid's return state, so the receipt cannot assert tool execution that
+    // never happened.
+    bool        agenticWired        = false;
+    std::string agenticError;
+    uint64_t    toolRequestsSeen    = 0;
+    uint64_t    toolRequestsParsed  = 0;
+    uint64_t    toolExecutions      = 0;
+    uint64_t    toolResultsProduced = 0;
+    uint64_t    toolResultsInjected = 0;
+    uint64_t    toolContinuations   = 0;
 };
 
 static ChatRunTelemetry g_chatTelemetry;
@@ -284,9 +319,16 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
 
     std::string r;
     r += "=== RAWRXD_IDE_CHAT_E2E_001 ===\r\n";
-    r += "CHAT_PANEL=PASS\r\n";
-    r += "SEND_DISPATCH=PASS\r\n";
-    r += "DEEP2_ENGINE=PASS\r\n";
+    // Stage verdicts are derived from measured state, never asserted. A receipt
+    // that reports PASS for a stage that did not run is a false PASS. See the
+    // RawrReceipt rule: a missing field is reported missing, never defaulted.
+    //   CHAT_PANEL     - streamedText was read back from the panel store
+    //                    (WndProc WM_CHAT_DONE reads ChatPanel_GetMessage).
+    //   SEND_DISPATCH  - the send path produced engine tokens.
+    //   DEEP2_ENGINE   - generation completed and was not cancelled.
+    r += std::string("CHAT_PANEL=")     + (tel.streamedText.empty() ? "FAIL" : "PASS") + "\r\n";
+    r += std::string("SEND_DISPATCH=")  + (tel.tokenCount > 0 ? "PASS" : "FAIL") + "\r\n";
+    r += std::string("DEEP2_ENGINE=")   + ((tel.completed && !tel.cancelled) ? "PASS" : "FAIL") + "\r\n";
     r += std::string("MODEL_PATH=") + tel.modelPath + "\r\n";
     r += std::string("PROMPT=") + tel.prompt + "\r\n";
     r += std::string("PROMPT_TOKEN_COUNT=") + std::to_string(tel.promptTokens) + "\r\n";
@@ -295,7 +337,7 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
     r += std::string("TOP_K=") + std::to_string(tel.actualTopK) + "\r\n";
     r += std::string("GREEDY=") + (g_startupOptions.chatGreedy ? "1" : "0") + "\r\n";
     r += std::string("SEED=") + std::to_string(g_startupOptions.chatSeed) + "\r\n";
-    r += "STREAMING_CALLBACK=PASS\r\n";
+    r += std::string("STREAMING_CALLBACK=") + ((tel.tokenCount > 0 && tel.genTimeMs > 0.0) ? "PASS" : "FAIL") + "\r\n";
     r += std::string("STREAMED_TOKEN_COUNT=") + std::to_string(tel.tokenCount) + "\r\n";
     r += std::string("RENDERED_CHAR_COUNT=") + std::to_string(tel.streamedText.size()) + "\r\n";
     r += std::string("GENERATION_TIME_MS=") + std::to_string((long long)tel.genTimeMs) + "\r\n";
@@ -304,8 +346,34 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
     r += std::string("FAILURE_DETAIL=") + tel.failureDetail + "\r\n";
     r += std::string("CANCELLED=") + (tel.cancelled ? "1" : "0") + "\r\n";
     r += std::string("COMPLETED=") + (tel.completed ? "1" : "0") + "\r\n";
+    // RAWRXD_IDE_AGENTIC_WIRING_001 — tool-loop provenance, measured.
+    //
+    // These previously did not exist, so the receipt could not distinguish a
+    // tool-capable run from a plain text completion. Every value comes from
+    // AgenticModelStreamerBridge::BridgeCounters, which only advances when the
+    // model actually emitted a request and the Tool Authority actually ran.
+    r += std::string("AGENTIC_PIPELINE=") + (tel.agenticWired ? "1" : "0") + "\r\n";
+    r += std::string("AGENTIC_PIPELINE_ERROR=") + tel.agenticError + "\r\n";
+    r += "DEGRADED_STREAMING_FALLBACK=" + std::string(tel.agenticWired ? "0" : "1") + "\r\n";
+    r += "TOOL_REQUESTS_SEEN=" + std::to_string(tel.toolRequestsSeen) + "\r\n";
+    r += "TOOL_REQUESTS_PARSED=" + std::to_string(tel.toolRequestsParsed) + "\r\n";
+    r += "TOOL_EXECUTIONS=" + std::to_string(tel.toolExecutions) + "\r\n";
+    r += "TOOL_RESULTS_PRODUCED=" + std::to_string(tel.toolResultsProduced) + "\r\n";
+    r += "TOOL_RESULTS_INJECTED=" + std::to_string(tel.toolResultsInjected) + "\r\n";
+    r += "TOOL_CONTINUATIONS=" + std::to_string(tel.toolContinuations) + "\r\n";
+
+    // SYNTHETIC_TOKEN_OUTPUT is now 0 by construction rather than by assertion:
+    // the only two token sources in this path are Deep2Engine's own callback and
+    // StreamingInferenceEngine::publishToken. The fabricated echo that used to
+    // type "[Agent] Invoking Deep2 engine..." character by character
+    // (Win32IDE_AgenticBridge.cpp) has been removed.
     r += "SYNTHETIC_TOKEN_OUTPUT=0\r\n";
+    // No stub lane is substituted on either path. The degraded path still runs
+    // real engine inference; it only skips tools, and that is recorded above as
+    // DEGRADED_STREAMING_FALLBACK=1 rather than hidden here.
     r += "STUB_FALLBACKS=0\r\n";
+    // This lane never talks to Ollama: it constructs Deep2::Deep2Engine directly
+    // in initChatEngine. Asserted by construction, not measured at runtime.
     r += "OLLAMA_USED=0\r\n";
     r += "=== STREAMED_TEXT_BEGIN ===\r\n";
     r += tel.streamedText;
@@ -318,7 +386,82 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
     CloseHandle(hFile);
 }
 
-// Worker thread: runs Deep2Engine::generateStream with token callback
+// ── RAWRXD_IDE_AGENTIC_WIRING_001: the IDE's tool surface ─────────────────────
+//
+// The chat panel had no tool registry at all, so a message typed in the GUI
+// could never cause a tool to run. This is the minimum honest surface: read a
+// file. It matches AgentToolRegistry::Handler exactly
+// (AgentToolRegistry.hpp:117) and is registered only when the Tool Authority is
+// bound, so the GUI cannot become a bypass path.
+static RawrXD::Agentic::ToolResult ideToolReadFile(
+    const RawrXD::Agentic::ToolRequest& req,
+    RawrXD::Agentic::ToolContext& ctx)
+{
+    RawrXD::Agentic::ToolResult res;
+    if (ctx.cancelled && ctx.cancelled()) {
+        res.exit_code = 130;
+        res.stderr_text = "cancelled";
+        return res;
+    }
+
+    std::string path;
+    if (!req.args.empty()) {
+        path = req.args[0];
+    } else if (!req.stdin_text.empty()) {
+        // Pull "path" out of the raw tool payload without a JSON dependency.
+        // Deliberately narrow: an unparsed payload yields an empty path and the
+        // tool fails closed rather than guessing a filename.
+        const std::string key = "\"path\"";
+        const size_t k = req.stdin_text.find(key);
+        if (k != std::string::npos) {
+            size_t p = req.stdin_text.find(':', k + key.size());
+            if (p != std::string::npos) {
+                ++p;
+                while (p < req.stdin_text.size() &&
+                       (req.stdin_text[p] == ' ' || req.stdin_text[p] == '\t')) ++p;
+                if (p < req.stdin_text.size() && req.stdin_text[p] == '"') {
+                    ++p;
+                    const size_t end = req.stdin_text.find('"', p);
+                    if (end != std::string::npos) path = req.stdin_text.substr(p, end - p);
+                }
+            }
+        }
+    }
+
+    if (path.empty()) {
+        res.exit_code = 1;
+        res.stderr_text = "read_file: missing path argument";
+        return res;
+    }
+
+    std::ifstream f(path, std::ios::binary);
+    if (!f) {
+        res.exit_code = 1;
+        res.stderr_text = "cannot open file: " + path;
+        return res;
+    }
+    std::ostringstream oss;
+    oss << f.rdbuf();
+    res.stdout_text = oss.str();
+    return res;
+}
+
+// Worker thread: drives the agentic streaming pipeline for one prompt.
+// RAWRXD_IDE_AGENTIC_WIRING_001 — previously this called
+// Deep2Engine::generateStream directly, which streams text but has no tool
+// channel, so no chat message could ever execute a tool.
+//
+//   StreamingInferenceEngine -> StreamingResultChannel
+//        -> AgenticModelStreamerBridge (pump thread: parses tool requests)
+//             -> AgentToolAuthority (executes)
+//             -> ToolResult written back into the same channel
+//   orchestrated by BP1BraidStreamer, which OWNS the channel and wires it into
+//   the engine, bridge and handler inside openChannel()
+//   (src/runtime/shared/BP1BraidStreamer.cpp:56-60).
+//
+// The UI must not drain that channel: draining removes events and the bridge
+// pump needs them to parse tool calls. It SUBSCRIBES instead
+// (RAWRXD_STREAM_MULTICAST_001), observing every event without consuming any.
 static void chatWorkerThread(std::string prompt) {
     if (!g_chatEngine || !g_chatEngine->isInitialized()) {
         if (g_hMainWnd) PostMessageA(g_hMainWnd, WM_CHAT_DONE, 0, 0);
@@ -359,54 +502,236 @@ static void chatWorkerThread(std::string prompt) {
     g_chatProgress.active.store(true);
     writeChatProgressFile();
 
-    uint64_t seen = 0;
-    auto callback = [](int32_t tokenId, const std::string& token) -> bool {
-        (void)tokenId;
-        // Marshal to the UI thread; never touch panel state from here.
-        onChatToken(token);
+    // RAWRXD_IDE_AGENTIC_WIRING_001 — drive the agentic pipeline.
+    //
+    // If the pipeline cannot be constructed the run degrades to the previous
+    // direct-generateStream path so the user still gets text, but the
+    // degradation is RECORDED (AGENTIC_PIPELINE=0 + AGENTIC_PIPELINE_ERROR) so
+    // a receipt can never claim a tool-capable run that did not happen.
+    bool        agenticWired   = false;
+    std::string agenticError;
+    std::string streamed;
+    uint64_t    tokenCount = 0, promptToks = 0;
+    bool        cancelled = false;
+    double      genMs = 0.0;
+    uint64_t toolRequestsSeen = 0, toolRequestsParsed = 0, toolExecutions = 0,
+             toolResultsProduced = 0, toolResultsInjected = 0, toolContinuations = 0;
+    // RAWRXD_IDE_DEGRADED_PATH_001: the non-agentic path still has a real
+    // GenerationResult with its own completed/failureDetail. Those are captured
+    // here so the receipt below can report the degraded run's own outcome
+    // instead of inferring one from token count alone.
+    std::string degradedFailureDetail;
+    bool        degradedCompleted = false;
 
-        const uint64_t n = ++g_chatProgress.tokens;
-        const uint64_t t = nowMs();
-        if (g_chatProgress.firstTokenAtMs.load() == 0) {
-            g_chatProgress.firstTokenAtMs.store(t);
-        }
-        g_chatProgress.lastTokenAtMs.store(t);
-        if (g_chatProgress.cancelRequested.load()) {
-            g_chatProgress.active.store(false);
-            writeChatProgressFile();
-            return false;  // stop the engine's decode loop
-        }
-        // Checkpoint periodically; per-token file writes would distort timing.
-        if ((n % 8) == 0) writeChatProgressFile();
-        return true;
-    };
+    try {
+        // RAWRXD_IDE_TOOL_AUTHORITY_LIFETIME_001
+        //
+        // This registry was block-scoped, which is a real hazard and not a
+        // style preference. BindAgentToolAuthority stores a RAW POINTER to a
+        // process-wide authority (tools/b3_continuation_test.cpp:45-48 says so
+        // explicitly: "binding a block-scoped registry leaves the process-wide
+        // authority dangling"). Every chat message would have destroyed the
+        // registry and left the global authority pointing at freed memory, so
+        // the next tool invocation would read freed state.
+        //
+        // It is function-static instead: one registry for the process lifetime,
+        // outliving every binder, and therefore every bind target.
+        static RawrXD::Agentic::AgentToolRegistry registry;
 
-    Deep2::GenerationResult result = g_chatEngine->generateStream(prompt, opts, callback);
+        RawrXD::Agentic::BindAgentToolAuthority(registry);
+        {
+            RawrXD::Agentic::ToolDescriptor d;
+            d.id          = "read_file";
+            d.aliases     = {"cat", "open"};
+            d.description = "Read the contents of a file";
+            // registerTool throws std::invalid_argument on a duplicate id, and
+            // the registry is now process-lived, so it is registered once. The
+            // try/catch around this block would otherwise convert a second chat
+            // message into a permanent AGENTIC_PIPELINE_ERROR.
+            static bool registered = false;
+            if (!registered) {
+                registry.registerTool(std::move(d), ideToolReadFile);
+                registered = true;
+            }
+        }
+
+        RawrXD::Inference::StreamingInferenceEngine sEngine;
+        sEngine.setEngine(g_chatEngine.get());
+
+        RawrXD::Agentic::StreamingCommandHandler handler;
+        handler.setToolRegistry(&registry);
+
+        RawrXD::Agentic::AgenticModelStreamerBridge bridge;
+        bridge.setToolRegistry(&registry);
+        bridge.clearAccumulatedText();
+
+        RawrXD::Runtime::BP1BraidStreamer braid;
+        braid.setInferenceEngine(&sEngine);
+        braid.setBridge(&bridge);
+        braid.setCommandHandler(&handler);
+
+        if (braid.openChannel()) {
+            RawrXD::StreamingResultChannel* ch = braid.channel();
+            if (ch) {
+                // Subscribe AFTER openChannel (the channel does not exist before)
+                // and unsubscribe BEFORE closeChannel.
+                const uint64_t sub = ch->subscribe(
+                    [](const RawrXD::StreamEvent& ev) {
+                        switch (ev.type) {
+                        case RawrXD::StreamEventType::Token:
+                        case RawrXD::StreamEventType::TextDelta: {
+                            // Marshal to the UI thread; never touch panel state here.
+                            onChatToken(ev.text);
+                            const uint64_t n = ++g_chatProgress.tokens;
+                            const uint64_t t = nowMs();
+                            if (g_chatProgress.firstTokenAtMs.load() == 0)
+                                g_chatProgress.firstTokenAtMs.store(t);
+                            g_chatProgress.lastTokenAtMs.store(t);
+                            if (g_chatProgress.cancelRequested.load()) {
+                                g_chatProgress.active.store(false);
+                                writeChatProgressFile();
+                            } else if ((n % 8) == 0) {
+                                writeChatProgressFile();
+                            }
+                            break;
+                        }
+                        case RawrXD::StreamEventType::ToolRequest:
+                            RawrXD::IDE::AgentPanel_SetTask("tool request: " + ev.text);
+                            RawrXD::IDE::AgentPanel_AddStep("dispatching tool");
+                            break;
+                        case RawrXD::StreamEventType::ToolResult:
+                            RawrXD::IDE::AgentPanel_AddStep("tool result returned");
+                            RawrXD::IDE::ChatPanel_AddMessage(RawrXD::IDE::MsgRole::Tool, ev.text);
+                            break;
+                        case RawrXD::StreamEventType::Cancelled:
+                            g_chatCancelled = true;
+                            break;
+                        default:
+                            break;
+                        }
+                    });
+
+                // StreamingInferenceOptions (streaming_inference_engine.h:17-22)
+                // exposes maxTokens/temperature/topP/enableStreaming and NO topK.
+                // Only fields that actually exist are set.
+                RawrXD::Inference::StreamingInferenceOptions sOpts;
+                sOpts.maxTokens       = static_cast<size_t>(opts.maxTokens);
+                sOpts.temperature     = opts.temperature;
+                sOpts.topP            = opts.topP;
+                sOpts.enableStreaming = true;
+
+                promptToks = g_chatEngine->tokenize(prompt).size();
+
+                const uint64_t t0 = nowMs();
+                braid.startGeneration(prompt, sOpts);
+                braid.pumpUntilDone();
+                genMs = static_cast<double>(nowMs() - t0);
+
+                ch->unsubscribe(sub);
+                braid.closeChannel();
+
+                const auto sc = sEngine.counters();
+                const auto bc = bridge.counters();
+                tokenCount           = sc.realTokenCount;
+                toolRequestsSeen     = bc.toolRequestsSeen;
+                toolRequestsParsed   = bc.toolRequestsParsed;
+                toolExecutions       = bc.toolExecutions;
+                toolResultsProduced  = bc.toolResultsProduced;
+                toolResultsInjected  = bc.toolResultsInjected;
+                toolContinuations    = bc.continuationsStarted;
+                streamed             = bridge.accumulatedText();
+                cancelled            = g_chatCancelled.load() || sc.cancelObserved > 0;
+                agenticWired = true;
+            }
+        }
+        if (!agenticWired) agenticError = "pipeline did not open a channel";
+    } catch (const std::exception& e) {
+        agenticError = e.what();
+    } catch (...) {
+        agenticError = "unknown exception constructing the agentic pipeline";
+    }
+
+    if (!agenticWired) {
+        // Degraded path: plain streaming, no tools. Visible in the receipt.
+        auto callback = [](int32_t tokenId, const std::string& token) -> bool {
+            (void)tokenId;
+            onChatToken(token);
+            const uint64_t n = ++g_chatProgress.tokens;
+            const uint64_t t = nowMs();
+            if (g_chatProgress.firstTokenAtMs.load() == 0)
+                g_chatProgress.firstTokenAtMs.store(t);
+            g_chatProgress.lastTokenAtMs.store(t);
+            if (g_chatProgress.cancelRequested.load()) {
+                g_chatProgress.active.store(false);
+                writeChatProgressFile();
+                return false;
+            }
+            if ((n % 8) == 0) writeChatProgressFile();
+            return true;
+        };
+        const Deep2::GenerationResult result =
+            g_chatEngine->generateStream(prompt, opts, callback);
+        tokenCount  = result.generatedTokens;
+        promptToks  = result.promptTokens;
+        genMs       = result.generationTimeMs;
+        cancelled   = result.cancelled;
+        // The degraded path's own failure reason must reach the receipt. It was
+        // previously dropped on the floor: `agenticError` is only set when the
+        // pipeline failed, so an engine-level ForwardFailure in this path was
+        // reported with an empty failureDetail.
+        degradedFailureDetail = result.failureDetail;
+        degradedCompleted     = result.completed;
+        streamed    = tel.streamedText;   // filled on the UI thread from the panel
+    }
 
     g_chatProgress.active.store(false);
     g_chatProgress.cancelRequested.store(g_chatCancelled.load());
 
-    tel.promptTokens = result.promptTokens;
-    tel.tokenCount   = result.generatedTokens;
-    tel.genTimeMs    = result.generationTimeMs;
-    tel.statusCode   = (int)result.status;
-    tel.statusName   = generationStatusName(result.status);
-    tel.failureDetail= result.failureDetail;
-    tel.cancelled    = result.cancelled;
-    tel.completed    = result.completed;
+    tel.promptTokens = promptToks;
+    tel.tokenCount   = tokenCount;
+    tel.genTimeMs    = genMs;
+    tel.statusCode   = cancelled ? 1 : 0;
+    tel.statusName   = cancelled ? "Cancelled"
+                     : (tokenCount > 0 ? "Completed" : "NoTokensProduced");
+    // RAWRXD_IDE_DEGRADED_PATH_001: prefer the real engine diagnostic when the
+    // degraded path produced one. agenticError remains correct for the agentic
+    // path (there is no GenerationResult to take it from), so agenticWired
+    // selects which source is authoritative rather than guessing.
+    tel.failureDetail= agenticWired ? agenticError : degradedFailureDetail;
+    tel.cancelled    = cancelled;
+    tel.completed    = agenticWired ? (!cancelled && tokenCount > 0)
+                                    : degradedCompleted;
     tel.actualTemperature = opts.temperature;
     tel.actualTopP        = opts.topP;
     tel.actualTopK        = opts.topK;
     tel.actualSeed        = opts.seed;
+    tel.agenticWired      = agenticWired;
+    tel.agenticError      = agenticError;
+    tel.toolRequestsSeen  = toolRequestsSeen;
+    tel.toolRequestsParsed= toolRequestsParsed;
+    tel.toolExecutions    = toolExecutions;
+    tel.toolResultsProduced = toolResultsProduced;
+    tel.toolResultsInjected = toolResultsInjected;
+    tel.toolContinuations = toolContinuations;
+    tel.streamedText      = streamed;
 
     g_chatTelemetry = tel;
 
     // Fail closed: a failed generation is reported, never papered over with a
     // synthetic completion. The error rides the same UI-thread queue so it
     // lands after the tokens it explains.
-    if (!result.completed && !result.cancelled) {
+    //
+    // RAWRXD_IDE_AGENTIC_WIRING_001: this used to read `result.completed` /
+    // `result.cancelled` / `result.failureDetail`, but `result` is a
+    // Deep2::GenerationResult declared INSIDE the `if (!agenticWired)` block
+    // and does not exist on the agentic path at all -- so the file did not
+    // compile. The completion state is now taken from `tel`, which both paths
+    // populate above (:664 cancelled, :665 completed, :663 failureDetail),
+    // so the check is path-independent and there is no backward reach for a
+    // variable whose lifetime ends at :652.
+    if (!tel.completed && !tel.cancelled) {
         std::string reason = "[Generation failed: stage=" + tel.statusName;
-        if (!result.failureDetail.empty()) reason += " / " + result.failureDetail;
+        if (!tel.failureDetail.empty()) reason += " / " + tel.failureDetail;
         reason += "]";
         ChatTokenData* data = new ChatTokenData();
         data->token = reason;
@@ -543,9 +868,23 @@ static void handleChatSend(const std::string& prompt) {
     g_chatThread = std::thread(chatWorkerThread, prompt);
 }
 
-// Wire ChatPanel send callback to Deep2Engine
+// RAWRXD_IDE_STOP_001: handler for the chat panel's Stop button.
+//
+// Sets the panel-visible flag AND the engine's own cooperative cancel
+// (Deep2Engine.h requestCancel, checked each decode step). The stream therefore
+// unwinds through the normal path: chatWorkerThread returns, WM_CHAT_DONE is
+// posted, and writeChatE2EReceipt records CANCELLED=1 / COMPLETED=0. Nothing is
+// abandoned mid-flight, so a cancelled run is still auditable.
+static void cancelChat() {
+    g_chatCancelled = true;
+    g_chatProgress.cancelRequested.store(true);
+    if (g_chatEngine) g_chatEngine->requestCancel();
+}
+
+// Wire ChatPanel send + cancel callbacks to Deep2Engine
 static void wireChatToDeep2() {
     RawrXD::IDE::ChatPanel_SetSendCallback(handleChatSend);
+    RawrXD::IDE::ChatPanel_SetCancelCallback(cancelChat);
 }
 
 #define WM_AUTORUN          (WM_APP + 100)
@@ -634,6 +973,10 @@ static HWND g_hOutput  = NULL;
 #define IDM_FILE_SAVEAS     1004
 #define IDM_FILE_SAVEALL    1005
 #define IDM_FILE_CLOSE      1006
+// RAWRXD_IDE_SETTINGS_WIRING_001: must match IDM_FILE_SETTINGS in
+// Win32IDE_Commands.cpp, which owns the handler. The two files each declare
+// the ID space independently, so both have to carry the new entries.
+#define IDM_FILE_SETTINGS   1007
 #define IDM_FILE_EXIT       1099
 #define IDM_BUILD_NATIVE    2001
 #define IDM_EDIT_UNDO       2101
@@ -644,8 +987,11 @@ static HWND g_hOutput  = NULL;
 #define IDM_EDIT_SELECT_ALL 2106
 #define IDM_EDIT_FIND       2107
 #define IDM_EDIT_REPLACE    2108
+#define IDM_EDIT_FINDNEXT   2109
+#define IDM_EDIT_REPLACEALL 2110
 #define IDM_MODEL_LOCAL     3001
 #define IDM_MODEL_DIAG      3002
+#define IDM_MODEL_OPEN      3003
 #define IDM_AGENTIC_GATE    4001
 #define IDM_AGENTIC_E2E_GATE 4002
 #define IDM_VIEW_SIDEBAR    5001
@@ -729,6 +1075,12 @@ static void runDiagnosticGate()
     appendOutputLine("IDE_LAUNCH=PASS");
 
     RawrXD::IDE::DiagnosticGateResult r = RawrXD::IDE::runDiagnosticGate();
+
+    // RAWRXD_MODEL_ADMISSION_ACTIVE_MODEL_001: the tested path was never
+    // reported, so a PASS could not be attributed to any model. This gate can
+    // now also run against the active model via RAWRXD_AGENT_MODEL, which makes
+    // naming it mandatory rather than cosmetic.
+    appendOutputLine(std::string("MODEL_PATH=") + r.modelPath);
 
     appendOutputLine("COMMAND_DISPATCH=PASS");
     appendOutputLine(std::string("MODEL_FOUND=") + (r.modelFound ? "PASS" : "FAIL"));
@@ -822,8 +1174,15 @@ static void runInferenceGate()
     appendOutputLine(std::string("LOGITS_FINITE=") + (r.logitsFinite ? "PASS" : "FAIL"));
     appendOutputLine(std::string("GENERATED_TOKEN_COUNT=") + std::to_string(r.generatedTokens));
     appendOutputLine(std::string("GENERATED_TOKEN_ID=") + std::to_string(r.generatedToken));
-    appendOutputLine("SYNTHETIC_TOKEN_OUTPUT=0");
-    appendOutputLine("STUB_FALLBACKS=0");
+    // RAWRXD_IDE_GATE_HONESTY_001: these were unconditional string literals, so
+    // the gate reported them identically whether or not the thing they claim
+    // was true. Now they are consistency checks over r:
+    //   tokens appeared while the forward pass is not ok => the tokens cannot
+    //   have come from a real forward pass.
+    appendOutputLine(std::string("SYNTHETIC_TOKEN_OUTPUT=") +
+                     ((r.generatedTokens > 0 && !r.forwardPassOk) ? "1" : "0"));
+    appendOutputLine(std::string("STUB_FALLBACKS=") +
+                     ((r.modelLoaded && r.weightsLoaded && r.tokenizerReady) ? "0" : "1"));
     if (!r.failStage.empty()) {
         appendOutputLine(std::string("FAIL_STAGE=") + r.failStage);
         appendOutputLine(std::string("FAIL_CODE=") + std::to_string(r.failCode));
@@ -1042,8 +1401,14 @@ static void runAgenticGate()
     appendOutputLine(std::string("TOOL_RESULT_REINJECTED=") + (r.toolResultInjected ? "PASS" : "FAIL"));
     appendOutputLine(std::string("MODEL_CONTINUATION=") + (r.continuationStarted ? "PASS" : "FAIL"));
     appendOutputLine(std::string("POST_TOOL_TOKENS=") + std::to_string(r.postToolTokenCount));
-    appendOutputLine("SYNTHETIC_TOOL_REQUEST=0");
-    appendOutputLine("STUB_FALLBACKS=0");
+    // RAWRXD_IDE_GATE_HONESTY_001: derived from r rather than asserted. A tool
+    // request can only have come from the model if one was seen AND parsed;
+    // a "synthetic" request is therefore exactly the case where the parse
+    // failed while something was still treated as a request.
+    appendOutputLine(std::string("SYNTHETIC_TOOL_REQUEST=") +
+                     ((r.toolRequestSeen && !r.toolRequestParsed) ? "1" : "0"));
+    appendOutputLine(std::string("STUB_FALLBACKS=") +
+                     ((r.toolRequestSeen && r.toolExecuted) ? "0" : "1"));
     if (!r.failStage.empty()) {
         appendOutputLine(std::string("FAIL_STAGE=") + r.failStage);
         appendOutputLine(std::string("FAIL_CODE=") + std::to_string(r.failCode));
@@ -1208,6 +1573,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDM_BUILD_NATIVE:
             runToolchainGate();
             break;
+        case IDM_MODEL_OPEN:
+        {
+            // RAWRXD_IDE_MODEL_OPEN_001: a model could previously only be loaded
+            // from the --model command-line flag during WM_CREATE. "Model >
+            // Local Inference Test" runs a certification gate, it does not pick
+            // a file, so there was no way to choose a model from the GUI.
+            const std::string picked = RawrXD::IDE::FileOps_OpenDialog(
+                hWnd, "GGUF Models\0*.gguf\0All Files\0*.*\0");
+            if (picked.empty()) break;  // user cancelled the picker
+
+            // Never swap the engine out from under a running generation.
+            if (g_chatThread.joinable()) {
+                g_chatCancelled = true;
+                g_chatProgress.cancelRequested.store(true);
+                g_chatThread.join();
+            }
+
+            if (initChatEngine(picked)) {
+                appendOutputLine("Model opened: " + g_chatModelPath + "\r\n");
+            } else {
+                appendOutputLine("Model open FAILED: " + g_chatEngineStatus + "\r\n");
+            }
+            // Status is written unconditionally so a failure is visible even
+            // though the chat panel has no model state to show before a send.
+            writeChatEngineStatus(picked);
+            break;
+        }
         case IDM_MODEL_LOCAL:
             runInferenceGate();
             break;
@@ -1395,9 +1787,19 @@ static int runGpuCorrectnessGate()
                 engine.setVulkanStrictNoCpuFallback(true);
             }
 
-            // Check if Vulkan actually initialized
-            // The engine's Vulkan init status is checked via the model load + forward pass
-            vulkanInit = "PASS";  // If enableVulkan didn't crash, init succeeded
+            // Measure Vulkan init instead of asserting it. This used to read:
+            //     vulkanInit = "PASS";  // If enableVulkan didn't crash, init succeeded
+            // which certified PASS on the absence of a crash and then fed that
+            // string straight into the verdict. Deep2Engine exposes the real
+            // state (Deep2Engine.h:630 isVulkanInitialized, :633 vulkanDeviceCount,
+            // :638 vulkanUnplannedFallbacks, :741 vulkanStrictViolation) so measure it.
+            deviceCount = (int)engine.vulkanDeviceCount();
+            vulkanInit = engine.isVulkanInitialized() ? "PASS" : "FAIL";
+            strictGpuViolations = engine.vulkanStrictViolation() ? 1 : 0;
+            unplannedFallbacks  = (int)engine.vulkanUnplannedFallbacks();
+            // selectedDevice stays "N/A" unless a verified accessor exists. It was
+            // previously left at its initial value, so inventing a device name here
+            // would have been a second unmeasured field in the same receipt.
 
             // Load model
             Deep2::ModelLoadDiag diag{};
@@ -1410,7 +1812,11 @@ static int runGpuCorrectnessGate()
 
                 // Generate one token via GPU forward pass
                 if (g_startupOptions.gpuForward) {
-                    gpuForwardReached = 1;  // If we get here, forward was requested
+                // gpuForwardReached used to be set to 1 by the mere act of
+                // reaching this line ("If we get here, forward was requested"),
+                // which made it a tautology rather than evidence. It is now
+                // only set from the observed result of generateStream below.
+                gpuForwardReached = 0;
 
                     Deep2::GenerationOptions opts;
                     opts.maxTokens = 1;
@@ -1437,15 +1843,19 @@ static int runGpuCorrectnessGate()
 
                     if (result.completed) {
                         std::fprintf(stderr, "GPU_GATE: result.completed=true\n"); std::fflush(stderr);
+                        // gpuForwardReached is set here, from the OBSERVED outcome of
+                        // generateStream, rather than from having reached the call.
+                        gpuForwardReached = 1;
                         generatedTokenCount = static_cast<int>(result.generatedTokens);
                         generationStatus = "Completed";
                         std::fprintf(stderr, "GPU_GATE: generationStatus=Completed tokenCount=%d\n", generatedTokenCount); std::fflush(stderr);
-                        // Check if fallback occurred
                         if (g_startupOptions.gpuNoFallback) {
-                            // In strict mode, any CPU fallback is a violation
-                            // The engine doesn't expose fallback count directly,
-                            // but if generation succeeded with Vulkan on, we check
-                            // the result status
+                            // The engine does expose fallback accounting, so use it
+                            // rather than inferring from a successful status:
+                            // vulkanUnplannedFallbacks() and vulkanStrictViolation()
+                            // (Deep2Engine.h:638, :741). These were read into
+                            // strictGpuViolations/unplannedFallbacks at init and are
+                            // enforced in the verdict blocks below.
                         }
                     } else {
                         generationStatus = "GenerationFailed";
@@ -1455,9 +1865,18 @@ static int runGpuCorrectnessGate()
                     }
 
                     // Write receipt NOW, before engine destructor runs (which crashes)
+                    //
+                    // RAWRXD_GPU_GATE_MEASURED_001: this verdict block was a
+                    // near-duplicate of the one further down and carried the same
+                    // `deviceCount = 1` fabrication. Two copies of gate logic can
+                    // drift, so both are corrected here; consolidating them into
+                    // one helper is the structural follow-up, not something to do
+                    // blind inside an uncompiled file.
                     bool pass = true;
                     if (vulkanInit != "PASS") pass = false;
-                    if (deviceCount == 0 && vulkanInit == "PASS") deviceCount = 1;
+                    if (deviceCount <= 0) pass = false;
+                    if (strictGpuViolations > 0) pass = false;
+                    if (unplannedFallbacks > 0) pass = false;
                     if (modelLoad != "PASS") pass = false;
                     if (g_startupOptions.gpuForward && gpuForwardReached == 0) pass = false;
                     if (g_startupOptions.gpuForward && gpuDispatchCount == 0) pass = false;
@@ -1522,11 +1941,20 @@ static int runGpuCorrectnessGate()
     // Determine verdict
     std::fprintf(stderr, "GPU_GATE: computing verdict\n"); std::fflush(stderr);
     bool pass = true;
+    // A zero device count is a FAILURE, not a value to paper over. This used to
+    // read:
+    //     if (deviceCount == 0 && vulkanInit == "PASS") {
+    //         // deviceCount not directly available; if vulkanInit passed, assume 1
+    //         deviceCount = 1;
+    //     }
+    // which invented a GPU on any machine that had none -- headless CI, missing
+    // driver, no adapter -- and reported a passing GPU gate. deviceCount is now
+    // measured from engine.vulkanDeviceCount(); if it is zero there is no device
+    // and the gate must say so.
     if (vulkanInit != "PASS") pass = false;
-    if (deviceCount == 0 && vulkanInit == "PASS") {
-        // deviceCount not directly available; if vulkanInit passed, assume 1
-        deviceCount = 1;
-    }
+    if (deviceCount <= 0) pass = false;
+    if (strictGpuViolations > 0) pass = false;
+    if (unplannedFallbacks > 0) pass = false;
     if (modelLoad != "PASS") pass = false;
     if (g_startupOptions.gpuForward && gpuForwardReached == 0) pass = false;
     if (g_startupOptions.gpuForward && gpuDispatchCount == 0) pass = false;
@@ -1598,6 +2026,34 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     });
 
     (void)hPrevInstance;
+
+    // RAWRXD_IDE_DPI_001 — DPI awareness was never declared anywhere in
+    // src/win32app: SetProcessDpiAwareness, SetProcessDPIAware and WM_DPICHANGED
+    // had zero occurrences, so Windows bitmap-stretched the entire IDE on any
+    // scaled display and no panel laid out at physical pixels. This must run
+    // before the first window is created, so it goes ahead of everything.
+    {
+        using SetCtxFn = BOOL (WINAPI *)(HANDLE);
+        HMODULE user32 = GetModuleHandleW(L"user32.dll");
+        if (user32) {
+            auto setCtx = reinterpret_cast<SetCtxFn>(
+                GetProcAddress(user32, "SetProcessDpiAwarenessContext"));
+            if (setCtx) {
+                // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 == (HANDLE)-4.
+                // Spelled numerically so this does not require an SDK new
+                // enough to declare the enumerator.
+                if (setCtx(reinterpret_cast<HANDLE>(static_cast<INT_PTR>(-4)))) {
+                    g_dpiAwarenessMode = "per-monitor-v2";
+                }
+            }
+        }
+        if (g_dpiAwarenessMode.empty() && SetProcessDPIAware()) {
+            g_dpiAwarenessMode = "system";
+        }
+        if (g_dpiAwarenessMode.empty()) {
+            g_dpiAwarenessMode = "unaware";
+        }
+    }
 
     // W8 certification: record process start tick for actual-duration measurement
     const ULONGLONG g_certStartTick = GetTickCount64();
@@ -1771,6 +2227,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     AppendMenuA(hFile, MF_STRING, IDM_FILE_SAVEAS,  "Save &As...\tCtrl+Shift+S");
     AppendMenuA(hFile, MF_STRING, IDM_FILE_SAVEALL,"Save A&ll");
     AppendMenuA(hFile, MF_STRING, IDM_FILE_CLOSE,   "&Close\tCtrl+W");
+    // RAWRXD_IDE_SETTINGS_WIRING_001: SettingsGUI_Show had no menu entry and no
+    // caller, so the whole settings dialog was unreachable.
+    AppendMenuA(hFile, MF_STRING, IDM_FILE_SETTINGS,"Se&ttings...");
     AppendMenuA(hFile, MF_SEPARATOR, 0, nullptr);
     AppendMenuA(hFile, MF_STRING, IDM_FILE_EXIT,    "E&xit");
     AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hFile, "&File");
@@ -1785,7 +2244,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     AppendMenuA(hEdit, MF_STRING, IDM_EDIT_SELECT_ALL, "Select &All\tCtrl+A");
     AppendMenuA(hEdit, MF_SEPARATOR, 0, nullptr);
     AppendMenuA(hEdit, MF_STRING, IDM_EDIT_FIND,       "&Find...\tCtrl+F");
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_FINDNEXT,   "Find &Next\tF3");
     AppendMenuA(hEdit, MF_STRING, IDM_EDIT_REPLACE,    "&Replace...\tCtrl+H");
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_REPLACEALL, "Replace &All\tCtrl+Alt+H");
     AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hEdit, "&Edit");
 
     HMENU hBuild = CreatePopupMenu();
@@ -1793,6 +2254,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hBuild, "&Build");
 
     HMENU hModel = CreatePopupMenu();
+    AppendMenuA(hModel, MF_STRING, IDM_MODEL_OPEN,    "&Open Model...\tCtrl+Shift+M");
+    AppendMenuA(hModel, MF_SEPARATOR, 0, nullptr);
     AppendMenuA(hModel, MF_STRING, IDM_MODEL_LOCAL, "&Local Inference Test\tF6");
     AppendMenuA(hModel, MF_STRING, IDM_MODEL_DIAG,  "&Model Admission Diag\tF7");
     AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hModel, "&Model");
@@ -1810,6 +2273,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // Accelerator table for Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Shift+S, Ctrl+W, Ctrl+Z, Ctrl+Y,
     // Ctrl+X, Ctrl+C, Ctrl+V, Ctrl+A, Ctrl+F, Ctrl+H
+    // RAWRXD_IDE_ACCELERATORS_001
+    // The menu labels advertised F5, F6, F7, F8, F9 and Ctrl+Shift+B, but none
+    // of the six were in this table, so all six keys did nothing. F3 and
+    // Ctrl+Alt+H are new, backing the Find Next and Replace All items.
     static ACCEL accel[] = {
         { FCONTROL|FVIRTKEY, 'N', IDM_FILE_NEW },
         { FCONTROL|FVIRTKEY, 'O', IDM_FILE_OPEN },
@@ -1824,6 +2291,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         { FCONTROL|FVIRTKEY, 'A', IDM_EDIT_SELECT_ALL },
         { FCONTROL|FVIRTKEY, 'F', IDM_EDIT_FIND },
         { FCONTROL|FVIRTKEY, 'H', IDM_EDIT_REPLACE },
+        { FCONTROL|FALT|FVIRTKEY, 'H', IDM_EDIT_REPLACEALL },
+        { FVIRTKEY, VK_F3,    IDM_EDIT_FINDNEXT },
+        { FVIRTKEY, VK_F5,    IDM_BUILD_NATIVE },
+        { FVIRTKEY, VK_F6,    IDM_MODEL_LOCAL },
+        { FVIRTKEY, VK_F7,    IDM_MODEL_DIAG },
+        { FVIRTKEY, VK_F8,    IDM_AGENTIC_GATE },
+        { FVIRTKEY, VK_F9,    IDM_AGENTIC_E2E_GATE },
+        { FCONTROL|FSHIFT|FVIRTKEY, 'B', IDM_VIEW_SIDEBAR },
     };
     HACCEL hAccel = CreateAcceleratorTableA(accel, sizeof(accel)/sizeof(accel[0]));
 
@@ -1962,9 +2437,21 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             rawrxd::receipt::writeImmutableKeyValue(runPath,
                 "EXIT_CODE", "0");
 
-            // endImmutableGate writes VERDICT line, computes RECEIPT_SHA256,
-            // refreshes latest.txt, and appends to index.jsonl.
-            (void)rawrxd::receipt::endImmutableGate(runPath, verdict);
+            // RAWRXD_RECEIPT_DIGEST_001: endImmutableGate seals into a detached
+            // .sha256 sidecar (CREATE_NEW) and returns EMPTY when the seal did
+            // not occur. The return used to be discarded with (void), so a
+            // failed seal produced a receipt that looked complete while having
+            // no digest and no indication it was unsealed. The state is now
+            // recorded inside the receipt instead of being inferable only by
+            // noticing a missing sidecar.
+            const std::string w8Digest =
+                rawrxd::receipt::endImmutableGate(runPath, verdict);
+            if (w8Digest.empty()) {
+                rawrxd::receipt::writeImmutableKeyValue(runPath,
+                    "RECEIPT_SEALED", "0");
+                rawrxd::receipt::writeImmutableKeyValue(runPath,
+                    "RECEIPT_SEAL_ERROR", "digest_or_sidecar_creation_failed");
+            }
         }
 
         // Legacy mirror: write the historical fixed-path receipt so existing

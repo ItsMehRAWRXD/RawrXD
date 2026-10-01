@@ -67,18 +67,37 @@ void AgenticBridge_Submit(const std::string& prompt)
                 Sleep(2);
             }
         } else {
-            // Real path: invoke the agentic gate engine
-            // The gate is already wired in ide_agentic_gate.cpp; here we call
-            // the streaming variant which feeds tokens back via callback.
-            // For now emit a live echo so the UI pipeline is exercised end-to-end.
-            std::string resp = "[Agent] Prompt received: " + prompt + "\n"
-                "[Agent] Model: " + g_modelPath + "\n"
-                "[Agent] Invoking Deep2 engine...\n";
-            for (char c : resp) {
-                if (StreamingUX_IsCancelled()) break;
-                StreamingUX_Token(std::string(1, c));
-                Sleep(1);
-            }
+            // RAWRXD_AGENTIC_BRIDGE_NO_FAKE_OUTPUT_001
+            //
+            // This branch used to fabricate agent output:
+            //
+            //   // For now emit a live echo so the UI pipeline is exercised end-to-end.
+            //   std::string resp = "[Agent] Prompt received: " + prompt + "\n"
+            //       "[Agent] Model: " + g_modelPath + "\n"
+            //       "[Agent] Invoking Deep2 engine...\n";
+            //
+            // It typed that literal one character at a time with Sleep(1) and
+            // never invoked inference, so the UI showed agent text that the
+            // model never produced. That is exactly the synthetic-output class
+            // the receipt gates forbid, so it is removed rather than patched.
+            //
+            // This bridge holds no Deep2Engine handle -- g_modelPath is a path,
+            // not an engine, and the live engine is the file-static
+            // g_chatEngine owned by main_win32.cpp:435. Streaming real tokens
+            // here would require a second engine and double inference.
+            //
+            // The real stream is Deep2Engine::generateStream driven from
+            // chatWorkerThread (main_win32.cpp), routed through the agentic
+            // pipeline: StreamingInferenceEngine -> StreamingResultChannel ->
+            // AgenticModelStreamerBridge -> AgentToolAuthority, orchestrated by
+            // BP1BraidStreamer::runSession. See ide_agentic_gate.cpp:217-263
+            // for the working reference wiring.
+            //
+            // Fail closed: say the bridge is unbound rather than invent output.
+            const std::string note =
+                "[Agent] Bridge has no engine binding; it will not fabricate output. "
+                "Use the chat panel (chatWorkerThread) for real streaming.";
+            StreamingUX_Token(note);
         }
 
         StreamingUX_End();

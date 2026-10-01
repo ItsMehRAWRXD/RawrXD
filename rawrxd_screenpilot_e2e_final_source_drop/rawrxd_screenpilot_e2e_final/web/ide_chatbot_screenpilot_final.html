@@ -13343,7 +13343,28 @@
             body: JSON.stringify(body),
             signal: AbortSignal.timeout(30000)
           });
-          var data = await res.json();
+          // RAWRXD_DUAL_AGENT_ROUTES_001: never call res.json() blindly. A
+          // non-JSON error body (404 HTML page, proxy error, empty response)
+          // throws "Unexpected non-whitespace character after JSON" and hides
+          // the real status code. Read text, then parse defensively.
+          var raw = await res.text();
+          var data = null;
+          try {
+            data = raw ? JSON.parse(raw) : null;
+          } catch (parseErr) {
+            data = null;
+          }
+          if (!res.ok) {
+            return {
+              success: false,
+              message: 'HTTP ' + res.status + ' from /api/agent/dual/init' +
+                       (data && data.error ? ': ' + (data.error.message || data.error) : '') +
+                       (data ? '' : ' (non-JSON body: ' + raw.slice(0, 120) + ')')
+            };
+          }
+          if (!data) {
+            return { success: false, message: 'Empty or non-JSON response from /api/agent/dual/init' };
+          }
           this.initialized = !!data.success;
           return data;
         } catch (e) {

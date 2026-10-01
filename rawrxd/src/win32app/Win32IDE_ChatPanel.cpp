@@ -28,9 +28,15 @@ struct ChatPanelState {
     HWND hwnd       = nullptr;
     HWND hInput     = nullptr;
     HWND hSend      = nullptr;
+    HWND hStop      = nullptr;
     HWND hScroll    = nullptr;
     std::vector<ChatMessage> messages;
     std::function<void(const std::string&)> onSend;
+    // RAWRXD_IDE_STOP_001: cancellation had no UI affordance at all. The only
+    // way to stop a generation was to send a SECOND prompt, which cancelled the
+    // first as a side effect of handleChatSend. This callback carries the user's
+    // intent straight to the engine's cooperative cancel.
+    std::function<void()> onCancel;
     int scrollOffset = 0;
     int lineH        = 18;
     bool streaming   = false;
@@ -177,6 +183,7 @@ static void ChatPaint(HWND hwnd)
 // ── Window procedure ──────────────────────────────────────────────────────────
 #define IDC_CHAT_SEND  2001
 #define IDC_CHAT_INPUT 2002
+#define IDC_CHAT_STOP  2003
 
 static LRESULT CALLBACK ChatWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -189,19 +196,29 @@ static LRESULT CALLBACK ChatWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 
         g_chat.hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
             WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL,
-            4, H - inputH + 4, W - btnW - 12, inputH - 8,
+            4, H - inputH + 4, W - btnW * 2 - 16, inputH - 8,
             hwnd, (HMENU)IDC_CHAT_INPUT,
             ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
 
         g_chat.hSend = CreateWindowExA(0, "BUTTON", "Send",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-            W - btnW - 4, H - inputH + 4, btnW, inputH - 8,
+            W - btnW * 2 - 12, H - inputH + 4, btnW, inputH - 8,
             hwnd, (HMENU)IDC_CHAT_SEND,
             ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
+
+        // RAWRXD_IDE_STOP_001: explicit cancel. Disabled while idle so it cannot
+        // be pressed into a no-op that silently looks like a working control.
+        g_chat.hStop = CreateWindowExA(0, "BUTTON", "Stop",
+            WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            W - btnW - 4, H - inputH + 4, btnW, inputH - 8,
+            hwnd, (HMENU)IDC_CHAT_STOP,
+            ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
+        EnableWindow(g_chat.hStop, FALSE);
 
         HFONT font = IDECore_UIFont();
         SendMessage(g_chat.hInput, WM_SETFONT, (WPARAM)font, TRUE);
         SendMessage(g_chat.hSend,  WM_SETFONT, (WPARAM)font, TRUE);
+        SendMessage(g_chat.hStop,  WM_SETFONT, (WPARAM)font, TRUE);
         return 0;
     }
 
@@ -209,14 +226,27 @@ static LRESULT CALLBACK ChatWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         int W = LOWORD(lParam), H = HIWORD(lParam);
         const int inputH = 60, btnW = 60;
         if (g_chat.hInput)
-            SetWindowPos(g_chat.hInput, nullptr, 4, H - inputH + 4, W - btnW - 12, inputH - 8, SWP_NOZORDER);
+            SetWindowPos(g_chat.hInput, nullptr, 4, H - inputH + 4, W - btnW * 2 - 16, inputH - 8, SWP_NOZORDER);
         if (g_chat.hSend)
-            SetWindowPos(g_chat.hSend, nullptr, W - btnW - 4, H - inputH + 4, btnW, inputH - 8, SWP_NOZORDER);
+            SetWindowPos(g_chat.hSend, nullptr, W - btnW * 2 - 12, H - inputH + 4, btnW, inputH - 8, SWP_NOZORDER);
+        if (g_chat.hStop)
+            SetWindowPos(g_chat.hStop, nullptr, W - btnW - 4, H - inputH + 4, btnW, inputH - 8, SWP_NOZORDER);
         InvalidateRect(hwnd, nullptr, FALSE);
         return 0;
     }
 
     case WM_COMMAND:
+        if (LOWORD(wParam) == IDC_CHAT_STOP) {
+            // RAWRXD_IDE_STOP_001: cooperative cancel. The engine checks this
+            // each decode step, so the stream unwinds and the existing
+            // WM_CHAT_DONE path still runs and still writes the receipt with
+            // CANCELLED=1 / COMPLETED=0 rather than being abandoned.
+            if (g_chat.onCancel) {
+                g_chat.onCancel();
+                ChatPanel_AddMessage(MsgRole::System, "[Generation cancelled by user.]");
+            }
+            return 0;
+        }
         if (LOWORD(wParam) == IDC_CHAT_SEND || (LOWORD(wParam) == IDC_CHAT_INPUT && HIWORD(wParam) == EN_UPDATE)) {
             if (LOWORD(wParam) == IDC_CHAT_SEND) {
                 char buf[4096] = {};
@@ -294,6 +324,9 @@ void ChatPanel_BeginStreaming()
     m.streaming = true;
     g_chat.messages.push_back(m);
     g_chat.streaming = true;
+    // RAWRXD_IDE_STOP_001: the Stop control is only meaningful while a
+    // generation is in flight, so it tracks the streaming state exactly.
+    if (g_chat.hStop) EnableWindow(g_chat.hStop, TRUE);
 }
 
 void ChatPanel_AppendStreamToken(const std::string& token)
@@ -312,12 +345,18 @@ void ChatPanel_EndStreaming()
     if (!g_chat.messages.empty() && g_chat.messages.back().streaming)
         g_chat.messages.back().streaming = false;
     g_chat.streaming = false;
+    if (g_chat.hStop) EnableWindow(g_chat.hStop, FALSE);
     if (g_chat.hwnd) InvalidateRect(g_chat.hwnd, nullptr, FALSE);
 }
 
 void ChatPanel_SetSendCallback(std::function<void(const std::string&)> cb)
 {
     g_chat.onSend = std::move(cb);
+}
+
+void ChatPanel_SetCancelCallback(std::function<void()> cb)
+{
+    g_chat.onCancel = std::move(cb);
 }
 
 void ChatPanel_Clear()

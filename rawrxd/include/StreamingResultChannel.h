@@ -16,6 +16,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <utility>
 #include <condition_variable>
 
 namespace RawrXD {
@@ -98,6 +99,35 @@ public:
     uint64_t publishedCount() const noexcept { return publishedCount_.load(std::memory_order_acquire); }
     uint64_t consumedCount() const noexcept { return consumedCount_.load(std::memory_order_acquire); }
 
+    // ── Observer API (multicast, NON-CONSUMING) ─────────────────────────────
+    // RAWRXD_STREAM_MULTICAST_001
+    //
+    // The queue above is single-consumer by construction: pop / tryPop / drain
+    // all REMOVE the event they deliver. That makes the class unusable for the
+    // one topology the agentic pipeline needs, because there are two mandatory
+    // consumers of the same events:
+    //
+    //   1. AgenticModelStreamerBridge's pump thread, which must see every
+    //      TextDelta to recognise tool requests (agentic_model_streamer_bridge.h)
+    //   2. A UI, which must see every TextDelta to render tokens live.
+    //
+    // With a single queue, whichever consumer drains first starves the other.
+    // That is why the IDE chat path bypasses this pipeline and calls
+    // Deep2Engine::generateStream directly.
+    //
+    // Observers resolve that without altering any existing consumer: they SEE
+    // every published event and cannot consume it, so the queue semantics that
+    // the certified agentic gate depends on are untouched.
+    //
+    // Observers are invoked synchronously on the publishing thread, AFTER the
+    // event is enqueued and mu_ is released. A slow observer therefore cannot
+    // extend the producer's critical section, but it does add latency to
+    // publish(); observers must not block.
+    using ObserverCallback = std::function<void(const StreamEvent&)>;
+    uint64_t subscribe(ObserverCallback cb);   // returns id, 0 on null callback
+    void     unsubscribe(uint64_t subscriptionId);
+    size_t   observerCount() const;
+
     // Cert counters -----------------------------------------------------------
     uint64_t realTokenCount() const noexcept { return realTokenCount_.load(std::memory_order_acquire); }
     uint64_t streamEventCount() const noexcept { return publishedCount_.load(std::memory_order_acquire); }
@@ -114,6 +144,11 @@ private:
     std::atomic<uint64_t>           consumedCount_{0};
     std::atomic<uint64_t>           realTokenCount_{0};
     std::atomic<uint64_t>           cancelObservedCount_{0};
+
+    // Observer registry. Guarded by mu_. Subscribers observe; they do not
+    // consume, so they never race the queue for events.
+    std::vector<std::pair<uint64_t, ObserverCallback>> observers_;
+    std::atomic<uint64_t>                             nextSubscriptionId_{1};
 };
 
 } // namespace RawrXD

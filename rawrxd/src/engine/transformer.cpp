@@ -31,16 +31,25 @@ TransformerConfig Transformer::GetConfig() const {
 }
 
 bool Transformer::LoadWeightsFromGGUF(const std::string& /*gguf_path*/) {
-    // Placeholder: actual weight loading would parse GGUF and populate layers_
-    impl_->layers_.resize(impl_->config_.num_hidden_layers);
-    impl_->loaded_ = true;
-    return true;
+    // RAWRXD_P0_FAIL_CLOSED_001: this never reads the file. Setting loaded_ here
+    // let Forward() run over empty weights and emit synthetic logits that looked
+    // like model output. There is no real implementation behind this entry point,
+    // so it must not report success.
+    impl_->layers_.clear();
+    impl_->token_embeddings_.clear();
+    impl_->output_norm_weight_.clear();
+    impl_->lm_head_.clear();
+    impl_->loaded_ = false;
+    return false;
 }
 
 bool Transformer::LoadWeightsFromBuffer(std::span<const uint8_t> /*data*/) {
-    impl_->layers_.resize(impl_->config_.num_hidden_layers);
-    impl_->loaded_ = true;
-    return true;
+    impl_->layers_.clear();
+    impl_->token_embeddings_.clear();
+    impl_->output_norm_weight_.clear();
+    impl_->lm_head_.clear();
+    impl_->loaded_ = false;
+    return false;
 }
 
 bool Transformer::IsLoaded() const {
@@ -51,58 +60,20 @@ bool Transformer::Forward(std::span<const uint32_t> input_tokens,
                               std::vector<float>& logits_out,
                               KVCache& kv_cache) {
     auto start = std::chrono::steady_clock::now();
+    // RAWRXD_P0_FAIL_CLOSED_001: Forward below synthesised embeddings from
+    // (token % 1000) and wrote one identical value into every vocabulary slot,
+    // so callers received plausible-looking text with no relation to any model.
+    // Refuse rather than fabricate. A real forward pass lives in
+    // src/deep2/Deep2Engine.cpp (forwardTokenAllLayers) and in
+    // src/rawrxd_transformer.cpp (LoadAllWeights + DoForward).
+    logits_out.clear();
     if (!impl_->loaded_) return false;
+    if (input_tokens.empty()) return false;
+    if (impl_->token_embeddings_.empty() || impl_->lm_head_.empty()) return false;
 
-    size_t seq_len = input_tokens.size();
-    size_t hidden = impl_->config_.hidden_size;
-
-    // Embed tokens (simplified)
-    std::vector<float> hidden_state(seq_len * hidden, 0.0f);
-    for (size_t pos = 0; pos < seq_len; ++pos) {
-        uint32_t tok = input_tokens[pos];
-        for (size_t h = 0; h < hidden; ++h) {
-            // Simple embedding lookup simulation
-            hidden_state[pos * hidden + h] = static_cast<float>(tok % 1000) / 1000.0f;
-        }
-    }
-
-    // Run through layers
-    for (uint32_t layer = 0; layer < impl_->config_.num_hidden_layers; ++layer) {
-        // Self-attention (simplified dot-product attention)
-        std::vector<float> attn_out(seq_len * hidden, 0.0f);
-        size_t head_dim = hidden / impl_->config_.num_attention_heads;
-        for (size_t h = 0; h < impl_->config_.num_attention_heads; ++h) {
-            for (size_t pos = 0; pos < seq_len; ++pos) {
-                // Simplified attention score computation
-                float score = 0.0f;
-                for (size_t d = 0; d < head_dim; ++d) {
-                    score += hidden_state[pos * hidden + h * head_dim + d] * 0.01f;
-                }
-                attn_out[pos * hidden + h * head_dim] = score;
-            }
-        }
-
-        // FFN (simplified)
-        for (size_t i = 0; i < hidden_state.size(); ++i) {
-            hidden_state[i] = hidden_state[i] + attn_out[i];
-            // SiLU simulation
-            hidden_state[i] = hidden_state[i] * (1.0f / (1.0f + std::exp(-hidden_state[i])));
-        }
-    }
-
-    // Output projection (simplified)
-    logits_out.resize(seq_len * impl_->config_.vocab_size);
-    for (size_t pos = 0; pos < seq_len; ++pos) {
-        for (size_t v = 0; v < impl_->config_.vocab_size; ++v) {
-            logits_out[pos * impl_->config_.vocab_size + v] = hidden_state[pos * hidden] * 0.5f;
-        }
-    }
-
-    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::steady_clock::now() - start);
-    impl_->last_forward_ms_ = elapsed.count() / 1000.0f;
-    return true;
+    return false;  // no real weight-backed forward pass exists in this class
 }
+
 
 bool Transformer::ForwardLayer(uint32_t layer_idx,
                                 std::span<const float> input,
@@ -111,11 +82,15 @@ bool Transformer::ForwardLayer(uint32_t layer_idx,
                                 std::vector<float>& output,
                                 std::vector<float>& k_cache_out,
                                 std::vector<float>& v_cache_out) {
+    // RAWRXD_P0_FAIL_CLOSED_001: this copied input to output and the caches to
+    // themselves, so it reported success while doing no attention. A caller
+    // treating this as a real layer got an identity transform.
+    output.clear();
+    k_cache_out.clear();
+    v_cache_out.clear();
     if (!impl_->loaded_ || layer_idx >= impl_->config_.num_hidden_layers) return false;
-    output.assign(input.begin(), input.end());
-    k_cache_out.assign(k_cache_in.begin(), k_cache_in.end());
-    v_cache_out.assign(v_cache_in.begin(), v_cache_in.end());
-    return true;
+    if (impl_->layers_.empty()) return false;
+    return false;  // no real per-layer implementation exists in this class
 }
 
 void Transformer::RotaryEmbed(std::vector<float>& q, std::vector<float>& k,
@@ -135,9 +110,25 @@ void Transformer::RotaryEmbed(std::vector<float>& q, std::vector<float>& k,
             }
         }
     }
-    // Same for k (simplified)
-    for (size_t i = 0; i < k.size(); ++i) {
-        k[i] = k[i] * 0.99f + 0.001f; // minimal rotation placeholder
+    // RAWRXD_P0_FAIL_CLOSED_001: K previously ran `k[i] = k[i]*0.99f + 0.001f`,
+    // which is not a rotation and destroyed the key cache. Apply the same
+    // rotate-half used for Q, iterating the KV heads (GQA: n_kv_heads may be
+    // fewer than n_heads, so K is laid out per KV head, not per query head).
+    for (size_t pos = 0; pos < seq_len; ++pos) {
+        for (size_t h = 0; h < num_kv_heads; ++h) {
+            for (size_t d = 0; d < head_dim; d += 2) {
+                const float theta = std::pow(impl_->config_.rope_theta, -2.0f * d / head_dim);
+                const float cos_val = std::cos(pos * theta);
+                const float sin_val = std::sin(pos * theta);
+                const size_t base = pos * num_kv_heads * head_dim + h * head_dim + d;
+                if (base + 1 < k.size()) {
+                    const float k0 = k[base];
+                    const float k1 = k[base + 1];
+                    k[base] = k0 * cos_val - k1 * sin_val;
+                    k[base + 1] = k0 * sin_val + k1 * cos_val;
+                }
+            }
+        }
     }
 }
 

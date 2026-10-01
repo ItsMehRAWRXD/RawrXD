@@ -170,6 +170,10 @@ private:
     bool m_ready     = false;
     bool m_hasAVX512 = false;
     bool m_licensed  = false;
+    // True when the host lacks AVX-512 and the portable scalar reference path
+    // is in use. The forward pass is scalar C++, so this is a reporting and
+    // tuning signal, not a correctness gate.
+    bool m_scalarFallback = false;
 };
 
 } // namespace RawrXD

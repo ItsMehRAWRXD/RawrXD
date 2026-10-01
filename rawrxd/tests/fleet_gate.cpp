@@ -16,6 +16,7 @@
 //   - GENERATED_TOKEN_COUNT>=1
 //
 #include "deep2/Deep2Engine.h"
+#include "deep2/Deep2GpuForward.hpp"
 #include "deep2/deep2_sha256.hpp"
 
 #include <algorithm>
@@ -172,6 +173,11 @@ int main(int argc, char** argv)
     if (warm.generatedTokens < 32) return fail("warmup");
 
     e.reset();
+    std::fprintf(stderr, "DIAG_PHASE=post_warmup_pre_reset "
+                         "DIAG_W_FWD_LAYERS=%llu DIAG_W_SLOT0=%llu DIAG_W_MATERIALIZATIONS=%llu\n",
+        (unsigned long long)e.gpuForwardCounters().forwardLayers,
+        (unsigned long long)e.gpuForwardCounters().forwardSlot[0],
+        (unsigned long long)e.gpuForwardCounters().hostMaterializations);
     e.resetGpuForwardCounters();
 
     LARGE_INTEGER freq{}, t0{}, t1{};
@@ -203,6 +209,46 @@ int main(int argc, char** argv)
     const bool enoughTokens = measured.generatedTokens >= 32 &&
                               measured.completed;
     const bool realGpu = e.isRealGpuForward();
+
+    // RAWRXD_FLEET_GATE_DIAG_001: emit the full GPU-forward counter set.
+    // isRealGpuForward() is a conjunction of several counters; without them a
+    // HOLD verdict does not say WHICH term failed, which makes the gate
+    // unactionable. This is diagnostic output on a test harness, not a receipt
+    // field, so it cannot promote a HOLD to a PASS.
+    Deep2::Deep2GpuForward_Emit(stderr, e.gpuForwardCounters(),
+                                e.vulkanUnplannedFallbacks());
+    // RAWRXD_GPU_FORWARD_AUTHORITY_001: compare the object the gate reads
+    // against the address the engine printed in GPU_FORWARD_COUNTER_WITNESS.
+    // Equal pointer + zero counters proves the gate is reading a different
+    // object; equal pointer + zero counters with a different pointer proves
+    // an ABI/layout disagreement between the two translation units.
+    std::fprintf(stderr,
+        "GATE_WITNESS engine=%p counters=%p forwardLayers=%llu\n",
+        (const void*)&e, (const void*)&e.gpuForwardCounters(),
+        (unsigned long long)e.gpuForwardCounters().forwardLayers);
+    std::fprintf(stderr,
+        "DIAG_RESIDENT=%d DIAG_HOST_FWD_LAYER_CALLS=%llu DIAG_MATERIALIZATIONS=%llu\n",
+        Deep2::Deep2GpuForward_Resident(e.gpuForwardCounters()) ? 1 : 0,
+        (unsigned long long)e.gpuForwardCounters().hostForwardLayerCalls,
+        (unsigned long long)e.gpuForwardCounters().hostMaterializations);
+    for (int i = 0; i < 2; ++i) {
+        std::fprintf(stderr, "DIAG_SLOT[%d]=%llu DIAG_FWD_LAYERS=%llu "
+                             "DIAG_RMSNORM=%llu DIAG_QKV=%llu DIAG_ROPE=%llu "
+                             "DIAG_ATTN_SCORE=%llu DIAG_RESIDUAL=%llu "
+                             "DIAG_FFN_ACT=%llu DIAG_MAT_FINAL=%llu "
+                             "DIAG_MAT_OTHER=%llu\n",
+            i,
+            (unsigned long long)e.gpuForwardCounters().forwardSlot[i],
+            (unsigned long long)e.gpuForwardCounters().forwardLayers,
+            (unsigned long long)e.gpuForwardCounters().rmsNormOps,
+            (unsigned long long)e.gpuForwardCounters().qkvOps,
+            (unsigned long long)e.gpuForwardCounters().ropeOps,
+            (unsigned long long)e.gpuForwardCounters().attnScoreOps,
+            (unsigned long long)e.gpuForwardCounters().residualOps,
+            (unsigned long long)e.gpuForwardCounters().ffnActOps,
+            (unsigned long long)e.gpuForwardCounters().matFinalDownload,
+            (unsigned long long)e.gpuForwardCounters().matOther);
+    }
 
     const bool pass = enoughTokens && noFallback && realGpu;
 

@@ -149,14 +149,53 @@ void writeImmutableKeyValueFloat(const std::string& runPath, const std::string& 
 }
 
 std::string endImmutableGate(const std::string& runPath, const std::string& verdict) {
-    // Write VERDICT line
+    // RAWRXD_RECEIPT_DIGEST_001
+    //
+    // This used to write RECEIPT_SHA256 *into the receipt it was hashing*:
+    //
+    //     writeImmutableKeyValue(runPath, "VERDICT", verdict);
+    //     std::string hash = sha256File(runPath);          // hash of the file WITHOUT the line
+    //     if (!hash.empty())
+    //         writeImmutableKeyValue(runPath, "RECEIPT_SHA256", hash);   // then mutate it
+    //
+    // The recorded digest therefore never described the file that contained it,
+    // and any verifier that re-hashed the receipt to check it would mismatch by
+    // construction. Self-reference is the defect; excluding a line from its own
+    // preimage is a convention that is easy to get wrong on the reader side.
+    //
+    // The digest now lives in a detached sidecar, which removes the self
+    // reference entirely:
+    //
+    //     receipts/<gate>/runs/<UTC>_<PID>_<RUN>.ini      <- sealed content
+    //     receipts/<gate>/runs/<UTC>_<PID>_<RUN>.ini.sha256 <- CREATE_NEW digest
+    //
+    // The receipt is NOT modified after the digest is computed, so
+    // SHA256(receipt bytes) == sidecar digest holds exactly.
     writeImmutableKeyValue(runPath, "VERDICT", verdict);
 
-    // Compute SHA256 of the receipt
-    std::string hash = sha256File(runPath);
-    if (!hash.empty()) {
-        writeImmutableKeyValue(runPath, "RECEIPT_SHA256", hash);
+    const std::string hash = sha256File(runPath);
+    if (hash.empty()) return {};
+
+    std::filesystem::path sidecarPath(runPath);
+    sidecarPath += ".sha256";
+
+    // CREATE_NEW: a sidecar must not be able to silently replace a previous
+    // digest for the same run. If it already exists the seal did not happen and
+    // the caller is told, rather than being handed a digest that certifies
+    // nothing.
+    HANDLE hSide = CreateFileA(sidecarPath.string().c_str(),
+        GENERIC_WRITE, 0, nullptr, CREATE_NEW,
+        FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hSide == INVALID_HANDLE_VALUE) {
+        return {};
     }
+
+    const std::string line = hash + "  " +
+        std::filesystem::path(runPath).filename().string() + "\n";
+    DWORD written = 0;
+    WriteFile(hSide, line.c_str(),
+              static_cast<DWORD>(line.size()), &written, nullptr);
+    CloseHandle(hSide);
 
     // Update latest.txt with final pointer
     std::filesystem::path runPathObj(runPath);

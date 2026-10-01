@@ -3,7 +3,7 @@ setlocal
 where ml64 >nul 2>nul || (echo ERROR: ml64.exe not found & exit /b 1)
 where link >nul 2>nul || (echo ERROR: link.exe not found & exit /b 1)
 if not exist build mkdir build
-for %%F in (src\remote64\*.asm) do (
+for %%F in (*.asm) do (
   echo [ASM] %%F
   ml64 /nologo /c /Fo"build\%%~nF.obj" "%%F" || exit /b 1
 )

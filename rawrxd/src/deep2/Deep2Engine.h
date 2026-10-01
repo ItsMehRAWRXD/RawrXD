@@ -379,11 +379,24 @@ using TokenCallback =
 // ============================================================================
 // Production Deep2 Engine
 // ============================================================================
+class PreparedWeightCache;
+} // namespace Deep2
+
+namespace Deep2 {
 class Deep2Engine {
 public:
     Deep2Engine();
     ~Deep2Engine();
-    
+
+    // RAWRXD_B63_PREPARED_WEIGHT_CACHE_001: lazily constructed bounded
+    // prepared-weight cache, defined in Deep2Engine_GpuForward.cpp.
+    ::Deep2::PreparedWeightCache& PreparedWeights();
+
+    // RAWRXD_B63_PREPARED_WEIGHT_CACHE_001: destroy the prepared-weight cache
+    // explicitly. It must go while the model's source tensors are still mapped
+    // because its keys reference those source pointers.
+    void ReleasePreparedWeights();
+
     // Initialize with configuration
     bool initialize(const EngineConfig& config);
     
@@ -477,6 +490,24 @@ public:
     std::size_t numLayers() const noexcept { return modelWeights.numLayers; }
     std::size_t headDim() const noexcept { return modelWeights.headDim; }
 
+    // RAWRXD_WEIGHT_TYPE_FROM_TENSORS_001
+    // The quantization the model was ACTUALLY loaded with, read out of the
+    // loaded tensors' GGML type.
+    //
+    // This exists because config_.weightQuant cannot answer the question: it is
+    // a config field that is never assigned from the model, so it reads FP32 for
+    // every model including Q6_K ones. Anything that reported that field as the
+    // model's weight type would be reporting a default, not a measurement.
+    // Returns -1 when no model is loaded, so "unknown" is distinguishable from
+    // "F32".
+    int loadedWeightType() const noexcept;
+    const char* loadedWeightTypeName() const noexcept;
+    // Fraction of projection/FFN weights whose type equals loadedWeightType(),
+    // in percent. A model can legitimately mix types (e.g. norms in F32), so
+    // the dominant type and its share are reported together rather than the
+    // type alone implying uniformity.
+    double loadedWeightTypeDominancePercent() const noexcept;
+
     // Get engine info
     bool isInitialized() const { return initialized; }
     bool isModelLoaded() const { return modelWeights.loaded; }
@@ -532,6 +563,14 @@ public:
     void beginTokenStreamingMeasurement(uint64_t tokenIndex);
     bool endTokenStreamingMeasurement(uint64_t& outBytesMoved);
     VramStreamingStats getVramStreamingStats() const;
+
+    // RAWRXD_REMOTE64_PRODUCT_INTEGRATION_001
+    // Native remote64 authority state, read from src/remote64/deep2_bridge.asm
+    // during initialize(). Both are false until a remote session authenticates;
+    // a fresh process must never report a remote session as authorized merely
+    // because the module-global session struct happened to be zeroed.
+    bool remoteObservePermitted() const { return remoteObservePermitted_; }
+    bool remoteControlPermitted() const { return remoteControlPermitted_; }
 
     // TimeReverseDigest: reverse-time materialization scheduler
     void enableTimeReverseDigest(bool enable);
@@ -618,7 +657,14 @@ public:
     uint64_t plannedCpuGemvOps() const { return plannedCpuGemvOps_; }
     uint64_t plannedGpuGemvOps() const { return plannedGpuGemvOps_; }
     const GpuForwardCounters& gpuForwardCounters() const;
+    // RAWRXD_REAL_GPU_FORWARD_002
     void resetGpuForwardCounters();
+    void captureGpuForwardReceipt(uint64_t nanCount, uint64_t infCount);
+    // Completed-generation evidence, captured before any transient cleanup.
+    // isRealGpuForward() is derived from this, never from a flag the execution
+    // path sets on itself.
+    struct GpuForwardReceipt;   // defined in the private section below
+    const GpuForwardReceipt& gpuForwardReceipt() const { return gpuFwdReceipt_; }
     bool isRealGpuForward() const;
     bool ensureGpuForwardArena(unsigned slot);
     bool forwardLayerGpuResident(uint32_t layer, unsigned slot,
@@ -1227,6 +1273,10 @@ private:
     std::unique_ptr<TimeReverseDigest> timeReverseDigest_;
     bool timeReverseEnabled_ = false;
 
+    // RAWRXD_REMOTE64_PRODUCT_INTEGRATION_001: native remote64 gate results.
+    bool remoteObservePermitted_ = false;
+    bool remoteControlPermitted_ = false;
+
     // Tokenizer
     std::unique_ptr<ITokenizer> tokenizer;
 
@@ -1266,6 +1316,51 @@ private:
     uint64_t plannedCpuGemvOps_ = 0;
     uint64_t plannedGpuGemvOps_ = 0;
     GpuForwardCounters gpuFwd_{};
+    // RAWRXD_REAL_GPU_FORWARD_002: completed-generation evidence.
+    //
+    // gpuFwd_ is LIVE telemetry and is cleared at the generation boundary
+    // (Deep2Engine::reset(), called from the tail of generateStream). A
+    // certification gate that reads it after generation therefore always sees
+    // zero, no matter how much GPU work actually happened. The receipt is the
+    // immutable snapshot taken at the moment the forward completes, BEFORE
+    // any cleanup, and is the only thing isRealGpuForward() is allowed to
+    // trust. gpuFwdCommitted_ is deliberately NOT consulted: it is set by the
+    // execution path itself, so it would self-certify.
+    struct GpuForwardReceipt {
+        uint64_t forwardLayers = 0;
+        uint64_t qkvOps = 0;
+        uint64_t rmsNormOps = 0;
+        uint64_t attnScoreOps = 0;
+        uint64_t ffnActOps = 0;
+        uint64_t residualOps = 0;
+        uint64_t forwardSlot0 = 0;
+        uint64_t tokenForwards = 0;
+        uint64_t hostMaterializations = 0;
+        uint64_t matFinalDownload = 0;
+        // RAWRXD_REAL_GPU_FORWARD_002: full materialization class sum. The
+        // codebase already defines this as the exhaustive taxonomy
+        // (Deep2GpuForward_MatClassSum): every hostMaterializations increment
+        // belongs to exactly one class. hostMaterializations==matFinalDownload
+        // alone is NOT an accounting invariant -- it only holds when nothing
+        // else materialized. Asserting it as the accounting check conflates
+        // "unclassified" with "not resident".
+        uint64_t matCrossDeviceHandoff = 0;
+        uint64_t matGemvSingleRoundTrip = 0;
+        uint64_t matDualRowSingle = 0;
+        uint64_t matDualRowGroup = 0;
+        uint64_t matOther = 0;
+        uint64_t hostMatSite[8]{};
+        uint64_t hostMatSiteBytes[8]{};
+        uint64_t hostForwardLayerCalls = 0;
+        uint64_t nanCount = 0;
+        uint64_t infCount = 0;
+        uint64_t generationId = 0;
+        uint32_t expectedLayersPerToken = 0;
+        bool valid = false;
+    };
+    GpuForwardReceipt gpuFwdReceipt_{};
+    // Monotonic id of the most recent generation whose receipt was captured.
+    uint64_t gpuFwdGenerationId_ = 0;
     bool gpuFwdCommitted_ = false;
     // Set once tryGpuTokenForward or forwardTokenGpuHybrid starts layer work
     // for the current token; after that, device KV/residency or hidden may
@@ -1282,7 +1377,21 @@ private:
     uint32_t lmHeadPinRow0Count_ = 0;
     uint32_t lmHeadPinRePins_ = 0;
     uint64_t lmHeadPinUploadDeltas_[2] = {0, 0};
+    // RAWRXD_B63_PREPARED_WEIGHT_CACHE_001: the cache type is declared at
+    // Deep2 namespace scope (see the forward declaration above class
+    // Deep2Engine). Do NOT redeclare it here: a nested `class
+    // PreparedWeightCache;` would shadow ::Deep2::PreparedWeightCache for
+    // unqualified lookup inside member functions, and that nested type is
+    // never defined -- producing "use of undefined type
+    // Deep2::Deep2Engine::PreparedWeightCache" at `new PreparedWeightCache()`.
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
+    // RAWRXD_B63_PREPARED_WEIGHT_CACHE_001: persistent prepared F32 for
+    // quantized weights, LRU-bounded by an explicit HOST budget. Owns the
+    // per-tensor dequantization that BOUNDED_STREAM previously repeated on
+    // every decode token. Raw pointer, not unique_ptr: PreparedWeightCache is an
+    // incomplete type in this header, and a raw member lets destruction be
+    // explicit (ReleasePreparedWeights) at a point where the type is complete.
+    ::Deep2::PreparedWeightCache* preparedWeights_ = nullptr;
     std::unordered_map<std::string, uint8_t> vulkanWeightSeen_;
     int parseWeightLayerIndex(const std::string& name) const;
     

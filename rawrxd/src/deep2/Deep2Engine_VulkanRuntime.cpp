@@ -553,8 +553,11 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
 
     // Fail-closed: hidden state must be finite after GPU resident forward.
     // This catches numerical errors before they propagate to computeLogits.
+    // RAWRXD_REAL_GPU_FORWARD_002: nan/inf are hoisted out of the block so the
+    // receipt below can record them as evidence.
+    size_t hiddenNan = 0, hiddenInf = 0;
     {
-        size_t hiddenFinite = 0, hiddenNan = 0, hiddenInf = 0;
+        size_t hiddenFinite = 0;
         float hiddenMin = std::numeric_limits<float>::max();
         float hiddenMax = -std::numeric_limits<float>::max();
         for (size_t i = 0; i < config.hiddenDim; ++i) {
@@ -577,6 +580,11 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
     }
 
     gpuFwdCommitted_=true;
+    // RAWRXD_REAL_GPU_FORWARD_002: snapshot the completed forward BEFORE any
+    // per-generation cleanup can clear the live counters. generateStream()
+    // calls reset() in its tail, so this is the last point at which the
+    // evidence for this generation exists.
+    captureGpuForwardReceipt(hiddenNan, hiddenInf);
     std::fprintf(stderr, "GPU_FORWARD_OK\n");
     return true;
 }

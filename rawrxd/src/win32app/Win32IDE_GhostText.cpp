@@ -5,6 +5,7 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <algorithm>
 
 namespace RawrXD::IDE {
 
@@ -96,14 +97,20 @@ bool GhostText_IsVisible() { return g_ghost.visible; }
 const std::string& GhostText_GetSuggestion() { return g_ghost.suggestion; }
 
 // Called from editor paint to overlay ghost text at cursor position
-void GhostText_Paint(HDC hdc, int cursorX, int cursorY, int charH)
+// RAWRXD_IDE_GHOSTTEXT_RENDER_001
+// charW is supplied by the caller (EditorPaint) so the ghost text is laid out
+// on the same monospace advance the editor uses, instead of a guessed width.
+// Previously this had no callers at all, so the inline suggestion was computed
+// and stored but never appeared on screen.
+void GhostText_Paint(HDC hdc, int cursorX, int cursorY, int charH, int charW)
 {
     if (!g_ghost.visible || g_ghost.suggestion.empty()) return;
     HFONT font = IDECore_MonoFont();
     HFONT old  = (HFONT)SelectObject(hdc, font);
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(100, 100, 100));
-    RECT r = {cursorX, cursorY, cursorX + 800, cursorY + charH};
+    int  w = std::max(1, charW) * (int)g_ghost.suggestion.size();
+    RECT r = {cursorX, cursorY, cursorX + w, cursorY + charH};
     DrawTextA(hdc, g_ghost.suggestion.c_str(), (int)g_ghost.suggestion.size(),
               &r, DT_LEFT | DT_SINGLELINE | DT_NOCLIP);
     SelectObject(hdc, old);

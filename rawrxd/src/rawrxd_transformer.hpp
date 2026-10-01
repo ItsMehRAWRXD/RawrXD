@@ -26,21 +26,27 @@ struct TransformerConfig {
     float rope_scaling_factor = 1.0f;
 };
 
-struct TransformerWeights {
-    std::vector<float> token_embedding_table;
-    std::vector<float> rms_att_weight;
-    std::vector<float> rms_ffn_weight;
-    std::vector<float> rms_final_weight;
+struct LayerWeights {
+    std::vector<float> rms_att_weight;   // [hidden]
+    std::vector<float> rms_ffn_weight;   // [hidden]
+    // Attention projections. q/o are [n_heads*head_dim, hidden]; k/v are
+    // [n_kv_heads*head_dim, hidden] (narrower under GQA).
     std::vector<float> wq;
     std::vector<float> wk;
     std::vector<float> wv;
     std::vector<float> wo;
-    std::vector<float> w1;
-    std::vector<float> w2;
-    std::vector<float> w3;
-    std::vector<float> freq_cis_real;
-    std::vector<float> freq_cis_imag;
-    std::vector<float> wcls;
+    // SwiGLU FFN. gate/up are [intermediate, hidden]; down is [hidden, intermediate].
+    std::vector<float> w_gate;
+    std::vector<float> w_up;
+    std::vector<float> w_down;
+};
+
+struct TransformerWeights {
+    std::vector<float> token_embedding_table;  // [vocab, hidden]
+    std::vector<float> rms_final_weight;       // [hidden]
+    std::vector<float> wcls;                   // lm_head [vocab, hidden]; may alias embedding
+    bool lm_head_tied = false;
+    std::vector<LayerWeights> layers;          // one entry per transformer layer
 };
 
 struct ForwardResult {
@@ -52,9 +58,42 @@ struct ForwardResult {
 };
 
 struct KVCacheEntry {
-    std::vector<float> key_cache;
-    std::vector<float> value_cache;
+    std::vector<float> key_cache;    // [capacity, kv_dim]
+    std::vector<float> value_cache;  // [capacity, kv_dim]
+    size_t capacity = 0;             // rows currently allocated
     bool allocated = false;
+};
+
+// Per-phase wall-clock attribution for one Forward() call. Populated only
+// while profiling is enabled, because the timers themselves are not free in a
+// hot loop. Fields are milliseconds.
+struct StageTimes {
+    double embed_ms = 0.0;
+    double proj_qkv_ms = 0.0;   // Wq/Wk/Wv GEMV
+    double rope_ms = 0.0;
+    double kv_write_ms = 0.0;
+    double qk_score_ms = 0.0;   // q . K^T (serial path only)
+    double softmax_ms = 0.0;
+    double vsum_ms = 0.0;       // weighted sum of V  (serial path only)
+    // Fused head-loop time. When heads run in parallel the three phases above
+    // cannot be separated without re-running the work, so this single figure is
+    // the honest one for the parallel regime.
+    double attention_fused_ms = 0.0;
+    double out_proj_ms = 0.0;   // Wo GEMV
+    double mlp_ms = 0.0;        // gate/up GEMVs + SiLU + down GEMV
+    double norm_ms = 0.0;       // RMSNorm calls
+    double lm_head_ms = 0.0;
+    double total_ms = 0.0;
+    uint64_t layers = 0;
+    uint64_t heads = 0;
+    double Sum() const {
+        return embed_ms + proj_qkv_ms + rope_ms + kv_write_ms + qk_score_ms +
+               softmax_ms + vsum_ms + attention_fused_ms + out_proj_ms + mlp_ms +
+               norm_ms + lm_head_ms;
+    }
+    double AttentionTotal() const {
+        return attention_fused_ms + qk_score_ms + softmax_ms + vsum_ms;
+    }
 };
 
 class TransformerRuntime {
@@ -77,6 +116,13 @@ public:
 
     void ResetKVCache();
 
+    // Stage profiling. Disabled by default; enable explicitly before calling
+    // Forward, and read StageTimes() afterwards.
+    void SetProfiling(bool on) { profiling_ = on; }
+    bool IsProfiling() const { return profiling_; }
+    StageTimes StageTimesResult() const;
+    void ResetStageTimes();
+
     std::vector<float> GetEmbedding(uint32_t token_id) const;
 
     static TransformerConfig InferConfigFromGGUF(const GGUFLoader& loader);
@@ -90,6 +136,7 @@ public:
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
+    bool profiling_ = false;
 };
 
 } // namespace rawrxd
