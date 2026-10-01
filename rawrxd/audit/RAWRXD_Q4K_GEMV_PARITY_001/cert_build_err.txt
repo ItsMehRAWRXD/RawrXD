@@ -1,0 +1,22 @@
+﻿MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  rawrxd_remote64.vcxproj -> F:\~dev\rawrxd\build_remote64_verify\Release\rawrxd_remote64.lib
+  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_remote64_verify\Release\InferenceEngine.lib
+  deep2_remote64_integration_cert.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_sanitizer_annotate_container.hpp(102,9): warning C4384: #pragma 'detect_mismatch' should only be used at global scope [F:\~dev\rawrxd\build_remote64_verify\deep2_remote64_integration_cert.vcxproj]
+  (compiling source file '../src/deep2/deep2_remote64_integration_cert.cpp')
+  
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_sanitizer_annotate_container.hpp(105,9): warning C4384: #pragma 'detect_mismatch' should only be used at global scope [F:\~dev\rawrxd\build_remote64_verify\deep2_remote64_integration_cert.vcxproj]
+  (compiling source file '../src/deep2/deep2_remote64_integration_cert.cpp')
+  
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_sanitizer_annotate_container.hpp(120,8): error C2598: linkage specification must be at global scope [F:\~dev\rawrxd\build_remote64_verify\deep2_remote64_integration_cert.vcxproj]
+  (compiling source file '../src/deep2/deep2_remote64_integration_cert.cpp')
+  
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_new.h(17,8): error C2598: linkage specification must be at global scope [F:\~dev\rawrxd\build_remote64_verify\deep2_remote64_integration_cert.vcxproj]
+  (compiling source file '../src/deep2/deep2_remote64_integration_cert.cpp')
+  
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_new.h(25,11): error C2870: 'std': a namespace definition must appear either at file scope or immediately within another namespace definition [F:\~dev\rawrxd\build_remote64_verify\deep2_remote64_integration_cert.vcxproj]
+  (compiling source file '../src/deep2/deep2_remote64_integration_cert.cpp')
+  
+F:\~dev\rawrxd\src\deep2\deep2_remote64_integration_cert.cpp(93,5): error C1903: unable to recover from previous error(s); stopping compilation [F:\~dev\rawrxd\build_remote64_verify\deep2_remote64_integration_cert.vcxproj]

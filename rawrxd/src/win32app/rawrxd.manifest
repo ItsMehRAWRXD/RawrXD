@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity type="win32" name="RawrXD.Win32IDE" version="14.7.3.0" processorArchitecture="amd64"/>
+  <description>RawrXD Win32 IDE — local model inference and agentic tooling</description>
+
+  <!-- RAWRXD_WIN32IDE_RESOURCE_001
+       Without this element the process has no requestedExecutionLevel, so the
+       IDE cannot declare asInvoker explicitly and gets no virtualization
+       redirect. uiAccess is false: the IDE never needs UI automation rights. -->
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <!-- Per-monitor v2 DPI awareness. Without it Windows applies DPI
+       virtualization: at 150% the whole IDE is bitmap-scaled and blurry, and
+       the custom editor's own hit-test (which computes logical pixel
+       coordinates) drifts from where the user actually clicked. -->
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
+    </windowsSettings>
+  </application>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 / 11 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
+      <!-- Windows 8.1 -->
+      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
+    </application>
+  </compatibility>
+
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls"
+                        version="6.0.0.0" processorArchitecture="amd64"
+                        publicKeyToken="6595b64144ccf1df" language="*"/>
+    </dependentAssembly>
+  </dependency>
+</assembly>

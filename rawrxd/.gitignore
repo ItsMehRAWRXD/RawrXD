@@ -1,0 +1,24 @@
+# Generated benchmark fixtures and harness scratch directories.
+# These are regenerated on every sweep run and must never be committed: they
+# hide real work in `git status` and each one is tens to hundreds of MB.
+bench_tmp*/
+bt_*/
+bt_b75a/
+bt_d1024/
+bt_synth/
+
+# Harness logs. The receipts under receipts/ are the authority; raw .log/.err
+# captures are diagnostic only and several are corrupted by concurrent runs.
+*.log
+*.err
+src/masm/disasm.txt
+src/masm/cf_disasm.txt
+src/masm/gp.txt
+
+# Local build scratch for the ad-hoc sweep/probe toolchain (regime_sweep and
+# friends are built by hand into the repo root, not by CMake).
+rs*.exe
+b79.exe
+cf_probe*.exe
+gguf_probe.exe
+gguf_memory.exe
