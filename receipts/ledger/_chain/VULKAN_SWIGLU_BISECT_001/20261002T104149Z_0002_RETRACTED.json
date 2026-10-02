@@ -1,0 +1,16 @@
+﻿{
+    "id":  "VULKAN_SWIGLU_BISECT_001#0002",
+    "gate":  "VULKAN_SWIGLU_BISECT_001",
+    "seq":  2,
+    "verdict":  "RETRACTED",
+    "claim":  "SWIGLU is the primary threshold-crossing stage; 7/169 pairs cross rel\u003e1e-3",
+    "reason":  "reported crossings not reproducible under any recorded metric",
+    "evidence":  "0 crossings on rel_L2; worst 2.01125e-05 over 8712 pairs",
+    "backup_ref":  "DCB238B83297285A6CC6165BA4BFEBC52330F0A1BB8ED4CC45EABE25C70975D0",
+    "supersedes":  "VULKAN_SWIGLU_BISECT_001#0001",
+    "supersedes_id":  "VULKAN_SWIGLU_BISECT_001#0001",
+    "prev_hash":  "1af027508586af2650df76c10a251b9aec7c39ed9d35a6c78c2b4062cb1dd619",
+    "recorded_utc":  "20261002T104149Z",
+    "pid":  25680,
+    "self_hash":  "d082dde60a91738e9d759e30d24460e824caf80b2903f64cc031a0b3fc70965d"
+}

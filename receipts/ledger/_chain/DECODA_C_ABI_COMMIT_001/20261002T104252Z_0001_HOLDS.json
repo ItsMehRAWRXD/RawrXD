@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_C_ABI_COMMIT_001#0001",
+    "gate":  "DECODA_C_ABI_COMMIT_001",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "Every C ABI COMMIT is traceable to observed_margin \u003e 2*certified_epsilon",
+    "reason":  "",
+    "evidence":  "7/7 request shapes; EXACT_EXECUTED alone never commits; certified-bound commit preserved",
+    "backup_ref":  "F5C9E7B493C1B56EED6943BEF584C30ED5FC5A5ACD8547FF801472B6A7BE0BB5",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T104252Z",
+    "pid":  29884,
+    "self_hash":  "e9ca9f2290df76c220cfb7c21837f8ccf5f426d6f0e0fd4ea766b5450ce78aca"
+}

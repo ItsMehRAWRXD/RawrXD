@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_RD_FLOOR_001#0001",
+    "gate":  "DECODA_RD_FLOOR_001",
+    "seq":  1,
+    "verdict":  "FAILS",
+    "claim":  "Decoda plane-0 error (0.389 @ 3.93 b/w) is the source\u0027s rate-distortion floor, so plane reordering cannot improve it",
+    "reason":  "",
+    "evidence":  "Validated Lloyd-Max (brute-force agreed at k=8..64): D_min=0.187 at 4.0 b/w global on real DeepSeek expert weights. Decoda plane 0 is 2.08x WORSE than the optimal memoryless scalar quantizer at the same rate. Floor is 2.08x below Decoda, so plane 0 is NOT source-limited.",
+    "backup_ref":  "6480F5AC47931A0517F0B3C4D19DCF88078B49CFD261F5D21CE5079C67E7477D",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T110912Z",
+    "pid":  24200,
+    "self_hash":  "32d09188418da675276a8faa4839d92c4e61da392b97b33d1887bd1433b47d10"
+}

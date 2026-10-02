@@ -1,0 +1,16 @@
+﻿{
+    "id":  "GGUF_STREAM_GATE_NONVACUOUS_001#0001",
+    "gate":  "GGUF_STREAM_GATE_NONVACUOUS_001",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "The streaming gate cannot report PASS on impossible numbers",
+    "reason":  "",
+    "evidence":  "First run reported 1863 GB touched from a 10.36 GB file and 2.8e12 elements, and printed PASS. Three defects fixed: per-tensor counters never reset in open(); setWindow called before blockElems was known so the window collapsed to 1 block; gate only tested \u0027decoded something\u0027. Gate now also requires touchedBytes\u003c=fileBytes, elements\u003c=declaredElements, elements==declaredElements, window\u003e0.",
+    "backup_ref":  "DCB238B83297285A6CC6165BA4BFEBC52330F0A1BB8ED4CC45EABE25C70975D0",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T111717Z",
+    "pid":  20812,
+    "self_hash":  "bf1a3a3714558096f7b153a73ee03d748108ecfffc5111370ee1f59824821f98"
+}

@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_VS_SCALAR_001#0001",
+    "gate":  "DECODA_VS_SCALAR_001",
+    "seq":  1,
+    "verdict":  "FAILS",
+    "claim":  "Decoda\u0027s rate-distortion is competitive with a trivial per-block scalar quantizer at sub-Q4K bit rates",
+    "reason":  "",
+    "evidence":  "Per-block scalar (SSE-optimal step) beats Decoda at EVERY rate below ~11 b/w on both real tensors. Native F32 router: scalar 0.068@4.25b/w vs Decoda 0.370@3.95b/w (5.4x worse). Q4_K expert slice: scalar 0.173@3.25b/w vs Decoda 0.389@3.93b/w (2.3x worse at MORE bits). Crossover ~11 b/w, not 4.5",
+    "backup_ref":  "6480F5AC47931A0517F0B3C4D19DCF88078B49CFD261F5D21CE5079C67E7477D",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T105048Z",
+    "pid":  27560,
+    "self_hash":  "f0badd1a23a4a69abb1135cf34fe611d457633708750d84a14ea477ba52de661"
+}

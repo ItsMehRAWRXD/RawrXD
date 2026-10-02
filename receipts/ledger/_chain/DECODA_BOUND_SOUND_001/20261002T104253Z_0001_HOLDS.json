@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_BOUND_SOUND_001#0001",
+    "gate":  "DECODA_BOUND_SOUND_001",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "outputInfErrorBound is a sound upper bound on |dW.x|_inf",
+    "reason":  "",
+    "evidence":  "0 under-bounds over 1344 comparisons; max obs/bound 0.164; never tighter than truth",
+    "backup_ref":  "F5C9E7B493C1B56EED6943BEF584C30ED5FC5A5ACD8547FF801472B6A7BE0BB5",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T104253Z",
+    "pid":  16632,
+    "self_hash":  "c7100305392a6398fd56eec9e14d054e8edfdde227e0740bcc9d0cdcc3fc4665"
+}

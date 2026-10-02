@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_PERF_THESIS_001#0001",
+    "gate":  "DECODA_PERF_THESIS_001",
+    "seq":  1,
+    "verdict":  "FAILS",
+    "claim":  "Decoda\u0027s progressive tier beats the Q4_K encoding it would replace, enabling a larger model at lower cost",
+    "reason":  "",
+    "evidence":  "Real DeepSeek-V2-Lite blk.9 weights: 3.93 b/w -\u003e rel_L2 0.389; \u003e=4.5 b/w costs 1.3-3.5x Q4_K for accuracy Q4_K already has; each plane costs exactly 1.0000 b/w",
+    "backup_ref":  "F5C9E7B493C1B56EED6943BEF584C30ED5FC5A5ACD8547FF801472B6A7BE0BB5",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T104844Z",
+    "pid":  12284,
+    "self_hash":  "ca3ad5cbfb1c1b789f4fac07bd7569654124c137d597245ca0d45474d98abb7c"
+}

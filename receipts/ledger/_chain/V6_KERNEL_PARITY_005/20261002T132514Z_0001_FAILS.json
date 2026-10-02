@@ -1,0 +1,16 @@
+﻿{
+    "id":  "V6_KERNEL_PARITY_005#0001",
+    "gate":  "V6_KERNEL_PARITY_005",
+    "seq":  1,
+    "verdict":  "FAILS",
+    "claim":  "The fused dot produces a numerically correct GEMV",
+    "reason":  "",
+    "evidence":  "NOT MEASURED. The 4021 dot calls were fed raw Q4_K weights as the activation tile (sliceData), not a real activation vector, and there is no reference-parity check. abs(acc)=1.03e19 is consistent with an executing kernel but is not evidence of a correct one. REFERENCE_PARITY is still unproven.",
+    "backup_ref":  "819C8A83FA3D0DE9A29D4CEB51B115CEEE21052F9DCA32552052D5BCE38B5D65",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T132514Z",
+    "pid":  15424,
+    "self_hash":  "0fb8b5c44b9434aa6a6519302be44cd1112b9ac251799f2cf8ef912e46b58ede"
+}

@@ -1,0 +1,16 @@
+﻿{
+    "id":  "VULKAN_SWIGLU_BISECT_001#0003",
+    "gate":  "VULKAN_SWIGLU_BISECT_001",
+    "seq":  3,
+    "verdict":  "HOLDS",
+    "claim":  "No broad Vulkan body failure: CPU/GPU agree within 5e-5 rel_L2 on 8712/8712 pairs; SWIGLU is an amplifier of FFN_GATE, not an origin",
+    "reason":  "un-retraction of VULKAN_SWIGLU_BISECT_001#0002: reported crossings not reproducible under any recorded metric",
+    "evidence":  "rel_L2 max 2.01125e-05; SWIGLU/FFN_GATE ratio 1.0004 across crossing pairs; full receipt E9C81FB4F8CABB4D13E54D68BF1D2193140C92303F2EDD33A0CA971F28AC6C11",
+    "backup_ref":  "DCB238B83297285A6CC6165BA4BFEBC52330F0A1BB8ED4CC45EABE25C70975D0",
+    "supersedes":  "VULKAN_SWIGLU_BISECT_001#0002",
+    "supersedes_id":  "VULKAN_SWIGLU_BISECT_001#0002",
+    "prev_hash":  "d082dde60a91738e9d759e30d24460e824caf80b2903f64cc031a0b3fc70965d",
+    "recorded_utc":  "20261002T104157Z",
+    "pid":  30816,
+    "self_hash":  "943668c3220fc0a11c05d031afbab06a3afd25c1831d4bca4b3e3bda54423335"
+}

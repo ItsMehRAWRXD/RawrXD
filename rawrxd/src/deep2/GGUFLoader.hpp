@@ -200,6 +200,14 @@ public:
         return it == tensors_.end() ? nullptr : &it->second;
     }
 
+    // Public forwarder to the private ggml type-geometry table.
+    // Decode-critical: block-granular streaming (GGUFStream.hpp) needs
+    // blockElems/blockBytes, and keeping a second copy of this table would
+    // silently diverge and mis-size every slice. Callers must query, not copy.
+    static bool queryTypeGeometry(uint32_t type, size_t& blockElems, size_t& blockBytes) {
+        return typeGeometry(type, blockElems, blockBytes);
+    }
+
     std::vector<std::string> listTensors() const {
         std::vector<std::string> names;
         names.reserve(tensors_.size());

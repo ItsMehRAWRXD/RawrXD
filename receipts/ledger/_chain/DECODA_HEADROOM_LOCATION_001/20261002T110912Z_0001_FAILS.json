@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_HEADROOM_LOCATION_001#0001",
+    "gate":  "DECODA_HEADROOM_LOCATION_001",
+    "seq":  1,
+    "verdict":  "FAILS",
+    "claim":  "The 2.08x gap at Decoda plane 0 is recoverable by reordering residual bitplanes",
+    "reason":  "",
+    "evidence":  "At plane 0 there are zero residual planes by construction; the gap lives entirely in the ternary base (1.6 b/w) + alpha (0.5) + CSR (0.82) + sign bitset (1.0). Reordering operates on planes that do not exist at plane 0. Closing the gap requires replacing the ternary base, not reordering planes.",
+    "backup_ref":  "6480F5AC47931A0517F0B3C4D19DCF88078B49CFD261F5D21CE5079C67E7477D",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T110912Z",
+    "pid":  8276,
+    "self_hash":  "cf69e61d333312c27599a8bb67d9e3a0fc1dc70a4ccf4e176dd20ab6f2115815"
+}

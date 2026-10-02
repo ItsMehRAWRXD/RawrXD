@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_UNSAT_LIMIT_001#0001",
+    "gate":  "DECODA_UNSAT_LIMIT_001",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "An unsatisfiable max-row-L1 limit fails closed instead of returning a violating state",
+    "reason":  "",
+    "evidence":  "tryCheapest returns false on 4/4 unsatisfiable limits; wrapper throws 4/4; limit=0 resolves to exact err=0",
+    "backup_ref":  "F5C9E7B493C1B56EED6943BEF584C30ED5FC5A5ACD8547FF801472B6A7BE0BB5",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T104252Z",
+    "pid":  3260,
+    "self_hash":  "741998914978456bdf3f79d232b946c53acabb16e626ec92a8f7f1f6ab4514d7"
+}

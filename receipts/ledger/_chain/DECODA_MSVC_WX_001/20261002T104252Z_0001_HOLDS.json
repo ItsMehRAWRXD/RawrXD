@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_MSVC_WX_001#0001",
+    "gate":  "DECODA_MSVC_WX_001",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "build_msvc.bat builds the drop clean at /W4 /WX on MSVC x64",
+    "reason":  "",
+    "evidence":  "DECODA_MSVC_STRICT=PASS, GATE_EXIT=0, zero warnings across 5 TUs, 14.44.35207",
+    "backup_ref":  "F5C9E7B493C1B56EED6943BEF584C30ED5FC5A5ACD8547FF801472B6A7BE0BB5",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T104252Z",
+    "pid":  23460,
+    "self_hash":  "51f672be99c90dcf18b8f36bbbbfe9f44f90637da21f19505768ab7c1bf85ab2"
+}

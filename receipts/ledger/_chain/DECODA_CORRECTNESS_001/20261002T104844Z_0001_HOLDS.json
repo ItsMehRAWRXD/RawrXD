@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_CORRECTNESS_001#0001",
+    "gate":  "DECODA_CORRECTNESS_001",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "Decoda mechanism is truthful: packing lossless, bound sound, probe separation enforced, commit authority closed",
+    "reason":  "",
+    "evidence":  "drops 1-3: 0/1344 under-bounds; tamper+archive rejected; C ABI commits only on margin\u003e2eps; MSVC /W4 /WX + MASM export verified",
+    "backup_ref":  "F5C9E7B493C1B56EED6943BEF584C30ED5FC5A5ACD8547FF801472B6A7BE0BB5",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T104844Z",
+    "pid":  19000,
+    "self_hash":  "39f24adcd51fe8d3b442e570cfe65776174cc6573c69ba0e2e3b1af636857ec7"
+}

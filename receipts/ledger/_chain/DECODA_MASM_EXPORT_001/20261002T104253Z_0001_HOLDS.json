@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_MASM_EXPORT_001#0001",
+    "gate":  "DECODA_MASM_EXPORT_001",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "SwarmV25_NonLinear_Quant assembles, links and is reachable through the exported symbol",
+    "reason":  "",
+    "evidence":  "ml64 14.44.35228 -\u003e 544 B obj; MASM_SHIM_VERDICT=PASS; RETURN_CODE=1; COMMIT=0",
+    "backup_ref":  "F5C9E7B493C1B56EED6943BEF584C30ED5FC5A5ACD8547FF801472B6A7BE0BB5",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T104253Z",
+    "pid":  24632,
+    "self_hash":  "60ab4a52d57b14632fc5e7cc09ee4b558fe0728d9f83cf5b5771545494be324f"
+}

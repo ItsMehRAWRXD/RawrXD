@@ -1,0 +1,16 @@
+﻿{
+    "id":  "GGUF_STREAM_BOUNDED_001#0001",
+    "gate":  "GGUF_STREAM_BOUNDED_001",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "A 10.36 GB GGUF can be fully streamed through a fixed-size decode window with memory independent of file size",
+    "reason":  "",
+    "evidence":  "DeepSeek-V2-Lite-Chat.Q4_K_M: 377/377 tensors, 15,706,484,224 elements, 10,360,420,352 of 10,364,416,768 file bytes touched, peak decode window 4.000 MB, working-set/data ratio 0.000405, checksum -46692.7, 25.04 s at 0.41 GB/s",
+    "backup_ref":  "DCB238B83297285A6CC6165BA4BFEBC52330F0A1BB8ED4CC45EABE25C70975D0",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T111717Z",
+    "pid":  31280,
+    "self_hash":  "166c6e68a9252579ad5007f22e5bf69c74105e04e80f9718e2b17c3b0634ff16"
+}

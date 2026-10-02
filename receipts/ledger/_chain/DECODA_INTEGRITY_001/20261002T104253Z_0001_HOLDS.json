@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_INTEGRITY_001#0001",
+    "gate":  "DECODA_INTEGRITY_001",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "Archive corruption and exact-tail tampering are rejected on load",
+    "reason":  "",
+    "evidence":  "bit flip, truncation, name tamper, trailing data, duplicate name all rejected; exact-tail FNV re-derivation",
+    "backup_ref":  "F5C9E7B493C1B56EED6943BEF584C30ED5FC5A5ACD8547FF801472B6A7BE0BB5",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T104253Z",
+    "pid":  19048,
+    "self_hash":  "d448d9a30a52db89982399bcf847e4e0ecfd09ace877d32f5e3661e017ce0a00"
+}

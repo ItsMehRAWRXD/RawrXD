@@ -1,0 +1,16 @@
+﻿{
+    "id":  "V6_KERNEL_CLOSURE_005#0001",
+    "gate":  "V6_KERNEL_CLOSURE_005",
+    "seq":  1,
+    "verdict":  "HOLDS",
+    "claim":  "Decoda v6 fused dot kernels fire on real Q4_K expert weights",
+    "reason":  "",
+    "evidence":  "Realistic 256x1408 slice, 4 experts of blk.9.ffn_gate_exps.weight. 5632 blocks encoded. bits census: 0=612, 1=999, 2=633, 3=836, 4=2552. REJECT_CODES_EMPTY=0 (no pack bug). REAL_DECODA_DOT_CALLS=4021 (Dot2=633 Dot3=836 Dot4=2552). acc(sink)=1.03e19 nonzero. The 0-1 bit concentration seen in probes 003/004 was an artifact of encoding a 1x256 strip where the rank-1 u+v vectors (257B) exceeded the entire 132B budget.",
+    "backup_ref":  "819C8A83FA3D0DE9A29D4CEB51B115CEEE21052F9DCA32552052D5BCE38B5D65",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T132514Z",
+    "pid":  29224,
+    "self_hash":  "18bece01701a3ec3f39a280809c6fe55bc2c0b34baecc5577e45ab5095d219c1"
+}

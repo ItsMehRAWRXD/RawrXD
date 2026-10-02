@@ -1,0 +1,16 @@
+﻿{
+    "id":  "DECODA_READY_FOR_INTEGRATION_001#0001",
+    "gate":  "DECODA_READY_FOR_INTEGRATION_001",
+    "seq":  1,
+    "verdict":  "FAILS",
+    "claim":  "Decoda core is ready to splice into the live Deep2 tree",
+    "reason":  "",
+    "evidence":  "source-only drop; LIVE_DEEP2_TREE_SPLICE and LIVE_VULKAN_DECODA_KERNEL not attempted",
+    "backup_ref":  "6C90442C9F48525F6FEC3DE66F2B3075682B61162F4C5E9D1B311E59825FB9B0",
+    "supersedes":  "",
+    "supersedes_id":  null,
+    "prev_hash":  null,
+    "recorded_utc":  "20261002T104253Z",
+    "pid":  9284,
+    "self_hash":  "9d01580cf32422c38fe2a735ab4488b9ae149a6c56592e920ce56850e6e515d0"
+}
