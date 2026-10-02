@@ -97,3 +97,4 @@ __pycache__/
 # Zero-byte scratch probe output from server smoke runs (gate1_srv.*).
 gate1_srv.err
 gate1_srv.out
+receipts/ledger/_backups/
