@@ -1,1 +1,1 @@
-{"intent":"cert crash after write","op":"begin"}
+{"args":{"path":"C:\\Windows\\win.ini"},"tool":"read_file"}

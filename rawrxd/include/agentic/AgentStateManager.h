@@ -50,15 +50,27 @@ public:
     void PushAssistant(const std::string& content);
     void PushToolResult(const std::string& toolName, const std::string& result);
 
-    // Builds the model context. The system prompt and the most recent user
-    // message are always retained; when the budget is exceeded the OLDEST
-    // middle messages are dropped. A naive implementation that `break`s on the
-    // first over-budget message silently drops the newest turns, which is the
-    // part the model actually needs.
+    // Builds the model context. The system prompt, the most recent user message
+    // and the most recent tool observation are always retained; when the budget
+    // is exceeded the OLDEST middle messages are dropped. A naive
+    // implementation that `break`s on the first over-budget message silently
+    // drops the newest turns, which is the part the model actually needs.
+    //
+    // RAWRXD_MODEL_TOOL_PROTOCOL_AUTHORITY_001
+    //
+    // Pinning the newest tool observation is not an optimisation. A single
+    // read_file can return up to maxOutputBytes (1 MiB by default) against a
+    // 16 k character budget, and the drop loop is oldest-first, so with one
+    // large observation the message it eventually removed was the observation
+    // itself: the loop resumed inference that had never seen the tool's answer,
+    // and reported success. An observation too large for the budget is now
+    // TRUNCATED with a visible marker, never dropped, and the loss is counted.
     std::string BuildContextWindow() const;
 
     // What BuildContextWindow had to drop, for measurement.
     std::uint32_t LastDroppedMessageCount() const;
+    // How many characters of pinned content did the budget force it to cut.
+    std::uint32_t LastTruncatedCharCount() const;
     std::size_t LastContextChars() const;
 
     std::vector<Message> History() const;
@@ -87,6 +99,7 @@ private:
     bool fatalError_ = false;
     std::string lastError_;
     mutable std::uint32_t lastDropped_ = 0;
+    mutable std::uint32_t lastTruncatedChars_ = 0;
     mutable std::size_t lastContextChars_ = 0;
 };
 

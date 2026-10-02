@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.20)
+project(fixed_accumulator NONE)
+
+# Two defects found in RAWRXD_GATE_AGGREGATION_001 by the section-12 harnesses.
+#
+# D1  ${ARGV1} is EMPTY on this CMake/host even though the argument was passed.
+#     Proven: ARGC=1, ${ARGV}='LIST_A violated', ${ARGV1}=''.
+#     Effect: every accumulated message was empty, so the aggregate reported
+#     "failed in 3 list(s):" followed by blanks.
+#
+# D2  CACHE INTERNAL TRUNCATES a stored string at the first embedded newline.
+#     Proven: storing "message with \n embedded newline" yields a value ending
+#     at the newline. Every real violation message contains \n, so even with D1
+#     fixed the first line would survive and the file list would be lost.
+#
+# Fix: named parameter instead of ARGV, and newlines encoded to a sentinel
+# before they enter the cache, decoded at raise time.
+
+function(declare_violation msg)
+    math(EXPR _vc "${CNT} + 1")
+    set(CNT ${_vc} CACHE INTERNAL "" FORCE)
+    string(REPLACE "\n" "@@NL@@" _enc "${msg}")
+    set(ACC "${ACC}|||${_enc}" CACHE INTERNAL "" FORCE)
+endfunction()
+
+function(raise_violations)
+    if(NOT CNT)
+        message(STATUS "NO_VIOLATIONS")
+        return()
+    endif()
+    string(REPLACE "|||" "\n\n  " _all "${ACC}")
+    string(REPLACE "@@NL@@" "\n  " _all "${_all}")
+    string(STRIP "${_all}" _all)
+    message(FATAL_ERROR "AGGREGATE failed in ${CNT} list(s):\n\n  ${_all}")
+endfunction()
+
+declare_violation("LIST_A violated: 3 missing\n  src/x.cpp src/y.cpp")
+declare_violation("LIST_B EMPTY-BODIED: 2 files\n  src/p.cpp src/q.cpp")
+declare_violation("LIST_C violated: plain single line")
+raise_violations()

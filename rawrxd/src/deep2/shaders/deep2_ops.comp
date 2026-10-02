@@ -1,4 +1,4 @@
-#version 450
+﻿#version 450
 // Batch 9 Deep2 generic correctness-first GPU ops.
 // No external shader libraries.
 layout(local_size_x = 64) in;
@@ -76,32 +76,70 @@ void main() {
     }
 
     if (pc.op == OP_ROPE) {
+        // RAWRXD_VULKAN_ROPE_CONVENTION_001
+        //
+        // This branch implemented ONLY the GPT-J adjacent-pair convention:
+        //     rotate (i, i+1) for i in [0, rotaryDim) step 2
+        //     invFreq = theta^(-2*pair/rotaryDim)
+        //
+        // Deep2Engine::applyRoPE selects the convention from the architecture
+        // and applies the NeoX ROTATED-HALF pairing for llama, qwen, qwen2,
+        // mistral, baichuan, yi, olmo, starchat, replit, refact, stablelm and
+        // deepseek2:
+        //     rotate (i, i + rotaryDim/2) for i in [0, rotaryDim/2)
+        //     invFreq = theta^(-i/(rotaryDim/2))
+        //
+        // Those are two different rotations of the same vector. The divergence
+        // is INVISIBLE at position 0, where angle = 0, cos = 1 and sin = 0 make
+        // both conventions the identity -- which is exactly why this survived
+        // every position-0 gate, every "step 0 matches" bisection, and every
+        // L2 comparison, and only appeared once a second visible position made
+        // the (incorrectly rotated) K visible to attention.
+        //
+        // pc.f1 carries the rotary dimension in its integral part and the NeoX
+        // flag in its fractional part. OpsPush has no free integer field: p0..p5
+        // and n are all live, and f0 is theta.
         uint headDim = pc.p0;
         uint heads = pc.p1;
         uint kvHeads = pc.p2;
         uint pos = pc.p3;
-        uint pairsPerHead = headDim / 2u;
+        uint rotaryDim = uint(pc.f1);
+        // The style flag lives in the fractional part as exactly 0.5, and the
+        // test is `> 0.25` rather than `> 0.5`: for f1 = 64.5, `pc.f1 - float(64)`
+        // is exactly 0.5f, so a `> 0.5` test is FALSE and the NeoX branch never
+        // activates. That is what the first attempt did, and it left the output
+        // bit-identical to the unfixed shader -- which is precisely why a fix
+        // that cannot be distinguished from no fix must be verified by output.
+        bool neox = (pc.f1 - float(rotaryDim)) > 0.25;
+        if (rotaryDim == 0u || rotaryDim > headDim) rotaryDim = headDim;
+        rotaryDim &= ~1u;                 // must be even
+        if (rotaryDim == 0u) return;
+        // NeoX rotates HALF as many pairs, each spanning the full head.
+        uint pairsPerHead = rotaryDim / 2u;
         uint allHeads = heads + kvHeads;
         uint totalPairs = allHeads * pairsPerHead;
         if (gid >= totalPairs || headDim == 0u || pc.f0 <= 0.0) return;
 
         uint h = gid / pairsPerHead;
         uint pair = gid % pairsPerHead;
-        uint i0 = h * headDim + pair * 2u;
-        uint i1 = i0 + 1u;
-        float exponent = -float(pair * 2u) / float(headDim);
+        uint halfRot = rotaryDim / 2u;
+        float exponent = neox
+            ? -float(pair) / float(halfRot)
+            : -float(pair * 2u) / float(rotaryDim);
         float theta = float(pos) * pow(pc.f0, exponent);
         float cs = cos(theta);
         float sn = sin(theta);
 
         if (h < heads) {
+            uint i0 = neox ? (h * headDim + pair) : (h * headDim + pair * 2u);
+            uint i1 = neox ? (i0 + halfRot) : (i0 + 1u);
             float x0 = a[i0], x1 = a[i1];
             a[i0] = x0 * cs - x1 * sn;
             a[i1] = x0 * sn + x1 * cs;
         } else {
             uint kh = h - heads;
-            i0 = kh * headDim + pair * 2u;
-            i1 = i0 + 1u;
+            uint i0 = neox ? (kh * headDim + pair) : (kh * headDim + pair * 2u);
+            uint i1 = neox ? (i0 + halfRot) : (i0 + 1u);
             float x0 = b[i0], x1 = b[i1];
             b[i0] = x0 * cs - x1 * sn;
             b[i1] = x0 * sn + x1 * cs;

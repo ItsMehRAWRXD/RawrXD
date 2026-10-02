@@ -1,5 +1,5 @@
-// ============================================================================
-// workspace_model.cpp — Real explicit workspace/project model for IDE
+﻿// ============================================================================
+// workspace_model.cpp â€” Real explicit workspace/project model for IDE
 // ============================================================================
 // Explicit workspace = folder(s); load/save "project" (open files, layout)
 // Workspace root + optional .rawrxd/workspace.json
@@ -450,7 +450,7 @@ private:
         std::ifstream file(m_configPath);
         if (!file.is_open()) {
             m_loadOutcome = LoadOutcome::Absent;
-            return false; // No existing config — a first run, not a failure.
+            return false; // No existing config â€” a first run, not a failure.
         }
 
         nlohmann::json j;
@@ -650,6 +650,35 @@ bool RawrXD_IDE_SaveWorkspace() {
     
     return RawrXD::IDE::g_workspace->save();
 }
+} // extern "C"
+
+// RAWRXD_END_TO_END_STATE_001
+//
+// The two functions below return C++ types -- a std::vector of a struct that
+// contains std::string, and a struct that contains three std::strings. Neither
+// can be declared with C linkage (MSVC C2526), and they were: this file had
+// its own extern "C" block wrapping them, which contradicted the header and
+// produced C7741 "ABI inconsistency" on every build. The header now agrees, and
+// so does this file: C linkage ends above, and the C++-typed results are
+// defined with C++ linkage like everything else.
+
+
+// RAWRXD_MULTIROOT_EXPLORER_001: the folder list for the explorer's per-root
+// nodes. A copy under the lock rather than a reference out of it, so the caller
+// cannot observe a vector being mutated underneath it.
+std::vector<RawrXDWorkspaceFolder> RawrXD_IDE_GetWorkspaceFolders() {
+    std::vector<RawrXDWorkspaceFolder> out;
+    std::lock_guard<std::mutex> lock(RawrXD::IDE::g_workspaceMutex);
+    if (!RawrXD::IDE::g_workspace) return out;
+    for (const auto& f : RawrXD::IDE::g_workspace->getFolders()) {
+        RawrXDWorkspaceFolder w;
+        w.path   = f.path;
+        w.name   = f.name;
+        w.isRoot = f.isRoot;
+        out.push_back(w);
+    }
+    return out;
+}
 
 // ============================================================================
 // RAWRXD_WORKSPACE_IDE_BINDING_001 -- measured diagnostics
@@ -679,4 +708,3 @@ RawrXDWorkspaceDiagnostics RawrXD_IDE_GetWorkspaceDiagnostics() {
     return d;
 }
 
-} // extern "C"

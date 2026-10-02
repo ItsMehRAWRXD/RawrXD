@@ -487,7 +487,142 @@ struct ActiveTx {
     HANDLE journal = INVALID_HANDLE_VALUE;
     std::uint32_t fileIndex = 0;
     std::vector<std::string> recordedBefore;  // paths whose before-state is durable
+    // RAWRXD_GIT_TRANSACTION_AUTHORITY_001 / G7: the index tree as it was before
+    // the first mutating git operation. Durable through the journal, not just
+    // here, so a crash restores it too.
+    std::string gitIndexTree;
 };
+
+// RAWRXD_GIT_TRANSACTION_AUTHORITY_001 / G7
+// Runs git with an argv and no shell, capturing stdout. CreateProcessW rather
+// than _popen, for the same reason the git-safety authority uses argv: a
+// metacharacter in a tree hash or a path must be data, never syntax.
+//
+// A tree hash is 40 hex characters, so the only realistic output that matters is
+// checked by the caller against that shape. Anything else is treated as failure.
+bool RunGit(const std::wstring& cwd, const std::vector<std::wstring>& args, std::string& outStdout, bool* outLaunchFailed = nullptr, std::string* outDiag = nullptr) {
+    // outLaunchFailed separates "git could not be started" from "git ran and
+    // refused". Collapsing the two is how a missing index baseline got reported
+    // as an unmerged index.
+    if (outLaunchFailed) *outLaunchFailed = false;
+    SECURITY_ATTRIBUTES sa{};
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
+    HANDLE readPipe = nullptr;
+    HANDLE writePipe = nullptr;
+    if (!::CreatePipe(&readPipe, &writePipe, &sa, 0)) return false;
+    ::SetHandleInformation(readPipe, HANDLE_FLAG_INHERIT, 0);
+
+    std::wstring commandLine = L"git";
+    for (const auto& a : args) {
+        commandLine += L" ";
+        commandLine += a;
+    }
+    std::vector<wchar_t> mutableCmd(commandLine.begin(), commandLine.end());
+    mutableCmd.push_back(L'\0');
+
+    // STARTF_USESTDHANDLES requires all THREE handles to be valid. Passing a
+    // null stdin makes CreateProcessW fail outright with ERROR_INVALID_HANDLE,
+    // which looked exactly like "git ran and refused" -- the first version of
+    // this reported a missing index baseline for the wrong reason entirely.
+    HANDLE nullInput = ::CreateFileW(L"NUL", GENERIC_READ, FILE_SHARE_READ, nullptr,
+                                      OPEN_EXISTING, 0, nullptr);
+    if (nullInput == INVALID_HANDLE_VALUE) {
+        ::CloseHandle(readPipe);
+        ::CloseHandle(writePipe);
+        return false;
+    }
+    STARTUPINFOW si{};
+    si.cb = sizeof(si);
+    si.hStdInput = nullInput;
+    si.hStdOutput = writePipe;
+    si.hStdError = writePipe;  // same pipe: git writes progress and errors to stderr
+    si.dwFlags = STARTF_USESTDHANDLES;
+    PROCESS_INFORMATION pi{};
+
+    std::wstring exeDir;
+    std::vector<wchar_t> exePath;
+    {
+        // Size first, then allocate. A single MAX_PATH-sized query SILENTLY
+        // TRUNCATES a long PATH and can drop the entry that holds git.exe -- which
+        // is exactly what happened here: the runner reported "git exited non-zero
+        // with no output" when it had never launched git at all.
+        const DWORD needed = ::GetEnvironmentVariableW(L"PATH", nullptr, 0);
+        if (needed == 0) {
+            ::CloseHandle(readPipe);
+            ::CloseHandle(writePipe);
+            return false;
+        }
+        std::wstring search(needed, L'\0');
+        const DWORD n = ::GetEnvironmentVariableW(L"PATH", &search[0], needed);
+        search.resize(n);
+        const wchar_t* gitExe = nullptr;
+        std::size_t start = 0;
+        while (start <= search.size()) {
+            const std::size_t end = search.find(L';', start);
+            const std::wstring dir =
+                search.substr(start, end == std::wstring::npos ? std::wstring::npos : end - start);
+            if (!dir.empty()) {
+                std::wstring candidate = dir + L"\\git.exe";
+                if (::GetFileAttributesW(candidate.c_str()) != INVALID_FILE_ATTRIBUTES) {
+                    gitExe = candidate.c_str();
+                    exePath.assign(candidate.begin(), candidate.end());
+                    exePath.push_back(L'\0');
+                    break;
+                }
+            }
+            if (end == std::wstring::npos) break;
+            start = end + 1;
+        }
+        if (!gitExe) {
+            ::CloseHandle(readPipe);
+            ::CloseHandle(writePipe);
+            return false;
+        }
+    }
+
+    if (outDiag) {
+        *outDiag = "exe=" + narrow(std::wstring(exePath.data())) + " cmd=" + narrow(commandLine) +
+                   " cwd=" + narrow(cwd);
+    }
+    const BOOL ok = ::CreateProcessW(exePath.data(), mutableCmd.data(), nullptr, nullptr, TRUE,
+                                     CREATE_NO_WINDOW, nullptr, cwd.empty() ? nullptr : cwd.c_str(),
+                                     &si, &pi);
+    ::CloseHandle(writePipe);
+    ::CloseHandle(nullInput);
+    if (!ok) {
+        ::CloseHandle(readPipe);
+        if (outLaunchFailed) *outLaunchFailed = true;
+        return false;
+    }
+    char buffer[4096];
+    DWORD got = 0;
+    outStdout.clear();
+    while (::ReadFile(readPipe, buffer, sizeof(buffer), &got, nullptr) && got > 0) {
+        outStdout.append(buffer, got);
+    }
+    ::CloseHandle(readPipe);
+    ::WaitForSingleObject(pi.hProcess, 30000);
+    DWORD exitCode = 1;
+    ::GetExitCodeProcess(pi.hProcess, &exitCode);
+    if (outDiag) *outDiag += " exit=" + std::to_string(exitCode);
+    ::CloseHandle(pi.hProcess);
+    ::CloseHandle(pi.hThread);
+    while (!outStdout.empty() &&
+           (outStdout.back() == '\n' || outStdout.back() == '\r')) {
+        outStdout.pop_back();
+    }
+    return exitCode == 0;
+}
+
+bool LooksLikeTreeHash(const std::string& s) {
+    if (s.size() != 40) return false;
+    for (char c : s) {
+        const bool hex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+        if (!hex) return false;
+    }
+    return true;
+}
 
 ActiveTx& active() {
     static ActiveTx tx;
@@ -958,6 +1093,67 @@ RecoveryReport Transaction::LastRecovery() {
     return lastRecovery();
 }
 
+bool Transaction::RecordGitIndexBaseline(std::string* outTree, std::string* outError) {
+    if (outTree) outTree->clear();
+    std::wstring cwd;
+    std::string root;
+    {
+        std::lock_guard<std::mutex> lk(activeMutex());
+        if (!active().active) {
+            if (outError) *outError = "no active transaction";
+            return false;
+        }
+        // Idempotent: the FIRST pre-mutation index is the one that has to be
+        // restored, so a second call must not overwrite it with a state the
+        // transaction has already changed.
+        if (!active().gitIndexTree.empty()) {
+            if (outTree) *outTree = active().gitIndexTree;
+            return true;
+        }
+        cwd = active().workspaceRootW;
+        root = active().workspaceRoot;
+    }
+
+    std::string tree;
+    bool launchFailed = false;
+    std::string diag;
+    if (!RunGit(cwd, {L"write-tree"}, tree, &launchFailed, &diag)) {
+        if (outError) {
+            // The captured output goes into the error verbatim. A first attempt
+            // blamed the index for a failure whose real cause was not the index,
+            // and the only way to avoid guessing is to carry git's own words out.
+            *outError = launchFailed
+                            ? "git could not be launched, so no index baseline was captured"
+                            : ("git write-tree exited non-zero in " + narrow(cwd) + ": " +
+                               (tree.empty() ? std::string("<no output>") : tree) + " [" + diag + "]");
+        }
+        return false;
+    }
+    if (!LooksLikeTreeHash(tree)) {
+        if (outError) *outError = "git write-tree produced output that is not a tree hash: " + tree;
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lk(activeMutex());
+    if (!active().active) {
+        if (outError) *outError = "the transaction closed while the baseline was being captured";
+        return false;
+    }
+    if (active().gitIndexTree.empty()) {
+        active().gitIndexTree = tree;
+        // Durable, not in-memory: a crash between this record and the rollback
+        // must still leave the original index recoverable.
+        if (active().journal != INVALID_HANDLE_VALUE) {
+            // AppendJournal takes a whole payload and CRCs it. The payload shape
+            // must match ParseRecord: type|txId|field.
+            AppendJournal(active().journal, "GITINDEX|" + active().txId + "|" + tree, nullptr);
+        }
+    }
+    if (outTree) *outTree = active().gitIndexTree;
+    (void)root;
+    return true;
+}
+
 // ---------------------------------------------------------------------------
 // Recovery
 // ---------------------------------------------------------------------------
@@ -1057,8 +1253,9 @@ RecoveryReport RecoverWorkspace(const std::string& workspaceRoot, bool writeRece
                                      : fileName.substr(0, fileName.size() - 5);
 
         bool committed = false;
-        bool alreadyRolledBack = false;
-        std::vector<BeforeEntry> befores;
+bool alreadyRolledBack = false;
+    std::string gitIndexBaseline;  // RAWRXD_GIT_TRANSACTION_AUTHORITY_001 / G7
+    std::vector<BeforeEntry> befores;
         std::istringstream iss(text);
         std::string line;
         while (std::getline(iss, line)) {
@@ -1081,6 +1278,14 @@ RecoveryReport RecoverWorkspace(const std::string& workspaceRoot, bool writeRece
                 // caught exactly that: the second pass re-restored identical
                 // bytes and reported the transaction as still incomplete.
                 alreadyRolledBack = true;
+            } else if (rec.type == "GITINDEX" && rec.fields.size() >= 2) {
+                // RAWRXD_GIT_TRANSACTION_AUTHORITY_001 / G7: the index tree as it
+                // was before the first mutating git operation. Restoring files
+                // without restoring the index leaves a staged file whose content
+                // was just reverted, which is a state the operator did not create
+                // and cannot easily explain.
+                const std::string tree = rec.fields[1];
+                if (LooksLikeTreeHash(tree)) gitIndexBaseline = tree;
             } else if (rec.type == "FILE_BEFORE" && rec.fields.size() >= 4) {
                 BeforeEntry e;
                 if (!hexDecode(rec.fields[0], e.path)) continue;
@@ -1149,6 +1354,26 @@ RecoveryReport RecoverWorkspace(const std::string& workspaceRoot, bool writeRece
             } else {
                 r.filesFailed += 1;
                 r.failedPaths.push_back(e.path);
+            }
+        }
+
+        // RAWRXD_GIT_TRANSACTION_AUTHORITY_001 / G7: restore the index AFTER the
+        // file bytes, so that a transaction which both edited and staged ends up
+        // consistent: content reverted first, then staged state reverted to match.
+        if (!gitIndexBaseline.empty()) {
+            std::string err;
+            bool indexLaunchFailed = false;
+            if (RunGit(rootW, {L"read-tree", widen(gitIndexBaseline)}, err, &indexLaunchFailed)) {
+                r.gitIndexRestored += 1;
+                r.gitIndexTree = gitIndexBaseline;
+            } else {
+                // A failure here is NOT silent: the files are restored but the
+                // index still reflects the transaction, and an operator who is
+                // told "recovery succeeded" would not know to look.
+                r.gitIndexFailed += 1;
+                r.gitIndexError = indexLaunchFailed
+                                                ? std::string("git could not be launched")
+                                                : err;
             }
         }
 

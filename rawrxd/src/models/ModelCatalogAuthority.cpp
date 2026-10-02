@@ -12,6 +12,7 @@
 #include <fstream>
 #include <set>
 #include <sstream>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -152,6 +153,18 @@ namespace rawrxd::models
         return e == ".gguf";
     }
 
+    // Ollama names its weight blobs "sha256-<hex>" with no extension, so the
+    // extension test alone hides every Ollama model. Read the 4-byte magic
+    // instead: GGUF files begin with the ASCII tag "GGUF".
+    bool looksLikeGguf(const std::string& path) {
+        std::ifstream f(path, std::ios::binary);
+        if (!f) return false;
+        char magic[4] = {0, 0, 0, 0};
+        f.read(magic, 4);
+        if (f.gcount() != 4) return false;
+        return std::memcmp(magic, "GGUF", 4) == 0;
+    }
+
     // Read a text file fully; empty on failure.
     std::string readAll(const fs::path& p) {
         std::ifstream in(p, std::ios::binary);
@@ -256,21 +269,62 @@ namespace rawrxd::models
                 name = parent.parent_path().filename().string() + "/" + name;
             }
 
-            // Pull the blob digest out of the manifest text.
+            // Ollama's canonical identifier is "<name>:<tag>", which is what
+            // `ollama list` prints. The tag was read and then discarded, so
+            // gemma3:latest and gemma3:4b collapsed into one record named
+            // "gemma3" and neither was reachable by the name a user types.
+            const std::string fullName = name + ":" + tag;
+
+            // Resolve the weights blob for this manifest.
+            //
+            // An Ollama manifest is OCI/Docker JSON. It writes digests with a
+            // COLON  -- "digest":"sha256:<hex>"  -- while the blob file on
+            // disk is named with a HYPHEN: blobs/sha256-<hex>. Searching for
+            // "sha256-" finds nothing in a real manifest, so every Ollama
+            // model resolved to an empty path (128 of 206 records).
+            //
+            // Only the layer whose mediaType is
+            // application/vnd.ollama.image.model holds weights. A cloud-only
+            // manifest has no such layer, and must stay unresolved rather than
+            // borrow the config blob's path.
             std::string blobPath;
             const std::string text = readAll(it->path());
-            const size_t dpos = text.find("sha256-");
-            if (dpos != std::string::npos) {
-                size_t end = dpos;
-                while (end < text.size() && (std::isalnum(static_cast<unsigned char>(text[end])) ||
-                                             text[end] == '-')) ++end;
-                const std::string digest = text.substr(dpos, end - dpos);
-                const fs::path candidate = blobs / digest;
+
+            const std::string kModelMedia = "application/vnd.ollama.image.model";
+            size_t search = 0;
+            std::string modelDigest;
+            while (true) {
+                const size_t dpos = text.find("\"digest\"", search);
+                if (dpos == std::string::npos) break;
+                const size_t colon = text.find(':', dpos + 8);
+                if (colon == std::string::npos) break;
+                const size_t vstart = text.find_first_not_of(" \t\"", colon + 1);
+                if (vstart == std::string::npos) break;
+                if (text.compare(vstart, 7, "sha256:") != 0) {
+                    search = colon + 1;
+                    continue;
+                }
+                size_t end = vstart + 7;
+                while (end < text.size() && std::isxdigit(static_cast<unsigned char>(text[end]))) ++end;
+                const std::string hex = text.substr(vstart + 7, end - (vstart + 7));
+                if (hex.empty()) break;
+
+                // Does this digest belong to the model layer?
+                const size_t mediaPos = text.rfind("\"mediaType\"", dpos);
+                if (mediaPos != std::string::npos && text.find(kModelMedia, mediaPos) < dpos) {
+                    modelDigest = hex;
+                    break;
+                }
+                search = end;
+            }
+
+            if (!modelDigest.empty()) {
+                const fs::path candidate = blobs / ("sha256-" + modelDigest);
                 std::error_code cec;
                 if (fs::exists(candidate, cec)) blobPath = candidate.string();
             }
 
-            if (ModelRecord* existing = findByName(name)) {
+            if (ModelRecord* existing = findByName(fullName)) {
                 // The blob is a file we may already have recorded by path.
                 if (!blobPath.empty() && existing->path != blobPath) {
                     ModelRecord* byPath = nullptr;
@@ -282,7 +336,7 @@ namespace rawrxd::models
             } else {
                 ModelRecord r;
                 r.source = "ollama_manifest";
-                r.name   = name;
+                r.name   = fullName;
                 r.path   = blobPath;
                 std::error_code sec;
                 if (!blobPath.empty()) {
@@ -339,23 +393,72 @@ namespace rawrxd::models
 
     void dedupeModelRecords() {
         State& s = state();
+
+        auto norm = [](std::string v) {
+            std::transform(v.begin(), v.end(), v.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            return v;
+        };
+
+        // 1. Drop records that repeat a name already present.
+        std::unordered_set<std::string> seenNames;
         std::vector<ModelRecord> out;
-        std::unordered_set<std::string> seenPaths;
+        out.reserve(s.records.size());
         for (auto& r : s.records) {
-            if (!r.path.empty() && r.source != "alias") {
-                std::string key = r.path;
-                std::transform(key.begin(), key.end(), key.begin(),
-                               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-                if (!seenPaths.insert(key).second) { ++s.stats.duplicatesRemoved; continue; }
+            const std::string nk = norm(r.name);
+            if (!nk.empty() && !seenNames.insert(nk).second) {
+                ++s.stats.duplicatesRemoved;
+                continue;
             }
             out.push_back(r);
         }
-        s.records.swap(out);
+
+        // 2. Resolve file-vs-tag collisions. A tagged Ollama model and the raw
+        //    blob file it points at are different objects; the tag is what a
+        //    user types, so the tag survives and the bare file record goes.
+        //
+        //    Two DIFFERENT tags sharing one blob is not a duplicate at all --
+        //    it is the normal alias case (gemma3:latest and gemma3:4b point at
+        //    one blob), and both must remain addressable. Keying dedup on path
+        //    alone deleted every such tag.
+        std::unordered_map<std::string, std::vector<size_t>> byPath;
+        for (size_t i = 0; i < out.size(); ++i) {
+            if (out[i].path.empty() || out[i].source == "alias") continue;
+            byPath[norm(out[i].path)].push_back(i);
+        }
+
+        std::vector<bool> drop(out.size(), false);
+        for (auto& entry : byPath) {
+            const auto& idx = entry.second;
+            if (idx.size() < 2) continue;
+
+            bool anyTag = false;
+            for (size_t i : idx) if (out[i].source == "ollama_manifest") { anyTag = true; break; }
+            if (!anyTag) continue;   // same-class collisions already handled by name
+
+            for (size_t i : idx) {
+                if (out[i].source == "ollama_manifest") continue;
+                drop[i] = true;
+                ++s.stats.duplicatesRemoved;
+            }
+        }
+
+        std::vector<ModelRecord> final;
+        final.reserve(out.size());
+        for (size_t i = 0; i < out.size(); ++i) {
+            if (!drop[i]) final.push_back(out[i]);
+        }
+        s.records.swap(final);
     }
 
     void probeAllGgufMetadata() {
         for (auto& r : state().records) {
-            if (r.path.empty() || !hasGgufExtension(fs::path(r.path))) continue;
+            if (r.path.empty()) continue;
+            // Ollama stores weights as blobs/sha256-<hex> with no .gguf
+            // extension, so an extension test skipped every Ollama model and
+            // left arch/quant blank. Decide by content: the GGUF magic is the
+            // only reliable signal.
+            if (!hasGgufExtension(fs::path(r.path)) && !looksLikeGguf(r.path)) continue;
             const GgufInfo info = probeGgufFile(r.path);
             r.arch         = info.architecture;
             r.quantization = info.quantization;

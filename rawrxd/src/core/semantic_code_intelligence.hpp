@@ -380,7 +380,9 @@ private:
     // Internal helpers
     bool matchesPrefix(const std::string& name, const std::string& prefix) const;
     bool fuzzyMatch(const std::string& name, const std::string& query) const;
-    void buildFileIndex(const std::string& filePath);
+    // Returns false when the file could not be read or parsed, so the callers
+    // can report that instead of counting an unreadable file as indexed.
+    bool buildFileIndex(const std::string& filePath);
 
     // State
     mutable std::mutex                              m_mutex;

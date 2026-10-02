@@ -191,7 +191,8 @@ public:
     bool DispatchSwiGLU(DeviceBuf& gate, DeviceBuf& up, DeviceBuf& out, uint32_t n);
     bool DispatchRope(DeviceBuf& q, DeviceBuf& k,
                       uint32_t headDim, uint32_t heads, uint32_t kvHeads,
-                      uint32_t pos, float theta);
+                      uint32_t pos, float theta,
+                      bool neoxStyle, uint32_t rotaryDim);
     bool AppendKV(DeviceBuf& k, DeviceBuf& v, uint32_t kvDim,
                   uint32_t pos, uint32_t layer);
     // RAWRXD_GPU_KV_HANDOFF_001: read-only measurement of the K/V cache bytes

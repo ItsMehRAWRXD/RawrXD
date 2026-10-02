@@ -1,0 +1,44 @@
+RAWRXD_B83_IDE_WRITE_TRANSACTIONAL_PROFILE_001.LOCK
+locked_at_utc = 2026-10-01T22:22:12Z
+locked_by     = the session that produced this evidence package
+
+# WHAT THIS LOCK MEANS
+#   The evidence named below is SEALED: it is the record that was measured, and
+#   it is not to be regenerated, edited, or replaced in place. New runs append.
+# WHAT IT DOES NOT MEAN
+#   The SOURCE is not frozen and the PRODUCT is not certified beyond what the
+#   named checks measured. A third party is actively writing this repository.
+#   A sealed receipt that stops matching its sources is a stale receipt, and the
+#   remedy is a new certificate, never an edit of this one.
+
+receipt_sha256            = 693BA7B949E3E7BA27750DF3F5B5EC3AAE85A317F181A9734DC83454881BD72F  RAWRXD_B83_IDE_WRITE_TRANSACTIONAL_PROFILE_001.md
+certified_binary_v1       = 396F06BDB70FA89D2ECD5CBEE72565CA359EBFF435A3CB4AD67AA232C44A9F59  (overwritten on disk; identified here)
+certified_binary_v2       = 061819CF1FD2FDEA63B8441BBB39690887854BDDEEFCB837142BC75869D6DBDC  (rawrxd/build/bin/Release/rawr-server.exe)
+source_revision_at_v1_cert= 17b035412efc0e76dac997456008f6471b9274e2
+head_at_v2_build          = 7d2fc86e3dec208ebee06e0c02397b8c7f91ebe3
+
+# cert sources (any change to these invalidates the corresponding run record)
+  DE12F825BB14A212D3A1748B0F9237778F6E7DC41528063D5718002884B8A913  tools/cert_write_transactional_profile.ps1
+  72DD77AAEE927B47081EAF08D3190B80ED54A11749A939103360B59EBD66AA82  tools/cert_journal_closure_probe.ps1
+  2A95E1455C7F86642A1D71FD4A10B314881889AB83E74AD35827F9CB942A61CA  tools/ckpt_journal_closure_probe.cpp
+  652E818159D8F5A546167B91DE359C5299209C0D24D714466F2B211BDCB9E005  tools/cert_tool_sandbox_matrix.ps1
+  3CA5B8312E9D462E2C7167BFA594BB70EA0CE9CF5ABFE2FA734AFCF9BEC2936D  tools/tool_sandbox_matrix_cert.cpp
+
+# authorities measured (sha256 at certification)
+  409C37CEF7514B2225F4C8EA41C8EDA1159949CDDD1BDFD83A9D18CF2359033E  src/agentic/AgentToolRegistry.cpp
+  6B9CF981B62EB73AB3255597CFB0CB63B862A2ADF3124067022189C03FE7F12B  include/agentic/AgentToolRegistry.h
+  BAF5AB66FEB1ED529B543172F6A559B59CA5C8598865698F4B92D6F8A88F999C  src/agentic/CheckpointRollbackAuthority.cpp
+  8C97074BA8D94DBEEC63649D4CEACB668F9D3859A7B7A884622AF70600D422C7  src/agentic/CheckpointRollbackAuthority.h
+
+# run records (append-only; never edited)
+  audit/RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001/CERT_LOG.txt            50/50 on V2
+  audit/RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001/probe/PROBE_LOG.txt    candidate CONTRACT_SATISFIED / control DEFECT_DETECTED
+  audit/RAWRXD_IDE_SANDBOX_MATRIX_001/MATRIX_HISTORY.txt                  all runs, verbatim
+  audit/RAWRXD_IDE_SANDBOX_MATRIX_001/MATRIX_HISTORY.index.txt           PARSER SURFACE (run_verdict only)
+  audit/RAWRXD_IDE_SANDBOX_MATRIX_001/MATRIX_HISTORY_ANNOTATION.txt      legacy vocabulary mapping
+  audit/RAWRXD_IDE_SANDBOX_MATRIX_001/VERDICT_SEMANTICS.txt               verdict vocabulary
+  audit/RAWRXD_IDE_SANDBOX_MATRIX_001/LEGACY_BASELINE.txt                legacy_lines_excluded baseline
+
+verdict_vocabulary        = CONTRACT_SATISFIED | CONTRACT_VIOLATED | DEFECT_DETECTED | NO_VERDICT
+label_authority           = B83 is a human-facing label; a second B83 receipt exists
+git_state_at_lock        = UNCOMMITTED (no commit, no push, by this session)

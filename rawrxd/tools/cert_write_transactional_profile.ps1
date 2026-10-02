@@ -33,7 +33,12 @@ param(
     [string]$OutDir = "F:\~dev\rawrxd\audit\RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001"
 )
 
-$ErrorActionPreference = "Stop"
+# 'Continue', not 'Stop': curl.exe legitimately writes to stderr when the server
+# is gone -- which is exactly what the crash checks are measuring -- and under
+# 'Stop' PowerShell turns that into a NativeCommandError and abandons the run
+# before the check that wanted it. Every decision in this harness is made by an
+# explicit comparison, never by the absence of console noise.
+$ErrorActionPreference = "Continue"
 $script:Failures = New-Object System.Collections.Generic.List[string]
 $script:Checks = 0
 $script:Log = New-Object System.Collections.Generic.List[string]
@@ -306,6 +311,57 @@ try {
     Check "T28_WRITE_REFUSED_AGAIN_AFTER_COMMIT" `
         (($bo.Json.ok -eq $false) -and ($bo.Json.error -match 'requires an open checkpoint transaction')) `
         ("error=" + $bo.Json.error)
+
+    # RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001: the drive-colon defect. The
+    # sandbox classified every absolute Windows path as a device/stream scheme,
+    # because the test demanded scheme[1] == '\\' of the characters before the
+    # colon. These two pin the fixed behaviour from both sides: an absolute path
+    # OUTSIDE the root is still refused, and what an absolute path INSIDE the
+    # root does is measured rather than assumed.
+    $absOut = Invoke-Tool "read_file" @{ path = "C:\Windows\win.ini" }
+    Check "T45_ABSOLUTE_PATH_OUTSIDE_ROOT_REFUSED" `
+        (($absOut.Json.ok -eq $false) -and ($absOut.Json.error -match 'rejected by sandbox')) `
+        ("error=" + $absOut.Json.error)
+    $absIn = Invoke-Tool "read_file" @{ path = $alphaPath }
+    Check "T46_ABSOLUTE_PATH_INSIDE_ROOT_ACCEPTED" ($absIn.Json.ok -eq $true) `
+        ("error=" + $absIn.Json.error + " bytes=" + $(if ($absIn.Json.output) { $absIn.Json.output.Length } else { 0 }))
+
+    # The junction escape. mklink /J is available to an unprivileged user on
+    # Windows, so this needs no elevation: a directory junction inside the root
+    # pointing at a directory outside it. Lexical canonicalisation does not
+    # follow it, so before the reparse-point check this read a file the policy
+    # never authorised -- and with write enabled it would have written one.
+    $junction = Join-Path $ws "escape_link"
+    $outsideDir = Join-Path $OutDir "outside"
+    New-Item -ItemType Directory -Path $outsideDir -Force | Out-Null
+    $secretPath = Join-Path $outsideDir "secret.txt"
+    [System.IO.File]::WriteAllText($secretPath, "RAWRXD_SHOULD_NEVER_BE_READ", $script:Utf8NoBom)
+    cmd /c "mklink /J `"$junction`" `"$outsideDir`"" | Out-Null
+    if (Test-Path -LiteralPath $junction) {
+        try {
+            $jr = Invoke-Tool "read_file" @{ path = "escape_link\secret.txt" }
+            Check "T47_JUNCTION_ESCAPE_REFUSED" `
+                (($jr.Json.ok -eq $false) -and ($jr.Json.error -match 'reparse point')) `
+                ("error=" + $jr.Json.error)
+            Check "T48_SECRET_BYTES_NOT_DISCLOSED" `
+                ($jr.Json.output -notmatch 'RAWRXD_SHOULD_NEVER_BE_READ') `
+                "no out-of-root bytes in the tool result"
+            $jw = Invoke-Tool "write_file" @{ path = "escape_link\planted.txt"; content = "planted" }
+            Check "T49_WRITE_THROUGH_JUNCTION_REFUSED" `
+                (($jw.Json.ok -eq $false) -and ($jw.Json.error -match 'reparse point')) `
+                ("error=" + $jw.Json.error)
+            Check "T50_NOTHING_PLANTED_OUTSIDE_ROOT" `
+                (-not (Test-Path -LiteralPath (Join-Path $outsideDir "planted.txt"))) `
+                "planted.txt absent outside the root"
+        }
+        finally {
+            # rmdir on a junction removes the link, never the target.
+            cmd /c "rmdir `"$junction`"" | Out-Null
+        }
+    }
+    else {
+        Check "T47_JUNCTION_ESCAPE_REFUSED" $false "mklink /J failed: junction not created"
+    }
 }
 finally {
     Stop-Server

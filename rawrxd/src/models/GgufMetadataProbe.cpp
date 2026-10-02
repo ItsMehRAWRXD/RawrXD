@@ -92,16 +92,63 @@ namespace rawrxd::models
 
     GgufInfo g_last;
 
-    } // namespace
+    // general.file_type is a ggml_ftype enum, not a human string. These are the
+    // values ggml defines; an unlisted value is reported numerically rather
+    // than guessed at, so an unknown encoding can never read as a known one.
+    const char* ggmlFtypeName(uint32_t ft) {
+        switch (ft) {
+            case  0: return "F32";
+            case  1: return "F16";
+            case  2: return "Q4_0";
+            case  3: return "Q4_1";
+            case  7: return "Q8_0";
+            case  8: return "Q5_0";
+            case  9: return "Q5_1";
+            case 10: return "Q2_K";
+            case 11: return "Q3_K_S";
+            case 12: return "Q3_K_M";
+            case 13: return "Q3_K_L";
+            case 14: return "Q4_K_S";
+            case 15: return "Q4_K_M";
+            case 16: return "Q5_K_S";
+            case 17: return "Q5_K_M";
+            case 18: return "Q6_K";
+            case 19: return "IQ2_XXS";
+            case 20: return "IQ2_XS";
+            case 21: return "IQ3_XXS";
+            case 22: return "IQ1_S";
+            case 23: return "IQ4_NL";
+            case 24: return "IQ3_S";
+            case 25: return "IQ2_S";
+            case 26: return "IQ2_M";
+            case 27: return "IQ4_XS";
+            case 28: return "IQ1_M";
+            case 29: return "BF16";
+            case 30: return "Q4_0_4_4";
+            case 31: return "Q4_0_4_8";
+            case 32: return "Q4_0_8_8";
+            case 33: return "TQ1_0";
+            case 34: return "TQ2_0";
+            default: {
+                static thread_local std::string buf;
+                buf = "FTYPE_" + std::to_string(ft);
+                return buf.c_str();
+            }
+        }
+    }
 
-    GgufInfo probeGgufFile(const std::string& path) {
+    // A modern GGUF header is not small. The tokenizer block alone (token strings
+    // plus token_type, plus merges) runs to several MiB at a 256K
+    // vocabulary, so a fixed 8 MiB window desynchronised the KV walk on
+    // gemma3 and newer models and silently yielded arch= but quant="" with
+    // valid=false. Escalate the window until the walk completes.
+    GgufInfo probeWithWindow(const std::string& path, std::size_t window) {
         GgufInfo info;
 
         std::ifstream in(path, std::ios::binary);
         if (!in) { info.error = "cannot open " + path; return info; }
 
-        // 8 MiB is far more than any header and bounds the read.
-        std::vector<unsigned char> buf(8u << 20);
+        std::vector<unsigned char> buf(window);
         in.read(reinterpret_cast<char*>(buf.data()), std::streamsize(buf.size()));
         buf.resize(size_t(in.gcount()));
         in.close();
@@ -134,6 +181,16 @@ namespace rawrxd::models
                 else if (key == "general.name")      info.name = val;
                 else if (key.size() > 20 && key.compare(key.size() - 20, 20,
                          ".quantization_type") == 0) info.quantization = val;
+            } else if (type == T_UINT32 && key == "general.file_type") {
+                // Quantization is normally stored here, as a UINT32 enum --
+                // not as a "<arch>.quantization_type" string, which most real
+                // files do not carry. Reading only the string form left
+                // quantization empty for every model, so the dump column
+                // showed "?" across the whole catalog.
+                const uint32_t ft = c.u32();
+                if (c.bad) break;
+                info.quantization = ggmlFtypeName(ft);
+                info.fileType = ft;
             } else {
                 if (key == "general.architecture" || key == "general.name") {
                     // We wanted these as strings but they are not; skip cleanly.
@@ -142,12 +199,34 @@ namespace rawrxd::models
             }
         }
 
-        if (c.bad) { info.error = "metadata walk desynchronised"; return info; }
+        if (c.bad) { info.error = "metadata walk desynchronised (header exceeds window)"; return info; }
 
         std::error_code ec;
         info.fileSizeBytes = std::filesystem::file_size(std::filesystem::path(path), ec);
         info.valid = true;
         return info;
+    }
+
+    } // namespace
+
+    GgufInfo probeGgufFile(const std::string& path) {
+        // Escalate the window until the KV walk completes. A partial read is
+        // reported as a failure rather than returned as a half-populated
+        // record, so a caller can never mistake a truncated header for
+        // "this model simply has no quantization".
+        static const std::size_t kWindows[] = {
+            8u << 20, 32u << 20, 128u << 20, 512u << 20
+        };
+        GgufInfo last;
+        for (std::size_t w : kWindows) {
+            last = probeWithWindow(path, w);
+            if (last.valid) { last.error.clear(); return last; }
+            // Stop escalating once the window covers the whole file.
+            std::error_code ec;
+            const auto sz = std::filesystem::file_size(std::filesystem::path(path), ec);
+            if (!ec && w >= sz) break;
+        }
+        return last;
     }
 
     void probeGgufMetadata(const std::string& modelPath) { g_last = probeGgufFile(modelPath); }

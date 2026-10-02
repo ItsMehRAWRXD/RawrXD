@@ -94,32 +94,55 @@ def _inum(kv, key):
         return None
 
 
-# The CPU probe emits the first layer's stages under BOTH an unscoped name
-# (Q, K, FFN_GATE, ...) and the layer-scoped name (LAYER_0_Q, ...), with
-# identical values. Normalising to the layer-scoped form is what lets the two
-# sides be compared by name instead of by position.
-UNSCOPED_TO_STAGE = {
-    "ATTN_NORM": "RMS_ATTN",
-    "Q": "Q", "K": "K", "V": "V",
-    "Q_ROPE": "Q_ROPE", "K_ROPE": "K_ROPE",
-    "ATTN_SCORES": "ATTN_SCORES", "ATTN_PROBS": "ATTN_PROBS",
-    "ATTN_VALUE": "ATTN_VALUE", "O_PROJ": "O_PROJ",
-    "ATTN_RESIDUAL": "ATTN_RESIDUAL",
-    "FFN_NORM": "RMS_FFN",
-    "FFN_GATE": "FFN_GATE", "FFN_UP": "FFN_UP", "SWIGLU": "SWIGLU",
-    "FFN_DOWN": "FFN_DOWN", "LAYER_RESIDUAL": "LAYER_RESIDUAL",
+# RAWRXD_COMPARATOR_ALIASING_001
+# The CPU probe emits stage names in TWO forms: layer-scoped (LAYER_0_Q) and
+# unscoped (Q, ATTN_NORM, ...). The unscoped form is emitted once per PREFILL
+# CHUNK, not once per layer: at STEP=0 with a 5-token prompt the dump contains
+# EIGHT `CP=ATTN_NORM` lines and eight `CP=LAYER_0_ATTN_NORM` lines.
+#
+# An earlier version canonicalised the unscoped names onto LAYER_0_* and kept
+# last-write-wins per (step, name). The two forms then collided, so the "CPU
+# RMS_ATTN" value used for the divergence report was the LAST chunk's, not the
+# layer-0 record. The reported 13% gap at LAYER_0_RMS_ATTN was an artefact of
+# that collision and has been withdrawn.
+#
+# Only layer-scoped names are used. An unscoped name is not ambiguous-free
+# evidence of anything, so it is dropped rather than guessed at.
+UNSCOPED_DROP = {
+    "ATTN_NORM", "Q", "K", "V", "Q_ROPE", "K_ROPE",
+    "ATTN_SCORES", "ATTN_PROBS", "ATTN_VALUE", "O_PROJ",
+    "ATTN_RESIDUAL", "FFN_NORM", "FFN_GATE", "FFN_UP", "SWIGLU",
+    "FFN_DOWN", "LAYER_RESIDUAL",
 }
 
 
 def canonical(name):
-    """Normalise a stage name to the LAYER_<n>_<STAGE> form."""
+    """Keep only unambiguous, layer-scoped names, and align the two naming
+    conventions for the norm stages.
+
+    The CPU probe names the norms ATTN_NORM / FFN_NORM; the Vulkan parity grid
+    names the same stages RMS_ATTN / RMS_FFN. Without this alias the two norm
+    stages had NO comparable pair and appeared as EXTRA on the GPU side, which
+    hid exactly the stage the divergence most likely lives in. Both names are
+    layer-scoped, so mapping them is unambiguous -- unlike the unscoped forms
+    above, which are not.
+    """
     if name is None:
         return None
-    if name.startswith("LAYER_") or name in ("EMBED", "HIDDEN_FINAL",
-                                             "FINAL_NORM", "LOGITS", "LOGITS_TOP10"):
+    if name in UNSCOPED_DROP:
+        return None            # ambiguous: emitted once per prefill chunk
+    if name.startswith("LAYER_"):
+        parts = name.split("_", 2)          # ["LAYER", "<n>", "<STAGE>"]
+        tail = parts[2] if len(parts) == 3 else ""
+        if tail == "ATTN_NORM":
+            return name.replace("_ATTN_NORM", "_RMS_ATTN")
+        if tail == "FFN_NORM":
+            return name.replace("_FFN_NORM", "_RMS_FFN")
         return name
-    if name in UNSCOPED_TO_STAGE:
-        return "LAYER_0_" + UNSCOPED_TO_STAGE[name]
+    if name in ("RMS_ATTN", "RMS_FFN"):
+        return name
+    if name in ("EMBED", "HIDDEN_FINAL", "FINAL_NORM", "LOGITS", "LOGITS_TOP10"):
+        return name
     return name
 
 
@@ -136,6 +159,7 @@ def parse(path):
     error the brief named, and it shipped in the first version of this tool.
     """
     stages = OrderedDict()
+    ordinal = 0
     with open(path, "r", errors="replace") as fh:
         for raw in fh:
             parsed = _kv(raw)
@@ -144,7 +168,26 @@ def parse(path):
             step, cp, kv = parsed
             if cp is None:
                 continue
-            key = (step, canonical(cp))
+            cp = canonical(cp)
+            if cp is None:
+                continue        # ambiguous unscoped name; see RAWRXD_COMPARATOR_ALIASING_001
+            # RAWRXD_COMPARATOR_IDENTITY_001
+            # (step, stage) IS NOT A UNIQUE EXECUTION IDENTITY. At STEP=0 a
+            # 5-token prompt still produces EIGHT records for
+            # LAYER_0_ATTN_NORM, because several forward calls share step index 0
+            # (prefill chunks, speculative windows). Keying on (step, stage)
+            # with last-write-wins therefore selected an arbitrary one of the
+            # eight -- accidental aliasing.
+            #
+            # Rather than picking "first" or "last" (which only replaces
+            # accidental ambiguity with deliberate ambiguity), every record now
+            # carries ORD, a monotonically increasing execution ordinal within
+            # the file, and is keyed by (step, ORD). Records are then aligned by
+            # ordinal position, so the Nth execution on the CPU is compared with
+            # the Nth on the GPU, and a count difference is reported rather than
+            # silently truncated.
+            ordinal += 1
+            key = (step, ordinal)
             if UNAVAILABLE in kv:
                 stages[key] = {"step": step, "unavailable": True}
                 continue
@@ -154,6 +197,9 @@ def parse(path):
                 continue
             rec = {
                 "step": step,
+                "cp": cp,          # RAWRXD_COMPARATOR_IDENTITY_001: without this the
+                                   # table printed "?" for every stage and the
+                                   # first mismatch could not be named.
                 "count": _inum(kv, "COUNT"),
                 "min": _fnum(kv, "MIN"),
                 "max": _fnum(kv, "MAX"),
@@ -165,6 +211,80 @@ def parse(path):
             }
             stages[key] = rec
     return stages
+
+# RAWRXD_VERDICT_TAXONOMY_001
+# A hash is excellent evidence for EQUALITY. Hash inequality proves only that
+# the BYTES differ, which is not the same as a numerical divergence: the
+# attention-norm record differed in hash while agreeing to ~1e-7 relative on
+# every displayed value, i.e. float32 rounding, and it was being reported as
+# HASH_MISMATCH.
+#
+# The verdict is therefore a separate decision with its own states.
+BIT_EXACT         = "BIT_EXACT"           # hashes equal
+FP32_EQUIVALENT   = "FP32_EQUIVALENT"     # bytes differ, values agree within fp32
+NUMERIC_MISMATCH  = "NUMERIC_MISMATCH"    # values genuinely differ
+ALIASED           = "ALIASED"             # different stage name, same evidence
+INVALID           = "INVALID"             # cannot certify: no hash, bad readback
+UNKNOWN           = "UNKNOWN"             # measurement did not happen
+
+# Relative tolerance for float32. Chosen just above fp32 epsilon (1.19e-7) with
+# margin for accumulated reduction order differences: 1e-4. L2 is compared on the
+# same basis. A ratio outside this band is a magnitude change, not rounding.
+FP32_REL_TOL = 1e-4
+FP32_L2_TOL  = 1e-3
+
+
+def _first8(rec):
+    """Parse FIRST8 into floats; returns [] when absent or unparseable."""
+    s = rec.get("first8")
+    if not s:
+        return []
+    out = []
+    for p in s.replace(";", ",").split(","):
+        p = p.strip()
+        if not p:
+            continue
+        try:
+            out.append(float(p))
+        except ValueError:
+            return []
+    return out
+
+
+def classify(c, g):
+    """Return (verdict, note). Never returns a numerical verdict from a
+    measurement that did not happen."""
+    # Readback / execution validity first. An invalid measurement cannot produce
+    # ANY numerical verdict, including a favourable one.
+    if g.get("unavailable"):
+        return UNKNOWN, "GPU has no device-side arena for this stage (fused)"
+    if g.get("readback_fail") or c.get("readback_fail"):
+        return UNKNOWN, "readback failed on one side; not a value comparison"
+    ch, gh = c.get("hash"), g.get("hash")
+    if not ch or not gh:
+        return INVALID, "hash missing on %s side; cannot certify" % (
+            "CPU" if not ch else "GPU")
+
+    if ch == gh:
+        return BIT_EXACT, "identical FNV-1a over raw bytes"
+
+    # Hash differs. Decide numerically.
+    a, b = _first8(c), _first8(g)
+    l2c, l2g = c.get("l2"), g.get("l2")
+    if not a or not b or len(a) != len(b) or not l2c or not l2g:
+        return NUMERIC_MISMATCH, "HASH_DIFFERS (insufficient numeric detail to refine)"
+
+    worst = 0.0
+    for x, y in zip(a, b):
+        d = abs(x - y)
+        rel = d / max(abs(x), abs(y), 1e-30)
+        worst = max(worst, rel)
+    l2rel = abs(l2c - l2g) / max(abs(l2c), abs(l2g), 1e-30)
+    if worst <= FP32_REL_TOL and l2rel <= FP32_L2_TOL:
+        return FP32_EQUIVALENT, ("bytes differ but values agree within fp32 "
+                                 "(max_rel=%.2e l2_rel=%.2e)" % (worst, l2rel))
+    return NUMERIC_MISMATCH, ("max_rel=%.3e l2_rel=%.3e cpu_l2=%s gpu_l2=%s"
+                              % (worst, l2rel, _fmt(l2c), _fmt(l2g)))
 
 
 def layer_of(name):
@@ -210,16 +330,12 @@ def main():
     gpu = parse(gpu_path)
 
     def pick(table):
-        # Reduce (step, stage) -> stage, for ONE step chosen ONCE and applied to
+        # Reduce (step, ORD) -> rec, for ONE step chosen ONCE and applied to
         # BOTH sides. Choosing each side's step independently is precisely how a
         # cross-step comparison slips through.
-        if want_step is None:
-            return None
-        return {k[1]: v for k, v in table.items() if k[0] == want_step}
+        return [v for k, v in sorted(table.items()) if k[0] == want_step]
 
     if want_step is None:
-        # Default to the LOWEST step present on either side, and then require
-        # both sides to actually have that step.
         csteps = {k[0] for k in cpu}
         gsteps = {k[0] for k in gpu}
         if not csteps or not gsteps:
@@ -228,17 +344,24 @@ def main():
         want_step = min(csteps | gsteps)
         print("AUTO_STEP=%d (pass --step to override)" % want_step)
 
+    # RAWRXD_COMPARATOR_IDENTITY_001: records are ALIGNED BY ORDINAL POSITION
+    # within the step, so the Nth execution on the CPU is compared with the Nth
+    # on the GPU. A count difference is reported, not truncated, because silently
+    # pairing different executions is the failure this whole change exists to
+    # prevent.
     cpu_s = pick(cpu)
     gpu_s = pick(gpu)
-    if cpu_s is None or gpu_s is None:
-        cpu_s = {k[1]: v for k, v in cpu.items() if k[0] == want_step}
-        gpu_s = {k[1]: v for k, v in gpu.items() if k[0] == want_step}
     if not cpu_s or not gpu_s:
         print("NO_RECORDS_AT_STEP %d cpu=%d gpu=%d (cpu_steps=%s gpu_steps=%s)"
               % (want_step, len(cpu_s), len(gpu_s),
                  sorted({k[0] for k in cpu}), sorted({k[0] for k in gpu})))
         return 1
 
+    n = min(len(cpu_s), len(gpu_s))
+    if len(cpu_s) != len(gpu_s):
+        print("RECORD_COUNT_DIFFERS cpu=%d gpu=%d -- comparing the first %d "
+              "ordinals; the remainder is NOT assumed to correspond"
+              % (len(cpu_s), len(gpu_s), n))
     cpu = cpu_s
     gpu = gpu_s
     cstep = gstep = want_step
@@ -250,75 +373,65 @@ def main():
 
     print("CPU_STAGES=%d GPU_STAGES=%d" % (len(cpu), len(gpu)))
     print("")
-    print("%-28s %-10s %-8s %-12s %-12s %s" %
-          ("STAGE", "STATUS", "MATCH", "CPU_L2", "GPU_L2", "NOTE"))
+    print("%-5s %-26s %-10s %-8s %-12s %-12s %s" %
+          ("ORD", "STAGE", "STATUS", "MATCH", "CPU_L2", "GPU_L2", "NOTE"))
     print("-" * 96)
 
     missing, extra, first_mismatch = [], [], None
-    for name in sorted(set(cpu) | set(gpu), key=sort_key):
-        c = cpu.get(name)
-        g = gpu.get(name)
-        if c is None:
-            extra.append(name)
-            print("%-28s %-10s %-8s %-12s %-12s %s" % (name, "EXTRA", "-", "-", "-",
-                  "on GPU only; no CPU counterpart to compare"))
+    # RAWRXD_COMPARATOR_IDENTITY_001: pair by ORDINAL POSITION, not by name.
+    # The Nth execution on each side is compared with the Nth on the other. A
+    # stage-name mismatch is reported as such (it is a real signal) but does not
+    # silently re-pair the remaining records onto different executions.
+    for i in range(n):
+        c = cpu[i]
+        g = gpu[i]
+        name = "LAYER_?_" + (c.get("cp") or "?")
+        cname = c.get("cp") or "?"
+        gname = g.get("cp") or "?"
+        if cname != gname:
+            # RAWRXD_COMPARATOR_ALIASING_001: a name difference is only a real
+            # finding when the VALUES differ. The grid calls the layer-0 input
+            # LAYER_0_INPUT where the CPU calls it EMBED; those are the same
+            # record with identical hashes, and reporting that as the first
+            # mismatch would send the investigation to a stage that is provably
+            # correct.
+            ch0 = c.get("hash")
+            gh0 = g.get("hash")
+            if ch0 and gh0 and ch0 == gh0:
+                print("%-5d %-26s %-10s %-8s %-12s %-12s %s" %
+                      (i, gname, "ALIASED", "1", _fmt(c.get("l2")), _fmt(g.get("l2")),
+                       "cpu=%s gpu=%s; identical hash, naming difference only"
+                       % (cname, gname)))
+                continue
+            print("%-5d %-26s %-10s %-8s %-12s %-12s %s" %
+                  (i, name, "NAME_DIFF", "0", _fmt(c.get("l2")), _fmt(g.get("l2")),
+                   "cpu=%s gpu=%s; these are not the same stage" % (cname, gname)))
+            if first_mismatch is None:
+                first_mismatch = (gname, c, g, "STAGE_NAME_MISMATCH")
             continue
-        if g is None:
-            missing.append(name)
-            print("%-28s %-10s %-8s %-12s %-12s %s" % (name, "MISSING", "-",
-                  _fmt(c.get("l2")), "-", "on CPU only; GPU emitted no record"))
-            continue
-        if g.get("unavailable"):
-            print("%-28s %-10s %-8s %-12s %-12s %s" % (name, "NO_ARENA", "n/a",
-                  _fmt(c.get("l2")), "n/a",
-                  "GPU has no device-side arena for this stage (fused)"))
-            continue
-        if g.get("readback_fail"):
-            print("%-28s %-10s %-8s %-12s %-12s %s" % (name, "RD_FAIL", "n/a",
-                  _fmt(c.get("l2")), "n/a", "GPU readback failed; not a value mismatch"))
-            continue
+        name = gname if gname != "?" else cname
         if c.get("count") != g.get("count"):
-            print("%-28s %-10s %-8s %-12s %-12s %s" % (name, "SHAPE", "0",
-                  str(c.get("count")), str(g.get("count")), "element count differs"))
+            print("%-5d %-26s %-10s %-8s %-12s %-12s %s" %
+                  (i, name, "SHAPE_MISMATCH", "0", str(c.get("count")),
+                   str(g.get("count")), "element count differs"))
             if first_mismatch is None:
                 first_mismatch = (name, c, g, "SHAPE_MISMATCH")
             continue
-        # A hash is REQUIRED on both sides. Two absent hashes must never compare
-        # equal: that is the fabricated-pass path, and a comparator that cannot
-        # prove a match must not report one.
-        ch, gh = c.get("hash"), g.get("hash")
-        if not ch or not gh:
-            print("%-28s %-10s %-8s %-12s %-12s %s" % (name, "NO_HASH", "0",
-                  _fmt(c.get("l2")), _fmt(g.get("l2")),
-                  "cpu_hash=%s gpu_hash=%s; cannot certify" %
-                  (ch or "MISSING", gh or "MISSING")))
-            if first_mismatch is None:
-                first_mismatch = (name, c, g, "HASH_UNAVAILABLE")
-            continue
-        same = (ch == gh)
-        note = ""
-        if not same:
-            if c.get("non_finite") or g.get("non_finite"):
-                note = "NON_FINITE_PRESENT cpu=%d gpu=%d" % (
-                    c.get("non_finite", 0), g.get("non_finite", 0))
-            elif _ratio(c.get("l2"), g.get("l2")) is not None and \
-                 _ratio(c.get("l2"), g.get("l2")) > 1.5:
-                note = "L2_INFLATED gpu/cpu=%.2fx" % _ratio(c.get("l2"), g.get("l2"))
-            else:
-                note = "HASH_DIFFERS"
-        print("%-28s %-10s %-8s %-12s %-12s %s" % (
-            name, "MATCH" if same else "MISMATCH", "1" if same else "0",
-            _fmt(c.get("l2")), _fmt(g.get("l2")), note))
-        if not same and first_mismatch is None:
-            first_mismatch = (name, c, g, "HASH_MISMATCH")
+        # RAWRXD_VERDICT_TAXONOMY_001: validity first, then hash equality, then a
+        # NUMERIC comparison. A hash difference is not a numerical verdict.
+        verdict, note = classify(c, g)
+        print("%-5d %-26s %-16s %-8s %-12s %-12s %s" %
+              (i, name, verdict, "1" if verdict in (BIT_EXACT, FP32_EQUIVALENT) else "0",
+               _fmt(c.get("l2")), _fmt(g.get("l2")), note))
+        if verdict == NUMERIC_MISMATCH and first_mismatch is None:
+            first_mismatch = (name, c, g, verdict)
 
     print("")
+    print("ALIGNED_RECORDS=%d (paired by execution ordinal)" % n)
     print("MISSING_ON_GPU=%d" % len(missing))
-    for n in missing[:12]:
-        print("  missing: %s" % n)
     print("EXTRA_ON_GPU=%d" % len(extra))
-    for n in extra[:12]:
-        print("  extra:   %s" % n)
+    if len(cpu_s) != len(gpu_s):
+        print("  (record counts differ; see RECORD_COUNT_DIFFERS above)")
 
     if first_mismatch:
         name, c, g, kind = first_mismatch

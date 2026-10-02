@@ -9,6 +9,11 @@
 #include <vector>
 #include <filesystem>
 #include <algorithm>
+// RAWRXD_MULTIROOT_EXPLORER_001: the explorer reads the workspace model's folder
+// list, which is the authority already linked and already runtime-measured in
+// P1_INTEGRATION_TRANCHE. Before this the explorer inserted one node from
+// GetCurrentDirectoryW and had no multi-root path at all.
+#include "core/workspace_model.h"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "shell32.lib")
@@ -38,14 +43,59 @@ static HIMAGELIST g_hImageList = nullptr;
 static int g_iFolderIcon = 0;
 static int g_iFileIcon = 1;
 
+// RAWRXD_MULTIROOT_EXPLORER_001
+//
+// TreeItemData now carries which workspace root a node belongs to, as an INDEX
+// into a root table rather than a path. That is the difference between a tree
+// that draws two roots and a tree that can answer "which root does this node
+// belong to" -- expansion, selection, open-file and delete all need that answer,
+// and re-deriving it from a path prefix comparison breaks the moment two roots
+// nest or one is a parent of the other.
+//
+// An empty rootIndex means "not yet assigned" and is only ever seen on the
+// synthetic placeholder child.
 struct TreeItemData {
     std::wstring path;
     bool isDir = false;
     bool expanded = false;
+    int  rootIndex = -1;          // RAWRXD_MULTIROOT_EXPLORER_001
+    bool isRootNode = false;      // the root row itself
 };
 
+struct WorkspaceRoot {
+    std::wstring path;
+    std::wstring name;
+    bool        isPrimary = false;   // the workspace's declared root
+    HTREEITEM   hItem = nullptr;
+};
+
+// Measured, so a receipt can read how many roots were actually rendered rather
+// than how many the model holds.
+struct SidebarMultiRootState {
+    int  rootsInModel = 0;
+    int  rootsRendered = 0;
+    int  nodesRendered = 0;
+    bool usedModel = false;       // false means the cwd fallback was used
+    char renderSource[32] = {0};
+};
+
+static std::vector<WorkspaceRoot> g_roots;
+static SidebarMultiRootState g_mrState;
+
+extern "C" const char* Win32IDE_Sidebar_MultiRootStatus() {
+    static std::string buf;
+    char tmp[512];
+    snprintf(tmp, sizeof(tmp),
+             "MODEL_ROOTS=%d;RENDERED_ROOTS=%d;NODES=%d;SOURCE=%s",
+             g_mrState.rootsInModel, g_mrState.rootsRendered, g_mrState.nodesRendered,
+             g_mrState.renderSource[0] ? g_mrState.renderSource : "none");
+    buf = tmp;
+    return buf.c_str();
+}
+
 static HTREEITEM InsertTreeItem(HWND hwndTree, HTREEITEM hParent, const std::wstring& text,
-                                 const std::wstring& path, bool isDir, int iconIndex) {
+                                 const std::wstring& path, bool isDir, int iconIndex,
+                                 int rootIndex = -1, bool isRootNode = false) {
     TVINSERTSTRUCTW tvis{};
     tvis.hParent = hParent;
     tvis.hInsertAfter = TVI_LAST;
@@ -54,12 +104,15 @@ static HTREEITEM InsertTreeItem(HWND hwndTree, HTREEITEM hParent, const std::wst
     tvis.item.iImage = iconIndex;
     tvis.item.iSelectedImage = iconIndex;
     tvis.item.cChildren = isDir ? 1 : 0;
-    TreeItemData* data = new TreeItemData{ path, isDir, false };
+    TreeItemData* data = new TreeItemData{ path, isDir, false, rootIndex, isRootNode };
     tvis.item.lParam = reinterpret_cast<LPARAM>(data);
     return TreeView_InsertItem(hwndTree, &tvis);
 }
 
-static void PopulateDirectory(HWND hwndTree, HTREEITEM hParent, const std::wstring& dirPath) {
+static int g_nodeCount = 0;
+
+static void PopulateDirectory(HWND hwndTree, HTREEITEM hParent, const std::wstring& dirPath,
+                              int rootIndex = -1) {
     try {
         std::vector<std::pair<std::wstring, bool>> entries;
         for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
@@ -72,9 +125,14 @@ static void PopulateDirectory(HWND hwndTree, HTREEITEM hParent, const std::wstri
         for (const auto& e : entries) {
             std::wstring fullPath = dirPath + L"\\" + e.first;
             int icon = e.second ? g_iFolderIcon : g_iFileIcon;
-            HTREEITEM hItem = InsertTreeItem(hwndTree, hParent, e.first, fullPath, e.second, icon);
+            // RAWRXD_MULTIROOT_EXPLORER_001: every descendant inherits the root
+            // index, so a node five levels down still resolves to the right root
+            // without any path arithmetic at the point of use.
+            HTREEITEM hItem = InsertTreeItem(hwndTree, hParent, e.first, fullPath, e.second,
+                                             icon, rootIndex, false);
+            ++g_nodeCount;
             if (e.second) {
-                InsertTreeItem(hwndTree, hItem, L"", L"", false, g_iFolderIcon);
+                InsertTreeItem(hwndTree, hItem, L"", L"", false, g_iFolderIcon, rootIndex, false);
             }
         }
     } catch (...) {}
@@ -130,7 +188,12 @@ static LRESULT CALLBACK TreeSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
                             TreeView_DeleteItem(hwnd, child);
                             child = next;
                         }
-                        PopulateDirectory(hwnd, pnmtv->itemNew.hItem, data->path);
+                        // RAWRXD_MULTIROOT_EXPLORER_001: expansion repopulates
+                        // under the SAME root index the node already carries. A
+                        // lazy child populated without this would land in root
+                        // -1 and every later operation on it would resolve to the
+                        // wrong root.
+                        PopulateDirectory(hwnd, pnmtv->itemNew.hItem, data->path, data->rootIndex);
                         data->expanded = true;
                     }
                 }
@@ -181,11 +244,69 @@ extern "C" void Win32IDE_Sidebar_Create(HWND hwndParent, HINSTANCE hInstance) {
         0, 0, SIDEBAR_DEFAULT_WIDTH, 600, g_hwndSidebar, (HMENU)(INT_PTR)IDC_TREE_EXPLORER, hInstance, nullptr);
     TreeView_SetImageList(g_hwndTree, g_hImageList, TVSIL_NORMAL);
 
-    wchar_t cwd[MAX_PATH];
-    GetCurrentDirectoryW(MAX_PATH, cwd);
-    HTREEITEM hRoot = InsertTreeItem(g_hwndTree, TVI_ROOT, L"Workspace", cwd, true, g_iFolderIcon);
-    PopulateDirectory(g_hwndTree, hRoot, cwd);
-    TreeView_Expand(g_hwndTree, hRoot, TVE_EXPAND);
+    // RAWRXD_MULTIROOT_EXPLORER_001
+    //
+    // This used to insert exactly one node from GetCurrentDirectoryW, with no
+    // `AddRoot`/multi-root path anywhere in the file, so the explorer was
+    // single-root BY CONSTRUCTION even though the workspace model has held a
+    // vector of WorkspaceFolder for its entire life.
+    //
+    // Roots now come from the workspace model, which is the authority that was
+    // already linked and already measured in P1_INTEGRATION_TRANCHE. Each root
+    // gets its own top-level node carrying its own index, and every descendant
+    // inherits that index, so "which root is this file in" is answered by the
+    // node rather than re-derived from the path at each point of use.
+    g_roots.clear();
+    g_mrState = SidebarMultiRootState{};
+    g_nodeCount = 0;
+
+    int modelRoots = 0;
+    for (const auto& f : RawrXD_IDE_GetWorkspaceFolders()) {
+        WorkspaceRoot r;
+        // RawrXDWorkspaceFolder carries narrow strings (it is a C++ struct, not
+        // a Win32 one); WorkspaceRoot is a tree-node record and uses wstring.
+        // The conversion is explicit rather than implicit because it is lossy
+        // for any byte sequence that is not valid UTF-8, and a silently mangled
+        // workspace path is worse than a visibly wrong one.
+        r.path = std::filesystem::path(f.path).wstring();
+        r.name = std::filesystem::path(f.name).wstring();
+        r.isPrimary = f.isRoot;
+        g_roots.push_back(r);
+        ++modelRoots;
+    }
+    g_mrState.rootsInModel = modelRoots;
+
+    if (g_roots.empty()) {
+        // Fallback preserved: an uninitialised or empty workspace still shows
+        // something, and the receipt says so rather than implying model backing.
+        wchar_t cwd[MAX_PATH];
+        GetCurrentDirectoryW(MAX_PATH, cwd);
+        WorkspaceRoot r;
+        r.path = cwd;
+        r.name = L"Workspace";
+        r.isPrimary = true;
+        g_roots.push_back(r);
+        strcpy_s(g_mrState.renderSource, sizeof(g_mrState.renderSource), "cwd_fallback");
+    } else {
+        strcpy_s(g_mrState.renderSource, sizeof(g_mrState.renderSource), "workspace_model");
+        g_mrState.usedModel = true;
+    }
+
+    for (std::size_t i = 0; i < g_roots.size(); ++i) {
+        WorkspaceRoot& r = g_roots[i];
+        // The primary root keeps the historical label so existing muscle memory
+        // and any test looking for "Workspace" still find it; secondary roots are
+        // labelled by their own name, which is what makes them distinguishable.
+        const std::wstring label = r.isPrimary
+            ? (r.name.empty() ? std::wstring(L"Workspace") : r.name)
+            : (r.name.empty() ? r.path : r.name);
+        r.hItem = InsertTreeItem(g_hwndTree, TVI_ROOT, label, r.path, true,
+                                 g_iFolderIcon, static_cast<int>(i), true);
+        PopulateDirectory(g_hwndTree, r.hItem, r.path, static_cast<int>(i));
+        TreeView_Expand(g_hwndTree, r.hItem, TVE_EXPAND);
+        ++g_mrState.rootsRendered;
+    }
+    g_mrState.nodesRendered = g_nodeCount;
 
     g_hwndSearchList = CreateWindowExW(WS_EX_CLIENTEDGE, L"LISTBOX", L"Search Results",
         WS_CHILD | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS,
@@ -224,4 +345,54 @@ extern "C" const wchar_t* Win32IDE_Sidebar_GetSelectedPath() {
     if (!TreeView_GetItem(g_hwndTree, &tvi)) return nullptr;
     TreeItemData* data = reinterpret_cast<TreeItemData*>(tvi.lParam);
     return data ? data->path.c_str() : nullptr;
+}
+
+// RAWRXD_MULTIROOT_EXPLORER_001
+//
+// Root-resolved accessors. RAWRXD_MULTIROOT_ROOT_0 is what a caller that
+// implicitly used root 0 was really getting before; these make the root an
+// explicit argument so "which root" stops being an assumption.
+//
+// Root count is -1 when the selected node carries no root index, which happens
+// only for a synthetic placeholder child. Returning -1 rather than 0 is
+// deliberate: a caller that ignores the return would previously have been handed
+// the primary root, and would now instead be handed a visibly invalid value.
+extern "C" int Win32IDE_Sidebar_GetSelectedRootIndex() {
+    if (!g_hwndTree) return -1;
+    HTREEITEM hSel = TreeView_GetSelection(g_hwndTree);
+    if (!hSel) return -1;
+    TVITEMW tvi{}; tvi.mask = TVIF_PARAM | TVIF_HANDLE; tvi.hItem = hSel;
+    if (!TreeView_GetItem(g_hwndTree, &tvi)) return -1;
+    TreeItemData* data = reinterpret_cast<TreeItemData*>(tvi.lParam);
+    return data ? data->rootIndex : -1;
+}
+
+extern "C" int Win32IDE_Sidebar_RootCount() {
+    return static_cast<int>(g_roots.size());
+}
+
+extern "C" const wchar_t* Win32IDE_Sidebar_GetRootPath(int index) {
+    if (index < 0 || index >= static_cast<int>(g_roots.size())) return L"";
+    // g_roots[index].path is already a wstring, so the previous std::string
+    // buffer could not hold it -- that assignment did not compile. A thread-local
+    // buffer is used rather than a function-local static so two calls from two
+    // threads cannot alias each other's pointer.
+    static thread_local std::wstring buf;
+    buf = g_roots[index].path;
+    return buf.c_str();
+}
+
+extern "C" const char* Win32IDE_Sidebar_GetRootName(int index) {
+    if (index < 0 || index >= static_cast<int>(g_roots.size())) return "";
+    static std::string buf;
+    int n = WideCharToMultiByte(CP_UTF8, 0, g_roots[index].name.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    if (n <= 1) { buf.clear(); return buf.c_str(); }
+    buf.assign(static_cast<size_t>(n - 1), '\0');
+    WideCharToMultiByte(CP_UTF8, 0, g_roots[index].name.c_str(), -1, &buf[0], n, nullptr, nullptr);
+    return buf.c_str();
+}
+
+extern "C" int Win32IDE_Sidebar_RootIsPrimary(int index) {
+    if (index < 0 || index >= static_cast<int>(g_roots.size())) return 0;
+    return g_roots[index].isPrimary ? 1 : 0;
 }

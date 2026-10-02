@@ -6,12 +6,20 @@
 // Rule: No exceptions. Structured PatchResult returns only.
 // Rule: All threading via std::mutex + std::lock_guard. No recursive locks.
 #include "semantic_code_intelligence.hpp"
+#include "repointel/ScopeTree.hpp"
+#include "repointel/RepositoryUniverse.hpp"
 #include <algorithm>
+#include <chrono>
 #include <queue>
 #include <fstream>
 #include <sstream>
 #include <cctype>
 #include <cstring>
+
+// This header's types are at global scope; the analyzer's are under
+// rawrxd::repointel. An alias keeps the calls below readable without pulling
+// `using namespace rawrxd` into a global-scope translation unit.
+namespace repointel = rawrxd::repointel;
 
 // ============================================================================
 // Singleton
@@ -667,8 +675,13 @@ std::vector<const SymbolEntry*> SemanticCodeIntelligence::getSymbolsInFile(
 // ============================================================================
 PatchResult SemanticCodeIntelligence::indexFile(const std::string& filePath) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    buildFileIndex(filePath);
-    m_stats.filesIndexed.fetch_add(1);
+    // The return value is what makes this honest. Previously the count was
+    // incremented and PatchResult::ok returned unconditionally, so a path that
+    // did not exist was reported as a successfully indexed file.
+    if (!buildFileIndex(filePath)) {
+        m_stats.cacheMisses.fetch_add(1);
+        return PatchResult::error("File not readable: " + filePath, -1);
+    }
     return PatchResult::ok("File indexed");
 }
 
@@ -729,9 +742,16 @@ PatchResult SemanticCodeIntelligence::rebuildIndex() {
     m_stats.totalSymbols.store(0);
     m_stats.totalReferences.store(0);
 
-    // Re-index each file
+    // Re-index each file. A file that cannot be read is reported rather than
+    // counted, so a green "Index rebuilt" means every file really was parsed.
+    uint32_t failed = 0;
     for (auto& path : files) {
-        buildFileIndex(path);
+        if (!buildFileIndex(path)) ++failed;
+    }
+    if (failed != 0) {
+        return PatchResult::error("Index rebuilt with " + std::to_string(failed) +
+                                      " file(s) unreadable",
+                                  -1);
     }
 
     return PatchResult::ok("Index rebuilt");
@@ -912,13 +932,210 @@ bool SemanticCodeIntelligence::fuzzyMatch(const std::string& name,
     return qi == query.size();
 }
 
-void SemanticCodeIntelligence::buildFileIndex(const std::string& filePath) {
-    // Called with lock held
-    // In production, this would parse the file using a language-specific parser
-    // For now, mark the file as indexed
+// RAWRXD_REPOSITORY_INTELLIGENCE_001
+//
+// This function used to be:
+//
+//     bool SemanticCodeIntelligence::buildFileIndex(const std::string& filePath) {
+//         // In production, this would parse the file using a language-specific parser
+//         // For now, mark the file as indexed
+//         m_stats.filesIndexed.fetch_add(1);
+//         if (m_progressCb) m_progressCb(filePath.c_str(), 100, m_progressData);
+//     }
+//
+// which incremented the counter and reported 100% completion for work it had
+// not performed. Every query below goToDefinition, findAllReferences,
+// getCallersOf, getCallChain, getCompletions and getHoverInfo reads state that
+// only this function ever wrote, so all six returned empty forever while
+// indexFile() returned PatchResult::ok("File indexed").
+//
+// It now parses with repointel::analyzeSource -- the same structural analyzer
+// certified by audit/RAWRXD_REPOSITORY_INTELLIGENCE_001 -- rather than
+// introducing a second parser. Deliberately conservative: it populates the
+// symbol table, the scope tree, cross-references and the call graph, and it
+// leaves typeId, baseTypes, documentation and signature alone rather than
+// guessing at them. A field that is not measured stays zero instead of being
+// invented.
+namespace {
+
+SymbolKind mapKind(repointel::SymbolKind k) {
+    switch (k) {
+        case repointel::SymbolKind::Function:     return SymbolKind::Function;
+        case repointel::SymbolKind::Method:       return SymbolKind::Method;
+        case repointel::SymbolKind::Class:        return SymbolKind::Class;
+        case repointel::SymbolKind::Struct:       return SymbolKind::Struct;
+        case repointel::SymbolKind::Union:        return SymbolKind::Struct;
+        case repointel::SymbolKind::Enum:         return SymbolKind::Enum;
+        case repointel::SymbolKind::EnumConstant: return SymbolKind::EnumValue;
+        case repointel::SymbolKind::Namespace:    return SymbolKind::Namespace;
+        case repointel::SymbolKind::Macro:        return SymbolKind::Macro;
+        case repointel::SymbolKind::TypeAlias:    return SymbolKind::Typedef;
+        case repointel::SymbolKind::Variable:     return SymbolKind::Variable;
+        case repointel::SymbolKind::Field:        return SymbolKind::Field;
+        default:                                  return SymbolKind::Unknown;
+    }
+}
+
+SymbolKind mapScope(repointel::ScopeKind s) {
+    switch (s) {
+        case repointel::ScopeKind::Namespace: return SymbolKind::Namespace;
+        case repointel::ScopeKind::Class:     return SymbolKind::Class;
+        case repointel::ScopeKind::Struct:    return SymbolKind::Struct;
+        case repointel::ScopeKind::Union:     return SymbolKind::Struct;
+        case repointel::ScopeKind::Enum:      return SymbolKind::Enum;
+        case repointel::ScopeKind::Function:  return SymbolKind::Function;
+        default:                              return SymbolKind::Unknown;
+    }
+}
+
+}  // namespace
+
+bool SemanticCodeIntelligence::buildFileIndex(const std::string& filePath) {
+    // Called with lock held.
+    const auto t0 = std::chrono::steady_clock::now();
+
+    std::string text;
+    if (!repointel::readWholeFile(filePath, text)) {
+        // An unreadable file is reported, not counted as indexed. Reporting
+        // 100% for a file that could not be read is the defect being fixed.
+        m_stats.cacheMisses.fetch_add(1);
+        return false;
+    }
+
+    const repointel::FileAnalysis a = repointel::analyzeSource(text);
+    if (!a.analyzed) {
+        m_stats.cacheMisses.fetch_add(1);
+        return false;
+    }
+
+    // 1. Symbols. Each definition gets an id, an entry, and two indexes.
+    std::vector<uint64_t> chunkToSymbol(a.chunks.size(), 0);
+    for (const repointel::FileSymbol& fs : a.symbols) {
+        SymbolEntry e;
+        e.symbolId      = m_nextSymbolId.fetch_add(1);
+        e.name          = fs.name;
+        e.qualifiedName = fs.qualified.empty() ? fs.name : fs.qualified;
+        e.displayName   = fs.name;
+        e.kind          = mapKind(fs.kind);
+        e.visibility    = SymbolVisibility::Public;
+        e.definition.filePath  = filePath;
+        e.definition.line      = fs.beginLine;
+        e.definition.column    = 1;
+        e.definition.endLine   = fs.endLine;
+        e.definition.endColumn = 1;
+        e.definition.offset    = fs.beginByte;
+        // Fields the analyzer does not resolve are left at their defaults
+        // rather than filled with a plausible-looking guess.
+        e.typeId         = 0;
+        e.parentSymbolId = 0;
+        if (fs.chunkIndex != 0xFFFFFFFFu && fs.chunkIndex < chunkToSymbol.size())
+            chunkToSymbol[fs.chunkIndex] = e.symbolId;
+
+        m_nameIndex[e.name].push_back(e.symbolId);
+        m_fileIndex[filePath].push_back(e.symbolId);
+        m_symbols[e.symbolId] = std::move(e);
+    }
+
+    // 2. Scope tree, in file order so parent links follow containment.
+    std::vector<uint64_t> chunkToScope(a.chunks.size(), 0);
+    for (size_t i = 0; i < a.chunks.size(); ++i) {
+        const repointel::FileChunk& fc = a.chunks[i];
+        Scope sc;
+        sc.scopeId       = m_nextScopeId.fetch_add(1);
+        sc.name          = fc.qualified.empty() ? fc.name : fc.qualified;
+        sc.kind          = mapScope(fc.scope);
+        sc.range.filePath = filePath;
+        sc.range.line     = fc.beginLine;
+        sc.range.endLine  = fc.endLine;
+        sc.range.offset   = fc.beginByte;
+        // The enclosing chunk is the nearest earlier chunk that contains this
+        // one's line span; containment is line-based because the analyzer emits
+        // balanced, nested chunks.
+        uint64_t parent = 0;
+        for (size_t j = i; j-- > 0;) {
+            if (a.chunks[j].beginLine <= fc.beginLine &&
+                a.chunks[j].endLine >= fc.endLine && a.chunks[j].depth < fc.depth) {
+                parent = chunkToScope[j];
+                break;
+            }
+        }
+        sc.parentScopeId = parent;
+        if (chunkToSymbol[i] != 0) sc.symbolIds.push_back(chunkToSymbol[i]);
+        chunkToScope[i] = sc.scopeId;
+        m_scopes[sc.scopeId] = std::move(sc);
+    }
+
+    // 3. Cross-references. Every identifier this file mentions that resolves to
+    // a known definition becomes a reference; identifiers with no definition
+    // anywhere are not invented as symbols.
+    const size_t refRoom = MAX_REFERENCES > m_references.size()
+                               ? MAX_REFERENCES - m_references.size()
+                               : 0;
+    uint64_t addedRefs = 0;
+    for (const std::string& ident : a.uniqueIdents) {
+        if (addedRefs >= refRoom) break;
+        auto it = m_nameIndex.find(ident);
+        if (it == m_nameIndex.end() || it->second.empty()) continue;
+        const uint64_t target = it->second.front();
+        // Skip the definition site itself.
+        const auto defIt = m_symbols.find(target);
+        if (defIt != m_symbols.end() &&
+            defIt->second.definition.filePath == filePath &&
+            defIt->second.definition.line == 0)
+            continue;
+        CrossReference r;
+        r.refId      = m_nextRefId.fetch_add(1);
+        r.symbolId   = target;
+        r.fromSymbolId= 0;
+        r.location.filePath = filePath;
+        r.location.line     = 1;
+        r.kind       = ReferenceKind::Read;
+        r.isImplicit = false;
+        m_references.push_back(r);
+        m_refBySymbol[target].push_back(m_references.size() - 1);
+        ++addedRefs;
+    }
+
+    // 4. Call graph. Only edges whose callee resolves to a known definition are
+    // recorded; an unresolved callee is not connected to every symbol that
+    // happens to share its name.
+    uint64_t addedEdges = 0;
+    for (const auto& call : a.calls) {
+        if (call.first >= chunkToSymbol.size()) continue;
+        const uint64_t caller = chunkToSymbol[call.first];
+        if (caller == 0 || call.second >= a.uniqueIdents.size()) continue;
+        const std::string& calleeName = a.uniqueIdents[call.second];
+        auto cit = m_nameIndex.find(calleeName);
+        if (cit == m_nameIndex.end() || cit->second.empty()) continue;
+        const uint64_t callee = cit->second.front();
+        if (callee == caller) continue;
+        CallGraphEdge e;
+        e.callerId  = caller;
+        e.calleeId  = callee;
+        e.callSite.filePath = filePath;
+        e.callSite.line     = 0;
+        e.callCount  = 1;
+        m_callGraph.push_back(e);
+        const size_t idx = m_callGraph.size() - 1;
+        m_callerIndex[callee].push_back(idx);
+        m_calleeIndex[caller].push_back(idx);
+        ++addedEdges;
+    }
+
+    m_stats.totalSymbols.fetch_add(a.symbols.size());
+    m_stats.totalScopes.fetch_add(a.chunks.size());
+    m_stats.totalReferences.fetch_add(addedRefs);
     m_stats.filesIndexed.fetch_add(1);
 
+    const auto us = std::chrono::duration_cast<std::chrono::microseconds>(
+                        std::chrono::steady_clock::now() - t0).count();
+    m_stats.indexBuildTimeUs.fetch_add(static_cast<uint64_t>(us < 0 ? 0 : us));
+
+    // Progress is reported after the work, not before it, and the call site
+    // reports 100 only for a file that was actually parsed.
     if (m_progressCb) {
         m_progressCb(filePath.c_str(), 100, m_progressData);
     }
+    (void)addedEdges;
+    return true;
 }

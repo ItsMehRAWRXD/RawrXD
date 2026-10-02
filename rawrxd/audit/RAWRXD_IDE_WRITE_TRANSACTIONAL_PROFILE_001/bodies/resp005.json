@@ -1,1 +1,1 @@
-{"elapsed_us":0,"error":"path rejected by sandbox: ..\\..\\escape.txt","ok":false,"tool":"write_file"}
+{"elapsed_us":0,"error":"path rejected by sandbox: ..\\..\\escape.txt (resolved path escapes the allowed root)","ok":false,"tool":"write_file"}

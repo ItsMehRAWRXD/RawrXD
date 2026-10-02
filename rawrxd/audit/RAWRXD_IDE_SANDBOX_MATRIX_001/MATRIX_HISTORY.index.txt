@@ -1,0 +1,19 @@
+# Normalised run index. Parser surface: every line carries run_verdict=.
+# Rebuilt from MATRIX_HISTORY.txt on each run; not independently appended.
+# Verdict vocabulary: CONTRACT_SATISFIED | CONTRACT_VIOLATED | DEFECT_DETECTED | NO_VERDICT
+# A probe's success is a FAILURE of the code it probed, so DEFECT_DETECTED is
+# the correct outcome for a control build and must never be read as a success.
+# legacy_lines_excluded=3 (pre-vocabulary; see MATRIX_HISTORY_ANNOTATION.txt)
+20261001T220442Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T220451Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T220627Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T220636Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T220638Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T220649Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T220718Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T220728Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T221945Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T221954Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T222038Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T222047Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T222056Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED

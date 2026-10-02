@@ -184,13 +184,45 @@ void scanBuffer(const std::string& fileLabel, const std::string& text, ScanResul
         }
 
         // Observation-sounding counters assigned a bare integer literal.
+        //
+        // RAWRXD_MEASUREMENT_HARNESS_AUTHORITY_001
+        //
+        // This used to be a FIXED LIST of eleven names, which is the same
+        // defect as a fixed list of stubs: it undercounts silently. The list
+        // caught `generatedTokenCount` and `rootsScanned` and therefore gave
+        // confidence, while `filesScanned`, `waitImportHits`,
+        // `networkImportHits`, `responseSymbolHits`, `pathResolvesRawr` and
+        // `freshShellRawRunCompleted` -- every one of which WAS assigned a
+        // literal in this tree -- passed as clean. A census whose coverage is a
+        // list someone chose is worse than one that fails loudly, because it
+        // reports a count that looks like a measurement of the whole.
+        //
+        // The list is retained as an explicit allow-nothing prefix set, and a
+        // GENERIC SUFFIX rule now covers the class: any identifier whose name
+        // ends in a measurement suffix and which is assigned a bare non-zero
+        // integer literal is a simulated observation. New counters are covered
+        // by construction rather than by remembering to add them.
         {
+            static const char* kSuffixes[] = {
+                "count", "counts", "hits", "scanned", "discovered", "classified",
+                "exists", "resolves", "completed", "started", "verified", "valid",
+                "parsed", "loaded", "issued", "found", "matched", "skipped"
+            };
             static const char* kCounters[] = {
                 "modelsDiscovered", "modelsClassified", "modelsWithPath",
                 "modelsWithUnknownPath", "deep2CompatibleCount", "unloadableCount",
                 "generatedTokenCount", "rootsScanned", "aliasesScanned",
                 "ggufFilesScanned", "ollamaManifestsScanned", "tensorCount",
                 "expertsUsed", "layerCount", "unloadableCount"
+            };
+            auto looksLikeObservation = [](const std::string& name) {
+                for (const char* s : kSuffixes) {
+                    if (name.size() > std::strlen(s) &&
+                        name.compare(name.size() - std::strlen(s), std::strlen(s), s) == 0) {
+                        return true;
+                    }
+                }
+                return false;
             };
             for (const char* c : kCounters) {
                 const size_t p = low.find(lower(c));
@@ -212,6 +244,87 @@ void scanBuffer(const std::string& fileLabel, const std::string& text, ScanResul
                     addFinding(out, fileLabel, lineNo, "SIMULATED_COUNTER",
                                Severity::Blocking, t);
                     ++out.simulatedCounters;
+                }
+            }
+
+            // Generic sweep: `<identifier> = <bare non-zero integer>;` where the
+            // identifier names an observation. Scoped to member-style access
+            // (`x.y = 3;` or a `g_state.y = 3;`) so ordinary local arithmetic
+            // and loop counters are not swept in.
+            {
+                size_t i = 0;
+                while (i < t.size()) {
+                    // identifier
+                    size_t s0 = i;
+                    while (i < t.size() && (std::isalnum(static_cast<unsigned char>(t[i])) || t[i] == '_')) ++i;
+                    const std::string ident = t.substr(s0, i - s0);
+                    if (ident.empty() || ident == "return") { continue; }
+                    // optional member access
+                    size_t j = i;
+                    while (j < t.size() && (t[j] == ' ' || t[j] == '.' || t[j] == '_' ||
+                                             std::isalnum(static_cast<unsigned char>(t[j])))) {
+                        if (t[j] == ' ' && !(j + 1 < t.size() &&
+                                (std::isalnum(static_cast<unsigned char>(t[j + 1])) ||
+                                 t[j + 1] == '_'))) { break; }
+                        ++j;
+                    }
+                    const std::string rhs2 = trim(t.substr(j));
+                    if (rhs2.size() < 3 || rhs2[0] != '=' || rhs2[1] == '=') { continue; }
+                    const std::string val2 = trim(rhs2.substr(1));
+                    const std::string bare = val2.substr(0, val2.find(';') == std::string::npos
+                                                 ? val2.size() : val2.find(';'));
+                    if (bare == "true" || bare == "false") {
+                        // `x.flag = true;` is only a simulated observation when
+                        // the name says it is one.
+                        if (looksLikeObservation(ident)) {
+                            addFinding(out, fileLabel, lineNo, "SIMULATED_OBSERVATION",
+                                       Severity::Advisory, t);
+                            ++out.simulatedCounters;
+                        }
+                        continue;
+                    }
+                    if (bare.empty() ||
+                        bare.find_first_not_of("0123456789") != std::string::npos) { continue; }
+                    if (bare == "0") continue;   // initialising to zero is correct
+                    if (looksLikeObservation(ident)) {
+                        addFinding(out, fileLabel, lineNo, "SIMULATED_OBSERVATION",
+                                   Severity::Blocking, t);
+                        ++out.simulatedCounters;
+                    }
+                }
+            }
+        }
+
+        // RAWRXD_MEASUREMENT_HARNESS_AUTHORITY_001
+        //
+        // A function that returns success while saying it did not check is the
+        // same defect as a fabricated counter, and it is invisible to any rule
+        // that inspects assignments. This catches
+        //     return true; // placeholder
+        //     return true;  // For now, assume yes
+        //     return true;  // Would need actual PATH verification
+        // and the `return false; // TODO: implement` shapes, by pairing the
+        // return with a concession marker anywhere in the same trimmed line or
+        // the one immediately above it.
+        {
+            const char* markers[] = {
+                "placeholder", "for now", "assume", "simplified", "omitted",
+                "not implemented", "stub", "mock", "would need", "todo",
+                "would extract", "would call", "would actually"
+            };
+            const size_t rr = low.rfind("return");
+            if (rr != std::string::npos) {
+                const std::string retLine = trim(low.substr(rr));
+                if (retLine.rfind("return true", 0) == 0 ||
+                    retLine.rfind("return false", 0) == 0 ||
+                    retLine.rfind("return 0", 0) == 0) {
+                    for (const char* m : markers) {
+                        if (retLine.find(m) != std::string::npos) {
+                            addFinding(out, fileLabel, lineNo, "ASSUMED_SUCCESS",
+                                       Severity::Blocking, t);
+                            break;
+                        }
+                    }
                 }
             }
         }

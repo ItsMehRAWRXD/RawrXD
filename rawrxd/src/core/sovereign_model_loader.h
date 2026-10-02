@@ -12,9 +12,22 @@
 #include <cstdint>
 #include <functional>
 
-// Assembly loader C interface
+// Assembly loader C interface.
+//
+// RAWRXD_UNSIMULATE_001 / RAWRXD_END_TO_END_STATE_001
+//
+// This included "../build/120b_loader/RawrXD_120B_Loader_C.h", a path under
+// build/ that has never existed, so this header has never compiled. The ABI is
+// declared now, from the call sites in sovereign_model_loader.cpp, and it lives
+// in src/core with the rest of the source rather than in a build-output
+// directory that only exists after a build.
+//
+// The assembly implementation is NOT present, so these symbols are declared and
+// not defined. That fails at link time for anything that calls them, which is
+// the correct signal: the ABI has no implementation. See the header for what to
+// add.
 extern "C" {
-#include "../build/120b_loader/RawrXD_120B_Loader_C.h"
+#include "RawrXD_120B_Loader_C.h"
 }
 
 namespace sovereign {

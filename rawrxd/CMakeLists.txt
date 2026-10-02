@@ -187,6 +187,57 @@ project(RawrXD VERSION 14.7.3 LANGUAGES C CXX RC ASM_MASM)
 option(RAWRXD_STRICT_SOURCES
     "Treat any referenced-but-missing source file as a configuration error instead of a warning"
     OFF)
+
+# RAWRXD_RELEASE_CERT_SOURCE_CLOSURE_001
+#
+# RAWRXD_STRICT_SOURCES makes an ABSENT source fatal, but it does nothing about an
+# EMPTY-BODIED one, and an empty-bodied TU is the more dangerous case in a
+# certification build: the file exists, the target links, and the target contains
+# no code. The stub-body scan in rawrxd_filter_missing_sources already counts
+# these, but only ever reported them as a WARNING. Measured in this tree before
+# that scan existed: 105 CMake-wired TUs whose names assert cert/verify/parity/
+# proof had no code at all, so a certification target could exist without
+# containing a certification.
+#
+# This is the release/certification switch. It is OFF by default, so an ordinary
+# development build configures exactly as it did, and when ON it:
+#
+#   1. engages RAWRXD_STRICT_SOURCES behaviour (absent source is fatal)
+#   2. additionally makes an empty-bodied TU fatal, because a cert build that
+#      links a target containing no code certifies nothing
+#   3. writes a machine-readable summary to
+#      ${CMAKE_BINARY_DIR}/release_cert_source_closure.txt so a gate can READ the
+#      outcome instead of trusting that a green build happened to mean something
+#
+# The summary file is the part that matters long term. A build being green is not
+# evidence of source closure; the counts in that file are.
+option(RAWRXD_RELEASE_CERT_BUILD
+    "Release/certification build: absent AND empty-bodied declared sources are fatal, and a source-closure summary is written"
+    OFF)
+
+if(RAWRXD_RELEASE_CERT_BUILD)
+    # Cert mode implies strict sources, so a caller does not have to remember both.
+    if(NOT RAWRXD_STRICT_SOURCES)
+        message(STATUS "[release_cert_source_closure] RAWRXD_RELEASE_CERT_BUILD=ON implies RAWRXD_STRICT_SOURCES=ON")
+        set(RAWRXD_STRICT_SOURCES ON CACHE BOOL "Implied by RAWRXD_RELEASE_CERT_BUILD" FORCE)
+    endif()
+endif()
+
+# Accumulators, so the summary reflects every filtered list rather than the last
+# one. initialised here because the first rawrxd_filter_missing_sources call
+# would otherwise see them UNDEFINED and abort arithmetic on an empty string.
+if(NOT DEFINED RAWRXD_CERT_DROPPED_TOTAL)
+    set(RAWRXD_CERT_DROPPED_TOTAL 0)
+endif()
+if(NOT DEFINED RAWRXD_CERT_EMPTY_TOTAL)
+    set(RAWRXD_CERT_EMPTY_TOTAL 0)
+endif()
+if(NOT DEFINED RAWRXD_CERT_DROPPED_NAMES)
+    set(RAWRXD_CERT_DROPPED_NAMES "")
+endif()
+if(NOT DEFINED RAWRXD_CERT_EMPTY_NAMES)
+    set(RAWRXD_CERT_EMPTY_NAMES "")
+endif()
 # This function used to drop every missing path with only a message(WARNING).
 # Applied to WIN32IDE_SOURCES it silently discarded ~225 referenced
 # src/win32app/*.cpp files that do not exist, and the IDE target then configured
@@ -230,18 +281,85 @@ function(rawrxd_filter_missing_sources list_var)
             # This is CONTENT-based, which the existing name filters cannot be:
             # `deep2_gpu_q4k_gemv_cert.cpp` passes every `_stub|stub_|shim_|mock`
             # pattern while its body says "Auto-generated stub".
-            file(READ "${_path}" _stub_body)
-            # CMake's regex engine is too limited for comment-stripping
-            # (no block comments, no dot-matches-newline, and '+' after an
-            # escaped '*' fails to compile). Instead strip every character that
-            # cannot appear in code -- anything outside [A-Za-z0-9_]. If nothing
-            # survives, the file contained no code, only comments and blanks.
-            string(REGEX REPLACE "[^A-Za-z0-9_]" "" _stub_body "${_stub_body}")
-            # A trivial `int main(){ return 0; }` survives identifier-stripping
-            # as "intmainreturn0". It compiles, links, and certifies nothing, so
+            # RAWRXD_STUB_GATE_BOUNDED_READ_001
+            # This used to read the WHOLE file. RAWR_ENGINE_SOURCES names 54
+            # translation units and at least one is multi-MB, so the read plus the
+            # regex below built a very large CMake string and recursed deep enough
+            # to exhaust the C stack:
+            #     cmake -S . -B <fresh dir>   ->   exit 0xC00000FD (STACK_OVERFLOW)
+            #     crash site: rawrxd_filter_missing_sources at CMakeLists.txt:3772
+            # It reproduced on a brand-new build directory, so it is not a stale
+            # generate.stamp, not a lock, and not a leftover process.
+            #
+            # A LIMIT preserves the check's power exactly. Every stub this gate is
+            # written to catch -- `// Auto-generated stub`, `// STUB: src/x.cpp`,
+            # `#pragma once` + banner -- is under 1 KB, and an empty-bodied TU
+            # has no code to appear after byte 65536. Reading 64 KB is therefore
+            # sufficient to classify every real case while bounding the cost per
+            # file, which is what stops the stack exhaustion.
+            file(READ "${_path}" _stub_body LIMIT 65536)
+            # RAWRXD_RELEASE_CERT_SOURCE_CLOSURE_001
+            #
+            # The previous test stripped every character outside [A-Za-z0-9_] and
+            # treated "nothing survives" as empty. That does not work, and its own
+            # comment claimed it did. A comment-only file leaves its PROSE behind:
+            # "// Stub header" strips to "Stubheader", which is non-empty, so the
+            # file is reported as having code. Measured on the very stub this gate
+            # is meant to catch: src/config/IDEConfig.h was 3 lines whose entire
+            # content was "// Stub header", and the old test called it non-empty.
+            #
+            # The reliable test is structural, not lexical: a translation unit with
+            # no code has no statement punctuation. Strip comments first, then look
+            # for ; { } ( ) =. `int main(){ return 0; }` survives that, so the
+            # trivial-main case is still handled separately below.
+            #
+            # Block comments are removed with a find loop rather than a regex,
+            # because CMake's regex engine has no dot-matches-newline and cannot
+            # span lines. Line comments are removed per line.
+            string(REGEX REPLACE "/\\*([^*]|\\*[^/])*\\*/" " " _stub_body "${_stub_body}")
+            # Repeat for a multi-line block comment the single pass above could not
+            # match across newlines. Bounded, so a malformed file cannot loop.
+            set(_block_iter 0)
+            while(_block_iter LESS 64)
+                string(FIND "${_stub_body}" "/*" _block_open)
+                if(_block_open LESS 0)
+                    break()
+                endif()
+                string(FIND "${_stub_body}" "*/" _block_close)
+                if(_block_close LESS 0 OR _block_close LESS _block_open)
+                    break()
+                endif()
+                math(EXPR _block_close "${_block_close} + 2")
+                string(SUBSTRING "${_stub_body}" 0 ${_block_open} _stub_head)
+                math(EXPR _block_tail_at "${_block_close}")
+                string(LENGTH "${_stub_body}" _block_len)
+                if(_block_tail_at GREATER_EQUAL _block_len)
+                    set(_block_tail "")
+                else()
+                    string(SUBSTRING "${_stub_body}" ${_block_tail_at} -1 _block_tail)
+                endif()
+                set(_stub_body "${_stub_head} ${_block_tail}")
+                math(EXPR _block_iter "${_block_iter} + 1")
+            endwhile()
+            string(REGEX REPLACE "//[^\n]*" " " _stub_body "${_stub_body}")
+            # Preprocessor-only content is a declaration of intent, not code. A
+            # file containing nothing but `#include "x.h"` supplies no definitions.
+            string(REGEX REPLACE "#[^\n]*" " " _stub_body "${_stub_body}")
+            # Structural test for code.
+            if(_stub_body MATCHES "[;{}()=]")
+                set(_has_code TRUE)
+            else()
+                set(_has_code FALSE)
+            endif()
+            # A trivial `int main(){ return 0; }` links and certifies nothing, so
             # it is treated as empty too. Measured in this tree:
-            # tests/b009/b009b_batched_gemm.cpp is exactly this.
-            if(_stub_body STREQUAL "intmainreturn0")
+            # tests/b009/b009_b_batched_gemm.cpp is exactly this.
+            string(REGEX REPLACE "[^A-Za-z0-9_]" "" _stub_ident "${_stub_body}")
+            if(NOT _has_code)
+                list(APPEND _kept "${_src}")
+                math(EXPR _emptybodied "${_emptybodied} + 1")
+                list(APPEND _emptybodied_names "${_src}")
+            elseif(_stub_ident STREQUAL "intmainreturn0")
                 list(APPEND _kept "${_src}")
                 math(EXPR _emptybodied "${_emptybodied} + 1")
                 list(APPEND _emptybodied_names "${_src}(trivial main)")
@@ -262,6 +380,18 @@ function(rawrxd_filter_missing_sources list_var)
     # without containing a certification.
     if(_emptybodied GREATER 0)
         string(REPLACE ";" " " _eb_list "${_emptybodied_names}")
+        # RAWRXD_RELEASE_CERT_SOURCE_CLOSURE_001: in a release/certification build
+        # an empty-bodied TU is fatal, not a warning. It exists, it links, and it
+        # contains no code, so a green build and a passing link would both be
+        # worthless as evidence about it.
+        if(RAWRXD_RELEASE_CERT_BUILD)
+            message(FATAL_ERROR
+                "[release_cert_source_closure] ${list_var}: ${_emptybodied} declared source(s) are "
+                "EMPTY-BODIED (no code survives comment stripping):\n"
+                "  ${_eb_list}\n"
+                "RAWRXD_RELEASE_CERT_BUILD=ON: refusing to certify a build whose declared sources "
+                "contain no code. Either implement the file or remove the entry from the list.")
+        endif()
         message(WARNING
             "[rawrxd_stub_gate] ${list_var}: ${_emptybodied} translation unit(s) "
             "are EMPTY-BODIED (no code after stripping comments):\n  ${_eb_list}\n"
@@ -285,6 +415,17 @@ function(rawrxd_filter_missing_sources list_var)
                 "Set -DRAWRXD_STRICT_SOURCES=ON to make this fatal.")
             message(STATUS "[rawrxd_filter_missing_sources] ${list_var}: dropped=${_dropped}")
         endif()
+    endif()
+    # RAWRXD_RELEASE_CERT_SOURCE_CLOSURE_001: record before the early return that
+    # a FATAL_ERROR above never reaches, so the summary is written whenever the
+    # build is allowed to continue at all.
+    math(EXPR RAWRXD_CERT_DROPPED_TOTAL "${RAWRXD_CERT_DROPPED_TOTAL} + ${_dropped}")
+    math(EXPR RAWRXD_CERT_EMPTY_TOTAL   "${RAWRXD_CERT_EMPTY_TOTAL} + ${_emptybodied}")
+    if(_dropped GREATER 0)
+        list(APPEND RAWRXD_CERT_DROPPED_NAMES ${_dropped_names})
+    endif()
+    if(_emptybodied GREATER 0)
+        list(APPEND RAWRXD_CERT_EMPTY_NAMES ${_emptybodied_names})
     endif()
     math(EXPR RAWRXD_DROPPED_SOURCE_COUNT "${RAWRXD_DROPPED_SOURCE_COUNT} + ${_dropped}")
     set(RAWRXD_DROPPED_SOURCE_COUNT "${RAWRXD_DROPPED_SOURCE_COUNT}" PARENT_SCOPE)
@@ -5063,6 +5204,11 @@ list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
     src/agentic/CheckpointRollbackAuthority.cpp
     src/agentic/AgentStateManager.cpp
     src/agentic/AgentToolOrchestrator.cpp
+    # RAWRXD_MODEL_TOOL_PROTOCOL_AUTHORITY_001: AgentToolOrchestrator.cpp now
+    # calls into the tool protocol authority, so this source is REQUIRED by the
+    # target above, not optional. Without it the tool-calling REPL fails to link
+    # and the agent cannot call tools at all.
+    src/agentic/ModelToolProtocol.cpp
     src/security/JwtValidator.cpp
     # TimeReverseDigest: reverse-time materialization scheduler
     src/deep2/TimeReverseDigest.cpp
@@ -8352,6 +8498,10 @@ endif()
 
 # deep2_streamer_cert +�-�+�-�+�-� STREAMER-CERT-001: Full streaming certification harness
 # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# NOTE: kept OFF. The canonical STREAMER-CERT-001 target is declared later in
+# this file as `deep2_streamer_cert` from tools/deep2_streamer_cert.cpp plus the
+# deep2_streamer_discovery library, EXCLUDE_FROM_ALL. Turning this legacy
+# option on declares the same target name twice and CMake refuses to configure.
 option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" OFF)
 if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
@@ -10555,6 +10705,89 @@ set_target_properties(rawrxd_sampler_combined_oob_001 PROPERTIES
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 else()
     message(STATUS "[RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_sampler_combined_oob_001: missing certs/rawrxd_sampler_combined_oob_001.cpp")
+endif()
+
+# RAWRXD_HTTP_TEMPLATE_MARKER_PROBE_001 — diagnostic for the CONTENT_CORRECTNESS
+# failure recorded in audit/RAWRXD_HTTP_AUTHORITY_CHAIN_001.md.
+#
+# That gate left ROOT_CAUSE=NARROWED_NOT_CONFIRMED because the vocabulary
+# lookup was never run with a working instrument: the ad-hoc tensor-info walk
+# desynchronised and raised MemoryError, so nobody knows whether
+# <|user|>/<|system|>/<|assistant|> are single vocabulary entries in
+# TinyLlama's 32000-token SentencePiece vocab or are fragmented into ordinary
+# pieces by the encoder.
+#
+# This probe answers that with the PRODUCTION loader (GGUFLoader, header-only)
+# and the PRODUCTION BPETokenizer, so the vocabulary it reports is the
+# vocabulary the server used. It is a diagnostic: it changes no behavior, and
+# its verdict is derived only from the observations it prints.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/certs/http_template_marker_probe_001.cpp" AND TARGET InferenceEngine)
+add_executable(http_template_marker_probe_001
+    certs/http_template_marker_probe_001.cpp)
+target_link_libraries(http_template_marker_probe_001 PRIVATE InferenceEngine)
+target_include_directories(http_template_marker_probe_001 PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(http_template_marker_probe_001 PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+endif()
+set_target_properties(http_template_marker_probe_001 PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME http_template_marker_probe_001
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+# RAWRXD_HTTP_ORACLE_SUITE_001 — the 2x2 (RAW vs TEMPLATE) deterministic oracle
+# suite. RAWRXD_HTTP_AUTHORITY_CHAIN_001 proved a byte-count gate cannot detect
+# a wrong answer; this measures content instead, on one engine and one set of
+# weights, so a column disagreement cannot be blamed on the model.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/certs/http_oracle_suite_001.cpp" AND TARGET InferenceEngine)
+add_executable(http_oracle_suite_001
+    certs/http_oracle_suite_001.cpp)
+target_link_libraries(http_oracle_suite_001 PRIVATE InferenceEngine)
+target_include_directories(http_oracle_suite_001 PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(http_oracle_suite_001 PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+endif()
+set_target_properties(http_oracle_suite_001 PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME http_oracle_suite_001
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+# RAWRXD_HTTP_TEMPLATE_FORMAT_SWEEP_001 — corrects an inference in
+# RAWRXD_HTTP_TEMPLATE_ROOT_CAUSE_002. That entry read "role markers absent from
+# the vocabulary" as evidence that the template was incompatible with the model.
+# Upstream TinyLlama-1.1B-Chat-v1.0 declares exactly THREE added tokens
+# (<unk>, <s>, </s>) and a chat_template that DOES use <|user|>/<|assistant|>.
+# The markers were deliberately never added as special tokens; the model was
+# trained on them as ordinary text. Absence from vocab is therefore the
+# model's real design, not a defect, and the earlier conclusion was wrong.
+#
+# This sweep measures the remaining suspect — byte-level whitespace — across
+# six candidate renderings on one engine, one seed, greedy.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/certs/http_template_format_sweep_001.cpp" AND TARGET InferenceEngine)
+add_executable(http_template_format_sweep_001
+    certs/http_template_format_sweep_001.cpp)
+target_link_libraries(http_template_format_sweep_001 PRIVATE InferenceEngine)
+target_include_directories(http_template_format_sweep_001 PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(http_template_format_sweep_001 PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+endif()
+set_target_properties(http_template_format_sweep_001 PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME http_template_format_sweep_001
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 # OpenAI-compatible Deep2 server (for Cursor/tunnel integration) - DEEP2_SERVER_BIND_AUTHORITY_001
@@ -17288,6 +17521,65 @@ set_target_properties(rawrxd_single_writer PROPERTIES
 add_executable(ckpt_rollback_crash_cert
     tools/ckpt_rollback_crash_cert.cpp)
 
+# CANONICAL_REAL_INFERENCE_CERTIFICATION: per-step decode instrumentation
+# (input token, KV position, logits hash, argmax, decoded piece, EOS) to
+# separate a stale-forward-state failure from a numerical one.
+add_executable(decode_step_instrument
+    tools/decode_step_instrument.cpp)
+target_link_libraries(decode_step_instrument PRIVATE InferenceEngine)
+target_include_directories(decode_step_instrument PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(decode_step_instrument PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+endif()
+set_target_properties(decode_step_instrument PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME decode_step_instrument
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# RAWRXD_ATTN_VISIBILITY_TRACE_001: production-primitive driver.
+#
+# decode_step_instrument drives a DecodeCursor, and a DecodeCursor is NOT the
+# production generation path: the two select different step-0 tokens, so a
+# measurement taken through the cursor does not describe what generateStream()
+# does. Every conclusion about canonical generation has to come from a driver
+# that calls generateStream() itself, which is what this target builds.
+#
+# It is EXCLUDE_FROM_ALL for the same reason as the ladder: it is a
+# certification instrument, not a product binary.
+if(TARGET InferenceEngine)
+    add_executable(server_generation_parity
+        tools/server_generation_parity.cpp)
+    set_target_properties(server_generation_parity PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    target_include_directories(server_generation_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${RAWR_VULKAN_INCLUDE})
+    target_link_libraries(server_generation_parity PRIVATE
+        InferenceEngine
+        dxgi
+        kernel32.lib user32.lib gdi32.lib)
+    if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_LIB)
+        target_link_libraries(server_generation_parity PRIVATE ${RAWR_VULKAN_LIB})
+        set_property(TARGET server_generation_parity APPEND_STRING
+            PROPERTY LINK_FLAGS " /LIBPATH:\"${RAWR_VULKAN_SDK_ROOT}/lib\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET server_generation_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET server_generation_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET server_generation_parity APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "server_generation_parity: PRODUCTION generateStream() driver CONFIGURED")
+endif()
+
 # RAWRXD_GPU_DLWVECTOR_CONTRACT_AUDIT_001: runtime confirmation that the
 # upload/download contract is an ELEMENT count, measured on a real Vulkan
 # device. Certifies the mechanism behind vulkan_compute.cpp:3987 without
@@ -17655,7 +17947,7 @@ endif()
 # paints from. Proving delivery against a private copy of the message list would
 # prove a second, parallel transport that no user ever sees.
 # ============================================================================
-if(EXISTS "${CMAKE_BINARY_DIR}/Release/InferenceEngine.lib")
+if(TARGET InferenceEngine)
     add_executable(inference_authority_ladder
         inference_authority_ladder.cpp
         src/win32app/Win32IDE_ChatPanel.cpp
@@ -17819,6 +18111,40 @@ if(BUILD_TESTING)
     add_test(NAME kquant_parity COMMAND kquant_parity)
 endif()
 message(STATUS "kquant_parity: CONFIGURED (AVX-512 Q4_K GEMV parity oracle)")
+
+# ============================================================================
+# RAWRXD_CPU_FULL_MODEL_INFERENCE_001
+#
+# Drives the production Deep2Engine over a real quantized model. Microkernel
+# parity is not end-to-end evidence, and a registry containing a vector kernel
+# is not proof either: this target links the real engine and reads the GEMV
+# dispatch counters, so the receipt can state that the admitted Q4_K and Q6_K
+# vector kernels actually executed during generation.
+# ============================================================================
+add_executable(full_model_inference EXCLUDE_FROM_ALL
+    full_model_inference.cpp
+)
+set_target_properties(full_model_inference PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+)
+target_include_directories(full_model_inference PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/deep2
+)
+target_link_libraries(full_model_inference PRIVATE InferenceEngine)
+target_compile_features(full_model_inference PRIVATE cxx_std_20)
+if(MSVC)
+    target_compile_options(full_model_inference PRIVATE /arch:AVX512 /EHsc)
+else()
+    target_compile_options(full_model_inference PRIVATE
+        -mavx512f -mavx512bw -mavx512dq -mavx512vl)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME full_model_inference
+             COMMAND full_model_inference)
+endif()
+message(STATUS "full_model_inference: CONFIGURED (real-model end-to-end gate)")
 
 message(STATUS "thread_geometry_probe: CONFIGURED")
 
@@ -18260,3 +18586,145 @@ add_test(NAME refactor_chain_cert
 
 message(STATUS "RAWRXD_P1_REFACTOR_CHAIN_001: CONFIGURED "
                "(library rawrxd_refactor_chain, driver refactor_chain_cert)")
+# ============================================================================
+# RAWRXD_RELEASE_CERT_SOURCE_CLOSURE_001 -- machine-readable summary
+#
+# Written unconditionally, so a gate can read the outcome of a build that WAS
+# permitted to configure. A green build is not evidence of source closure; these
+# counts are. A development build therefore also produces this file, with
+# RELEASE_CERT_BUILD=0 and whatever counts the permissive mode tolerated.
+# ============================================================================
+
+string(REPLACE ";" " " _cert_dropped_list "${RAWRXD_CERT_DROPPED_NAMES}")
+string(REPLACE ";" " " _cert_empty_list "${RAWRXD_CERT_EMPTY_NAMES}")
+
+if(RAWRXD_RELEASE_CERT_BUILD)
+    set(_cert_mode "1")
+    set(_cert_verdict "PASS")
+    if(RAWRXD_CERT_DROPPED_TOTAL GREATER 0 OR RAWRXD_CERT_EMPTY_TOTAL GREATER 0)
+        set(_cert_verdict "FAIL")
+    endif()
+else()
+    set(_cert_mode "0")
+    # A development build is not a certification build, so it cannot PASS. It can
+    # only report what it tolerated.
+    set(_cert_verdict "NOT_A_CERT_BUILD")
+endif()
+
+set(_cert_body
+"=== RAWRXD_RELEASE_CERT_SOURCE_CLOSURE_001 ===
+RELEASE_CERT_BUILD=${_cert_mode}
+STRICT_SOURCES=${RAWRXD_STRICT_SOURCES}
+DROPPED_SOURCE_TOTAL=${RAWRXD_CERT_DROPPED_TOTAL}
+EMPTY_BODIED_TOTAL=${RAWRXD_CERT_EMPTY_TOTAL}
+DROPPED_SOURCES=${_cert_dropped_list}
+EMPTY_BODIED_SOURCES=${_cert_empty_list}
+VERDICT=${_cert_verdict}
+=== RECEIPT_END ===
+")
+
+file(WRITE "${CMAKE_BINARY_DIR}/release_cert_source_closure.txt" "${_cert_body}")
+message(STATUS "[release_cert_source_closure] mode=${_cert_mode} dropped=${RAWRXD_CERT_DROPPED_TOTAL} empty_bodied=${RAWRXD_CERT_EMPTY_TOTAL} verdict=${_cert_verdict}")
+message(STATUS "[release_cert_source_closure] summary -> ${CMAKE_BINARY_DIR}/release_cert_source_closure.txt")
+# ============================================================================
+# RAWRXD_MODEL_TOOL_PROTOCOL_AUTHORITY_001
+#
+# A model does not need native function-calling training to take part in the
+# agent loop: the runtime provides the protocol. This target certifies the three
+# tiers (native / puppeteer / hotpatch) together with the negative controls that
+# make the certification falsifiable.
+#
+# The target is EXCLUDE_FROM_ALL and links the tool-loop sources directly rather
+# than a prebuilt library, so a PASS is bound to the authority and the loop that
+# uses it, and not to whatever an unrelated library happened to contain.
+# ============================================================================
+add_executable(model_tool_protocol_cert EXCLUDE_FROM_ALL
+    tools/model_tool_protocol_cert.cpp
+    src/agentic/ModelToolProtocol.cpp
+    src/agentic/AgentToolOrchestrator.cpp
+    src/agentic/AgentToolRegistry.cpp
+    src/agentic/AgentStateManager.cpp
+    src/agentic/StreamingToolParser.cpp
+    src/agentic/CommandExecutor.cpp
+    src/agentic/CheckpointRollbackAuthority.cpp
+)
+target_compile_options(model_tool_protocol_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
+target_include_directories(model_tool_protocol_cert PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+set_target_properties(model_tool_protocol_cert PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+    OUTPUT_NAME "model_tool_protocol_cert"
+)
+if(MSVC)
+    set_property(TARGET model_tool_protocol_cert APPEND_STRING PROPERTY LINK_FLAGS " /LARGEADDRESSAWARE:NO")
+endif()
+message(STATUS "[ModelToolProtocol] cert target: model_tool_protocol_cert")
+
+# ============================================================================
+# RAWRXD_DEEP2_STREAMER_CERT_001 / RAWRXD_DEEP2_STREAMER_PARITY_001
+#
+# Discovery is by GGUF magic, never by extension, so an Ollama blob with no
+# .gguf suffix is still found. Admission is by CLASSIFICATION only: no size
+# gate, because "too large to fit" is a finding about a loader and the loader is
+# the thing under test. A 578 GB sharded model is entered at member 00001 and
+# every member is proven present before the file is opened.
+# ============================================================================
+add_library(deep2_streamer_discovery STATIC EXCLUDE_FROM_ALL
+    src/streamer/ModelInventory.cpp
+)
+target_compile_options(deep2_streamer_discovery PRIVATE /O2 /EHsc /W4 /std:c++20)
+target_include_directories(deep2_streamer_discovery PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+add_executable(deep2_streamer_cert EXCLUDE_FROM_ALL
+    tools/deep2_streamer_cert.cpp
+)
+target_compile_options(deep2_streamer_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
+target_link_libraries(deep2_streamer_cert PRIVATE deep2_streamer_discovery InferenceEngine psapi)
+set_target_properties(deep2_streamer_cert PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+add_executable(deep2_streamer_parity EXCLUDE_FROM_ALL
+    tools/deep2_streamer_parity.cpp
+)
+target_compile_options(deep2_streamer_parity PRIVATE /O2 /EHsc /W4 /std:c++20)
+target_link_libraries(deep2_streamer_parity PRIVATE deep2_streamer_discovery InferenceEngine)
+
+# RAWRXD_DIRECT_IO_PROBE_001: the A/B that decides whether Direct I/O is worth
+# an engine rewrite. Times mmap+forced-residency against a real
+# FILE_FLAG_NO_BUFFERING read of the SAME bytes into a 4096-aligned arena.
+# Reports MEASURED bytes; never infers I/O from page-fault counts.
+#
+# Excluded from `all`; request it explicitly to run.
+add_executable(direct_io_probe_001 EXCLUDE_FROM_ALL
+    certs/direct_io_probe_001.cpp
+)
+target_compile_options(direct_io_probe_001 PRIVATE /O2 /EHsc /W4 /std:c++20)
+
+# RAWRXD_DOG_TELEMETRY_001: bare-metal per-token telemetry harness.
+#
+# Links the SAME real engine (InferenceEngine) that deep2_streamer_cert uses,
+# which is why that harness can prove models actually stream. There is no
+# phantom C-API here: this calls Deep2::Deep2Engine::loadModel and
+# generateStream directly, so if the engine's streaming path were stubbed this
+# target would fail to link rather than print a fabricated PASS.
+#
+# Excluded from `all`; request it explicitly to run.
+add_executable(rawr_dog_harness EXCLUDE_FROM_ALL
+    certs/rawr_dog_harness.cpp
+)
+target_compile_options(rawr_dog_harness PRIVATE /O2 /EHsc /W4 /std:c++20)
+target_link_libraries(rawr_dog_harness PRIVATE InferenceEngine psapi)
+target_include_directories(rawr_dog_harness PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+set_target_properties(deep2_streamer_parity PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+message(STATUS "[Deep2Streamer] cert target: deep2_streamer_cert")
+message(STATUS "[Deep2Streamer] parity target: deep2_streamer_parity")

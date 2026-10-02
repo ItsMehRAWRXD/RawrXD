@@ -1,1 +1,1 @@
-{"active":false,"error":"commit failed: no active transaction","execute_enabled":false,"ok":false,"op":"commit","requires_transaction":true,"write_enabled":true,"write_profile":"transactional"}
+{"active":false,"committed":true,"execute_enabled":false,"file_writes":4,"journal_records":23,"ok":true,"op":"commit","requires_transaction":true,"tx":"tx13435366756_24104_123427c1","workspace_root":"F:\\~dev\\rawrxd\\audit\\RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001\\work","write_enabled":true,"write_profile":"transactional"}

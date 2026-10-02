@@ -1,1 +1,1 @@
-{"elapsed_us":0,"error":"path rejected by sandbox: alpha.txt","ok":false,"tool":"write_file"}
+{"elapsed_us":0,"ok":true,"output":"wrote 51 bytes to F:\\~dev\\rawrxd\\audit\\RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001\\work\\alpha.txt","tool":"write_file"}

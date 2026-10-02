@@ -1,0 +1,2400 @@
+﻿{
+  "gate": "RAWRXD_RAWR_DUMP_AUTHORITY_001",
+  "cpu_only": true,
+  "gpu_required": false,
+  "generation_required": false,
+  "model_count": 206,
+  "models": [
+    {
+      "name": "bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "bartowski/Llama-3.2-1B-Instruct-GGUF",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "chat",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "bartowski/Llama-3.2-3B-Instruct-GGUF",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "chat",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "huihui-ai/Huihui-Qwen3.6-35B-A3B-Claude-4.7-Opus-abliterated-MTP-GGUF",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "bazobehram/kimi-2.5-flash",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "frontier",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "blackgrg26/WORMGPT-14",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "bluehawana/deepseek-v4-flash",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "reasoning",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "gsferroti/qwen35-397b-cloud-laravel12-php84-boost",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "huihui_ai/llama3.3-abliterated",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "IHA089/drana-infinity-3b",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "kiminoto/T0.0.1",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "frontier",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "kiwi_kiwi/mythos-9b-merged_v2-abliterated",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "kwangsuklee/Qwen3.5-9B.Q4_K_M-Claude-4.6-Opus-Reasoning-Distilled-v2",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bg-ide-agentic",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bg-test",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bg40",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bg40-f32",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bg40-f32-from-q4",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bg40-unleashed",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddy-7b-cheetah",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddy-balanced-agentic",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-16gb",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-16gb-balanced",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-16gb-fixed",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-16gb-v2",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-agentic",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-alldrive",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-cheetah",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-comprehensive",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-f32-from-q4",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-fast",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-fast-agentic",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-god",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-god-fast",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-no-refuse-q4_k_m",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-personalized",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-personalized-agentic",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-productivity-local",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-productivity-native",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-q2-ultra",
+      "source": "ollama_manifest",
+      "resolved_path": "F:\OllamaModels\blobs\sha256-d39f8ddb7e54a04ea9dd83a5b1d01e4c88c12e4e2eedba85381a7ef1e341929a",
+      "exists": true,
+      "file_size_bytes": 25463410912,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "medium",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyg-q2k-ultra-productive",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddyglocal",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/bigdaddygnative",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/cheetah-speed-agentic",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/cheetah-stealth",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/cheetah-stealth-agentic",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/cheetah-stealth-agentic-5gb",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/cheetah-stealth-agentic-q5km-full",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/codellama",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/codestral",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/codestral22b-local",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/copilot-bigdaddyg-f32-from-q4",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/deepseek-coder",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/deepseek-coder-v2",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/deepseek-r1",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "reasoning",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/deepseek-v3.1",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "reasoning",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/deepseek-v4-flash",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "reasoning",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/deepseek-v4-pro",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "reasoning",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/deepseek-v4.1-flash",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "reasoning",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/dolphin3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/gemini-3-flash-preview",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/gemma3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/gemma4",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/glm-5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/glm-5.1",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/glm-5.2",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/glm-5.3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/glm-5.3-flash",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/gpt-oss",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/granite3.3",
+      "source": "ollama_manifest",
+      "resolved_path": "F:\OllamaModels\blobs\sha256-77bcee066a76dcdd10d0d123c87e32c8ec2c74e31b6ffd87ebee49c9ac215dca",
+      "exists": true,
+      "file_size_bytes": 4942873344,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "small",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/hermes3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/kimi-k2.5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "frontier",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/kimi-k2.6",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "frontier",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/kimi-k2.7-code",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "frontier",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/kimi-k3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "frontier",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/laguna-s-2.1",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/laguna-xs-2.1",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/lfm2.5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/llama2",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/llama3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/llama3-comprehensive-agentic",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/llama3.1",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/llama3.2",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/minicpm-v4.5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/minimax-m2.5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/minimax-m3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/ministral-3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "small/fast",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/mistral",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general/chat",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/mistral-large-3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general/chat",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/mistral-medium-3.5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general/chat",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/n4-tiny-oracle",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/nemotron-3-nano",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/nemotron-3-super",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/nemotron-3.5-lightning",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/nemotron3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/nomic-embed-text",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/ornith-1.5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/phi",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/phi3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/quantumide-architect",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/quantumide-feature",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/quantumide-performance",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/quantumide-security",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen2.5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen2.5-coder",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen25coder14b-local",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen3",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen3-coder",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen3-next",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen3-vl",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen3.5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen3.5-40b-q4",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen3.5-q4k-m-local",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen3.8",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen35-40b-heretic-q8",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/qwen35-q4-lowmem",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/r1-1776",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "reasoning",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/rawrxd-engine",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/starcoder2",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "library/unlocked-125M",
+      "source": "ollama_manifest",
+      "resolved_path": "F:\OllamaModels\blobs\sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+      "exists": true,
+      "file_size_bytes": 2019377376,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "mannix/llama3.1-8b-abliterated",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "mdq100/qwen3.5",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "novaforgeai/starcoder2",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "nutboy02/Agents-A1-4B-Kimi-heretic",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "frontier",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "coder",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "RageBait/LadySophiaNoctua",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "richardyoung/kimi-vl-a3b-thinking",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "frontier",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "rubenftenorio/kimi-k25-local",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "frontier",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "name": "ttempvnn/HauhauCS-Gemma4-26B-A4B-Uncensored-HauhauCS-Balanced-Q4-K-M",
+      "source": "ollama_manifest",
+      "resolved_path": "",
+      "exists": false,
+      "file_size_bytes": 0,
+      "gguf": {
+        "parsed": false,
+        "arch": "",
+        "tensor_count": 0,
+        "quantization": ""
+      },
+      "classification": {
+        "parameter_class": "tiny",
+        "runtime_class": "general",
+        "confidence": "inferred"
+      }
+    }
+  ]
+}
+[RawrDumpAuthority] dump receipt:
+  RAWRXD_RAWR_DUMP_AUTHORITY_001=ENTERED
+  RAWRXD_RAWR_DUMP_CPU_ONLY_AUTHORITY_001=ENTERED
+  COMMAND=rawr dump
+  GENERATED_FROM_SCRATCH=1
+  CONFIG_USED=filesystem_scan
+  ROOTS_SCANNED=2
+  ROOTS_SKIPPED_MISSING=0
+  ALIASES_SCANNED=0
+  OLLAMA_MANIFESTS_SCANNED=168
+  GGUF_FILES_SCANNED=75
+  MODELS_DISCOVERED=206
+  MODELS_CLASSIFIED=206
+  MODELS_WITH_PATH=78
+  MODELS_WITH_UNKNOWN_PATH=128
+  DEEP2_COMPATIBLE_COUNT=78
+  UNLOADABLE_COUNT=128
+  DUPLICATES_REMOVED=3
+  OUTPUT_FORMAT=json
+  OUTPUT_PATH=
+  DEEP2_GENERATION_CALLED=0
+  GENERATE_STREAM_CALLED=0
+  GPU_INIT_CALLED=0
+  VULKAN_INIT_CALLED=0
+  VRAM_ALLOCATED=0
+  LOGITS_REQUIRED=0
+  GENERATED_TOKEN_COUNT=0
+  GPU_REQUIRED=0
+  NO_GPU_ENV_SUPPORTED=1
+  EMPTY_ROOT_RETURNS_FAIL=0
+  STUB_FALLBACKS=0
+  VERDICT=PASS
+

@@ -17,6 +17,42 @@
 #include "module4_stopstring.h"
 #include "module5_context.h"
 
+// --- Engine interface ---
+//
+// RAWRXD_UNSIMULATE_001
+//
+// This interface used to be declared nowhere that mattered. The only
+// declaration of `Deep2Engine` in the tree lived in module7_glue.h and was a
+// CONCRETE class that emitted the hardcoded tokens "Hello" and " world" and
+// returned true, so module6 -- which calls engine methods and therefore needs a
+// complete type -- was structurally dependent on a fabricated implementation in
+// order to compile at all.
+//
+// The interface is declared here, in the header that consumes it, and it is
+// abstract. There is no definition in this tree, which is the correct state:
+// every implementation is a real engine.
+//
+// Implementations must:
+//   * return true only after the tokens were actually produced;
+//   * call tokenCb(tokenStr, idx) once per generated token;
+//   * call engineErrorCb on engine failure, nonEngineErrorCb on non-engine
+//     failure;
+//   * never throw from a callback, never call a callback after returning, and
+//     never call one from a thread other than the caller's.
+class Deep2Engine {
+public:
+    virtual ~Deep2Engine() {}
+
+    virtual bool isReady() const = 0;
+
+    virtual bool generate(
+        const char* prompt,
+        const TokenCallback&   tokenCb,
+        const ErrorCallback&   engineErrorCb,
+        const ErrorCallback&   nonEngineErrorCb
+    ) = 0;
+};
+
 // --- Helper: finalize result from context ---
 static void finalizeResult(GenerationResult& result, TokenContext& ctx) {
     // Flush remaining UTF-8 bytes

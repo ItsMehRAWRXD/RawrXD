@@ -1,0 +1,16 @@
+20261001T215803Z mode=full rows=35 mismatches=0 junction_violations=0 verdict=PASS
+20261001T215817Z mode=probe rows=35 mismatches=5 junction_violations=5 verdict=PASS
+20261001T215842Z mode=probe rows=35 mismatches=5 junction_violations=5 verdict=PASS
+20261001T220442Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T220451Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T220627Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T220636Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T220638Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T220649Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T220718Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T220728Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T221945Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T221954Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED
+20261001T222038Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T222047Z mode=full build_role=candidate rows=35 mismatches=0 junction_violations=0 run_verdict=CONTRACT_SATISFIED
+20261001T222056Z mode=probe build_role=control rows=35 mismatches=5 junction_violations=5 run_verdict=DEFECT_DETECTED

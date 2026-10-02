@@ -1,0 +1,196 @@
+
+[repo]  (git rev-parse --show-toplevel from F:\~dev\rawrxd == F:/~dev : ONE repo, not two)
+repo_root=F:\~dev
+measured_tree=F:\~dev\rawrxd
+git_head_at_rebind=4cfd4ab82a9be2cbc5871da1b1c003b657fa6426
+git_branch=beacon-residency-001
+git_status_modified_paths=329
+
+[provenance: HEAD MOVED DURING THIS AUDIT]
+first_configure_series_at_head=b81d3f1312727eb6ab1b7f2dd7ef7798fd5c9223
+rebind_series_at_head=4cfd4ab82a9be2cbc5871da1b1c003b657fa6426
+REBIND_RESULT=IDENTICAL  (strict exit=1, 225 missing, 75 empty entries / 68 unique;
+                        default exit=0, dropped=225, VERDICT=FAIL_DROPPED_SOURCE)
+Both series are shipped below. The finding is stable across the transition, so the audit
+is bound to 4cfd4ab8 with 329 modified paths present. No receipt in this tree should be
+read as characterising a clean tree at either commit.
+
+[host]
+os=Microsoft Windows NT 10.0.26200.0
+ps_version=5.1.26100.9549
+ps_edition=Desktop
+ps_has_Path_GetRelativePath=False
+
+[toolchain]
+cmake_version=4.4.2
+msvc=Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64
+vcvarsall=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat
+
+[commands_and_exit_codes]  (all configure logs below are from the REBIND series)
+A) cmake -S F:\~dev\rawrxd -B <fresh> -DRAWRXD_STRICT_SOURCES=ON -DRAWRXD_BUILD_WIN32IDE=ON -DRAWRXD_BUILD_CLI=ON -DCMAKE_BUILD_TYPE=Release
+   EXIT=1  fatal CMakeLists.txt:406  WIN32IDE_SOURCES: 225 referenced source(s) do not exist
+   also  CMakeLists.txt:395  WIN32IDE_SOURCES: 75 translation unit(s) EMPTY-BODIED
+   log=ide_strict_configure.log
+
+B) cmake -S F:\~dev\rawrxd -B <fresh> -DRAWRXD_BUILD_WIN32IDE=ON -DRAWRXD_BUILD_CLI=ON -DCMAKE_BUILD_TYPE=Release
+   EXIT=0  dropped=225  RAWRXD_IDE_TARGET_CONFIGURED=1  VERDICT=FAIL_DROPPED_SOURCE (printed, ignored)
+   log=ide_default_configure.log
+
+C) cmake -S F:\~dev\rawrxd -B <fresh> -DRAWRXD_STRICT_SOURCES=ON -DRAWRXD_BUILD_CLI=ON   (IDE NOT enabled)
+   EXIT=0  RAWRXD_IDE_TARGET_CONFIGURED=0  DROPPED_SOURCE_MEASUREMENT_VALID=0
+   purpose: proves the WIN32IDE_SOURCES filter did not run, so dropped=0 there is vacuous.
+          Not shipped as a log; recorded here because it is what makes A and B meaningful.
+
+[package_hashes_sha256]
+44eadf24af8b72386ee3c8d670d9aa434f9cc33de8d7230c2c08ddf8a059e9a0  ide_strict_configure.log
+033481f2df6df236333b83fb73502b85ffe34be130aa04a510b6bdcdbc7d8b88  ide_default_configure.log
+ef4b6dd2d76d2239a708b1d533e57137d4ed88f45a0d3389a35302688b0b3cb1  source_closure.csv
+879b434ee7d1a444cceef4efc26b1cdba4b791818658eeadd2216c743e8ee534  empty_tu_inventory.txt
+
+[known_instrument_defect]
+audit_ide_stubs.ps1:27 calls [System.IO.Path]::GetRelativePath. Availability on this host:
+  ps_has_Path_GetRelativePath=False
+The script aborts before writing a receipt. Its output is NOT part of this package; every
+number here comes from cmake itself or from an independent parse cross-checked against bytes.
+
+[RUN D - verification of the recommended flag, added after the initial package was written]
+cmd /c cmake -S F:\~dev\rawrxd -B <fresh> -DRAWRXD_RELEASE_CERT_BUILD=ON -DRAWRXD_BUILD_WIN32IDE=ON -DRAWRXD_BUILD_CLI=ON -DCMAKE_BUILD_TYPE=Release
+   EXIT=1
+   CONFIRMED: the flag does imply RAWRXD_STRICT_SOURCES=ON (CMakeLists.txt:220-222), as documented.
+   CORRECTED: it does NOT reach WIN32IDE_SOURCES. It aborts at the FIRST filter call site,
+   CMakeLists.txt:3788 (RAWR_ENGINE_SOURCES), with FATAL_ERROR at :388 on 54 empty-bodied TUs.
+   Therefore the 225 missing WIN32IDE sources are NOT reported under this flag at all.
+   Reached neither :5218 (INFERENCE_ENGINE_LIBRARY_SOURCES) nor :7307 (WIN32IDE_SOURCES).
+   log=ide_release_cert_configure.log
+
+[empty_bodied_tu_union_across_all_gated_lists]
+  RAWR_ENGINE_SOURCES                54 entries / 53 unique
+  GOLD_UNDERSCORE_SOURCES            49 entries / 44 unique
+  INFERENCE_ENGINE_LIBRARY_SOURCES   22 entries / 22 unique
+  WIN32IDE_SOURCES                   75 entries / 68 unique
+  SUM_OF_ENTRIES=200    UNION_UNIQUE_FILES=81
+  By area: src=71  validation=7  tests=1  Ship=1  B014=1
+  Gate counter equals printed tokens in all four lists; every delta is duplicate list entries.
+
+[package_hashes_sha256_final]
+44eadf24af8b72386ee3c8d670d9aa434f9cc33de8d7230c2c08ddf8a059e9a0  ide_strict_configure.log
+033481f2df6df236333b83fb73502b85ffe34be130aa04a510b6bdcdbc7d8b88  ide_default_configure.log
+6c6eb0e85477fbb48f680dfe8a6447187cbdd7ea4f83b236c9ae79af342193ed  ide_release_cert_configure.log
+ef4b6dd2d76d2239a708b1d533e57137d4ed88f45a0d3389a35302688b0b3cb1  source_closure.csv
+879b434ee7d1a444cceef4efc26b1cdba4b791818658eeadd2216c743e8ee534  empty_tu_inventory.txt
+
+
+[SECTION 12 ARTIFACTS - prepared, NOT applied]
+patch=RAWRXD_GATE_AGGREGATION_001.patch
+  43 lines added, 2 changed; 18659 -> 18702 lines
+  git apply --check against a pristine copy of the live file: EXIT=0
+  LIVE FILE NOT MODIFIED BY THIS AUDIT:
+    live_sha256=729d809eb82e6dee7d67e27d4fe2ea7dea4b811c14eff4a046d465dc15973279
+    snapshot_sha256=729d809eb82e6dee7d67e27d4fe2ea7dea4b811c14eff4a046d465dc15973279
+    BYTES_IDENTICAL=1
+  Unapplied because CMakeLists.txt is modified by another lane and grew 40 lines
+  during this audit; the change is multi-site and cannot be regression-tested here.
+harness=gate_harness/   (mechanism verified in isolation, all four cases)
+  1 FAILFAST  + VIOLATING -> EXIT=1, reports LIST_B only; LIST_C never reported
+  2 AGGREGATE + VIOLATING -> EXIT=1, reports LIST_B and LIST_C, "failed in 2 list(s)"
+  3 AGGREGATE + CLEAN     -> EXIT=0, no violation fired  (falsification test)
+  4 FAILFAST  + CLEAN     -> EXIT=0, no violation fired  (control)
+
+[package_hashes_sha256_section12]
+28bef90536c276160e4d7b4149298ba0d587142d0997554cef6d7aa167c65016  AUDIT.md
+5caf9c6db436001156b41560497ae0ea53312130bafb82cb92f1aec3560c396c  RAWRXD_GATE_AGGREGATION_001.patch
+636e655f294db1903e3da1c339a8d470477f9a4206d0f126091820104313d8be  gate_harness\CMakeLists.txt
+06fa94566b7b3cdfb18585c067db9f98910f3cca113b85c733389e5dc8e4eb29  gate_harness\failfast_violating.log
+5dc24e0e69fb458122b025d8087991e569226817fdd9dda34407d30f31eb031f  gate_harness\agg_violating.log
+7455326e424c888712dca5d6ad6bf483b69da70b8d80ce4245d7920fd77baa14  gate_harness\agg_clean.log
+a9ddf32ede413ed097a8cf2a048f168479deb0f2945173d51729f415871d4e2a  gate_harness\failfast_clean.log
+
+
+[SECTION 13 - two defects found in the section-12 patch and fixed]
+D1  ${ARGV1} is EMPTY on this CMake: ARGC=1 and ${ARGV}='LIST_A violated' but ${ARGV1}='.
+    The first patch used ${ARGV1}; every message was empty and the raise printed
+    "failed in 3 list(s):" followed by blanks. Fix: named parameter.
+D2  CACHE INTERNAL truncates a stored string at the first embedded newline.
+    Every real violation message contains one, so the file list inside each
+    message was silently lost. Fix: encode to @@RAWRXD_NL@@ before caching.
+
+corrected patch: 54 lines added, 2 changed; 18659 -> 18713 lines
+  git apply --check: EXIT=0    git apply: EXIT=0
+  LIVE FILE UNTOUCHED: live_sha256 == snapshot_sha256 ==
+    729d809eb82e6dee7d67e27d4fe2ea7dea4b811c14eff4a046d465dc15973279
+
+defer_harness results, corrected implementation:
+  U1_TIMING        EXIT=1  order=MARK_LAST_TOP_LEVEL_COMMAND -> MARK_RAISE_ENTERED  lists=2
+                   DEFER fires at end of directory, and registers from inside a function
+  U2_FATAL_IN_DEFER EXIT=1 lists=3  full multi-line messages preserved
+                   FATAL in a deferred call aborts configure; raise fires exactly once
+  U3_EMPTY_TARGET  EXIT=1  lists=1  deferred fatal preempts the empty add_library
+  CONTROL_CLEAN    EXIT=0  MARK_RAISE_NO_VIOLATIONS=1  configure+generate complete
+
+
+[SECTION 14 - intervening span]
+last rawrxd_filter_missing_sources() call = line 7313 (_WIN32IDE_ASM), the 8th and last
+intervening span = 11346 lines
+FATAL_ERROR sites: 33 total; 29 before :7313; 4 after -> 7733, 8041, 8076, 13525
+  all four are [ProductionLane] guards requiring RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON
+  => not reachable under a default configure
+
+long_span_harness results:
+  LONG_SPAN_HARMLESS           EXIT=1  deferred_ran=True  aggregate=True  lists=2
+     400 add_library + 400 add_custom_target + 401 messages after the violation.
+     Span length and source-less targets do NOT preempt: those errors are generate-time,
+     DEFER fires at end of configure which precedes generate.
+  LONG_SPAN_WARNING_AS_ERROR   EXIT=1  deferred_ran=True  aggregate=True  lists=2
+  LONG_SPAN_INTERVENING_FATAL  EXIT=1  deferred_ran=False aggregate=False
+     A configure-time FATAL_ERROR after the last filter call preempts the deferred raise.
+
+[measurement defects in this audits own tooling]
+  1. [IO.File]::ReadAllLines with a RELATIVE path resolves against
+     [Environment]::CurrentDirectory, which PowerShell Set-Location does not change.
+     It reported total_lines=212 / total_fatal_sites=0 for an 18659-line file.
+     Redone with an absolute path: 18659 / 33.
+  2. A stale patch nearly shipped. The generator script failed with a PowerShell parse
+     error (dropped quote+comma in an array literal); the diff was regenerated from the
+     PREVIOUS output and shipped. Caught by asserting on artifact contents
+     (PREEMPTION_NOTE_present=False) rather than on exit code.
+
+[patch, final]
+  68 lines added, 2 changed; 18659 -> 18727 lines; patch_bytes=5348
+  git apply --check EXIT=0 ; git apply EXIT=0
+  PREEMPTION_NOTE_present=True  named_param=True  sentinel=True  no bare ARGV1 use
+  LIVE FILE UNTOUCHED: sha256 729d809eb82e6dee7d67e27d4fe2ea7dea4b811c14eff4a046d465dc15973279
+
+
+[SECTION 15 - audit_ide_stubs.ps1 restored (the only source change by this audit)]
+path=_ide_stub_closure_recovery_001/rawrxd_ide_stub_closure_recovery/scripts/audit_ide_stubs.ps1
+  tracked=yes  was_clean=yes  git checkout reverts it
+  diff: 31 insertions, 6 deletions; 54 -> 79 lines
+
+  TWO independent PS 5.1 faults, not one:
+  1. [System.IO.Path]::GetRelativePath absent on .NET Framework (aborted at line 27)
+  2. @($emptyList[object]).Count raises ArgumentException "Argument types do not match"
+     -> three summary lines and the verdict line. Fixing (1) alone still fails.
+     replaced with $list.Count, a direct property.
+
+  IDE-scoped run (src/win32app):
+    SOURCE_FILES_SCANNED=56 PURE_STUB_FILES=0 CMAKE_REFERENCED_PURE_STUB_FILES=0
+    STUB_OR_FALLBACK_NAMED_FILES=0 MARKER_FILES=5 VERDICT=PASS
+    PURE_STUB_FILES=0 independently corroborates the section-7 scan (separate impl)
+    MARKER_FILES 5/5 are false positives, each verified by reading the source site
+
+  Tree-wide run (-ScanAllSrc):
+    SOURCE_FILES_SCANNED=3246 PURE_STUB_FILES=338 CMAKE_REFERENCED_PURE_STUB_FILES=164
+    STUB_OR_FALLBACK_NAMED_FILES=51 MARKER_FILES=450 VERDICT=FAIL
+    independent_crosscheck.ps1 (separate impl, no shared helper): PURE_STUB=338, 3246 files,
+      TOTAL_BYTES=17258 MEAN_BYTES=51 MAX_BYTES=1241
+    CMAKE_REFERENCED=164 is a WEAK claim: the gate does $cmakeText.Contains($rel) over the
+      whole file, so it means "mentioned somewhere in CMakeLists.txt", not "in a source list".
+
+  Overlap with section 3, by sorted-file comparison:
+    pure_stub_paths.txt=338  win32ide_empty_tu_paths.txt=68  INTERSECTION=0
+    two independent extractions of the 68 agreed exactly (0 differing entries)
+
+  Correction: the receipt listed GGUFLoader.cpp / ModelLoader.cpp / KVCache.cpp /
+  Deep2Engine.cpp as pure stubs and I was about to call them false positives on the strength
+  of their filenames. Read as bytes they are 32-40 byte single-line "// STUB: <path>" files.
+  The gate was right; I inferred a fact about the tree from a filename.

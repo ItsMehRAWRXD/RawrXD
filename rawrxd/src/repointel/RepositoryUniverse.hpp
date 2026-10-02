@@ -43,6 +43,11 @@ struct UniversePolicy {
     // This is what a legacy narrow scope is, and setting it forces
     // `narrowed` so absence claims from the result are refused.
     std::vector<std::string> restrictToRoots;
+    // Exact repo-relative paths to omit. Used by the determinism gate to
+    // declare its input set: a file another process is writing cannot be part
+    // of a reproducibility proof, and the excluded set is always reported
+    // rather than silently dropped.
+    std::vector<std::string> excludeRelPaths;
     uint32_t                 maxFiles = 0;  // 0 == unlimited
     bool                     includeBuildTrees = false;
     bool                     narrowed = false;   // caller restricted scope

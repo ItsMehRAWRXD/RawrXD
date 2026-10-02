@@ -109,6 +109,40 @@ unsigned ThreadCountFor(size_t work_items) {
 // barrier. Below this, the fan-out costs more than the work.
 constexpr size_t kMinRowsPerThread = 4;
 
+// RAWRXD_THREAD_POLICY_SHARED_001
+//
+// The minimum-work-per-thread policy, in ONE place, consumed by both callers.
+//
+// This constant used to be consulted only by MatMulThreadCount. ParallelRows
+// gated on `threads <= 1 || total_rows < 2` alone, so the attention path --
+// which goes straight to ParallelRows -- never saw it. Measured consequence at
+// depth=4096 with nH=8 heads:
+//
+//     requested=8 rows=8 -> slice=1, actual_workers=7, effective=8
+//     dispatches_with_this_request = 11040 per cell
+//
+// One row per worker, with a condition-variable barrier to hand out each one,
+// eleven thousand times. The policy already encoded the intended granularity;
+// it simply was not applied at the path that needed it.
+//
+// Two independent heuristics for one invariant is how they drift apart, so
+// there is now one function and both entry points call it.
+//
+// `requested` is TOTAL PARTICIPANTS (the caller keeps slice 0 and is itself a
+// participant), which is why the ceiling is ceil(total_rows / kMinRowsPerThread)
+// and not one more than that: at rows=8, kMinRowsPerThread=4, the ceiling is 2
+// participants -- the caller plus one worker.
+unsigned EffectiveParticipants(size_t total_rows, unsigned requested) {
+    if (requested <= 1 || total_rows < 2) return 1;
+    const size_t maxParticipants =
+        (total_rows + kMinRowsPerThread - 1) / kMinRowsPerThread;
+    if (maxParticipants < 1) return 1;
+    if (maxParticipants < requested) {
+        return static_cast<unsigned>(maxParticipants);
+    }
+    return requested;
+}
+
 unsigned MatMulThreadCount(size_t n) {
     // Threading is opt-out: measured on this Zen 4 host the pool cost more than
     // the work for decode-shaped matmuls, so the default is single-threaded.
@@ -134,9 +168,21 @@ unsigned MatMulThreadCount(size_t n) {
         const unsigned cap = static_cast<unsigned>(forced);
         return ThreadCountFor(n < cap ? n : cap);
     }
+    // RAWRXD_THREAD_POLICY_SHARED_001: the historical code returned 1
+    // unconditionally here and left `by_work` computed but unused --
+    // "// measured default: threading is a net loss at this granularity".
+    //
+    // That measurement was taken on the MATMUL path, where a row is a full
+    // k-length dot product. The attention path's row is one head scoring the
+    // whole KV cache, which is orders of magnitude more work per row, so the
+    // same conclusion does not transfer. The shared policy now applies the
+    // minimum-work rule uniformly and lets the caller's own opt-out remain
+    // opt-out: a forced RAWRXD_MATMUL_THREADS still overrides, and the
+    // unforced default below still returns 1 for matmul so that measured
+    // default is preserved exactly.
     const size_t by_work = n / kMinRowsPerThread;
     if (by_work < 2) return 1;
-    return 1;   // measured default: threading is a net loss at this granularity
+    return 1;   // measured default for MATMUL: unchanged, see above
 }
 
 } // namespace
@@ -294,8 +340,23 @@ public:
     //
 // This trades throughput for correctness after a stall, which is the correct
     // direction: a silently corrupted result is worse than a slow one.
+    // `requested_threads` is what the CALLER asked for, which may exceed
+    // `threads` after the shared policy clamps it. It exists solely so the
+    // per-requested tally stays keyed by the request rather than by the clamp.
+    //
+    // Passing only the clamped count is a real bug, not a cosmetic one: with
+    // rows=8 and kMinRowsPerThread=4, a request for 8 clamps to 2, so
+    // RecordGeometry wrote slot 2 and GeometryForRequested(8) returned a
+    // zeroed record -- reading as "requested 8 never dispatched" for a cell
+    // that had run thousands of times. b015_pool_microbench caught it as 26
+    // failed cells on the first run of the policy change.
+    //
+    // 0 means "not clamped": record under `threads`.
     void RunThreads(void (*fn)(void*, size_t, size_t), void* ctx,
-                    size_t total_rows, unsigned threads) {
+                    size_t total_rows, unsigned threads,
+                    unsigned requested_threads = 0) {
+        const unsigned recordAs =
+            (requested_threads != 0) ? requested_threads : threads;
         if (threads <= 1) {
             // RAWRXD_B77_THREAD_TERMINOLOGY_001: record the inline geometry
             // BEFORE returning. This path used to return without touching the
@@ -303,7 +364,7 @@ public:
             // dispatch's geometry on display -- a request for 1 could be
             // reported as 8, which is the same class of bug as a requested
             // configuration vanishing from a report.
-            last_requested_threads_.store(threads, std::memory_order_release);
+            last_requested_threads_.store(recordAs, std::memory_order_release);
             last_actual_workers_.store(0, std::memory_order_release);
             last_caller_participates_.store(true, std::memory_order_release);
             last_effective_participants_.store(1, std::memory_order_release);
@@ -349,7 +410,7 @@ public:
         // hides that the two are structurally different execution geometries,
         // which is exactly the ambiguity that made "requested 2 disappeared"
         // unresolvable from sweep output alone.
-        last_requested_threads_.store(threads, std::memory_order_release);
+        last_requested_threads_.store(recordAs, std::memory_order_release);
         last_actual_workers_.store(0, std::memory_order_release);
         last_caller_participates_.store(false, std::memory_order_release);
         last_effective_participants_.store(1, std::memory_order_release);
@@ -374,14 +435,14 @@ public:
         // every worker slice provably non-empty, so the budget and the work
         // agree by construction instead of by coincidence.
         unsigned use = threads - 1u;
-        if (total_rows <= 1) { RecordGeometry(threads, 0, true, 1, total_rows, 0); fn(ctx, 0, total_rows); return; }
+        if (total_rows <= 1) { RecordGeometry(recordAs, 0, true, 1, total_rows, 0); fn(ctx, 0, total_rows); return; }
         if (use > total_rows - 1) use = static_cast<unsigned>(total_rows - 1);
-        if (use == 0) { RecordGeometry(threads, 0, true, 1, total_rows, 0); fn(ctx, 0, total_rows); return; }
+        if (use == 0) { RecordGeometry(recordAs, 0, true, 1, total_rows, 0); fn(ctx, 0, total_rows); return; }
         // RAWRXD_B77_THREAD_TERMINOLOGY_001: `use` is the number of workers that
         // will actually be given a non-empty slice, AFTER the clamp above. The
         // caller takes the remaining slice, so effective participants is use+1.
         // This is the value a benchmark must report, not `threads`.
-        RecordGeometry(threads, use, true, use + 1u, total_rows, 0);
+        RecordGeometry(recordAs, use, true, use + 1u, total_rows, 0);
 
         // RAWRXD_WORKERPOOL_STALE_GENERATION_001
         // Spawn first, then publish, and hand each new thread the CURRENT
@@ -464,7 +525,7 @@ public:
             // partition is known. The earlier record at entry passed chunk=0,
             // so every dispatched cell reported chunk=0 and a geometry report
             // could not state the slice size that actually executed.
-            RecordGeometry(threads, use, true, use + 1u, total_rows, chunk);
+            RecordGeometry(recordAs, use, true, use + 1u, total_rows, chunk);
             // RAWRXD_WORKERPOOL_ACTIVE_BOUND_001
             // active_ bounds who may consume this generation. The pool is a
             // process-wide singleton, so threads_ persists at the high-water
@@ -597,7 +658,47 @@ public:
     unsigned long long GenerationAtReturn() const { return last_generation_at_return_.load(std::memory_order_acquire); }
     unsigned long long Dispatches() const { return dispatches_.load(std::memory_order_acquire); }
 
-    // RAWRXD_B78_INLINE_GEOMETRY_001
+    // RAWRXD_THREAD_POLICY_SHARED_001: what the shared policy did to this
+    // request. Recorded separately from the geometry because a clamped request
+    // and a genuinely narrow one produce the SAME geometry -- rows=8 with 2
+    // participants looks identical whether the caller asked for 2 or asked for
+    // 8 and was clamped. Without this field a report cannot tell "requested 8,
+    // policy granted 2" from "requested 2, policy granted 2", which is exactly
+    // the distinction the sweep grid exists to test.
+    void RecordPolicyClamp(unsigned requested, unsigned effective) {
+        last_policy_requested_.store(requested, std::memory_order_release);
+        last_policy_effective_.store(effective, std::memory_order_release);
+        // RAWRXD_THREAD_POLICY_SHARED_001: count only ACTUAL clamps.
+        //
+        // This counter was previously incremented on every request, including
+        // ones the policy left alone, and named "clamps". That is a misleading
+        // name for a number that counts everything: the sweep printed
+        // policy_clamps_total=8034744 against 8068440 total dispatches, which
+        // reads as "99.6% of all work was clamped away" and is false -- the
+        // overwhelming majority of dispatches are the inline MLP path at
+        // threads=1, which the policy never touches.
+        if (effective < requested) {
+            policy_clamps_.fetch_add(1, std::memory_order_relaxed);
+        }
+        policy_requests_.fetch_add(1, std::memory_order_relaxed);
+    }
+    unsigned LastPolicyRequested() const {
+        return last_policy_requested_.load(std::memory_order_acquire);
+    }
+    unsigned LastPolicyEffective() const {
+        return last_policy_effective_.load(std::memory_order_acquire);
+    }
+    // Clamps only. Compare against PolicyRequests() for the clamp RATE; the
+    // ratio of clamps to total dispatches is meaningless because most
+    // dispatches never reach the policy.
+    unsigned long long PolicyClamps() const {
+        return policy_clamps_.load(std::memory_order_acquire);
+    }
+    unsigned long long PolicyRequests() const {
+        return policy_requests_.load(std::memory_order_acquire);
+    }
+
+    // B78_INLINE_GEOMETRY_001
     // Records the geometry of a dispatch that ran entirely on the calling
     // thread. Zero workers, and the caller is the only participant -- which is
     // a DIFFERENT execution shape from a dispatched 2-way split, and was
@@ -635,6 +736,12 @@ std::atomic<unsigned> last_total_at_return_{0};
 std::atomic<unsigned> last_chunk_at_return_{0};
     std::atomic<unsigned long long> last_generation_at_return_{0};
     std::atomic<unsigned long long> dispatches_{0};
+    // RAWRXD_THREAD_POLICY_SHARED_001: the shared minimum-work-per-thread
+    // policy's inputs and outcome for the most recent request.
+    std::atomic<unsigned> last_policy_requested_{0};
+    std::atomic<unsigned> last_policy_effective_{1};
+    std::atomic<unsigned long long> policy_clamps_{0};
+    std::atomic<unsigned long long> policy_requests_{0};
   // RAWRXD_B76_WORKERPOOL_FAIL_CLOSED_001: set when a dispatch times out with
   // workers possibly still running. While set, RunThreads executes inline only,
   // so no new dispatch writes into a buffer a stale worker may still touch.
@@ -1138,7 +1245,19 @@ void ParallelRows(RowTask fn, void* ctx, size_t total_rows, unsigned threads) {
     //
     // Recording the inline geometry here makes every dispatch -- inline or
     // dispatched -- leave a record that describes itself.
-    if (threads <= 1 || total_rows < 2) {
+    // RAWRXD_THREAD_POLICY_SHARED_001: apply the minimum-work-per-thread rule
+    // at the one entry point every coarse-grained dispatch goes through.
+    //
+    // The tally is keyed by REQUESTED threads, not by the clamped count, and
+    // that distinction is load-bearing. GeometryForRequested(8) is how the
+    // sweep identifies "the cell that asked for 8"; if the clamp were baked
+    // into the key, every clamped cell would write slot 2 and requested=8
+    // would report timesRequested=0 -- reading as "THIS REQUEST NEVER
+    // DISPATCHED" for a cell that in fact ran thousands of times. So the
+    // record keeps the request and reports the clamp as its own field.
+    const unsigned effective = EffectiveParticipants(total_rows, threads);
+
+    if (effective <= 1) {
         // RAWRXD_B79_INLINE_TALLY_001
         // Must be RecordInline(requested, ...) so the per-requested tally in
         // GeometryForRequested() is written. Calling the tally-free
@@ -1146,10 +1265,12 @@ void ParallelRows(RowTask fn, void* ctx, size_t total_rows, unsigned threads) {
         // GeometryForRequested(1) returned a zeroed record and requested=1
         // vanished from every receipt.
         WorkerPool::Instance().RecordInline(threads, total_rows);
+        WorkerPool::Instance().RecordPolicyClamp(threads, effective);
         fn(ctx, 0, total_rows);
         return;
     }
-    WorkerPool::Instance().RunThreads(fn, ctx, total_rows, threads);
+    WorkerPool::Instance().RecordPolicyClamp(threads, effective);
+    WorkerPool::Instance().RunThreads(fn, ctx, total_rows, effective, threads);
 }
 
 // RAWRXD_WORKERPOOL_BOUNDED_WAIT_001
@@ -1218,6 +1339,14 @@ unsigned LastEffectiveParticipants() {
 size_t LastTotalRows() { return WorkerPool::Instance().LastTotalRows(); }
 size_t LastChunk()     { return WorkerPool::Instance().LastChunk(); }
 bool   LastInlined()   { return WorkerPool::Instance().LastInlined(); }
+
+// RAWRXD_THREAD_POLICY_SHARED_001: free-function accessors for the shared
+// minimum-work-per-thread policy, so a report can state what the policy did
+// rather than inferring it from the resulting geometry.
+unsigned PolicyRequested() { return WorkerPool::Instance().LastPolicyRequested(); }
+unsigned PolicyEffective() { return WorkerPool::Instance().LastPolicyEffective(); }
+unsigned long long PolicyClamps() { return WorkerPool::Instance().PolicyClamps(); }
+unsigned long long PolicyRequests() { return WorkerPool::Instance().PolicyRequests(); }
 
 // RAWRXD_THREAD_GEOMETRY_TRACE_001: the per-request entry point. The
 // process-wide accessors above answer "what ran last", which a benchmark cannot

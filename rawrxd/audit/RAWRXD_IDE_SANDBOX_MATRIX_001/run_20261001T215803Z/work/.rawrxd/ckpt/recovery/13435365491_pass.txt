@@ -1,0 +1,15 @@
+RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001 startup recovery pass
+workspace=F:\~dev\rawrxd\audit\RAWRXD_IDE_SANDBOX_MATRIX_001\run_20261001T215803Z\work
+journals_scanned=1
+closed_transactions=0
+incomplete_transactions=1
+files_restored=0
+files_deleted=2
+files_verified=0
+files_failed=0
+torn_records_discarded=0
+missing_blobs=0
+identity_before=43f7f1147b639a3b91d28b91766dab79ebb9de1279fe8db8fd24df8f93ddb629
+identity_after=2b36793a681174de9ce6bb33fb0a72913ca8cca7f4e2d7dcbc89fe388598d57f
+recovered=tx13435365491_16280_1220dbef
+verdict=ALL_TRANSACTIONS_CLOSED

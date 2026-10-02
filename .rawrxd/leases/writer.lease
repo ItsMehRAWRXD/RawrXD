@@ -1,8 +1,0 @@
-{
-  "repository_root": "f:/~dev",
-  "pid": 19104,
-  "nonce": 3592759703483040638,
-  "expected_head": "94cd2fadf91431b5eaf8d61e52203d1b02268263",
-  "acquired_unix_seconds": 1790834419,
-  "authorized_paths": ["f:/~dev/rawrxd/src/deep2/deep2readyring.hpp", "f:/~dev/rawrxd/src/deep2/deep2readyring.cpp", "f:/~dev/rawrxd/src/deep2/deep2readyringbridge.hpp", "f:/~dev/rawrxd/src/deep2/deep2readyringbridge.cpp", "f:/~dev/rawrxd/src/deep2/expert_cache/expertcache.h", "f:/~dev/rawrxd/src/deep2/expert_cache/expertcache.cpp", "f:/~dev/rawrxd/cmakelists.txt", "f:/~dev/rawrxd/tools/deep2_bounded_stream_gate.cpp", "f:/~dev/rawrxd/audit/rawrxd_deep2_bounded_stream_001/receipt.md"]
-}

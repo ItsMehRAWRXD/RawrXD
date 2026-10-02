@@ -9,13 +9,35 @@
 
 namespace rawrxd {
 
+// RAWRXD_GGUF_TYPE_ENUM_001
+// This enum previously read Uint64=7, Int64=8, Float64=9, Bool=10, String=11,
+// Array=12. That is WRONG per the GGUF specification and per ggml.h:
+//
+//     UINT8=0 INT8=1 UINT16=2 INT16=3 UINT32=4 INT32=5 FLOAT32=6
+//     BOOL=7 STRING=8 ARRAY=9 UINT64=10 INT64=11 FLOAT64=12
+//
+// Consequence, measured against F:/~dev/qwen2.5-coder-1.5b-base.gguf:
+// the first metadata key is "general.architecture" with type byte 8, which is
+// STRING in the spec. The old enum read that as Int64, consumed 8 bytes of
+// string data as an integer, desynchronised the rest of the metadata stream and
+// the loader rejected a perfectly valid 940 MB model with MODEL_LOAD=FAIL.
+//
+// It went unnoticed because the in-tree GGUFTensorWriter used the SAME wrong
+// enum, so writer and reader agreed on a private, non-standard format and every
+// synthetic round-trip passed. The error only surfaces on a real model.
+//
+// The array subtypes below (Uint32Array etc.) are not part of the GGUF spec at
+// all: an array is ARRAY with an element type and a length. They are retained
+// only so the writer's convenience types keep compiling, and the reader must
+// not expect to see them on the wire.
 enum class GGUFType : uint32_t {
     Uint8 = 0, Int8 = 1, Uint16 = 2, Int16 = 3, Uint32 = 4,
-    Int32 = 5, Float32 = 6, Uint64 = 7, Int64 = 8, Float64 = 9,
-    Bool = 10, String = 11, Array = 12, Uint32Array = 13,
-    Int32Array = 14, Float32Array = 15, Uint64Array = 16,
-    Int64Array = 17, Float64Array = 18, BoolArray = 19,
-    StringArray = 20
+    Int32 = 5, Float32 = 6, Bool = 7, String = 8, Array = 9,
+    Uint64 = 10, Int64 = 11, Float64 = 12,
+    // Writer-side conveniences only; never valid on the wire.
+    Uint32Array = 13, Int32Array = 14, Float32Array = 15,
+    Uint64Array = 16, Int64Array = 17, Float64Array = 18,
+    BoolArray = 19, StringArray = 20
 };
 
 // Tensor *data* types. This is the ggml type enum, which is a DIFFERENT

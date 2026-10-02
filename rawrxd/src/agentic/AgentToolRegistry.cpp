@@ -235,6 +235,50 @@ bool CanonicalizeAbsolute(const std::string& path, std::wstring& outWide, std::s
 
 } // namespace
 
+// RAWRXD_GIT_TRANSACTION_AUTHORITY_001 / G4
+//
+// Declared in the public header, so defined OUTSIDE the anonymous namespace.
+// Defining them inside it as well made every internal call ambiguous between
+// the anonymous-namespace copy and the declared one.
+bool IsTransactionRequired(const std::string& toolName, const ToolPolicy& policy) {
+    for (const auto& n : policy.transactionRequiredTools) {
+        if (n == toolName) return true;
+    }
+    return false;
+}
+
+// True when the tool's own NAME implies it mutates something. This is a
+// cross-check on the policy list, not a substitute for it: a name that looks
+// mutating and is absent from policy.transactionRequiredTools is a policy typo,
+// and a typo in a security list is a silent hole. UncoveredMutatingTools()
+// reports those so the hole is visible instead of merely inferred.
+bool ToolNameLooksMutating(const std::string& toolName) {
+    static const char* const kMutatingVerbs[] = {
+        "stage",   "unstage",  "commit",  "branch",  "checkout", "stash",   "worktree",
+        "rollback", "push",    "write",   "edit",    "delete",   "remove",  "apply",
+        "revert",  "reset",    "merge",   "rebase",  "tag",      "rename",  "update"};
+    std::string lower = toolName;
+    for (char& c : lower) {
+        if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+    }
+    for (const char* verb : kMutatingVerbs) {
+        const std::string v(verb);
+        if (lower.find(v) != std::string::npos) return true;
+    }
+    return false;
+}
+
+std::vector<std::string> UncoveredMutatingTools(const ToolRegistry& registry,
+                                               const ToolPolicy& policy) {
+    std::vector<std::string> missing;
+    for (const auto& name : registry.GetToolNames()) {
+        if (ToolNameLooksMutating(name) && !IsTransactionRequired(name, policy)) {
+            missing.push_back(name);
+        }
+    }
+    return missing;
+}
+
 ToolPolicy ToolPolicy::DefaultDenyAll() {
     ToolPolicy p;
     p.allowedRoots.clear();
@@ -324,6 +368,33 @@ ToolResult ToolRegistry::Execute(const std::string& name,
         policy = policy_;
     }
 
+    // RAWRXD_GIT_TRANSACTION_AUTHORITY_001 / G4
+    //
+    // write_file refuses to run without a checkpoint transaction, so every file
+    // the agent writes is journalled and undoable. The git tools were not held
+    // to that: with capability and scope both granted, `git_stage` moved the
+    // index with NO transaction open and wrote ZERO journal records. Measured,
+    // not hypothesised -- see the gate receipt.
+    //
+    // The promise a write profile makes is about MUTATION, not about which
+    // function performs it. A gate that only covers write_file leaves the same
+    // hole open through any other registered tool that changes state, so this
+    // gate sits at the one point every tool passes through.
+    //
+    // The set of gated tools is a policy list rather than hardcoded names,
+    // because a registry cannot infer which tool mutates: git_status and
+    // git_stage have identical signatures. What the registry does enforce is
+    // that the list cannot be quietly wrong -- see TransactionRequired() and the
+    // coverage check beside it.
+    if (policy.writeRequiresTransaction && IsTransactionRequired(name, policy) &&
+        !ckpt::Transaction::Active()) {
+        ToolResult r;
+        r.error = name +
+                  " requires an open checkpoint transaction; open one first "
+                  "(POST /api/agent/transaction {\"op\":\"begin\"})";
+        return r;
+    }
+
     const ULONGLONG start = GetTickCount64();
     ToolResult result = executor(params);
     result.elapsedMicros = (GetTickCount64() - start) * 1000ULL;
@@ -380,6 +451,20 @@ std::string ToolRegistry::BuildSystemPrompt() const {
     return oss.str();
 }
 
+std::vector<ToolDef> ToolRegistry::GetDefs() const {
+    std::vector<ToolDef> snapshot;
+    {
+        std::lock_guard<std::mutex> lk(mtx_);
+        snapshot.reserve(defs_.size());
+        for (const auto& kv : defs_) snapshot.push_back(kv.second);
+    }
+    // Same name order as BuildSystemPrompt, so a prompt and the validation that
+    // follows it are describing one list, not two.
+    std::sort(snapshot.begin(), snapshot.end(),
+              [](const ToolDef& a, const ToolDef& b) { return a.name < b.name; });
+    return snapshot;
+}
+
 std::vector<std::string> ToolRegistry::GetToolNames() const {
     std::lock_guard<std::mutex> lk(mtx_);
     std::vector<std::string> names;
@@ -412,7 +497,7 @@ ToolPolicy ToolRegistry::GetPolicy() const {
 
 void ToolRegistry::InstallBuiltinTools() {
     Register({"read_file", "Read a UTF-8 or binary file and return its contents.",
-              {{"path", "string", "File path relative to an allowed root.", true}}},
+              {{"path", "string", "File path, root-relative or absolute; absolute paths must resolve inside an allowed root.", true}}},
              [](const std::unordered_map<std::string, std::string>& p) -> ToolResult {
                  // Read the live policy rather than a copy captured at
                  // registration time. Safe: Execute releases the registry lock
@@ -469,7 +554,7 @@ void ToolRegistry::InstallBuiltinTools() {
              });
 
     Register({"list_directory", "List entries in a directory.",
-              {{"path", "string", "Directory path relative to an allowed root.", true}}},
+              {{"path", "string", "Directory path, root-relative or absolute; absolute paths must resolve inside an allowed root.", true}}},
              [](const std::unordered_map<std::string, std::string>& p) -> ToolResult {
                  const ToolPolicy policy = ToolRegistry::Instance().GetPolicy();
                  ToolResult r;
@@ -590,7 +675,7 @@ void ToolRegistry::InstallBuiltinTools() {
              });
 
     Register({"write_file", "Create or overwrite a file with text content.",
-              {{"path", "string", "File path relative to an allowed root.", true},
+              {{"path", "string", "File path, root-relative or absolute; absolute paths must resolve inside an allowed root.", true},
                {"content", "string", "Full file content to write.", true}}},
              [](const std::unordered_map<std::string, std::string>& p) -> ToolResult {
                  const ToolPolicy policy = ToolRegistry::Instance().GetPolicy();
@@ -669,7 +754,7 @@ void ToolRegistry::InstallBuiltinTools() {
               "Run a console command and capture its output. Disabled unless the tool "
               "policy enables execution.",
               {{"command", "string", "Command line to run.", true},
-               {"cwd", "string", "Optional working directory under an allowed root.", false},
+               {"cwd", "string", "Optional working directory, root-relative or absolute; absolute paths must resolve inside an allowed root.", false},
                {"timeout_ms", "string", "Optional timeout override in milliseconds.", false}}},
              [](const std::unordered_map<std::string, std::string>& p) -> ToolResult {
                  const ToolPolicy policy = ToolRegistry::Instance().GetPolicy();

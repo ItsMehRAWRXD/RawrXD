@@ -1,0 +1,15 @@
+RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001 startup recovery pass
+workspace=F:\~dev\rawrxd\audit\RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001\probe\ws_prefix
+journals_scanned=2
+closed_transactions=1
+incomplete_transactions=1
+files_restored=1
+files_deleted=0
+files_verified=1
+files_failed=0
+torn_records_discarded=0
+missing_blobs=0
+identity_before=a462db74799b4f76e351cb273a1636bfbbdeb28d89e9be4ae45689dc6ea49124
+identity_after=aff468311bb79591b771299933a261224408aabfa877f2bf07a11f78365ead0f
+recovered=tx13435366819_12048_12351f12
+verdict=ALL_TRANSACTIONS_CLOSED

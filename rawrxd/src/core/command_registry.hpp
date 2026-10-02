@@ -340,6 +340,26 @@ enum CmdFlags : uint32_t
     X(5068, LSP_SYMBOL_INFO, "lsp.symbolInfo", "!lsp symbol", BOTH, "LSP", handleLspSymbolInfo, CMD_REQUIRES_CARET)    \
     X(5069, LSP_CONFIGURE, "lsp.configure", "!lsp config", BOTH, "LSP", handleLspConfigure, CMD_NONE)                  \
     X(5070, LSP_SAVE_CONFIG, "lsp.saveConfig", "!lsp save", BOTH, "LSP", handleLspSaveConfig, CMD_NONE)                \
+                                                                                                                        \
+    /* ═══════════════════ RAWRXD_P1_REFACTOR_CHAIN_001 (50603-50606) ═══════════════════                              \
+     *                                                                                                                  \
+     * Four of the nine refactoring-chain capabilities had NO entry in the table at all,                              \
+     * so they were not merely unimplemented: they did not exist as commands, and no                                  \
+     * handler, menu item, palette row or CLI alias could reach them. Workspace symbols,                               \
+     * code actions, format and extract-function were absent.                                                             \
+     *                                                                                                                  \
+     * The implementations are in src/refactor/RefactorChainIdeSurface.cpp, which is linked into                          \
+     * RawrXD-Win32IDE. The certification driver proves the pointers below resolve to those                              \
+     * bodies and not to a stub.                                                                                        \
+     */                                                                                                                 \
+    X(50603, LSP_WORKSPACE_SYMBOLS, "lsp.workspaceSymbols", "!lsp wssymbols", BOTH, "LSP", handleLspWorkspaceSymbols, \
+      CMD_REQUIRES_CARET)                                                                                               \
+    X(50604, LSP_CODE_ACTION, "lsp.codeAction", "!lsp codeaction", BOTH, "LSP", handleLspCodeAction,                   \
+      CMD_REQUIRES_FILE)                                                                                                \
+    X(50605, EDITOR_FORMAT_DOCUMENT, "editor.formatDocument", "!editor format", BOTH, "Editor", handleEditorFormatDocument, \
+      CMD_REQUIRES_FILE)                                                                                                \
+    X(50606, EDITOR_EXTRACT_FUNCTION, "editor.extractFunction", "!editor extract", BOTH, "Editor", handleEditorExtractFunction, \
+      CMD_REQUIRES_SELECT)                                                                                              \
                                                                                                                        \
     /* ═══════════════════ ASM SEMANTIC (5082-5093) ═══════════════════ */                                             \
     X(5082, ASM_PARSE_SYMBOLS, "asm.parseSymbols", "!asm parse", BOTH, "ASM", handleAsmParse,                          \

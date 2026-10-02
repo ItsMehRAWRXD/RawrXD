@@ -1,0 +1,79 @@
+﻿dummy	0			F:\OllamaModels\dummy.gguf
+library/n4-tiny-oracle:latest	0.59	Q4_0	llama	F:\OllamaModels\blobs\sha256-da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556
+mmproj-Qwen3.6-35B-A3B-BF16	0.84	Q4_0_8_8	clip	F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\mmproj-Qwen3.6-35B-A3B-BF16.gguf
+library/qwen2.5-coder:1.5b-base	0.92	Q4_K_M	qwen2	F:\OllamaModels\blobs\sha256-6a77366395772462c84f0c4d226ac404674327cbe78c01e4391cc7e0c698851e
+mmproj-gemma-4-E4B-it-BF16	0.92	Q4_0_8_8	clip	F:\OllamaModels\gemma-4-E4B-it-GGUF\mmproj-gemma-4-E4B-it-BF16.gguf
+mmproj-gemma-4-31B-it-BF16	1.12	Q4_0_8_8	clip	F:\OllamaModels\gemma-4-31B-it-GGUF\mmproj-gemma-4-31B-it-BF16.gguf
+llama3.2-3b-Q2_K	1.27	Q2_K	llama	F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+RageBait/LadySophiaNoctua:latest	1.88	Q4_K_M	llama	F:\OllamaModels\blobs\sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff
+Phi-3-mini-4k-instruct-q8_0	2.03	Q4_0	phi3	F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf
+library/phi3:mini	2.03	Q4_0	phi3	F:\OllamaModels\blobs\sha256-633fc5be925f9a484b61d6f9b9a78021eeb462100bd557309f01ba84cac26adf
+library/qwen35-40b-heretic-q8:latest	2.03	Q4_0	phi3	F:\OllamaModels\blobs\sha256-09c9fefcf64d16494a50e74923035fabb94023584a338075058c1b7c12dc83df
+library/nemotron-3-nano:4b	2.64	Q4_K_M	nemotron_h	F:\OllamaModels\blobs\sha256-527db2cf6c705d8fabb95693d038d9c06b4a2b0b8b0a4bbdbd01212d37242970
+library/gemma3:latest	3.11	Q4_K_M	gemma3	F:\OllamaModels\blobs\sha256-aeda25e63ebd698fab8638ffb778e68bed908b960d39d0becc650fa981609d25
+NVIDIA-Nemotron-3-Nano-4B-Q8_0	3.94	Q8_0	nemotron_h	F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+library/llama3.1:8b	4.58	Q4_K_M	llama	F:\OllamaModels\blobs\sha256-667b0c1932bc6ffc593ed1d03f895bf2dc8dc6df21db3042284a6f4416b06a29
+library/granite3.3:8b	4.6	Q4_K_M	granite	F:\OllamaModels\blobs\sha256-77bcee066a76dcdd10d0d123c87e32c8ec2c74e31b6ffd87ebee49c9ac215dca
+DeepSeek-R1-0528-Qwen3-8B-Q4_K_M	4.68	Q4_K_M	qwen3	F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+library/qwen3:8b	4.87	Q4_K_M	qwen3	F:\OllamaModels\blobs\sha256-a3de86cd1c132c822487ededd47a324c50491393e6565cd14bafa40d0b8e686f
+gemma-4-E4B-it-Q4_K_M	4.97	Q4_K_M	gemma4	F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest	5.24	Q4_K_M	qwen35	F:\OllamaModels\blobs\sha256-9be227448d319e6a7acca8056b71bf7d9a2c6b2811986e6658a9dedc208d0ada
+kiminoto/T0.0.1:latest	6.14	Q4_K_M	qwen35	F:\OllamaModels\blobs\sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c
+Phi-3-medium-128k-instruct-Q4_K_M	7.98	Q4_K_M	phi3	F:\OllamaModels\Phi-3-medium-128k-instruct-14B-Q4_K_M\Phi-3-medium-128k-instruct-Q4_K_M.gguf
+library/deepseek-coder-v2:16b	8.29	Q4_0	deepseek2	F:\OllamaModels\blobs\sha256-5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046
+library/starcoder2:15b	8.44	Q4_0	starcoder2	F:\OllamaModels\blobs\sha256-dc5deb763c383b81460256a0ac7e40b320c3b01632727ea407e386002588d417
+Codestral-22B-v0.1-Q4_K_M	11.79	Q4_K_S	llama	F:\OllamaModels\rawrxd_test_models\Codestral-22B-v0.1-Q4_K_M.gguf
+library/gpt-oss:20b	12.85	FTYPE_4	gptoss	F:\OllamaModels\blobs\sha256-e7b273f9636059a689e3ddcab3716e4f65abe0143ac978e46673ad0e52d09efb
+qwen2.5-coder-14b-instruct-q8_0	14.62	Q8_0	qwen2	F:\OllamaModels\Qwen2.5-Coder-14B-Instruct-Q8_0\qwen2.5-coder-14b-instruct-q8_0.gguf
+library/qwen3.8:27b	15.66	Q4_K_M	qwen35	F:\OllamaModels\blobs\sha256-f5f1dd8920d417aac2718b0bda3403da274301efdd6760b4f0f4b864ff2ad57d
+BigDaddyG-Q2_K-PRUNED-16GB	15.81	Q2_K	llama	F:\OllamaModels\BigDaddyG-Q2_K-PRUNED-16GB.gguf
+DeepSeek-R1-Q4_K_M-00011-of-00011	15.86			F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00011-of-00011.gguf
+Qwen3.8-27B-AD-Q4_K_M	15.94	Q8_0	qwen35	F:\OllamaModels\Qwen3.8-27B-AD-Q4_K_M\Qwen3.8-27B-AD-Q4_K_M.gguf
+GLM-4.7-Flash-Q4_K_M	16.89	Q4_K_M	deepseek2	F:\OllamaModels\GLM-4.7-Flash-GGUF\GLM-4.7-Flash-Q4_K_M.gguf
+Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-MTP-Q4_K_M	17.23	Q4_K_M	qwen35	F:\OllamaModels\Qwen3.6-27B-Fable-Fusion-711-Heretic-MAX-Q4_K_M\Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-MTP-Q4_K_M.gguf
+gemma-4-31B-it-Q4_K_M	17.4	Q4_K_M	gemma4	F:\OllamaModels\gemma-4-31B-it-GGUF\gemma-4-31B-it-Q4_K_M.gguf
+library/deepseek-r1:32b	18.49	Q4_K_M	qwen2	F:\OllamaModels\blobs\sha256-6150cb382311b69f09cc0f9a1b69fc029cbd742b66bb8ec531aa5ecf5c613e93
+Qwen3.6-35B-A3B-Q4_K_M	19.71	Q4_K_M	qwen35moe	F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf
+library/ornith-1.5:35b	20.22	Q4_K_M	qwen35moe	F:\OllamaModels\blobs\sha256-aaeb640f98a892980ef54876024293cc8d6987a86523aa1b947ffa9274ef800a
+Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M	22.28	Q4_K_M	qwen35	F:\OllamaModels\Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf
+library/nemotron-3.5-lightning:30b	23.68	Q4_K_M	nemotron_h_moe	F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+library/bigdaddyg-q2k-ultra-productive:latest	23.71	Q2_K	llama	F:\OllamaModels\blobs\sha256-d39f8ddb7e54a04ea9dd83a5b1d01e4c88c12e4e2eedba85381a7ef1e341929a
+BigDaddyG-Q2_K-ULTRA	23.71	Q2_K	llama	F:\OllamaModels\BigDaddyG-Q2_K-ULTRA.gguf
+BigDaddyG-Q2_K-CHEETAH	23.71	Q2_K	llama	F:\OllamaModels\BigDaddyG-Q2_K-CHEETAH.gguf
+DeepSeek-R1-Q4_K_M-00007-of-00011	35.13			F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00007-of-00011.gguf
+DeepSeek-R1-Q4_K_M-00002-of-00011	35.94			F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00002-of-00011.gguf
+DeepSeek-R1-Q4_K_M-00008-of-00011	35.94			F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00008-of-00011.gguf
+DeepSeek-R1-Q4_K_M-00005-of-00011	35.94			F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00005-of-00011.gguf
+DeepSeek-R1-Q4_K_M-00006-of-00011	36.03			F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00006-of-00011.gguf
+DeepSeek-R1-Q4_K_M-00003-of-00011	36.03			F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00003-of-00011.gguf
+DeepSeek-R1-Q4_K_M-00004-of-00011	36.04			F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00004-of-00011.gguf
+DeepSeek-R1-Q4_K_M-00001-of-00011	36.1	Q4_K_M	deepseek2	F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf
+BigDaddyG-F32-FROM-Q4	36.2	Q4_0	llama	F:\OllamaModels\BigDaddyG-F32-FROM-Q4.gguf
+BigDaddyG-NO-REFUSE-Q4_K_M	36.2	Q4_0	llama	F:\OllamaModels\BigDaddyG-NO-REFUSE-Q4_K_M.gguf
+BigDaddyG-UNLEASHED-Q4_K_M	36.2	Q4_0	llama	F:\OllamaModels\BigDaddyG-UNLEASHED-Q4_K_M.gguf
+MiniMax-M2.7-Q4_K_M-00003-of-00003	36.55			F:\OllamaModels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf
+DeepSeek-R1-Q4_K_M-00010-of-00011	36.68			F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00010-of-00011.gguf
+DeepSeek-R1-Q4_K_M-00009-of-00011	36.94			F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00009-of-00011.gguf
+Qwen3.8-Flash-Next-AD-IQ1_M-M64-00002-of-00002	37.33			F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\Qwen3.8-Flash-Next-AD-IQ1_M-M64\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00002-of-00002.gguf
+Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q8_0	38.68	Q8_0	qwen35	F:\OllamaModels\Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q8_0.gguf
+library/deepseek-r1:70b	39.6	Q4_K_M	llama	F:\OllamaModels\blobs\sha256-4cd576d9aa16961244012223abf01445567b061f1814b57dfef699e4cf8df339
+Kimi-K2-Instruct-0905-Q4_K_M-00013-of-00013	41.19			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00013-of-00013.gguf
+Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002	41.76	Q4_0_4_8	qwen4exp	F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\Qwen3.8-Flash-Next-AD-IQ1_M-M64\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013	43.12	Q4_K_M	deepseek2	F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00005-of-00013	43.18			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00005-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00012-of-00013	44.27			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00012-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00011-of-00013	44.48			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00011-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00006-of-00013	44.48			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00006-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00007-of-00013	44.53			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00007-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00004-of-00013	44.53			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00004-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00009-of-00013	44.54			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00009-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013	45.83			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf
+MiniMax-M2.7-Q4_K_M-00001-of-00003	45.99	Q4_K_M	minimax-m2	F:\OllamaModels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00010-of-00013	46.15			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00010-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013	46.15			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf
+Kimi-K2-Instruct-0905-Q4_K_M-00008-of-00013	46.15			F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00008-of-00013.gguf
+MiniMax-M2.7-Q4_K_M-00002-of-00003	46.3			F:\OllamaModels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf
+library/qwen3-next:80b	46.89	Q4_K_M	qwen3next	F:\OllamaModels\blobs\sha256-8476acca2ca7dc4dd86ad2e069cb270fdbd44287d9ff3006d86e9a54cc19acd1
+library/gpt-oss:120b	60.88	FTYPE_4	gptoss	F:\OllamaModels\blobs\sha256-6be6d66a3f546d8c19b130dc41dc24b2fc159f84ffbc76a0ee0676205083cf5a
+library/laguna-s-2.1:Q4_K_M	89.44	Q8_0	laguna	F:\OllamaModels\blobs\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8
+bluehawana/deepseek-v4-flash:iq2_m	96.86	IQ4_NL	deepseek4	F:\OllamaModels\blobs\sha256-764636b03a41d573e71eea419a8992a8960778355b2d832117cf014a5d231f21

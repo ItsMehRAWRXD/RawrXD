@@ -1,0 +1,23 @@
+RAWRXD_B83_IDE_WRITE_TRANSACTIONAL_PROFILE_001.LOCK r2
+issued_at_utc = 2026-10-01T22:24:39Z
+supersedes   = RAWRXD_B83_IDE_WRITE_TRANSACTIONAL_PROFILE_001.LOCK.txt
+supersede_reason = the V2 closure (link, 50/50 on 061819CF, sandbox 35/35, controls)
+                        was measured AFTER the r1 lock was written, so the receipt was
+                        legitimately extended. The rule r1 states -- a sealed receipt that
+                        stops matching its sources is STALE, and the remedy is a new
+                        certificate, never an edit of that one -- is applied to r1 itself:
+                        r1 is retained unedited and SUPERSEDED. It is not deleted and not
+                        rewritten.
+
+receipt_sha256      = 0AF9E6198BE578D18556F616EA00F54094DF3F504445E9904F3A02B808DAD787
+sidecar_sha256      = E2FF29D57A59F185BC60DD4B721CC2B8FEE49ABF375D0B35791C20C2F22A00F6
+superseded_lock_sha = 44AD828892372AD4FAB9E08AB8867B7D0D26D66C4863BC427ADDC50E0B436DA3
+certified_binary_v2 = 061819CF1FD2FDEA63B8441BBB39690887854BDDEEFCB837142BC75869D6DBDC
+certified_binary_v1 = 396F06BDB70FA89D2ECD5CBEE72565CA359EBFF435A3CB4AD67AA232C44A9F59  (archival)
+http_cert_v2        = CONTRACT_SATISFIED_50_OF_50 (HTTP_CERT_EXIT=0)
+sandbox_matrix      = CONTRACT_SATISFIED_35_OF_35 / control DEFECT_DETECTED
+journal_closure     = candidate CONTRACT_SATISFIED / control DEFECT_DETECTED
+git_tools           = REGISTERED 13 / EXECUTED_CERT 0 / CERTIFIED 0
+git_state_at_lock   = UNCOMMITTED
+evidence_scope      = sealed; product scope NOT frozen (third party writing this tree)
+next_gate           = RAWRXD_GIT_TRANSACTION_AUTHORITY_001 (G0..G15)

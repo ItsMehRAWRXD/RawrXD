@@ -32,13 +32,28 @@ static inline float fp16_to_fp32(uint16_t h) {
             std::memcpy(&result, &f32_bits, sizeof(float));
             return result;
         }
-        // Subnormal: normalize
+        // Subnormal: normalize.
+        //
+        // RAWRXD_FP16_SUBNORMAL_001
+        //
+        // The shift count must survive. This previously accumulated it into
+        // `exp` (starting at 0 and decrementing an unsigned, which wraps) and
+        // then reset `exp = 0u`, discarding it entirely, so every subnormal
+        // came out as 2^-15 regardless of magnitude. Measured: 1022 of 2046
+        // subnormal patterns wrong, error growing to 512x.
+        //
+        // After `shifts` left-shifts the value is (m/1024) * 2^(-14 - shifts),
+        // so the fp32 exponent field is 113 - shifts.
+        uint32_t shifts = 0;
         while ((mantissa & 0x0400u) == 0u) {
             mantissa <<= 1u;
-            exp -= 1u;
+            ++shifts;
         }
         mantissa &= 0x03FFu;
-        exp = 0u;
+        const uint32_t f32_bits = sign | ((113u - shifts) << 23u) | (mantissa << 13u);
+        float result;
+        std::memcpy(&result, &f32_bits, sizeof(float));
+        return result;
     }
 
     if (exp == 0x1Fu) {

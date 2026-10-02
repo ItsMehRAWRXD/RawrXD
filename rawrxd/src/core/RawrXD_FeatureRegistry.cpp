@@ -170,18 +170,22 @@ void FeatureRegistry::SetExtensionHostEnabled(bool enabled) {
 // ============================================================================
 
 bool FeatureRegistry::CanEnableAgentBridge(std::string& out_reason) {
-    // Check prerequisites for AgentBridge
-    // - Config file exists
-    // - AI model path configured
-    // - Backend manager initialized
-    
-    out_reason.clear();
-    
-    // TODO: Check if config file exists
-    // TODO: Check if model path is configured
-    // TODO: Check if backend manager is ready
-    
-    return true;  // For now, assume yes
+    // RAWRXD_UNSIMULATE_001
+    // Was: three TODO comments followed by `return true; // For now, assume yes`.
+    //
+    // A prerequisite gate that always opens is worse than a closed one: it
+    // reports that a bridge is safe to enable on the strength of having checked
+    // nothing. The sibling CanEnableOmegaOrchestrator below already fails closed
+    // with a stated reason, so this is the same shape, not a new policy.
+    //
+    // The three prerequisites are not evaluated here, so the answer is not
+    // "yes": it is "unknown, therefore not permitted".
+    out_reason =
+        "AgentBridge prerequisites are not evaluated: config file presence, "
+        "model path configuration and backend-manager readiness are all "
+        "unimplemented. A gate that checks nothing must not report ready. "
+        "RAWRXD_UNSIMULATE_001";
+    return false;
 }
 
 bool FeatureRegistry::CanEnableOmegaOrchestrator(std::string& out_reason) {

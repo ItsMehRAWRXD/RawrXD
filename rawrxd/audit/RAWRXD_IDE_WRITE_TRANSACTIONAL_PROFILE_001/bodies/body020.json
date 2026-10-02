@@ -1,1 +1,1 @@
-{"op":"recover"}
+{"args":{"path":"escape_link\\secret.txt"},"tool":"read_file"}

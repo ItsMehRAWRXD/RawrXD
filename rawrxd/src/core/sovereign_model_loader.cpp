@@ -4,6 +4,8 @@
 // ============================================================================
 
 #include "sovereign_model_loader.h"
+#include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -249,9 +251,32 @@ QuantizationConfig DetectOptimalConfig() {
 }
 
 bool ValidateGGUF(const std::string& path) {
-    // Quick validation - check file exists and has GGUF magic
-    // In production, would actually read and validate header
-    return true;  // Placeholder
+    // RAWRXD_UNSIMULATE_001
+    // Was: `return true; // Placeholder` with "In production, would actually
+    // read and validate header".
+    //
+    // This is the model-file validator. It returned true for a path that does
+    // not exist, for a text file, and for a truncated GGUF, so every caller
+    // downstream believed it had a loadable model.
+    //
+    // It now reads the header, which is what the comment always said it did:
+    // the 4-byte ASCII magic "GGUF" and the little-endian uint32 format
+    // version. That is the minimum a GGUF file must have to be one, and it is
+    // a real check rather than a different guess.
+    std::ifstream f(path, std::ios::binary);
+    if (!f) return false;
+    char magic[4] = {0, 0, 0, 0};
+    f.read(magic, 4);
+    if (f.gcount() != 4) return false;
+    if (magic[0] != 'G' || magic[1] != 'G' || magic[2] != 'U' || magic[3] != 'F') {
+        return false;
+    }
+    uint32_t version = 0;
+    f.read(reinterpret_cast<char*>(&version), sizeof(version));
+    if (f.gcount() != static_cast<std::streamsize>(sizeof(version))) return false;
+    // Version 0 was never a released GGUF layout; 1..3 are the formats in use.
+    if (version < 1 || version > 3) return false;
+    return true;
 }
 
 const char* GetQuantTypeName(RawrXD_QuantType type) {

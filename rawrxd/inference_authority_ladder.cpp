@@ -649,9 +649,169 @@ int main(int argc, char** argv) {
                          "that can be deterministically wrong while passing every other "
                          "gate.";
     }
+    // RAWRXD_COMPARE_B_CHAIN_001: the same technique extended past V. Each
+    // stage's input is the GPU's own captured arena vector for the preceding
+    // stage, so the CPU reference cannot be mis-paired the way the ordinal
+    // comparator's was.
+    // RAWRXD_VULKAN_ATTENTION_CORE_BISECT_001 (A1-A6): CPU RoPE applied to the
+    // captured pre-RoPE bytes, compared against the device's post-RoPE capture.
+    const char* ropeEnv = std::getenv("RAWRXD_ROPE_BISECT");
+    if (ropeEnv && *ropeEnv) {
+        std::printf("\n---- RoPE bisect (RAWRXD_VULKAN_ATTENTION_CORE_BISECT_001) ----\n");
+        std::fflush(stdout);
+        Deep2::Deep2Engine re;
+        re.enableVulkan(true);
+        Deep2::ModelLoadDiag d3;
+        if (!re.loadModel(model, &d3)) {
+            std::printf("ROPE_LOAD_FAIL stage=%d '%s'\n", d3.stageCode, d3.message.c_str());
+        } else {
+            std::vector<Deep2::Deep2Engine::ChainStage> rs;
+            if (re.ropeBisectRun(0, ropeEnv, &rs) && !rs.empty()) {
+                std::printf("%-10s %-12s %-12s %-11s %-11s %s\n",
+                            "STAGE", "CPU_L2", "GPU_L2", "MAX_DIFF", "COSINE", "VERDICT");
+                const char* firstBad = nullptr;
+                for (const auto& s : rs) {
+                    std::printf("%-10s %-12.6f %-12.6f %-11.6g %-11.6f %s%s\n",
+                                s.stage, s.cpuL2, s.gpuL2, s.maxAbsDiff, s.cosine,
+                                s.match ? "MATCH" : "NUMERIC_MISMATCH",
+                                s.reason.empty() ? "" : (" (" + s.reason + ")").c_str());
+                    if (!s.match && !firstBad) firstBad = s.stage;
+                }
+                std::printf("\nROPE_FIRST_MISMATCH=%s\n", firstBad ? firstBad : "NONE");
+            } else {
+                std::printf("ROPE_BISECT_NO_RESULT\n");
+            }
+        }
+        std::fflush(stdout);
+    }
+    const char* chainEnv = std::getenv("RAWRXD_COMPARE_B_CHAIN");
+    if (chainEnv && *chainEnv) {
+        std::printf("\n---- post-V CPU replay chain (RAWRXD_COMPARE_B_CHAIN_001) ----\n");
+        std::fflush(stdout);
+        Deep2::Deep2Engine ce;
+        ce.enableVulkan(true);
+        Deep2::ModelLoadDiag d2;
+        if (!ce.loadModel(model, &d2)) {
+            std::printf("CHAIN_LOAD_FAIL stage=%d '%s'\n", d2.stageCode, d2.message.c_str());
+        } else {
+            std::vector<Deep2::Deep2Engine::ChainStage> chain;
+            if (ce.postVChainReplay(0, chainEnv, &chain) && !chain.empty()) {
+                std::printf("%-18s %-12s %-12s %-11s %-11s %s\n",
+                            "STAGE", "CPU_L2", "GPU_L2", "COSINE", "MAX_DIFF", "VERDICT");
+                const char* firstBad = nullptr;
+                for (const auto& s : chain) {
+                    std::printf("%-18s %-12.6f %-12.6f %-11.6f %-11.6g %s\n",
+                                s.stage, s.cpuL2, s.gpuL2, s.cosine, s.maxAbsDiff,
+                                s.match ? "MATCH" : "NUMERIC_MISMATCH");
+                    if (!s.match && !firstBad) firstBad = s.stage;
+                }
+                std::printf("\nCHAIN_FIRST_MISMATCH_STAGE=%s\n",
+                            firstBad ? firstBad : "NONE");
+                if (firstBad) {
+                    std::printf("  => Q/K/V are exonerated on real captured input, so the\n"
+                                "     first genuine divergence after V is at %s.\n", firstBad);
+                } else {
+                    std::printf("  => every replayed post-V stage agrees. The divergence lies in\n"
+                                "     the FUSED attention (DispatchAttnDecode), which has no\n"
+                                "     device arena and therefore no capture point at all.\n");
+                }
+            } else {
+                std::printf("CHAIN_REPLAY_FAILED (no captured vectors matched)\n");
+            }
+        }
+        std::fflush(stdout);
+    }
     if (emitPath && *emitPath) {
         SaveTokenFile(emitPath, R.greedy);
         std::printf("emitted_greedy_tokens=%zu -> %s\n", R.greedy.size(), emitPath);
+    }
+
+    if (emitPath && *emitPath) {
+        SaveTokenFile(emitPath, R.greedy);
+        std::printf("emitted_greedy_tokens=%zu -> %s\n", R.greedy.size(), emitPath);
+    }
+
+    // ───────────── RAWRXD_VULKAN_PROJECTION_BISECT_001 ─────────────
+    // The identical-input experiment. Runs AFTER the gate ladder so the ladder
+    // verdict is produced first and cannot be influenced by it.
+    //
+    // This is the measurement that separates ONE upstream defect from TWO
+    // independent defects: it feeds the SAME host vector to the CPU projection
+    // and the GPU projection, so the ~13% RMS_ATTN disagreement observed by the
+    // grid is removed from the experiment entirely.
+    const char* projEnv = std::getenv("RAWRXD_PROJECTION_BISECT");
+    if (projEnv && (projEnv[0] == '1' || projEnv[0] == 't' || projEnv[0] == 'T')) {
+        std::printf("\n---- identical-input projection bisect "
+                    "(RAWRXD_VULKAN_PROJECTION_BISECT_001) ----\n");
+        std::fflush(stdout);
+        Deep2::Deep2Engine be;
+        be.enableVulkan(true);
+        Deep2::ModelLoadDiag d;
+        if (!be.loadModel(model, &d)) {
+            std::printf("PROJ_BISECT_LOAD_FAIL stage=%d '%s'\n",
+                        d.stageCode, d.message.c_str());
+        } else {
+            std::vector<Deep2::Deep2Engine::ProjectionBisectResult> res;
+            if (be.projectionBisectRun(0, &res) && !res.empty()) {
+                std::printf("%-6s %-10s %-10s %-9s %-12s %-12s %-8s %-10s %s\n",
+                            "STAGE", "ROWS_EXP", "ROWS_DISP", "TYPE",
+                            "CPU_L2", "GPU_L2", "RATIO", "COSINE", "TOP1_AGREE");
+                // RAWRXD_VULKAN_PROJECTION_BISECT_001
+                // The verdict is gated on the GPU path actually RUNNING.
+                //
+                // The first version of this block checked only top1Agree and
+                // cosine, and both are 0 when the GPU produced nothing at all.
+                // It therefore printed IDENTICAL_INPUT_GPU_QKV_MATCH=NO and
+                // declared an independent projection defect PROVEN -- while
+                // gpu_reached was 0 on every stage and the dispatch had never
+                // executed. A failed measurement reported as a defect is the
+                // same class of error as a fabricated receipt, and it is now
+                // structurally impossible: no GPU output, no verdict.
+                bool allRan = true;
+                for (const auto& r : res) if (!r.gpuReached) allRan = false;
+                bool allAgree = true;
+                for (const auto& r : res) {
+                    const double ratio = r.cpuL2 > 0 ? r.gpuL2 / r.cpuL2 : 0.0;
+                    std::printf("%-6s %-10zu %-10u %-9d %-12.4f %-12.4f %-8.4f %-10.6f %zu%s\n",
+                                r.stage, r.rows, r.rowsDispatched, r.type,
+                                r.cpuL2, r.gpuL2, ratio, r.cosine, r.top1Agree,
+                                r.gpuReached ? "" : "  GPU_NOT_REACHED");
+                    std::printf("       byte_offset=%zu byte_size=%zu max_abs_diff=%.6g "
+                                "rms_diff=%.6g gpu_reached=%d\n",
+                                r.byteOffset, r.byteSize, r.maxAbsDiff,
+                                r.rmsDiff, r.gpuReached ? 1 : 0);
+                    if (r.gpuReached && (!r.top1Agree || r.cosine < 0.99)) allAgree = false;
+                }
+                if (!allRan) {
+                    std::printf("\nIDENTICAL_INPUT_GPU_QKV_MATCH=UNKNOWN\n");
+                    std::printf("  => NO VERDICT. The GPU projection did not execute "
+                                "(gpu_reached=0 on at least one stage), so there is\n"
+                                "     no measurement to conclude from. Reporting a "
+                                "mismatch here would be\n"
+                                "     reporting a failed dispatch as a numerical defect.\n"
+                                "     The GPU side must be routed through the SAME "
+                                "residency path the\n"
+                                "     forward uses (PrefetchWeight + SubmitGemvPrefetch), "
+                                "not a bare\n"
+                                "     DispatchGemvQuant with a host weight pointer.\n");
+                } else {
+                std::printf("\nIDENTICAL_INPUT_GPU_QKV_MATCH=%s\n", allAgree ? "YES" : "NO");
+                if (allAgree) {
+                    std::printf("  => the projection machinery is SOUND on identical input.\n"
+                                "     The divergence originates UPSTREAM (the RMS_ATTN mismatch\n"
+                                "     the grid already measured). Chase that, not gemvOverlap3.\n");
+                } else {
+                    std::printf("  => an INDEPENDENT GPU projection defect is PROVEN: with the\n"
+                                "     same input bytes the two paths disagree. Suspect weight\n"
+                                "     binding, dequant scale, row stride, or the fused 3-input\n"
+                                "     dispatch indexing -- NOT the upstream RMS.\n");
+                }
+                }
+            } else {
+                std::printf("PROJ_BISECT_RUN_FAILED\n");
+            }
+        }
+        std::fflush(stdout);
     }
 
     // ───────────── STAGE B: FIRST-TOKEN LOGIT DIVERGENCE ─────────────

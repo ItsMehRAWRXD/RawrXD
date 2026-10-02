@@ -1,1 +1,1 @@
-{"elapsed_us":0,"error":"path rejected by sandbox: gamma.txt","ok":false,"tool":"write_file"}
+{"elapsed_us":16000,"ok":true,"output":"wrote 26 bytes to F:\\~dev\\rawrxd\\audit\\RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001\\work\\gamma.txt","tool":"write_file"}

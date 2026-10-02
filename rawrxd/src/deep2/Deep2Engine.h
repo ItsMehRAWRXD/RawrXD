@@ -1116,6 +1116,62 @@ public:
     const std::vector<float>& debugLastLogits() const { return debugLastLogits_; }
     uint64_t debugLogitsStep() const { return debugLogitsStep_; }
 
+    // ───────────── RAWRXD_VULKAN_PROJECTION_BISECT_001 ─────────────
+    // The identical-input projection experiment.
+    //
+    // The parity grid proved two separate things: RMS_ATTN already diverges
+    // (~13% in L2), and the projection turns that into a 83x divergence on K.
+    // Those are consistent with EITHER one defect upstream plus a fragile
+    // projection, OR two independent defects. This removes the upstream
+    // disagreement from the experiment by feeding the SAME host vector to both
+    // paths, so any remaining difference belongs to the projection alone.
+    //
+    //   IDENTICAL_INPUT_GPU_QKV_MATCH=YES  => projection sound; chase RMS upstream
+    //   IDENTICAL_INPUT_GPU_QKV_MATCH=NO   => independent projection defect
+    //
+    // Gated on RAWRXD_PROJECTION_BISECT=1. Read-only with respect to inference
+    // state: it dispatches into scratch buffers and never touches the model's
+    // KV cache or residuals.
+    struct ProjectionBisectResult {
+        const char* stage = "";      // "Q" | "K" | "V"
+        size_t rows = 0, cols = 0;   // as DECLARED on the tensor
+        uint32_t rowsDispatched = 0; // as CONSUMED by the dispatch
+        int      type = -1;          // GGML type of the weight tensor
+        size_t   byteOffset = 0, byteSize = 0;
+        float    dequantScaleFirst = 0.0f, dequantScaleMid = 0.0f,
+                 dequantScaleLast = 0.0f;
+        double   cpuL2 = 0, gpuL2 = 0, maxAbsDiff = 0, rmsDiff = 0, cosine = 0;
+        bool     cpuReached = false, gpuReached = false;
+        size_t   top1Agree = 0;      // 1 if argmax matched
+    };
+    // Runs the experiment for one layer across Q, K and V.
+    bool projectionBisectRun(unsigned layer, std::vector<ProjectionBisectResult>* out);
+
+    // RAWRXD_COMPARE_B_CHAIN_001
+    // Replays the post-V stages on the CPU, using the GPU's OWN captured arena
+    // vectors as each stage's input, and compares the CPU's result against the
+    // GPU's captured output for that stage.
+    //
+    // This is the same discipline as compare B applied to the stages after the
+    // projection: every input is a value the GPU actually produced, so the
+    // reference cannot be mis-paired the way the ordinal comparator's was.
+    // The first stage whose CPU result disagrees with the GPU's captured output
+    // is the first genuine numerical divergence after V.
+    struct ChainStage {
+        const char* stage = "";
+        bool     ran = false;
+        bool     cpuAvailable = false;
+        double   cpuL2 = 0, gpuL2 = 0, maxAbsDiff = 0, rmsDiff = 0, cosine = 0;
+        bool     match = false;
+        std::string reason;      // why it could not be compared
+    };
+    bool postVChainReplay(unsigned layer, const std::string& dumpDir,
+                          std::vector<ChainStage>* out);
+    // RAWRXD_VULKAN_ATTENTION_CORE_BISECT_001 (A1-A6): CPU RoPE on the captured
+    // pre-RoPE bytes vs the device's post-RoPE capture.
+    bool ropeBisectRun(unsigned layer, const std::string& dumpDir,
+                        std::vector<ChainStage>* out);
+
 private:
     PreparedSpecWindow preparedSpec_[2]{};
     uint64_t specGeneration_=0;

@@ -1,0 +1,17 @@
+﻿=== RAWRXD_AUTHORITY_SURFACE_CENSUS_001 ===
+PROMOTION_RULE=source_exists+non_stub+target_compiles+production_reaches+receipt
+NAME_TOTAL=45
+STATE_RUNTIME_PROVEN=0
+STATE_BINARY_REACHABLE=0
+STATE_CMAKE_WIRED=1
+STATE_SOURCE_IMPLEMENTED=12
+STATE_SOURCE_DECLARED=14
+STATE_UNIMPLEMENTED_STUB=0
+STATE_PLAN_ONLY=16
+STATE_DOCUMENTATION_ONLY=0
+STATE_STALE_CLAIM=0
+STATE_RETRACTED=2
+NOTE=Name presence in a ledger proves a CLAIM. This census reports the
+     strongest state backed by source, build, binary or receipt evidence.
+=== RECEIPT_END ===
+

@@ -1,0 +1,46 @@
+cmake_minimum_required(VERSION 3.20)
+project(accumulator_diagnosis NONE)
+
+# Why does RAWRXD_CERT_VIOLATIONS come back empty while RAWRXD_CERT_VIOLATION_COUNT
+# survives? Isolating the CACHE INTERNAL round-trip.
+
+function(declare_via_cache msg)
+    math(EXPR _vc "${COUNT} + 1")
+    set(COUNT ${_vc} CACHE INTERNAL "" FORCE)
+    set(MSGS "${MSGS}|||${msg}" CACHE INTERNAL "" FORCE)
+endfunction()
+
+function(declare_via_parent_scope msg)
+    # alternative: normal variable + PARENT_SCOPE, no cache
+endfunction()
+
+message(STATUS "=== before ===")
+message(STATUS "  COUNT='${COUNT}'")
+message(STATUS "  MSGS='${MSGS}'")
+
+declare_via_cache("plain message, no newline")
+message(STATUS "=== after 1 plain ===")
+message(STATUS "  COUNT='${COUNT}'")
+message(STATUS "  MSGS='${MSGS}'")
+message(STATUS "  MSGS_length=${string_LENGTH_PLACEHOLDER}")
+
+declare_via_cache("message with \n embedded newline")
+message(STATUS "=== after 1 with embedded newline ===")
+message(STATUS "  COUNT='${COUNT}'")
+message(STATUS "  MSGS='${MSGS}'")
+
+# Isolate: does a leading '|' in the stored value get treated as a list?
+set(RAW "|||abc" CACHE INTERNAL "" FORCE)
+message(STATUS "=== raw '|||abc' in cache ===")
+message(STATUS "  RAW='${RAW}'  length=${CMAKE_MATCH_COUNT}")
+
+# Does a semicolon in the message destroy it?
+declare_via_cache("semi;colon;inside")
+message(STATUS "=== after semi-colon message ===")
+message(STATUS "  COUNT='${COUNT}'")
+message(STATUS "  MSGS='${MSGS}'")
+
+string(REPLACE "|||" "\n\n  " _all "${MSGS}")
+string(STRIP "${_all}" _all)
+message(STATUS "=== final formatted ===")
+message(STATUS "[[${_all}]]")

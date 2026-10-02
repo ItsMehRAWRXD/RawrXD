@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -20,14 +20,14 @@
 
 namespace rawrxd::ai {
 
-// ─── Forward Declarations ───
+// â”€â”€â”€ Forward Declarations â”€â”€â”€
 class InferenceSession;
 class KVCacheManager;
 class Tensor;
 struct DraftModelConfig;
 struct TreeAttentionConfig;
 
-// ─── Tree Node Structure ───
+// â”€â”€â”€ Tree Node Structure â”€â”€â”€
 // Each node represents a candidate token in the speculative tree.
 // Children represent speculative continuations from this token.
 struct SpeculativeTreeNode {
@@ -35,7 +35,7 @@ struct SpeculativeTreeNode {
     float logit{ 0.0f };                    // Raw logit from draft model
     float probability{ 0.0f };             // Draft model probability
     float cumulative_prob{ 0.0f };         // Cumulative probability along path
-    float attention_score{ 0.0f };          // Cross-attention score (target↔draft)
+    float attention_score{ 0.0f };          // Cross-attention score (targetâ†”draft)
     uint32_t depth{ 0 };                    // Depth in tree (0 = root)
     uint32_t parent_idx{ 0 };               // Index of parent node
     std::vector<uint32_t> child_indices;    // Indices of child nodes
@@ -45,7 +45,7 @@ struct SpeculativeTreeNode {
     std::vector<float> value_cache;        // Per-head V cache slice
 };
 
-// ─── Draft Model Configuration ───
+// â”€â”€â”€ Draft Model Configuration â”€â”€â”€
 // Supports multiple draft models of varying sizes for ensemble speculation.
 struct DraftModelConfig {
     std::string model_path;
@@ -63,7 +63,7 @@ struct DraftModelConfig {
     float weight{ 1.0f };                  // Ensemble weight for this draft model
 };
 
-// ─── Tree Attention Configuration ───
+// â”€â”€â”€ Tree Attention Configuration â”€â”€â”€
 struct TreeAttentionConfig {
     uint32_t max_tree_depth{ 8 };            // Maximum speculation depth
     uint32_t max_branching_factor{ 4 };      // Max children per node
@@ -82,7 +82,7 @@ struct TreeAttentionConfig {
     uint64_t cache_size_bytes{ 8ULL * 1024 * 1024 * 1024 }; // 8GB default
 };
 
-// ─── Verification Result ───
+// â”€â”€â”€ Verification Result â”€â”€â”€
 struct TreeVerificationResult {
     std::vector<int32_t> accepted_tokens;
     std::vector<float> accepted_probs;
@@ -97,7 +97,7 @@ struct TreeVerificationResult {
     std::chrono::nanoseconds total_round_time{ 0 };
 };
 
-// ─── Speculative Tree Attention Bridge ───
+// â”€â”€â”€ Speculative Tree Attention Bridge â”€â”€â”€
 // Production-grade speculative decoding with tree-structured attention.
 // Surpasses standard speculative decoding by accepting more tokens per forward pass
 // through tree-based organization and cross-model attention scoring.
@@ -112,7 +112,7 @@ public:
     SpeculativeTreeAttentionBridge(SpeculativeTreeAttentionBridge&&) noexcept;
     SpeculativeTreeAttentionBridge& operator=(SpeculativeTreeAttentionBridge&&) noexcept;
 
-    // ─── Core API ───
+    // â”€â”€â”€ Core API â”€â”€â”€
 
     // Initialize with draft model configurations
     bool Initialize(std::vector<DraftModelConfig> draft_configs,
@@ -131,7 +131,7 @@ public:
         const std::vector<std::vector<int32_t>>& input_batches,
         uint32_t max_new_tokens_per_sequence);
 
-    // ─── Tree Management ───
+    // â”€â”€â”€ Tree Management â”€â”€â”€
 
     // Build speculative tree from draft model predictions
     void BuildSpeculativeTree(
@@ -145,7 +145,7 @@ public:
     // Compute attention scores between draft tree and target model
     void ComputeCrossAttentionScores();
 
-    // ─── Verification ───
+    // â”€â”€â”€ Verification â”€â”€â”€
 
     // Verify tree nodes against target model in parallel batches
     TreeVerificationResult VerifyTreeNodes(
@@ -155,7 +155,7 @@ public:
     TreeVerificationResult VerifyTreeAdaptive(
         const std::vector<int32_t>& prefix_tokens);
 
-    // ─── Statistics & Diagnostics ───
+    // â”€â”€â”€ Statistics & Diagnostics â”€â”€â”€
 
     TreeVerificationResult GetLastRoundStats() const { return last_result_; }
     float GetRollingAcceptanceRate() const;
@@ -164,24 +164,24 @@ public:
     float GetAverageTreeDepth() const;
     std::vector<float> GetPerDepthAcceptanceRates() const;
 
-    // ─── KV Cache Management ───
+    // â”€â”€â”€ KV Cache Management â”€â”€â”€
 
     void EvictCache(const std::string& policy);
     void CompactCache();
     size_t GetCacheMemoryUsage() const;
 
-    // ─── Configuration ───
+    // â”€â”€â”€ Configuration â”€â”€â”€
 
     void UpdateConfig(const TreeAttentionConfig& new_config);
     TreeAttentionConfig GetConfig() const { return config_; }
 
-    // ─── Debug & Export ───
+    // â”€â”€â”€ Debug & Export â”€â”€â”€
 
     std::string ExportTreeDOT() const;
     void DumpTreeStatistics(std::ostream& out) const;
 
 private:
-    // ─── Internal Tree Operations ───
+    // â”€â”€â”€ Internal Tree Operations â”€â”€â”€
 
     void ExpandNode(uint32_t parent_idx, const std::vector<std::pair<int32_t, float>>& candidates);
     void ScoreNodeWithAttention(uint32_t node_idx);
@@ -189,7 +189,7 @@ private:
     std::vector<uint32_t> GetPathToRoot(uint32_t node_idx) const;
     void BacktrackAndResample(uint32_t reject_idx);
 
-    // ─── Draft Model Ensemble ───
+    // â”€â”€â”€ Draft Model Ensemble â”€â”€â”€
 
     std::vector<std::pair<int32_t, float>> EnsembleDraftPredictions(
         const std::vector<int32_t>& context,
@@ -200,14 +200,14 @@ private:
         const std::vector<int32_t>& context,
         uint32_t num_candidates);
 
-    // ─── Attention Computation ───
+    // â”€â”€â”€ Attention Computation â”€â”€â”€
 
     void ComputeSelfAttentionForTree();
     void ComputeTreeTargetCrossAttention();
     float ComputeAttentionScore(const SpeculativeTreeNode& draft_node,
                                 const std::vector<float>& target_query);
 
-    // ─── Verification Internals ───
+    // â”€â”€â”€ Verification Internals â”€â”€â”€
 
     std::vector<bool> BatchVerifyNodes(
         const std::vector<int32_t>& prefix,
@@ -217,7 +217,7 @@ private:
     bool AcceptToken(int32_t draft_token, float draft_prob,
                      int32_t target_token, float target_prob);
 
-    // ─── KV Cache ───
+    // â”€â”€â”€ KV Cache â”€â”€â”€
 
     void InitializeKVCache(uint32_t num_heads, uint32_t head_dim, uint32_t max_seq_len);
     void UpdateKVCache(uint32_t layer_idx, uint32_t seq_pos,
@@ -225,13 +225,13 @@ private:
     std::pair<std::vector<float>, std::vector<float>> RetrieveKVCache(
         uint32_t layer_idx, uint32_t seq_pos) const;
 
-    // ─── Threading ───
+    // â”€â”€â”€ Threading â”€â”€â”€
 
     void StartWorkerThreads();
     void StopWorkerThreads();
     void WorkerLoop();
 
-    // ─── Members ───
+    // â”€â”€â”€ Members â”€â”€â”€
 
     TreeAttentionConfig config_;
     std::vector<DraftModelConfig> draft_configs_;
@@ -252,8 +252,13 @@ private:
     TreeVerificationResult last_result_;
     std::atomic<uint64_t> total_tokens_generated_{ 0 };
     std::atomic<uint64_t> total_tokens_accepted_{ 0 };
-    std::vector<std::atomic<uint64_t>> depth_acceptance_counts_;
-    std::vector<std::atomic<uint64_t>> depth_total_counts_;
+    // std::atomic is neither copyable nor movable, so std::vector<atomic<T>>::resize
+    // cannot be instantiated (MSVC C2672 in construct_at) and the counters below
+    // could never have compiled. unique_ptr gives per-element stable addresses,
+    // which is also what makes a counter safe to hand to a worker thread.
+    std::vector<std::unique_ptr<std::atomic<uint64_t>>> depth_acceptance_counts_;
+    std::vector<std::unique_ptr<std::atomic<uint64_t>>> depth_total_counts_;
+
     std::atomic<uint64_t> total_rounds_{ 0 };
     mutable std::mutex stats_mutex_;
 
@@ -277,7 +282,7 @@ private:
     mutable std::mutex scratch_mutex_;
 };
 
-// ─── Free Functions ───
+// â”€â”€â”€ Free Functions â”€â”€â”€
 
 // Optimized softmax with numerical stability
 inline void SoftmaxInPlace(std::vector<float>& logits) {

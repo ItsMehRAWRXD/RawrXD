@@ -79,6 +79,109 @@ static void RefGemvQ4K(const uint8_t* w, const float* x, float* y,
     }
 }
 
+// ---- ggml-transcribed reference -------------------------------------------
+// RAWRXD_GATE_INTEGRITY_001
+// The cross-check's first reference used the SAME (g/2)*32 / (g&1)?4:0 rule as
+// the fixed loader, in the same shape. That is a valid two-translation-unit
+// cross-check but NOT a structurally independent derivation: one wrong belief
+// about the layout would be replicated in both and agree with itself.
+//
+// This reference is transcribed from ggml's dequantize_row_q4_K
+// (ggml-quants.c) shape instead: it walks y in groups of 32 and indexes
+// x[i] = qs[j] with j running 0..63 for the low half and the mirrored high half
+// offset by 64 -- no "group" abstraction at all. If the loader's group rule were
+// wrong, this one would not be wrong the same way.
+static void RefGemvQ4K_ggml(const uint8_t* w, const float* x, float* y,
+                            size_t rows, size_t cols) {
+    const size_t bpr = (cols + 255) / 256;
+    for (size_t r = 0; r < rows; ++r) {
+        double acc = 0.0;
+        const uint8_t* row = w + r * bpr * 144;
+        for (size_t b = 0; b < bpr; ++b) {
+            const uint8_t* blk = row + b * 144;
+            const float d    = RefFP16((uint16_t)(blk[0] | (blk[1] << 8)));
+            const float dmin = RefFP16((uint16_t)(blk[2] | (blk[3] << 8)));
+            uint8_t sc[8], mn[8];
+            RefScales(blk + 4, sc, mn);
+            const uint8_t* qs = blk + 16;
+            const uint8_t* q = qs;
+            // ggml: for each of 8 groups of 32, take 32 low nibbles from q[0..32)
+            // then 32 high nibbles from q[0..32), advancing q by 32 per pair.
+            for (int is = 0; is < 8; is += 2) {
+                const float d1 = d * sc[is], m1 = dmin * mn[is];
+                const float d2 = d * sc[is + 1], m2 = dmin * mn[is + 1];
+                for (int l = 0; l < 32; ++l) {
+                    const size_t i0 = b * 256 + (size_t)is * 32 + l;
+                    const size_t i1 = i0 + 32;
+                    if (i0 < cols) acc += (d1 * (q[l] & 0x0F) - m1) * (double)x[i0];
+                    if (i1 < cols) acc += (d2 * (q[l] >> 4)    - m2) * (double)x[i1];
+                }
+                q += 32;
+            }
+        }
+        y[r] += (float)acc;
+    }
+}
+
+// Cross-check: loader must agree with BOTH references.
+static void CrossCheckLoader(const char* label, const std::vector<uint8_t>& blk,
+                             const std::vector<float>& want) {
+    rawrxd::GGUFTensorInfo info;
+    info.ggml_type = rawrxd::GGMLType::Q4_K;
+    info.block_size = 256;
+    info.element_size = 144;
+    info.byte_size = 144;
+    info.element_count = 256;
+    rawrxd::GGUFTensorView view(blk.data(), info);
+    std::vector<float> loaded;
+    const bool got = view.ToFloat32(loaded);
+    Check(got && loaded.size() == 256,
+          (std::string("loader decoded Q4_K super-block (") + label + ")").c_str());
+    float worst = 0.0f;
+    int firstbad = -1;
+    for (size_t i = 0; i < 256 && i < want.size(); ++i) {
+        const double mag = std::max(1.0, std::fabs((double)want[i]));
+        const double e = std::fabs((double)loaded[i] - (double)want[i]) / mag;
+        if (e > worst) worst = (float)e;
+        if (e > 1e-4 && firstbad < 0) firstbad = (int)i;
+    }
+    if (firstbad >= 0) {
+        std::printf("  INFO [%s] first mismatch at weight %d: loader=%.6f ref=%.6f\n",
+                    label, firstbad, loaded[firstbad], want[firstbad]);
+    }
+    Check(worst < 1e-4,
+          (std::string("gguf_loader Q4_K == ") + label).c_str(), worst, 0.0);
+}
+
+static std::vector<float> ReferenceFromGroups(const std::vector<uint8_t>& blk) {
+    uint8_t sc[8], mn[8];
+    RefScales(blk.data() + 4, sc, mn);
+    const float d = RefFP16((uint16_t)(blk[0] | (blk[1] << 8)));
+    const float dmin = RefFP16((uint16_t)(blk[2] | (blk[3] << 8)));
+    std::vector<float> want(256);
+    for (unsigned g = 0; g < 8; ++g) {
+        const uint8_t* q = blk.data() + 16 + (g / 2) * 32;
+        const int shift = (g & 1) ? 4 : 0;
+        for (size_t l = 0; l < 32; ++l) {
+            const int nib = (q[l] >> shift) & 0x0F;
+            want[g * 32 + l] =
+                (float)((double)d * sc[g] * nib - (double)dmin * mn[g]);
+        }
+    }
+    return want;
+}
+
+// Independent transcription of upstream get_scale_min_k4, used as the Q5_K
+// reference. Written separately from kquant::GetScaleMinK4 so a shared belief
+// about the layout cannot hide a defect.
+static void RefScaleMinK4(int j, const uint8_t* q, uint8_t& d, uint8_t& m) {
+    if (j < 4) { d = (uint8_t)(q[j] & 63); m = (uint8_t)(q[j + 4] & 63); }
+    else {
+        d = (uint8_t)((q[j + 4] & 0x0F) | (((q[j - 4] >> 6) & 0x03) << 4));
+        m = (uint8_t)((q[j + 4] >> 4)   | (((q[j - 0] >> 6) & 0x03) << 4));
+    }
+}
+
 int main() {
     std::printf("avx512_compiled=%d\n\n", HaveAvx512() ? 1 : 0);
 
@@ -216,49 +319,123 @@ int main() {
         putf16(blk, 0, 0x2111);   // d
         putf16(blk, 2, 0x1911);   // dmin
 
-        // (a) loader path
-        rawrxd::GGUFTensorInfo info;
-        info.ggml_type = rawrxd::GGMLType::Q4_K;
-        info.block_size = 256;
-        info.element_size = 144;
-        info.byte_size = 144;
-        info.element_count = 256;
-        rawrxd::GGUFTensorView view(blk.data(), info);
-        std::vector<float> loaded;
-        const bool got = view.ToFloat32(loaded);
+        // loader path
+        CrossCheckLoader("group-rule reference", blk, ReferenceFromGroups(blk));
 
-        // (b) independent reference (same group rule the GEMV uses)
-        uint8_t sc[8], mn[8];
-        RefScales(blk.data() + 4, sc, mn);
-        const float d = RefFP16((uint16_t)(blk[0] | (blk[1] << 8)));
-        const float dmin = RefFP16((uint16_t)(blk[2] | (blk[3] << 8)));
-        std::vector<float> want(256);
-        for (unsigned g = 0; g < 8; ++g) {
-            const uint8_t* q = blk.data() + 16 + (g / 2) * 32;
-            const int shift = (g & 1) ? 4 : 0;
-            for (size_t l = 0; l < 32; ++l) {
-                const int nib = (q[l] >> shift) & 0x0F;
-                want[g * 32 + l] =
-                    (float)((double)d * sc[g] * nib - (double)dmin * mn[g]);
+        // Second, structurally independent reference transcribed from ggml.
+        // Compare the two REFERENCES to each other on a full GEMV; if the group
+        // rule and the ggml transcription disagree, one of them is wrong even
+        // though the loader happens to match.
+        {
+            std::vector<float> xw(256);
+            for (size_t i = 0; i < 256; ++i) xw[i] = 0.01f * std::sin(0.021f * float(i));
+            std::vector<float> ya(1, 0.0f), yb(1, 0.0f);
+            RefGemvQ4K(blk.data(), xw.data(), ya.data(), 1, 256);
+            RefGemvQ4K_ggml(blk.data(), xw.data(), yb.data(), 1, 256);
+            const double mag = std::max(1.0, std::fabs((double)ya[0]));
+            const double e = std::fabs((double)ya[0] - (double)yb[0]) / mag;
+            Check(e < 1e-5, "group-rule and ggml-transcribed references agree",
+                  e, 0.0);
+        }
+    }
+
+    // ---- Q5_K synthetic differential -------------------------------------
+    // The bundled model contains only F32/Q4_K/Q6_K, so Q5_K cannot be proven
+    // on real weights here. It is proven instead against an independent
+    // reference transcribed from upstream dequantize_row_q5_K
+    // (ggml-quants.c:1731) rather than from the kernel under test.
+    {
+        auto rnd5 = [](uint32_t& s) { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return s; };
+        for (size_t cols : {256u, 768u, 2048u}) {
+            for (size_t rows : {1u, 5u}) {
+                const size_t bpr = cols / 256;
+                std::vector<uint8_t> w(rows * bpr * 176);
+                uint32_t s = 0xABCDEF01u + (uint32_t)(cols * 31 + rows);
+                for (auto& b : w) b = (uint8_t)(rnd5(s) & 0xFF);
+                // well-formed finite fp16 d / dmin
+                for (size_t i = 0; i < rows * bpr; ++i) {
+                    uint16_t d16 = 0x2E66;    // ~0.1
+                    uint16_t m16 = 0x3126;    // ~0.09
+                    const size_t o = i * 176;
+                    w[o + 172] = (uint8_t)(d16 & 0xFF); w[o + 173] = (uint8_t)(d16 >> 8);
+                    w[o + 174] = (uint8_t)(m16 & 0xFF); w[o + 175] = (uint8_t)(m16 >> 8);
+                }
+                std::vector<float> x(cols);
+                for (size_t i = 0; i < cols; ++i) x[i] = 0.5f * std::sin(0.017f * float(i + 1));
+
+                // Independent reference (upstream shape).
+                std::vector<float> yRef(rows, 0.0f);
+                for (size_t r = 0; r < rows; ++r) {
+                    const uint8_t* base = w.data() + r * bpr * 176;
+                    double acc = 0.0;
+                    for (size_t bb = 0; bb < bpr; ++bb) {
+                        const uint8_t* blk = base + bb * 176;
+                        const uint8_t* ql = blk;
+                        const uint8_t* qh = blk + 128;
+                        const uint8_t* sc = blk + 160;
+                        const float dd = RefFP16((uint16_t)(blk[172] | (blk[173] << 8)));
+                        const float mn = RefFP16((uint16_t)(blk[174] | (blk[175] << 8)));
+                        int is = 0; uint8_t u1 = 1, u2 = 2; size_t n = 0;
+                        for (; n < 256; n += 64) {
+                            uint8_t s0, m0, s1, m1;
+                            RefScaleMinK4(is + 0, sc, s0, m0);
+                            RefScaleMinK4(is + 1, sc, s1, m1);
+                            const float d1 = dd * (float)s0, e1 = mn * (float)m0;
+                            const float d2 = dd * (float)s1, e2 = mn * (float)m1;
+                            for (size_t l = 0; l < 32; ++l) {
+                                const size_t i0 = bb * 256 + n + l;
+                                const size_t i1 = bb * 256 + n + 32 + l;
+                                acc += (d1 * (float)((ql[l] & 0x0F) + ((qh[l] & u1) ? 16 : 0)) - e1) * (double)x[i0];
+                                acc += (d2 * (float)((ql[l] >> 4)  + ((qh[l] & u2) ? 16 : 0)) - e2) * (double)x[i1];
+                            }
+                            ql += 32; is += 2; u1 = (uint8_t)(u1 << 2); u2 = (uint8_t)(u2 << 2);
+                        }
+                    }
+                    yRef[r] = (float)acc;
+                }
+
+                std::vector<float> yFast(rows, 0.0f);
+                rawrxd::kquant::GemvQ5KDispatch(w.data(), x.data(), yFast.data(), rows, cols);
+                std::vector<float> yScalar(rows, 0.0f);
+                rawrxd::kquant::GemvQ5K(w.data(), x.data(), yScalar.data(), rows, cols);
+
+                auto chk = [&](const char* what, const std::vector<float>& a) {
+                    float worst = 0.0f; int nf = 0;
+                    for (size_t i = 0; i < rows; ++i) {
+                        if (!std::isfinite(a[i])) { ++nf; continue; }
+                        const double den = std::max(1.0, std::fabs((double)yRef[i]));
+                        const double e = std::fabs((double)a[i] - (double)yRef[i]) / den;
+                        if (e > worst) worst = (float)e;
+                    }
+                    char nm[96];
+                    std::snprintf(nm, sizeof(nm), "Q5_K %s cols=%zu rows=%zu rel", what, cols, rows);
+                    Check(nf == 0 && worst < 1e-4, nm, worst, 0.0);
+                };
+                chk("scalar", yScalar);
+                chk("dispatch", yFast);
+#if defined(__AVX512F__)
+                // The AVX-512 form is compiled but not dispatched
+                // (RAWRXD_Q5K_VECTOR_WITHHELD_001): it does not reproduce the
+                // scalar reference. Asserted here so it cannot silently ship.
+                {
+                    std::vector<float> yV(rows, 0.0f);
+                    rawrxd::kquant::GemvQ5K_AVX512(w.data(), x.data(), yV.data(), rows, cols);
+                    float worst = 0.0f;
+                    for (size_t i = 0; i < rows; ++i) {
+                        const double den = std::max(1.0, std::fabs((double)yRef[i]));
+                        const double e = std::fabs((double)yV[i] - (double)yRef[i]) / den;
+                        if (e > worst) worst = (float)e;
+                    }
+                    char nm[96];
+                    std::snprintf(nm, sizeof(nm), "Q5_K avx512 WITHHELD (rel>tol) cols=%zu rows=%zu", cols, rows);
+                    Check(worst >= 1e-4, nm, worst, 0.0);
+                }
+#endif
             }
         }
-
-        Check(got && loaded.size() == 256, "loader decoded Q4_K super-block");
-        float worst = 0.0f;
-        int firstbad = -1;
-        for (size_t i = 0; i < 256; ++i) {
-            const double mag = std::max(1.0, std::fabs((double)want[i]));
-            const double e = std::fabs((double)loaded[i] - (double)want[i]) / mag;
-            if (e > worst) { worst = (float)e; }
-            if (e > 1e-4 && firstbad < 0) firstbad = (int)i;
-        }
-        if (firstbad >= 0) {
-            std::printf("  INFO first mismatch at weight %d: loader=%.6f ref=%.6f\n",
-                        firstbad, loaded[firstbad], want[firstbad]);
-        }
-        Check(worst < 1e-4, "gguf_loader Q4_K == independent reference", worst, 0.0);
     }
 
     std::printf("\nRESULT %s (%d failures)\n", g_fail ? "FAIL" : "PASS", g_fail);
     return g_fail ? 1 : 0;
 }
+

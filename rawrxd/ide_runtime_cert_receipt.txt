@@ -1,0 +1,31 @@
+RAWRXD_IDE_RUNTIME_CERT_001=1
+GENERATED_UTC=2026-10-01T17:35:33Z
+EXE_DIR=F:\~dev\rawrxd\certbuild\bin\Release
+PID=PID=19668
+
+; --- per-stage measured evidence ---
+STAGE S01_EXE_LAUNCH_WINMAIN=PASS | hwnd=00000000017F008C is_window=1
+STAGE S02_WINDOW_CREATION=PASS | rect=78,78,800x600 visible=1
+STAGE S03_EDITOR_CREATION=PASS | hwnd=0000000002B70090 class=RawrXDEditor is_window=1
+STAGE S04_WORKSPACE_FILE_OPEN=PASS | wrote=1 exists=1 content_roundtrip=1
+STAGE S05_EDIT=FAIL | len_after=0 contains_marker=0
+STAGE S06_SAVE=PASS | route_save=1 bytes=0 disk_roundtrip=1
+STAGE S07_COMMAND_PALETTE=NOT_IMPLEMENTED | no palette window class and no palette command id registered
+STAGE S08_CTRL_P=NOT_IMPLEMENTED | no Ctrl+P handler found; key would reach the WndProc unhandled
+STAGE S09_F12_GOTO_DEFINITION=NOT_IMPLEMENTED | GotoDefinition implemented in auto_feature_real_impl.cpp but no F12 command id routes to it from the Win32IDE command table
+STAGE S10_RENAME=NOT_IMPLEMENTED | no rename command id in the Win32IDE command table
+STAGE S11_CLIPBOARD=PASS | open_clipboard=1 has_cf_text=1
+STAGE S12_UNDO_REDO=PASS | undo_route=1 undo_changed_editor=0 redo_route=1 redo_restored=1 len_typed=0 len_after_undo=0
+STAGE S13_GIT_OPERATION=NOT_IMPLEMENTED | FeatureGroup::Git has 5 registered features; none routes from the Win32IDE command table
+STAGE S14_TERMINAL_COMMAND=PASS | hwnd=0000000001820560 class=RawrXDTerminal is_window=1 read_only=0
+STAGE S15_CLOSE_REOPEN_DOCUMENT=PASS | close_route=1 reopen_route=1 on_disk=1 note=OpenDialog is modal, reopen is route-only
+STAGE S16_CLEAN_SHUTDOWN=BLOCKED | pending: observed after message loop exit
+
+; --- totals ---
+STAGES_TOTAL=16
+PASS=9
+FAIL=1
+NOT_IMPLEMENTED=5
+BLOCKED=1
+IDE_RUNTIME_CERT=FAIL
+EVIDENCE_RULE=every_stage_field_computed_from_measured_state

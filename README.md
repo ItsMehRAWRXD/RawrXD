@@ -511,31 +511,178 @@ This provides a foundation for safe GPU weight admission and residency managemen
 
 ---
 
-# Progressive Residency
-Deep2's multi-GPU architecture is moving beyond simple whole-model placement.
+# Residencyless Model Access
 
-The runtime architecture supports progressively resident execution concepts:
+Deep2 is developing a model-execution architecture in which model size does not
+directly determine required process residency.
+
+Instead of requiring a complete model or tensor to remain mapped and resident,
+the runtime addresses model data through bounded windows:
 
 ```
-                   Weight Tensor
-                        │
-          ┌─────────────┴──────────────┐
-          │                            │
-          ▼                            ▼
-   Resident Row Range            Nonresident Tail
-          │                            │
-          ▼                            ▼
-      GPU Compute              Alternate Execution
-          │                            │
-          └─────────────┬──────────────┘
-                        ▼
-                  Combined Output
+Model
+  ↓
+Tensor Manifest
+  ↓
+Requested Tensor / Expert Range
+  ↓
+Bounded File View
+  ↓
+Decode / Transform / Execute
+  ↓
+Release View
 ```
-As additional rows become resident, the GPU execution range can grow without requiring the complete tensor to become resident first.
 
-This is particularly useful for heterogeneous and memory-constrained GPU systems.
+A Beacon certification run on `DeepSeek-V2-Lite-Chat.Q4_K_M.gguf`
+(10,364,416,768 bytes, 377 tensors) traversed **99.96%** of the file across all
+377 tensor regions in **shuffled order**, so no streaming locality could mask a
+retention effect.
 
-**Progressive residency remains an active v3 certification area.**
+Measured comparison, same source bytes:
+
+```
+Whole-file mapped view:
+    peak process working set      9883.91 MB
+
+Windowed mapped views:
+    peak process working set         3.99 MB
+    maximum mapped view              0.56 MB
+    private-memory delta             0.059 MB
+```
+
+```
+WHOLE_MODEL_VIEW_REQUIRED = 0     MEASURED
+WHOLE_MODEL_PRIVATE_COPY  = 0     MEASURED
+BYTE_IDENTITY_PRESERVED   = 1     MEASURED
+```
+
+This establishes a host-side execution substrate where:
+
+```
+Model Size  ≠  Required Whole-Model Process Residency
+```
+
+The model is treated as an addressable collection of execution ranges.
+
+**This is host-side evidence.** GPU execution from this representation is
+separately certified below and is not implied by the numbers above.
+
+---
+
+# Loadless Beacon Model Server
+
+The Beacon model server exposes model metadata and byte-addressable ranges
+without decoding or privately materializing the complete model.
+
+```
+GET /v1/models
+GET /health
+GET /models/<id>/manifest
+GET /models/<id>/blob?off=<offset>&len=<length>
+```
+
+Range responses use partial-content semantics and are verified byte-for-byte
+against the source model. The manifest carries per-tensor `elements`,
+`block_bytes`, `type_name`, and parsed `layer` / `expert` / `role`, so a MoE
+router never has to parse tensor names on the hot path.
+
+This resolves:
+
+```
+Model → Layer → Tensor → Expert → Byte Range
+```
+
+without treating the entire model as one load operation.
+
+---
+
+# Execution Aperture
+
+The longer-term Deep2 design is a bounded execution aperture:
+
+```
+Large Model Source
+       ↓
+Selected Range
+       ↓
+Small Mapped Window
+       ↓
+Kernel-sized Decode / Execution Tile
+       ↓
+Accumulator
+       ↓
+Release
+```
+
+The objective is for memory requirements to scale with the active execution
+window rather than total model size.
+
+Host-side bounded mapping is measured. Direct end-to-end GPU execution from
+this representation remains under active correctness and performance
+certification.
+
+---
+
+# Experimental — Decoda Execution Representation
+
+**Certification status, not production capability.** The Decoda path is the
+compressed-weight execution research track. Every number below is measured; the
+gates that remain open are listed explicitly.
+
+### Serialized size (measured)
+
+`RAWRXD_V6_BITACCOUNT_006`, one 256×1408 expert slice of
+`blk.9.ffn_gate_exps.weight`, encoder's own accounting:
+
+```
+V6_TOTAL_BPW          = 4.1557
+Q4_K_SOURCE_BPW       = 4.5000
+V6_VERSUS_Q4K         = 0.923x      COMPRESSES
+COMPRESSION_GAIN      = 7.65%
+
+MEAN_M                = 2.66193
+MEAN_RESIDUAL_BPW     = 2.66193     (M is bits per weight)
+LLOYD_CENTROID_BPW    = 1.1532      (27.75% of total)
+```
+
+The design target was 3.125 b/w. **The encoder emits 4.1557 b/w on real
+weights** — it beats Q4_K, but by 7.65%, not the ~30% originally assumed.
+
+### Residual kernel parity (measured, PASS)
+
+`RAWRXD_V6_KERNEL_PARITY_007`. `Dot2/3/4_256` against an independent scalar
+dot over `beacon::decode`'s reconstruction of the packed block, five
+deterministic activation patterns:
+
+```
+M2_TESTED = 720    M2_FAILURES = 0
+M3_TESTED = 1075   M3_FAILURES = 0
+M4_TESTED = 3165   M4_FAILURES = 0
+TOTAL = 4960        TOTAL_FAILURES = 0
+KERNEL_NAN = 0
+VERDICT = PARITY=PASS
+```
+
+`REFERENCE_CONTRACT = RESIDUAL_ONLY` — the kernels compute
+`sum_i centroid[code[i]] * x[i]`, excluding the rank-1 base and outliers, per
+their own documented contract. A full-weight reference is invalid for them.
+
+### Open gates
+
+```
+M0_KERNEL                 = MISSING
+M1_KERNEL                 = MISSING
+M0–M4 COMPLETE PARITY     = NOT_YET_RUN
+DCB6_SIDECAR              = NOT_CANONICAL
+V6_EXECUTION_BPW          = UNMEASURED
+ZERO_RUNTIME_V6_ENCODE    = NOT_DEMO
+```
+
+M=0 and M=1 blocks are **28.6%** of the allocation census and have no
+executable kernel today. Forcing them to M≥2 would close coverage in an
+afternoon and discard most of the compression that justifies the format.
+
+`3.125 bpw` does not appear as an achieved figure anywhere in this document.
 
 ---
 
@@ -1350,6 +1497,27 @@ A subsystem is not considered fully integrated until the actual IDE/CLI/product 
 - [ ] IDE / CLI / headless authority parity *(in progress)*
 - [ ] Full autonomous recovery certification *(in progress)*
 
+## Residencyless Model Access
+
+- [x] Byte-addressable model manifest
+- [x] Byte-exact partial model serving
+- [x] Bounded host-side window mapping
+- [x] Model-size-independent process residency substrate
+- [x] Kernel-sized F32 transform scratch
+- [x] Hostile-order shuffled traversal certification
+
+## Decoda Execution Representation
+
+- [x] M2/M3/M4 kernel execution closure
+- [x] M2/M3/M4 zero-failure residual parity
+- [x] Serialized-size accounting (4.1557 b/w vs Q4_K 4.5)
+- [ ] M0 execution kernel
+- [ ] M1 execution kernel
+- [ ] M0–M4 complete parity
+- [ ] Canonical DCB6 execution image
+- [ ] Zero runtime V6 encoding
+- [ ] Direct DCB6 streamed execution
+
 ## Deep2 Runtime
 
 - [x] GGUF metadata discovery
@@ -1358,12 +1526,12 @@ A subsystem is not considered fully integrated until the actual IDE/CLI/product 
 - [x] Live Vulkan memory-budget support
 - [x] Weight-residency infrastructure
 - [x] Heterogeneous device discovery
-- [ ] Progressive residency hardening *(in progress)*
-- [ ] Ranged resident execution *(in progress)*
+- [ ] GPU execution aperture from bounded views *(in progress)*
 - [ ] Multi-GPU admission hardening *(in progress)*
-- [ ] Quantized-kernel parity validation *(in progress)*
+- [ ] Whole-model residencyless generation *(in progress)*
 - [ ] Decode-path optimization *(in progress)*
 - [ ] Repeatable full-model performance certification *(in progress)*
+- [ ] Oversized-model certification *(in progress)*
 
 ## Product Authority
 

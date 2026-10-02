@@ -98,3 +98,35 @@ __pycache__/
 gate1_srv.err
 gate1_srv.out
 receipts/ledger/_backups/
+
+# Accidental stale copy of the whole rawrxd/ tree (24,888 files / 7.7 GB),
+# created by a Copy-Item/robocopy run with the wrong destination. It is a
+# DIVERGENT snapshot, not a copy: Deep2Engine.cpp differs from rawrxd/src/.
+# Committing it would add 7.7 GB and a second, conflicting source tree.
+/rawrxd copy/
+
+# CLI litter written into the repo root by running project tools with the
+# wrong working directory or test positional args. Each one holds a single
+# stray workspace.json or receipt written relative to CWD.
+valid/
+zerofolders/
+malformed/
+first/
+--help/
+
+# Zero-byte / reserved-name strays left by shell redirection failures.
+# nul.cpp is a Windows reserved device name and is not readable as a file.
+nul
+nul.cpp
+t.bin
+/src/
+/tools/refactor_chain_cert.cpp
+
+# Ad-hoc debug dumps from disassembly and gate probes.
+dis_all.txt
+_dp.txt
+_dump_probe_out.txt
+gate1_A.err
+gate1_A.out
+gate1_D.err
+gate1_D.out

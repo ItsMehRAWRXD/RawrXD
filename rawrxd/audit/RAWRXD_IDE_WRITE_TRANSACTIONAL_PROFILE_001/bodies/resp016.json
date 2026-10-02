@@ -1,1 +1,1 @@
-{"elapsed_us":0,"error":"path rejected by sandbox: after_commit.txt","ok":false,"tool":"write_file"}
+{"elapsed_us":0,"error":"write_file requires an open checkpoint transaction; open one first (POST /api/agent/transaction {\"op\":\"begin\"})","ok":false,"tool":"write_file"}

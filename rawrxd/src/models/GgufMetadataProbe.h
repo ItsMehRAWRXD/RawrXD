@@ -17,7 +17,9 @@ namespace rawrxd::models
         uint64_t    metadataKvCount= 0;
         std::string architecture;    // general.architecture
         std::string name;           // general.name
-        std::string quantization;   // file_type.{arch}.quantization_type
+        std::string quantization;   // general.file_type (ggml ftype enum), or
+                                    // file_type.{arch}.quantization_type
+        uint32_t    fileType        = 0;      // raw general.file_type value
         uint64_t    fileSizeBytes   = 0;
         std::string error;          // why parsing stopped, when it did
     };

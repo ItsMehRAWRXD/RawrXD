@@ -135,6 +135,24 @@ public:
     // has further down.
     static RecoveryReport LastRecovery();
 
+    // RAWRXD_GIT_TRANSACTION_AUTHORITY_001 / G7
+    //
+    // A transaction that stages a file and is then rolled back leaves that file
+    // BOTH reverted in content AND still staged: the journal restores file
+    // bytes, and nothing has ever restored the index. That is an inconsistent
+    // state, because the next `git status` reports a staged modification of a
+    // file whose content is the pre-transaction content.
+    //
+    // Captures the repository index as a tree object, once per transaction,
+    // before the first mutating git operation. Rollback then issues
+    // `git read-tree <tree>` so the index is exactly as it was found.
+    //
+    // Returns false and fills outError when the workspace is not a git
+    // repository, or when the index cannot be written as a tree (an unmerged
+    // index has no tree object). Callers must read false as "no baseline was
+    // recorded", never as success.
+    static bool RecordGitIndexBaseline(std::string* outTree, std::string* outError);
+
     static WorkingTreeIdentity CaptureIdentity(const std::string& workspaceRoot);
     static MeasuredCounters Counters();
 };
@@ -153,6 +171,15 @@ struct RecoveryReport {
     std::uint32_t tornRecordsDiscarded = 0;
     std::uint32_t missingBlobs = 0;
     std::uint64_t fsyncCalls = 0;
+    // RAWRXD_GIT_TRANSACTION_AUTHORITY_001 / G7. A restored index is reported
+    // separately from restored files, and a FAILED index restore is its own
+    // counter rather than an entry in filesFailed: the file bytes are correct
+    // and the repository is still wrong, and an operator told only "recovery
+    // succeeded" would never look at the index.
+    std::uint32_t gitIndexRestored = 0;
+    std::uint32_t gitIndexFailed = 0;
+    std::string gitIndexTree;    // the tree object the index was restored to
+    std::string gitIndexError;   // measured git output when the restore failed
     std::vector<std::string> recoveredTxIds;
     std::vector<std::string> failedPaths;
     std::string receiptPath;
@@ -160,7 +187,10 @@ struct RecoveryReport {
     std::string identityAfterSha256;   // working-tree identity at pass end
 
     // FAIL when any file could not be restored or verified. Derived, never set.
-    bool AllRestored() const { return invoked && filesFailed == 0; }
+    // A failed index restore makes the repository wrong even when every file
+    // byte is correct, so it is NOT folded into filesFailed: it has to be
+    // separately visible, and it fails this predicate.
+    bool AllRestored() const { return invoked && filesFailed == 0 && gitIndexFailed == 0; }
 };
 
 // Scans <workspace>\.rawrxd\ckpt\journal, rolls back every transaction that has

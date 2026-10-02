@@ -11,6 +11,8 @@
 #include "lavapath/GpuForwardChildLadder.hpp"
 #include "Deep2ArchitectureRuntime.hpp"
 #include "Deep2ModelRegistry.hpp"
+#include "AttnVisibilityTrace.h"
+#include "AttnCtx2Probe.h"
 #include "expert_cache/Deep2Batch005Integration.h"
 #if defined(RAWRXD_REMOTE64_LINKED)
 #include "remote64_bridge.h"
@@ -133,6 +135,11 @@ void RegisterDeep2Architectures() {
 #ifdef _WIN32
 #include <windows.h>
 #include <psapi.h>
+
+// RAWRXD_MLA_LOAD_AUTHORITY_001 (M5d): the MLA metadata binder, previously
+// present only as uncompiled source.
+#include <sstream>
+#include "Deep2B66RuntimeMeta.hpp"
 #endif
 
 namespace Deep2 {
@@ -1377,15 +1384,214 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
     // Only the metadata fallback path requires hiddenDim to divide numHeads.
     const size_t keyLen   = metaSize("attention.key_length", 0);
     const size_t valueLen = metaSize("attention.value_length", 0);
-    if (keyLen != 0 && valueLen != 0 && keyLen != valueLen) {
-        if (diag) {
-            diag->stageCode = 6;
-            diag->stageName = "ATTN_HEAD_DIM_MISMATCH";
-            diag->message = "Deep2 currently requires equal attention.key_length and attention.value_length.";
+
+    // RAWRXD_MLA_LOAD_AUTHORITY_001 (M5d): parse MLA metadata through the one
+    // binder that knows the rule, instead of leaving that knowledge in
+    // uncompiled source. Before this the engine's own MLA fields were never
+    // assigned by any loader, so useMLA could not become true and
+    // computeMLAAttentionGpu was unreachable even for a model that passed
+    // admission.
+    //
+    // NOTE what this does NOT do: it does not make MLA loadable. The eight MLA
+    // tensors (attnQ_a, attnQ_a_norm, attnQ_b, attnKV_a_mqa, attnKV_a_norm,
+    // attnK_b, attnV_b, attnO) are still never bound by this loader, so
+    // modelWeights.useMLA is deliberately left false for routing. See the
+    // refusal below, which now names the unmet precondition instead of
+    // reporting only a dimension mismatch.
+    // M5.0-M5.3: derive the geometry that metadata does not carry, from the
+    // tensor table, and reconcile it. Numbers are accepted only when the
+    // divisions and relationships are EXACT and agree with the metadata that
+    // does exist; a plausible integer is not enough.
+    //
+    // Two MLA tensor layouts exist in the wild and this file may be either:
+    //   split : attn_q_a, attn_q_a_norm, attn_q_b, attn_kv_a_mqa, attn_kv_a_norm,
+    //           attn_k_b, attn_v_b, attn_o            (what the consumer wants)
+    //   fused : attn_q, attn_kv_a_mqa, attn_kv_a_norm, attn_kv_b, attn_output
+    //           (q_a/q_b and k_b/v_b pre-fused by the converter)
+    struct MlaFacts {
+        bool rectangular = false;
+        bool metadataParsed = false;
+        bool geometryValidated = false;
+        bool layoutSplit = false;
+        bool layoutFused = false;
+        std::size_t keyLen = 0, valueLen = 0;
+        std::size_t qLoraRank = 0, kvLoraRank = 0;
+        std::size_t qkNope = 0, qkRope = 0, vHead = 0;
+        std::size_t numHeads = 0;
+        std::size_t layersFullyBound = 0;
+        std::size_t numLayersExpected = 0;
+        std::string missing;
+    } mla;
+    mla.keyLen = keyLen;
+    mla.valueLen = valueLen;
+    mla.rectangular = (keyLen != 0 && valueLen != 0 && keyLen != valueLen);
+
+    bool mlaMetaParsed = false;
+    {
+        // M5.0: identify the MLA projection tensors that actually exist in this
+        // file, rather than assuming a naming convention. Every name and shape
+        // below is read from the tensor table.
+        {
+            const std::vector<std::string> all = loader->listTensors();
+            size_t printed = 0;
+            for (const std::string& n : all) {
+                if (n.rfind("blk.0.", 0) != 0) continue;
+                if (n.find("attn") == std::string::npos) continue;
+                const GGUFTensor* t = loader->getTensor(n);
+                if (!t) continue;
+                std::fprintf(stderr, "[Deep2Engine] MLA_TENSOR name=%s shape=[", n.c_str());
+                for (std::size_t i = 0; i < t->shape.size(); ++i) {
+                    std::fprintf(stderr, "%s%lld", i ? "," : "",
+                                 static_cast<long long>(t->shape[i]));
+                }
+                std::fprintf(stderr, "] type=%d bytes=%llu\n",
+                             static_cast<int>(t->type),
+                             static_cast<unsigned long long>(t->sizeBytes));
+                if (++printed >= 24) break;
+            }
+            std::fflush(stderr);
         }
-        return false;
+        auto metaU64 = [&](const char* key) -> uint64_t {
+            const int64_t prefixed = loader->getMetaInt(arch + std::string(".") + key, -1);
+            if (prefixed > 0) return static_cast<uint64_t>(prefixed);
+            const int64_t bare = loader->getMetaInt(std::string(key), -1);
+            return bare > 0 ? static_cast<uint64_t>(bare) : 0ull;
+        };
+        static const char* const kB66Keys[] = {
+            "block_count", "llm.block_count",
+            "embedding_length", "llm.embedding_length",
+            "attention.head_count", "attention.head_count_kv",
+            "attention.key_length", "attention.value_length",
+            "feed_forward_length",
+            "expert_count", "expert_used_count", "expert_shared_count",
+            "context_length",
+            "attention.q_lora_rank", "attention.kv_lora_rank",
+            "rope.dimension_count",
+            "ssm.state_size", "attention.sliding_window",
+            "attention.linear_layer_count"};
+        Deep2::B66MetadataSource source;
+        for (const char* k : kB66Keys) {
+            const uint64_t v = metaU64(k);
+            if (v != 0) source.u64[k] = v;
+        }
+        source.str["general.architecture"] = arch;
+        const Deep2::B66Result bound = Deep2::B66RuntimeMetaBinder::bind(source);
+        mlaMetaParsed = bound.pass;
+        mla.metadataParsed = mlaMetaParsed;
+        if (mlaMetaParsed) {
+            mla.qLoraRank  = bound.meta.qLoraRank;
+            mla.kvLoraRank = bound.meta.kvLoraRank;
+            mla.numHeads   = bound.meta.heads ? bound.meta.heads
+                                              : modelWeights.numHeads;
+            modelWeights.qLoraRank  = mla.qLoraRank;
+            modelWeights.kvLoraRank = mla.kvLoraRank;
+            modelWeights.qkNopeHeadDim = metaSize("attention.qk_nope_head_dim", 0);
+            modelWeights.qkRopeHeadDim = metaSize("attention.qk_rope_head_dim", 0);
+            modelWeights.vHeadDim      = metaSize("attention.v_head_dim", 0);
+            modelWeights.keyLength     = keyLen;
+            modelWeights.valueLength   = valueLen;
+
+            // --- M5.0: which layout does this file actually use? ---
+            const auto has = [&](const char* leaf) {
+                return loader->getTensor(std::string("blk.0.") + leaf) != nullptr;
+            };
+            const bool splitQ  = has("attn_q_a.weight") && has("attn_q_b.weight");
+            const bool splitKV = has("attn_k_b.weight") && has("attn_v_b.weight");
+            const bool fusedQ  = has("attn_q.weight");
+            const bool fusedKV = has("attn_kv_b.weight");
+            mla.layoutSplit = splitQ && splitKV && has("attn_kv_a_mqa.weight");
+            mla.layoutFused = fusedQ && fusedKV && has("attn_kv_a_mqa.weight");
+
+            // --- M5.2: derive what metadata does not carry ---
+            const GGUFTensor* kvmqa = loader->getTensor("blk.0.attn_kv_a_mqa.weight");
+            if (mla.kvLoraRank != 0 && kvmqa && kvmqa->shape.size() >= 2) {
+                const std::size_t rows = static_cast<std::size_t>(kvmqa->shape[1]);
+                if (rows > mla.kvLoraRank) {
+                    const std::size_t rope = rows - mla.kvLoraRank;
+                    if ((rope & 1u) == 0 && rope != 0) mla.qkRope = rope;
+                }
+            }
+            if (mla.qkRope != 0 && keyLen > mla.qkRope) {
+                mla.qkNope = keyLen - mla.qkRope;
+            }
+            if (valueLen != 0) mla.vHead = valueLen;
+
+            if (mla.layoutSplit && splitQ) {
+                const GGUFTensor* qb = loader->getTensor("blk.0.attn_q_b.weight");
+                if (qb && qb->shape.size() >= 2) {
+                    mla.qLoraRank = static_cast<std::size_t>(qb->shape[0]);
+                }
+            } else if (mla.layoutFused && fusedQ) {
+                // Fused: q_a and q_b are pre-combined, so q_lora_rank is not
+                // recoverable from the tensor. Leave it 0 rather than invent it.
+                mla.qLoraRank = 0;
+            }
+
+            // --- M5.3: reconcile. Every check must hold exactly. ---
+            mla.geometryValidated =
+                mla.metadataParsed && mla.rectangular && mla.kvLoraRank != 0 &&
+                mla.numHeads != 0 && mla.keyLen != 0 && mla.valueLen != 0 &&
+                mla.qkRope != 0 && (mla.qkRope & 1u) == 0 &&
+                mla.qkNope != 0 && mla.vHead == mla.valueLen &&
+                (mla.qkNope + mla.qkRope) == mla.keyLen;
+
+            // Cross-check against the tensor that fuses the KV down-projection,
+            // when present: rows must equal heads*(nope + vHead) for the fused
+            // layout, or heads*(keyLen) for the split layout's attn_q.
+            if (mla.geometryValidated && mla.layoutFused) {
+                const GGUFTensor* kvb = loader->getTensor("blk.0.attn_kv_b.weight");
+                if (kvb && kvb->shape.size() >= 2) {
+                    const std::size_t expect =
+                        mla.numHeads * (mla.qkNope + mla.vHead);
+                    if (static_cast<std::size_t>(kvb->shape[1]) != expect) {
+                        mla.geometryValidated = false;
+                    }
+                }
+            }
+            if (mla.geometryValidated && mla.layoutFused && fusedQ) {
+                const GGUFTensor* q = loader->getTensor("blk.0.attn_q.weight");
+                if (q && q->shape.size() >= 2) {
+                    if (static_cast<std::size_t>(q->shape[1]) != mla.numHeads * mla.keyLen) {
+                        mla.geometryValidated = false;
+                    }
+                }
+            }
+
+            modelWeights.qkNopeHeadDim = mla.qkNope;
+            modelWeights.qkRopeHeadDim = mla.qkRope;
+            modelWeights.vHeadDim      = mla.vHead;
+            modelWeights.qLoraRank     = mla.qLoraRank;
+
+            std::fprintf(stderr,
+                "[Deep2Engine] MLA_METADATA arch=%s layout=%s numHeads=%zu "
+                "kvLoraRank=%zu qLoraRank=%zu qkNopeHeadDim=%zu qkRopeHeadDim=%zu "
+                "vHeadDim=%zu keyLength=%zu valueLength=%zu geometryValidated=%d\n",
+                arch.c_str(), mla.layoutSplit ? "split" : (mla.layoutFused ? "fused" : "unknown"),
+                mla.numHeads, mla.kvLoraRank, mla.qLoraRank, mla.qkNope, mla.qkRope,
+                mla.vHead, mla.keyLen, mla.valueLen,
+                mla.geometryValidated ? 1 : 0);
+            std::fflush(stderr);
+        }
     }
-    if (keyLen != 0) {
+
+    // RAWRXD_MLA_LOAD_AUTHORITY_001 (M4). The rectangular decision is DEFERRED,
+    // not taken here: eligibility depends on whether every layer actually binds
+    // the tensors the MLA consumer requires, which is only known after the
+    // per-layer binder has run. Taking it here would either refuse a model that
+    // turns out to be eligible, or accept one that does not.
+    //
+    // Hard invariant, enforced at the deferred site:
+    //     RECTANGULAR_ATTN && !MLA_EXECUTION_ELIGIBLE -> LOAD_REFUSED
+    if (mla.rectangular) {
+        // A rectangular model's Q rows are heads*key_length, so headDim must be
+        // the larger of the two or any square-derived sizing under-allocates.
+        modelWeights.headDim = keyLen > valueLen ? keyLen : valueLen;
+        std::fprintf(stderr,
+            "[Deep2Engine] MLA_RECTANGULAR_DEFERRED arch=%s key_length=%zu "
+            "value_length=%zu headDim=%zu awaitingEligibility=1\n",
+            arch.c_str(), keyLen, valueLen, modelWeights.headDim);
+        std::fflush(stderr);
+    } else if (keyLen != 0) {
         modelWeights.headDim = keyLen;
     } else if (valueLen != 0) {
         modelWeights.headDim = valueLen;
@@ -1571,7 +1777,17 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         md.numHeads = modelWeights.numHeads;
         md.numKVHeads = modelWeights.numKVHeads;
         md.headDim = modelWeights.headDim;
-        md.vocabSize = modelWeights.vocabSize;
+    // RAWRXD_MLA_LOAD_AUTHORITY_001: classify the GEOMETRY for admission. This is
+    // NOT execution eligibility -- modelWeights.useMLA stays false until the
+    // deferred decision after the per-layer binder, and only a split-layout
+    // model with all eight tensors bound can set it. Admission needs to know
+    // the shape class because its numHeads*headDim invariant is square-only.
+    md.useMLA = mla.geometryValidated;
+    md.kvLoraRank = mla.kvLoraRank;
+    md.qkNopeHeadDim = mla.qkNope;
+    md.qkRopeHeadDim = mla.qkRope;
+    md.vHeadDim = mla.vHead;
+    md.vocabSize = modelWeights.vocabSize;
         md.intermediateDim = modelWeights.intermediateDim;
         md.moeIntermediateDim = modelWeights.moeIntermediateDim;
         md.numExperts = modelWeights.numExperts;
@@ -1653,9 +1869,111 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
             report.recurrent ? 1 : 0, report.slidingWindow ? 1 : 0,
             md.quantization.c_str(), md.quantTypeId,
             md.presentTensors.size());
+
+        // ------------------------------------------------------------------
+        // DEEP2_MLA_CPU_PATH_SUSPENDED_001
+        //
+        // Suspend here: metadata is parsed, but nothing is mapped, bound or
+        // allocated yet. The "GGUF mapped" log and every tensor bind happen
+        // further down.
+        //
+        // computeAttention() has no CPU MLA branch at all:
+        //     if (lw.useMLA || modelWeights.useMLA) {
+        //         if (computeMLAAttentionGpu(...)) return;
+        //         throw std::runtime_error(
+        //             "attention: GPU MLA path failed or unsupported");
+        //     }
+        // so an MLA model has exactly two outcomes: Vulkan, or exception.
+        //
+        // Both facts needed to know that are in hand HERE: report.mla (below)
+        // and vulkanEnabled_. Measured on Kimi K2 before this check existed:
+        // 966 ms to build the VMA for a 43.12 GB shard, 1096 tensors bound,
+        // 61 MLA layers validated, KV/cache allocated for a 163840 vocab, a
+        // full prefill forward -- and only then the throw. All of that work was
+        // spent rediscovering a fact available at this line.
+        //
+        // Deliberately a SUSPENSION, not an implementation: a CPU MLA kernel
+        // would ADD numerical surface that must itself be certified against the
+        // GPU path. Naming the missing capability at the earliest possible
+        // moment is the smaller change.
+        //
+        // NOTE: modelWeights.useMLA is NOT usable here -- it is still false at
+        // this point and is only assigned later, in the MLA_ELIGIBLE block.
+        // Using it produced a check that silently never fired.
+        // ------------------------------------------------------------------
+        if (report.mla && !vulkanEnabled_) {
+            std::fprintf(stderr,
+                "[Deep2Engine] SUSPENDED arch=%s reason=MLA_CPU_PATH_ABSENT "
+                "vulkan=0 -- suspended BEFORE mapping; nothing read or allocated\n",
+                report.architectureId ? report.architectureId : "(null)");
+            std::fflush(stderr);
+            if (diag) {
+                diag->stageCode = 21;
+                diag->stageName = "MLA_CPU_PATH_ABSENT";
+                diag->message =
+                    "Model requires MLA attention, which this build exposes only "
+                    "through the GPU branch; Vulkan is disabled and no CPU MLA "
+                    "path exists. Suspended at admission: no shard was mapped and "
+                    "nothing was allocated. This is a missing compute path, not a "
+                    "memory-mapping or I/O failure.";
+            }
+            modelState_ = ModelState::Closed;
+            return false;
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // DEEP2_MLA_CPU_PATH_SUSPENDED_001
+    //
+    // Suspend here, before anything is mapped, bound or allocated.
+    //
+    // computeAttention() has no CPU MLA branch at all:
+    //     if (lw.useMLA || modelWeights.useMLA) {
+    //         if (computeMLAAttentionGpu(...)) return;
+    //         throw std::runtime_error(
+    //             "attention: GPU MLA path failed or unsupported");
+    //     }
+    // So an MLA model has exactly two outcomes: Vulkan, or exception.
+    //
+    // Both facts needed to know that -- traits.mla and vulkanEnabled_ -- are
+    // already in hand at this point, and the shard mapping that follows (the
+    // "GGUF mapped" log) has not run yet. Measured on Kimi K2 before this check
+    // existed: 966 ms to build the VMA for a 43.12 GB shard, then 1096 tensors
+    // bound, 61 MLA layers validated, KV/cache allocated for a 163840 vocab,
+    // a full prefill forward, and only then the throw. Every unit of that work
+    // was spent discovering something knowable here.
+    //
+    // This is deliberately a SUSPENSION, not an implementation. Writing a CPU
+    // MLA kernel would ADD surface: a new numerical path that must itself be
+    // certified against the GPU path, and one more thing that can silently
+    // disagree with it. Naming the missing capability at the earliest possible
+    // moment is the smaller change, and it makes the census report WHY a model
+    // is unsupported instead of a generic ForwardFailure that has to be
+    // diagnosed from stderr.
+    //
+    // Deletion is the better answer when a model is refused this way: no VMA,
+    // no resident pages, no allocation, and a message that names the gap.
+    // ------------------------------------------------------------------
+    if (modelWeights.useMLA && !vulkanEnabled_) {
+        std::fprintf(stderr,
+            "[Deep2Engine] SUSPENDED reason=MLA_CPU_PATH_ABSENT "
+            "vulkan=0 -- suspended BEFORE mapping; nothing was read or allocated\n");
+        std::fflush(stderr);
+        if (diag) {
+            diag->stageCode = 21;
+            diag->stageName = "MLA_CPU_PATH_ABSENT";
+            diag->message =
+                "Model requires MLA attention, which this build exposes only "
+                "through the GPU branch; Vulkan is disabled and no CPU MLA path "
+                "exists. Suspended at admission: no shard was mapped and nothing "
+                "was allocated. This is a missing compute path, not a "
+                "memory-mapping or I/O failure.";
+        }
+        return false;
     }
 
     modelWeights.layers.assign(modelWeights.numLayers, LayerWeights{});
+    mla.numLayersExpected = modelWeights.numLayers;
 
     for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
         LayerWeights& lw = modelWeights.layers[layer];
@@ -1675,6 +1993,72 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         bindTensor(p + "attn_q_norm.weight", lw.attnQNorm);
         bindTensor(p + "attn_k_norm.weight", lw.attnKNorm);
 
+        // RAWRXD_MLA_LOAD_AUTHORITY_001 (M5.4): bind the MLA projection tensors.
+        //
+        // Both converter layouts are handled. `split` is what
+        // computeMLAAttentionGpu() requires (attn_q_a / attn_q_b / attn_k_b /
+        // attn_v_b / attn_o). `fused` is what some converters emit, with
+        // q_a+q_b and k_b+v_b already combined. Fused files are bound as far as
+        // they go so the diagnostic can name exactly which tensors the consumer
+        // is still missing, but they are NOT eligible: the consumer would read
+        // unbound pointers.
+        if (mla.metadataParsed) {
+            const bool split = mla.layoutSplit;
+            const bool fused = mla.layoutFused;
+            if (split) {
+                bindTensor(p + "attn_q_a.weight", lw.attnQ_a);
+                bindTensor(p + "attn_q_a_norm.weight", lw.attnQ_a_norm);
+                bindTensor(p + "attn_q_b.weight", lw.attnQ_b);
+                // The latent down-projection has TWO real spellings: DeepSeek2 and
+                // later absorb queries and export attn_kv_a_mqa, earlier MLA
+                // exports use attn_kv_a. ModelRegistry's MLA admission accepts
+                // either (it is a disjunction, not a conjunction), so the binder
+                // must too -- otherwise a model passes admission and then fails to
+                // bind, which is strictly worse than rejecting it at the door.
+                if (!bindTensor(p + "attn_kv_a_mqa.weight", lw.attnKV_a_mqa))
+                    bindTensor(p + "attn_kv_a.weight", lw.attnKV_a_mqa);
+                bindTensor(p + "attn_kv_a_norm.weight", lw.attnKV_a_norm);
+                bindTensor(p + "attn_k_b.weight", lw.attnK_b);
+                bindTensor(p + "attn_v_b.weight", lw.attnV_b);
+                bindFirst(lw.attnO, {(p + "attn_o.weight").c_str(),
+                                     (p + "attn_output.weight").c_str()});
+            } else if (fused) {
+                // Same two-spelling rule as the split layout above.
+                if (!bindTensor(p + "attn_kv_a_mqa.weight", lw.attnKV_a_mqa))
+                    bindTensor(p + "attn_kv_a.weight", lw.attnKV_a_mqa);
+                bindTensor(p + "attn_kv_a_norm.weight", lw.attnKV_a_norm);
+                // attn_q.weight and attn_output.weight are already bound above
+                // into wq / wo for this layout; the split-only tensors cannot be
+                // synthesised, because splitting a fused quantised weight would
+                // require dequantisation and requantisation.
+            }
+
+            // M5.5: the consumer's exact required set.
+            const bool complete =
+                lw.attnQ_a.data && lw.attnQ_a_norm.data && lw.attnQ_b.data &&
+                lw.attnKV_a_mqa.data && lw.attnKV_a_norm.data &&
+                lw.attnK_b.data && lw.attnV_b.data && lw.attnO.data;
+            if (complete) ++mla.layersFullyBound;
+            else if (layer == 0) {
+                std::ostringstream miss;
+                auto note = [&](const char* what, const WeightTensor& t) {
+                    if (!t.data) {
+                        if (!miss.str().empty()) miss << ", ";
+                        miss << what;
+                    }
+                };
+                note("attnQ_a", lw.attnQ_a);
+                note("attnQ_a_norm", lw.attnQ_a_norm);
+                note("attnQ_b", lw.attnQ_b);
+                note("attnKV_a_mqa", lw.attnKV_a_mqa);
+                note("attnKV_a_norm", lw.attnKV_a_norm);
+                note("attnK_b", lw.attnK_b);
+                note("attnV_b", lw.attnV_b);
+                note("attnO", lw.attnO);
+                mla.missing = miss.str();
+            }
+        }
+
         bindFirst(lw.wGate,
                   {(p + "ffn_gate.weight").c_str(),
                    (p + "mlp_gate.weight").c_str()});
@@ -1687,6 +2071,80 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         bindFirst(lw.ffnNorm,
                   {(p + "ffn_norm.weight").c_str(),
                    (p + "mlp_norm.weight").c_str()});
+
+        // RAWRXD_FUSED_GATE_UP_001: gated architectures (phi3, llama-3,
+        // qwen2) ship ONE ffn_up tensor holding the gate rows followed by the
+        // up rows, rather than separate ffn_gate / ffn_up tensors.
+        //
+        // Without this, such a model is silently computed WRONG rather than
+        // rejected: computeFFN() treats a missing wGate as the "simple MLP"
+        // topology and evaluates silu(up) instead of silu(gate) * up, which is
+        // numerically incorrect but produces entirely plausible text. The
+        // admission gate correctly refused these models; the loader is what was
+        // missing, and a gate that refuses work the engine cannot yet do is
+        // correct behaviour, not a bug to relax around.
+        //
+        // The split is proven, not assumed: it is only performed when the gate
+        // is absent AND ffn_up's row count is exactly twice ffn_down's column
+        // count, which is the only shape consistent with one tensor holding
+        // two equal projections. Rows are contiguous in the GGUF buffer, so
+        // the halves are an exact byte-prefix split; quantised types keep their
+        // per-row block structure because the boundary is row-aligned.
+        //
+        // llama.cpp's swiglu convention puts gate in rows [0, I) and up in
+        // [I, 2I).
+        if (!lw.wGate.data && lw.wUp.data && lw.wDown.data &&
+            lw.wUp.cols == modelWeights.hiddenDim &&
+            lw.wDown.rows == modelWeights.hiddenDim &&
+            lw.wUp.rows == lw.wDown.cols * 2 &&
+            lw.wUp.sizeBytes % 2 == 0) {
+            const size_t halfBytes = lw.wUp.sizeBytes / 2;
+            const size_t inter = lw.wDown.cols;
+
+            // Which half is the gate is the one thing about this layout that the
+            // byte geometry alone cannot prove. It is normally the FIRST half
+            // (llama.cpp's swiglu convention). RAWRXD_FUSED_GATE_UP_ORDER=up_gate
+            // inverts it so the assumption can be falsified instead of trusted:
+            // if inverting leaves the output identical, the split is not being
+            // consumed at all, and if inverting produces markedly better text
+            // then the assumed order is wrong. Diagnostic only; the default is
+            // the production order.
+            static const bool invertOrder = [] {
+                const char* e = std::getenv("RAWRXD_FUSED_GATE_UP_ORDER");
+                return e && std::string(e) == "up_gate";
+            }();
+            static const bool orderReported = [] {
+                const char* e = std::getenv("RAWRXD_FUSED_GATE_UP_ORDER");
+                std::fprintf(stderr, "[Deep2Engine] fused gate_up order=%s\n",
+                             e ? e : "gate_up(default)");
+                return true;
+            }();
+            (void)orderReported;
+
+            const uint8_t* base = static_cast<const uint8_t*>(lw.wUp.data);
+            const uint8_t* gateData = invertOrder ? base + halfBytes : base;
+            const uint8_t* upData   = invertOrder ? base : base + halfBytes;
+
+            lw.wGate = lw.wUp;
+            lw.wGate.data = const_cast<uint8_t*>(gateData);
+            lw.wGate.rows = inter;
+            lw.wGate.sizeBytes = halfBytes;
+            lw.wGate.fileOffset = lw.wUp.fileOffset + (invertOrder ? halfBytes : 0);
+            lw.wGate.name = p + "fused_gateup[gate_half]";
+
+            lw.wUp.data = const_cast<uint8_t*>(upData);
+            lw.wUp.rows = inter;
+            lw.wUp.sizeBytes = halfBytes;
+            lw.wUp.fileOffset = lw.wUp.fileOffset + (invertOrder ? 0 : halfBytes);
+            lw.wUp.name = p + "fused_gateup[up_half]";
+
+            std::fprintf(stderr,
+                "[Deep2Engine] layer %zu fused gate_up split: I=%zu order=%s "
+                "(gate rows [%zu,%zu), up rows [%zu,%zu))\n",
+                layer, inter, invertOrder ? "up_gate(DIAGNOSTIC)" : "gate_up",
+                invertOrder ? inter : 0, invertOrder ? inter * 2 : inter,
+                invertOrder ? 0 : inter, invertOrder ? inter : inter * 2);
+        }
         bindFirst(lw.attnPostNorm,
                   {(p + "attn_post_norm.weight").c_str(),
                    (p + "post_attention_norm.weight").c_str()});
@@ -2120,10 +2578,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
             return false;
         }
 
+        // RAWRXD_MLA_LOAD_AUTHORITY_001 (M5.4/M5.5): an MLA layer carries no
+        // wq/wk/wv triple at all, so "missing Q/K/V topology" is the wrong
+        // verdict for it. A rectangular model is therefore exempted from this
+        // square check and from the head/geometry checks below (which divide
+        // projection rows by one headDim), and the deferred eligibility decision
+        // after this loop becomes the single authority on whether it may run.
+        const bool mlaSplitTopology =
+            mla.metadataParsed && mla.layoutSplit &&
+            lw.attnQ_a.data && lw.attnQ_a_norm.data && lw.attnQ_b.data &&
+            lw.attnKV_a_mqa.data && lw.attnKV_a_norm.data &&
+            lw.attnK_b.data && lw.attnV_b.data && lw.attnO.data;
         const bool splitQkv =
             lw.wq.data && lw.wk.data && lw.wv.data;
         const bool fusedQkv = lw.wqkv.data != nullptr;
-        if (!isNemotronH && !splitQkv && !fusedQkv) {
+        if (!isNemotronH && !splitQkv && !fusedQkv && !mlaSplitTopology &&
+            !mla.rectangular) {
             std::fprintf(stderr,
                 "[Deep2Engine] layer %zu missing Q/K/V topology\n", layer);
             if (diag) {
@@ -2244,6 +2714,80 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                 return false;
             }
         }
+    }
+
+    // RAWRXD_MLA_LOAD_AUTHORITY_001 (M5.6/M5.7): the deferred decision.
+    //
+    // MLA_EXECUTION_ELIGIBLE requires, exactly:
+    //     metadata parsed
+    //  && geometry validated (every division and relationship held exactly)
+    //  && the SPLIT tensor layout the consumer requires
+    //  && all 8 required tensors bound on EVERY layer
+    //  && all five geometry values non-zero
+    //
+    // Anything less -> refuse. This is the single place the rectangle decision
+    // is made, and it is deliberately AFTER the per-layer binder so eligibility
+    // is judged on what was actually bound rather than on what was hoped for.
+    if (mla.rectangular) {
+        const bool allLayersBound =
+            mla.metadataParsed && mla.numLayersExpected != 0 &&
+            mla.layersFullyBound == mla.numLayersExpected;
+        const bool geometryComplete =
+            mla.qkNope != 0 && mla.qkRope != 0 && mla.vHead != 0 &&
+            mla.kvLoraRank != 0 && mla.numHeads != 0;
+        const bool eligible = mla.geometryValidated && mla.layoutSplit &&
+                              allLayersBound && geometryComplete;
+        if (eligible) {
+            modelWeights.useMLA = true;
+            std::fprintf(stderr,
+                "[Deep2Engine] MLA_ELIGIBLE arch=%s layersBound=%zu/%zu "
+                "qkNopeHeadDim=%zu qkRopeHeadDim=%zu vHeadDim=%zu "
+                "kvLoraRank=%zu numHeads=%zu useMLA=1\n",
+                arch.c_str(), mla.layersFullyBound, mla.numLayersExpected,
+                mla.qkNope, mla.qkRope, mla.vHead, mla.kvLoraRank, mla.numHeads);
+        } else {
+            std::ostringstream msg;
+            msg << "Rectangular attention refused: attention.key_length="
+                << mla.keyLen << " != attention.value_length=" << mla.valueLen
+                << ". MLA_EXECUTION_ELIGIBLE=0.";
+            if (!mla.metadataParsed) {
+                msg << " metadata did not bind.";
+            } else if (!mla.geometryValidated) {
+                msg << " geometry not validated: numHeads=" << mla.numHeads
+                    << " kvLoraRank=" << mla.kvLoraRank
+                    << " qLoraRank=" << mla.qLoraRank
+                    << " qkNopeHeadDim=" << mla.qkNope
+                    << " qkRopeHeadDim=" << mla.qkRope
+                    << " vHeadDim=" << mla.vHead << ".";
+            } else if (!mla.layoutSplit) {
+                msg << " layout mismatch: this file uses the "
+                    << (mla.layoutFused ? "FUSED" : "unrecognised")
+                    << " MLA layout (attn_q / attn_kv_a_mqa / attn_kv_b / "
+                       "attn_output), but the MLA consumer requires the SPLIT "
+                       "layout (attn_q_a, attn_q_a_norm, attn_q_b, attn_kv_a_mqa, "
+                       "attn_kv_a_norm, attn_k_b, attn_v_b, attn_o). Missing on "
+                       "layer 0: "
+                    << (mla.missing.empty() ? "(none)" : mla.missing)
+                    << ". Splitting a fused quantised projection would require "
+                       "dequantise+requantise, which this loader does not do.";
+            } else {
+                msg << " tensors incomplete: bound on " << mla.layersFullyBound
+                    << " of " << mla.numLayersExpected << " layers.";
+            }
+            msg << " RAWRXD_MLA_LOAD_AUTHORITY_001: M0-M3 closed, M5d closed "
+                   "(geometry derived from tensor shapes), M5e closed for the "
+                   "split layout, M4 held closed because eligibility is false.";
+            if (diag) {
+                diag->stageCode = 6;
+                diag->stageName = "ATTN_HEAD_DIM_MISMATCH";
+                diag->message = msg.str();
+            }
+            std::fprintf(stderr, "[Deep2Engine] MLA_NOT_ELIGIBLE arch=%s %s\n",
+                         arch.c_str(), msg.str().c_str());
+            std::fflush(stderr);
+            return false;
+        }
+        std::fflush(stderr);
     }
 
     if (!modelWeights.isMoE && modelWeights.intermediateDim == 0 && !(arch == "nemotron_h")) {
@@ -3938,6 +4482,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
     const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
     std::vector<float> scores(attend);
 
+    // RAWRXD_ATTN_CTX2_PROBE_001: layer 0 only, positions 0 and 1 only. Layer 0
+    // is where the divergence first appears, and restricting to it keeps the
+    // probe from perturbing the other 21 layers through 32 per-head readbacks.
+    const bool ctx2Wanted = Deep2::Ctx2::wantsPosition(static_cast<int>(pos)) &&
+                            layer == 0;
+    std::vector<float> rawScores;
+    if (ctx2Wanted) rawScores.assign(attend, 0.0f);
+
     for (size_t h = 0; h < numHeads; ++h) {
         const size_t kvHead = h / groupSize;
         const float* q = qProj + h * headDim;
@@ -3952,6 +4504,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
                        static_cast<double>(k[d]);
             }
             scores[t] = static_cast<float>(dot) * scale;
+            if (ctx2Wanted) rawScores[t] = static_cast<float>(dot);
         }
         parityEmit(ParityCheckpoint::AttnScores, scores.data(), attend);
         parityEmitLayer(static_cast<int>(layer), "ATTN_SCORES",
@@ -3971,7 +4524,60 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
                 headOut[d] += a * v[d];
             }
         }
+
+        // RAWRXD_ATTN_CTX2_PROBE_001: the four objects for the CTX=1 -> CTX=2
+        // transition, taken from the production arithmetic at the point it
+        // happens. `rawScores` holds the unscaled dot products, which the
+        // production path folds into `scores` in place and therefore does not
+        // otherwise retain; keeping a copy is what makes SCORE_RAW observable
+        // rather than reconstructed.
+        if (ctx2Wanted) {
+            Deep2::Ctx2::Record r;
+            r.step = static_cast<int>(pos);
+            r.ctx = static_cast<int>(attend);
+            r.side = "cpu";
+            r.layer = static_cast<int>(layer);
+            r.qHead = static_cast<int>(h);
+            r.kvHead = static_cast<int>(kvHead);
+            r.gqaGroup = static_cast<int>(groupSize);
+            r.headDim = static_cast<int>(headDim);
+            r.scoreRaw = rawScores;
+            r.scoreScaled.assign(rawScores.begin(), rawScores.end());
+            for (size_t t = 0; t < rawScores.size(); ++t) {
+                r.scoreScaled[t] = r.scoreScaled[t] * scale;
+            }
+            r.prob.assign(scores.begin(), scores.end());
+            r.out.assign(headOut, headOut + headDim);
+            // The bytes this head consumed, hashed per head so the join can ask
+            // directly whether two sides used the same inputs. K and V are
+            // taken from the LAST visible slot, which is the slot whose value
+            // the divergence is measured against.
+            r.qHash = Deep2::Ctx2::fnv1a(q, headDim);
+            {
+                const float* kLast = kvCache->keyPtr(layer, kvHead, attend - 1);
+                const float* vLast = kvCache->valuePtr(layer, kvHead, attend - 1);
+                if (kLast) r.kHash = Deep2::Ctx2::fnv1a(kLast, headDim);
+                if (vLast) r.vHash = Deep2::Ctx2::fnv1a(vLast, headDim);
+                const size_t n8 = headDim < 8 ? headDim : 8;
+                if (kLast) r.kF8.assign(kLast, kLast + n8);
+                if (vLast) r.vF8.assign(vLast, vLast + n8);
+            }
+            r.qF8.assign(q, q + (headDim < 8 ? headDim : 8));
+            Deep2::Ctx2::emit(r);
+        }
     }
+    // RAWRXD_ATTN_VISIBILITY_TRACE_001: state-visibility record for THIS
+    // production attention call, using only values the code above actually
+    // used. `pos` is the index written above, `attend` is the count the read
+    // loop reached, and the loop body is `t < attend`, so the read range is
+    // [0, attend-1]. No mask array exists on this route: the causal read is
+    // fused into the loop bound, so MASK_IMPL records that rather than
+    // reporting a mask that was never applied.
+    Deep2::AttnVis::recordAttention(
+        layer, pos, pos, pos, pos, pos,
+        0, attend - 1, attend,
+        "fused_full_causal", 0, attend - 1,
+        attend - 1, "cpu_attn");
     parityEmit(ParityCheckpoint::AttnValue, attnValue.data(), qDim);
     parityEmitLayer(static_cast<int>(layer), "ATTN_VALUE",
                     attnValue.data(), qDim);
@@ -4944,6 +5550,15 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (profiler_) profiler_->recordCpuOverhead(
             static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tEmbed1 - tEmbed0).count()));
         auto tFwd0 = std::chrono::steady_clock::now();
+        // RAWRXD_ATTN_VISIBILITY_TRACE_001: open the position frame on the
+        // authoritative KV position, not on the loop counter, so the record is
+        // bound to the same identity the KV machinery uses.
+        {
+            const size_t posAtPre = kvCache ? kvCache->currentLength() : p;
+            Deep2::AttnVis::beginPosition(
+                static_cast<int>(posAtPre), posAtPre, "prefill", promptTokens[p],
+                posAtPre, isVulkanInitialized() ? "vulkan" : "cpu");
+        }
         {
             auto fr = forwardTokenAllLayers(hidden.data(), p + 1);
             if (!fr.ok) {
@@ -4963,6 +5578,14 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (profiler_) profiler_->recordGpuForward(
             static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tFwd1 - tFwd0).count()));
         if (config.useKVCache && kvCache) kvCache->advance();
+        // The LAST prefill position's logits are produced by the computeLogits
+        // call that follows this loop, so that frame deliberately stays open
+        // and is closed there. Every earlier prefill position has no logits of
+        // its own and is closed here with logits_available=0.
+        if (p + 1 < promptLen) {
+            Deep2::AttnVis::endPosition(nullptr, 0,
+                kvCache ? kvCache->currentLength() : 0);
+        }
         if (profiler_) profiler_->endToken(static_cast<uint32_t>(p));
     }    auto tPrefillEnd = std::chrono::steady_clock::now();
     parityEmit((ParityCheckpoint)20, hidden.data(), config.hiddenDim);
@@ -5044,6 +5667,15 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
             auto tFwd0 = std::chrono::steady_clock::now();
             if (vramStreamingController_) vramStreamingController_->beginTokenMeasurement(promptLen + generated);
+            // RAWRXD_ATTN_VISIBILITY_TRACE_001: decode position frame, anchored
+            // on the authoritative KV position.
+            {
+                const size_t posAtDec = kvCache ? kvCache->currentLength()
+                                                : (promptLen + generated - 1);
+                Deep2::AttnVis::beginPosition(
+                    static_cast<int>(posAtDec), posAtDec, "decode", pendingToken,
+                    posAtDec, isVulkanInitialized() ? "vulkan" : "cpu");
+            }
             {
                 auto fr = forwardTokenAllLayers(hidden.data(),seq);
                 if(!fr.ok) {
@@ -5193,6 +5825,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 (size_t)config.vocabSize, finite, nan, inf, logitMin, logitMax);
             std::fflush(stderr);
         }
+        // RAWRXD_ATTN_VISIBILITY_TRACE_001: close the open position frame with
+        // the token decision this forward produced. On the first decode
+        // iteration the open frame is the LAST PREFILL position -- that is
+        // where the first generated token's logits actually come from.
+        Deep2::AttnVis::endPosition(logits, config.vocabSize,
+            kvCache ? kvCache->currentLength() : 0);
         // Step label was set by the prefill loop (step 0) or by the decode
         // parityBeginStep(promptLen+i-1) before this token's forward pass.
         parityEmitLogitsTop10(logits, config.vocabSize);

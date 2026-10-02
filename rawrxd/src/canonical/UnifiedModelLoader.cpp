@@ -1,17 +1,18 @@
-#include "UnifiedModelLoader.hpp"
+﻿#include "UnifiedModelLoader.hpp"
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <filesystem>
 #include <thread>
 #include <future>
-#include <sha256.h>  // or fallback if not available
+#include "sha256.h"  // or fallback if not available
 
 namespace rawrxd::canonical {
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Static helpers
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 static bool FileExists(const std::string& path) {
     return std::filesystem::exists(path);
 }
@@ -20,9 +21,9 @@ static uint64_t FileSize(const std::string& path) {
     return std::filesystem::file_size(path);
 }
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // ModelIndex
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 void ModelIndex::Reserve(size_t n) {
     name_to_idx_.reserve(n * 2);
 }
@@ -49,9 +50,9 @@ std::vector<size_t> ModelIndex::FindByLayer(uint32_t layer_idx) const {
     return FindByPrefix(prefix);
 }
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // UnifiedModelLoader
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 UnifiedModelLoader::UnifiedModelLoader() = default;
 UnifiedModelLoader::~UnifiedModelLoader() = default;
 
@@ -111,15 +112,62 @@ bool UnifiedModelLoader::ValidateAllTensorData() const {
 }
 
 bool UnifiedModelLoader::VerifySHA256(const std::string& expected) const {
-    if (expected.empty()) return true;
-    if (current_source_.path.empty()) return false;
-    // SHA256 computation omitted — use library or OS crypto
-    return true; // placeholder
+    // RAWRXD_UNSIMULATE_001
+    // Was: `return true; // placeholder` with "SHA256 computation omitted".
+    //
+    // This is a model INTEGRITY check. Returning true from it asserted that a
+    // model file's bytes hash to a requested value without reading the file,
+    // which is the one claim every other certification in this tree is pinned
+    // to: receipts are bound to a model by hash. A verifier that always passes
+    // makes every hash-bound receipt unfalsifiable.
+    //
+    // It now computes the digest. sha256.h did not exist when this function was
+    // written -- the include has been in this file since before the tree was
+    // assembled, which is why this translation unit never compiled and why the
+    // placeholder survived.
+    //
+    // Every failure mode returns false with a stated reason. In particular an
+    // empty expectation is NOT a pass: "no hash was asked for" is not the same
+    // claim as "the hash matched", and conflating them is the same defect one
+    // level up.
+    if (expected.empty()) {
+        std::fprintf(stderr,
+            "[UnifiedModelLoader] VerifySHA256 REFUSED: no expected digest was "
+            "supplied. An absent expectation is not a passing integrity check. "
+            "RAWRXD_UNSIMULATE_001\n");
+        std::fflush(stderr);
+        return false;
+    }
+    if (current_source_.path.empty()) {
+        std::fprintf(stderr,
+            "[UnifiedModelLoader] VerifySHA256 REFUSED: no model path is loaded; "
+            "there is nothing to hash.\n");
+        std::fflush(stderr);
+        return false;
+    }
+    const std::string actual = rawrxd::sha256::HexOfFile(current_source_.path);
+    if (actual.empty()) {
+        std::fprintf(stderr,
+            "[UnifiedModelLoader] VerifySHA256 REFUSED: could not read or hash "
+            "the model file (path=\"%s\"). A read failure is not a match.\n",
+            current_source_.path.c_str());
+        std::fflush(stderr);
+        return false;
+    }
+    if (!rawrxd::sha256::EqualDigest(actual, expected)) {
+        std::fprintf(stderr,
+            "[UnifiedModelLoader] VerifySHA256 FAILED: expected %s, got %s "
+            "(path=\"%s\")\n",
+            expected.c_str(), actual.c_str(), current_source_.path.c_str());
+        std::fflush(stderr);
+        return false;
+    }
+    return true;
 }
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // GGUF Load Path
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 bool UnifiedModelLoader::LoadGGUF(const ModelSource& source) {
     gguf_adapter_ = std::make_unique<GGUFAdapter>();
     gguf_adapter_->SetProgressCallback(
@@ -195,16 +243,16 @@ bool UnifiedModelLoader::LoadGGUF(const ModelSource& source) {
     // Validation
     auto missing = gguf_adapter_->DetectMissingArchitectureTensors();
     if (!missing.empty()) {
-        // Log warnings but don't fail — some architectures have optional tensors
+        // Log warnings but don't fail â€” some architectures have optional tensors
     }
 
     ReportProgress(LoadProgress::Phase::Complete);
     return true;
 }
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Safetensors Load Path (placeholder)
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 bool UnifiedModelLoader::LoadSafetensors(const ModelSource& source) {
     // Safetensors format: JSON header + tensor blobs
     // Implementation: parse JSON header, read tensor offsets, mmap or copy
@@ -212,18 +260,18 @@ bool UnifiedModelLoader::LoadSafetensors(const ModelSource& source) {
     return false; // TODO: implement safetensors support
 }
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // ONNX Load Path (placeholder)
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 bool UnifiedModelLoader::LoadONNX(const ModelSource& source) {
     // ONNX support via ONNX Runtime or custom minimal parser
     (void)source;
     return false; // TODO: implement ONNX support
 }
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Cache management
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 bool UnifiedModelLoader::ExportToCache(const std::string& cache_dir) const {
     if (!gguf_adapter_) return false;
     std::filesystem::path dir(cache_dir);
@@ -258,9 +306,9 @@ void UnifiedModelLoader::InvalidateCache(const std::string& cache_key, const std
     }
 }
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Format detection
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 ModelFormat UnifiedModelLoader::DetectFormat(const std::string& path) {
     std::ifstream fs(path, std::ios::binary);
     if (!fs) return ModelFormat::Unknown;
@@ -293,9 +341,9 @@ std::string UnifiedModelLoader::FormatToString(ModelFormat f) {
     }
 }
 
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Progress reporting
-// ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 void UnifiedModelLoader::ReportProgress(LoadProgress::Phase phase, size_t current, size_t total) {
     if (!progress_cb_) return;
     LoadProgress lp;

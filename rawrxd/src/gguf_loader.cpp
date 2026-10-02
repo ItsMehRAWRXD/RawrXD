@@ -1,4 +1,5 @@
 #include "gguf_loader.hpp"
+#include "gguf_q6k_trace.hpp"
 #include <fstream>
 #include <string>
 #include <algorithm>
@@ -9,6 +10,13 @@
 #include <cstring>
 
 namespace rawrxd {
+
+// RAWRXD_Q6K_LIVE_BLOCK_TRACE_001. Default-null sink, so the production decoder
+// pays one predictable branch per 128-element half and nothing else.
+uint32_t    g_q6k_trace_element = 0;
+Q6KTraceSink g_q6k_trace_sink   = nullptr;
+uintptr_t   g_q6k_trace_src     = 0;
+uint64_t    g_q6k_trace_records = 0;
 
 namespace {
     uint16_t ReadU16LE(const uint8_t* p) {
@@ -38,11 +46,26 @@ float FP16ToFP32(uint16_t h) {
             bits = sign;                       // +/- zero
         } else {
             // Subnormal: renormalize into an fp32 exponent.
+            //
+            // After shifting left until bit 0x400 is set, m/1024 lies in [1,2) and
+            // the value is (m/1024) * 2^(-14 - e). The fp32 exponent field is
+            // therefore 127 - 14 - e.
+            //
+            // This previously read `127 - 15 - e`, one too small, so EVERY fp16
+            // subnormal was decoded at exactly half its value (ratio 0.5 on all
+            // 2046 subnormal bit patterns, verified exhaustively by
+            // fp16_probe.cpp / RAWRXD_Q6K_LIVE_BLOCK_TRACE_001). The normal path
+            // was already correct on all 61440 patterns, which is why the bug
+            // survived: a scale that is normal looks perfect under test.
+            //
+            // It surfaced as "Q6_K direct decode and ToFloat32 disagree by exactly
+            // 2x at element 0" -- the Q6_K decoder was innocent, and the fp16
+            // super-scale for that block (0x00C6) is a subnormal.
             uint32_t e = 0;
             uint32_t m = mant;
             while ((m & 0x400u) == 0) { m <<= 1; ++e; }
             m &= 0x3FFu;
-            bits = sign | ((127 - 15 - e) << 23) | (m << 13);
+            bits = sign | ((127 - 14 - e) << 23) | (m << 13);
         }
     } else if (exp == 0x1Fu) {
         bits = sign | 0x7F800000u | (mant << 13);  // inf / nan
@@ -331,10 +354,14 @@ namespace {
     }
 
     void DequantQ6_K(const uint8_t* src, size_t blk, float* out) {
+        const bool tracing = (g_q6k_trace_sink != nullptr) &&
+                             (g_q6k_trace_src == 0 ||
+                              g_q6k_trace_src == reinterpret_cast<uintptr_t>(src));
         const uint8_t* ql = src;        // 128 bytes, low 4 bits
         const uint8_t* qh = src + 128;  // 64 bytes, high 2 bits
         const int8_t* scales = reinterpret_cast<const int8_t*>(src + 192);
-        const float d = FP16ToFP32(ReadU16LE(src + 208));
+        const uint16_t d_raw = ReadU16LE(src + 208);
+        const float d = FP16ToFP32(d_raw);
         for (size_t n = 0; n < blk; n += 128) {
             for (size_t l = 0; l < 32; ++l) {
                 const int is = l / 16;
@@ -346,6 +373,87 @@ namespace {
                 out[l + 32] = d * scales[is + 2] * q2;
                 out[l + 64] = d * scales[is + 4] * q3;
                 out[l + 96] = d * scales[is + 6] * q4;
+
+                // RAWRXD_Q6K_LIVE_BLOCK_TRACE_001
+                //
+                // Observed HERE, at the point of consumption: after the writes and
+                // before the pointer advance. A re-derivation outside this function
+                // would reproduce the arithmetic while proving nothing about which
+                // addresses this execution actually touched, and the entire open
+                // question is whether the two paths touch the same bytes. So the
+                // addresses recorded below are the live ql/qh/scales pointers at
+                // this iteration, not constants recomputed from `src`.
+                if (tracing) {
+                    const uint32_t target = g_q6k_trace_element;
+                    // The four writes in this lane produce elements n+l+0, +32,
+                    // +64, +96. Compare the target against ALL FOUR, not against
+                    // the half-range: matching only the half-range fires once per
+                    // lane of every block and silently reports the LAST block
+                    // decoded rather than the one asked about. That is precisely
+                    // how an instrumentation layer comes to disagree with the
+                    // thing it is instrumenting.
+                    for (uint32_t r = 0; r < 4u; ++r) {
+                        if (target != static_cast<uint32_t>(n) + static_cast<uint32_t>(l) + r * 32u)
+                            continue;
+                        const uint32_t run     = r;
+                        const uint32_t lane    = static_cast<uint32_t>(l);
+                        // Run 0 and 2 read ql[lane]; runs 1 and 3 read ql[lane+32].
+                        // Run 0/1 take the LOW nibble, run 2/3 the HIGH nibble, and
+                        // the qh 2-bit field sits at bit pair `run` of qh[lane].
+                        const uint32_t ql_lane = (run == 1u || run == 3u) ? lane + 32u : lane;
+                        const uint8_t* ql_ptr  = ql + ql_lane;
+                        const uint8_t* qh_ptr  = qh + lane;
+                        const uint32_t shift   = run * 2u;
+                        const bool     hi_nib  = (run == 2u || run == 3u);
+                        const uint8_t  ql_byte = *ql_ptr;
+                        const uint8_t  qh_byte = *qh_ptr;
+                        const uint32_t low4    = hi_nib ? (ql_byte >> 4) : (ql_byte & 0x0Fu);
+                        const uint32_t high2   = ((qh_byte >> shift) & 3u) << 4;
+                        const uint32_t uns     = low4 | high2;
+                        const int32_t  signedq = static_cast<int32_t>(uns) - 32;
+                        const int8_t   sc      = scales[is + (int)(run * 2u)];
+                        const int8_t*  sc_ptr  = scales + is + static_cast<int>(run * 2u);
+                        const float    dsc     = d * static_cast<float>(sc);
+
+                        Q6KTraceRecord rec;
+                        rec.element      = target;
+                        rec.src_addr     = reinterpret_cast<uintptr_t>(src);
+                        rec.ql_addr      = reinterpret_cast<uintptr_t>(ql_ptr);
+                        rec.qh_addr      = reinterpret_cast<uintptr_t>(qh_ptr);
+                        rec.scales_addr  = reinterpret_cast<uintptr_t>(sc_ptr);
+                        rec.d_addr       = reinterpret_cast<uintptr_t>(src + 208);
+                        rec.ql_offset     = static_cast<uint32_t>(ql_ptr - src);
+                        rec.qh_offset     = static_cast<uint32_t>(qh_ptr - src);
+                        rec.scales_offset = static_cast<uint32_t>(
+                            reinterpret_cast<uintptr_t>(sc_ptr) - reinterpret_cast<uintptr_t>(src));
+                        rec.d_offset      = 208u;
+                        rec.ql0_raw       = ql_byte;
+                        rec.qh0_raw       = qh_byte;
+                        rec.scale0_raw    = sc;
+                        rec.d_raw_u16     = d_raw;
+                        rec.d_fp32        = d;
+                        rec.q_low4        = static_cast<int32_t>(low4);
+                        rec.q_high2       = static_cast<int32_t>(high2);
+                        rec.q6_unsigned   = static_cast<int32_t>(uns);
+                        rec.q6_signed     = signedq;
+                        rec.d_times_scale = dsc;
+                        // `out` is a MOVING pointer: it advances by 128 at the end
+                        // of each half. The slot just written for this element is
+                        // therefore out[l + r*32], NOT out[n + l + r*32]. Indexing
+                        // by n reads one half too far and reports a zero for every
+                        // element at or past 128 -- a disagreement in the final
+                        // field with every input and every intermediate in
+                        // agreement, which is the signature of a broken instrument
+                        // rather than a broken decoder.
+                        rec.result        = out[l + r * 32u];
+                        rec.n_loop        = static_cast<uint32_t>(n);
+                        rec.l_loop        = lane;
+                        rec.is_sub        = static_cast<uint32_t>(is);
+                        rec.run           = run;
+                        ++g_q6k_trace_records;
+                        g_q6k_trace_sink(rec);
+                    }
+                }
             }
             out += 128;
             qh += 32;

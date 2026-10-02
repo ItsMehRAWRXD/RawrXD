@@ -1169,6 +1169,35 @@ static void gemv_f16_avx512(
 // k_quant_gemv_avx512.h, which is admitted by kquant_parity_check
 // (RESULT PASS, 0 failures, 20 checks; AVX-512 vs scalar direct agreement
 // included). The scalar body remains the reference and the non-AVX-512 path.
+// RAWRXD_CPU_FULL_MODEL_INFERENCE_001: dispatch telemetry.
+// The admitted vector kernels bump these on entry, so a receipt can PROVE
+// which path executed instead of inferring it from the registry's contents.
+namespace {
+std::atomic<uint64_t> g_q4k_vec_calls{0};
+std::atomic<uint64_t> g_q4k_scalar_calls{0};
+std::atomic<uint64_t> g_q6k_vec_calls{0};
+std::atomic<uint64_t> g_q6k_scalar_calls{0};
+std::atomic<uint64_t> g_q5k_vec_calls{0};
+std::atomic<uint64_t> g_q5k_scalar_calls{0};
+}
+
+void ResetGemvDispatchCounters() {
+    g_q4k_vec_calls = 0; g_q4k_scalar_calls = 0;
+    g_q6k_vec_calls = 0; g_q6k_scalar_calls = 0;
+    g_q5k_vec_calls = 0; g_q5k_scalar_calls = 0;
+}
+
+GemvDispatchCounters GetGemvDispatchCounters() {
+    GemvDispatchCounters c;
+    c.q4k_vector = g_q4k_vec_calls.load(std::memory_order_relaxed);
+    c.q4k_scalar = g_q4k_scalar_calls.load(std::memory_order_relaxed);
+    c.q6k_vector = g_q6k_vec_calls.load(std::memory_order_relaxed);
+    c.q6k_scalar = g_q6k_scalar_calls.load(std::memory_order_relaxed);
+    c.q5k_vector = g_q5k_vec_calls.load(std::memory_order_relaxed);
+    c.q5k_scalar = g_q5k_scalar_calls.load(std::memory_order_relaxed);
+    return c;
+}
+
 static void gemv_q4_k_avx512(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -1176,13 +1205,34 @@ static void gemv_q4_k_avx512(
     size_t rows, size_t cols
 ) {
 #if defined(__AVX512F__)
+    g_q4k_vec_calls.fetch_add(1, std::memory_order_relaxed);
     rawrxd::kquant::GemvQ4K_AVX512(w, x, y, rows, cols);
 #else
+    g_q4k_scalar_calls.fetch_add(1, std::memory_order_relaxed);
     // The TU was not built with AVX-512 enabled, so the vector body does not
     // exist. Keep the scalar reference rather than failing to link.
     gemv_q4_k_scalar(w, x, y, rows, cols);
 #endif
 }
+
+// RAWRXD_Q6K_AVX512_GEMV_001
+// Mirrors gemv_q4_k_avx512 above, matching GEMVKernelFn exactly, and records
+// its own invocations so a receipt can prove the vector path ran.
+static void gemv_q6_k_avx512_kernel(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+#if defined(__AVX512F__)
+    g_q6k_vec_calls.fetch_add(1, std::memory_order_relaxed);
+    rawrxd::kquant::GemvQ6K_AVX512(w, x, y, rows, cols);
+#else
+    g_q6k_scalar_calls.fetch_add(1, std::memory_order_relaxed);
+    gemv_q6_k_scalar(w, x, y, rows, cols);
+#endif
+}
+
 
 // --- Q8_0 GEMV (AVX-512) ---
 static void gemv_q8_0_avx512(
@@ -1952,8 +2002,14 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q6_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q6_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q6_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q6_K, dequant_q6_k);
-    // MASM stubbed — use scalar reference until AVX2 kernel is verified
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
+    // RAWRXD_Q6K_AVX512_GEMV_001: Q6_K is the second most common weight type
+    // in Q4_K_M models (29 of 337 tensors in qwen2.5-coder-1.5b-base) and was
+    // scalar-only. The fused kernel is admitted by real_q6k_gemv_parity:
+    // 29/29 tensors, worst rel 1.74e-05, cosine 0.999999999998, negative control
+    // still firing. Capability-gated exactly like Q4_K so non-AVX-512 builds
+    // keep the scalar reference.
+    if (hasAVX512) RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_avx512_kernel);
+    else          RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
 
     // --- Q2_K ---
     // LAW: block_q2_K = 84 bytes. There is no Q2_K MASM kernel in the build.
@@ -2163,6 +2219,8 @@ void QuantKernelRegistry::PrintBatch21Report() const {
 }
 
 } // namespace Deep2
+
+
 
 
 

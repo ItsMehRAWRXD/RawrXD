@@ -68,7 +68,8 @@ static inline float halfToF32(uint16_t h) {
             uint32_t e = 0, m = man;
             while (!(m & 0x400u)) { m <<= 1; ++e; }
             m &= 0x3FFu;
-            bits = sign | ((127 - 15 - e) << 23) | (m << 13);
+            // RAWRXD_FP16_SUBNORMAL_001: exponent is 127 - 14 - e.
+bits = sign | ((127 - 14 - e) << 23) | (m << 13);
         }
     } else if (exp == 31) {
         bits = sign | 0x7F800000u | (man << 13);

@@ -2535,13 +2535,28 @@ bool VulkanCompute::ProbeDeviceFloats(DeviceBuf& buf, uint32_t floatOffset,
 
 bool VulkanCompute::DispatchRope(
     DeviceBuf& q, DeviceBuf& k, uint32_t headDim,
-    uint32_t heads, uint32_t kvHeads, uint32_t pos, float theta)
+    uint32_t heads, uint32_t kvHeads, uint32_t pos, float theta,
+    bool neoxStyle, uint32_t rotaryDim)
 {
     if (!headDim || (headDim & 1u) || !heads || !kvHeads || theta <= 0.0f)
         return false;
+    // RAWRXD_VULKAN_ROPE_CONVENTION_001
+    // The shader used to implement only the GPT-J adjacent-pair convention,
+    // while Deep2Engine::applyRoPE selects rotated-half for the NeoX
+    // architectures. Passing the convention (and the rotary dimension, which is
+    // not always headDim) is what makes the two implementations the same
+    // function. Without this, position 0 agrees -- both are the identity there --
+    // and every position after it is rotated differently.
+    if (rotaryDim == 0u || rotaryDim > headDim) rotaryDim = headDim;
+    rotaryDim &= ~1u;
+    if (rotaryDim == 0u) return false;
     OpsPush p{};
     p.op=OP_ROPE; p.p0=headDim; p.p1=heads; p.p2=kvHeads; p.p3=pos; p.f0=theta;
-    const uint32_t pairs = (heads+kvHeads)*(headDim/2u);
+    // f1 carries rotaryDim in the integral part and the NeoX flag in the
+    // fractional part. OpsPush has no spare integer field: p0..p5 and n are all
+    // live and f0 is theta.
+    p.f1 = static_cast<float>(rotaryDim) + (neoxStyle ? 0.5f : 0.0f);
+    const uint32_t pairs = (heads+kvHeads)*(rotaryDim/2u);
     p.n = pairs;
     return dispatchOps(q,k,q,k,p,(pairs+63u)/64u);
 }
@@ -3984,9 +3999,17 @@ bool VulkanCompute::RunMLAAttentionHost(
     DeviceBuf& kSlice=Scratch(41);
     DeviceBuf& vSlice=Scratch(42);
     DeviceBuf& outBuf=Scratch(43);
-    if(!UploadVector(qBuf,q,qElems*sizeof(float))||
-       !UploadVector(kSlice,k,qElems*sizeof(float))||
-       !UploadVector(vSlice,v,vElems*sizeof(float)))
+    // RAWRXD_GPU_DLWVECTOR_CONTRACT_AUDIT_001: the third parameter of
+    // UploadVector/DownloadVector is a FLOAT ELEMENT count, not a byte count --
+    // both apply count*sizeof(float) internally (and bounds-check it). These four
+    // sites supplied bytes, so the first upload requested 4x the scratch buffer
+    // and was refused before any staging or copy, which made
+    // RunMLAAttentionHost return false unconditionally. Proven on a real device
+    // by tools/mla_upload_contract_cert.cpp. Prior text: `qElems*sizeof(float)`
+    // and `vElems*sizeof(float)`.
+    if(!UploadVector(qBuf,q,qElems)||
+       !UploadVector(kSlice,k,qElems)||
+       !UploadVector(vSlice,v,vElems))
         return false;
 
     // Copy the K/V slice into the device cache at (layer, pos).
@@ -4021,7 +4044,7 @@ bool VulkanCompute::RunMLAAttentionHost(
                     (pos+1)*heads,GpuWorkKind::ModelCompute))
         return false;
 
-    return DownloadVector(outBuf,output,qElems*sizeof(float));
+    return DownloadVector(outBuf,output,qElems);
 }
 
 bool VulkanCompute::RunWeightHostRoundTrip(

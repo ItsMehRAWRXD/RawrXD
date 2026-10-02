@@ -1,0 +1,165 @@
+# RAWRXD_IDE_AUDIT_20261002 - empty-bodied translation units wired into WIN32IDE_SOURCES
+# Source: [rawrxd_stub_gate] WIN32IDE_SOURCES warning, strict configure, CMakeLists.txt:395
+# GATE_ENTRIES_DECLARED=75
+# GATE_TOKENS_PRINTED=75
+# UNIQUE_FILES=68
+# NOTE: entries == printed tokens for every list; the delta is duplicate list entries,
+#       NOT a counter/list disagreement. The same TU is added to the target twice.
+#
+# DUPLICATE_ENTRIES:
+  x2  src/runtime/memory/CapacityManager.cpp  present=True bytes=2
+  x2  src/runtime/memory/PredictiveMemoryManager.cpp  present=True bytes=2
+  x2  src/runtime/memory/ResidencyTracker.cpp  present=True bytes=2
+  x2  src/runtime/memory/TensorPlacementManager.cpp  present=True bytes=2
+  x2  src/runtime/memory/WorkingSetPredictor.cpp  present=True bytes=2
+  x2  src/runtime/StreamRouterAdapter.cpp  present=True bytes=2
+  x2  src/runtime/TensorExecutionRouter.cpp  present=True bytes=2
+#
+# UNIQUE EMPTY-BODIED TUs (path,present,bytes):
+  B014/build/b014_profiler.cpp,True,2
+  Ship/RawrXD_AutonomousAgenticPipeline.cpp,True,60
+  src/agent/agent_self_healing_orchestrator.cpp,True,42
+  src/agent/agent_self_repair.cpp,True,28
+  src/agent/agentic_hotpatch_orchestrator.cpp,True,40
+  src/agent/autonomous_orchestrator.cpp,True,24
+  src/agent/DiskRecoveryAgent.cpp,True,36
+  src/agent/eval_framework.cpp,True,25
+  src/agent/hexmag_client.cpp,True,24
+  src/agent/llm_http_client.cpp,True,26
+  src/agent/meta_planner.cpp,True,24
+  src/agent/orchestrator_cli_handler.cpp,True,24
+  src/agent/planner.cpp,True,18
+  src/agent/quantum_agent_orchestrator.cpp,True,37
+  src/agent/quantum_autonomous_todo_system.cpp,True,41
+  src/agent/quantum_dynamic_time_manager.cpp,True,39
+  src/agent/quantum_missing_impl.cpp,True,31
+  src/agent/quantum_multi_model_agent_cycling.cpp,True,44
+  src/agent/quantum_production_orchestrator.cpp,True,42
+  src/agentic/agent_workflow_orchestrator.cpp,True,38
+  src/agentic/agentic_executor.cpp,True,27
+  src/agentic/agentic_transaction.cpp,True,30
+  src/agentic/AgenticDeepThinkingEngine.cpp,True,36
+  src/agentic/AgenticNavigator.cpp,True,27
+  src/agentic/AgentToolHandlers.cpp,True,28
+  src/agentic/autonomous_recovery_orchestrator.cpp,True,43
+  src/agentic/DeterministicReplayEngine.cpp,True,36
+  src/agentic/DiskRecoveryAgent.cpp,True,38
+  src/agentic/DiskRecoveryToolHandler.cpp,True,34
+  src/agentic/failure_intelligence_orchestrator.cpp,True,24
+  src/agentic/FIMPromptBuilder.cpp,True,27
+  src/agentic/OllamaProvider.cpp,True,24
+  src/agentic/OrchestratorBridge.cpp,True,29
+  src/agentic/RawrXD_AgentLoop.cpp,True,27
+  src/agentic_agent_coordinator.cpp,True,24
+  src/ai_completion_real.cpp,True,24
+  src/ai_model_caller.cpp,True,24
+  src/auth/QuantumAuthUI.cpp,True,24
+  src/auth/rbac_engine.cpp,True,22
+  src/autonomous_feature_engine.cpp,True,24
+  src/autonomous_intelligence_orchestrator.cpp,True,24
+  src/backend/vulkan_compute.cpp,True,24
+  src/benchmark_menu_widget.cpp,True,24
+  src/benchmark_runner.cpp,True,24
+  src/cli/swarm_orchestrator.cpp,True,29
+  src/cloud_api_client.cpp,True,24
+  src/collab/crdt_buffer.cpp,True,24
+  src/collab/cursor_widget.cpp,True,24
+  src/collab/websocket_hub.cpp,True,24
+  src/command/SessionBinder.cpp,True,24
+  src/compression/zlib_runtime_loader.cpp,True,30
+  src/core/feature_registration.cpp,True,2414
+  src/deep2/MoERouter.cpp,True,26
+  src/feature_registry_panel.cpp,True,24
+  src/hybrid_cloud_manager.cpp,True,24
+  src/inference/NegativeSpaceProfiler.cpp,True,2
+  src/logging/Logger.cpp,True,2
+  src/production_config_manager.cpp,True,36
+  src/rawrxd_inference.cpp,True,36
+  src/runtime/memory/CapacityManager.cpp,True,2
+  src/runtime/memory/PredictiveMemoryManager.cpp,True,2
+  src/runtime/memory/ResidencyTracker.cpp,True,2
+  src/runtime/memory/TensorPlacementManager.cpp,True,2
+  src/runtime/memory/WorkingSetPredictor.cpp,True,2
+  src/runtime/StreamRouterAdapter.cpp,True,2
+  src/runtime/TensorExecutionRouter.cpp,True,2
+  src/vulkan_compute.cpp,True,35
+  src/vulkan_kernel_bridge.cpp,True,31
+
+# INTENT CLASSIFICATION
+# An empty TU that explains itself is a deliberate placeholder retained so a
+# build does not break. An empty TU that does not explain itself is indistinguishable,
+# to any reader and to any gate, from an implementation that was never written.
+SELF_DOCUMENTED_INTENT=1
+SILENT_NO_EXPLANATION=67
+#
+# self-documented (deliberate):
+#   src/core/feature_registration.cpp
+#
+# silent:
+#   B014/build/b014_profiler.cpp
+#   Ship/RawrXD_AutonomousAgenticPipeline.cpp
+#   src/agent/agent_self_healing_orchestrator.cpp
+#   src/agent/agent_self_repair.cpp
+#   src/agent/agentic_hotpatch_orchestrator.cpp
+#   src/agent/autonomous_orchestrator.cpp
+#   src/agent/DiskRecoveryAgent.cpp
+#   src/agent/eval_framework.cpp
+#   src/agent/hexmag_client.cpp
+#   src/agent/llm_http_client.cpp
+#   src/agent/meta_planner.cpp
+#   src/agent/orchestrator_cli_handler.cpp
+#   src/agent/planner.cpp
+#   src/agent/quantum_agent_orchestrator.cpp
+#   src/agent/quantum_autonomous_todo_system.cpp
+#   src/agent/quantum_dynamic_time_manager.cpp
+#   src/agent/quantum_missing_impl.cpp
+#   src/agent/quantum_multi_model_agent_cycling.cpp
+#   src/agent/quantum_production_orchestrator.cpp
+#   src/agentic/agent_workflow_orchestrator.cpp
+#   src/agentic/agentic_executor.cpp
+#   src/agentic/agentic_transaction.cpp
+#   src/agentic/AgenticDeepThinkingEngine.cpp
+#   src/agentic/AgenticNavigator.cpp
+#   src/agentic/AgentToolHandlers.cpp
+#   src/agentic/autonomous_recovery_orchestrator.cpp
+#   src/agentic/DeterministicReplayEngine.cpp
+#   src/agentic/DiskRecoveryAgent.cpp
+#   src/agentic/DiskRecoveryToolHandler.cpp
+#   src/agentic/failure_intelligence_orchestrator.cpp
+#   src/agentic/FIMPromptBuilder.cpp
+#   src/agentic/OllamaProvider.cpp
+#   src/agentic/OrchestratorBridge.cpp
+#   src/agentic/RawrXD_AgentLoop.cpp
+#   src/agentic_agent_coordinator.cpp
+#   src/ai_completion_real.cpp
+#   src/ai_model_caller.cpp
+#   src/auth/QuantumAuthUI.cpp
+#   src/auth/rbac_engine.cpp
+#   src/autonomous_feature_engine.cpp
+#   src/autonomous_intelligence_orchestrator.cpp
+#   src/backend/vulkan_compute.cpp
+#   src/benchmark_menu_widget.cpp
+#   src/benchmark_runner.cpp
+#   src/cli/swarm_orchestrator.cpp
+#   src/cloud_api_client.cpp
+#   src/collab/crdt_buffer.cpp
+#   src/collab/cursor_widget.cpp
+#   src/collab/websocket_hub.cpp
+#   src/command/SessionBinder.cpp
+#   src/compression/zlib_runtime_loader.cpp
+#   src/deep2/MoERouter.cpp
+#   src/feature_registry_panel.cpp
+#   src/hybrid_cloud_manager.cpp
+#   src/inference/NegativeSpaceProfiler.cpp
+#   src/logging/Logger.cpp
+#   src/production_config_manager.cpp
+#   src/rawrxd_inference.cpp
+#   src/runtime/memory/CapacityManager.cpp
+#   src/runtime/memory/PredictiveMemoryManager.cpp
+#   src/runtime/memory/ResidencyTracker.cpp
+#   src/runtime/memory/TensorPlacementManager.cpp
+#   src/runtime/memory/WorkingSetPredictor.cpp
+#   src/runtime/StreamRouterAdapter.cpp
+#   src/runtime/TensorExecutionRouter.cpp
+#   src/vulkan_compute.cpp
+#   src/vulkan_kernel_bridge.cpp

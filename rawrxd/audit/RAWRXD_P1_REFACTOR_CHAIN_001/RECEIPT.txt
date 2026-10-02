@@ -1,0 +1,92 @@
+GATE=RAWRXD_P1_REFACTOR_CHAIN_001
+VERDICT=FAIL
+CHECKS_TOTAL=49
+CHECKS_PASS=39
+CHECKS_FAIL=10
+CHAIN_CAPABILITIES=9
+CHAIN[0]=lsp.gotoDef id=5061 cli=!lsp goto tableHandler=handleLspGotoDef expectedHandler=handleLspGotoDef matches=1
+CHAIN[1]=lsp.findRefs id=5062 cli=!lsp refs tableHandler=handleLspFindRefs expectedHandler=handleLspFindRefs matches=1
+CHAIN[2]=lsp.rename id=5063 cli=!lsp rename tableHandler=handleLspRename expectedHandler=handleLspRename matches=1
+CHAIN[3]=lsp.symbolInfo id=5068 cli=!lsp symbol tableHandler=handleLspSymbolInfo expectedHandler=handleLspSymbolInfo matches=1
+CHAIN[4]=lsp.workspaceSymbols id=50603 cli=!lsp wssymbols tableHandler=handleLspWorkspaceSymbols expectedHandler=handleLspWorkspaceSymbols matches=1
+CHAIN[5]=lsp.diagnostics id=5065 cli=!lsp diag tableHandler=handleLspDiagnostics expectedHandler=handleLspDiagnostics matches=1
+CHAIN[6]=lsp.codeAction id=50604 cli=!lsp codeaction tableHandler=handleLspCodeAction expectedHandler=handleLspCodeAction matches=1
+CHAIN[7]=editor.formatDocument id=50605 cli=!editor format tableHandler=handleEditorFormatDocument expectedHandler=handleEditorFormatDocument matches=1
+CHAIN[8]=editor.extractFunction id=50606 cli=!editor extract tableHandler=handleEditorExtractFunction expectedHandler=handleEditorExtractFunction matches=1
+PRODUCT_BINDING_PROOF=table_row_identifier + symbol_linked_in_certified_binary + same_TU_in_WIN32IDE_SOURCES
+PRODUCT_BINDING_NOT_PROVEN_BY_THIS_GATE=address_comparison_of_g_commandRegistry_against_stub_provider;requires_linking_all_535_handlers
+STUB_PROVIDER_HANDLER_DEFS_TOTAL=371
+STUB_PROVIDER_UNCONDITIONAL_SUCCESS=371
+STUB_PROVIDER_REAL_BODIES=0
+CHAIN_NAMES_STILL_IN_STUB_PROVIDER=0
+OPEN_GAP_UNRELATED_STUB_HANDLERS=371
+FORMAT_SCOPE=WHITESPACE_ONLY_R1_R5
+DIAGNOSTIC_RULES=missing_semicolon,undeclared_identifier
+DIAGNOSTIC_BLIND_SPOT=names_qualified_by_double_colon_are_never_reported
+SEMANTIC_ORACLE=program_output_byte_identical_pre_post
+FALSIFICATION_PROBES=5
+
+# every check, with the measurement it was made from
+  PASS  FIXTURE_COPIED_TO_SCRATCH  |  source of truth is never mutated; scratch=C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356
+  PASS  WORKSPACE_ROOT_VISIBLE_TO_THE_HANDLERS  |  RAWRXD_REFACTOR_ROOT=C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\fixture.code-workspace
+  PASS  COMMAND_TABLE_PARSED  |  rows parsed from src/core/command_registry.hpp = 539
+  PASS  CHAIN_COMMANDS_IN_COMMAND_TABLE  |  9/9 present; missing: none
+  PASS  CHAIN_HANDLERS_NAME_THE_REAL_IMPLEMENTATION  |  every chain row names its implementation
+  PASS  CHAIN_CLI_ALIASES_EXPOSED  |  every chain command is reachable from the CLI
+  PASS  CHAIN_HANDLER_SYMBOLS_LINKED_IN_THIS_BINARY  |  9/9 table-named handler symbols resolved and were executed
+  PASS  SURFACE_TRANSLATION_UNIT_IS_IN_THE_IDE_SOURCE_LIST  |  RefactorChainIdeSurface.cpp at 351863, WIN32IDE_SOURCES at 323074, add_executable(RawrXD-Win32IDE) at 469855 -> the IDE compiles the same unit the driver executed
+  PASS  NO_CHAIN_HANDLER_LEFT_IN_STUB_PROVIDER  |  stub provider defines 371 handlers, 371 of them unconditional successes; chain names still stubbed: none
+  PASS  WORKSPACE_OPENED  |  C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\alpha
+  PASS  WORKSPACE_MULTI_ROOT  |  roots=2 filesIndexed=9 symbolsIndexed=71 rootList=[alpha|beta] indexedFiles=[alpha/include/calc_engine.h | alpha/src/calc_engine.cpp | alpha/src/decoy_fs.cpp | alpha/src/extract_target.cpp | alpha/src/series_stats.cpp | beta/include/report_sink.h | beta/src/malformed.cpp | beta/src/report_sink.cpp | beta/src/unformatted.cpp]
+  PASS  WORKSPACE_INDEX_COUNTS_MATCH_FIXTURE  |  9 source files authored in the fixture (5 under alpha, 4 under beta), indexed 9
+  PASS  FIXTURE_COMPILES_BEFORE_REFACTOR  |  cl.exe /std:c++17 accepted every source
+  PASS  FIXTURE_RUNS_BEFORE_REFACTOR  |  fixture program produced output
+  PASS  DEFINITION_RESOLVES_EXACT_LOCATION  |  [refactor] workspace open: root=C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\alpha files=9 symbols=71 occurrences=276 roots=2;[lsp] definition: computeWeightedMean -> alpha/src/calc_engine.cpp:13:8 (qualified=alpha::computeWeightedMean, candidates=2, symbolsIndexed=71);
+  PASS  F1_UNRESOLVABLE_DEFINITION_RETURNS_FAILURE  |  the old body printed "Symbol not found" and returned ok; detail=definition not resolved
+  FAIL  REFERENCES_EXACT_SET_MATCHES_FIXTURE  |  sites=3 defs=1 uses=2 commentSkipped=2 stringSkipped=1
+  PASS  REFERENCES_VIA_COMMAND_TABLE_POINTER  |  [lsp] references: WidgetCacheSlot total=3 definitions=1 declarations=0 uses=2 calls=0 commentOccurrencesSkipped=2 stringOccurrencesSkipped=1;  alpha/include/calc_engine.h:21:8;  alpha/src/calc_engine.cpp:11:1;  beta/src/report_sink.cpp:31:56;
+  PASS  RENAME_VIA_COMMAND_TABLE_POINTER  |  [lsp] rename OK: WidgetCacheSlot -> WidgetCacheEntry edits=3 files=3 commentsSkipped=2 stringsSkipped=1 nearMissTokensSkipped=2;  edited alpha/include/calc_engine.h:21:8;  edited alpha/src/calc_engine.cpp:11:1;  edited beta/src/report_sink.cpp:31:56;
+  PASS  RENAME_ROUND_TRIP_EDITS_THE_SAME_THREE_SITES  |  edits=3 files=3 commentsSkipped=0 stringsSkipped=0 nearMissSkipped=0
+  PASS  RENAME_LEFT_THE_FILESYSTEM_DECOY_BYTE_IDENTICAL  |  alpha/src/decoy_fs.cpp holds std::filesystem::rename and no WidgetCacheSlot; a substring renamer would have rewritten it
+  PASS  RENAME_LEFT_THE_COMMENT_AND_STRING_DECOYS_BYTE_IDENTICAL  |  alpha/src/series_stats.cpp names WidgetCacheSlot in a comment and in a string literal; a text renamer would have rewritten both
+  PASS  RENAME_LEFT_EXACTLY_THREE_CODE_OCCURRENCES  |  WidgetCacheSlot sites=3 WidgetCacheEntry sites=0
+  PASS  F3_COMMENT_ONLY_RENAME_IS_REFUSED  |  [lsp] rename FAILED: no code occurrence of 'orphanSentinelName'; nothing was edited (edits=0 files=0 commentsSkipped=1 stringsSkipped=1 nearMissTokensSkipped=0);
+  PASS  F3_COMMENT_ONLY_RENAME_CHANGED_NOTHING  |  the two decoy occurrences are still present
+  FAIL  SYMBOL_SEARCH_RANKS_EXACT_NAME_ABOVE_NEAR_MISSES  |  [lsp] symbol search: 'cmwm' considered=4 ranked=4;  alpha/src/calc_engine.cpp:13:8  computeWeightedMean;  alpha/src/series_stats.cpp:11:8  computeWeightedMeanFast;  alpha/src/series_stats.cpp:15:8  ComputeWeightedMeanBackup;  alpha/src/series_stats.cpp:36:8  computeWeightedMeanOfFirstAndLast;
+  FAIL  WORKSPACE_SYMBOLS_REACHES_SECOND_ROOT  |  [lsp] workspace symbols: 'summarize' roots=2 matchedRoots=[beta] ranked=4;  beta/src/report_sink.cpp:9:8  summarizeReport;  beta/src/report_sink.cpp:31:8  summarizeWithSlot;  beta/src/report_sink.cpp:19:8  summarizeReportPair;  beta/src/malformed.cpp:12:8  brokenSummarize;
+  FAIL  DIAGNOSTICS_TWO_AUTHORED_DEFECTS_ONLY  |  malformed.cpp must report missing_semicolon:13 and undeclared_identifier:15; total reported=4 files with diagnostics: beta/include/report_sink.h,beta/src/malformed.cpp
+  FAIL  DIAGNOSTICS_DUMP  |   beta/include/report_sink.h:11:8 undeclared_identifier beta/include/report_sink.h:11:59 undeclared_identifier beta/src/malformed.cpp:13:29 missing_semicolon beta/src/malformed.cpp:15:12 undeclared_identifier
+  FAIL  DIAGNOSTICS_ZERO_ON_CLEAN_FILES  |  7 of the 8 indexed files must report nothing
+  PASS  DIAGNOSTICS_VIA_COMMAND_TABLE_POINTER  |  [lsp] diagnostics: 2 reported;  beta/src/malformed.cpp:13:29  missing_semicolon  statement ends with a value but not ';';  beta/src/malformed.cpp:15:12  undeclared_identifier  identifier 'undeclaredHelper' is not declared in this workspace;
+  PASS  CODE_ACTIONS_OFFERED_FOR_BOTH_DEFECTS  |  actions=2 forMissingSemicolon=1 forUndeclared=1
+  PASS  F5_MALFORMED_FILE_DOES_NOT_COMPILE_BEFORE_THE_FIX  |  a code action that fixes nothing still needs the file to have been broken
+  PASS  CODE_ACTION_REMOVES_ITS_OWN_DIAGNOSTIC  |  [lsp] code action applied: beta/src/malformed.cpp index=0 diagnosticsBefore=2 diagnosticsAfter=1;
+  FAIL  F2_ABSENT_CODE_ACTION_RETURNS_FAILURE  |  index 0 no longer exists after the first fix was applied; detail=lsp.codeAction
+  PASS  CODE_ACTION_RESULT_STILL_COMPILES  |  cl.exe /c accepted the repaired file
+  PASS  FORMAT_REPORTS_THE_CHANGES_IT_MADE  |  changed=1 linesChanged=3 bytesBefore=405 bytesAfter=409 rules=5
+  PASS  FORMAT_DECLARES_ITS_SCOPE  |  R1..R5 whitespace only; this is not clang-format and is not described as one
+  PASS  FORMAT_IS_IDEMPOTENT  |  second pass changed=0
+  PASS  FORMAT_VIA_COMMAND_TABLE_POINTER  |  [editor] format: beta/src/unformatted.cpp changed=0 linesChanged=0 bytesBefore=409 bytesAfter=409 rules=[R1_CRLF_TO_LF,R2_TAB_TO_INDENT_UNIT,R3_STRIP_TRAILING_WHITESPACE,R4_COLLAPSE_MULTI_BLANK_LINES,R5_SINGLE_TRAILING_NEWLINE];
+  PASS  EXTRACT_FUNCTION_APPLIED  |  block 15..17 -> weightedAccumulate params=2 types=[const Series&, double] functionLine=13 callsiteLine=21
+  PASS  EXTRACT_INSERTED_ABOVE_ITS_CALLER  |  the new function lands at line 13 so the call site can see it; a below-insertion would not compile
+  FAIL  EXTRACT_REPLACED_THE_BLOCK_WITH_ONE_CALL  |  the call sits at line 22 after the 7 inserted lines
+  PASS  EXTRACT_VIA_COMMAND_TABLE_POINTER  |  [editor] extract FAILED: the selected block is not inside a function body;
+  FAIL  FIXTURE_COMPILES_AFTER_REFACTOR  |  fixture_driver.cpp;calc_engine.cpp;series_stats.cpp;decoy_fs.cpp;extract_target.cpp;report_sink.cpp;unformatted.cpp;Generating Code...;C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\alpha\src\extract_target.cpp(17) : error C4716: 'alpha::weightedAccumulate': must return a value;;[process_exit=2]
+  FAIL  FIXTURE_OUTPUT_IDENTICAL_BEFORE_AND_AFTER  |  PRE=[mean=3.666667;norm=0.600000;med=3.000000;scored=27.500000;fast=1.000000;backup=5.000000;ends=3.000000;sum=119.000000;pair=3.500000;pass=2.500000;second=7.500000;] POST=[]
+  PASS  F4_SINGLE_ROOT_OPEN_IS_STILL_SERVING  |  reopening the primary root directly resolves the symbol; this proves the gate did not depend on the document form alone
+  PASS  F4_UNOPENABLE_WORKSPACE_RETURNS_FAILURE  |  reason=workspace root does not exist: C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\no_such_directory_here
+  PASS  F4_NO_INDEX_MEANS_NO_RESOLUTION  |  reason=no workspace open
+
+# fixture program output, before and after, byte for byte
+PRE_OUTPUT=mean=3.666667
+norm=0.600000
+med=3.000000
+scored=27.500000
+fast=1.000000
+backup=5.000000
+ends=3.000000
+sum=119.000000
+pair=3.500000
+pass=2.500000
+second=7.500000
+

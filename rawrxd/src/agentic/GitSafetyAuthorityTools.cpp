@@ -21,6 +21,9 @@
 #include "agentic/GitSafetyAuthorityTools.h"
 #include "agentic/AgentToolRegistry.h"
 
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -129,6 +132,131 @@ GitPolicy GitSafetyBoundPolicy() {
 }
 
 bool IsGitSafetyBound() { return binding() != nullptr; }
+
+namespace {
+
+const char* EnvOrNull(const char* name) {
+    const char* v = std::getenv(name);
+    if (!v || !*v) return nullptr;
+    return v;
+}
+
+bool EnvIsOne(const char* name) {
+    const char* v = EnvOrNull(name);
+    if (!v) return false;
+    return std::strcmp(v, "1") == 0 || std::strcmp(v, "true") == 0 ||
+           std::strcmp(v, "on") == 0 || std::strcmp(v, "yes") == 0;
+}
+
+} // namespace
+
+GitPolicy GitSafetyPolicyFromEnvironment(const std::string& fallbackRoot) {
+    GitPolicy p = GitPolicy::DefaultDenyAll();
+
+    std::string root = EnvOrNull("RAWRXD_GIT_ROOT") ? EnvOrNull("RAWRXD_GIT_ROOT") : fallbackRoot;
+    if (root.empty()) return p;  // no roots -> repositoryRootAllowed() denies
+
+    // Normalise separators and drop a trailing separator so the prefix test
+    // and the canonical-root comparison see the same string.
+    std::replace(root.begin(), root.end(), '/', '\\');
+    while (root.size() > 3 && root.back() == '\\') root.pop_back();
+    p.repositoryRoots.push_back(root);
+
+    if (const char* scope = EnvOrNull("RAWRXD_GIT_SCOPE")) {
+        std::string current;
+        for (const char* c = scope;; ++c) {
+            if (*c == ';' || *c == ',' || *c == '|' || *c == '\0') {
+                if (!current.empty()) {
+                    std::replace(current.begin(), current.end(), '\\', '/');
+                    while (!current.empty() && current.front() == '/') current.erase(current.begin());
+                    while (!current.empty() && current.back() == '/') current.pop_back();
+                    if (!current.empty()) p.authorizedPrefixes.push_back(current);
+                }
+                current.clear();
+                if (*c == '\0') break;
+            } else {
+                current.push_back(*c);
+            }
+        }
+    }
+
+    if (EnvIsOne("RAWRXD_GIT_ALLOW_STAGE")) {
+        p.granted |= static_cast<std::uint32_t>(GitCapability::Stage);
+        // Unstage is the inverse half of the same index write, so it follows
+        // stage unless it is named separately.
+        if (!EnvOrNull("RAWRXD_GIT_ALLOW_UNSTAGE") ||
+            EnvIsOne("RAWRXD_GIT_ALLOW_STAGE")) {
+            p.granted |= static_cast<std::uint32_t>(GitCapability::Unstage);
+        }
+    }
+    if (EnvOrNull("RAWRXD_GIT_ALLOW_UNSTAGE") && EnvIsOne("RAWRXD_GIT_ALLOW_UNSTAGE")) {
+        p.granted |= static_cast<std::uint32_t>(GitCapability::Unstage);
+    }
+    if (EnvIsOne("RAWRXD_GIT_ALLOW_COMMIT")) {
+        p.granted |= static_cast<std::uint32_t>(GitCapability::Commit);
+    }
+    if (EnvIsOne("RAWRXD_GIT_ALLOW_BRANCH")) {
+        p.granted |= static_cast<std::uint32_t>(GitCapability::Branch);
+    }
+    if (EnvIsOne("RAWRXD_GIT_ALLOW_CHECKOUT")) {
+        p.granted |= static_cast<std::uint32_t>(GitCapability::Checkout);
+    }
+    if (EnvIsOne("RAWRXD_GIT_ALLOW_STASH")) {
+        p.granted |= static_cast<std::uint32_t>(GitCapability::Stash);
+    }
+    if (EnvIsOne("RAWRXD_GIT_ALLOW_WORKTREE")) {
+        p.granted |= static_cast<std::uint32_t>(GitCapability::Worktree);
+    }
+    if (EnvIsOne("RAWRXD_GIT_ALLOW_ROLLBACK")) {
+        p.granted |= static_cast<std::uint32_t>(GitCapability::Rollback);
+    }
+    if (const char* c = EnvOrNull("RAWRXD_GIT_REQUIRE_CLEAN")) {
+        p.requireCleanForDestructive =
+            !(std::strcmp(c, "0") == 0 || std::strcmp(c, "off") == 0 ||
+              std::strcmp(c, "false") == 0);
+    }
+    return p;
+}
+
+void BindGitSafetySession(const GitPolicy& policy, const std::filesystem::path& repoRoot) {
+    BindGitSafetyPolicy(policy, repoRoot);
+}
+
+GitBindingReport InstallGitSafetyFromEnvironment(ToolRegistry& registry,
+                                                 const std::string& fallbackRoot) {
+    GitBindingReport report;
+    const GitPolicy policy = GitSafetyPolicyFromEnvironment(fallbackRoot);
+    report.capabilitiesGranted = policy.granted;
+    report.scopePrefixes = policy.authorizedPrefixes.size();
+    if (!policy.repositoryRoots.empty()) report.repositoryRoot = policy.repositoryRoots.front();
+
+    // Bind first so the tools exist even when no repository could be opened:
+    // a read-only agent that asks for status in an unconfigured install gets a
+    // measured refusal, not a 404 that looks like a missing feature.
+    const bool haveRoot = !policy.repositoryRoots.empty();
+    if (haveRoot) {
+        BindGitSafetyPolicy(policy, std::filesystem::path(policy.repositoryRoots.front()));
+    } else {
+        BindGitSafetyPolicy(policy);
+    }
+    report.sessionOpened = IsGitSafetyBound() && haveRoot;
+    if (haveRoot) {
+        auto b = binding();
+        if (b && b->beginResult.ok) {
+            report.sessionDetail = b->beginResult.detail;
+        } else if (b) {
+            report.sessionOpened = false;
+            report.sessionDetail = b->beginResult.detail;
+            report.refusalName = GitRefusalName(b->beginResult.refusal);
+        }
+    } else {
+        report.sessionDetail = "RAWRXD_GIT_ROOT is not set and no fallback root was supplied";
+        report.refusalName = GitRefusalName(GitRefusal::RepositoryRootNotAllowed);
+    }
+
+    report.installed = InstallGitTools(registry);
+    return report;
+}
 
 // Returns false when the policy grants no mutating capability, so a
 // default-deny policy cannot be widened by calling this.

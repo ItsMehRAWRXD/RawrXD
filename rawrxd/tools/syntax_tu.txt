@@ -1,0 +1,12 @@
+src/cli/RawrDumpRebuild.cpp
+src/canonical/UnifiedModelLoader.cpp
+src/core/sovereign_model_loader.cpp
+src/core/RawrXD_FeatureRegistry.cpp
+src/diagnostics/IdeResponseHangAuthority.cpp
+src/install/InstallRebootRawrE2EAuthority.cpp
+src/ai/SpeculativeTreeAttentionBridge.cpp
+src/backend/VulkanGemmDispatcher.cpp
+src/cli/deep_iteration_engine.cpp
+src/agentmodes/RawrAuditAuthority.cpp
+src/generation/test_generation.cpp
+src/generation/integration/RawrXDEngineAdapter.cpp

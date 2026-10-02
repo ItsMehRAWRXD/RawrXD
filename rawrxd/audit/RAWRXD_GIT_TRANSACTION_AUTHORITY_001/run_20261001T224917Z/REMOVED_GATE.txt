@@ -1,0 +1,8 @@
+    if (policy.writeRequiresTransaction && IsTransactionRequired(name, policy) &&
+        !ckpt::Transaction::Active()) {
+        ToolResult r;
+        r.error = name +
+                  " requires an open checkpoint transaction; open one first "
+                  "(POST /api/agent/transaction {\"op\":\"begin\"})";
+        return r;
+    }

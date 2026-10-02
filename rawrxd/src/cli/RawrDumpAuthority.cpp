@@ -80,6 +80,12 @@ namespace rawrxd::cli
         std::string configUsed;
         std::string verdict                = "FAIL";
 
+        // Selection authority. A query the user typed must be answered, and a
+        // query that matches nothing must not inherit the scan's PASS.
+        std::string selectionQuery;
+        std::string selectionStatus = "UNSET";  // MATCH | NO_MATCH | AMBIGUOUS | UNRESOLVED_PATH
+        int         selectionMatches = 0;
+
         // Rows for output.
         std::vector<DumpRow> rows;
     };
@@ -283,17 +289,50 @@ namespace rawrxd::cli
 
         // Build output rows from the real catalog.
         const auto& records = rawrxd::models::catalog();
+        std::string queryLower = g_state.modelName;
+        std::transform(queryLower.begin(), queryLower.end(), queryLower.begin(),
+                       [](unsigned char c) { return (char)std::tolower(c); });
+
         for (const auto& r : records) {
-            // Apply filters. A filter that eliminates everything yields an
-            // empty table, not a failure — the receipt still reports what
-            // was scanned.
+            // Apply filters. Match is case-insensitive and accepts both the
+            // bare name and the "name:tag" form the catalog now carries.
             if (!g_state.modelName.empty()) {
-                if (r.name.find(g_state.modelName) == std::string::npos) continue;
+                std::string nameLower = r.name;
+                std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(),
+                               [](unsigned char c) { return (char)std::tolower(c); });
+                if (nameLower.find(queryLower) == std::string::npos) continue;
             }
             if (g_state.ggufOnly && r.source != "local_gguf") continue;
             if (g_state.ollamaOnly && r.source != "ollama_manifest") continue;
             if (g_state.aliasesOnly && r.source != "alias") continue;
             g_state.rows.push_back(rowFromRecord(r));
+        }
+
+        // Selection authority. A query the user actually typed must be
+        // answered. The scan's verdict describes the scan; it does not
+        // describe whether the requested object was found, so it cannot be
+        // inherited by a query that matched nothing.
+        g_state.selectionQuery   = g_state.modelName;
+        g_state.selectionMatches = (int)g_state.rows.size();
+
+        if (!g_state.modelName.empty()) {
+            if (g_state.selectionMatches == 0) {
+                g_state.selectionStatus = "NO_MATCH";
+                g_state.verdict = "FAIL_NO_MATCH";
+            } else if (g_state.selectionMatches > 1) {
+                g_state.selectionStatus = "AMBIGUOUS";
+                g_state.verdict = "FAIL_AMBIGUOUS";
+            } else if (g_state.rows.front().path.empty()) {
+                g_state.selectionStatus = "UNRESOLVED_PATH";
+                g_state.verdict = "FAIL_UNRESOLVED_PATH";
+            } else {
+                g_state.selectionStatus = "MATCH";
+            }
+        } else {
+            g_state.selectionStatus = "ALL";
+            if (g_state.rows.empty() && !g_state.rootsOnly) {
+                g_state.verdict = "FAIL_EMPTY_CATALOG";
+            }
         }
 
         // --roots mode: print scanned/skipped roots and exit.
@@ -326,6 +365,9 @@ namespace rawrxd::cli
         writeDumpReceipt();
         writeCpuOnlyReceiptFile();
 
+        // A failing verdict must not exit 0. An empty model set reported as
+        // success is indistinguishable from a working query that found nothing.
+        if (g_state.verdict != "PASS") return 1;
         return 0;
     }
 
@@ -363,6 +405,12 @@ namespace rawrxd::cli
         std::cout << "  \"cpu_only\": true,\n";
         std::cout << "  \"gpu_required\": false,\n";
         std::cout << "  \"generation_required\": false,\n";
+        std::cout << "  \"verdict\": \"" << g_state.verdict << "\",\n";
+        std::cout << "  \"selection\": {\n";
+        std::cout << "    \"query\": \"" << g_state.selectionQuery << "\",\n";
+        std::cout << "    \"status\": \"" << g_state.selectionStatus << "\",\n";
+        std::cout << "    \"matches\": " << g_state.selectionMatches << "\n";
+        std::cout << "  },\n";
         std::cout << "  \"model_count\": " << g_state.modelsDiscovered << ",\n";
         std::cout << "  \"models\": [\n";
         for (size_t i = 0; i < g_state.rows.size(); ++i) {
@@ -444,6 +492,9 @@ namespace rawrxd::cli
         std::cout << "  GPU_REQUIRED=0\n";
         std::cout << "  NO_GPU_ENV_SUPPORTED=1\n";
         std::cout << "  EMPTY_ROOT_RETURNS_FAIL=" << g_state.emptyRootReturnsFail << "\n";
+        std::cout << "  SELECTION_QUERY=" << g_state.selectionQuery << "\n";
+        std::cout << "  SELECTION_STATUS=" << g_state.selectionStatus << "\n";
+        std::cout << "  SELECTION_MATCHES=" << g_state.selectionMatches << "\n";
         std::cout << "  STUB_FALLBACKS=0\n";
         std::cout << "  VERDICT=" << g_state.verdict << "\n";
 
@@ -464,6 +515,9 @@ namespace rawrxd::cli
         rawrxd::receipt::writeKeyValueInt(path, "MODELS_CLASSIFIED", g_state.modelsClassified);
         rawrxd::receipt::writeKeyValueInt(path, "MODELS_WITH_PATH", g_state.modelsWithPath);
         rawrxd::receipt::writeKeyValueInt(path, "MODELS_WITH_UNKNOWN_PATH", g_state.modelsWithUnknownPath);
+        rawrxd::receipt::writeKeyValue(path, "SELECTION_QUERY", g_state.selectionQuery);
+        rawrxd::receipt::writeKeyValue(path, "SELECTION_STATUS", g_state.selectionStatus);
+        rawrxd::receipt::writeKeyValueInt(path, "SELECTION_MATCHES", g_state.selectionMatches);
         rawrxd::receipt::writeKeyValueInt(path, "DEEP2_COMPATIBLE_COUNT", g_state.deep2CompatibleCount);
         rawrxd::receipt::writeKeyValueInt(path, "UNLOADABLE_COUNT", g_state.unloadableCount);
         rawrxd::receipt::writeKeyValueInt(path, "DUPLICATES_REMOVED", g_state.duplicatesRemoved);

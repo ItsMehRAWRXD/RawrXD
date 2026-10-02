@@ -44,7 +44,8 @@ static float RefF16(uint16_t h) {
             int e = 0; uint32_t m = mant;
             while ((m & 0x400u) == 0) { m <<= 1; ++e; }
             m &= 0x3FFu;
-            bits = sign | ((uint32_t)(127 - 15 - e) << 23) | (m << 13);
+            // RAWRXD_FP16_SUBNORMAL_001: exponent is 127 - 14 - e.
+bits = sign | ((uint32_t)(127 - 14 - e) << 23) | (m << 13);
         }
     } else if (exp == 0x1Fu) {
         bits = sign | 0x7F800000u | (mant << 13);

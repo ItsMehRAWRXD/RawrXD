@@ -1,0 +1,14 @@
+RAWRXD_GIT_TRANSACTION_AUTHORITY_001.LOCK r2
+issued_at_utc = 2026-10-01T22:54:25Z
+supersedes   = RAWRXD_GIT_TRANSACTION_AUTHORITY_001.LOCK.txt (r1), retained unedited
+reason       = the receipt was legitimately extended AFTER r1 was written: the
+                RAWRXD_GIT_TRANSACTION_AUTHORITY_001 findings and the resulting
+                tree movement were not known when r1 was issued
+rule_applied = a sealed receipt that stops matching its evidence is STALE; the
+                remedy is a new certificate, never an edit of the sealed one
+
+receipt_sha256 = AB773B86825AC58AF2531A459C7FD9871A212FE5377DA088C95CBC6B62F8DE7A
+sidecar_sha256 = E3BFC2BA91DCB016A3FD71882CE8B6FE7F3C213E52E2CDED1E84C98ED96B678A
+r1_sha256      = CA4889E2DA91EFFB83DA8C4F5E2CD80EEF5D9F4C4426100AA86CA64646B19FB2
+scope          = EVIDENCE sealed. Source and product NOT frozen.
+git_state      = UNCOMMITTED (no commit, no push, by this session)

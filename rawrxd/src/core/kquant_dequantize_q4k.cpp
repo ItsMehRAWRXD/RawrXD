@@ -65,13 +65,26 @@ static inline float fp16_to_fp32(uint16_t h) {
             return *reinterpret_cast<float*>(&sign);
         }
         // Denormal
+        //
+        // RAWRXD_FP16_SUBNORMAL_001
+        //
+        // The loop seeds exp = 1 and decrements once per shift, so on exit
+        // exp == 1 - k for k shifts. After k shifts the value is
+        // (m/1024) * 2^(-14 - k), and 113 - k == 112 + (1 - k) == 112 + exp.
+        // The exponent therefore ACCUMULATES with exp.
+        //
+        // This previously read `exp = 127 - 15 - exp`, i.e. 112 - exp ==
+        // 111 + k. Because exp is small and k varies, that is not even a
+        // constant factor: measured across all 2046 subnormal patterns the
+        // error ran from 1x to 2.62e5x and 1022 of 2046 patterns were wrong.
+        // A varying factor is far harder to recognise than a clean 2x.
         exp = 1;
         while ((mant & 0x0400) == 0) {
             mant <<= 1;
             exp--;
         }
         mant &= 0x03FF;
-        exp = 127 - 15 - exp;
+        exp = 127 - 15 + exp;
     } else if (exp == 0x1F) {
         // Inf/NaN
         exp = 0xFF;

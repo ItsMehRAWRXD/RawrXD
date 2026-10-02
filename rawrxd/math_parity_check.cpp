@@ -5,6 +5,8 @@
 #include "rawrxd_transformer.hpp"
 
 #include <cmath>
+#include <filesystem>
+#include <system_error>
 #include <cstdio>
 #include <cstring>
 #include <vector>
@@ -278,7 +280,21 @@ int main() {
             add(b + "ffn_down.weight", {H, I}, 0.03f);
         }
         const std::string path = "F:/~dev/rawrxd/bench_tmp/parity.gguf";
-        if (!w.WriteToFile(path, meta)) { Check(false, "write parity gguf"); return 2; }
+        // RAWRXD_GATE_INTEGRITY_001
+        // This previously did `if (!w.WriteToFile(...)) { Check(false,...); return 2; }`,
+        // returning BEFORE the RESULT line was printed. A hard failure was then
+        // indistinguishable from a truncated or aborted run: no RESULT, no exit
+        // code the reader could interpret. A gate that cannot state its own
+        // failure is not a gate. The directory is created, and every exit path
+        // now prints RESULT before returning.
+        std::error_code ec;
+        std::filesystem::create_directories("F:/~dev/rawrxd/bench_tmp", ec);
+        if (!w.WriteToFile(path, meta)) {
+            Check(false, "write parity gguf");
+            std::printf("\nRESULT FAIL (1 failures)\n");
+            std::printf("GATE_ABORT=write_parity_gguf\n");
+            return 1;
+        }
 
         TransformerRuntime rt;
         Check(rt.LoadWeights(path), "LoadWeights for parity model");

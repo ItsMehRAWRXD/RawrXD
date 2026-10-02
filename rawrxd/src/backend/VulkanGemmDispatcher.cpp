@@ -30,8 +30,24 @@ bool VulkanGemmDispatcher::Initialize(const DispatchConfig& config) {
     vk_physical_device_ = VK_NULL_HANDLE;  // device_->GetVkPhysicalDevice();
 
     if (vk_device_ == VK_NULL_HANDLE) {
-        // Mock mode: allow initialization for testing
-        return true;
+        // RAWRXD_UNSIMULATE_001
+        // This used to "Mock mode: allow initialization for testing" and return
+        // true, which left the dispatcher in a state where DispatchGemm and
+        // CreatePipeline also returned true without touching a device, without
+        // creating a pipeline and without writing the output buffer. Every
+        // caller above it was told a GEMM happened.
+        //
+        // A dispatcher with no device must report that it cannot dispatch.
+        // Initialization succeeding is only meaningful if something was
+        // initialized, and nothing was: the device handles above are literals
+        // set to VK_NULL_HANDLE with the real extraction left as a comment, so
+        // this path was reachable and terminal.
+        std::fprintf(stderr,
+            "[VULKAN_GEMM] Initialize FAILED: no VkDevice (device handle "
+            "extraction is not implemented; extraction is NOT optional and is "
+            "not simulated)\n");
+        std::fflush(stderr);
+        return false;
     }
 
     // Create pipeline cache
@@ -183,8 +199,17 @@ bool VulkanGemmDispatcher::DispatchGemm(
     const GemmShape& shape)
 {
     if (vk_device_ == VK_NULL_HANDLE) {
-        // Mock mode: simulate success
-        return true;
+        // RAWRXD_UNSIMULATE_001: was "// Mock mode: simulate success".
+        //
+        // Returning true here reported a completed matrix multiply while
+        // leaving C entirely untouched. Any caller that used the result -- and
+        // a GEMM result is a model activation -- consumed uninitialised
+        // memory and had no way to know. A dispatch that cannot run must say so.
+        std::fprintf(stderr,
+            "[VULKAN_GEMM] DispatchGemm REFUSED: no VkDevice; output buffer "
+            "left untouched. No GEMM was performed.\n");
+        std::fflush(stderr);
+        return false;
     }
 
     // Get or create pipeline
@@ -636,7 +661,19 @@ std::vector<std::pair<TileConfig, float>> VulkanGemmDispatcher::BenchmarkTiles(
 // ─── Pipeline Management ───
 
 bool VulkanGemmDispatcher::CreatePipeline(const PipelineKey& key, PipelineState& state) {
-    if (vk_device_ == VK_NULL_HANDLE) return true; // Mock mode
+    // RAWRXD_UNSIMULATE_001: was `if (vk_device_ == VK_NULL_HANDLE) return true;`
+    // // Mock mode. A pipeline state that claims to exist but has no
+    // VkPipeline behind it is a pipeline state that will be bound. Failing
+    // closed here is what stops a "compiled" pipeline from being a null handle
+    // reaching a bind call.
+    if (vk_device_ == VK_NULL_HANDLE) {
+        std::fprintf(stderr,
+            "[VULKAN_GEMM] CreatePipeline REFUSED: no VkDevice; no pipeline was "
+            "compiled. Returning success here would hand callers an empty "
+            "PipelineState to bind.\n");
+        std::fflush(stderr);
+        return false;
+    }
 
     // Compile shader
     std::vector<uint32_t> spirv;

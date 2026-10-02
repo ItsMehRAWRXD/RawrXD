@@ -26,6 +26,7 @@
 #include "sentinel_watchdog.hpp"
 #include "shared_feature_dispatch.h"
 #include "swarm_coordinator.h"
+#include "repointel/RepositoryUniverse.hpp"
 #include "unified_hotpatch_manager.hpp"
 #include <algorithm>
 #include <array>
@@ -1324,6 +1325,19 @@ struct LspSymbolMatch
 static std::string toLowerAsciiCopy(std::string v);
 static bool pathIsDirectory(const std::string& path);
 
+// RAWRXD_REPOSITORY_INTELLIGENCE_001 — whole-repository workspace state.
+// Cached on first use because eight handlers call
+// collectDefaultLspSearchFiles() and one walk is enough.
+static std::vector<std::string> g_lspWorkspace;
+static size_t g_lspUniverseFiles = 0;
+static size_t g_lspFilesSeen = 0;
+static uint64_t g_lspUniverseBytes = 0;
+static size_t g_lspPrunedDirs = 0;
+static size_t g_lspPrunedFilesBelow = 0;
+static size_t g_lspTruncated = 0;
+static std::string g_lspRoot;
+static bool g_lspScopeResolved = false;
+
 static bool hasLspSearchExt(const std::string& path)
 {
     size_t dot = path.find_last_of('.');
@@ -1365,17 +1379,64 @@ static void collectLspSearchFilesRecursive(const std::string& root, std::vector<
 
 static std::vector<std::string> collectDefaultLspSearchFiles()
 {
-    std::vector<std::string> files;
-    files.reserve(1024);
-    const std::array<const char*, 4> roots = {"src", "include", "tests", "test"};
-    for (const char* root : roots)
+    // RAWRXD_REPOSITORY_INTELLIGENCE_001
+    //
+    // This used to be:
+    //     const std::array<const char*, 4> roots = {"src","include","tests","test"};
+    //     collectLspSearchFilesRecursive(root, files, 1600);
+    //
+    // Four hardcoded directory names under a 1600-file cap, against a
+    // repository the project's own audit measured at 1968 implementation files.
+    // Because the walk recursed in alphabetical order and broke at the cap, the
+    // truncation landed on the tail of src/ -- reverse_engineering, runtime,
+    // serve, soloide, sovereign, tokenizer, win32app -- and nothing anywhere
+    // recorded that a search had been cut short. A feature living in a directory
+    // past the cap was indistinguishable from a feature that did not exist.
+    //
+    // The scope is now a measured universe: the root is resolved from the
+    // filesystem, excluded trees are still enumerated so their sizes can be
+    // reported, and the counters below are what the LSP handlers print so a
+    // reader can tell a complete workspace from a narrowed one.
+    if (!g_lspScopeResolved)
     {
-        collectLspSearchFilesRecursive(root, files, 1600);
-        if (files.size() >= 1600)
-            break;
+        char cwd[MAX_PATH] = {};
+        const DWORD n = GetCurrentDirectoryA(MAX_PATH, cwd);
+        std::string start = (n > 0 && n < MAX_PATH) ? std::string(cwd) : std::string(".");
+        rawrxd::repointel::UniversePolicy policy;
+        policy.explicitRoot = rawrxd::repointel::resolveRepositoryRoot(start);
+        if (policy.explicitRoot.empty())
+            policy.explicitRoot = start;
+        policy.extensions = {".c",  ".cc", ".cpp", ".cxx", ".h",  ".hh",
+                             ".hpp", ".hxx", ".ixx", ".inl", ".ipp", ".asm",
+                             ".inc"};
+        const rawrxd::repointel::Universe u =
+            rawrxd::repointel::buildUniverse(policy);
+        g_lspWorkspace.reserve(u.files.size());
+        for (const rawrxd::repointel::UniverseFile& f : u.files)
+            g_lspWorkspace.push_back(f.abs);
+        g_lspUniverseFiles = u.files.size();
+        g_lspUniverseBytes = u.bytesSeen;
+        g_lspFilesSeen = u.filesSeen;
+        g_lspPrunedDirs = u.pruned.size();
+        g_lspPrunedFilesBelow = 0;
+        for (const rawrxd::repointel::PrunedDir& p : u.pruned)
+            g_lspPrunedFilesBelow += p.filesBelow;
+        g_lspTruncated = u.truncated;
+        g_lspRoot = policy.explicitRoot;
+        g_lspScopeResolved = true;
     }
-    return files;
+    return g_lspWorkspace;
 }
+
+// Counters describing what the LSP workspace actually covered. Reported by the
+// workspace handler so a search result can be read against its scope.
+size_t lspWorkspaceUniverseFiles()   { return g_lspUniverseFiles; }
+size_t lspWorkspaceFilesSeen()       { return g_lspFilesSeen; }
+size_t lspWorkspacePrunedDirs()      { return g_lspPrunedDirs; }
+size_t lspWorkspacePrunedFilesBelow(){ return g_lspPrunedFilesBelow; }
+size_t lspWorkspaceTruncated()      { return g_lspTruncated; }
+uint64_t lspWorkspaceBytesSeen()     { return g_lspUniverseBytes; }
+std::string lspWorkspaceRoot()       { return g_lspRoot; }
 
 static bool readTextFileLimited(const std::string& path, std::string& out, size_t maxBytes)
 {

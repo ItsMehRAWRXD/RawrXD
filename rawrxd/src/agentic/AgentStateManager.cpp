@@ -68,17 +68,28 @@ std::string AgentStateManager::BuildContextWindow() const {
     struct Entry {
         std::string rendered;
         MessageRole role;
-        bool pinned = false;  // system and the newest user message
+        bool pinned = false;  // system, the newest user, the newest observation
     };
     std::vector<Entry> entries;
     entries.reserve(history_.size());
+
+    // The newest message of each pinned kind. Found first, because "the last
+    // message" is not the same thing: after a tool turn the last message is the
+    // observation and the user's actual question is no longer last, which is how
+    // a question used to become the first droppable message.
+    std::size_t lastUser = history_.size();
+    std::size_t lastTool = history_.size();
+    for (std::size_t i = 0; i < history_.size(); ++i) {
+        if (history_[i].role == MessageRole::User) lastUser = i;
+        if (history_[i].role == MessageRole::Tool) lastTool = i;
+    }
+
     for (std::size_t i = 0; i < history_.size(); ++i) {
         Entry e;
         e.role = history_[i].role;
         e.rendered = std::string("<|") + RoleName(history_[i].role) + "|>\n" +
                      history_[i].content + "\n";
-        e.pinned = (history_[i].role == MessageRole::System) ||
-                   (history_[i].role == MessageRole::User && i + 1 == history_.size());
+        e.pinned = (history_[i].role == MessageRole::System) || i == lastUser || i == lastTool;
         entries.push_back(std::move(e));
     }
 
@@ -105,6 +116,31 @@ std::string AgentStateManager::BuildContextWindow() const {
         }
     }
 
+    // Pinned content alone can still exceed the budget, and the only way to fit
+    // it is to cut it. Cutting the observation is wrong (the model would resume
+    // without the answer); cutting the system prompt is also wrong. So the
+    // newest observation is cut instead, from the END, with the number of lost
+    // characters stated, and the loss is counted so a caller can report it.
+    std::uint32_t truncatedChars = 0;
+    if (total > contextCharBudget_ && lastTool < entries.size() && keep[lastTool]) {
+        Entry& obs = entries[lastTool];
+        // Leave room for the marker itself, and never cut below the header that
+        // names the tool and its status.
+        const std::size_t markerReserve = 96;
+        const std::string header = obs.rendered.substr(0, obs.rendered.find('\n') + 1);
+        if (obs.rendered.size() > header.size() + markerReserve) {
+            const std::size_t keepChars = contextCharBudget_ > markerReserve + header.size()
+                                              ? contextCharBudget_ - markerReserve - header.size()
+                                              : 0;
+            const std::size_t cut = obs.rendered.size() - header.size() - keepChars;
+            obs.rendered = header + obs.rendered.substr(header.size(), keepChars) +
+                           "\n[observation truncated: " + std::to_string(cut) +
+                           " character(s) removed to fit the context budget]\n";
+            truncatedChars = static_cast<std::uint32_t>(cut);
+            total = totalOf(keep);
+        }
+    }
+
     std::string out;
     out.reserve(total + 32);
     for (std::size_t i = 0; i < entries.size(); ++i) {
@@ -117,6 +153,7 @@ std::string AgentStateManager::BuildContextWindow() const {
     out += "<|assistant|>\n";
 
     lastDropped_ = dropped;
+    lastTruncatedChars_ = truncatedChars;
     lastContextChars_ = out.size();
     return out;
 }
@@ -124,6 +161,11 @@ std::string AgentStateManager::BuildContextWindow() const {
 std::uint32_t AgentStateManager::LastDroppedMessageCount() const {
     std::lock_guard<std::mutex> lk(mtx_);
     return lastDropped_;
+}
+
+std::uint32_t AgentStateManager::LastTruncatedCharCount() const {
+    std::lock_guard<std::mutex> lk(mtx_);
+    return lastTruncatedChars_;
 }
 
 std::size_t AgentStateManager::LastContextChars() const {

@@ -24,6 +24,10 @@
 #include "execution_governor.h"
 #include "gpu_backend_bridge.h"
 #include "../agentic/AgentOllamaClient.h"
+// RAWRXD_GIT_SAFETY_AUTHORITY_001: the git.* command handlers dispatch through
+// the sandboxed tool registry so `!git_commit` cannot become an ungoverned path
+// around the gate.
+#include "agentic/AgentToolRegistry.h"
 #include <windows.h>
 #include <shellapi.h>
 #include <winhttp.h>
@@ -2789,23 +2793,121 @@ CommandResult handleServerStatus(const CommandContext& ctx) {
 
 // ============================================================================
 // GIT
+//
+// RAWRXD_GIT_SAFETY_AUTHORITY_001
+//
+// Every one of these used to build a command STRING and hand it to _popen:
+//
+//     std::string cmd = "git commit -m \"" + std::string(ctx.args) + "\" 2>&1";
+//
+// A quote, an ampersand or a pipe in the message escaped into cmd.exe, so
+// `!git_commit x" && del /s F:\*` was a command injection from a text box. The
+// status/diff handlers were read-only but still spawned a shell for no reason.
+//
+// All five now run git with an argv vector through CreateProcessW, so no shell
+// exists and a metacharacter in any argument is data. Commit additionally goes
+// through the RAWRXD_GIT_SAFETY_AUTHORITY_001 gate, which refuses when the
+// index holds a staged path outside the caller's scope: `git commit` with no
+// pathspec commits the WHOLE index and would otherwise publish the user's
+// staged work under this message.
+//
+// The human-facing command is no longer an ungoverned path around the gate,
+// and it is no longer a shell.
 // ============================================================================
 
+namespace {
+
+// The directory these git commands act on: RAWRXD_GIT_ROOT if set, else the
+// process working directory.
+std::string GitCommandRoot() {
+    const char* root = std::getenv("RAWRXD_GIT_ROOT");
+    if (root && *root) return std::string(root);
+    char buf[MAX_PATH]{};
+    const DWORD n = GetCurrentDirectoryA(MAX_PATH, buf);
+    return (n > 0 && n < MAX_PATH) ? std::string(buf, n) : std::string(".");
+}
+
+// Run git with an argument vector. No shell, so nothing in any argument can be
+// reinterpreted as a metacharacter, redirection or pipeline.
+int RunGitNoShell(const std::string& root, const std::vector<std::string>& args,
+                  std::string& out) {
+    SECURITY_ATTRIBUTES sa{};
+    sa.nLength = sizeof sa;
+    sa.bInheritHandle = TRUE;
+    HANDLE rd = nullptr, wr = nullptr;
+    if (!CreatePipe(&rd, &wr, &sa, 0)) return -1;
+    SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0);
+
+    // CommandLineToArgvW quoting rules. Reproduced here rather than shared
+    // because this translation unit does not link the agentic library; the
+    // point is that a message containing a quote is escaped, not concatenated.
+    auto quote = [](const std::string& a) {
+        if (!a.empty() && a.find_first_of(" \t\n\v\"") == std::string::npos) return a;
+        std::string q = "\"";
+        for (std::size_t i = 0; i < a.size(); ++i) {
+            std::size_t slashes = 0;
+            while (i < a.size() && a[i] == '\\') { ++i; ++slashes; }
+            if (i == a.size()) { q.append(slashes * 2, '\\'); break; }
+            if (a[i] == '"') { q.append(slashes * 2 + 1, '\\'); q.push_back('"'); }
+            else { q.append(slashes, '\\'); q.push_back(a[i]); }
+        }
+        q.push_back('"');
+        return q;
+    };
+
+    std::string line = "git.exe -C " + quote(root);
+    for (const std::string& a : args) line += " " + quote(a);
+    std::vector<char> mutableCmd(line.begin(), line.end());
+    mutableCmd.push_back('\0');
+
+    STARTUPINFOA si{};
+    si.cb = sizeof si;
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdOutput = wr;
+    si.hStdError = wr;
+    si.hStdInput = nullptr;
+    PROCESS_INFORMATION pi{};
+    const BOOL ok = CreateProcessA(nullptr, mutableCmd.data(), nullptr, nullptr, TRUE,
+                                   CREATE_NO_WINDOW, nullptr, root.c_str(), &si, &pi);
+    CloseHandle(wr);
+    if (!ok) { CloseHandle(rd); return -1; }
+
+    char buf[1024];
+    DWORD n = 0;
+    // Drain to EOF rather than breaking at a cap: closing the read end early
+    // makes git die of a broken pipe and turns a truncated observation into a
+    // reported command failure.
+    while (ReadFile(rd, buf, sizeof buf, &n, nullptr) && n > 0) out.append(buf, n);
+    CloseHandle(rd);
+    WaitForSingleObject(pi.hProcess, 30000);
+    DWORD code = 0;
+    GetExitCodeProcess(pi.hProcess, &code);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    return static_cast<int>(code);
+}
+
+} // namespace
+
 CommandResult handleGitStatus(const CommandContext& ctx) {
-    // Execute real git command
-    FILE* pipe = _popen("git status --short 2>&1", "r");
-    if (!pipe) {
+    std::string out;
+    const int rc = RunGitNoShell(GitCommandRoot(), {"status", "--short"}, out);
+    if (rc < 0) {
         ctx.output("[Git] Failed to execute git status.\n");
-        return CommandResult::error("git.status: popen failed");
+        return CommandResult::error("git.status: spawn failed");
     }
     std::ostringstream oss;
     oss << "=== Git Status ===\n";
-    char buf[256];
-    while (fgets(buf, sizeof(buf), pipe)) oss << "  " << buf;
-    int rc = _pclose(pipe);
+    std::istringstream iss(out);
+    std::string line;
+    while (std::getline(iss, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        oss << "  " << line << "\n";
+    }
     if (rc != 0) oss << "  (git returned exit code " << rc << ")\n";
     ctx.output(oss.str().c_str());
-    return CommandResult::ok("git.status");
+    return rc == 0 ? CommandResult::ok("git.status")
+                   : CommandResult::error("git.status: git exited non-zero");
 }
 
 CommandResult handleGitCommit(const CommandContext& ctx) {
@@ -2813,64 +2915,58 @@ CommandResult handleGitCommit(const CommandContext& ctx) {
         ctx.output("Usage: !git_commit <message>\n");
         return CommandResult::error("git.commit: missing message");
     }
-    std::string cmd = "git commit -m \"" + std::string(ctx.args) + "\" 2>&1";
-    FILE* pipe = _popen(cmd.c_str(), "r");
-    if (!pipe) {
-        ctx.output("[Git] Failed to execute git commit.\n");
-        return CommandResult::error("git.commit: popen failed");
+    auto& reg = rawrxd::agentic::ToolRegistry::Instance();
+    if (!reg.HasTool("git_commit")) {
+        ctx.output("[Git] Commit refused: the git safety gate is not installed in this "
+                   "process.\n  Set RAWRXD_GIT_ROOT, RAWRXD_GIT_SCOPE and "
+                   "RAWRXD_GIT_ALLOW_COMMIT=1.\n");
+        return CommandResult::error("git.commit: RAWRXD_GIT_SAFETY_UNBOUND");
     }
-    std::ostringstream oss;
-    oss << "[Git] Committing...\n";
-    char buf[256];
-    while (fgets(buf, sizeof(buf), pipe)) oss << "  " << buf;
-    _pclose(pipe);
-    ctx.output(oss.str().c_str());
+    std::unordered_map<std::string, std::string> params;
+    params["message"] = std::string(ctx.args);
+    const auto r = reg.Execute("git_commit", params);
+    if (!r.success) {
+        ctx.output(std::string("[Git] Commit refused by "
+                               "RAWRXD_GIT_SAFETY_AUTHORITY_001:\n  ") + r.error + "\n");
+        return CommandResult::error("git.commit: " + r.error);
+    }
+    ctx.output(r.output.c_str());
     return CommandResult::ok("git.commit");
 }
 
 CommandResult handleGitPush(const CommandContext& ctx) {
-    ctx.output("[Git] Pushing to remote...\n");
-    FILE* pipe = _popen("git push 2>&1", "r");
-    if (!pipe) {
-        ctx.output("[Git] Failed to execute git push.\n");
-        return CommandResult::error("git.push: popen failed");
-    }
-    std::ostringstream oss;
-    char buf[256];
-    while (fgets(buf, sizeof(buf), pipe)) oss << "  " << buf;
-    _pclose(pipe);
-    ctx.output(oss.str().c_str());
-    return CommandResult::ok("git.push");
+    ctx.output("[Git] Push is not performed by this handler.\n"
+               "RAWRXD_GIT_SAFETY_AUTHORITY_001 does not implement push: it is not an\n"
+               "enum value, so no policy can grant it. Run it yourself if you intend to.\n");
+    return CommandResult::error("git.push: not implemented by design");
 }
 
 CommandResult handleGitPull(const CommandContext& ctx) {
-    ctx.output("[Git] Pulling from remote...\n");
-    FILE* pipe = _popen("git pull 2>&1", "r");
-    if (!pipe) {
-        ctx.output("[Git] Failed to execute git pull.\n");
-        return CommandResult::error("git.pull: popen failed");
-    }
-    std::ostringstream oss;
-    char buf[256];
-    while (fgets(buf, sizeof(buf), pipe)) oss << "  " << buf;
-    _pclose(pipe);
-    ctx.output(oss.str().c_str());
-    return CommandResult::ok("git.pull");
+    ctx.output("[Git] Pull is not performed by this handler.\n"
+               "RAWRXD_GIT_SAFETY_AUTHORITY_001 does not implement pull or fetch:\n"
+               "neither is a certified capability and neither has a policy bit.\n"
+               "Run it yourself if you intend to.\n");
+    return CommandResult::error("git.pull: not implemented by design");
 }
 
 CommandResult handleGitDiff(const CommandContext& ctx) {
-    FILE* pipe = _popen("git diff --stat 2>&1", "r");
-    if (!pipe) {
+    std::string out;
+    const int rc = RunGitNoShell(GitCommandRoot(), {"diff", "--stat"}, out);
+    if (rc < 0) {
         ctx.output("[Git] Failed to execute git diff.\n");
-        return CommandResult::error("git.diff: popen failed");
+        return CommandResult::error("git.diff: spawn failed");
     }
     std::ostringstream oss;
     oss << "=== Git Diff ===\n";
-    char buf[256];
-    while (fgets(buf, sizeof(buf), pipe)) oss << "  " << buf;
-    _pclose(pipe);
+    std::istringstream iss(out);
+    std::string line;
+    while (std::getline(iss, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        oss << "  " << line << "\n";
+    }
     ctx.output(oss.str().c_str());
-    return CommandResult::ok("git.diff");
+    return rc == 0 ? CommandResult::ok("git.diff")
+                   : CommandResult::error("git.diff: git exited non-zero");
 }
 
 // ============================================================================

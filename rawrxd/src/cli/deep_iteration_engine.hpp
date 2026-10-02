@@ -54,6 +54,17 @@ struct StepMetrics {
     std::chrono::milliseconds forward_time{0};
     std::chrono::milliseconds backward_time{0};
     std::chrono::milliseconds optimizer_time{0};
+    // RAWRXD_UNSIMULATE_001
+    //
+    // A zero in a metrics struct is indistinguishable from a measurement of
+    // zero. Every field above used to be filled by a formula that produced a
+    // guaranteed loss decrease and constant 10/20/5ms timings, so a consumer
+    // reading a "loss" of 0.5 could not tell it from a real one. `measured`
+    // makes the difference explicit: when it is false, every other field in
+    // this struct is undefined and must not be plotted, averaged or reported.
+    // It is not set by any code path in this tree, because no forward or
+    // backward pass is implemented.
+    bool measured = false;
 };
 
 // ───────────────────────────────────────────────────────────────

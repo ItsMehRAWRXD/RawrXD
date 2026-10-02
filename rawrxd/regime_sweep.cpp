@@ -377,6 +377,18 @@ int main(int argc, char** argv) {
                     const unsigned t = counts[ci];
                     // Discard the first rep of each round for this config.
                     const Cell c = MeasureCell(t, round);
+                    // RAWRXD_SWEEP_PROGRESS_001
+                    // Cell results were printed only after ALL rounds finished,
+                    // so a slow block emitted nothing at all for its whole
+                    // duration. At depth=4096 one block ran >40 minutes of
+                    // steady CPU with the log frozen after the header, which is
+                    // indistinguishable from a hang -- the exact failure mode
+                    // the unbuffered-stdout change was made to prevent, one
+                    // level up. Progress is reported per cell as it completes.
+                    std::printf("    [%s depth=%u round=%d/%d req=%u] n=%d med=%.1f%s\n",
+                                knob, depth, round + 1, kRounds, t, c.n, c.med,
+                                c.n == 0 ? "  (no samples)" : "");
+                    std::fflush(stdout);
                     if (c.n == 0) continue;
                     Agg& a = agg[ci];
                     if (round == 0) a.argmax_match = (c.pass_flags & 1) != 0;

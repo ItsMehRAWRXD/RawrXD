@@ -1,1 +1,1 @@
-{"active":false,"error":"workspace root rejected by sandbox: C:\\Windows\\Temp","execute_enabled":false,"ok":false,"op":"begin","requires_transaction":true,"write_enabled":true,"write_profile":"transactional"}
+{"active":true,"error":"a transaction is already active: tx13435366755_24104_1234262b","execute_enabled":false,"ok":false,"op":"begin","requires_transaction":true,"tx":"tx13435366755_24104_1234262b","workspace_root":"F:\\~dev\\rawrxd\\audit\\RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001\\work","write_enabled":true,"write_profile":"transactional"}

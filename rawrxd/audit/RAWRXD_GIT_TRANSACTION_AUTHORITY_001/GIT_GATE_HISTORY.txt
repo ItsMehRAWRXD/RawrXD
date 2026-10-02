@@ -1,0 +1,7 @@
+20261001T223900Z mode=candidate build_role=candidate gate_conditions_not_met=1 run_verdict=CONTRACT_VIOLATED
+20261001T223956Z mode=candidate build_role=candidate gate_conditions_not_met=0 run_verdict=CONTRACT_SATISFIED
+20261001T224026Z mode=control build_role=control run_verdict=NO_VERDICT note=guard_hits_0
+20261001T224056Z mode=control build_role=control run_verdict=NO_VERDICT note=gate_body_not_delimited
+20261001T224111Z mode=control build_role=control gate_conditions_not_met=2 run_verdict=DEFECT_DETECTED
+20261001T224858Z mode=candidate build_role=candidate gate_conditions_not_met=0 run_verdict=CONTRACT_SATISFIED
+20261001T224917Z mode=control build_role=control gate_conditions_not_met=2 run_verdict=DEFECT_DETECTED

@@ -1,6 +1,7 @@
-#include "SpeculativeTreeAttentionBridge.hpp"
+﻿#include "SpeculativeTreeAttentionBridge.hpp"
 #include <algorithm>
-#include <math>
+#include <cmath>
+#include <cstdint>
 #include <chrono>
 #include <future>
 #include <sstream>
@@ -17,17 +18,43 @@
 
 namespace rawrxd::ai {
 
-// ─── Constants ───
-static constexpr float ATTENTION_SCALE = 1.0f / std::sqrt(64.0f);
+// â”€â”€â”€ Constants â”€â”€â”€
+// RAWRXD_UNSIMULATE_001: this was `1.0f / std::sqrt(64.0f)`, which is not a
+// constant expression before C++26, so the file did not compile. Written out
+// because sqrt(64) is exactly 8 and the value is unchanged.
+static constexpr float ATTENTION_SCALE = 1.0f / 8.0f;
 static constexpr uint32_t SIMD_FLOAT_WIDTH = 16; // AVX-512
 static constexpr float EPSILON = 1e-6f;
 
-// ─── Constructor / Destructor ───
+// â”€â”€â”€ Constructor / Destructor â”€â”€â”€
+
+// RAWRXD_UNSIMULATE_001: builds a vector of (maxTreeDepth + 1) LIVE counters.
+//
+// std::atomic is neither copyable nor movable, so std::vector<std::atomic<T>>
+//   - cannot be resized at all (MSVC C2672 via construct_at), and
+//   - could not have been copy- or move-constructed either.
+// The members are std::vector<std::unique_ptr<std::atomic<uint64_t>>> instead,
+// which is constructible and movable, and which gives each counter a stable
+// address so a worker thread can hold one across the bridge's lifetime.
+//
+// The alternative that also compiles is std::vector<uint64_t>, which drops the
+// atomicity these counters need while parallel verification increments them
+// from several threads. That trades a build error for a data race, so the
+// indirection is the right cost.
+static std::vector<std::unique_ptr<std::atomic<uint64_t>>>
+makeDepthCounters(size_t n) {
+    std::vector<std::unique_ptr<std::atomic<uint64_t>>> v;
+    v.reserve(n);
+    for (size_t i = 0; i < n; ++i) {
+        v.push_back(std::make_unique<std::atomic<uint64_t>>(0));
+    }
+    return v;
+}
 
 SpeculativeTreeAttentionBridge::SpeculativeTreeAttentionBridge(const TreeAttentionConfig& config)
     : config_(config)
-    , depth_acceptance_counts_(config.max_tree_depth + 1)
-    , depth_total_counts_(config.max_tree_depth + 1)
+    , depth_acceptance_counts_(makeDepthCounters(config.max_tree_depth + 1))
+    , depth_total_counts_(makeDepthCounters(config.max_tree_depth + 1))
 {
     tree_nodes_.reserve(config.max_tree_nodes);
     attention_scratch_.reserve(config.max_tree_nodes * config.max_tree_nodes);
@@ -95,7 +122,7 @@ SpeculativeTreeAttentionBridge& SpeculativeTreeAttentionBridge::operator=(Specul
     return *this;
 }
 
-// ─── Initialization ───
+// â”€â”€â”€ Initialization â”€â”€â”€
 
 bool SpeculativeTreeAttentionBridge::Initialize(
     std::vector<DraftModelConfig> draft_configs,
@@ -115,8 +142,8 @@ bool SpeculativeTreeAttentionBridge::Initialize(
     }
 
     // Initialize depth counters
-    depth_acceptance_counts_.resize(config_.max_tree_depth + 1);
-    depth_total_counts_.resize(config_.max_tree_depth + 1);
+    depth_acceptance_counts_ = makeDepthCounters(config_.max_tree_depth + 1);
+    depth_total_counts_       = makeDepthCounters(config_.max_tree_depth + 1);
 
     // Start worker threads for parallel verification
     if (config_.use_parallel_verification) {
@@ -126,7 +153,7 @@ bool SpeculativeTreeAttentionBridge::Initialize(
     return true;
 }
 
-// ─── Core Speculation API ───
+// â”€â”€â”€ Core Speculation API â”€â”€â”€
 
 std::vector<int32_t> SpeculativeTreeAttentionBridge::SpeculateAndVerify(
     const std::vector<int32_t>& input_tokens,
@@ -202,7 +229,7 @@ std::vector<int32_t> SpeculativeTreeAttentionBridge::SpeculateAndVerify(
         for (size_t i = 0; i < verify_result.accepted_depths.size(); ++i) {
             uint32_t depth = verify_result.accepted_depths[i];
             if (depth < depth_acceptance_counts_.size()) {
-                depth_acceptance_counts_[depth].fetch_add(1);
+                depth_acceptance_counts_[depth]->fetch_add(1);
             }
         }
     }
@@ -213,7 +240,7 @@ std::vector<int32_t> SpeculativeTreeAttentionBridge::SpeculateAndVerify(
     return result;
 }
 
-// ─── Batch Speculation ───
+// â”€â”€â”€ Batch Speculation â”€â”€â”€
 
 std::vector<std::vector<int32_t>> SpeculativeTreeAttentionBridge::BatchSpeculateAndVerify(
     const std::vector<std::vector<int32_t>>& input_batches,
@@ -239,7 +266,7 @@ std::vector<std::vector<int32_t>> SpeculativeTreeAttentionBridge::BatchSpeculate
     return results;
 }
 
-// ─── Tree Construction ───
+// â”€â”€â”€ Tree Construction â”€â”€â”€
 
 void SpeculativeTreeAttentionBridge::BuildSpeculativeTree(
     const std::vector<int32_t>& prefix_tokens,
@@ -301,7 +328,7 @@ void SpeculativeTreeAttentionBridge::BuildSpeculativeTree(
     }
 }
 
-// ─── Tree Pruning with Diversity ───
+// â”€â”€â”€ Tree Pruning with Diversity â”€â”€â”€
 
 void SpeculativeTreeAttentionBridge::PruneTreeWithDiversity(uint32_t max_nodes)
 {
@@ -378,7 +405,7 @@ void SpeculativeTreeAttentionBridge::PruneTreeWithDiversity(uint32_t max_nodes)
     tree_nodes_ = std::move(new_nodes);
 }
 
-// ─── Cross Attention Scoring ───
+// â”€â”€â”€ Cross Attention Scoring â”€â”€â”€
 
 void SpeculativeTreeAttentionBridge::ComputeCrossAttentionScores()
 {
@@ -438,7 +465,7 @@ float SpeculativeTreeAttentionBridge::ComputeAttentionScore(
     const std::vector<float>& target_query)
 {
     // Simplified attention computation
-    // Production: actual Q·K^T / sqrt(d_k) with target model query and draft key
+    // Production: actual QÂ·K^T / sqrt(d_k) with target model query and draft key
     float dot_product = 0.0f;
     for (size_t i = 0; i < target_query.size(); ++i) {
         if (i < draft_node.key_cache.size()) {
@@ -448,7 +475,7 @@ float SpeculativeTreeAttentionBridge::ComputeAttentionScore(
     return dot_product * ATTENTION_SCALE;
 }
 
-// ─── Ensemble Draft Predictions ───
+// â”€â”€â”€ Ensemble Draft Predictions â”€â”€â”€
 
 std::vector<std::pair<int32_t, float>> SpeculativeTreeAttentionBridge::EnsembleDraftPredictions(
     const std::vector<int32_t>& context,
@@ -505,26 +532,28 @@ std::vector<std::pair<int32_t, float>> SpeculativeTreeAttentionBridge::SingleDra
     const std::vector<int32_t>& context,
     uint32_t num_candidates)
 {
-    // Placeholder: in production this would call the actual draft model
-    // For now, generate plausible-looking predictions
-    std::uniform_int_distribution<int32_t> token_dist(0, 32000);
-    std::uniform_real_distribution<float> prob_dist(0.0f, 1.0f);
-
-    std::vector<std::pair<int32_t, float>> predictions;
-    predictions.reserve(num_candidates);
-
-    for (uint32_t i = 0; i < num_candidates; ++i) {
-        predictions.emplace_back(token_dist(rng_), prob_dist(rng_));
-    }
-
-    // Sort by probability descending
-    std::sort(predictions.begin(), predictions.end(),
-             [](const auto& a, const auto& b) { return a.second > b.second; });
-
-    return predictions;
+    // RAWRXD_UNSIMULATE_001
+    //
+    // This returned num_candidates random token ids drawn uniformly from
+    // [0, 32000) with random probabilities, under the comment "generate
+    // plausible-looking predictions". Neither `context` nor `draft_idx` was
+    // consulted.
+    //
+    // A speculative decoder built on this emits tokens uncorrelated with any
+    // model, and the rejection sampler downstream accepts or rejects them
+    // against equally random target logits (see GetTargetLogits). The result
+    // looks like generation and is noise.
+    //
+    // No draft model is wired to this class, so no prediction can be produced.
+    // Empty means "no speculation available", which is a real answer: the
+    // caller falls back to ordinary single-token decoding.
+    (void)draft_idx;
+    (void)context;
+    (void)num_candidates;
+    return {};
 }
 
-// ─── Verification ───
+// â”€â”€â”€ Verification â”€â”€â”€
 
 TreeVerificationResult SpeculativeTreeAttentionBridge::VerifyTreeNodes(
     const std::vector<int32_t>& prefix_tokens)
@@ -702,13 +731,22 @@ std::vector<bool> SpeculativeTreeAttentionBridge::BatchVerifyNodes(
     return results;
 }
 
+// RAWRXD_UNSIMULATE_001
+//
+// This returned 32000 uniformly random floats in [-2, 2] as "logits", under
+// the comment "in production this calls target_session_->Forward()". Those are
+// the TARGET model's logits: the vector the rejection sampler uses to accept or
+// reject every speculative token. A random target is not a degraded model, it
+// is the absence of one, and it makes AcceptToken a coin flip rather than a
+// verification step.
+//
+// No target session is attached to this class, so no logits can be produced.
+// Empty means "no verification available"; the caller must then decline the
+// speculative path rather than accept an unverified token.
 std::vector<float> SpeculativeTreeAttentionBridge::GetTargetLogits(const std::vector<int32_t>& tokens)
 {
-    // Placeholder: in production this calls target_session_->Forward()
-    std::uniform_real_distribution<float> dist(-2.0f, 2.0f);
-    std::vector<float> logits(32000);
-    for (auto& l : logits) l = dist(rng_);
-    return logits;
+    (void)tokens;
+    return {};
 }
 
 bool SpeculativeTreeAttentionBridge::AcceptToken(int32_t draft_token, float draft_prob,
@@ -725,7 +763,7 @@ bool SpeculativeTreeAttentionBridge::AcceptToken(int32_t draft_token, float draf
     return dist(rng_) < accept_prob;
 }
 
-// ─── Tree Queries ───
+// â”€â”€â”€ Tree Queries â”€â”€â”€
 
 std::vector<uint32_t> SpeculativeTreeAttentionBridge::GetPathToRoot(uint32_t node_idx) const
 {
@@ -760,7 +798,7 @@ std::vector<uint32_t> SpeculativeTreeAttentionBridge::SelectTopKNodes(uint32_t k
     return result;
 }
 
-// ─── Statistics ───
+// â”€â”€â”€ Statistics â”€â”€â”€
 
 float SpeculativeTreeAttentionBridge::GetRollingAcceptanceRate() const {
     return rolling_acceptance_rate_;
@@ -782,14 +820,14 @@ std::vector<float> SpeculativeTreeAttentionBridge::GetPerDepthAcceptanceRates() 
     std::vector<float> rates;
     rates.reserve(depth_acceptance_counts_.size());
     for (size_t i = 0; i < depth_acceptance_counts_.size(); ++i) {
-        uint64_t accepted = depth_acceptance_counts_[i].load();
-        uint64_t total = depth_total_counts_[i].load();
+        uint64_t accepted = depth_acceptance_counts_[i]->load();
+        uint64_t total = depth_total_counts_[i]->load();
         rates.push_back(total > 0 ? static_cast<float>(accepted) / static_cast<float>(total) : 0.0f);
     }
     return rates;
 }
 
-// ─── KV Cache Management ───
+// â”€â”€â”€ KV Cache Management â”€â”€â”€
 
 void SpeculativeTreeAttentionBridge::InitializeKVCache(
     uint32_t num_heads, uint32_t head_dim, uint32_t max_seq_len)
@@ -852,7 +890,7 @@ size_t SpeculativeTreeAttentionBridge::GetCacheMemoryUsage() const
     return cache_memory_used_;
 }
 
-// ─── Threading ───
+// â”€â”€â”€ Threading â”€â”€â”€
 
 void SpeculativeTreeAttentionBridge::StartWorkerThreads()
 {
@@ -894,7 +932,7 @@ void SpeculativeTreeAttentionBridge::WorkerLoop()
     }
 }
 
-// ─── Configuration ───
+// â”€â”€â”€ Configuration â”€â”€â”€
 
 void SpeculativeTreeAttentionBridge::UpdateConfig(const TreeAttentionConfig& new_config)
 {
@@ -908,7 +946,7 @@ void SpeculativeTreeAttentionBridge::UpdateConfig(const TreeAttentionConfig& new
     }
 }
 
-// ─── Debug & Export ───
+// â”€â”€â”€ Debug & Export â”€â”€â”€
 
 std::string SpeculativeTreeAttentionBridge::ExportTreeDOT() const
 {
@@ -953,7 +991,7 @@ void SpeculativeTreeAttentionBridge::DumpTreeStatistics(std::ostream& out) const
     }
 }
 
-// ─── Free Functions ───
+// â”€â”€â”€ Free Functions â”€â”€â”€
 
 std::vector<std::pair<int32_t, float>> TopKSampling(
     const std::vector<float>& logits,

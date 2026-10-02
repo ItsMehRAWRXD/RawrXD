@@ -163,6 +163,29 @@ size_t LastTotalRows();
 size_t LastChunk();
 bool   LastInlined();
 
+// RAWRXD_THREAD_POLICY_SHARED_001
+// One minimum-work-per-thread policy, shared by MatMulThreadCount and
+// ParallelRows, so the two paths cannot drift apart again. kMinRowsPerThread=4
+// used to be consulted only by MatMulThreadCount, which the attention path
+// bypasses entirely -- measured at depth=4096 that produced rows=8 split 8
+// ways (slice=1 per worker) across 11040 dispatches per cell.
+//
+// `requested` is TOTAL PARTICIPANTS (the caller keeps slice 0 and is itself a
+// participant), so the ceiling is ceil(total_rows / kMinRowsPerThread).
+// At rows=8 that is 2 participants, not 3.
+//
+// These report what the policy did to the most recent request. A clamped
+// request and a genuinely narrow one produce identical geometry, so the
+// geometry alone cannot distinguish them.
+unsigned PolicyRequested();
+unsigned PolicyEffective();
+// Clamps ONLY -- requests the policy actually reduced. Divide by
+// PolicyRequests() for the clamp rate. Do NOT divide by total dispatches:
+// most dispatches are the inline threads<=1 path and never reach the policy,
+// which makes that ratio meaningless.
+unsigned long long PolicyClamps();
+unsigned long long PolicyRequests();
+
 // B75A_TIMEOUT_ESCAPE_IMPOSSIBLE
 // State captured at the instant the most recent dispatch returned. With
 // RAWRXD_WORKERPOOL_WAIT_INFINITE=1 the wait cannot expire, so a diagnostic

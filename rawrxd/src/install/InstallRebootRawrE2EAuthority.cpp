@@ -30,43 +30,58 @@ namespace rawrxd::install
     static InstallRebootRawrE2EAuthorityState g_installRebootState;
 
     // Certify install reboot rawr
+    //
+    // RAWRXD_UNSIMULATE_001
+    //
+    // This previously reported, from constants:
+    //
+    //     pathResolvesRawr         = true;  // "Would need actual PATH verification"
+    //     freshShellRawRunStarted  = true;  // "Simulate fresh shell execution"
+    //     freshShellRawRunCompleted= true;
+    //     generatedTokenCount      = 42;    // "Example token count"
+    //     exitCode                 = 0;
+    //     -> VERDICT = PASS
+    //
+    // GENERATED_TOKEN_COUNT is a claim about MODEL OUTPUT. Reporting 42 tokens
+    // from a model that was never launched is the single most direct way to
+    // assert that a model works without running one, and it did so alongside a
+    // PATH resolution that was never performed and a shell that never started.
+    //
+    // No shell is spawned and no model is launched here. The honest result is
+    // INVALID with the reason stated, and the only fields reported are the two
+    // that were genuinely measured from the filesystem.
     void certInstallRebootRawr()
     {
         g_installRebootState.entered = true;
-        
-        // Check if installed rawr exists
-        g_installRebootState.installRawrExists = std::filesystem::exists(g_installRebootState.installRawrPath);
-        
-        // Check if PATH resolves rawr (simplified)
-        g_installRebootState.pathResolvesRawr = true; // Would need actual PATH verification
-        g_installRebootState.pathResolvesRawrPath = "C:\\Users\\Garrett\\rawrxd\\bin";
-        
-        // Check if model dir exists
+
+        // Measured: the two filesystem facts below are real queries.
+        g_installRebootState.installRawrExists =
+            std::filesystem::exists(g_installRebootState.installRawrPath);
         g_installRebootState.modelDirExists = std::filesystem::exists("F:\\models");
-        
-        // Simulate fresh shell execution and completion
-        g_installRebootState.freshShellRawRunStarted = true;
-        g_installRebootState.freshShellRawRunCompleted = true;
-        g_installRebootState.generatedTokenCount = 42; // Example token count
-        g_installRebootState.exitCode = 0;
-        
-        // Set verdict
-        bool allOk = g_installRebootState.installRawrExists && 
-                    g_installRebootState.pathResolvesRawr && 
-                    g_installRebootState.modelDirExists && 
-                    g_installRebootState.freshShellRawRunCompleted;
-        g_installRebootState.verdict = allOk ? "PASS" : "FAIL";
-        
-        std::cout << "[InstallRebootRawrE2EAuthority] Certified install reboot rawr:" << std::endl;
+
+        // Not measured, and no longer asserted. These stay false so that every
+        // field printed below is either a measurement or a declared non-result.
+        g_installRebootState.pathResolvesRawr = false;
+        g_installRebootState.freshShellRawRunStarted = false;
+        g_installRebootState.freshShellRawRunCompleted = false;
+        g_installRebootState.generatedTokenCount = -1;  // -1 = not measured
+        g_installRebootState.exitCode = -1;             // -1 = not measured
+        g_installRebootState.verdict = "INVALID";
+
+        std::cout << "[InstallRebootRawrE2EAuthority] install reboot NOT certified:" << std::endl;
         std::cout << "  AUTOSTART_POLICY=" << g_installRebootState.autostartPolicy << std::endl;
         std::cout << "  INSTALL_RAWR_EXISTS=" << (g_installRebootState.installRawrExists ? "true" : "false") << std::endl;
-        std::cout << "  PATH_RESOLVES_RAWR=" << (g_installRebootState.pathResolvesRawr ? "true" : "false") << std::endl;
         std::cout << "  MODEL_DIR_EXISTS=" << (g_installRebootState.modelDirExists ? "true" : "false") << std::endl;
-        std::cout << "  FRESH_SHELL_RAW_RUN_STARTED=" << (g_installRebootState.freshShellRawRunStarted ? "true" : "false") << std::endl;
-        std::cout << "  FRESH_SHELL_RAW_RUN_COMPLETED=" << (g_installRebootState.freshShellRawRunCompleted ? "true" : "false") << std::endl;
-        std::cout << "  GENERATED_TOKEN_COUNT=" << g_installRebootState.generatedTokenCount << std::endl;
-        std::cout << "  EXIT_CODE=" << g_installRebootState.exitCode << std::endl;
-        std::cout << "  VERDICT=" << g_installRebootState.verdict << std::endl;
+        std::cout << "  PATH_RESOLVES_RAWR=NOT_MEASURED" << std::endl;
+        std::cout << "  FRESH_SHELL_RAW_RUN_STARTED=false" << std::endl;
+        std::cout << "  FRESH_SHELL_RAW_RUN_COMPLETED=false" << std::endl;
+        std::cout << "  GENERATED_TOKEN_COUNT=NOT_MEASURED" << std::endl;
+        std::cout << "  EXIT_CODE=NOT_MEASURED" << std::endl;
+        std::cout << "  VERDICT=INVALID" << std::endl;
+        std::cout << "  REASON=this authority launches no shell and no model; "
+                     "it cannot certify end-to-end execution. To certify it, run "
+                     "server_generation_parity against a real model and record the "
+                     "token ids that come back." << std::endl;
     }
 
     // Write install reboot rawr E2E receipt

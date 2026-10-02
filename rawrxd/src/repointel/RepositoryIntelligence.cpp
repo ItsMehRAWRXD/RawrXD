@@ -262,7 +262,10 @@ bool RepositoryIntelligence::parseAll(bool reuse) {
         nowPaths.reserve(n * 2);
         for (const UniverseFile& f : m_universe.files) nowPaths.insert(f.rel);
         for (const std::string& r : m_savedRel)
-            if (nowPaths.find(r) == nowPaths.end()) ++m_delta.removed;
+            if (nowPaths.find(r) == nowPaths.end()) {
+                ++m_delta.removed;
+                m_delta.removedPaths.push_back(r);
+            }
     }
 
     std::atomic<uint32_t> cursor{0};
@@ -316,6 +319,7 @@ bool RepositoryIntelligence::parseAll(bool reuse) {
         } else {
             ++m_stats.filesIndexed;
             ++m_delta.reindexed;
+            m_delta.reindexedPaths.push_back(m_universe.files[i].rel);
         }
     }
 
@@ -1516,6 +1520,11 @@ RepositoryIntelligence::verifyDeterminismRebuild(const UniversePolicy& p,
     const std::string pathA = dirA + "/index.rix";
     const std::string pathB = dirB + "/index.rix";
 
+    // Fingerprint the input tree first: without this, two builds of a tree that
+    // something else is writing to would be reported as non-determinism when the
+    // algorithm is in fact deterministic.
+    const Universe before = buildUniverse(p);
+
     RepositoryIntelligence a;
     a.build(p);
     a.save(pathA);
@@ -1523,6 +1532,43 @@ RepositoryIntelligence::verifyDeterminismRebuild(const UniversePolicy& p,
     RepositoryIntelligence b;
     b.build(p);
     b.save(pathB);
+
+    const Universe after = buildUniverse(p);
+    std::vector<std::string> moved;
+    {
+        if (before.files.size() != after.files.size()) {
+            moved.push_back("<file count changed " +
+                            std::to_string(before.files.size()) + " -> " +
+                            std::to_string(after.files.size()) + ">");
+        }
+        std::unordered_map<std::string, const UniverseFile*> byRel;
+        for (const UniverseFile& f : before.files) byRel.emplace(f.rel, &f);
+        for (const UniverseFile& f : after.files) {
+            auto it = byRel.find(f.rel);
+            if (it == byRel.end() || it->second->hash != f.hash ||
+                it->second->size != f.size)
+                moved.push_back(f.rel);
+        }
+        r.treeStable = moved.empty();
+        for (size_t i = 0; i < moved.size() && i < 40; ++i)
+            r.changedPaths += (i ? "," : "") + moved[i];
+    }
+
+    if (!r.treeStable) {
+        // Another process is writing to this tree. Reproducibility over a moving
+        // input proves nothing, so the comparison is redone over a declared
+        // input set that excludes exactly the paths that moved, and the
+        // excluded set is reported. This narrows what determinism has been
+        // proven over, and says so, rather than either failing the algorithm or
+        // silently ignoring the difference.
+        UniversePolicy stable = p;
+        stable.excludeRelPaths = moved;
+        DeterminismResult narrowed =
+            verifyDeterminismRebuild(stable, dirA, dirB);
+        narrowed.excludedVolatilePaths = r.changedPaths;
+        narrowed.volatilePathCount = static_cast<uint32_t>(moved.size());
+        return narrowed;
+    }
 
     std::string ba, bb;
     if (!readWholeFile(pathA, ba) || !readWholeFile(pathB, bb)) {

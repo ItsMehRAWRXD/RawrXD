@@ -153,6 +153,24 @@ BlockGeometry GetBlockGeometryForType(int quantType);
 const char*   GGMLTypeName(int type);
 
 // ---------------------------------------------------------------------------
+// RAWRXD_CPU_FULL_MODEL_INFERENCE_001: dispatch telemetry
+//
+// Counts actual invocations of the admitted vector kernels and their scalar
+// references. A receipt needs to PROVE which path ran during a real generation;
+// reading the registry's table only shows what was registered, not what executed.
+struct GemvDispatchCounters {
+    uint64_t q4k_vector = 0;
+    uint64_t q4k_scalar = 0;
+    uint64_t q6k_vector = 0;
+    uint64_t q6k_scalar = 0;
+    uint64_t q5k_vector = 0;
+    uint64_t q5k_scalar = 0;
+};
+
+void ResetGemvDispatchCounters();
+GemvDispatchCounters GetGemvDispatchCounters();
+
+// ---------------------------------------------------------------------------
 // Kernel function-pointer types
 // ---------------------------------------------------------------------------
 using GEMVKernelFn = void (*)(

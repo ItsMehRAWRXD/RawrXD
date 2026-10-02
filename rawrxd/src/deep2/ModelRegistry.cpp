@@ -175,13 +175,51 @@ bool checkGeometry(const ModelMetadata& md, GeometryProblem& problem) noexcept {
     if (md.vocabSize == 0)      { problem = {"vocabSize", "zero"};        return false; }
     if (md.headDim == 0)         { problem = {"headDim", "zero"};          return false; }
 
-    // Attention heads must partition the hidden dimension exactly. A mismatch
-    // here is the signature of a mis-parsed or truncated KV cache layout.
-    if (md.numHeads != 0 && md.headDim != 0 &&
-        md.numHeads * md.headDim != md.hiddenDim) {
-        problem = {"numHeads*headDim", "!= hiddenDim"};
-        return false;
-    }
+// Attention heads must partition the hidden dimension exactly. A mismatch
+      // here is the signature of a mis-parsed or truncated KV cache layout.
+      //
+      // RAWRXD_MLA_LOAD_AUTHORITY_001: this invariant is a SQUARE-attention
+      // requirement and does not hold for MLA. For MLA the query width is
+      // numHeads * key_length, and key_length is the nope+rope sum, which
+      // legitimately differs from hiddenDim -- DeepSeek-V2-Lite is 16*192=3072
+      // against hiddenDim=2048. Applying the square rule to an MLA model
+      // rejected a valid model at admission, before any MLA code could run.
+      //
+      // The check is not removed: an MLA model is held to its own set of
+      // invariants instead, so a genuinely malformed MLA geometry is still
+      // rejected rather than waved through.
+      if (md.useMLA) {
+          if (md.kvLoraRank == 0 || md.qkNopeHeadDim == 0 ||
+              md.qkRopeHeadDim == 0 || md.vHeadDim == 0) {
+              problem = {"mlaDims", "kvLoraRank/qkNopeHeadDim/qkRopeHeadDim/vHeadDim zero"};
+              return false;
+          }
+          if ((md.qkNopeHeadDim + md.qkRopeHeadDim) % 2 != 0) {
+              problem = {"mlaHeads", "qkNopeHeadDim+qkRopeHeadDim is odd"};
+              return false;
+          }
+      }
+      // DEEP2_GQA_GEOMETRY_001: the previous check here was
+      //     numHeads * headDim != hiddenDim  ->  reject
+      // That invariant is false in general and rejected valid GQA models. The
+      // engine does NOT require it: it treats qDim (numHeads*headDim) and
+      // hiddenDim as independent dimensions and validates each projection
+      // against the real per-layer tensors:
+      //     wq.rows == numHeads*headDim   wq.cols == hiddenDim
+      //     wk.rows == kvDim              wk.cols == hiddenDim
+      //     wo.rows  == hiddenDim         wo.cols  == qDim
+      // (Deep2Engine.cpp ATTN_PROJECTION_GEOMETRY, stage 18). A model whose
+      // tensors genuinely disagree is still rejected there, against evidence.
+      //
+      // Measured: llama3.2-3b  3072 hidden, 24 heads, head_dim 128 -> 3072 == hidden
+      // (passes the old check).  gemma3-1b  1152 hidden, 8 heads, head_dim 256
+      // -> 2048 != 1152, a legitimate projection from 1152 into 2048, which the
+      // old check refused. The metadata-only equality was the sole gate and it
+      // contradicted the engine's own tensor-level contract.
+      //
+      // The legitimate head-count invariants (numKVHeads parsed, <= numHeads,
+      // and dividing numHeads) remain enforced below; they are not affected.
+
 
     // Grouped-query attention requires a KV head count that divides the query
     // head count. numKVHeads == 0 means "not parsed"; that is a rejection, not
@@ -494,20 +532,73 @@ constexpr RoleRule kAttnNormRole[] = {
 };
 
 // Dense (non-MLA) attention projections.
+//
+// The Q/K/V triple is split out of this table because it has TWO legal GGUF
+// layouts, and requiring only the split one rejects models the engine
+// genuinely supports.
+//
+// The loader binds BOTH:
+//     Deep2Engine.cpp  bindTensor(p + "attn_qkv.weight", lw.wqkv);
+//     Deep2Engine.cpp  bindTensor(p + "attn_q.weight",     lw.wq);   (+k, +v)
+// and its own topology check accepts either form:
+//     Deep2Engine.cpp  const bool fusedQkv = lw.wqkv.data != nullptr;
+//                     if (!splitQkv && !fusedQkv) -> reject
+// with the fused tensor consumed at the projection site:
+//     Deep2Engine.cpp  } else if (lw.wqkv.data) { LinearW(lw.wqkv, ...) }
+//
+// phi3 exports the fused layout (blk.N.attn_qkv.weight) and was refused with
+// "MissingRequiredTensor field=attn_q" — the registry rejecting a model the
+// loader can load. Requiring split-only made this gate STRICTER than the
+// engine it guards, which converts a supported architecture into an
+// unsupported one.
+//
+// attn_output is required in BOTH layouts and stays in this table.
 constexpr RoleRule kDenseAttnRoles[] = {
-    {"attn_q",      "attn_q",      true},
-    {"attn_k",      "attn_k",      true},
-    {"attn_v",      "attn_v",      true},
     {"attn_output", "attn_output", true},
+};
+
+// The alternative QKV layouts. A model satisfies the QKV requirement when the
+// fused tensor is present, or when all three split tensors are present.
+constexpr RoleRule kFusedQkvRole[] = {
+    {"attn_qkv", "attn_qkv", true},
+};
+
+constexpr RoleRule kSplitQkvRoles[] = {
+    {"attn_q", "attn_q", true},
+    {"attn_k", "attn_k", true},
+    {"attn_v", "attn_v", true},
 };
 
 // Dense FFN. Only required when the architecture is NOT MoE — a MoE layer
 // carries the expert tensors instead and has no ffn_gate/up/down at all.
+//
+// The gate is split out for the same reason as the QKV triple: gated
+// architectures (phi3, llama-3, qwen2) may ship a SINGLE ffn_up tensor that
+// concatenates the gate rows and the up rows. This is a genuine second legal
+// layout, and the loader splits it:
+//
+//     Deep2Engine.cpp  fused gate_up split  (RAWRXD_FUSED_GATE_UP_001)
+//     Deep2Engine.cpp  computeFFN() -> SwiGLU branch (both wGate and wUp)
+//
+// Requiring only the split layout refused models the engine now supports. The
+// fused tensor is accepted ONLY alongside ffn_down, because the down
+// projection's column count is what proves the 2x row ratio; ffn_up on its own
+// is equally consistent with a genuine non-gated MLP, which is a different
+// topology with different arithmetic and must keep being rejected.
 constexpr RoleRule kDenseFfnRoles[] = {
     {"ffn_norm", "ffn_norm", true},
-    {"ffn_gate", "ffn_gate", true},
     {"ffn_up",   "ffn_up",   true},
     {"ffn_down", "ffn_down", true},
+};
+
+// The two legal gate layouts: an explicit ffn_gate tensor, or a fused ffn_up
+// that the loader splits. Satisfying EITHER satisfies one required role.
+constexpr RoleRule kSplitFfnGateRole[] = {
+    {"ffn_gate", "ffn_gate", true},
+};
+
+constexpr RoleRule kFusedFfnGateRole[] = {
+    {"ffn_up", "ffn_up", true},
 };
 
 // MoE replaces the dense FFN with a router plus per-expert tensors.
@@ -519,12 +610,67 @@ constexpr RoleRule kMoeRoles[] = {
 };
 
 // MLA / DeepSeek: q/k/v projections are replaced by latent projections.
-constexpr RoleRule kMlaRoles[] = {
-    {"attn_q",      "q_proj",    true},
-    {"attn_k",      "kv_a_proj", true},
-    {"attn_v",      "kv_b_proj", true},
-    {"attn_output", "o_proj",    true},
+// ---------------------------------------------------------------------------
+// Negative control for this translation unit's role tables.
+//
+// The defect this guards against is not theoretical: kMlaRoles below once held
+// q_proj / kv_a_proj / kv_b_proj / o_proj, which are PyTorch/HuggingFace
+// parameter names. No GGUF file contains them, so the table was unsatisfiable
+// and every MLA model was rejected at admission while the reported "missing
+// role" named a tensor the engine had never looked for.
+//
+// Every real per-layer GGUF stem in this file is snake_case with no "_proj"
+// suffix. Any stem reintroducing a PyTorch spelling fails to compile.
+// ---------------------------------------------------------------------------
+#include <string_view>
+
+constexpr bool stemUsesHfNaming(const char* stem) noexcept {
+    return std::string_view(stem).find("_proj") != std::string_view::npos;
+}
+#define RAWRXD_ASSERT_GGUF_STEMS(table)                                          \
+    static_assert([&] {                                                         \
+        for (const RoleRule& r : table) if (stemUsesHfNaming(r.stem)) return false; \
+        return true;                                                            \
+    }(), #table " contains a PyTorch/HuggingFace stem; GGUF models do not "     \
+        "ship those names")
+
+// MLA attention projections, grouped by FUNCTIONAL ROLE rather than as one flat
+// conjunctive list.
+//
+// Measured tensor table of a real MLA model (DeepSeek-V2-Lite, read from the
+// GGUF directly, not from a name):
+//     blk.N.attn_q_a.weight        blk.N.attn_q_b.weight
+//     blk.N.attn_k_b.weight        blk.N.attn_v_b.weight
+//     blk.N.attn_kv_a_mqa.weight   blk.N.attn_output.weight
+//
+// A flat table of all of these would be CONJUNCTIVE and would reject a model
+// shipping attn_kv_a (without the _mqa suffix) on the missing attn_kv_a_mqa.
+// The latent down-projection therefore has two real spellings that satisfy one
+// requirement, and is evaluated as a disjunction by the caller.
+constexpr RoleRule kMlaQueryRoles[] = {
+    {"attn_q_a", "attn_q_a", true},
+    {"attn_q_b", "attn_q_b", true},
 };
+
+constexpr RoleRule kMlaKvRoles[] = {
+    {"attn_k_b", "attn_k_b", true},
+    {"attn_v_b", "attn_v_b", true},
+};
+
+// Alternatives for ONE requirement: multi-query-absorbed (DeepSeek2 and later)
+// versus the plain latent spelling used by earlier MLA exports.
+constexpr RoleRule kMlaKvDownMqaRole[]   = { {"attn_kv_a_mqa", "attn_kv_a_mqa", true} };
+constexpr RoleRule kMlaKvDownPlainRole[] = { {"attn_kv_a",     "attn_kv_a",     true} };
+
+constexpr RoleRule kMlaOutRoles[] = {
+    {"attn_output", "attn_output", true},
+};
+
+RAWRXD_ASSERT_GGUF_STEMS(kMlaQueryRoles);
+RAWRXD_ASSERT_GGUF_STEMS(kMlaKvRoles);
+RAWRXD_ASSERT_GGUF_STEMS(kMlaKvDownMqaRole);
+RAWRXD_ASSERT_GGUF_STEMS(kMlaKvDownPlainRole);
+RAWRXD_ASSERT_GGUF_STEMS(kMlaOutRoles);
 
 // Recurrent / SSM roles.
 constexpr RoleRule kRecurrentRoles[] = {
@@ -620,8 +766,51 @@ std::size_t ModelRegistry::countMissingRequiredTensors(const ModelMetadata& md,
         countRoles(md, kAttnNormRole, std::size(kAttnNormRole), required, missing, firstMissing);
         // MLA carries latent projections instead of dense q/k/v.
         if (traits.mla) {
-            countRoles(md, kMlaRoles, std::size(kMlaRoles), required, missing, firstMissing);
+            // Three functional requirements, four conjunctive stems:
+            //   query low-rank  : attn_q_a AND attn_q_b   (two distinct factors)
+            //   key/value latent: attn_k_b AND attn_v_b   (two distinct factors)
+            //   output          : attn_output
+            // plus ONE requirement with two alternative spellings:
+            //   latent down     : attn_kv_a_mqa OR attn_kv_a
+            //
+            // The down-projection is an OR because DeepSeek2 and later absorb the
+            // queries into the latent and export attn_kv_a_mqa, while earlier MLA
+            // exports use attn_kv_a. Both are real and both are correct for their
+            // model; requiring the specific one turns a supported architecture
+            // into an unsupported one -- the same mistake the fused-QKV table
+            // above documents for phi3.
+            countRoles(md, kMlaQueryRoles, std::size(kMlaQueryRoles), required, missing, firstMissing);
+            countRoles(md, kMlaKvRoles,    std::size(kMlaKvRoles),    required, missing, firstMissing);
+            countRoles(md, kMlaOutRoles,   std::size(kMlaOutRoles),   required, missing, firstMissing);
+
+            ++required;
+            const bool kvMqa   = roleSatisfied(md, kMlaKvDownMqaRole[0]);
+            const bool kvPlain = roleSatisfied(md, kMlaKvDownPlainRole[0]);
+            if (!kvMqa && !kvPlain) {
+                ++missing;
+                // Name the stem the loader prefers, matching the convention used
+                // by the fused-QKV disjunct above.
+                if (firstMissing.empty()) firstMissing = kMlaKvDownMqaRole[0].role;
+            }
         } else {
+            // QKV is satisfied by EITHER layout, and counts as ONE required
+            // role rather than three, because the two are alternatives for the
+            // same requirement. Counting all three would make a perfectly
+            // valid fused model appear to be missing two roles it never needed.
+            //
+            // Only when NEITHER layout is satisfied is the requirement absent,
+            // and the reported field names the fused stem: that is the shape
+            // the loader prefers and the one a reader of the message will
+            // look for.
+            ++required;
+            const bool fusedOk   = roleSatisfied(md, kFusedQkvRole[0]);
+            const bool splitOk   = layersWithRole(md, kSplitQkvRoles[0]) > 0 &&
+                                   layersWithRole(md, kSplitQkvRoles[1]) > 0 &&
+                                   layersWithRole(md, kSplitQkvRoles[2]) > 0;
+            if (!fusedOk && !splitOk) {
+                ++missing;
+                if (firstMissing.empty()) firstMissing = kFusedQkvRole[0].role;
+            }
             countRoles(md, kDenseAttnRoles, std::size(kDenseAttnRoles), required, missing, firstMissing);
         }
     } else {
@@ -633,6 +822,25 @@ std::size_t ModelRegistry::countMissingRequiredTensors(const ModelMetadata& md,
         countRoles(md, kMoeRoles, std::size(kMoeRoles), required, missing, firstMissing);
     } else if (!traits.recurrent) {
         countRoles(md, kDenseFfnRoles, std::size(kDenseFfnRoles), required, missing, firstMissing);
+
+        // The gate requirement is satisfied by EITHER an explicit ffn_gate
+        // tensor or a fused ffn_up that the loader splits, and counts as ONE
+        // required role for the same reason the QKV layouts count as one.
+        //
+        // The fused layout is only believed when ffn_down is also present: the
+        // loader proves the 2x row ratio against ffn_down's column count, and a
+        // bare ffn_up is equally consistent with a genuine non-gated MLP, which
+        // is a different topology and must still be rejected. ffn_up is already
+        // counted as required above, so this adds no new requirement.
+        ++required;
+        const bool gateSplitOk = layersWithRole(md, kSplitFfnGateRole[0]) > 0;
+        const bool gateFusedOk = !gateSplitOk &&
+                                 layersWithRole(md, kFusedFfnGateRole[0]) > 0 &&
+                                 layersWithRole(md, kDenseFfnRoles[2]) > 0;
+        if (!gateSplitOk && !gateFusedOk) {
+            ++missing;
+            if (firstMissing.empty()) firstMissing = kSplitFfnGateRole[0].role;
+        }
     }
 
     // output.weight is absent when embeddings are tied; token_embd already

@@ -1,1 +1,1 @@
-{"active":false,"error":"recovery root rejected by sandbox: ","execute_enabled":false,"ok":false,"op":"recover","requires_transaction":true,"write_enabled":true,"write_profile":"transactional"}
+{"elapsed_us":0,"error":"path rejected by sandbox: escape_link\\secret.txt (path crosses a reparse point (junction or link) inside the root)","ok":false,"tool":"read_file"}

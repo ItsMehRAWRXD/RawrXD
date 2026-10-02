@@ -49,6 +49,14 @@ namespace RawrXD { namespace IDE {
     HWND ShellLayout_GetTerminal();
     HWND ShellLayout_GetSidebar();
     HWND ShellLayout_GetStatusBar();
+    // RawrXDEditor is a CUSTOM window class, not an EDIT control: it ignores
+    // EM_REPLACESEL. RAWRXD_IDE_RUNTIME_CERT_001 first drove the editor with
+    // EM_* messages and measured len_after=0 -- a false PASS waiting to happen.
+    // The real surface is the engine API.
+    void        EditorEngine_SetText(const std::string& text);
+    std::string EditorEngine_GetText();
+    void        EditorEngine_InsertTextAtCursor(const std::string& text);
+    bool        EditorEngine_HasSelection();
 }}
 // FileOps_* have C++ linkage in Win32IDE_FileOps.cpp (they return std::string,
 // which is incompatible with extern "C" and would warn C4190).
@@ -217,38 +225,51 @@ static void RunStages() {
     }
 
     // ---- S05 edit ---------------------------------------------------------
-    // Drive the real EDIT control, then read it back. EM_SETSEL + EM_REPLACESEL
-    // is the same message path a keystroke takes.
+    // Drive the real editor engine, then read it back. Using the editor API
+    // rather than EM_* messages is what makes this stage meaningful.
+    // RAWRXD_CERT_VACUOUS_PASS: an earlier revision drove the wrong control,
+    // got len_after=0, and STILL reported PASS because "did the readback match
+    // what we wrote" is trivially true when both sides are empty. Every stage
+    // below therefore also requires a NON-EMPTY payload, so an inert control
+    // cannot produce a pass.
+    std::string typedPayload;
     {
         if (!editor || !IsWindow(editor)) {
-            Record("S05_EDIT", Verdict::BLOCKED, "no editor");
+            Record("S05_EDIT", Verdict::BLOCKED, "no editor window");
         } else {
-            SendMessageA(editor, EM_SETSEL, 0, -1);
-            SendMessageA(editor, EM_REPLACESEL, TRUE, (LPARAM)"");
-            const std::string typed = "RAWRXD_CERT_EDIT_MARK\n";
-            SendMessageA(editor, EM_REPLACESEL, FALSE, (LPARAM)typed.c_str());
-            const std::string now = ReadEdit(editor);
-            const bool ok = now.find("RAWRXD_CERT_EDIT_MARK") != std::string::npos;
-            char d[220];
-            std::snprintf(d, sizeof(d), "len_after=%zu contains_marker=%d",
-                          now.size(), ok ? 1 : 0);
-            Record("S05_EDIT", ok ? Verdict::PASS : Verdict::FAIL, d);
+            const std::string seedText =
+                "line one alpha\nline two beta\nRAWRXD_CERT_TOKEN\n";
+            RawrXD::IDE::EditorEngine_SetText(seedText);
+            RawrXD::IDE::EditorEngine_InsertTextAtCursor("RAWRXD_CERT_EDIT_MARK\n");
+            const std::string now = RawrXD::IDE::EditorEngine_GetText();
+            typedPayload = now;
+            const bool nonempty = !now.empty();
+            const bool hasMarker = now.find("RAWRXD_CERT_EDIT_MARK") != std::string::npos;
+            const bool keptSeed  = now.find("RAWRXD_CERT_TOKEN") != std::string::npos;
+            char d[260];
+            std::snprintf(d, sizeof(d),
+                          "len_after=%zu nonempty=%d has_marker=%d kept_seed=%d",
+                          now.size(), nonempty ? 1 : 0, hasMarker ? 1 : 0, keptSeed ? 1 : 0);
+            Record("S05_EDIT", (nonempty && hasMarker && keptSeed) ? Verdict::PASS
+                                                                 : Verdict::FAIL, d);
         }
     }
 
     // ---- S06 save ---------------------------------------------------------
     {
-        if (!editor || !IsWindow(editor)) {
-            Record("S06_SAVE", Verdict::BLOCKED, "no editor");
+        if (!editor || !IsWindow(editor) || typedPayload.empty()) {
+            Record("S06_SAVE", Verdict::BLOCKED, "no editor or empty payload");
         } else {
-            const std::string content = ReadEdit(editor);
+            const std::string content = RawrXD::IDE::EditorEngine_GetText();
+            const bool nonempty = !content.empty();
             const bool wrote = FileOps_WriteFile(doc, content);
             const bool ok = wrote && FileOps_ReadFile(doc) == content;
-            char d[220];
-            std::snprintf(d, sizeof(d), "route_save=%d bytes=%zu disk_roundtrip=%d",
+            char d[260];
+            std::snprintf(d, sizeof(d),
+                          "route_save=%d bytes=%zu nonempty=%d disk_roundtrip=%d",
                           Win32IDE_Commands_Route(IDM_FILE_SAVE) ? 1 : 0,
-                          content.size(), ok ? 1 : 0);
-            Record("S06_SAVE", ok ? Verdict::PASS : Verdict::FAIL, d);
+                          content.size(), nonempty ? 1 : 0, ok ? 1 : 0);
+            Record("S06_SAVE", (ok && nonempty) ? Verdict::PASS : Verdict::FAIL, d);
         }
     }
 
@@ -313,22 +334,25 @@ static void RunStages() {
         if (!editor || !IsWindow(editor)) {
             Record("S12_UNDO_REDO", Verdict::BLOCKED, "no editor");
         } else {
-            SendMessageA(editor, EM_SETSEL, 0, -1);
-            SendMessageA(editor, EM_REPLACESEL, TRUE, (LPARAM)"");
-            SendMessageA(editor, EM_REPLACESEL, FALSE, (LPARAM)"undo me\n");
-            const std::string typed = ReadEdit(editor);
+            RawrXD::IDE::EditorEngine_SetText("RAWRXD_CERT_BASE\n");
+            const std::string base = RawrXD::IDE::EditorEngine_GetText();
+            RawrXD::IDE::EditorEngine_InsertTextAtCursor("RAWRXD_CERT_TYPED\n");
+            const std::string typed = RawrXD::IDE::EditorEngine_GetText();
+            const bool grew = typed.size() > base.size() &&
+                              typed.find("RAWRXD_CERT_TYPED") != std::string::npos;
             const bool routed = Win32IDE_Commands_Route(IDM_EDIT_UNDO);
-            const std::string afterUndo = ReadEdit(editor);
-            const bool changed = (afterUndo != typed);
+            const std::string afterUndo = RawrXD::IDE::EditorEngine_GetText();
+            const bool undoWorked = (afterUndo != typed);
             const bool routedRedo = Win32IDE_Commands_Route(IDM_EDIT_REDO);
-            const std::string afterRedo = ReadEdit(editor);
-            char d[260];
+            const std::string afterRedo = RawrXD::IDE::EditorEngine_GetText();
+            char d[300];
             std::snprintf(d, sizeof(d),
-                          "undo_route=%d undo_changed_editor=%d redo_route=%d "
-                          "redo_restored=%d len_typed=%zu len_after_undo=%zu",
-                          routed ? 1 : 0, changed ? 1 : 0, routedRedo ? 1 : 0,
-                          (afterRedo == typed) ? 1 : 0, typed.size(), afterUndo.size());
-            const bool ok = routed && routedRedo;
+                          "grew=%d undo_route=%d undo_changed=%d redo_route=%d "
+                          "redo_restored=%d len_base=%zu len_typed=%zu len_after_undo=%zu",
+                          grew ? 1 : 0, routed ? 1 : 0, undoWorked ? 1 : 0,
+                          routedRedo ? 1 : 0, (afterRedo == typed) ? 1 : 0,
+                          base.size(), typed.size(), afterUndo.size());
+            const bool ok = grew && routed && routedRedo;
             Record("S12_UNDO_REDO", ok ? Verdict::PASS : Verdict::FAIL, d);
         }
     }
@@ -408,7 +432,7 @@ static void WriteReceipt() {
     {
         char line[64];
         const long long pid = (long long)GetCurrentProcessId();
-        std::snprintf(line, sizeof(line), "PID=%lld", pid);
+        std::snprintf(line, sizeof(line), "%lld", pid);
         out += std::string("PID=") + line + "\r\n";
     }
 

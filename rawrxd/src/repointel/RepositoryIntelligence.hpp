@@ -118,6 +118,11 @@ struct IncrementalDelta {
     uint32_t hashVerified = 0;
     double   fullMs = 0.0;
     double   incrMs = 0.0;
+    // Exactly which files were re-parsed, and which disappeared. A count alone
+    // cannot distinguish "re-parsed the file I changed" from "re-parsed the
+    // file I changed plus something else that moved under the walk".
+    std::vector<std::string> reindexedPaths;
+    std::vector<std::string> removedPaths;
 };
 
 struct RankedChunk {
@@ -173,13 +178,21 @@ public:
     bool load(const std::string& path, std::string* err = nullptr);
 
     // Build the same policy twice and report whether the two payloads match.
+    // A determinism claim is only meaningful over a stable input tree, so the
+    // universe facts are captured before the first build and re-read after the
+    // second; if they differ, `treeStable` is false and the caller must report
+    // INDETERMINATE rather than either a pass or a failure of the algorithm.
     struct DeterminismResult {
         bool        identical = false;
+        bool        treeStable = false;
+        uint32_t    volatilePathCount = 0;
+        std::string excludedVolatilePaths;
         uint64_t    bytesA = 0;
         uint64_t    bytesB = 0;
         std::string hashA;
         std::string hashB;
         std::string mismatch;
+        std::string changedPaths;  // paths that moved during the two builds
     };
     static DeterminismResult verifyDeterminismRebuild(const UniversePolicy& p,
                                                       const std::string& dirA,

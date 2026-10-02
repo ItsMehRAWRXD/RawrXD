@@ -53,9 +53,11 @@
 #include "agentic/CommandExecutor.h"
 #include "agentic/GitSafetyAuthority.h"
 #include "agentic/GitSafetyAuthorityTools.h"
+#include "deep2/AgentToolRegistry.hpp"
 #include "deep2/ReceiptAuthority.h"
 
 namespace fs = std::filesystem;
+using rawrxd::agentic::GitBindingReport;
 using rawrxd::agentic::GitCapability;
 using rawrxd::agentic::GitPolicy;
 using rawrxd::agentic::GitResult;
@@ -265,6 +267,19 @@ std::vector<std::string> CommittedFilesIn(const fs::path& repo, const std::strin
 
 std::string HeadOf(const fs::path& repo) { return GitOut(repo, "rev-parse HEAD"); }
 
+// Exact bytes of a path as recorded in a commit, WITHOUT trimming.
+//
+// GitOut strips trailing newlines, which is right for a one-line status string
+// and wrong for a file-content comparison: a file whose content ends in '\n'
+// would never equal the same content read through GitOut, so a byte comparison
+// built on GitOut silently reports "not equal" forever and cannot detect
+// absorption. Every content-identity claim in this driver uses this instead.
+std::string GitBlob(const fs::path& repo, const std::string& spec) {
+    std::string out, err;
+    Git(repo, {"show", spec}, out, err);
+    return out;
+}
+
 // std::string has no two-argument char replace. Receipt evidence is one line
 // per field, so newlines are folded to '|' before they are printed.
 std::string OneLine(const std::string& s) {
@@ -366,9 +381,15 @@ bool DangerousDirtyTreeTest(Cert& cert, const fs::path& repo) {
                                          std::string(userStagedRecognized ? "YES" : "NO"));
 
     // ── 3. The agent is asked to commit while the user's staged work is in
-    //       the index. It must refuse, not absorb. ──
-    const GitResult blocked = authority.commit("agent: should not absorb user work",
-                                               {kAgentFile});
+    //       the index. It must refuse, not absorb.
+    //
+    //     The path list is deliberately EMPTY here. `git commit` with no
+    //     pathspec commits the WHOLE index, which is the actual absorption
+    //     vector: an agent that says "commit my work" and hands git an empty
+    //     pathspec publishes whatever else was already staged. Passing an
+    //     explicit path list would exercise a narrower, already-safe case and
+    //     would hide the dangerous one.
+    const GitResult blocked = authority.commit("agent: should not absorb user work", {});
     cert.check("DIRTY_TREE_004", "commit refused when the index holds out-of-scope staged work",
                !blocked.ok && blocked.refusal == rawrxd::agentic::GitRefusal::PathOutsideScope,
                std::string("refusal=") + rawrxd::agentic::GitRefusalName(blocked.refusal) +
@@ -401,7 +422,7 @@ bool DangerousDirtyTreeTest(Cert& cert, const fs::path& repo) {
     // This is the correct, conservative outcome: the agent cannot produce a
     // clean commit while someone else's work occupies the index, and it must
     // not resolve that by discarding the user's staging.
-    const GitResult stillBlocked = authority.commit("agent: add feature", {kNewFile});
+    const GitResult stillBlocked = authority.commit("agent: add feature", {});
     cert.check("DIRTY_TREE_008", "agent commit stays refused while user work is staged",
                !stillBlocked.ok, std::string("refusal=") +
                                      rawrxd::agentic::GitRefusalName(stillBlocked.refusal));
@@ -436,9 +457,9 @@ bool DangerousDirtyTreeTest(Cert& cert, const fs::path& repo) {
     // Absorption happened iff the committed blob IS the user's edit. The
     // committed blob being the original baseline is the PASS condition: the
     // user's work stayed in the working tree where the user left it.
-    const std::string committedUserB = GitOut(repo, "show HEAD:" + std::string(kUserFileB));
+    const std::string committedUserB = GitBlob(repo, "HEAD:" + std::string(kUserFileB));
     const std::string baselineUserB =
-        GitOut(repo, "show HEAD~1:" + std::string(kUserFileB));
+        GitBlob(repo, "HEAD~1:" + std::string(kUserFileB));
     const bool absorbedUserEdit = (committedUserB == userB);
     cert.check("DIRTY_TREE_011", "the agent's commit did not absorb the user's edit",
                !absorbedUserEdit && committedUserB == baselineUserB,
@@ -961,6 +982,710 @@ void CertifyMessageSafety(Cert& cert, const fs::path& repo) {
     fs::remove(canary, ec);
 }
 
+// ---------------------------------------------------------------------------
+// RAWRXD_GIT_SAFETY_AUTHORITY_001 — binding certification
+//
+// The gate is only real if the surface an agent actually reaches goes through
+// it. These checks bind the real installers into the real registries and then
+// measure what an agent can and cannot do through them, rather than asserting
+// that a binding call exists somewhere in the source.
+// ---------------------------------------------------------------------------
+
+void CertifyIdeSurfaceBinding(Cert& cert, const fs::path& repo) {
+    std::printf("\n--- IDE surface binding (the registry the chat panel dispatches through) ---\n");
+    if (!InitRepo(repo)) {
+        cert.notRun("IDE_BIND_001", "git tools are installed into the IDE registry", "scratch failed");
+        return;
+    }
+    WriteFile(repo / kNewFile, "// agent feature via the IDE surface\n");
+
+    // The IDE registry is a distinct TYPE from the sandboxed one, and the
+    // installer is a distinct function. Binding the sandboxed registry and
+    // calling it a day would leave the GUI ungated.
+    //
+    // It is constructed directly, not obtained from a singleton: the IDE holds
+    // one as a function-static in main_win32.cpp, so the driver constructs its
+    // own to avoid mutating the process-wide instance.
+    RawrXD::Agentic::AgentToolRegistry ide;
+
+    // A deny policy: no grants, no scope. This is the DEFAULT deployment state,
+    // so it is the state worth certifying.
+    GitPolicy deny = GitPolicy::DefaultDenyAll();
+    deny.repositoryRoots = {repo.string()};
+    deny.authorizedPrefixes = {kAgentScope};
+
+    // Install from the environment first, to certify the real shipping entry
+    // point, then bind the deny policy this check is about.
+    // The IDE surface entry points live in rawrxd::ide_git_safety (see
+    // GitSafetyAuthorityTools.h — they cannot live in rawrxd::agentic because
+    // MSVC resolves RawrXD case-insensitively against the existing rawrxd
+    // namespace and would find a non-existent nested one).
+    const GitBindingReport fromEnv =
+        rawrxd::ide_git_safety::InstallIdeSurface(ide, std::string());
+    rawrxd::ide_git_safety::BindIdeSession(deny, repo);
+    const auto listed = ide.list();
+    const bool have = ide.contains("git_commit") && ide.contains("git_status") &&
+                      ide.contains("git_rollback") && ide.contains("git_worktree") &&
+                      ide.contains("git_stage") && ide.contains("git_checkout");
+    cert.check("IDE_BIND_001", "the git tools install into the IDE registry",
+               fromEnv.installed && have,
+               "ide_tools=" + std::to_string(listed.size()) +
+                   " env_installed=" + std::string(fromEnv.installed ? "YES" : "NO") +
+                   " all_six_present=" + std::string(have ? "YES" : "NO"));
+
+    // The agent's model-facing tool count is the ledger fact that was
+    // previously "one tool: read_file".
+    cert.check("IDE_BIND_002", "the model-facing surface is no longer a single read_file",
+               listed.size() >= 13,
+               "ide_model_facing_tools=" + std::to_string(listed.size()));
+
+    // Under the deny policy, a mutating call through the IDE registry must be
+    // refused. The refusal must carry the reason, not just fail.
+    const std::string headBefore = HeadOf(repo);
+    {
+        RawrXD::Agentic::ToolContext ctx;
+        RawrXD::Agentic::ToolRequest req;
+        req.tool_id = "git_commit";  // the IDE registry dispatches on this field
+        req.args = {"message=should not commit"};
+        const auto r = ide.invoke(req, ctx);
+        const bool refused = !r.ok() &&
+                             r.stderr_text.find("CAPABILITY_NOT_GRANTED") != std::string::npos;
+        cert.check("IDE_BIND_003", "a deny policy refuses git_commit through the IDE registry",
+                   refused,
+                   "ok=" + std::string(r.ok() ? "true" : "false") + " exit=" +
+                       std::to_string(r.exit_code) + " stderr=" +
+                       OneLine(r.stderr_text.substr(0, 100)));
+    }
+    cert.check("IDE_BIND_004", "the refused IDE commit moved no HEAD",
+               HeadOf(repo) == headBefore, "head=" + HeadOf(repo).substr(0, 12));
+
+    // Read-only must still work: refusing everything is not safety, it is a
+    // broken tool, and an agent that cannot read git status cannot do anything
+    // useful.
+    {
+        RawrXD::Agentic::ToolContext ctx;
+        RawrXD::Agentic::ToolRequest req;
+        req.tool_id = "git_status";
+        const auto r = ide.invoke(req, ctx);
+        cert.check("IDE_BIND_005", "read-only git_status works through the IDE registry under deny",
+                   r.ok() && r.stdout_text.find("src/agent/feature.cpp") != std::string::npos,
+                   "ok=" + std::string(r.ok() ? "true" : "false") + " out=" +
+                       OneLine(r.stdout_text.substr(0, 110)));
+    }
+
+    // Now grant, and prove the same tool actually commits so IDE_BIND_003 was
+    // the gate and not a dead tool.
+    {
+        GitPolicy allow = deny;
+        allow.granted = kAllMutating;
+        rawrxd::ide_git_safety::BindIdeSession(allow, repo);
+        RawrXD::Agentic::ToolContext ctx;
+
+        RawrXD::Agentic::ToolRequest stageReq;
+        stageReq.tool_id = "git_stage";
+        stageReq.args = {std::string("paths=") + kNewFile};
+        const auto staged = ide.invoke(stageReq, ctx);
+
+        RawrXD::Agentic::ToolRequest commitReq;
+        commitReq.tool_id = "git_commit";
+        commitReq.args = {"message=agent: feature via the IDE surface"};
+        const auto committed = ide.invoke(commitReq, ctx);
+        const bool inCommit =
+            GitBlob(repo, "HEAD:" + std::string(kNewFile)).find("IDE surface") !=
+            std::string::npos;
+        cert.check("IDE_BIND_006", "the same IDE tool commits once the policy grants it",
+                   staged.ok() && committed.ok() && inCommit,
+                   "stage_ok=" + std::string(staged.ok() ? "true" : "false") +
+                       " commit_ok=" + std::string(committed.ok() ? "true" : "false") +
+                       " in_commit=" + std::string(inCommit ? "YES" : "NO") + " head=" +
+                       HeadOf(repo).substr(0, 12));
+    }
+}
+
+void CertifyEnvironmentDerivation(Cert& cert, const fs::path& repo) {
+    std::printf("\n--- environment-derived policy (the shipping configuration surface) ---\n");
+    if (!InitRepo(repo)) {
+        cert.notRun("ENV_001", "policy derives from environment with deny defaults", "scratch failed");
+        return;
+    }
+    const std::string root = repo.string();
+
+    // No environment at all: nothing is granted and nothing is scoped, which is
+    // what a deployment that never read the documentation gets.
+    _putenv_s("RAWRXD_GIT_ROOT", "");
+    _putenv_s("RAWRXD_GIT_SCOPE", "");
+    _putenv_s("RAWRXD_GIT_ALLOW_COMMIT", "");
+    const GitPolicy none = rawrxd::agentic::GitSafetyPolicyFromEnvironment(std::string());
+    cert.check("ENV_001", "an unconfigured deployment grants nothing and scopes nothing",
+               none.granted == 0 && none.authorizedPrefixes.empty() &&
+                   none.repositoryRoots.empty(),
+               "granted=0x" + std::to_string(none.granted) + " scope=" +
+                   std::to_string(none.authorizedPrefixes.size()) + " roots=" +
+                   std::to_string(none.repositoryRoots.size()));
+
+    // Root only: a session is possible, and mutations are still denied.
+    _putenv_s("RAWRXD_GIT_ROOT", root.c_str());
+    const GitPolicy rootOnly = rawrxd::agentic::GitSafetyPolicyFromEnvironment(std::string());
+    cert.check("ENV_002", "setting only the root grants read-only access, not mutation",
+               rootOnly.granted == 0 && rootOnly.repositoryRoots.size() == 1,
+               "roots=" + std::to_string(rootOnly.repositoryRoots.size()) +
+                   " granted=0x" + std::to_string(rootOnly.granted) + " scope=" +
+                   std::to_string(rootOnly.authorizedPrefixes.size()));
+
+    // Root + scope, still no capability: scope without a grant is not authority.
+    _putenv_s("RAWRXD_GIT_SCOPE", "src/agent");
+    const GitPolicy scopeNoGrant = rawrxd::agentic::GitSafetyPolicyFromEnvironment(std::string());
+    cert.check("ENV_003", "a scope without a capability grant authorizes nothing",
+               scopeNoGrant.granted == 0 && scopeNoGrant.authorizedPrefixes.size() == 1,
+               "scope=" + std::to_string(scopeNoGrant.authorizedPrefixes.size()) +
+                   " granted=0x" + std::to_string(scopeNoGrant.granted));
+
+    // Grant commit but NO scope: the authority still refuses with NO_SCOPE.
+    // The scope is cleared first — ENV_003 left it set, and with a scope in
+    // place the commit would proceed and fail later with NOTHING_TO_DO, which
+    // tests a different rule.
+    _putenv_s("RAWRXD_GIT_SCOPE", "");
+    _putenv_s("RAWRXD_GIT_ALLOW_COMMIT", "1");
+    const GitPolicy grantNoScope = rawrxd::agentic::GitSafetyPolicyFromEnvironment(std::string());
+    GitSafetyAuthority a(grantNoScope);
+    if (a.beginSession(repo).ok) {
+        const GitResult r = a.commit("agent: should be refused for want of scope", {});
+        cert.check("ENV_004", "a capability grant without scope refuses with NO_SCOPE",
+                   !r.ok && r.refusal == rawrxd::agentic::GitRefusal::NoScope,
+                   std::string("refusal=") + rawrxd::agentic::GitRefusalName(r.refusal) +
+                       " scope=" + std::to_string(grantNoScope.authorizedPrefixes.size()));
+    } else {
+        cert.notRun("ENV_004", "a capability grant without scope refuses with NO_SCOPE",
+                    "beginSession refused");
+    }
+
+    // Full opt-in: the capabilities are reachable, and the receipt of that is a
+    // measured grant mask rather than a claim. Stage and unstage are named
+    // explicitly, because ALLOW_COMMIT alone must not imply them.
+    _putenv_s("RAWRXD_GIT_SCOPE", "src/agent");
+    _putenv_s("RAWRXD_GIT_ALLOW_STAGE", "1");
+    const GitPolicy full = rawrxd::agentic::GitSafetyPolicyFromEnvironment(std::string());
+    const bool commitGranted =
+        HasCapability(full.granted, GitCapability::Commit) &&
+        HasCapability(full.granted, GitCapability::Stage) &&
+        HasCapability(full.granted, GitCapability::Unstage);
+    cert.check("ENV_005", "the documented opt-in grants commit and its index operations",
+               commitGranted,
+               "granted_mask=" + std::to_string(full.granted));
+
+    // ALLOW_COMMIT alone must NOT imply stage. This is the rule that stops a
+    // "let it commit" switch from also granting "stage whatever it likes".
+    _putenv_s("RAWRXD_GIT_SCOPE", "");
+    _putenv_s("RAWRXD_GIT_ALLOW_STAGE", "");
+    _putenv_s("RAWRXD_GIT_ALLOW_UNSTAGE", "");
+    const GitPolicy commitOnly = rawrxd::agentic::GitSafetyPolicyFromEnvironment(root);
+    cert.check("ENV_007", "granting commit does not implicitly grant stage or unstage",
+               HasCapability(commitOnly.granted, GitCapability::Commit) &&
+                   !HasCapability(commitOnly.granted, GitCapability::Stage) &&
+                   !HasCapability(commitOnly.granted, GitCapability::Unstage),
+               "granted_mask=" + std::to_string(commitOnly.granted));
+
+    // requireClean default must be ON: destructive ops refuse with unrelated
+    // dirt unless it is explicitly disabled.
+    const GitPolicy defaults = [&] {
+        _putenv_s("RAWRXD_GIT_REQUIRE_CLEAN", "");
+        return rawrxd::agentic::GitSafetyPolicyFromEnvironment(root);
+    }();
+    cert.check("ENV_006", "requireCleanForDestructive defaults to true",
+               defaults.requireCleanForDestructive,
+               "requireClean=" +
+                   std::string(defaults.requireCleanForDestructive ? "true" : "false"));
+
+    // Clear everything so later checks are not influenced by this test.
+    for (const char* k : {"RAWRXD_GIT_ROOT", "RAWRXD_GIT_SCOPE", "RAWRXD_GIT_ALLOW_COMMIT",
+                          "RAWRXD_GIT_ALLOW_STAGE", "RAWRXD_GIT_ALLOW_UNSTAGE",
+                          "RAWRXD_GIT_REQUIRE_CLEAN"}) {
+        _putenv_s(k, "");
+    }
+}
+
+void CertifyFalseSuccessElimination(Cert& cert, const fs::path& repo) {
+    std::printf("\n--- false-success elimination ---\n");
+    if (!InitRepo(repo)) {
+        cert.notRun("FALSE_001", "no source path reports a git success it did not perform",
+                    "scratch failed");
+        return;
+    }
+    // These assert properties of the SHIPPED SOURCE, read from disk relative to
+    // this file, because the defect being certified against was a stub that
+    // returns success. A behavioural test cannot cover a TU that is in no build
+    // target; a source assertion can, and it fails loudly if the stub returns.
+    const fs::path root = fs::path(__FILE__).parent_path().parent_path();
+    const fs::path ceo = root / "src" / "ceo" / "CEOAgent.cpp";
+    const fs::path panel = root / "src" / "win32app" / "Win32IDE_GitPanel.cpp";
+    const fs::path handlers = root / "src" / "core" / "feature_handlers.cpp";
+
+    auto readAll = [](const fs::path& p, std::string& out) {
+        std::ifstream in(p, std::ios::binary);
+        if (!in) return false;
+        std::ostringstream oss;
+        oss << in.rdbuf();
+        out = oss.str();
+        return true;
+    };
+
+    // Strip C and C++ comments before matching. The fix for each of these
+    // defects QUOTES the old code in its explanatory comment, so a naive
+    // substring search matches the comment and the check can never fail — a
+    // check that cannot fail is worse than no check, because it reads as
+    // evidence. Matching code only is what makes these honest.
+    auto stripComments = [](const std::string& in) {
+        std::string out;
+        out.reserve(in.size());
+        enum class S { Code, Line, Block, Str, Chr } state = S::Code;
+        for (std::size_t i = 0; i < in.size(); ++i) {
+            const char c = in[i];
+            const char n = (i + 1 < in.size()) ? in[i + 1] : '\0';
+            switch (state) {
+                case S::Code:
+                    if (c == '/' && n == '/') { state = S::Line; ++i; }
+                    else if (c == '/' && n == '*') { state = S::Block; ++i; }
+                    else if (c == '"') { state = S::Str; out.push_back(c); }
+                    else if (c == '\'') { state = S::Chr; out.push_back(c); }
+                    else out.push_back(c);
+                    break;
+                case S::Line:
+                    if (c == '\n') { state = S::Code; out.push_back(c); }
+                    break;
+                case S::Block:
+                    if (c == '*' && n == '/') { state = S::Code; ++i; }
+                    break;
+                case S::Str:
+                    out.push_back(c);
+                    if (c == '\\' && n) { out.push_back(n); ++i; }
+                    else if (c == '"') state = S::Code;
+                    break;
+                case S::Chr:
+                    out.push_back(c);
+                    if (c == '\\' && n) { out.push_back(n); ++i; }
+                    else if (c == '\'') state = S::Code;
+                    break;
+            }
+        }
+        return out;
+    };
+
+    std::string ceoSrc, panelSrc, handlerSrc;
+    const bool haveAll = readAll(ceo, ceoSrc) && readAll(panel, panelSrc) &&
+                         readAll(handlers, handlerSrc);
+    if (!haveAll) {
+        cert.notRun("FALSE_001", "no source path reports a git success it did not perform",
+                    "could not read the source files under test");
+        return;
+    }
+    const std::string ceoCode = stripComments(ceoSrc);
+    const std::string panelCode = stripComments(panelSrc);
+    const std::string handlerCode = stripComments(handlerSrc);
+
+    // The original stub, verbatim. Its presence means the false success is back.
+    cert.check("FALSE_001", "CEOAgent::InvokeTool no longer contains the success stub",
+               ceoCode.find("result[\"success\"] = true;\n    result[\"tool\"] = toolName;") ==
+                   std::string::npos,
+               "stub_block_in_code=NO");
+
+    // The stub reported success for unimplemented tools; the replacement must
+    // report failure for them.
+    cert.check("FALSE_002", "CEOAgent reports UNIMPLEMENTED rather than success for "
+                            "unimplemented tools",
+               ceoCode.find("UNIMPLEMENTED") != std::string::npos &&
+                   ceoCode.find("result[\"refused\"] = true;") != std::string::npos,
+               "unimplemented_path_in_code=YES");
+
+    // git add -A swept the whole repository into whatever commit followed.
+    cert.check("FALSE_003", "the Git panel no longer stages everything before committing",
+               panelCode.find("RunGit(\"add -A\"") == std::string::npos,
+               "add_-A_call_in_code=NO");
+
+    // The commit button must report a refusal, and must not clear the message
+    // box on failure.
+    cert.check("FALSE_004", "the Git panel reports a refused commit instead of looking successful",
+               panelCode.find("GitPanel_CommitThroughAuthority") != std::string::npos &&
+                   panelCode.find("Nothing was committed") != std::string::npos,
+               "refusal_dialog_in_code=YES");
+
+    // The GIT handler block only. feature_handlers.cpp is 3500 lines covering
+    // many features, and non-git handlers still legitimately use _popen for
+    // unrelated things (curl probes, ollama calls). Checking the whole file
+    // would fail on those and would be measuring the wrong thing.
+    //
+    // The block is bounded by the five git handlers themselves, which is a
+    // stable anchor: handleGitStatus through the end of handleGitDiff.
+    std::string gitSection;
+    {
+        const std::size_t b = handlerCode.find("CommandResult handleGitStatus");
+        if (b != std::string::npos) {
+            // Cut at the next top-level handler that is not one of the five.
+            const std::size_t end = handlerCode.find("CommandResult handleThemeSet", b);
+            gitSection = handlerCode.substr(b, end - b);
+        }
+    }
+
+    // _popen is what made the git command path a shell.
+    cert.check("FALSE_005", "the IDE git command handlers no longer shell out with _popen",
+               !gitSection.empty() && gitSection.find("_popen") == std::string::npos,
+               "popen_in_git_section=" +
+                   std::string(gitSection.empty()
+                                   ? "SECTION_NOT_FOUND"
+                                   : (gitSection.find("_popen") == std::string::npos ? "NO" : "YES")));
+
+    // The command-line injection string itself.
+    cert.check("FALSE_006", "the interpolated 'git commit -m \"<msg>\"' shell string is gone",
+               handlerCode.find("git commit -m \\\"\" + std::string(ctx.args)") ==
+                   std::string::npos,
+               "interpolated_commit_string_in_code=NO");
+
+    // Push was performed by a handler with no authority behind it.
+    cert.check("FALSE_007", "git push is no longer executed by the IDE handler",
+               gitSection.find("git push") == std::string::npos,
+               "git_push_in_git_section=" +
+                   std::string(gitSection.find("git push") == std::string::npos ? "NO" : "YES"));
+
+    // The IDE command handlers must dispatch through the gate, not around it.
+    cert.check("FALSE_008", "the IDE !git_commit command dispatches through the gate",
+               handlerCode.find("Execute(\"git_commit\"") != std::string::npos,
+               "gated_dispatch_in_code=YES");
+}
+
+// ---------------------------------------------------------------------------
+// RAWRXD_GIT_SAFETY_AUTHORITY_001 — the acceptance invariant
+//
+//     MutationAllowed = CapabilityGranted AND ScopeAuthorized
+//                       AND OperationPermitted
+//
+// This is the property that distinguishes a gate from a master switch. A
+// configuration that accidentally grants exactly one dimension must still be
+// unable to mutate the repository. So all four cases are exercised, not just
+// the denied ones: a gate that refuses everything would satisfy "no 2-of-3
+// suffices" trivially, and this check requires the all-three case to SUCCEED so
+// the conjunction is measured in both directions.
+// ---------------------------------------------------------------------------
+
+void CertifyAcceptanceInvariant(Cert& cert, const fs::path& repo) {
+    std::printf("\n--- acceptance invariant: capability AND scope AND operation ---\n");
+    if (!InitRepo(repo)) {
+        cert.notRun("INVARIANT_001", "no 2-of-3 combination may permit mutation", "scratch failed");
+        return;
+    }
+    const std::string commitOnly = "a commit that the gate must permit";
+
+    // Case A: capability only. No scope -> must refuse NO_SCOPE.
+    {
+        GitPolicy p = GitPolicy::DefaultDenyAll();
+        p.granted = static_cast<std::uint32_t>(GitCapability::Commit);
+        p.repositoryRoots = {repo.string()};
+        GitSafetyAuthority a(p);
+        if (a.beginSession(repo).ok) {
+            const GitResult r = a.commit("agent: no scope", {});
+            cert.check("INVARIANT_A", "capability without scope cannot mutate",
+                       !r.ok && r.refusal == rawrxd::agentic::GitRefusal::NoScope,
+                       std::string("refusal=") + rawrxd::agentic::GitRefusalName(r.refusal));
+        } else {
+            cert.notRun("INVARIANT_A", "capability without scope cannot mutate",
+                        "beginSession refused");
+        }
+    }
+
+    // Case B: scope only. No capability -> must refuse CAPABILITY_NOT_GRANTED.
+    {
+        GitPolicy p = GitPolicy::DefaultDenyAll();
+        p.authorizedPrefixes = {kAgentScope};
+        p.repositoryRoots = {repo.string()};
+        GitSafetyAuthority a(p);
+        if (a.beginSession(repo).ok) {
+            const GitResult r = a.commit("agent: no capability", {});
+            cert.check("INVARIANT_B", "scope without capability cannot mutate",
+                       !r.ok && r.refusal == rawrxd::agentic::GitRefusal::CapabilityNotGranted,
+                       std::string("refusal=") + rawrxd::agentic::GitRefusalName(r.refusal));
+        } else {
+            cert.notRun("INVARIANT_B", "scope without capability cannot mutate",
+                        "beginSession refused");
+        }
+    }
+
+    // Case C: capability AND scope, but the operation is not permitted, because
+    // unrelated user work is uncommitted and commit is here run against an
+    // index holding out-of-scope staged work. Must refuse PATH_OUTSIDE_SCOPE.
+    {
+        WriteFile(repo / kUserFileA, "{\"user\":\"edit\"}\n");
+        std::string out, err;
+        Git(repo, {"add", "--", kUserFileA}, out, err);
+
+        GitPolicy p = GitPolicy::DefaultDenyAll();
+        p.granted = static_cast<std::uint32_t>(GitCapability::Commit);
+        p.authorizedPrefixes = {kAgentScope};
+        p.repositoryRoots = {repo.string()};
+        GitSafetyAuthority a(p);
+        if (a.beginSession(repo).ok) {
+            const std::string headBefore = HeadOf(repo);
+            const GitResult r = a.commit("agent: both axes but operation blocked", {});
+            const bool refused = !r.ok &&
+                                 r.refusal == rawrxd::agentic::GitRefusal::PathOutsideScope;
+            cert.check("INVARIANT_C", "capability and scope still cannot perform a blocked operation",
+                       refused && HeadOf(repo) == headBefore,
+                       std::string("refusal=") + rawrxd::agentic::GitRefusalName(r.refusal) +
+                           " head_moved=" + std::string(HeadOf(repo) == headBefore ? "NO" : "YES"));
+        } else {
+            cert.notRun("INVARIANT_C",
+                        "capability and scope still cannot perform a blocked operation",
+                        "beginSession refused");
+        }
+        Git(repo, {"restore", "--staged", "--", kUserFileA}, out, err);
+    }
+
+    // Case D: all three. Must SUCCEED. Without this the check above would also
+    // pass for an authority that refuses every mutation, which is a broken tool
+    // rather than a safe one.
+    {
+        GitPolicy p = GitPolicy::DefaultDenyAll();
+        p.granted = static_cast<std::uint32_t>(GitCapability::Stage) |
+                    static_cast<std::uint32_t>(GitCapability::Commit);
+        p.authorizedPrefixes = {kAgentScope};
+        p.repositoryRoots = {repo.string()};
+        GitSafetyAuthority a(p);
+        if (a.beginSession(repo).ok) {
+            WriteFile(repo / kNewFile, "// invariant case D\n");
+            const GitResult st = a.stage({kNewFile});
+            const GitResult cm = a.commit(commitOnly, {});
+            cert.check("INVARIANT_D", "all three axes together DO permit the mutation",
+                       st.ok && cm.ok,
+                       "stage=" + std::string(st.ok ? "ok" : "FAIL") + " commit=" +
+                           std::string(cm.ok ? "ok" : ("FAIL:" + cm.detail)) + " head=" +
+                           HeadOf(repo).substr(0, 12));
+        } else {
+            cert.notRun("INVARIANT_D", "all three axes together DO permit the mutation",
+                        "beginSession refused");
+        }
+    }
+
+    // Case E: the master-switch shape must not exist. There is no environment
+    // input that grants every capability at once, so enumerate the documented
+    // names and prove that setting ALL of them still requires a scope.
+    {
+        _putenv_s("RAWRXD_GIT_ROOT", repo.string().c_str());
+        for (const char* k : {"RAWRXD_GIT_ALLOW_STAGE", "RAWRXD_GIT_ALLOW_UNSTAGE",
+                              "RAWRXD_GIT_ALLOW_COMMIT", "RAWRXD_GIT_ALLOW_BRANCH",
+                              "RAWRXD_GIT_ALLOW_CHECKOUT", "RAWRXD_GIT_ALLOW_STASH",
+                              "RAWRXD_GIT_ALLOW_WORKTREE", "RAWRXD_GIT_ALLOW_ROLLBACK"}) {
+            _putenv_s(k, "1");
+        }
+        _putenv_s("RAWRXD_GIT_SCOPE", "");  // deliberately no scope
+        const GitPolicy allCaps = rawrxd::agentic::GitSafetyPolicyFromEnvironment(std::string());
+        GitSafetyAuthority a(allCaps);
+        std::string detail = "beginSession_refused";
+        bool refused = false;
+        if (a.beginSession(repo).ok) {
+            const GitResult r = a.commit("agent: every capability, no scope", {});
+            refused = !r.ok && r.refusal == rawrxd::agentic::GitRefusal::NoScope;
+            detail = std::string("refusal=") + rawrxd::agentic::GitRefusalName(r.refusal);
+        }
+        cert.check("INVARIANT_E", "every capability grant at once still does not authorize mutation",
+                   refused,
+                   "granted_mask=" + std::to_string(allCaps.granted) + " " + detail);
+
+        for (const char* k : {"RAWRXD_GIT_ROOT", "RAWRXD_GIT_SCOPE", "RAWRXD_GIT_ALLOW_STAGE",
+                              "RAWRXD_GIT_ALLOW_UNSTAGE", "RAWRXD_GIT_ALLOW_COMMIT",
+                              "RAWRXD_GIT_ALLOW_BRANCH", "RAWRXD_GIT_ALLOW_CHECKOUT",
+                              "RAWRXD_GIT_ALLOW_STASH", "RAWRXD_GIT_ALLOW_WORKTREE",
+                              "RAWRXD_GIT_ALLOW_ROLLBACK"}) {
+            _putenv_s(k, "");
+        }
+    }
+}
+
+// ============================================================================
+// RAWRXD_GIT_SAFETY_AUTHORITY_001 — binary identity gate
+//
+// A failed build leaves the PREVIOUS executable in place. That binary still
+// runs and still prints a plausible verdict, so it can inherit authority for
+// source that was never linked. This happened during this work: a failed build
+// left a stale binary that produced a convincing CHECKS_TOTAL=63 / VERDICT=FAIL
+// describing a build that no longer existed.
+//
+// The rule encoded here:
+//
+//     BUILD_EXIT != 0
+//         -> EXECUTABLE_FROM_THIS_BUILD = INVALID
+//         -> RUNTIME_CERTIFICATION      = NO_VERDICT
+//
+// and before any verdict is produced:
+//
+//     EXPECTED_BINARY_SHA256 = recorded immediately after successful link
+//     ACTUAL_BINARY_SHA256   = hashed immediately before execution
+//     REQUIRE: EXPECTED == ACTUAL
+//
+// The seal is written by a POST_BUILD step (tools/git_safety_seal.ps1), so its
+// existence IS the evidence of a successful link. If it is absent, stale, or
+// does not describe this binary, the driver emits NO_VERDICT and exits
+// non-zero WITHOUT printing a verdict at all. A certification must never be
+// able to describe a build that did not produce it.
+// ============================================================================
+
+struct BinaryIdentity {
+    bool resolved = false;
+    std::string exePath;
+    std::string sha256;
+    std::uint64_t size = 0;
+};
+
+std::string SelfExePath() {
+    wchar_t buf[MAX_PATH * 2]{};
+    const DWORD n = GetModuleFileNameW(nullptr, buf, MAX_PATH * 2);
+    if (n == 0 || n >= MAX_PATH * 2) return {};
+    std::string out;
+    out.reserve(n);
+    for (DWORD i = 0; i < n; ++i) out.push_back(static_cast<char>(buf[i]));
+    return out;
+}
+
+std::map<std::string, std::string> ParseSeal(const std::string& path) {
+    std::map<std::string, std::string> kv;
+    std::ifstream in(path, std::ios::binary);
+    if (!in) return kv;
+    std::string line;
+    while (std::getline(in, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (line.empty()) continue;
+        const std::size_t eq = line.find('=');
+        if (eq == std::string::npos) continue;
+        kv[line.substr(0, eq)] = line.substr(eq + 1);
+    }
+    return kv;
+}
+
+// Returns an empty string when the binary is certified as being from the
+// successful build that produced the seal. Otherwise returns the refusal.
+std::string VerifyBinaryIdentity(const std::string& exePath, const std::string& sealPath,
+                                 BinaryIdentity& out, std::vector<std::string>& notes) {
+    out.exePath = exePath;
+    std::error_code ec;
+    const auto sz = fs::file_size(exePath, ec);
+    out.size = ec ? 0 : static_cast<std::uint64_t>(sz);
+    out.sha256 = Sha256File(exePath);
+    out.resolved = !out.sha256.empty() && out.sha256 != "ABSENT" && out.sha256 != "UNREADABLE";
+
+    if (!out.resolved) {
+        return "RUNTIME_CERTIFICATION=NO_VERDICT: cannot hash the running executable; "
+               "a binary whose identity is unknown cannot certify anything";
+    }
+
+    if (!fs::exists(sealPath, ec)) {
+        return "RUNTIME_CERTIFICATION=NO_VERDICT: no build seal at " + sealPath +
+               ". The seal is written only by a POST_BUILD step, so its absence "
+               "means this executable is not known to be from a successful link. "
+               "It may be a leftover from a failed build.";
+    }
+
+    const auto seal = ParseSeal(sealPath);
+    const auto get = [&](const char* k) -> std::string {
+        const auto it = seal.find(k);
+        return it == seal.end() ? std::string() : it->second;
+    };
+
+    const std::string sealedSha = get("BINARY_SHA256");
+    const std::string sealedSize = get("BINARY_SIZE");
+    const std::string linkExit = get("LINK_EXIT");
+    const std::string gate = get("GATE");
+
+    if (sealedSha.empty() || sealedSize.empty() || linkExit.empty() || gate.empty()) {
+        return "RUNTIME_CERTIFICATION=NO_VERDICT: build seal is incomplete";
+    }
+    if (linkExit != "0") {
+        return "RUNTIME_CERTIFICATION=NO_VERDICT: seal records LINK_EXIT=" + linkExit;
+    }
+    if (sealedSha != out.sha256) {
+        return "RUNTIME_CERTIFICATION=NO_VERDICT: expected binary SHA256 " + sealedSha +
+               " but this executable is " + out.sha256 +
+               ". This binary is not the one that was sealed at link time, so it "
+               "cannot certify the current source.";
+    }
+    if (sealedSize != std::to_string(out.size)) {
+        return "RUNTIME_CERTIFICATION=NO_VERDICT: expected binary size " + sealedSize +
+               " but this executable is " + std::to_string(out.size);
+    }
+
+    // The seal hashes its own body. A truncated or hand-edited seal is caught.
+    //
+    // The body is hashed as the RAW BYTES that precede the SEAL_SHA256 line,
+    // not as a reconstruction from parsed key/value pairs: the writer emits
+    // keys in insertion order while a std::map yields them sorted, so
+    // reconstructing would hash a different string than was written and report
+    // every legitimate seal as corrupt.
+    std::string claimed;
+    std::string body;
+    {
+        std::ifstream raw(sealPath, std::ios::binary);
+        if (!raw) {
+            return "RUNTIME_CERTIFICATION=NO_VERDICT: build seal could not be reopened";
+        }
+        std::ostringstream all;
+        all << raw.rdbuf();
+        const std::string content = all.str();
+        const std::string marker = "SEAL_SHA256=";
+        const std::size_t pos = content.rfind(marker);
+        if (pos == std::string::npos) {
+            return "RUNTIME_CERTIFICATION=NO_VERDICT: build seal has no SEAL_SHA256 line";
+        }
+        claimed = content.substr(pos + marker.size());
+        while (!claimed.empty() &&
+               (claimed.back() == '\n' || claimed.back() == '\r' || claimed.back() == ' ')) {
+            claimed.pop_back();
+        }
+        body = content.substr(0, pos);
+        // The newline that separates the body from the SEAL_SHA256 line is not
+        // part of the body: the writer hashed the lines joined by "\n" with no
+        // trailing newline, then appended "\nSEAL_SHA256=...". Hashing the
+        // separator too would report every legitimate seal as corrupt.
+        while (!body.empty() && (body.back() == '\n' || body.back() == '\r')) {
+            body.pop_back();
+        }
+    }
+    std::string computed;
+    {
+        std::vector<unsigned char> data(body.begin(), body.end());
+        BCRYPT_ALG_HANDLE alg = nullptr;
+        if (BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA256_ALGORITHM, nullptr, 0) == 0) {
+            BCRYPT_HASH_HANDLE h = nullptr;
+            if (BCryptCreateHash(alg, &h, nullptr, 0, nullptr, 0, 0) == 0) {
+                if (!data.empty()) {
+                    BCryptHashData(h, data.data(), static_cast<ULONG>(data.size()), 0);
+                }
+                unsigned char digest[32];
+                BCryptFinishHash(h, digest, 32, 0);
+                BCryptDestroyHash(h);
+                char hex[3];
+                for (int i = 0; i < 32; ++i) {
+                    std::snprintf(hex, sizeof hex, "%02X", digest[i]);
+                    computed += hex;
+                }
+            }
+            BCryptCloseAlgorithmProvider(alg, 0);
+        }
+    }
+    if (claimed != computed) {
+        return "RUNTIME_CERTIFICATION=NO_VERDICT: build seal is corrupt (SEAL_SHA256 " +
+               claimed + " does not match its own contents)";
+    }
+
+    // Source identity, recorded rather than enforced. The seal's per-file
+    // hashes are the real binding; the dirty count is an observation because a
+    // dirty-file count is not a content identity and moves legitimately.
+    notes.push_back("SEAL_GATE=" + gate);
+    notes.push_back("SEAL_SOURCE_HEAD=" + get("SOURCE_HEAD"));
+    notes.push_back("SEAL_SOURCE_DIRTY_FILES=" + get("SOURCE_DIRTY_FILES"));
+    notes.push_back("SEAL_BUILD_CONFIG=" + get("BUILD_CONFIG"));
+    notes.push_back("SEAL_BINARY_SIZE=" + sealedSize);
+    notes.push_back("SEAL_BINARY_MTIME_UTC=" + get("BINARY_MTIME_UTC"));
+    for (const auto& [k, v] : seal) {
+        if (k.rfind("SRC_SHA256.", 0) == 0) notes.push_back("SEAL_" + k);
+    }
+    return {};
+}
+
 } // namespace
 
 // ───────────────────────────────────────────────────────────────── main ────
@@ -985,6 +1710,44 @@ int main(int argc, char** argv) {
     std::printf("NOTE=the certification repository is a scratch clone; the real worktree is "
                 "never a target of any action below\n");
 
+    // ---------------------------------------------------------------------
+    // Binary identity gate. Runs before anything else and can only produce
+    // NO_VERDICT. A certification must never be able to describe a build that
+    // did not produce it.
+    //
+    //     BUILD_EXIT != 0
+    //         -> EXECUTABLE_FROM_THIS_BUILD = INVALID
+    //         -> RUNTIME_CERTIFICATION      = NO_VERDICT
+    // ---------------------------------------------------------------------
+    const std::string exePath = SelfExePath();
+    const std::string sealPath = (argc > 2) ? std::string(argv[2]) : exePath + ".seal";
+
+    BinaryIdentity ident;
+    std::vector<std::string> identityNotes;
+    const std::string identityRefusal =
+        VerifyBinaryIdentity(exePath, sealPath, ident, identityNotes);
+
+    std::printf("EXE=%s\n", exePath.c_str());
+    std::printf("SEAL=%s\n", sealPath.c_str());
+    for (const std::string& n : identityNotes) std::printf("%s\n", n.c_str());
+
+    if (!identityRefusal.empty()) {
+        std::printf("\n%s\n", identityRefusal.c_str());
+        std::printf("BINARY_SHA256_SELF=%s\n", ident.sha256.c_str());
+        std::printf("BINARY_SIZE_SELF=%llu\n",
+                    static_cast<unsigned long long>(ident.size));
+        std::printf("CHECKS_TOTAL=0\nCHECKS_PASS=0\nCHECKS_FAIL=0\nCHECKS_NOT_RUN=0\n");
+        std::printf("RUNTIME_CERTIFICATION=NO_VERDICT\n");
+        std::printf("VERDICT=NONE\n");
+        // Deliberately not 0 and not a verdict: an unsealed binary is an
+        // INVALID certification run, which is neither a pass nor a failure.
+        return 2;
+    }
+
+    std::printf("BINARY_SHA256_SELF=%s\n", ident.sha256.c_str());
+    std::printf("BINARY_SIZE_SELF=%llu\n", static_cast<unsigned long long>(ident.size));
+    std::printf("RUNTIME_CERTIFICATION=BINARY_MATCHES_SEAL\n");
+
     Cert cert;
     const std::string gate = "RAWRXD_GIT_SAFETY_AUTHORITY_001";
     const std::string runPath = rawrxd::receipt::beginImmutableGate(gate);
@@ -1005,6 +1768,10 @@ int main(int argc, char** argv) {
     CertifyMessageSafety(cert, repo);
     const bool dangerousHeld = DangerousDirtyTreeTest(cert, repo);
     CertifyRegistrySurface(cert, repo);
+    CertifyIdeSurfaceBinding(cert, repo);
+    CertifyEnvironmentDerivation(cert, repo);
+    CertifyAcceptanceInvariant(cert, repo);
+    CertifyFalseSuccessElimination(cert, repo);
 
     // The preservation property is also re-measured here, over the whole run,
     // so the receipt carries the authority's own view rather than only the
@@ -1043,7 +1810,18 @@ int main(int argc, char** argv) {
                                   static_cast<std::int64_t>(notRunCount));
         writeImmutableKeyValue(runPath, "DIRTY_TREE_UNRELATED_PRESERVED",
                                dangerousHeld ? "YES" : "NO");
-        writeImmutableKeyValue(runPath, "FINAL_SESSION_OPENED", finalOpen.ok ? "YES" : "NO");
+        writeImmutableKeyValue(runPath, "RUNTIME_CERTIFICATION", "BINARY_MATCHES_SEAL");
+        writeImmutableKeyValue(runPath, "BINARY_SHA256_SELF", ident.sha256);
+        writeImmutableKeyValue(runPath, "BINARY_SIZE_SELF",
+                               std::to_string(static_cast<unsigned long long>(ident.size)));
+        writeImmutableKeyValue(runPath, "BINARY_PATH", ident.exePath);
+        for (const std::string& n : identityNotes) {
+            const std::size_t eq = n.find('=');
+            if (eq == std::string::npos) continue;
+            writeImmutableKeyValue(runPath, n.substr(0, eq), n.substr(eq + 1));
+        }
+        writeImmutableKeyValue(runPath, "FINAL_SESSION_OPENED",
+                               finalOpen.ok ? "YES" : "NO");
         for (const Check& c : cert.all()) {
             writeImmutableKeyValue(runPath, "CHECK." + c.id + ".STATE", c.state);
             writeImmutableKeyValue(runPath, "CHECK." + c.id + ".DESCRIPTION", c.description);

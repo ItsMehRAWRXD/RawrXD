@@ -1,0 +1,97 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f63c016..2345434 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -249,6 +249,74 @@ endif()
+ # Set -DRAWRXD_STRICT_SOURCES=ON to make any drop fatal; the default stays
+ # permissive so an in-progress tree still configures, but the count is printed
+ # at STATUS level and recorded in RAWRXD_DROPPED_SOURCE_COUNT for other logic.
++# RAWRXD_GATE_AGGREGATION_001
++# rawrxd_filter_missing_sources is called at eight sites in this file. It used
++# to raise message(FATAL_ERROR) inline, so configuration aborted at the FIRST
++# offending list and the remaining seven were never reported.
++#
++# Measured on this tree at 4cfd4ab8:
++#   -DRAWRXD_RELEASE_CERT_BUILD=ON exits 1 at CMakeLists.txt:3788
++#     (RAWR_ENGINE_SOURCES, 54 empty-bodied TUs) and never reaches
++#     WIN32IDE_SOURCES at :7307, so the 225 missing IDE sources go unreported.
++#   -DRAWRXD_STRICT_SOURCES=ON exits 1 at :406 on those 225, and the
++#     empty-bodied TUs only warn.
++# Each flag surfaces one finding and hides the other. This change accumulates
++# every violation and raises once, after all lists have been filtered.
++#
++# Two implementation constraints were found by measurement, not assumed:
++#   1. ${ARGV1} is EMPTY here. ARGC is 1 and ${ARGV} holds the argument, but
++#      ${ARGV1} does not. A named parameter is used instead. Using ARGV would
++#      have produced an aggregate error with a correct count and no detail.
++#   2. CACHE INTERNAL truncates a stored string at the first embedded newline,
++#      and every violation message contains one. Newlines are encoded to a
++#      sentinel before the value enters the cache and decoded at raise time.
++# Without (2) the file lists inside each message would be silently lost.
++#
++# cmake_language(DEFER) requires CMake >= 3.19; this project requires 3.20.
++# The ID option is deliberately unused: cmake_language(DEFER ... ID ...) needs
++# 3.28, and depending on it would break the declared minimum.
++#
++# PREEMPTION WINDOW, measured. DEFER runs at end of directory scope, which is
++# BEFORE generate, so span length and empty-source targets do not affect it: with
++# 400 add_library/add_custom_target calls between the violation and end of
++# directory the aggregate still printed, reporting both lists. A span of 11,346
++# lines does not change that.
++# What DOES preempt it is a configure-time message(FATAL_ERROR) raised after the
++# last filter call. This file has 33 FATAL_ERROR sites; 29 are before the last
++# filter call at :7313 and 4 are after it -- lines 7733, 8041, 8076 and 13525,
++# all [ProductionLane] guards requiring RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.
++# Under a default configure none of them fire and the aggregate is reached.
++# If the aggregate must be unconditionally reachable, raise it immediately after
++# the last filter call instead; :7313 (_WIN32IDE_ASM) is the last of the eight
++# call sites, so nothing would be lost.
++function(rawrxd_declare_cert_violation msg)
++    math(EXPR _vc "${RAWRXD_CERT_VIOLATION_COUNT} + 1")
++    set(RAWRXD_CERT_VIOLATION_COUNT ${_vc} CACHE INTERNAL "" FORCE)
++    string(REPLACE "\n" "@@RAWRXD_NL@@" _enc "${msg}")
++    set(RAWRXD_CERT_VIOLATIONS "${RAWRXD_CERT_VIOLATIONS}|||${_enc}"
++        CACHE INTERNAL "" FORCE)
++    if(RAWRXD_CERT_VIOLATION_DEFERRED)
++        return()
++    endif()
++    set(RAWRXD_CERT_VIOLATION_DEFERRED TRUE CACHE INTERNAL "" FORCE)
++    cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}"
++                   CALL rawrxd_raise_cert_violations)
++endfunction()
++
++function(rawrxd_raise_cert_violations)
++    if(NOT RAWRXD_CERT_VIOLATION_COUNT)
++        return()
++    endif()
++    string(REPLACE "|||" "\n\n  " _all "${RAWRXD_CERT_VIOLATIONS}")
++    string(REPLACE "@@RAWRXD_NL@@" "\n  " _all "${_all}")
++    string(STRIP "${_all}" _all)
++    message(FATAL_ERROR
++        "[rawrxd_cert_violations] source closure failed in "
++        "${RAWRXD_CERT_VIOLATION_COUNT} list(s). Every offending list is listed "
++        "below; this gate reports all of them rather than stopping at the first.\n\n"
++        "  ${_all}")
++endfunction()
++
+ function(rawrxd_filter_missing_sources list_var)
+     set(_kept)
+     set(_dropped 0)
+@@ -385,7 +453,7 @@ function(rawrxd_filter_missing_sources list_var)
+         # contains no code, so a green build and a passing link would both be
+         # worthless as evidence about it.
+         if(RAWRXD_RELEASE_CERT_BUILD)
+-            message(FATAL_ERROR
++            rawrxd_declare_cert_violation(
+                 "[release_cert_source_closure] ${list_var}: ${_emptybodied} declared source(s) are "
+                 "EMPTY-BODIED (no code survives comment stripping):\n"
+                 "  ${_eb_list}\n"
+@@ -403,7 +471,7 @@ function(rawrxd_filter_missing_sources list_var)
+     if(_dropped GREATER 0)
+         string(REPLACE ";" " " _dropped_list "${_dropped_names}")
+         if(RAWRXD_STRICT_SOURCES)
+-            message(FATAL_ERROR
++            rawrxd_declare_cert_violation(
+                 "[rawrxd_filter_missing_sources] ${list_var}: ${_dropped} referenced source(s) do not exist:\n"
+                 "  ${_dropped_list}\n"
+                 "RAWRXD_STRICT_SOURCES=ON: refusing to configure with a source list that does not "

@@ -1,0 +1,7 @@
+# RAWRXD_GIT_TRANSACTION_AUTHORITY_001 -- verdict semantics
+CONTRACT_SATISFIED = the build under test met every stated gate condition
+CONTRACT_VIOLATED  = it did not
+DEFECT_DETECTED    = a deliberately defective CONTROL build failed as required
+NO_VERDICT         = the control could not be constructed; nothing was measured
+mode=candidate -> expect run_verdict=CONTRACT_SATISFIED
+mode=control   -> expect run_verdict=DEFECT_DETECTED and G4 not met

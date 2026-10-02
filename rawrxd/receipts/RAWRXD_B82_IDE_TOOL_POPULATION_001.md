@@ -217,10 +217,21 @@ L28a /api/cli                    CLOSED (200, verified live in B80)
 L28b /api/agent/execute-tool     CLOSED (200/400, verified live in B80)
 L28c matFinalDownload            NOT A DEFECT (correction recorded)
 L28d stale canonical build tree  NOT STARTED
-L28e real Tool Authority routing BLOCKED (kquant, another session)
+L28e real Tool Authority routing CLOSED_READONLY_EXEC_PROFILE (B84)
+L28f write-enabled transactional CLOSED_TRANSACTIONAL_PROFILE (B83)
 ```
 
 ```ini
 B82_COMMITTED=NO
 B82_PUSHED=NO
 ```
+
+Superseded in part. B84 certified the live chain for read/search/execute
+dispatch and sandbox failure behaviour only, and recorded that
+`write_file={"ok":false,"error":"write_file is disabled by the active tool
+policy"}` is correct security behaviour rather than a closed gate. B83 added
+the write-enabled transactional profile that line was waiting on:
+`ToolPolicy::writeRequiresTransaction` plus `POST /api/agent/transaction`
+(begin/status/commit/rollback/recover), 50/50 live checks, plus a
+falsification probe for the journal-closure defect the build exposed. Neither
+receipt certifies `RAWRXD_MODEL_TOOL_OBSERVATION_LOOP_001`.

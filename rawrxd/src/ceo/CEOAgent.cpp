@@ -4,6 +4,8 @@
 // ============================================================================
 #include "CEOAgent.hpp"
 #include "../core/rawrxd_subsystem_api.hpp"
+#include "agentic/AgentToolRegistry.h"
+#include "agentic/GitSafetyAuthorityTools.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -721,12 +723,91 @@ void CEOAgent::ReportCompletion(const Goal& goal, bool success) {
 // ============================================================================
 // Tool Integration
 // ============================================================================
+// RAWRXD_GIT_SAFETY_AUTHORITY_001
+//
+// This used to be:
+//
+//     (void)toolName; (void)args;
+//     result["success"] = true;
+//     result["tool"] = toolName;
+//     return true;
+//
+// which reported a SUCCESSFUL result for every tool without executing any of
+// them. The two git tools that reach here — git_commit (CommitChanges, line
+// ~634) and git_rollback (~684) — therefore reported completed git operations
+// while the repository was untouched, and callers branched on that lie.
+//
+// The fix is not "implement all five tools"; it is that an unimplemented tool
+// must fail. A false success is worse than a stub because it is invisible: a
+// stub fails loudly, and a false success corrupts the caller's control flow.
+// So:
+//
+//   - git tools dispatch to the real GitSafetyAuthority, which either performs
+//     the operation under policy or returns a measured refusal reason.
+//   - every other tool reports UNIMPLEMENTED and returns false.
+//
+// The non-git callers (generate_plan, validate_completion, review_code) now
+// take their failure branch instead of proceeding on a fabricated result.
+// That is a behaviour change and it is the correct one: they were reading a
+// `success: true` that was never earned.
 bool CEOAgent::InvokeTool(const std::string& toolName, const json& args, json& result) {
-    (void)toolName;
-    (void)args;
-    result["success"] = true;
     result["tool"] = toolName;
-    return true;
+
+    const bool isGit = toolName.rfind("git_", 0) == 0;
+    if (isGit) {
+        using namespace rawrxd::agentic;
+
+        if (!IsGitSafetyBound()) {
+            result["success"] = false;
+            result["error"] =
+                "RAWRXD_GIT_SAFETY_UNBOUND: no git safety policy is bound in this "
+                "process. Set RAWRXD_GIT_ROOT (and RAWRXD_GIT_SCOPE plus the "
+                "RAWRXD_GIT_ALLOW_* grants) before an agent may run git.";
+            return false;
+        }
+
+        auto& reg = ToolRegistry::Instance();
+        if (!reg.HasTool(toolName)) {
+            result["success"] = false;
+            result["error"] = "no such git tool is installed: " + toolName;
+            return false;
+        }
+
+        std::unordered_map<std::string, std::string> params;
+        if (args.is_object()) {
+            for (const auto& item : args.items()) {
+                if (item.value().is_string()) params[item.key()] = item.value().get<std::string>();
+                else if (item.value().is_array()) {
+                    std::string joined;
+                    for (const auto& one : item.value()) {
+                        if (!one.is_string()) continue;
+                        if (!joined.empty()) joined.push_back(',');
+                        joined += one.get<std::string>();
+                    }
+                    params[item.key()] = joined;
+                }
+            }
+        }
+        if (args.is_string()) params["message"] = args.get<std::string>();
+
+        const ToolResult r = reg.Execute(toolName, params);
+        result["success"] = r.success;
+        if (r.success) {
+            result["output"] = r.output;
+        } else {
+            result["error"] = r.error;
+        }
+        return r.success;
+    }
+
+    // Everything else is unimplemented. Saying so is the whole fix.
+    result["success"] = false;
+    result["error"] = "UNIMPLEMENTED: '" + toolName +
+                      "' has no implementation in CEOAgent. It previously "
+                      "reported success without executing anything, which is a "
+                      "false success rather than a missing feature.";
+    result["refused"] = true;
+    return false;
 }
 
 // ============================================================================

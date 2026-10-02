@@ -1,1 +1,1 @@
-{"elapsed_us":0,"error":"path rejected by sandbox: .rawrxd\\ckpt\\journal\\evil.jrnl","ok":false,"tool":"write_file"}
+{"elapsed_us":0,"error":"write refused: the checkpoint tree is not writable by the agent: F:\\~dev\\rawrxd\\audit\\RAWRXD_IDE_WRITE_TRANSACTIONAL_PROFILE_001\\work\\.rawrxd\\ckpt\\journal\\evil.jrnl","ok":false,"tool":"write_file"}

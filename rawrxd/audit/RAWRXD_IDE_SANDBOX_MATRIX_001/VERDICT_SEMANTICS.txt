@@ -1,0 +1,8 @@
+# RAWRXD_IDE_SANDBOX_MATRIX_001 -- verdict semantics (see also the receipt)
+CONTRACT_SATISFIED = the build under test met every stated expectation
+CONTRACT_VIOLATED  = the build under test did not
+DEFECT_DETECTED    = a deliberately defective CONTROL build failed as required
+NO_VERDICT         = the control could not be constructed; nothing was measured
+mode=full  -> expect run_verdict=CONTRACT_SATISFIED
+mode=probe -> expect run_verdict=DEFECT_DETECTED and junction_violations>0
+This file is rewritten on every run; MATRIX_HISTORY.txt is append-only.

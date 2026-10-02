@@ -1,0 +1,14 @@
+RAWRXD_IDE_CHECKPOINT_ROLLBACK_AUTHORITY_001
+transaction=tx13435365899_16176_122716b9
+reason=no COMMIT record in journal (interrupted transaction)
+workspace=F:\~dev\rawrxd\audit\RAWRXD_IDE_SANDBOX_MATRIX_001\run_20261001T220451Z\work
+files_restored=0
+files_deleted=3
+files_verified=0
+files_failed=0
+torn_records_discarded=0
+missing_blobs=0
+journal_flushes=1
+identity_before=e727b372ab5e0d2e26c60472903f274108c91a1cef189e729b4171d0b3f80d52
+identity_after=00b597a3aa3e2ba7ffe2468dfbd8118ad47d9e154c481cd8243a995f3fc936e5
+verdict=RESTORED

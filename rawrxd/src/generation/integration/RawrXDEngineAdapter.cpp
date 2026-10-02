@@ -1,19 +1,27 @@
-#include "RawrXDEngineAdapter.h"
+﻿#include "RawrXDEngineAdapter.h"
 #include "../../cpu_inference_engine.h"
 
 #include <memory>
 
 RawrXDEngineAdapter::RawrXDEngineAdapter()
 {
-    inferenceEngine_ = RawrXD::CPUInferenceEngine::GetSharedInstance();
+    // RAWRXD_UNSIMULATE_001: was RawrXD::CPUInferenceEngine::GetSharedInstance(),
+    // which does not exist on that class. Its real surface is LoadModel,
+    // Tokenize, Detokenize, GenerateStreaming, isModelLoaded and getStatus --
+    // there is no shared instance, so the engine is owned here.
+    //
+    // A fresh engine has no model loaded, so isReady() is false until whoever
+    // holds this adapter calls LoadModel. That is the correct initial state and
+    // it is reported as not-ready rather than as ready.
+    inferenceEngine_ = std::make_shared<RawrXD::CPUInferenceEngine>();
 }
 
-RawrXDEngineAdapter::~RawrXDEngineAdapter() {
-}
+RawrXDEngineAdapter::~RawrXDEngineAdapter() = default;
 
 bool RawrXDEngineAdapter::isReady() const {
-    return inferenceEngine_ && inferenceEngine_->IsModelLoaded();
+    return inferenceEngine_ && inferenceEngine_->isModelLoaded();
 }
+
 
 bool RawrXDEngineAdapter::tokenize(const std::string& text, std::vector<int32_t>& tokens) {
     if (!inferenceEngine_) return false;
@@ -21,44 +29,20 @@ bool RawrXDEngineAdapter::tokenize(const std::string& text, std::vector<int32_t>
     return !tokens.empty();
 }
 
+
 std::string RawrXDEngineAdapter::detokenize(int32_t tokenId) {
     if (!inferenceEngine_) return "";
     std::vector<int32_t> singleToken = { tokenId };
     return inferenceEngine_->Detokenize(singleToken);
 }
 
+
 int RawrXDEngineAdapter::getEosTokenId() {
     // 2 is broadly standard for Llama / Mistral / GGUF, but in production we ask the loader wrapper if exposed.
     return 2;
 }
 
-bool RawrXDEngineAdapter::prefill(const std::vector<int32_t>& tokens) {
-    if (!inferenceEngine_) return false;
-    
-    // CPUInferenceEngine::Eval performs a forward pass and returns logits.
-    // It internally updates KV Cache via its encapsulated RawrXDInference.
-    std::vector<float> logits = inferenceEngine_->Eval(tokens);
-    return !logits.empty();
-}
 
-int RawrXDEngineAdapter::decodeStep() {
-    if (!inferenceEngine_) return -1;
-    
-    // 1. Get the last computed logits from the engine.
-    const auto& logits = inferenceEngine_->GetLastState();
-    if (logits.empty()) return -1;
-
-    // 2. Sample from logits.
-    // Need a mutable copy for the sampler, because sampling typically mutates the logit buffer inline
-    std::vector<float> mutableLogits = logits;
-    uint32_t tokenId = sampler_.Sample(mutableLogits.data(), static_cast<int>(mutableLogits.size()), {});
-
-    // 3. Preemptively run forward pass with the newly sampled token to populate KV cache and get next logits.
-    std::vector<int32_t> nextToken = { static_cast<int32_t>(tokenId) };
-    inferenceEngine_->Eval(nextToken);
-    
-    return static_cast<int>(tokenId);
-}
 
 bool RawrXDEngineAdapter::generate(
     const char* prompt,
@@ -88,42 +72,41 @@ bool RawrXDEngineAdapter::generate(
         return false;
     }
 
-    // --- Run prefill (prompt processing) ---
-    if (!prefill(promptTokens)) {
-        if (engineErrorCb) engineErrorCb("Prefill failed");
+    // --- Stream from the engine ---
+    //
+    // RAWRXD_UNSIMULATE_001: this used to run its own prefill/decodeStep loop
+    // over CPUInferenceEngine::Eval() and GetLastState(), neither of which
+    // exists on that class. There is no per-token stepping API underneath, so
+    // that loop could not have been real at any point.
+    //
+    // CPUInferenceEngine::GenerateStreaming IS the API: prompt tokens, a token
+    // budget, a per-piece callback and a completion callback. Each streamed
+    // piece is forwarded to tokenCb with a monotonically increasing index,
+    // which is the contract the module6 consumers rely on.
+    //
+    // The returned bool means "the stream produced output", and it is decided
+    // by what GenerateStreaming actually did: piecesSeen is incremented from
+    // the engine's own callback, so a stream that emitted nothing is reported
+    // as failure rather than as an empty successful generation.
+    uint32_t tokenIdx = 0;
+    uint32_t piecesSeen = 0;
+    inferenceEngine_->GenerateStreaming(
+        promptTokens,
+        static_cast<int>(maxDecodeTokens_),
+        [tokenCb, &tokenIdx, &piecesSeen](const std::string& piece) {
+            ++piecesSeen;
+            if (tokenCb && !piece.empty()) {
+                tokenCb(piece.c_str(), tokenIdx++);
+            }
+        },
+        []() {});
+
+    if (piecesSeen == 0) {
+        if (engineErrorCb) {
+            engineErrorCb("Generation produced no output: the engine streamed "
+                          "no pieces");
+        }
         return false;
     }
-
-    // --- Decode loop ---
-    uint32_t tokenIdx = 0;
-    int eosTokenId = getEosTokenId();
-
-    while (true) {
-        // Decode one token
-        int tokenId = decodeStep();
-        if (tokenId < 0) {
-            if (engineErrorCb) engineErrorCb("Decode step returned invalid token");
-            return false;
-        }
-
-        // Check for EOS
-        if (tokenId == eosTokenId) {
-            return true;  // Normal stop
-        }
-
-        // Detokenize the single token to text
-        std::string tokenText = detokenize(tokenId);
-        if (!tokenText.empty() && tokenCb) {
-            tokenCb(tokenText.c_str(), tokenIdx);
-        }
-
-        tokenIdx++;
-
-        // Check max tokens
-        if (tokenIdx >= maxDecodeTokens_) {
-            return true;  // Hit length limit
-        }
-    }
-
     return true;
 }

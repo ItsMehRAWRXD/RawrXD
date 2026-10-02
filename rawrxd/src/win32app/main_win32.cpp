@@ -1,6 +1,7 @@
-#include <windows.h>
+﻿#include <windows.h>
 #include <shellapi.h>
 #include <string>
+#include <filesystem>
 #include <vector>
 #include <functional>
 #include <cstdio>
@@ -18,7 +19,7 @@
 // RawrXD::IDE::ToolchainResult locally instead of including the header that
 // owns it. That is legal only while the two definitions stay byte-identical, so
 // any future field added to one and not the other would produce a silent
-// layout/ABI mismatch with no compiler diagnostic — runNativeToolchainGate()
+// layout/ABI mismatch with no compiler diagnostic â€” runNativeToolchainGate()
 // returns the header's type across a TU boundary, and this file would be
 // reading it through a different declaration. Including the owning header makes
 // a divergence a compile error instead of a runtime mystery.
@@ -28,7 +29,7 @@
 #include "deep2/Deep2Engine.h"
 #include "deep2/ReceiptAuthority.h"
 #include "agentic/CheckpointRollbackAuthority.h"
-// RAWRXD_IDE_AGENTIC_WIRING_001 — the agentic streaming pipeline. Same five
+// RAWRXD_IDE_AGENTIC_WIRING_001 â€” the agentic streaming pipeline. Same five
 // objects the certified gate drives (ide_agentic_gate.cpp:207-263).
 #include "StreamingResultChannel.h"
 #include "streaming_inference_engine.h"
@@ -43,7 +44,7 @@
 #include "Win32IDE_MCPHooks.h"
 #include "Win32IDE_ChatPanel.h"
 
-// Recovered IDE stubs — RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001
+// Recovered IDE stubs â€” RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001
 extern "C" void Win32IDE_Sidebar_Create(HWND hwndParent, HINSTANCE hInstance);
 extern "C" void Win32IDE_Sidebar_SetVisibility(bool visible);
 extern "C" bool Win32IDE_Sidebar_IsVisible();
@@ -58,7 +59,7 @@ namespace RawrXD::IDE { std::string FileOps_OpenDialog(HWND parent, const std::s
 
 // RAWRXD_IDE_AGENTIC_WIRING_001: Win32IDE_AgentPanel.cpp publishes no header,
 // so these two entry points are declared here. Before this change both had zero
-// callers — the panel window was created and never fed.
+// callers â€” the panel window was created and never fed.
 namespace RawrXD::IDE {
 void AgentPanel_SetTask(const std::string& task);
 void AgentPanel_AddStep(const std::string& label);
@@ -122,7 +123,7 @@ static StartupOptions g_startupOptions;
 static FILE* g_headlessLog = nullptr;  // File log for GUI-subsystem headless runs
 static bool g_certTimerExpired = false;  // W8: set when cert timer fires
 
-// W8: Shutdown origin tracing — records the FIRST reason the process exits
+// W8: Shutdown origin tracing â€” records the FIRST reason the process exits
 enum class ShutdownReason {
     Unknown = 0, WmClose, WmDestroy, ChatExitOnDone, CertTimerExpired,
     AutorunComplete, Scheduler, ApplicationQuit, ExternalClose,
@@ -159,7 +160,7 @@ static bool certStayAliveBlocksShutdown() {
 // (defined here so StartupOptions can reference it if needed)
 
 // ---------------------------------------------------------------------------
-// Persistent chat engine — wires ChatPanel → Deep2Engine → streamed tokens
+// Persistent chat engine â€” wires ChatPanel â†’ Deep2Engine â†’ streamed tokens
 // ---------------------------------------------------------------------------
 static std::unique_ptr<Deep2::Deep2Engine> g_chatEngine;
 static std::thread g_chatThread;
@@ -182,12 +183,12 @@ struct ChatTokenData {
 // Defined further down with the other exe-relative path helpers.
 static std::string getExeDir();
 
-// RAWRXD_SETTINGS_PERSISTENCE_001 — the canonical settings authority surface
+// RAWRXD_SETTINGS_PERSISTENCE_001 â€” the canonical settings authority surface
 // lives in Win32IDE_Settings.h. writeSettingsStatus() is defined next to
 // writeChatEngineStatus() below; both are used from WndProc.
 #include "Win32IDE_Settings.h"
 
-// RAWRXD_SESSION_PERSISTENCE_001 — same defect class as settings, fixed here.
+// RAWRXD_SESSION_PERSISTENCE_001 â€” same defect class as settings, fixed here.
 // Session_SetPath() had zero callers, so the session code was linked and could
 // not read or write anything.
 #include "Win32IDE_Session.h"
@@ -195,6 +196,19 @@ static std::string getExeDir();
 // RAWRXD_WORKSPACE_IDE_BINDING_001 -- multi-root workspace model, now linked
 // into this target (CMakeLists.txt appends src/core/workspace_model.cpp).
 #include "core/workspace_model.h"
+
+// RAWRXD_MULTIROOT_EXPLORER_001 -- explorer surface.
+//
+// The sidebar has no header of its own; these are declared here so the receipt
+// emitter can read what the tree actually rendered. Root accessors take an
+// explicit index and return "" or -1 out of range, so a caller cannot silently
+// be handed the primary root when it asked for another.
+extern "C" int  Win32IDE_Sidebar_RootCount();
+extern "C" int  Win32IDE_Sidebar_GetSelectedRootIndex();
+extern "C" const wchar_t* Win32IDE_Sidebar_GetRootPath(int index);
+extern "C" const char* Win32IDE_Sidebar_GetRootName(int index);
+extern "C" int  Win32IDE_Sidebar_RootIsPrimary(int index);
+extern "C" const char* Win32IDE_Sidebar_MultiRootStatus();
 
 // RAWRXD_INTEGRATION_TRANCHE_001 -- task configs, launch configs, filesystem
 // watcher, per-project config. All four are now linked into this target; see the
@@ -236,7 +250,7 @@ static void onChatDone() {
     RawrXD::IDE::ChatPanel_EndStreaming();
 }
 
-// ── E2E gate receipt ──────────────────────────────────────────────────────────
+// â”€â”€ E2E gate receipt â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Written next to the exe on every completed chat generation so the
 // RAWRXD_IDE_CHAT_E2E_001 gate can be asserted on text, not on a screenshot.
 struct ChatRunTelemetry {
@@ -257,7 +271,7 @@ struct ChatRunTelemetry {
     uint32_t    actualTopK        = 40;
     uint64_t    actualSeed        = 0;
 
-    // RAWRXD_IDE_AGENTIC_WIRING_001 — whether this run actually went through the
+    // RAWRXD_IDE_AGENTIC_WIRING_001 â€” whether this run actually went through the
     // tool-capable pipeline, and what the Tool Authority actually did. Every
     // value is read from AgenticModelStreamerBridge::BridgeCounters or from the
     // braid's return state, so the receipt cannot assert tool execution that
@@ -388,7 +402,7 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
     r += std::string("FAILURE_DETAIL=") + tel.failureDetail + "\r\n";
     r += std::string("CANCELLED=") + (tel.cancelled ? "1" : "0") + "\r\n";
     r += std::string("COMPLETED=") + (tel.completed ? "1" : "0") + "\r\n";
-    // RAWRXD_IDE_AGENTIC_WIRING_001 — tool-loop provenance, measured.
+    // RAWRXD_IDE_AGENTIC_WIRING_001 â€” tool-loop provenance, measured.
     //
     // These previously did not exist, so the receipt could not distinguish a
     // tool-capable run from a plain text completion. Every value comes from
@@ -429,7 +443,7 @@ static void writeChatE2EReceipt(const ChatRunTelemetry& tel)
     CloseHandle(hFile);
 }
 
-// ── RAWRXD_IDE_AGENTIC_WIRING_001: the IDE's tool surface ─────────────────────
+// â”€â”€ RAWRXD_IDE_AGENTIC_WIRING_001: the IDE's tool surface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
 // The chat panel had no tool registry at all, so a message typed in the GUI
 // could never cause a tool to run. This is the minimum honest surface: read a
@@ -490,7 +504,7 @@ static RawrXD::Agentic::ToolResult ideToolReadFile(
 }
 
 // Worker thread: drives the agentic streaming pipeline for one prompt.
-// RAWRXD_IDE_AGENTIC_WIRING_001 — previously this called
+// RAWRXD_IDE_AGENTIC_WIRING_001 â€” previously this called
 // Deep2Engine::generateStream directly, which streams text but has no tool
 // channel, so no chat message could ever execute a tool.
 //
@@ -527,7 +541,7 @@ static void chatWorkerThread(std::string prompt) {
         opts.topK = 1;
     }
     // NOTE: the previous hardcoded overrides (temperature=0.8 / topP=0.95 /
-    // topK=40) were removed — they silently destroyed the --chat-greedy and
+    // topK=40) were removed â€” they silently destroyed the --chat-greedy and
     // --chat-temperature/topP/topK flags, making the differential test
     // impossible. The CLI flags now reach the engine unmodified.
 
@@ -545,7 +559,7 @@ static void chatWorkerThread(std::string prompt) {
     g_chatProgress.active.store(true);
     writeChatProgressFile();
 
-    // RAWRXD_IDE_AGENTIC_WIRING_001 — drive the agentic pipeline.
+    // RAWRXD_IDE_AGENTIC_WIRING_001 â€” drive the agentic pipeline.
     //
     // If the pipeline cannot be constructed the run degrades to the previous
     // direct-generateStream path so the user still gets text, but the
@@ -617,7 +631,7 @@ static void chatWorkerThread(std::string prompt) {
             git_installed = true;
             // RAWRXD_GIT_REGISTRY_AUTHORITY_001: the registry passed here is the
             // canonical process-wide singleton, rawrxd::agentic::ToolRegistry::
-            // Instance() (src/agentic/AgentToolRegistry.cpp:290) — the same one
+            // Instance() (src/agentic/AgentToolRegistry.cpp:290) â€” the same one
             // the agent tool orchestrator and the HTTP feature_handlers route
             // dispatch through. The call site previously named an undeclared
             // `registry`; declaring one here would have produced a SECOND
@@ -637,7 +651,7 @@ static void chatWorkerThread(std::string prompt) {
             //      !git_commit command dispatches through THIS one.
             //
             // Installing into only one leaves the other ungated, so both are
-            // installed and both share one GitSafetyAuthority — a refusal reads
+            // installed and both share one GitSafetyAuthority â€” a refusal reads
             // the same either way.
             //
             // Defaults are deny. With no RAWRXD_GIT_ROOT the fallback is the
@@ -1017,7 +1031,7 @@ static void writeSettingsStatus(const char* phase)
     r += std::string("SETTINGS_PROBE_VALUE=") + probeVal + "\r\n";
     r += std::string("SETTINGS_LAST_ERROR=") + d.lastError + "\r\n";
 
-    // RAWRXD_SETTINGS_AUTHORITY_001 — schema + migration
+    // RAWRXD_SETTINGS_AUTHORITY_001 â€” schema + migration
     r += std::string("SETTINGS_VALIDATION_RAN=") + (d.validationRan ? "1" : "0") + "\r\n";
     r += std::string("SETTINGS_VALIDATION_VALID=") + (d.validationValid ? "1" : "0") + "\r\n";
     r += std::string("SETTINGS_VALIDATION_ERRORS=") + std::to_string(d.validationErrors) + "\r\n";
@@ -1168,6 +1182,19 @@ static void writeWorkspaceStatus(const char* phase)
     r += std::string("WORKSPACE_SAVE_BYTES=") + std::to_string(d.saveBytes) + "\r\n";
     r += std::string("WORKSPACE_DOC_EXISTS_NOW=") + (docExistsNow ? "1" : "0") + "\r\n";
     r += std::string("WORKSPACE_DOC_BYTES_NOW=") + std::to_string(docBytesNow) + "\r\n";
+
+    // RAWRXD_MULTIROOT_EXPLORER_001: what the explorer actually rendered, read
+    // back from the sidebar rather than inferred from the model's folder count.
+    // These are two different questions -- the model can hold three roots while
+    // the tree shows one -- and conflating them is how a single-root UI keeps
+    // passing a multi-root backend check.
+    r += std::string("EXPLORER_ROOTS_RENDERED=") + std::to_string(Win32IDE_Sidebar_RootCount()) + "\r\n";
+    for (int i = 0; i < Win32IDE_Sidebar_RootCount(); ++i) {
+        r += std::string("EXPLORER_ROOT_PATH=") + std::filesystem::path(Win32IDE_Sidebar_GetRootPath(i)).string() + "\r\n";
+        r += std::string("EXPLORER_ROOT_NAME=") + Win32IDE_Sidebar_GetRootName(i) + "\r\n";
+        r += std::string("EXPLORER_ROOT_PRIMARY=") + std::to_string(Win32IDE_Sidebar_RootIsPrimary(i)) + "\r\n";
+    }
+    r += std::string("EXPLORER_MULTIROOT_STATE=") + Win32IDE_Sidebar_MultiRootStatus() + "\r\n";
 
     // Derived verdict. A startup is satisfied by "the model was initialised and
     // the document either applied or legitimately absent" -- Applied and Absent
@@ -1360,7 +1387,7 @@ static void wireChatToDeep2() {
 #define WM_AUTORUN_COMPLETE   (WM_APP + 101)
 
 // ---------------------------------------------------------------------------
-// Helpers — exe-relative path resolution
+// Helpers â€” exe-relative path resolution
 // ---------------------------------------------------------------------------
 static std::string getExeDir()
 {
@@ -1380,7 +1407,7 @@ static std::string getExeDir()
 }
 
 // ---------------------------------------------------------------------------
-// Headless log helper — GUI apps have no connected stderr; write to file instead
+// Headless log helper â€” GUI apps have no connected stderr; write to file instead
 // ---------------------------------------------------------------------------
 static void openHeadlessLog()
 {
@@ -1486,7 +1513,7 @@ static void appendOutputLine(const std::string& text)
 }
 
 // ---------------------------------------------------------------------------
-// Native Toolchain Gate — runs inside the shipping IDE process
+// Native Toolchain Gate â€” runs inside the shipping IDE process
 // ---------------------------------------------------------------------------
 // RAWRXD_IDE_RECEIPT_MEASURED_001
 // These two fields were string literals at 16 sites, so neither could ever
@@ -1575,7 +1602,7 @@ static void runToolchainGate()
 }
 
 // ---------------------------------------------------------------------------
-// Local Inference Gate — runs inside the shipping IDE process
+// Local Inference Gate â€” runs inside the shipping IDE process
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // Diagnostic Gate (RAWRXD_MODEL_ADMISSION_DIAG_001)
@@ -1761,10 +1788,10 @@ static void runInferenceGate()
 }
 
 // ---------------------------------------------------------------------------
-// Agentic Gate — RAWRXD_WIN32IDE_AGENT_001
+// Agentic Gate â€” RAWRXD_WIN32IDE_AGENT_001
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-// Agentic E2E Gate — RAWRXD_WIN32IDE_AGENTIC_001
+// Agentic E2E Gate â€” RAWRXD_WIN32IDE_AGENTIC_001
 // ---------------------------------------------------------------------------
 static void runAgenticE2EGate()
 {
@@ -1876,7 +1903,7 @@ static void runAgenticE2EGate()
 }
 
 // ---------------------------------------------------------------------------
-// Agentic Gate — RAWRXD_WIN32IDE_AGENT_001
+// Agentic Gate â€” RAWRXD_WIN32IDE_AGENT_001
 // ---------------------------------------------------------------------------
 static void runAgenticGate()
 {
@@ -1898,7 +1925,7 @@ static void runAgenticGate()
     }
 
     headlessLogPrintf("MAIN_AGENT_GATE_RETURNED\n");
-    // ── Emit diagnostics ───────────────────────────────────────────
+    // â”€â”€ Emit diagnostics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     { std::string s; AppendCommandDispatch(s, IDM_AGENTIC_GATE, false); appendOutputLine(s); }
     appendOutputLine(std::string("STREAMER_BUILT=") + (r.streamerBuilt ? "PASS" : "FAIL"));
     appendOutputLine(std::string("ENGINE_INIT=") + (r.engineInitOk ? "PASS" : "FAIL"));
@@ -1943,7 +1970,7 @@ static void runAgenticGate()
     appendOutputLine(std::string("VERDICT=") + (allOk ? "PASS" : "FAIL"));
     appendOutputLine("");
 
-    // ── Write certification receipt UNCONDITIONALLY ──────────────────
+    // â”€â”€ Write certification receipt UNCONDITIONALLY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {
         headlessLogPrintf("CERT_RECEIPT_WRITE_BEGIN\n");
         std::string receiptDir = getExeDir();
@@ -2110,7 +2137,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         Win32IDE_Commands_SetMainWindow(hWnd);
         Win32IDE_Commands_SetEditorWindow(hEditor);
 
-        // Wire ChatPanel → Deep2Engine streaming
+        // Wire ChatPanel â†’ Deep2Engine streaming
         // Try --model path, then RAWRXD_AGENT_MODEL env, then default
         std::string chatModel = g_startupOptions.modelPath;
         if (chatModel.empty()) {
@@ -2144,7 +2171,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (g_hOutput)
         {
             SendMessageA(g_hOutput, WM_SETFONT, (WPARAM)GetStockObject(ANSI_FIXED_FONT), TRUE);
-            appendOutputLine("RawrXD Win32 IDE — Build -> Native Compile Test to run toolchain gate.\r\n");
+            appendOutputLine("RawrXD Win32 IDE â€” Build -> Native Compile Test to run toolchain gate.\r\n");
         }
         break;
     }
@@ -2164,7 +2191,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // W8: guard against premature exit during cert stay-alive mode
             if (certStayAliveBlocksShutdown()) {
                 recordShutdownReason(ShutdownReason::ApplicationQuit);
-                break;  // suppress — cert timer will handle exit
+                break;  // suppress â€” cert timer will handle exit
             }
             recordShutdownReason(ShutdownReason::ApplicationQuit);
             DestroyWindow(hWnd);
@@ -2221,7 +2248,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
         default:
-            // RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001 — delegate to command router
+            // RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001 â€” delegate to command router
             if (Win32IDE_Commands_Route(wmId)) break;
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
@@ -2256,7 +2283,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 // W8: guard chat-exit-on-done during cert stay-alive mode
                 if (certStayAliveBlocksShutdown()) {
                     recordShutdownReason(ShutdownReason::ChatExitOnDone);
-                    // suppress — cert timer will handle exit
+                    // suppress â€” cert timer will handle exit
                 } else {
                     recordShutdownReason(ShutdownReason::ChatExitOnDone);
                     PostMessageA(g_hMainWnd, WM_CLOSE, 0, 0);
@@ -2281,9 +2308,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // / no-display scenarios.
         if (certStayAliveBlocksShutdown() && g_hMainWnd == hWnd) {
             recordShutdownReason(ShutdownReason::WmClose);
-            return 0;  // suppress — cert timer will handle exit
+            return 0;  // suppress â€” cert timer will handle exit
         }
-        // D-W6-001: do NOT clean up the engine here — the destructor chain
+        // D-W6-001: do NOT clean up the engine here â€” the destructor chain
         // (111+ STL members) causes both stack overflow and access violations
         // during window teardown. The engine is intentionally leaked; the OS
         // reclaims all memory on process exit. The generation receipt is
@@ -2394,7 +2421,7 @@ static int runGpuCorrectnessGate()
             std::fprintf(stderr, "GPU_GATE: Deep2Engine::initialize failed\n");
             generationStatus = "InitFailed";
         } else {
-            // Enable Vulkan (GPU) — this is the core of the GPU gate
+            // Enable Vulkan (GPU) â€” this is the core of the GPU gate
             engine.enableVulkan(true);
             if (g_startupOptions.gpuNoFallback) {
                 engine.setVulkanStrictNoCpuFallback(true);
@@ -2473,7 +2500,7 @@ static int runGpuCorrectnessGate()
                     } else {
                         generationStatus = "GenerationFailed";
                         if (result.status == Deep2::GenerationStatus::ForwardFailure) {
-                            hostFallbacks = 1;  // Forward failed — likely fell back
+                            hostFallbacks = 1;  // Forward failed â€” likely fell back
                         }
                     }
 
@@ -2640,7 +2667,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     (void)hPrevInstance;
 
-    // RAWRXD_IDE_DPI_001 — DPI awareness was never declared anywhere in
+    // RAWRXD_IDE_DPI_001 â€” DPI awareness was never declared anywhere in
     // src/win32app: SetProcessDpiAwareness, SetProcessDPIAware and WM_DPICHANGED
     // had zero occurrences, so Windows bitmap-stretched the entire IDE on any
     // scaled display and no panel laid out at physical pixels. This must run
@@ -2703,7 +2730,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
     }
 
-    // RAWRXD_AUTOCLOSURE_001 — bounded autonomous CLI path before GUI startup.
+    // RAWRXD_AUTOCLOSURE_001 â€” bounded autonomous CLI path before GUI startup.
     if (RawrXD::AutoClosure::CommandLineRequested()) {
         return RawrXD::AutoClosure::RunFromCurrentCommandLine();
     }
@@ -2973,7 +3000,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ShowWindow(g_hMainWnd, g_startupOptions.headless ? SW_HIDE : nCmdShow);
     UpdateWindow(g_hMainWnd);
 
-    // RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001 — wire command router + MCP bridge
+    // RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001 â€” wire command router + MCP bridge
     Win32IDE_Commands_SetMainWindow(g_hMainWnd);
     Win32IDE_Commands_SetEditorWindow(g_hOutput);
     RawrXD::MCPBridgeManager::GetInstance().Initialize(GetModuleHandle(NULL));
@@ -3057,7 +3084,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // the crash. This is acceptable for a GUI application's exit path.
     g_chatCancelled = true;
     if (g_chatThread.joinable()) g_chatThread.join();
-    // g_chatEngine is intentionally NOT reset — the destructor is unsafe during
+    // g_chatEngine is intentionally NOT reset â€” the destructor is unsafe during
     // process teardown. The OS will reclaim the memory.
     // CRITICAL: call .release() to prevent the static unique_ptr's destructor
     // (which runs at CRT shutdown) from calling delete on the Deep2Engine.
@@ -3068,7 +3095,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     // W8_HEADLESS_LIFECYCLE_CERT_001: write certification receipt
-    // MIGRATION_BATCH_1 — switched to ReceiptAuthority immutable per-run API.
+    // MIGRATION_BATCH_1 â€” switched to ReceiptAuthority immutable per-run API.
     // Verdict is derived from measured actual-vs-target duration. PASS is only
     // emitted when the cert timer reached (or exceeded) its target duration AND
     // the recorded shutdown reason is CertTimerExpired.
@@ -3152,7 +3179,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             FILE* f = nullptr;
             fopen_s(&f, "w8_headless_lifecycle_receipt.txt", "w");
             if (f) {
-                std::fprintf(f, "# >>> NON_AUTHORITATIVE_MIRROR — DO NOT CERTIFY FROM THIS FILE <<<\n");
+                std::fprintf(f, "# >>> NON_AUTHORITATIVE_MIRROR â€” DO NOT CERTIFY FROM THIS FILE <<<\n");
                 std::fprintf(f, "AUTHORITY=NON_AUTHORITATIVE_MIRROR\n");
                 std::fprintf(f, "DEPRECATED=1\n");
                 std::fprintf(f, "MIRROR_FORBIDDEN_TO_CERTIFY=1\n");

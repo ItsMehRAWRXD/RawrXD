@@ -1700,3 +1700,303 @@ SAFE_TO_GPU=0
 `
 
 BATCH_3 = INCOMPLETE_NO_AGENT_CERT (unchanged, not attempted this session).
+
+---
+
+# Ledger — 2026-10-01: RAWRXD_ENTERPRISE_CLOSURE_MEASUREMENT_001
+
+Every field below is measured in this session against binaries built from the
+tree described. Where an earlier ledger disagrees, this entry is the measurement
+and the earlier one is the record of what was believed then.
+
+## 1. The build is not broken. The build GRAPH was.
+
+`RAWRXD_DROPPED_SOURCE_TOTAL=225` /
+`DROPPED_SOURCE_MEASUREMENT_VALID=1` / `VERDICT=FAIL_DROPPED_SOURCE`
+
+Of those 225, only 6 basenames exist anywhere else in the tree. **219 referenced
+translation units were never written.** `src/serve/` holds one file and that file
+is `int main(){ return 0; }`; `src/modules/` holds two headers;
+`src/win32ide/` holds zero. The IDE target names ~200 `src/win32app/*.cpp` files
+that do not exist. This is not a compile error — it is the IDE's source list
+describing a product that has not been written.
+
+All three shipping binaries **do** compile and link from a clean configure:
+
+```text
+rawr-server.exe        1,722,368 B  SHA256 649691921951CB38
+RawrXD-Win32IDE.exe   22,289,920 B  SHA256 AAD3D0C12A4E44B7
+rawr.exe               1,819,136 B  SHA256 8331F317B06A947C
+```
+
+The `Deep2Engine_GpuForward.cpp` / `DownloadVector` API mismatch described as the
+active blocker is **already repaired** (audit addenda 001–005). The real blockers
+were four CMake defects, all fixed here:
+
+```text
+D1 rawrxd-cli-full-serve vs rawrxd-serve target-name mismatch  -> configuration
+   ABORTED at generate whenever RAWRXD_BUILD_CLI=ON
+D2 q4k_gemv_parity declared twice (CLI-gated + top level)     -> duplicate-target
+   ERROR whenever RAWRXD_BUILD_CLI=ON
+D3 `rawr` gated behind BUILD_RAWRXD_RUN_MODELNAME_001 (default OFF) -> the entire
+   shipping CLI -- rawr dump, agent modes, receipt authority, gate verifier,
+   rawr repo -- was UNREACHABLE from any build
+D4 `if(EXISTS rawr_run.cpp)` closed mid-target-definition     -> target properties,
+   compile options and include dirs fell outside the guard
+```
+
+`rawr modes` and `rawr dump` now run: `MODELS_DISCOVERED=206`,
+`MODELS_CLASSIFIED=206`, `OLLAMA_MANIFESTS_SCANNED=168`, `VERDICT=PASS`.
+
+## 2. The inference ladder was never wired into CMake
+
+`inference_authority_ladder.cpp` exists at the repository root and is the only
+harness in the tree that separates G1 MODEL_LOAD, G2 TOKENIZATION,
+G3 FORWARD_EXECUTION, G4 NUMERICAL_CORRECTNESS, G5 SAMPLING_CORRECTNESS,
+G6 TOKEN_STREAMING, G7 IDE_DELIVERY, G8 PERFORMANCE — and, through
+`enableParityProbe()`, emits the 20-point layer/stage grid used to localise the
+first CPU<->GPU divergence. No target named it, so it could not be compiled,
+could not be linked, and could not produce a receipt. **Gates 1 and 3 were
+unmeasurable regardless of the engine underneath them.** Now declared as
+`inference_authority_ladder`, EXCLUDE_FROM_ALL, deliberately NOT gated on
+`RAWR_ENABLE_VULKAN` because the CPU route is the reference the GPU route is
+compared against.
+
+Link note: it must link the CMake **target** `InferenceEngine`, not the raw path
+`${CMAKE_BINARY_DIR}/Release/InferenceEngine.lib`. A path carries no transitive
+interface, so naming it silently dropped InferenceEngine's PUBLIC dependency on
+`rawrxd_remote64` and produced four LNK2019s in `Deep2Engine::initialize`.
+`src/win32app/Win32IDE_Core.cpp` is also required: `Win32IDE_ChatPanel.cpp`
+cannot link without `IDECore_UIFont()` even though the harness never opens a
+window, because the store and the painter are one TU.
+
+## 3. CPU route: G1–G8 PASS on a real Q4_K_M model
+
+`G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf`, real weights,
+`weight_type=Q4_K dominance=86.5%`, hidden=2048 layers=22 vocab=32000 heads=32
+kv_heads=4.
+
+```text
+G1 MODEL_LOAD             PASS  geometry known, not merely non-zero
+G2 TOKENIZATION           PASS  6 tokens, roundtrip_exact=1, all_in_vocab=1
+G3 FORWARD_EXECUTION      PASS  status=0 generated>0 failureDetail empty
+G4 NUMERICAL_CORRECTNESS  PASS  greedy_runs_identical=1 across repeats
+G5 SAMPLING_CORRECTNESS   PASS  seed-invariant (seed 1 vs 999, temp=0 topK=1)
+G6 TOKEN_STREAMING        PASS  reported=8 callback=8 agree=1
+G7 IDE_DELIVERY           PASS  panel_messages=2 tokens_after=32
+                                  contains_streamed=1
+G8 PERFORMANCE            PASS  3.588 tok/s (implies nothing about G1-G7)
+G9 CROSS_ROUTE_PARITY     FAIL  no reference supplied -- reported FAIL, not skipped
+```
+
+Generated continuation of "The capital of France is": **` the city of Paris,
+which is the`** — correct fact, correct English. The numerics are not merely
+finite; they are right.
+
+G9 fails closed by design. A route never compared to anything is exactly the
+route that can be deterministically wrong while passing everything else, so the
+harness reports FAIL rather than skip.
+
+## 4. GPU route: same eight gates pass, and it is still numerically wrong
+
+```text
+DEEP2_GPU_SELECT slot=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+BATCH9_VULKAN_INIT=DEVICE_BACKED  gpu_initialized=1  GPU_FALLBACK=0
+GATES_FAILED=1  (G9 only)
+
+CPU_TOP1_ID=278       logit 12.601561
+VULKAN_TOP1_ID=29889  logit 11.027828
+MAX_ABS_DIFF=15.2703  RMS_DIFF=3.31061  COSINE_SIM=0.757578  NON_FINITE=0
+TOP8_OVERLAP=0/8      TOP1_MATCH=0
+DIAGNOSIS=VECTOR_DIVERGENCE
+```
+
+Every functional gate passes on the GPU and the logits are still wrong. This is a
+numeric defect, not a functional one, and no amount of gate-counting detects it.
+
+## 5. The stated premise is REFUTED by measurement
+
+The active blocker was described as "the first proven GPU divergence at attention
+RMSNorm". Measured, on all 22 layers, all 16 per-stage checkpoints, comparing
+relative L2 against the engine's own CPU grid:
+
+```text
+L0 worst 1.821e-006   L6  worst 8.392e-006   L12 worst 2.687e-006
+L1 worst 8.849e-006   L7  worst 7.372e-005   L13 worst 6.808e-006
+L2 worst 9.112e-006   L8  worst 6.400e-006   L14 worst 7.005e-006
+L3 worst 2.812e-005   L9  worst 3.307e-005   L15 worst 3.695e-006
+L4 worst 8.975e-006   L10 worst 2.283e-006   L16 worst 2.851e-006
+L5 worst 2.578e-006   L11 worst 3.298e-006   L17 worst 1.939e-004
+                                            L18 worst 4.401e-006
+                                            L19 worst 1.775e-005
+                                            L20 worst 1.096e-005
+                                            L21 worst 1.023e-004
+
+ALL_22_LAYERS_MATCH_WITHIN_1E-3_AT_STEP0
+ATTENTION_RMSNORM_WORST_REL_L2 = 2.578e-006
+```
+
+**Attention RMSNorm agrees to float32 rounding on every layer.** The divergence
+the premise names is not there.
+
+## 6. Why it was believed: two defects in the measuring instrument
+
+**(a) The GPU parity grid could only ever see layer 0.** `VulkanParityGrid`
+held `unsigned emittedMask[4]` — 128 bits keyed by `stageId` **alone**. `layer`
+was accepted by `emit()` and used only to label the record; it was never part of
+the key. Each of the 17 stageIds therefore emitted exactly once per *process*,
+and layer 0 consumed all 17 slots. Measured consequence: LAYER_0_* produced 16
+comparable numeric records and every LAYER_1_*..LAYER_21_* record read
+
+```text
+UNAVAILABLE=NO_DEVICE_ARENA (fused into DispatchAttnDecode; not a reachability failure)
+```
+
+which is a statement about the mask, not about the arena. Fix: key on
+(layer, stageId), then (step, layer, stageId). Numeric GPU records went from
+17/1 layer to 374/22 layers.
+
+**(b) My own comparison produced two confident wrong readings before it was
+corrected.** First, a regex group-index error compared `MEAN` while reporting it
+as `L2`, which printed `SWIGLU rel=7.04 DIVERGENT` for a stage that matches to
+9e-9. Second, the key omitted `step`, so step-1 CPU values were diffed against
+step-0 GPU values and printed 22/22 layers `DIVERGENT`. Both were caught only by
+re-deriving the expected values from the raw files. This is the third instance in
+this project of the same failure: **a measurement that cannot disagree with the
+thing it measures produces a confident, specific, wrong answer.**
+
+## 7. Where the divergence actually is
+
+The grids cover step 0 and every layer matches. The logits comparison was at
+step 17. So the layer body is correct and **something accumulates per decode
+token**. The candidates are the KV-cache write, the GQA head layout on read, or
+the fused decode attention — not the projection, which is faithfully reporting
+damage from upstream. Next action: the grid key now includes step, so emitting
+`(step, layer, stage)` records and diffing CPU against GPU per step will name the
+first token at which they part.
+
+## 8. New blocker, measured
+
+```text
+cmake -S rawrxd -B <tree>  EXITS 0xC00000FD (stack overflow)
+crash site: rawrxd_filter_missing_sources, called at CMakeLists.txt:3772
+            with RAWR_ENGINE_SOURCES (54 entries, several multi-MB)
+reproduces once generate.stamp is stale; survived a kill of 8 orphaned MSBuild
+processes, so it is not a file lock
+```
+
+This blocks every further build in the `gx1` tree. Root cause not yet
+established; a fresh configure directory is the workaround.
+
+## 9. State
+
+```text
+GATE_2_CLEAN_PRODUCTION_BUILDS      = PARTIAL  (4 binaries link; graph lies by 219 files)
+GATE_3_CANONICAL_INFERENCE_CPU      = PASS    G1-G8 on real Q4_K_M; G9 needs a reference
+GATE_1_CPU_GPU_NUMERICAL            = FAIL    measured, localised to >1 token, not to RMSNorm
+GATE_1_PREMISE_ATTENTION_RMSNORM    = RETRACTED 2.578e-006 relative L2 across 22 layers
+SAFE_TO_MARK_GPU                    = 0
+SAFE_TO_SHIP                        = 0
+```
+
+Two retractions this session, both of the project's own claims, both replaced by
+measurement:
+
+```text
+"the first GPU divergence is at attention RMSNorm"  ->  RETRACTED
+"the ladder/parity probe is the authority for gates 1 and 3"  ->  it was never built
+```
+
+The dominant classification is unchanged and worth stating plainly: in this tree
+the implementations are frequently real, the wiring frequently absent, and the
+**instruments frequently incapable of disagreeing**. All three have now been
+found and, where measured, fixed.
+
+## 10. Addendum — the two-token control, and why `DIVERGENCE_CLASS` is narrowed further
+
+Two negatives controls were run on the rebuilt instrument, and the result is
+sharper than "stateful decode path":
+
+```ini
+CPU  first_ids=[278, 4272, 310]   text=' the city of Paris, which is the'
+VULKAN first_ids=[3681, 29889, 13] text=' Paris.'
+```
+
+**Token 0 already differs.** CPU's first token is 278; the GPU's is 3681. And
+3681 appears at NO step of the CPU trajectory:
+
+```text
+CPU STEP=1 TOP1=386   STEP=5 TOP1=278   STEP=6 TOP1=4272
+```
+
+So this is not drift that compounds — the GPU's first sampled token is not a
+perturbation of the CPU's, it is off-trajectory.
+
+That is consistent with, and sharply narrows, the hypothesis. The layer body is
+verified correct at the ONE step where no persistent state is consumed (prefill
+token 0: CPU `EMBED` and GPU `INPUT` are byte-identical, hash `bf616e11d7c90cb4`,
+and all 22 layers agree to <=1.9e-4). Every step that *reads back* KV state is
+unmeasured on the GPU. The leading candidates are now, in order:
+
+```text
+C1  the GPU KV-cache WRITE during prefill corrupts slots 1..N, leaving slot 0
+    correct -- exactly what "step 0 matches, token 0 differs" implies
+C2  final norm / lm_head on GPU differs on the LAST prefill step
+C3  an early prefill step >=1 already diverges (GPU has no data for it)
+```
+
+## 11. RAWRXD_CMAKE_INCREMENTAL_CONFIG_001 — root cause found and fixed
+
+```ini
+cmake -S rawrxd -B <FRESH directory>  ->  exit 0xC00000FD (STACK_OVERFLOW)
+crash site: rawrxd_filter_missing_sources, CMakeLists.txt:3772
+```
+
+It reproduced on a **brand-new** build directory, so it was never a stale
+`generate.stamp`, never a file lock, and never an orphaned compiler. Those three
+were each ruled out by measurement, in that order.
+
+Root cause: the stub gate did `file(READ "${_path}" _stub_body)` with no LIMIT,
+then `string(REGEX REPLACE "[^A-Za-z0-9_]" "" ...)` over the result.
+`RAWR_ENGINE_SOURCES` names 54 translation units and at least one is multi-MB, so
+the read plus the regex built a very large CMake string and recursed deep enough
+to exhaust the C stack.
+
+Fix: `file(READ ... LIMIT 65536)`. This preserves the check exactly — every
+pattern the gate exists to catch (`// Auto-generated stub`, `// STUB: src/x.cpp`,
+`#pragma once` + banner, empty file) is under 1 KB, and an empty-bodied TU has no
+code to appear after byte 65536 — while bounding the per-file cost.
+
+```text
+BEFORE  CFG_EXIT=-1073741571   (0xC00000FD)  on every fresh directory
+AFTER   CFG_EXIT=0             Configuring done (3.7s)  Generating done (3.0s)
+```
+
+Also fixed in the same pass: `inference_authority_ladder` was guarded on
+`if(EXISTS ${CMAKE_BINARY_DIR}/Release/InferenceEngine.lib)`, which is false on a
+clean configure because the lib does not exist until the engine is BUILT. The
+target could therefore never be created on a fresh tree — it only appeared in a
+tree that had previously been built. Guard is now `if(TARGET InferenceEngine)`,
+matching the `rawr` precedent.
+
+## 12. Next measurable step (not yet done)
+
+`VulkanParityGrid` has an `int step = 0` member that is **never incremented
+anywhere in the tree**. After keying the dedup mask on
+`(step, layer, stageId)`, the key therefore still degenerates to
+`(layer, stageId)` and the GPU grid emits step 0 only — measured:
+`GPU grid steps: 0`, 374 numeric records, while the CPU probe reports steps 0..6.
+
+So C1/C2/C3 cannot yet be separated, and no claim about steps >= 1 is
+admissible. The required change is to advance the GPU grid's step from the same
+KV-length value the CPU probe uses in `parityBeginStep()`, and to add a
+GPU-side KV-cache slot readback so that "K/V projected" and "K/V after cache
+write" become two comparable records rather than one. Until that exists, the
+narrowest true statement is:
+
+```ini
+LAYER_BODY_STEP0       = PASS
+FIRST_GENERATED_TOKEN  = ALREADY_DIVERGENT   (278 vs 3681)
+STATEFUL_STEPS_1_PLUS  = UNMEASURED          (no GPU instrumentation)
+SAFE_TO_SHIP           = 0
+```

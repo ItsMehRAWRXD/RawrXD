@@ -438,6 +438,12 @@ int main(int argc, char** argv) {
                 const unsigned actualWorkers = g.actualWorkers;
                 const bool callerParts = g.callerParticipates;
                 const unsigned effParts = g.effectiveParticipants;
+                // RAWRXD_THREAD_POLICY_SHARED_001: state what the shared
+                // minimum-work-per-thread policy did to THIS request. Without
+                // it, rows=8/effective=2 is ambiguous between "asked for 2" and
+                // "asked for 8 and was clamped", which are different results.
+                const unsigned polReq = cpu::PolicyRequested();
+                const unsigned polEff = cpu::PolicyEffective();
                 std::printf("%-22s     GEOMETRY requested_threads=%u actual_workers=%u "
                             "caller_participates=%d effective_participants=%u "
                             "rows=%zu slice=%zu dispatches_with_this_request=%llu %s\n",
@@ -448,6 +454,20 @@ int main(int argc, char** argv) {
                                 ? "(THIS REQUEST NEVER DISPATCHED)"
                                 : (g.inlined ? "(inline; pool untouched)"
                                              : "(caller does slice 0)"));
+                // Process-wide, not per-request: these counters accumulate across the
+                // whole run so a reader sees how often the policy fired in
+                // total. Divided by policy_requests rather than by total
+                // dispatches, since most dispatches are the inline path and
+                // never reach the policy.
+                std::printf("%-22s     POLICY requested=%u effective=%u clamped=%d "
+                            "clamps_total=%llu of %llu requests (%.1f%%)\n",
+                            "", polReq, polEff, (polEff < polReq) ? 1 : 0,
+                            (unsigned long long)cpu::PolicyClamps(),
+                            (unsigned long long)cpu::PolicyRequests(),
+                            cpu::PolicyRequests()
+                                ? 100.0 * (double)cpu::PolicyClamps() /
+                                      (double)cpu::PolicyRequests()
+                                : 0.0);
                 std::printf("%-22s     argmax_match=%d determinism=%d no_stall=%d%s\n",
                             "", a.argmax_match, a.det, a.no_stall,
                             pass ? "" : "   (TPS NOT ADMITTED)");

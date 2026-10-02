@@ -12,6 +12,7 @@
 #include "agentmodes/RawrCertAuthority.h"
 #include "agentmodes/RawrGateVerifier.h"
 #include "deep2/ReceiptAuthority.h"
+#include "repointel/RepoIntelCli.hpp"
 
 #include <cstdio>
 #include <cstring>
@@ -104,7 +105,8 @@ int runRawrModes(int argc, char** argv) {
                     "  rawr modes\n"
                     "  rawr audit  <root> [--out <receipt>]\n"
                     "  rawr gate   <gateName> <receiptPath> <backingSource>...\n"
-                    "  rawr cert   <exe> <gateName>=<receiptPath>...\n");
+                    "  rawr cert   <exe> <gateName>=<receiptPath>...\n"
+                    "  rawr repo   <subcommand>   whole-repository index\n");
         return 64;
     }
     const std::string sub = argv[0];
@@ -114,6 +116,18 @@ int runRawrModes(int argc, char** argv) {
     if (sub == "audit") return cmdAudit(rest, restv);
     if (sub == "gate")  return cmdGate(rest, restv);
     if (sub == "cert")  return cmdCert(rest, restv);
+    // RAWRXD_REPOSITORY_INTELLIGENCE_001. `rawr repo` answers repository-scale
+    // questions against the whole repository, and refuses to answer "absent"
+    // from a narrowed scope. `rawr audit` above scans one tree; this one knows
+    // the size of the whole tree.
+    if (sub == "repo") {
+        std::vector<std::string> args;
+        args.reserve(static_cast<size_t>(rest));
+        for (int i = 0; i < rest; ++i) args.emplace_back(restv[i]);
+        const repointel::RepoCliResult r =
+            repointel::runRepoIntelCli(args, std::string());
+        return r.exitCode;
+    }
     std::printf("unknown modes subcommand: %s\n", sub.c_str());
     return 64;
 }

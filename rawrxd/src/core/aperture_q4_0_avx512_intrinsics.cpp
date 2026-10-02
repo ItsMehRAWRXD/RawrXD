@@ -128,8 +128,7 @@ int64_t Aperture_Q4_0_Dequant_AVX512_Intrinsics(
                 scale = sign ? -INFINITY : INFINITY;
             } else {
                 // Normalized
-                scale = (sign ? -1.0f : 1.0f) * (1.0f + mantissa / 1024.0f) * 
-                        (1 << (exponent - 15));
+                scale = (sign ? -1.0f : 1.0f) * std::ldexp(1.0f + mantissa / 1024.0f, (int)exponent - 15);
             }
             
             // Broadcast scale to all 16 elements
@@ -191,8 +190,7 @@ int64_t Aperture_Q4_0_Dequant_AVX512_Intrinsics(
         } else if (exponent == 31) {
             scale = sign ? -INFINITY : INFINITY;
         } else {
-            scale = (sign ? -1.0f : 1.0f) * (1.0f + mantissa / 1024.0f) * 
-                    (1 << (exponent - 15));
+            scale = (sign ? -1.0f : 1.0f) * std::ldexp(1.0f + mantissa / 1024.0f, (int)exponent - 15);
         }
         
         // Process 32 weights in two chunks of 16

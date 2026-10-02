@@ -1,0 +1,8 @@
+ D VERSION
+ M cutils.h
+ M dtoa.c
+ M quickjs.c
+ M quickjs.h
+?? compat_msvc.h
+?? quickjs_orig.c
+?? version.txt

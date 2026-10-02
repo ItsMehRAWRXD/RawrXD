@@ -107,6 +107,10 @@ struct Walker {
         u->bytesSeen += fd.nFileSizeLow;
 
         const std::string rel = relFrom(rootSlash, abs);
+        if (!u->policy.excludeRelPaths.empty() &&
+            std::binary_search(u->policy.excludeRelPaths.begin(),
+                               u->policy.excludeRelPaths.end(), rel))
+            return;
         if (!u->policy.extensions.empty() &&
             !matchesAny(u->policy.extensions, extensionOf(rel))) {
             return;
@@ -300,6 +304,14 @@ std::string resolveRepositoryRoot(const std::string& startDir) {
 Universe buildUniverse(const UniversePolicy& policy) {
     Universe u;
     u.policy = policy;
+    // excludeRelPaths is matched with binary_search, so it must be sorted. The
+    // policy is stored by value, so sorting it here does not surprise the
+    // caller.
+    std::sort(u.policy.excludeRelPaths.begin(), u.policy.excludeRelPaths.end());
+    u.policy.excludeRelPaths.erase(
+        std::unique(u.policy.excludeRelPaths.begin(),
+                    u.policy.excludeRelPaths.end()),
+        u.policy.excludeRelPaths.end());
     // A restricted walk is a narrowed scope by definition, whether or not the
     // caller remembered to say so.
     u.narrowed = policy.narrowed || !policy.restrictToRoots.empty();

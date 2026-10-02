@@ -69,14 +69,36 @@ struct ToolPolicy {
     // not an autonomous edit; it is an unrecoverable mutation.
     bool writeRequiresTransaction = false;
 
+    // RAWRXD_GIT_TRANSACTION_AUTHORITY_001
+    //
+    // The same promise extends to every OTHER tool that mutates state. Measured
+    // on 2026-10-01: with capability and scope granted, `git_stage` moved the
+    // repository index with no transaction open and wrote zero journal records,
+    // so write_file was transactional while the git mutation path was not.
+    //
+    // Each name listed here is refused unless a transaction is open, exactly as
+    // write_file is. The list is explicit because a registry cannot infer which
+    // tool mutates -- git_status and git_stage have identical signatures.
+    //
+    // UncoveredMutatingTools() exists so the list cannot be quietly wrong: a
+    // registered tool whose NAME implies mutation but which is absent from this
+    // list is reported, because a typo in a security list is a silent hole.
+    std::vector<std::string> transactionRequiredTools;
+
     static ToolPolicy DefaultDenyAll();
 };
 
 // Returns true when `candidate` resolves inside one of the allowed roots.
 // Rejects traversal, UNC, device and ADS paths by requiring the canonical form
 // to start with a canonical root plus a separator.
+//
+// `outError`, when given, receives the SPECIFIC reason for a refusal ("resolved
+// path escapes the allowed root", "path crosses a reparse point (junction or
+// link) inside the root", "UNC paths are not permitted", ...). Without it a
+// caller can only say "rejected", which is indistinguishable from a policy that
+// does not exist and from a path that simply does not exist.
 bool IsPathAllowed(const ToolPolicy& policy, const std::string& candidate,
-                   std::string& outCanonical);
+                   std::string& outCanonical, std::string* outError = nullptr);
 
 // Canonicalises a configured root: resolves it to an absolute, separator-
 // normalised form using the same rules the tools use, and rejects UNC, device
@@ -93,6 +115,22 @@ bool CanonicalizeRoot(const std::string& path, std::string& outCanonical, std::s
 // root-relative candidate and cannot be given one.
 bool IsCanonicalPathAllowed(const ToolPolicy& policy, const std::string& absPath);
 
+// RAWRXD_GIT_TRANSACTION_AUTHORITY_001
+// True when `toolName` is in policy.transactionRequiredTools.
+bool IsTransactionRequired(const std::string& toolName, const ToolPolicy& policy);
+
+// True when `toolName` contains a verb that implies mutation. A heuristic, and
+// deliberately so: it exists to make a mistake in transactionRequiredTools
+// VISIBLE, not to stand in for the list.
+bool ToolNameLooksMutating(const std::string& toolName);
+
+// Every registered tool whose name implies mutation but which is absent from
+// policy.transactionRequiredTools. An empty result is the only state in which
+// the transactional write profile can honestly claim to cover every mutating
+// tool.
+std::vector<std::string> UncoveredMutatingTools(const class ToolRegistry& registry,
+                                                const ToolPolicy& policy);
+
 class ToolRegistry {
 public:
     static ToolRegistry& Instance();
@@ -106,6 +144,15 @@ public:
     // Deterministic: tools are emitted in name order, never hash order, so the
     // system prompt is byte-stable across runs and across processes.
     std::string BuildSystemPrompt() const;
+
+    // RAWRXD_MODEL_TOOL_PROTOCOL_AUTHORITY_001
+    //
+    // The live tool set as data, in name order. The tool protocol authority
+    // needs the parameter names to decide whether a call is valid, and it must
+    // decide it against what is actually installed rather than against a copy
+    // that can drift. A name the authority does not see is a name it refuses.
+    std::vector<ToolDef> GetDefs() const;
+
     std::vector<std::string> GetToolNames() const;
     bool HasTool(const std::string& name) const;
     std::size_t Size() const;

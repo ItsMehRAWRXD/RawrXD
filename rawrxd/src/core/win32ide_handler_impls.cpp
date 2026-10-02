@@ -1,5 +1,40 @@
 #include "shared_feature_dispatch.h"
 
+// ============================================================================
+// RAWRXD_P1_REFACTOR_CHAIN_001
+//
+// Every definition in this file was, until this change, the single line
+//
+//     CommandResult handleX(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+//
+// and this file is the one the RawrXD-Win32IDE link resolves every
+// COMMAND_TABLE handler symbol to. Measured before this change:
+//
+//     TOTAL_HANDLER_DEFS = 376
+//     STUB_OK_ONLY       = 376
+//     NON_STUB           = 0
+//
+// The table's pointers for `lsp.gotoDef`, `lsp.findRefs`, `lsp.rename`,
+// `lsp.diagnostics` and `lsp.symbolInfo` therefore resolved to functions that
+// answered success without doing anything. The return code is the authority
+// every caller and every receipt trusts, so those five commands reported a pass
+// for work that never happened.
+//
+// Five definitions were removed from this file and implemented for real in
+// src/refactor/RefactorChainIdeSurface.cpp, which is linked into the same
+// target. The handler names are unchanged, so the table still resolves; the
+// bodies now act, and they enforce
+//
+//     RENAME_SUCCESS_REQUIRES_EDIT_COUNT_GT_0
+//     GOTO_DEFINITION_SUCCESS_REQUIRES_RESOLVED_LOCATION
+//
+// The remaining definitions here are the same open, measured gap they were
+// before. They are NOT fixed by the removal of five neighbours, and no receipt
+// may claim otherwise. The gate that keeps this honest is the stub census in
+// tools/refactor_chain_cert.cpp, which fails if any of the nine chain handler
+// symbols reappears here.
+// ============================================================================
+
 CommandResult handleAgentAuditDrive(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAgentBoundedLoop(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAgentConfigure(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
@@ -156,11 +191,7 @@ CommandResult HandleIDEDiagnosticAutoHealer(const CommandContext& ctx) { (void)c
 CommandResult HandleIOCPFileWatcher(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleLspClearDiag(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleLspConfigure(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleLspDiagnostics(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleLspFindRefs(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleLspGotoDef(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleLspHover(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleLspRename(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleLspRestart(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleLspSaveConfig(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleLspSrvConfig(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
@@ -175,7 +206,6 @@ CommandResult handleLspSrvStop(const CommandContext& ctx) { (void)ctx; return Co
 CommandResult handleLspStartAll(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleLspStatus(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleLspStopAll(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleLspSymbolInfo(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleManifestJSON(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleManifestMarkdown(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleManifestSelfTest(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }

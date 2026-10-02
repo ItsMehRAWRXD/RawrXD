@@ -1,0 +1,18 @@
+{
+  "census": {
+    "files_scanned": 1,
+    "gguf_by_magic": 1,
+    "non_gguf_skipped": 0,
+    "logical_models": 1,
+    "single_file": 1,
+    "sharded_complete": 0,
+    "sharded_incomplete": 0,
+    "projectors": 0,
+    "manifests_no_payload": 0,
+    "corrupt_headers": 0,
+    "total_bytes": 668788096
+  },
+  "models": [
+    {"logical_name": "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf", "directory": "C:\\Users\\Garrett\\AppData\\Local\\Temp\\kilo\\tinyroot", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 668788096, "entry_shard": "C:\\Users\\Garrett\\AppData\\Local\\Temp\\kilo\\tinyroot\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf", "gguf_version": 3, "arch": "llama", "name": "tinyllama_tinyllama-1.1b-chat-v1.0", "tensor_count": 201, "quant": "Q4_K", "header_valid": true, "header_error": ""}
+  ]
+}

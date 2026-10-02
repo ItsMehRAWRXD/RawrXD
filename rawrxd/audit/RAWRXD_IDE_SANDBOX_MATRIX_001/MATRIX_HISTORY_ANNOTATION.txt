@@ -1,0 +1,12 @@
+# Annotation for MATRIX_HISTORY.txt
+#
+# Lines up to and including 20261001T215842Z predate the verdict-vocabulary change
+# and used a bare 'verdict=' field. They are retained unedited: a cert history
+# with its wrong turns removed reads better than the work was. Read them as:
+#   20261001T215803Z mode=full  verdict=PASS -> CONTRACT_SATISFIED
+#   20261001T215817Z mode=probe verdict=PASS -> DEFECT_DETECTED  (5 mismatches REQUIRED)
+#   20261001T215842Z mode=probe verdict=PASS -> DEFECT_DETECTED  (5 mismatches REQUIRED)
+# Every later line uses the explicit vocabulary and carries build_role=.
+# The same change was applied to the journal-closure probe, whose log had the
+# inverse ambiguity: a deliberately defective build reported FAIL next to a real
+# PASS under one identical label.
