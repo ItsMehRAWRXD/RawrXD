@@ -130,3 +130,12 @@ gate1_A.err
 gate1_A.out
 gate1_D.err
 gate1_D.out
+
+# Temporary sweep fixture: a 109 MB GGUF model staged into audit/. A model
+# file under a *_tmp path is a disposable test artifact, not evidence.
+rawrxd/audit/sweep_tmp/
+
+# GitTransactionAuthority certification fixtures create a nested .git repo per
+# run. Staging one records a gitlink (mode 160000) pointing at a commit that
+# does not exist on the remote, so a clone receives an empty directory.
+rawrxd/audit/RAWRXD_GIT_TRANSACTION_AUTHORITY_001/run_*/ws/repo/
