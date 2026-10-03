@@ -142,11 +142,64 @@ void RegisterDeep2Architectures() {
 
 // RAWRXD_MLA_LOAD_AUTHORITY_001 (M5d): the MLA metadata binder, previously
 // present only as uncompiled source.
+// RAWRXD_EXPERT_REUSE_TRACE_001: <map> and <vector> back the per-(layer,expert)
+// reuse-distance table and the observed-distance population. Both were already
+// used later in this file without a direct include; they are named here so the
+// tracker does not depend on transitive inclusion order.
+#include <map>
+#include <vector>
 #include <sstream>
 #include "Deep2B66RuntimeMeta.hpp"
 #endif
 
+// RAWRXD_EXPERT_REUSE_TRACE_001 -- state for the reuse-distance tracker
+// installed at the MoE route site. Everything is a plain observation counter;
+// nothing here has a target value, and the trace is inert unless the env var is
+// set, so a normal decode pays one relaxed-load branch per expert selection.
+namespace {
+struct ReuseSlot {
+    std::uint64_t accessSeq = 0;
+    std::uint64_t token     = 0;
+};
+std::map<std::uint64_t, ReuseSlot> g_expertReuseLast;
+std::uint64_t g_expertReuseAccessSeq        = 0;
+std::uint64_t g_expertReuseToken            = 0;
+std::uint64_t g_expertReuseColdFirstTouches = 0;
+std::uint64_t g_expertReuseReused           = 0;
+const bool g_expertReuseTraceEnabled = [] {
+    const char* v = std::getenv("RAWRXD_EXPERT_REUSE_TRACE");
+    return v && *v && std::strcmp(v, "0") != 0;
+}();
+}  // namespace
+
 namespace Deep2 {
+
+// RAWRXD_EXPERT_REUSE_TRACE_001 -- summary of the population the trace actually
+// observed. HOT_WORTHY_PAIR_FRACTION is reused/accesses: a low value means most
+// accesses are first touches, which is the regime in which a small HOT set cannot
+// work. It is a measurement, never a target.
+//
+// Defined with the Deep2Engine scope qualifier because the declaration in
+// Deep2Engine.h is a MEMBER of the class. A definition of the form
+// `Deep2::EmitExpertReuseSummary()` -- which is what this was originally --
+// mangles to a different symbol and links to LNK2019, because
+// `?EmitExpertReuseSummary@Deep2Engine@Deep2@@QEAAXXZ` carries the class scope.
+void Deep2Engine::EmitExpertReuseSummary() {
+    if (!g_expertReuseTraceEnabled) return;
+    std::fprintf(stderr,
+                 "EXPERT_REUSE_SUMMARY TOKENS=%llu EXPERT_ACCESSES=%llu "
+                 "UNIQUE_PAIRS=%zu COLD_FIRST_TOUCHES=%llu REUSED_ACCESSES=%llu "
+                 "HOT_WORTHY_PAIR_FRACTION=%.6f\n",
+                 (unsigned long long)g_expertReuseToken,
+                 (unsigned long long)g_expertReuseAccessSeq,
+                 g_expertReuseLast.size(),
+                 (unsigned long long)g_expertReuseColdFirstTouches,
+                 (unsigned long long)g_expertReuseReused,
+                 g_expertReuseAccessSeq
+                     ? double(g_expertReuseReused) / double(g_expertReuseAccessSeq)
+                     : 0.0);
+    std::fflush(stderr);
+}
 
 // ------------------------------------------------------------
 // Token-path telemetry accumulator (C++20, zero-dependency beyond the standard lib).
@@ -3756,8 +3809,45 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         }
 
         // Attempt 1: dual-GPU row split
+        //
+        // GATED ON MEASURED CAPABILITY, NOT ON DEVICE COUNT. (Deep2StreamReasoning_001)
+        //
+        // The gate used to be `vulkanDevices_.size() >= 2` -- a COUNT. That is
+        // not evidence that a cross-device row split is possible. On this host
+        // two discrete AMD GPUs are enumerated and both are pushed into
+        // vulkanDevices_, and at init the engine measured:
+        //
+        //     PEER_HANDOFF_SUPPORTED=0
+        //     DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN
+        //     BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=0
+        //
+        // so multiGpuLayerPlan_.active is false and the plan was never enabled.
+        // LinearW attempted the route anyway, tryVulkanHostGEMV failed on both
+        // slots, and strict mode (vulkanStrictNoCpuFallback_, default true at
+        // Deep2Engine.h:1391) correctly refused the silent host fallback. The
+        // process then died on the FIRST GEMV of layer 0:
+        //
+        //     LINEARW_DUAL_ROW_FAIL name=blk.0.attn_v.weight
+        //     [Deep2Engine] dual-row dense forward failed:
+        //         LinearW: GPU path failed under strict mode
+        //     [PREFILL] forwardTokenAllLayers FAILED at prefill token 0
+        //
+        // Note attn_v is not a special case: it is simply the first projection
+        // reached, so it is the one that reports. The route failed on EVERY
+        // tensor.
+        //
+        // This route had never been exercised before because the harness did not
+        // call enableVulkan(true); enabling the GPU backend woke a path that was
+        // always broken and always dormant. Enabling a subsystem for the first
+        // time is how this class of defect surfaces -- not model parity testing.
+        //
+        // We do NOT relax strict mode here. The guard at Deep2Engine.cpp:5457
+        // exists precisely to "fail closed rather than silently execute the host
+        // lane"; loosening it would convert a loud failure into the silent CPU
+        // fallback that guard was written to prevent. With this gate the route
+        // is simply not attempted, and the existing non-dual path is reached.
         bool triedDual = false, dualOk = false;
-        if (vulkanDevices_.size() >= 2 && wt.rows >= 2) {
+        if (vulkanDevices_.size() >= 2 && wt.rows >= 2 && multiGpuLayerPlan_.active) {
             triedDual = true;
             if (tryVulkanHostGEMV(wt, input, output, outDim)) {
                 dualOk = true;
@@ -4723,6 +4813,76 @@ void Deep2Engine::computeMoEFFN(size_t layer,
         route.expertIds.size() != K ||
         route.expertWeights.size() != K)
         throw std::runtime_error("MoE: route failed");
+
+    // RAWRXD_EXPERT_REUSE_TRACE_001
+    //
+    // The one measurement that decides whether the transient-realization
+    // architecture (UNMODEL/UNADDRESS/SPACELESS/REALIZE) is buildable at all.
+    // It is placed here because this is the SINGLE point every routed expert
+    // passes through: RouteFromLogits has produced the top-k, the ids are
+    // validated, and the token index is known. No expert can be executed
+    // without appearing in route.expertIds at this line, so the trace cannot
+    // miss an access, and it cannot double-count one.
+    //
+    // WHY REUSE DISTANCE AND NOT EXPERT-HIT-RATE
+    //   A residency policy needs to know how far away the next use of a given
+    //   (layer, expert) is, not merely whether it was ever hit. Two distances
+    //   are recorded because they imply different residency designs:
+    //     ACCESS distance -- intervening EXPERT ACCESSES. Bounds the working set:
+    //       if P95 is ~7, a HOT set of 8-12 experts per layer is plausible.
+    //     TOKEN  distance -- intervening DECODE TOKENS. Bounds how long a hot
+    //       tensor must survive: a large TOKEN distance with a small ACCESS
+    //       distance means many experts are live at once.
+    //   If P95 access distance is ~90, a small HOT set cannot work and the whole
+    //   strategy must change. That is the falsification this buys.
+    //
+    // MEASUREMENT, NOT ASSERTION
+    //   Every field is observed at runtime. Nothing here is a default, a target,
+    //   or a constant: the counters are printed from accumulated observations and
+    //   an unrun trace prints nothing at all.
+    //
+    //   SCOPE LIMIT, stated rather than hidden: this records the ROUTER's
+    //   selection, which is an upper bound on expert residency pressure. If a
+    //   selected expert is then skipped, the trace over-counts residency demand.
+    //   That direction is the safe one -- it over-states the working set rather
+    //   than under-stating it -- but it is a bound and not an equality.
+    if (g_expertReuseTraceEnabled) {
+        const std::uint64_t token = g_expertReuseToken;
+        const std::uint64_t accessSeq = g_expertReuseAccessSeq;
+        for (size_t k = 0; k < route.expertIds.size(); ++k) {
+            const int eid = route.expertIds[k];
+            if (eid < 0) continue;
+            // Keyed by (layer, expert): MoE weights are per-layer, so an expert
+            // id means nothing without its layer. A shared-expert slot is
+            // deliberately NOT recorded here -- it is resident for every token by
+            // construction and would pollute the reuse distribution.
+            const std::uint64_t key =
+                (static_cast<std::uint64_t>(layer) << 32) |
+                static_cast<std::uint32_t>(eid);
+
+            auto it = g_expertReuseLast.find(key);
+            const bool seen = (it != g_expertReuseLast.end());
+            const std::uint64_t prevAccess = seen ? it->second.accessSeq : 0;
+            const std::uint64_t prevToken   = seen ? it->second.token     : 0;
+
+            std::fprintf(stderr,
+                         "EXPERT_REUSE TOKEN=%llu LAYER=%zu EXPERT=%d ACCESS_SEQ=%llu "
+                         "PREV_ACCESS_SEQ=%llu REUSE_DISTANCE_ACCESS=%llu "
+                         "PREV_TOKEN=%llu REUSE_DISTANCE_TOKEN=%llu COLD_FIRST_TOUCH=%d\n",
+                         (unsigned long long)token, layer, eid,
+                         (unsigned long long)accessSeq,
+                         (unsigned long long)prevAccess,
+                         seen ? (unsigned long long)(accessSeq - prevAccess) : 0ull,
+                         (unsigned long long)prevToken,
+                         seen ? (unsigned long long)(token - prevToken) : 0ull,
+                         seen ? 0 : 1);
+            g_expertReuseLast[key] = ReuseSlot{accessSeq, token};
+            ++g_expertReuseAccessSeq;
+            if (!seen) ++g_expertReuseColdFirstTouches;
+            else       ++g_expertReuseReused;
+        }
+        ++g_expertReuseToken;
+    }
 
 #ifdef RAWRXD_DEEP2_SSM_NUMERIC_DIAG
     {

@@ -1,6 +1,6 @@
 // RawrCommandAuthority.cpp — RAWRXD_COMMAND_AUTHORITY_001
 #include "RawrCommandAuthority.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <cstdio>
 namespace rawrxd { namespace cli {
 Command resolveCommand(const std::string& cmd) {

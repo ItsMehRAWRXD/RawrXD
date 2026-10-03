@@ -1,6 +1,6 @@
 // StartupModeAuthority.cpp — RAWRXD_STARTUP_MODE_AUTHORITY_001
 #include "StartupModeAuthority.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <cstring>
 namespace rawrxd { namespace startup {
 Mode resolveMode(int argc, char* argv[]) {

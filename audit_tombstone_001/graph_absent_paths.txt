@@ -1,0 +1,374 @@
+﻿ACTIVE_MISSING,${_WIN10_SDK_ROOT}/Include/10.0.22621.0/um/windows.h
+ACTIVE_MISSING,${_WIN10_SDK_ROOT}/Include/10.0.26100.0/um/windows.h
+ACTIVE_MISSING,${CMAKE_BINARY_DIR}/bin/RawrEngine.m
+ACTIVE_MISSING,${CMAKE_BINARY_DIR}/bin/RawrXD-Win32IDE.m
+ACTIVE_MISSING,${CMAKE_BINARY_DIR}/CMakeFiles/val_051_5_diag_1_token.dir/src/deep2/sovereign_q4k_gemv_v2.asm
+ACTIVE_MISSING,${CMAKE_BINARY_DIR}/gold/RawrXD_Gold.m
+ACTIVE_MISSING,${CMAKE_BINARY_DIR}/RawrEngine.m
+ACTIVE_MISSING,${CMAKE_BINARY_DIR}/RawrXD_Gold.m
+ACTIVE_MISSING,${CMAKE_BINARY_DIR}/RawrXD-Win32IDE.m
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/certs/http_oracle_suite_001.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/certs/http_template_format_sweep_001.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/certs/http_template_marker_probe_001.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/certs/mla_cert_001.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/certs/rawrxd_sampler_combined_oob_001.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/gpu_requantize_rocm.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/native_speed_kernels.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrCodex.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_AgenticOrchestrator.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256_Auth.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_CopilotGapCloser.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_dll_entry.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_engine.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_phase39.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Debug_Engine.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_EnterpriseLicense.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GGUF_Vulkan_Loader.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GSIHash.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_HardwareSynthesizer.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Hotpatch_Kernel.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_KQuant_Kernel.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_License_Shield.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_AI_Bridge.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_SymbolIndex.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MeshBrain.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MonacoCore.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NanoQuant_Engine.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NeuralBridge.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_OmegaOrchestrator.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PDBKernel.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PerfCounters.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Pyre_Compute.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_QuadBuffer_Streamer.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RefProvider.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RouterBridge.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfHost_Engine.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfPatch_Engine.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Snapshot.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SocketResponder.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Speciator.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Streaming_QuadBuffer.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_StubDetector.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Swarm_Network.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon_GPU.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_VulkanBridge.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Watchdog.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/requantize_q4km_to_q2k_avx512.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/asm/swarm_tensor_stream.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/core/link_stubs_gate.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/_probe_chat_quality.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_k2_useful_tps_001.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_nu_perf_cert.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/deep2_openai_server_main.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/rawr_run.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/test_attn_out_bisect.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/test_o_proj_gemv.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/test_o_proj_mulmat_002.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_masm/deflate_brutal_masm.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/RDNA3_Full_Test.asm
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_code_world_cert.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_minimal_source_cert.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_model_inventory_cert.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_negative_knowledge_cert.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_product_context_smoke.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/rkc/rkc_smoke.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypass_impl_stub.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/src/serve/rawrxd_serve.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/tests/b010/b010_weight_residency_profile.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/tests/k2_007a_tokenizer_metadata.cpp
+ACTIVE_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/tests/test_quant_dequant_crosscheck.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/production_regime_sweep.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/core/missing_handler_stubs.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/core/ssot_missing_handlers_provider.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/cpu_inference_engine_autofix_stub.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/deep2/VwaRangeX64.asm
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/kernels/q4_preprocessed_avx512.asm
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/lsp/RawrXD_LSPServer.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/profiling/flame_graph.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/profiling/pmc_profiler.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/script/debug/minimal_dap_server.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/soloide/main.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/src/sovereign/patcher/AntiHallucinationHotPatcher.asm
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_overhead.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/benchmark_planner_amortization.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/nevm_determinism_validation.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/nevm_stress_test.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/test_q4_asm_debug.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/test_q4_cache_alignment.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/test_q4_fused_pipeline.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/test_q4_scalar_simd.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tests/validate_end_to_end.cpp
+ACTIVE_MISSING,${CMAKE_SOURCE_DIR}/tools/address_resolver_native.cpp
+ACTIVE_MISSING,${RAWRXD_COMPRESSION_ASM_DIR}/RawrXD_Compression.asm
+ACTIVE_MISSING,${RAWRXD_COMPRESSION_DIR}/zlib_runtime_loader.cpp
+ACTIVE_MISSING,${RAWRXD_COMPRESSION_DIR}/zlib_runtime_loader.hpp
+ACTIVE_MISSING,(//.cpp
+ACTIVE_MISSING,(_stubs//.cpp
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/gpu_requantize_rocm.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/native_speed_kernels.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrCodex.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_AgenticOrchestrator.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256_Auth.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_CopilotGapCloser.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_dll_entry.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_engine.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_phase39.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Debug_Engine.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_EnterpriseLicense.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GGUF_Vulkan_Loader.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GSIHash.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_HardwareSynthesizer.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Hotpatch_Kernel.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_KQuant_Kernel.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_License_Shield.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_AI_Bridge.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_SymbolIndex.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MeshBrain.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MonacoCore.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NanoQuant_Engine.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NeuralBridge.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_OmegaOrchestrator.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PDBKernel.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PerfCounters.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Pyre_Compute.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_QuadBuffer_Streamer.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RefProvider.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RouterBridge.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfHost_Engine.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfPatch_Engine.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Snapshot.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SocketResponder.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Speciator.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Streaming_QuadBuffer.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_StubDetector.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Swarm_Network.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon_GPU.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_VulkanBridge.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Watchdog.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/requantize_q4km_to_q2k_avx512.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/swarm_tensor_stream.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_masm/deflate_brutal_masm.asm
+ACTIVE_MISSING,[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/RDNA3_Full_Test.asm
+ACTIVE_MISSING,_kernel//.asm
+ACTIVE_MISSING,_scanner//.asm
+ACTIVE_MISSING,_stub//.asm
+ACTIVE_MISSING,_stub//.cpp
+ACTIVE_MISSING,_stubs//.asm
+ACTIVE_MISSING,_stubs//.cpp
+ACTIVE_MISSING,ai_agent_masm_core_impl//.cpp
+ACTIVE_MISSING,cot_fallback_system//.cpp
+ACTIVE_MISSING,dml_asm_fallback//.cpp
+ACTIVE_MISSING,fake)//.asm
+ACTIVE_MISSING,fake)//.cpp
+ACTIVE_MISSING,Kits/10/Include/10.0.22621.0/um/windows.h
+ACTIVE_MISSING,Kits/10/Include/10.0.26100.0/um/windows.h
+ACTIVE_MISSING,link_stubs_gold//.cpp
+ACTIVE_MISSING,receipts/RAWRXD_STUB_CERTIFICATION_SURFACE_001.m
+ACTIVE_MISSING,set_source_files_properties(src/asm/RawrXD_HexMag_RepeatTuner.asm
+ACTIVE_MISSING,set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm
+ACTIVE_MISSING,set_source_files_properties(src/benchmark/tree_attention_masm_val038.asm
+ACTIVE_MISSING,src/ui/*.cpp
+COMMENTED_MISSING,${CMAKE_CURRENT_SOURCE_DIR}/tests/test_generation.cpp
+COMMENTED_MISSING,${CMAKE_SOURCE_DIR}/src/core/ai_agent_masm_core_impl.cpp
+COMMENTED_MISSING,${OMEGA1_DIR}/OmegaPowerShellBridge.cpp
+COMMENTED_MISSING,${OMEGA1_DIR}/OmegaPowerShellBridge.h
+COMMENTED_MISSING,(docs/ANALYSIS_QUICKSTART.m
+COMMENTED_MISSING,(include/agentic/AgentToolRegistry.h
+COMMENTED_MISSING,(src/agentic/ToolRegistry.h
+COMMENTED_MISSING,(src/core/feature_handlers.cpp
+COMMENTED_MISSING,.../src/deep2/deep2_k2_useful_tps_001.cpp
+COMMENTED_MISSING,audit/RAWRXD_HTTP_AUTHORITY_CHAIN_001.m
+COMMENTED_MISSING,core/file_watcher.cpp
+COMMENTED_MISSING,core/file_watcher.h
+COMMENTED_MISSING,docs/PMASSA_BYE_OLLAMA.m
+COMMENTED_MISSING,lsp/RawrXD_LSPServer.h
+COMMENTED_MISSING,nlohmann/json.hpp
+COMMENTED_MISSING,rawrxd/src/deep2/deep2_moe_bench_standalone.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/Deep2Engine_KernelTest.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/Deep2Server_Minimal.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/GGUFLoader_Fixed.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/GGUFVerifier.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/moe_microbench.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/moe_simple_bench.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/moe_test.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/moe_validation_test.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/router_bench.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/router_latency_test.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/test_api_server.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/test_real_gguf_load.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/test_real_gguf_validate.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/test_tool_limit_hotpatch.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/TheDualityExample.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/VAL038_Benchmark_Harness.cpp
+COMMENTED_MISSING,rawrxd/src/deep2/VAL063_Deep2Certification.cpp
+COMMENTED_MISSING,Ship/RawrCompatIo.hpp
+COMMENTED_MISSING,Ship/StdReplacements.hpp
+COMMENTED_MISSING,win32app/multi_response_engine.h
+COMMENTED_PRESENT,include/enterprise_license.h
+COMMENTED_PRESENT,include/nlohmann/json.hpp
+COMMENTED_PRESENT,include/nlohmann/json_fwd.hpp
+COMMENTED_PRESENT,src/agentic/AgentOllamaClient_stubs.cpp
+COMMENTED_PRESENT,src/agentic/IdeToolImplementations.cpp
+COMMENTED_PRESENT,src/agentic/RawrXD_AutonomousCoordinator_Final.cpp
+COMMENTED_PRESENT,src/agentic/RawrXD_AutonomousFlow.cpp
+COMMENTED_PRESENT,src/agentic/SovereignCodeGenerator.cpp
+COMMENTED_PRESENT,src/ai/digestion_scanner.asm
+COMMENTED_PRESENT,src/asm/byte_search.asm
+COMMENTED_PRESENT,src/asm/DirectML_Bridge.asm
+COMMENTED_PRESENT,src/asm/memory_patch.asm
+COMMENTED_PRESENT,src/asm/native_speed_kernels.asm
+COMMENTED_PRESENT,src/asm/quantum_beaconism_backend.asm
+COMMENTED_PRESENT,src/asm/RawrXD_CopilotGapCloser.asm
+COMMENTED_PRESENT,src/asm/RawrXD_DualEngine_Pure.asm
+COMMENTED_PRESENT,src/asm/RawrXD_DualEngine_QuantumBeacon.asm
+COMMENTED_PRESENT,src/asm/RawrXD_Hotpatch_Kernel.asm
+COMMENTED_PRESENT,src/asm/RawrXD_MissingSymbols.asm
+COMMENTED_PRESENT,src/asm/RawrXD_Pyre_Compute.asm
+COMMENTED_PRESENT,src/asm/RawrXD_Snapshot.asm
+COMMENTED_PRESENT,src/asm/RawrXD-AnalyzerDistiller.asm
+COMMENTED_PRESENT,src/asm/RawrXD-StreamingOrchestrator.asm
+COMMENTED_PRESENT,src/asm/vision_projection_kernel.asm
+COMMENTED_PRESENT,src/benchmark/Fix3_NHWC_Benchmark_Stub.cpp
+COMMENTED_PRESENT,src/codec/compression.cpp
+COMMENTED_PRESENT,src/config/IDEConfig.cpp
+COMMENTED_PRESENT,src/config/IDEConfig.h
+COMMENTED_PRESENT,src/core/asm_symbols_stub.cpp
+COMMENTED_PRESENT,src/core/auto_feature_real_impl.cpp
+COMMENTED_PRESENT,src/core/beacon_link_stub.cpp
+COMMENTED_PRESENT,src/core/collab_stubs.cpp
+COMMENTED_PRESENT,src/core/command_registry.hpp
+COMMENTED_PRESENT,src/core/crypto_stubs.cpp
+COMMENTED_PRESENT,src/core/final_gauntlet.cpp
+COMMENTED_PRESENT,src/core/gguf_runner_stub.cpp
+COMMENTED_PRESENT,src/core/gold_patch_symbol_stubs.cpp
+COMMENTED_PRESENT,src/core/hwsynth_stubs.cpp
+COMMENTED_PRESENT,src/core/json_instantiations.cpp
+COMMENTED_PRESENT,src/core/link_stubs.cpp
+COMMENTED_PRESENT,src/core/link_stubs_production.cpp
+COMMENTED_PRESENT,src/core/mesh_brain_stubs.cpp
+COMMENTED_PRESENT,src/core/model_loader_asm_stubs.cpp
+COMMENTED_PRESENT,src/core/model_router_stubs.cpp
+COMMENTED_PRESENT,src/core/native_log_stub.cpp
+COMMENTED_PRESENT,src/core/neural_bridge_stubs.cpp
+COMMENTED_PRESENT,src/core/ollama_provider_stub.cpp
+COMMENTED_PRESENT,src/core/pattern_stubs.cpp
+COMMENTED_PRESENT,src/core/perf_telemetry_stubs.cpp
+COMMENTED_PRESENT,src/core/rawrxd_native_log_impl.cpp
+COMMENTED_PRESENT,src/core/speciator_stubs.cpp
+COMMENTED_PRESENT,src/core/spengine_stubs.cpp
+COMMENTED_PRESENT,src/core/subsystem_api_stubs.cpp
+COMMENTED_PRESENT,src/core/task_system.hpp
+COMMENTED_PRESENT,src/core/ToolRegistry.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_002.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_004.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_009.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_010.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_011.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_013.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_018.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_019.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_020.cpp
+COMMENTED_PRESENT,src/core/unlinked_symbols_batch_022.cpp
+COMMENTED_PRESENT,src/core/watchdog_stubs.cpp
+COMMENTED_PRESENT,src/core/win32ide_link_stubs.cpp
+COMMENTED_PRESENT,src/deep2/deep2_end_to_end_bench.cpp
+COMMENTED_PRESENT,src/deep2/deep2_http_gateway.cpp
+COMMENTED_PRESENT,src/deep2/deep2_moe_bench_standalone.cpp
+COMMENTED_PRESENT,src/deep2/Deep2APIServer.cpp
+COMMENTED_PRESENT,src/deep2/Deep2Benchmark.cpp
+COMMENTED_PRESENT,src/deep2/Deep2Discovery.cpp
+COMMENTED_PRESENT,src/deep2/Deep2Engine_KernelTest.cpp
+COMMENTED_PRESENT,src/deep2/Deep2InferenceGateway.cpp
+COMMENTED_PRESENT,src/deep2/Deep2Integration.cpp
+COMMENTED_PRESENT,src/deep2/Deep2LocalServer.cpp
+COMMENTED_PRESENT,src/deep2/Deep2Server_Minimal.cpp
+COMMENTED_PRESENT,src/deep2/Deep2Server_Sovereign.cpp
+COMMENTED_PRESENT,src/deep2/Deep2StackGuard.cpp
+COMMENTED_PRESENT,src/deep2/dump_tensors.cpp
+COMMENTED_PRESENT,src/deep2/GGUFDiagnostics.cpp
+COMMENTED_PRESENT,src/deep2/GGUFLoader.cpp
+COMMENTED_PRESENT,src/deep2/GGUFLoader_Fixed.cpp
+COMMENTED_PRESENT,src/deep2/GGUFVerifier.cpp
+COMMENTED_PRESENT,src/deep2/gpu/Deep2GPUBackend.cpp
+COMMENTED_PRESENT,src/deep2/InferenceWire.hpp
+COMMENTED_PRESENT,src/deep2/k_quant_gemv_avx512.h
+COMMENTED_PRESENT,src/deep2/mcp_bridge.cpp
+COMMENTED_PRESENT,src/deep2/moe_microbench.cpp
+COMMENTED_PRESENT,src/deep2/moe_simple_bench.cpp
+COMMENTED_PRESENT,src/deep2/moe_test.cpp
+COMMENTED_PRESENT,src/deep2/moe_validation_test.cpp
+COMMENTED_PRESENT,src/deep2/MultiGPU/GPUDeviceRegistry.cpp
+COMMENTED_PRESENT,src/deep2/MultiGPU/MultiGPUScheduler.cpp
+COMMENTED_PRESENT,src/deep2/MultiGPU/VRAMAllocator.cpp
+COMMENTED_PRESENT,src/deep2/production/Deep2ProductionRuntime.cpp
+COMMENTED_PRESENT,src/deep2/ReceiptAuthority.cpp
+COMMENTED_PRESENT,src/deep2/router_bench.cpp
+COMMENTED_PRESENT,src/deep2/router_latency_test.cpp
+COMMENTED_PRESENT,src/deep2/ScaleQuality.cpp
+COMMENTED_PRESENT,src/deep2/test_api_server.cpp
+COMMENTED_PRESENT,src/deep2/test_real_gguf_load.cpp
+COMMENTED_PRESENT,src/deep2/test_real_gguf_validate.cpp
+COMMENTED_PRESENT,src/deep2/test_tool_limit_hotpatch.cpp
+COMMENTED_PRESENT,src/deep2/TheDualityExample.cpp
+COMMENTED_PRESENT,src/deep2/VAL038_Benchmark_Harness.cpp
+COMMENTED_PRESENT,src/deep2/VAL063_Deep2Certification.cpp
+COMMENTED_PRESENT,src/deep2/vulkan_compute.h
+COMMENTED_PRESENT,src/full_agentic_ide/AgenticIOCPBridge.cpp
+COMMENTED_PRESENT,src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
+COMMENTED_PRESENT,src/full_agentic_ide/FullAgenticIDE.cpp
+COMMENTED_PRESENT,src/gold_stubs/gold_link_stubs.cpp
+COMMENTED_PRESENT,src/ide/ANSIColorParser.cpp
+COMMENTED_PRESENT,src/ide/Deep2Bridge.cpp
+COMMENTED_PRESENT,src/ide/FindReplaceDialog.cpp
+COMMENTED_PRESENT,src/ide/GitCommitDialog.cpp
+COMMENTED_PRESENT,src/ide/GitDiffViewer.cpp
+COMMENTED_PRESENT,src/inference/ai_model_caller_real.cpp
+COMMENTED_PRESENT,src/inference/gguf_d3d12_bridge_link_fallback.cpp
+COMMENTED_PRESENT,src/inference/inference_engine_real.cpp
+COMMENTED_PRESENT,src/inference/inference_standalone_link_shims.cpp
+COMMENTED_PRESENT,src/infinite/InfinitePerfectionEngine.cpp
+COMMENTED_PRESENT,src/link_stubs/rawrengine_link_closure.cpp
+COMMENTED_PRESENT,src/lsp/RawrXD_LSPServer.cpp
+COMMENTED_PRESENT,src/main.cpp
+COMMENTED_PRESENT,src/modules/codex_ultimate.cpp
+COMMENTED_PRESENT,src/modules/engine_manager.cpp
+COMMENTED_PRESENT,src/ollama_client.cpp
+COMMENTED_PRESENT,src/rawr_agent.cpp
+COMMENTED_PRESENT,src/RawrXD_Complete_ReverseEngineered.asm
+COMMENTED_PRESENT,src/rawrxd_link_stubs.cpp
+COMMENTED_PRESENT,src/sovereign/verify_integration.cpp
+COMMENTED_PRESENT,src/swarm/SovereignSwarm.cpp
+COMMENTED_PRESENT,src/tests/backend_orchestrator_shard_smoke_stubs.cpp
+COMMENTED_PRESENT,src/tests/swarm_smoke_stubs.cpp
+COMMENTED_PRESENT,src/tools/multi_model_benchmark.cpp
+COMMENTED_PRESENT,src/ui/RawrXD_MainLoop.cpp
+COMMENTED_PRESENT,src/win32app/HeadlessIDE_FileAliases.cpp
+COMMENTED_PRESENT,src/win32app/rtp_protocol_fallback.cpp
+COMMENTED_PRESENT,src/win32app/sovereign_gpu_link_stubs.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_AgentOllamaClient.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_ChatPanel_Ollama.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_CursorParityBridge.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_HardwareSynthesizer.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_LSPServer.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_MeshBrain.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_NeuralBridge.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_OmegaOrchestrator.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_private_stubs.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_SelfHostEngine.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_SpeciatorEngine.cpp
+COMMENTED_PRESENT,src/win32app/Win32IDE_TranscendenceCoordinator.cpp
+COMMENTED_PRESENT,src/x.cpp
+COMMENTED_PRESENT,src/x64/rawrxd_quantum_beaconism.asm
+COMMENTED_PRESENT,tests/b009/b009_b_batched_gemm.cpp
+COMMENTED_PRESENT,tests/test_generation.cpp
+COMMENTED_PRESENT,tools/deep2_streamer_cert.cpp
+COMMENTED_PRESENT,tools/repo_intelligence_cert.cpp
+COMMENTED_PRESENT,tools/single_writer_adversarial_test.cpp

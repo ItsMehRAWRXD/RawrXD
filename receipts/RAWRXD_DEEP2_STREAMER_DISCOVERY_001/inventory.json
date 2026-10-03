@@ -1,19 +1,19 @@
 {
   "census": {
-    "files_scanned": 14,
-    "gguf_by_magic": 13,
-    "non_gguf_skipped": 1,
+    "files_scanned": 2,
+    "gguf_by_magic": 2,
+    "non_gguf_skipped": 0,
     "logical_models": 2,
-    "single_file": 0,
-    "sharded_complete": 1,
+    "single_file": 1,
+    "sharded_complete": 0,
     "sharded_incomplete": 0,
-    "projectors": 0,
-    "manifests_no_payload": 1,
+    "projectors": 1,
+    "manifests_no_payload": 0,
     "corrupt_headers": 0,
-    "total_bytes": 621245224864
+    "total_bytes": 22069579744
   },
   "models": [
-    {"logical_name": "Kimi-K2-Instruct-0905-Q4_K_M", "directory": "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M", "artifact": "SHARDED_INFERENCE_MODEL", "present_shards": 13, "expected_shards": 13, "total_bytes": 621245224864, "entry_shard": "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf", "gguf_version": 3, "arch": "deepseek2", "name": "Kimi-K2-Instruct-0905", "tensor_count": 98, "quant": "F32", "header_valid": true, "header_error": ""},
-    {"logical_name": "Modelfile", "directory": "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M", "artifact": "MANIFEST_NO_PAYLOAD", "present_shards": 0, "expected_shards": 1, "total_bytes": 57, "entry_shard": "", "gguf_version": 0, "arch": "", "name": "", "tensor_count": 0, "quant": "", "header_valid": false, "header_error": ""}
+    {"logical_name": "Qwen3.6-35B-A3B-Q4_K_M.gguf", "directory": "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 21166757728, "entry_shard": "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf", "gguf_version": 3, "arch": "qwen35moe", "name": "Qwen_Qwen3.6 35B A3B", "tensor_count": 733, "quant": "Q4_K", "header_valid": true, "header_error": ""},
+    {"logical_name": "mmproj-Qwen3.6-35B-A3B-BF16.gguf", "directory": "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF", "artifact": "PROJECTOR", "present_shards": 1, "expected_shards": 1, "total_bytes": 902822016, "entry_shard": "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\mmproj-Qwen3.6-35B-A3B-BF16.gguf", "gguf_version": 3, "arch": "clip", "name": "Qwen_Qwen3.6 35B A3B", "tensor_count": 334, "quant": "F32", "header_valid": true, "header_error": ""}
   ]
 }

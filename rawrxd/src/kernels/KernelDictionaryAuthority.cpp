@@ -1,6 +1,6 @@
 // KernelDictionaryAuthority.cpp — RAWRXD_KERNEL_DICTIONARY_AUTHORITY_001
 #include "KernelDictionaryAuthority.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <vector>
 #include <mutex>
 namespace rawrxd { namespace kernels {

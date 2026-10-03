@@ -675,6 +675,9 @@ bool EditorEngine_OpenFile(const std::string& path)
     g_editor.modified    = false;
     EditorClearSelection();
     if (g_editor.hwnd) InvalidateRect(g_editor.hwnd, nullptr, FALSE);
+    // RAWRXD_IDE_UNDO_COVERAGE_002: same omission as EditorEngine_SetText. Opening a file
+    // replaces the entire buffer, so without this the open is not undoable either.
+    EditorNotifyMutation();
     return true;
 }
 
@@ -710,6 +713,12 @@ void EditorEngine_SetText(const std::string& text)
     if (g_editor.lines.empty()) g_editor.lines.push_back("");
     g_editor.cursorLine = 0; g_editor.cursorCol = 0; g_editor.scrollLine = 0;
     if (g_editor.hwnd) InvalidateRect(g_editor.hwnd, nullptr, FALSE);
+    // RAWRXD_IDE_UNDO_COVERAGE_002
+    // This replaces the entire buffer but did not notify, contradicting the design note
+    // above ("Every mutating path below calls EditorNotifyMutation()"). Consequence: a
+    // whole-buffer replacement was never undoable at all, by any caller, regardless of
+    // message pumping. It is a content mutation, so it must notify like the others.
+    EditorNotifyMutation();
 }
 
 std::string EditorEngine_GetText()

@@ -224,7 +224,7 @@ static std::optional<nlohmann::json> handlePDBResolve(
 // This is the externally-visible function called from Win32IDE_PDBSymbols.cpp.
 // It is declared extern "C" for simple linkage (no name mangling).
 
-void initPDBLSPBridge(RawrXD::LSPServer::RawrXDLSPServer* lspServer) {
+void initPDBLSPBridge(void* lspServer) {
     if (!lspServer) {
         OutputDebugStringA("[Phase 29] PDB LSP Bridge: null LSP server, skipping registration");
         return;

@@ -1,0 +1,178 @@
+RAWRXD_REAL_DELTA_MATRIX_001
+==============================
+REPLICATION OF THE REAL-DELTA MEASUREMENT ACROSS TENSOR FAMILIES,
+QUANT TYPES, LAYERS AND WINDOWS.
+
+MODEL  = F:\OllamaModels\blobs\sha256-6150cb38...c5c613e93   (19.85 GB)
+         GGUF v3, 771 tensors: 385 Q4_K, 65 Q6_K, 321 F32, 64 layers
+ARCH   = DENSE, not MoE  (verified: ffn_gate_inp=0, ffn_up_exps=0,
+                            ffn_down_exps=0, ffn_gate_exps=0;
+                            exactly 64 each of ffn_gate/ffn_up/ffn_down)
+TOOL   = rawrxd/certs/gguf_tensor_slice_001.cpp
+CASES  = 11   ALL PASS   LOW_RANK_BEATS_ORDER0 = 0 IN ALL 11
+
+
+----------------------------------------------------------------------------
+1. THE MATRIX
+----------------------------------------------------------------------------
+ #   tensor                 type   L1_ratio  order0_b  rank99  cost_b/e  beats?
+ 1   blk.0.attn_q.weight    Q4_K   0.791996   7.2138     188    47.00     NO
+ 2   blk.0.attn_q  @row4096 Q4_K   0.789055   7.2216     194    48.50     NO
+ 3   blk.31.attn_q.weight   Q4_K   0.801869   7.2074     195    48.75     NO
+ 4   blk.63.attn_q.weight   Q4_K   0.783674   7.2074     196    49.00     NO
+ 5   blk.63.attn_q  @row4096 Q4_K   0.789393   7.2035     195    48.75     NO
+ 6   blk.0.ffn_up.weight    Q4_K   0.788621   7.2141     195    48.75     NO
+ 7   blk.31.ffn_up.weight   Q4_K   0.788323   7.2156     197    49.25     NO
+ 8   blk.63.ffn_up.weight   Q4_K   0.786620   7.2178     196    49.00     NO
+ 9   blk.0.ffn_down.weight  Q6_K   0.799599   6.8743     196    49.00     NO
+10   blk.31.ffn_down.weight Q6_K   0.789925   6.8777     197    49.25     NO
+11   blk.63.ffn_down.weight Q6_K   0.798975   6.8559     197    49.25     NO
+
+  ALL DEQUANTS VALIDATED (group_rms_cv 0.0706 .. 0.3761, all < 1.0)
+  ALL ROW_BLOCKS_READ exact (36864 B Q4_K / 53760 B Q6_K per window)
+
+RANGES ACROSS ALL 11:
+  L1_RATIO          0.783674 .. 0.801869    spread 0.018
+  ORDER0_ENTROPY    6.8559   .. 7.2218     spread 0.37
+  RANK_FOR_99PCT    188      .. 197
+  FACTOR_COST       47.00    .. 49.25 bits/element
+  LOW_RANK_BEATS_ORDER0   0 / 11
+
+
+----------------------------------------------------------------------------
+2. WHAT IS AND IS NOT NOW CLOSED
+----------------------------------------------------------------------------
+REAL_DENSE_ATTN_Q4_K   = REFUTED   (5 windows across 3 layers)
+REAL_DENSE_FFN_UP_Q4_K = REFUTED   (3 layers)
+REAL_DENSE_FFN_DN_Q6_K = REFUTED   (3 layers)
+REAL_MOE_EXPERT_*      = NOT MEASURED  <-- see section 4
+
+Q4_K vs Q6_K, side by side:
+  Q4_K order0 entropy  7.2035 .. 7.2218
+  Q6_K order0 entropy  6.8559 .. 6.8777
+Q6_K's delta is ~0.34 bits/elem cheaper, which is the expected direction -- a
+better base leaves a smaller-magnitude error. But 6.86 bits/elem is still far
+above anything worth storing, and the rank-99 cost is UNCHANGED at ~49
+bits/elem. A better base reduces the delta's magnitude and its entropy slightly
+while leaving its rank structure exactly as hopeless.
+
+
+----------------------------------------------------------------------------
+3. THE STABILITY IS THE FINDING
+----------------------------------------------------------------------------
+A single window of a single tensor is an anecdote. Eleven cases across three
+tensor families (attention projection, FFN up-projection, FFN down-projection),
+three layers (0 / 31 / 63), two window origins, and two quant types land inside:
+
+  L1 ratio   0.784 .. 0.802   (2.3% spread)
+  entropy    6.86  .. 7.22    (5.2% spread, and that is across TWO quant types)
+  rank-99    188    .. 197    (never lower)
+
+The spread is smaller than the difference between any two configurations. The
+delta's structure is a property of the weight class, not of the sample.
+
+Rank 99% costs 47-49.25 bits/element. The tensor it is compressing is 32 bits.
+The low-rank representation of the low-precision residual is roughly 1.5x
+LARGER THAN THE ORIGINAL WEIGHTS, at every accuracy target that matters.
+
+=> On dense Q4_K and Q6_K weights, a ternary-base residual overlay is not a
+   compression scheme. Its correction field is neither sparse (2-13%), nor low
+   entropy (6.9-7.2 b/elem), nor low rank (rank 188-197 for 99% of energy).
+   All three available mechanisms lose, by 6-7x.
+
+
+----------------------------------------------------------------------------
+4. WHY MoE EXPERT TENSORS ARE NOT IN THIS MATRIX -- AND WHY THAT MATTERS
+----------------------------------------------------------------------------
+The proposal is about MoE. The model measured here is DENSE. A real MoE model
+was located and parsed:
+
+  F:\OllamaModels\blobs\sha256-764636b0...  96.9 GB  arch=deepseek4  43 layers
+     ffn_gate_inp=43  ffn_up_exps=43  ffn_down_exps=43  ffn_gate_exps=43
+  F:\OllamaModels\blobs\sha256-948255a1...  89.4 GB  arch=laguna     47 layers
+     same MoE tensor structure
+
+Both parse cleanly (1328 tensors, all offsets in bounds, all blocks aligned).
+But their EXPERT tensors are NOT Q4_K or Q6_K. The unknown type IDs were
+identified by counting and reporting them rather than guessing a geometry:
+
+  UNKNOWN_TYPE_IDS: 17, 18, 26, 39
+    17 = IQ2_XXS    18 = IQ2_XS    26 = IQ4_XS    39 = MXFP4
+
+THESE CARRY CODEBOOKS. An i-quant decode is a codebook lookup, and a wrong
+codebook index does not fail -- it produces a plausible matrix whose spectral
+structure is an ARTEFACT of the wrong codebook. That is precisely the failure the
+stationarity check was built to catch, and stationarity is weaker evidence
+against a codebook error than against a scale-index error.
+
+So the i-quant expert decode is deliberately NOT implemented. Guessing three
+codebooks to produce a rank curve would be exactly the fabrication this project
+has produced repeatedly, and it would be invisible: the output would look like
+the other eleven rows.
+
+CONSEQUENCE, STATED PLAINLY:
+  The negative result is established for dense Q4_K and Q6_K. It is NOT
+  established for MoE expert tensors. Anyone citing this receipt to close the
+  MoE case is overclaiming.
+
+  There is also a substantive reason to expect a DIFFERENT answer for experts:
+  experts are quantised with i-quants / MXFP4 precisely because they must fit a
+  much smaller budget per expert than a dense projection. A base that coarse
+  has a LARGER delta, and therefore plausibly a MORE structured one -- outliers
+  and a heavy tail concentrate energy in few directions. That is a hypothesis,
+  and it is testable, and it is the one measurement that would change the
+  verdict.
+
+
+----------------------------------------------------------------------------
+5. DEFECTS FOUND WHILE EXTENDING THE TOOL
+----------------------------------------------------------------------------
+D1  GGML BOOL is ONE byte, not four. Every subsequent metadata key
+    desynchronised. The parser now records the key/index/offset it was reading
+    when the cursor went bad.
+D2  The failure diagnostic was packed into the check's own format string behind
+    ternaries and printed garbage on SUCCESS (kv=612120512030816), because a
+    std::to_string temporary's c_str() was fed to %s. Diagnostics now print
+    separately, only on failure.
+D3  "blk.0.attn_q" resolved to blk.0.attn_q.bias -- a 1-D F32 bias -- because
+    exact-name matching was missing. Every geometry expectation was being
+    checked against the wrong tensor.
+D4  R was 64, which penalises low-rank and would have made the rank curve an
+    artefact of the SAMPLE HEIGHT rather than of the delta. Raised to 256.
+D5  windows.h defines min/max as MACROS, rewriting std::max into C2589 rather
+    than failing at the call. NOMINMAX added ahead of the include.
+D6  The liveness check gated on distinct_bytes > 8 and failed on an F32 bias
+    whose low bytes legitimately take few values. Replaced by the condition it
+    actually stood in for (all-zero block).
+D7  Unknown ggml types were counted but not NAMED, so the MoE expert tensors
+    were simply "TYPE_UNSUPPORTED" with no way to act on it. Now prints the IDs.
+
+
+----------------------------------------------------------------------------
+6. WHAT WOULD CHANGE THE VERDICT
+----------------------------------------------------------------------------
+  1. A VALIDATED i-quant decode (IQ2_XXS / IQ2_XS / IQ4_XS) for the deepseek4 or
+     laguna expert tensors, then this same matrix on experts. THIS is the
+     measurement that matters. A correct codebook needs its own stationarity and
+     value-distribution validation, and its results must NOT be produced until
+     that validation passes.
+  2. MXFP4 (id 39) on experts -- block 32, 17 bytes, E8M0 scale plus fp4 codes,
+     no codebook. Cheaper to validate than the i-quants.
+  3. A per-tensor rather than per-256x256-window low-rank fit, to separate "the
+     tensor is low rank" from "this window is low rank".
+  4. Q5_K / Q8_K, which have better bases still; the trend across Q4_K -> Q6_K
+     suggests more base precision lowers entropy but does not rescue rank.
+
+
+----------------------------------------------------------------------------
+VERDICT
+  CASES                                   = 11   all PASS
+  LOW_RANK_BEATS_ORDER0                  = 0/11
+  DELTA_ENTROPY_SPREAD_ACROSS_ALL_CASES  = 6.86 .. 7.22 bits/elem
+  RANK_99PCT_SPREAD                      = 188 .. 197
+  FACTOR_COST_VS_ORIGINAL_32_BITS        = 1.47x .. 1.54x  (LARGER, not smaller)
+  DENSE_Q4_K                             = REFUTED
+  DENSE_Q6_K                             = REFUTED
+  MOE_EXPERT_IQUANTS                     = NOT MEASURED (codebook decode unvalidated)
+  RESIDUAL_OVERLAY_COMPRESSION_DENSE     = NOT VIABLE
+  RESIDUAL_OVERLAY_COMPRESSION_MOE       = UNKNOWN -- do not cite as refuted

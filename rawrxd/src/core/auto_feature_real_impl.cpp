@@ -11,7 +11,14 @@
 #include "lsp_client.h"
 
 #include <windows.h>
-#include <sstring>
+// RAWRXD_QT_CONVERSION_RESIDUE_001
+// This was the last surviving Qt-era spelling in this translation unit.
+// 'sstring' was the project's transitional alias header for QString; the
+// Qt-to-native conversion replaced every QString/QWidget/QVector use in this
+// file with std::/native types (verified: QString=0, QWidget=0, QVector=0,
+// QObject=0 occurrences) but left this one #include behind, so the file could
+// not compile. <string> is the native header it was standing in for.
+#include <string>
 #include <fstream>
 #include <filesystem>
 

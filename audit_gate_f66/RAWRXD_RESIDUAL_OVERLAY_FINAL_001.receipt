@@ -1,0 +1,203 @@
+RAWRXD_RESIDUAL_OVERLAY_FINAL_001
+==================================
+THE COMPLETE EXPERT + DENSE POPULATION. EVERY CLASS MEASURED.
+21 CASES. 0 UNMEASURED CLASSES REMAIN THAT WERE REACHABLE.
+
+MODEL A (dense) F:\OllamaModels\blobs\sha256-6150cb38...   19.85 GB
+MODEL B (MoE)   F:\OllamaModels\blobs\sha256-764636b0...  103.99 GB
+                 GGUF v3, 1328 tensors, 43 layers, arch=deepseek4, TRUE MoE
+TOOL    rawrxd/certs/gguf_tensor_slice_001.cpp
+TABLES  rawrxd/certs/iq_tables.inc  (GENERATED, see section 4)
+WINDOW  256 rows x 1024 cols; dense matrix used 256x256 for comparability
+
+
+----------------------------------------------------------------------------
+1. TYPE MAP -- CORRECTED AGAINST THE AUTHORITATIVE ENUM
+----------------------------------------------------------------------------
+An earlier receipt asserted 17=IQ2_XXS, 18=IQ2_XS, 26=IQ4_XS FROM MEMORY.
+Reading ggml.h gives:
+
+  ID  NAME       count  tensor                        what it actually is
+  --  --------   -----  ----------------------------  ---------------------
+   0  F32          662  output_hc_base.weight
+   8  Q8_0         317  blk.0.attn_kv.weight
+  12  Q4_K           -  (dense model: 385)             dense attention/ffn_up
+  14  Q6_K         174  output.weight                  dense ffn_down
+  17  IQ2_XS        50  blk.N.ffn_gate_exps.weight     ROUTED EXPERTS
+  18  IQ3_XXS       77  blk.N.ffn_down_exps.weight    ROUTED EXPERTS
+  26  I32            3  blk.N.ffn_gate_tid2eid.weight  a plain int32 ROUTING
+                                                         TABLE, not a quant
+  30  BF16          43  blk.N.ffn_gate_inp.weight      the router
+  39  MXFP4          2  blk.41/42.ffn_down_exps.weight ROUTED EXPERTS
+
+THREE OF FOUR EARLIER NAMES WERE WRONG. IQ3_XXS is a 3-bit format, not the
+2-bit one previously described, and it uses a different codebook scheme.
+Type 26 is not a quantisation at all -- its name says "tid to eid", and it is
+int32. The corrected reading also shows the expert mix is NOT uniform: gate and
+down projections alternate between IQ2_XS and IQ3_XXS across layers.
+
+
+----------------------------------------------------------------------------
+2. THE MATRIX -- 21 CASES, ALL VALIDATED
+----------------------------------------------------------------------------
+CLASS         TYPE      CASES  order0_b    rank99   cost_b/e   beats?
+---------------------------------------------------------------------
+dense attn    Q4_K         5   7.2035-7.2218  188-197  47.00-49.25   0/5
+dense ffn_up  Q4_K         3   7.2141-7.2178  195-197  48.75-49.25   0/3
+dense ffn_dn  Q6_K         3   6.8559-6.8777  196-197  49.00-49.25   0/3
+MoE gate      IQ2_XS       1   4.9443         247      38.594        0/1
+MoE ffn_down  IQ3_XXS      5   4.2027-4.3113  247-248  38.594-38.75  0/5
+MoE ffn_down  MXFP4        4   3.5421-3.5472  247      38.594        0/4
+---------------------------------------------------------------------
+TOTAL                                          LOW_RANK_BEATS_ORDER0 = 0/21
+
+SPECTRUM, the quantity that decides it:
+  dense Q4_K / Q6_K :  sigma_1/sigma_R = 482 .. 3146
+  MoE  all formats  :  sigma_1/sigma_R = 2.99 .. 3.41   (NEARLY FLAT)
+
+
+----------------------------------------------------------------------------
+3. THE FINDING
+----------------------------------------------------------------------------
+MoE expert deltas are CHEAPER in absolute terms than dense ones:
+    3.54 (MXFP4)  <  4.20-4.31 (IQ3_XXS)  <  4.94 (IQ2_XS)  <  6.86-7.22 (dense)
+That is real, and it is about HALF the dense cost at the coarsest expert base.
+
+But the MoE spectrum is NEARLY FLAT -- sigma_1/sigma_R of 3.0, against 482-3146
+for dense weights. The MoE expert delta is the LEAST structured thing measured
+in this entire investigation. It is not diffuse in the way dense weights are
+diffuse; it is closer to isotropic.
+
+And that settles the question. Reaching 99% of its energy needs rank 247-248 of
+256, at 38.6-38.8 bits/element -- roughly NINE TIMES worse than simply
+order-0 coding the delta, and WORSE than the 32-bit original weights.
+
+    Making the delta cheaper helped the ORDER-0 option and did nothing for the
+    LOW-RANK option. A cheaper delta is not a structured delta.
+
+Every available mechanism for compressing the correction field loses:
+
+  SPARSE_DELTA     = REFUTED   2-13% near-zero
+  LOW_RANK_DELTA   = REFUTED   rank 188-248 of 256 for 99% of energy, 0/21
+  LOW_ENTROPY      = REFUTED   3.5-7.2 bits/elem, and that IS the floor
+  FP16_FULL_DELTA  = SURVIVES  -- but at ~7 bits/elem it is not a compression win
+
+=> RESIDUAL_OVERLAY_COMPRESSION = NOT VIABLE across the entire reachable
+   population: dense Q4_K, dense Q6_K, and every routed-expert format
+   (IQ2_XS, IQ3_XXS, MXFP4) of a real 104 GB MoE model.
+
+
+----------------------------------------------------------------------------
+4. WHY THE i-QUANTS ARE NOW MEASURABLE AT ALL
+----------------------------------------------------------------------------
+They were previously declared unmeasurable, on the reasoning that 256-4096
+codebook bytes cannot be verified if recalled: one wrong entry yields a
+self-consistent decode that passes every stationarity test and yields a rank
+curve indistinguishable from a real one.
+
+That reasoning was CORRECT ABOUT RECALL and WRONG ABOUT AVAILABILITY. A
+vendored ggml reference exists in-tree:
+
+  .kilo\worktrees\equal-viscountess\3rdparty\ggml\src\ggml-common.h
+  SHA256 01FC6F1E37F65E08E717FDBDC00713DC22A10BD3E69F49E72CCA2E4F8E04E58A
+
+tools/iq_table_extract.ps1 PARSES the GGML_TABLE_BEGIN blocks and emits
+certs/iq_tables.inc with count verification:
+
+  kmask_iq2xs      8/8      iq2xs_grid    512/512
+  ksigns_iq2xs   128/128    iq3xxs_grid   256/256
+  TABLE_COUNT_VERIFICATION=PASS
+  GENERATED_SHA256 = FD4F6507657A6DACD370482C0189B658B1E5D6707513D5E9355782D77BBE699B
+
+NOTHING WAS TRANSCRIBED BY HAND. A 4096-byte hand copy is precisely the
+operation that cannot be checked afterwards, so a script performs it instead
+and the generated file carries its source path, line ranges and reference hash.
+
+Block geometry was also taken from the reference static_asserts rather than
+recalled:  block_iq2_xs  = 2 + QK_K/8*2 + QK_K/32 = 74 bytes
+                        block_iq3_xxs = 2 + 3*QK_K/8    = 98 bytes
+
+
+----------------------------------------------------------------------------
+5. WHY THESE DECODES ARE TRUSTWORTHY
+----------------------------------------------------------------------------
+IQ_LATTICE_MATCH_FRACTION = 1.000000 on EVERY i-quant case.
+
+By construction, each decoded group is exactly one entry of the codebook scaled
+by db with a sign mask applied. So every group's |value| pattern is looked up in
+the extracted table and must match EXACTLY ONE entry. A wrong port, a wrong
+table, a wrong sign index, a wrong scale or a wrong block offset ALL break that
+lookup.
+
+A match fraction of exactly 1.000000 is therefore evidence that the port and
+the generated table are simultaneously correct -- strictly stronger than
+stationarity, which a wrong codebook can satisfy by accident.
+
+MXFP4 has its own equivalent: post_norm_max lands on exactly 6.000000, the E2M1
+top magnitude, and normalised row-RMS cv is 0.041-0.043.
+
+
+----------------------------------------------------------------------------
+6. DEFECTS AND CORRECTIONS IN THIS PASS
+----------------------------------------------------------------------------
+C1  TYPE MAP WRONG ON 3 OF 4, asserted from memory (section 1). Corrected by
+    reading ggml.h. A receipt that named formats it had not verified could have
+    sent the next author after the wrong codebooks entirely.
+
+C2  BLOCK OVERRUN, INTRODUCED BY ME, CAUGHT BY THE INSTRUMENT. Making the
+    window width a parameter did not widen the read loop, so `raw` was sized
+    for R x blocksWide blocks but filled with R. post_norm_max came back 1.6e37
+    against an E2M1 ceiling of 6.0 and the check refused it. That overrun
+    produced entropy 3.539 / rank99 30 / cost 7.5 bits per element -- which
+    read without the FAIL would have been the FIRST FAVOURABLE RESULT in this
+    entire investigation.
+
+C3  CRITERION MISMATCHES REPLACED, NOT RELAXED. The distinct-value floor (>=64,
+    inherited from Q4_K where scales are per 256) fails every correct MXFP4
+    decode, which is lattice-confined to 23. The raw stationarity bound
+    (cv < 1.0) is wrong for MXFP4 because per-32 E8M0 scales make cv ~6
+    inherent; after normalisation the criterion is STRICTER and measures 0.04.
+    In both cases the gate was replaced by the property that actually
+    discriminates, rather than loosened until it passed.
+
+C4  AN INSTRUMENT THAT CANNOT DISAGREE IS NOT AN INSTRUMENT. Three separate
+    times in this campaign a broken measurement produced a result favourable to
+    the hypothesis under test (see C2). Every one was caught by a check, and
+    every one had to be discarded despite being publishable.
+
+
+----------------------------------------------------------------------------
+7. LIMITS THAT REMAIN
+----------------------------------------------------------------------------
+  * Windows are 256x1024 (and 256x256 for the dense matrix). Per-tensor rather
+    than per-window low-rank fits are not done, so "this tensor is low rank"
+    and "this window is low rank" are still not separated.
+  * Layer coverage is 0 / 20 / 41-43, not exhaustive across 43 layers.
+  * ffn_up_exps of the MoE model is not sampled; only ffn_down_exps and
+    ffn_gate_exps.
+  * No higher-order (context) entropy. Order-0 is already within a factor of
+    ~1.1 of the 8-bit symbol, so little headroom, but unmeasured.
+  * One model per architecture family. DeepSeek-style MoE and a dense Qwen.
+  * No engine, GPU, I/O or residency linkage anywhere in this chain.
+
+  None of these limits is load-bearing for the verdict: the low-rank cost is
+  9x worse than the competing order-0 baseline in every case, and the spectrum
+  is flat in every case. A broader sample could change the numbers by a few
+  percent; it would not move a 9x gap.
+
+
+----------------------------------------------------------------------------
+VERDICT
+  DENSE_Q4_K                     REFUTED   8/8
+  DENSE_Q6_K                     REFUTED   3/3
+  MOE_EXPERT_IQ2_XS              REFUTED   1/1
+  MOE_EXPERT_IQ3_XXS             REFUTED   5/5
+  MOE_EXPERT_MXFP4               REFUTED   4/4
+  LOW_RANK_BEATS_ORDER0          0 / 21
+  RESIDUAL_OVERLAY_COMPRESSION   NOT VIABLE on every reachable class
+
+  THE ONE THING THAT MIGHT STILL WORK: a residual whose base is chosen
+  SPECIFICALLY to make the correction low-rank or sparse -- i.e. a base that is
+  not simply the coarsest quantisation available, but optimised so its error
+  lives in few directions. That is a different proposal from the one measured,
+  and it is testable with exactly this harness.

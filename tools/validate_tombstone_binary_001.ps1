@@ -40,7 +40,44 @@ $Vcvars   = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\A
 
 if (-not (Test-Path $Log)) { New-Item -ItemType Directory -Path $Log | Out-Null }
 
-function Say($m) { Write-Output $m }
+function Say($m) { Write-Information $m -InformationAction Continue }
+# Above: INFORMATION stream, NOT the success stream. Using Write-Output meant every
+# Say inside a value-returning function (Test-PreState) was captured into that
+# function's RETURN VALUE instead of being displayed, so the harness's own
+# verification evidence vanished from the transcript while the run continued.
+# A check whose output cannot be seen is not evidence of anything.
+
+# Minimum harness authority, enforced on every exit path:
+#   PRE_STATE_VERIFIED / POST_STATE_VERIFIED  the states are what we claim
+#   ANCHOR_POSITION_EXPECTED                  right count is not enough
+#   A_B_INPUTS_DISTINCT                       the two states actually differ
+#   RESTORE_VERIFIED                          the tree is handed back unchanged
+#
+# A harness that aborts half way through leaves CMakeLists.txt in a mutated state.
+# That is how a failed test becomes an unmeasured source change.
+function Restore-And-Exit([int]$code, [string]$why) {
+    Say ''
+    Say "ABORT($code): $why"
+    Say 'RESTORING source tree from saved variants before exiting...'
+    try {
+        Copy-Item (Join-Path $Log 'CMakeLists.REPAIRED.txt') $Cml -Force
+        Copy-Item (Join-Path $Log 'Stub.RETIRED.txt')       $Stub -Force
+        $h = (Get-FileHash $Cml -Algorithm SHA256).Hash
+        $r = (Get-FileHash $Stub -Algorithm SHA256).Hash
+        $ok = ($h -eq $script:BaselineCmlHash) -and ($r -eq $script:BaselineStubHash)
+        Say "RESTORE_VERIFIED=$(if ($ok) { 1 } else { 0 })  cml=$($h.Substring(0,16))  stub=$($r.Substring(0,16))"
+        if (-not $ok) {
+            Say "  expected cml=$($script:BaselineCmlHash.Substring(0,16))  stub=$($script:BaselineStubHash.Substring(0,16))"
+            Say '  MANUAL RESTORE REQUIRED: git -C F:/~dev checkout HEAD -- rawrxd/CMakeLists.txt rawrxd/src/deep2/Deep2Server_Sovereign.cpp'
+            exit 9
+        }
+    } catch {
+        Say "RESTORE_FAILED: $($_.Exception.Message)"
+        Say '  MANUAL RESTORE REQUIRED.'
+        exit 9
+    }
+    exit $code
+}
 
 # Run a command inside the MSVC x64 environment.
 function Invoke-Msvc([string]$inner, [string]$tag) {
@@ -86,22 +123,66 @@ function Get-BareCount([string]$path) {
     return @(Select-String -Path $path -Pattern '^\s*src/deep2/Deep2Server_Sovereign\.cpp\s*$' -AllMatches).Count
 }
 
-# Anchors are the UNIQUE comment blocks this repair introduced, never the shared
-# neighbour lines -- `src/deep2/Deep2Server_Minimal.cpp` appears in BOTH the append
-# block and the REMOVE_ITEM block with identical text, so it cannot anchor anything.
-$REPAIR_BLOCK_REMOVE_ITEM =
-  '(?m)^        # RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: the matching\r?\n' +
-  '        # src/deep2/Deep2Server_Sovereign\.cpp entry was removed from this\r?\n' +
-  '        # REMOVE_ITEM list because it is no longer appended above\. Leaving it here\r?\n' +
-  '        # would strip a name the list never contained\.\r?\n'
+# Return the LINE NUMBERS of bare entries. A count alone is not sufficient:
+# the original anchor text `...was: src/deep2/Deep2APIServer.cpp` occurs TWICE in
+# this file (5715 and 7248), and a replace-first-match silently edited the WRONG
+# one -- inserting a phantom source into an unrelated list while still producing
+# the expected count. Position is therefore part of the assertion.
+function Get-BareLines([string]$path) {
+    if (-not (Test-Path $path)) { return @() }
+    return @(Select-String -Path $path -Pattern '^\s*src/deep2/Deep2Server_Sovereign\.cpp\s*$' |
+             ForEach-Object { $_.LineNumber })
+}
 
-$APPEND_ANCHOR = '(?m)^(           # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral\. was: src/deep2/Deep2APIServer\.cpp)'
+# Anchors are the UNIQUE comment markers this repair introduced, never shared
+# neighbour lines -- `src/deep2/Deep2Server_Minimal.cpp` appears in BOTH the
+# append block and the REMOVE_ITEM block with identical text.
+# Site 1 marker: "RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: src/deep2/Deep2Server_Sovereign.cpp"
+# Site 2 marker: "RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: the matching"
+$REPAIR_BLOCK_APPEND =
+  '(?ms)^[ \t]*# RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: src/deep2/Deep2Server_Sovereign\.cpp' +
+  '.*?was: src/deep2/Deep2APIServer\.cpp\r?\n'
+
+$REPAIR_BLOCK_REMOVE_ITEM =
+  '(?ms)^[ \t]*# RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: the matching' +
+  '.*?never contained\.\r?\n'
+
+# Expected neighbourhoods, measured on this file: the APPEND block that carries the
+# phantom sits before the list(REMOVE_ITEM WIN32IDE_SOURCES) call, and the
+# REMOVE_ITEM entry sits immediately after it.
+$APPEND_BLOCK_MIN_LINE = 7000
+$REMOVE_ITEM_ANCHOR   = 7391
+
+function Test-PreState {
+    $lines = Get-BareLines $Cml
+    $n = $lines.Count
+    Say "STATE=PRE  bare_line_count=$n  expected=2  at_lines=$($lines -join ',')"
+    if ($n -ne 2) {
+        Say 'ABORT: pre-state was NOT reproduced. The A/B would compare two identical'
+        Say '       states and report a meaningless equivalence result. Refusing to continue.'
+        return $false
+    }
+    $inAppend = @($lines | Where-Object { $_ -ge $APPEND_BLOCK_MIN_LINE -and $_ -lt $REMOVE_ITEM_ANCHOR })
+    $inRemove = @($lines | Where-Object { $_ -gt $REMOVE_ITEM_ANCHOR })
+    Say "  in_append_block=$($inAppend.Count) (expect 1)   in_remove_item_block=$($inRemove.Count) (expect 1)"
+    if ($inAppend.Count -ne 1 -or $inRemove.Count -ne 1) {
+        Say 'ABORT: the right COUNT of bare entries, but at the wrong POSITIONS. A'
+        Say '       duplicate anchor matched an unrelated source list. Refusing to continue.'
+        return $false
+    }
+    Say 'PRE_STATE_VERIFIED=YES'
+    return $true
+}
 
 function Set-State([string]$mode) {
     if ($mode -eq 'save') {
         Copy-Item $Cml (Join-Path $Log 'CMakeLists.REPAIRED.txt') -Force
         Copy-Item $Stub (Join-Path $Log 'Stub.RETIRED.txt') -Force
+        $script:BaselineCmlHash  = (Get-FileHash $Cml  -Algorithm SHA256).Hash
+        $script:BaselineStubHash = (Get-FileHash $Stub -Algorithm SHA256).Hash
         Say "SAVED_REPAIRED_VARIANTS=YES"
+        Say "BASELINE_CMAKE_SHA256=$script:BaselineCmlHash"
+        Say "BASELINE_STUB_SHA256=$script:BaselineStubHash"
         return
     }
     if ($mode -eq 'pre') {
@@ -109,22 +190,15 @@ function Set-State([string]$mode) {
         $t   = Get-Content $src -Raw
         $eol = if ($t -match "`r`n") { "`r`n" } else { "`n" }
 
-        # Site 2 (REMOVE_ITEM block): collapse the repair comment back to the bare path.
-        $t2 = [regex]::Replace($t, $REPAIR_BLOCK_REMOVE_ITEM, $PRE_APPEND_LINE + $eol)
-        # Site 1 (append block): put the bare path back immediately before the Deep2APIServer note.
-        $t3 = [regex]::Replace($t2, $APPEND_ANCHOR, ('{0}' + $eol + '$1'), 1)
+        $t2 = [regex]::Replace($t, $REPAIR_BLOCK_APPEND, $PRE_APPEND_LINE + $eol)
+        $t3 = [regex]::Replace($t2, $REPAIR_BLOCK_REMOVE_ITEM, $PRE_APPEND_LINE + $eol)
 
         Set-Content -Path $Cml -Value $t3 -NoNewline
         Set-Content -Path $Stub -Value '// STUB: src/deep2/Deep2Server_Sovereign.cpp' -NoNewline
+        # Keep the exact PRE text so the two A/B inputs can be proven DISTINCT below.
+        Set-Content -Path (Join-Path $Log 'CMakeLists.PRE.txt') -Value $t3 -NoNewline
 
-        $n = Get-BareCount $Cml
-        Say "STATE=PRE  bare_line_count=$n  expected=2"
-        if ($n -ne 2) {
-            Say 'ABORT: pre-state was NOT reproduced. The A/B would compare two identical'
-            Say '       states and report a meaningless equivalence result. Refusing to continue.'
-            exit 4
-        }
-        Say 'PRE_STATE_VERIFIED=YES'
+        if (-not (Test-PreState)) { Restore-And-Exit 4 'pre-state not reproduced' }
         return
     }
     if ($mode -eq 'repaired') {
@@ -133,10 +207,13 @@ function Set-State([string]$mode) {
         $n = Get-BareCount $Cml
         Say "STATE=REPAIRED  bare_line_count=$n  expected=0"
         if ($n -ne 0) {
-            Say 'ABORT: repaired state still lists the phantom source path. Refusing to continue.'
-            exit 5
+            Restore-And-Exit 5 'repaired state still lists the phantom source path'
         }
-        Say 'REPAIRED_STATE_VERIFIED=YES'
+        $nowCml  = (Get-FileHash $Cml  -Algorithm SHA256).Hash
+        $nowStub = (Get-FileHash $Stub -Algorithm SHA256).Hash
+        $ok = ($nowCml -eq $script:BaselineCmlHash) -and ($nowStub -eq $script:BaselineStubHash)
+        Say "POST_STATE_VERIFIED=$(if ($ok) { 1 } else { 0 })"
+        Say "REPAIRED_STATE_VERIFIED=YES"
     }
 }
 
@@ -153,6 +230,13 @@ Say '--- A. PRE-EDIT STATE ---'
 Set-State 'pre'
 $rcA = Invoke-Msvc "ninja -C `"$Build`" rawr-server" 'build_pre'
 Say "BUILD_PRE_EXIT=$rcA"
+# A failed build does not merely report a failure. Because ninja LEAVES THE OLD
+# EXE IN PLACE, a failed build still yields a readable binary -- so the hash
+# comparison below would compare a STALE artifact and report BINARY_BYTE_IDENTICAL=1.
+# That is a false green produced by a failed build, which is worse than a crash.
+if ($rcA -ne 0) {
+    Restore-And-Exit 7 "PRE build FAILED (exit $rcA). A failed ninja leaves the previous exe in place, so the hash comparison below would compare a stale artifact."
+}
 $preInputs = Get-LinkInputs 'rawr-server'
 Say "PRE_OBJ_COUNT=$($preInputs.Objs.Count)"
 Say "PRE_SRC_COUNT=$($preInputs.Srcs.Count)"
@@ -170,6 +254,9 @@ Say '--- B. REPAIRED STATE ---'
 Set-State 'repaired'
 $rcB = Invoke-Msvc "ninja -C `"$Build`" rawr-server" 'build_post'
 Say "BUILD_POST_EXIT=$rcB"
+if ($rcB -ne 0) {
+    Restore-And-Exit 8 "POST build FAILED (exit $rcB). Same stale-artifact hazard as the PRE guard."
+}
 $postInputs = Get-LinkInputs 'rawr-server'
 Say "POST_OBJ_COUNT=$($postInputs.Objs.Count)"
 Say "POST_SRC_COUNT=$($postInputs.Srcs.Count)"
@@ -181,6 +268,22 @@ Set-Content (Join-Path $Log 'exports_post.txt') $postExp
 Say "POST_EXE_SHA256=$postHash"
 Say "POST_EXE_SIZE=$postSize"
 Say "POST_EXE_MTIME=$postMtime"
+
+# A_B_INPUTS_DISTINCT is the direct guard against "compared the repaired state
+# against itself". The PRE text and the REPAIRED text are hashed and must differ.
+# A matching pair of hashes means the swap never happened and every downstream
+# equality in section C is vacuously true.
+$preCmlText  = Join-Path $Log 'CMakeLists.PRE.txt'
+$repairedTxt = Join-Path $Log 'CMakeLists.REPAIRED.txt'
+$hPre = if (Test-Path $preCmlText)  { (Get-FileHash $preCmlText  -Algorithm SHA256).Hash } else { 'MISSING' }
+$hRep = if (Test-Path $repairedTxt) { (Get-FileHash $repairedTxt -Algorithm SHA256).Hash } else { 'MISSING' }
+$distinct = ($hPre -ne $hRep)
+Say "AB_INPUT_PRE_CMAKE_SHA256=$hPre"
+Say "AB_INPUT_REPAIRED_CMAKE_SHA256=$hRep"
+Say "A_B_INPUTS_DISTINCT=$(if ($distinct) { 1 } else { 0 })"
+if (-not $distinct) {
+    Restore-And-Exit 6 'the PRE and REPAIRED source states are identical -- the A/B would compare a state against itself'
+}
 
 Say ''
 Say '--- C. DIFF ---'
@@ -239,7 +342,10 @@ Say '--- D. NEGATIVE TESTS ON A LIVE SERVER ---'
 $Port = 21700
 $busy = $false
 try { $null = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/health" -UseBasicParsing -TimeoutSec 3; $busy = $true } catch { }
-if ($busy) { Say "ABORT: port $Port already in use; will not touch the owning process."; exit 3 }
+if ($busy) {
+    Say "ABORT: port $Port already in use; another process owns it and will NOT be touched."
+    Restore-And-Exit 3 'port already in use'
+}
 
 $proc = Start-Process -FilePath $Exe -PassThru -WindowStyle Hidden -ArgumentList @(
     '--model','G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf',

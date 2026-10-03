@@ -664,6 +664,11 @@ public:
     const GpuForwardCounters& gpuForwardCounters() const;
     // RAWRXD_REAL_GPU_FORWARD_002
     void resetGpuForwardCounters();
+    // RAWRXD_EXPERT_REUSE_TRACE_001
+    // Emits the population summary of the expert reuse-distance trace captured at
+    // the MoE route site. No-op unless RAWRXD_EXPERT_REUSE_TRACE is set, so the
+    // declaration is safe to call unconditionally from a harness.
+    void EmitExpertReuseSummary();
     void captureGpuForwardReceipt(uint64_t nanCount, uint64_t infCount);
     // Completed-generation evidence, captured before any transient cleanup.
     // isRealGpuForward() is derived from this, never from a flag the execution

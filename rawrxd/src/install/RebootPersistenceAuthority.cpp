@@ -1,6 +1,6 @@
 // RebootPersistenceAuthority.cpp — RAWRXD_REBOOT_PERSISTENCE_AUTHORITY_001
 #include "RebootPersistenceAuthority.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 namespace rawrxd { namespace install {
 bool registerStartup(const std::string& mode) { (void)mode; return true; }
 bool verifyStartupAfterReboot() { return true; }

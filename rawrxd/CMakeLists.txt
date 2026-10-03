@@ -1,5 +1,200 @@
 # CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
+
+# RAWRXD_SOURCE_GRAPH_001: declared-architecture census. Instrumentation only --
+# it creates no target and cannot fail a configure. Run FIRST so metrics are
+# visible even when the configure later fails on a missing source or stub gate.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/source_graph_census.cmake")
+
+# =============================================================================
+# RAWRXD_BUILD_GRAPH_CENSUS_001 — unconditional configure receipt (DISABLED)
+# The active implementation is in cmake/source_graph_census.cmake above.
+# =============================================================================
+# INSTRUMENTATION ONLY. This measures and reports. It refuses nothing, gates
+# nothing, and modifies nothing, and it runs on every configure.
+#
+# Every field below is COMPUTED from the CMakeLists text on disk. No value is
+# hardcoded. A gate that carries its own target constant baked in is a
+# hardcoded-verdict gate wearing a measurement costume, and it would silently
+# "pass" or "fail" on a tree it never looked at. (An earlier hand-carried
+# baseline of 1393 declared / 355 absent did not reproduce against the current
+# file, which has since grown, so the constant was dropped in favour of a
+# computed one.)
+#
+# It deliberately separates two mechanisms that both make a declared source
+# vanish from the graph:
+#
+#   1. rawrxd_filter_missing_sources() drops absent paths at configure time and
+#      prints [rawrxd_stub_gate] warnings. That is a filter WITH a counter.
+#   2. A '#'-commented source reference is a manual exclusion that no tool
+#      reports and no build graph can see. It is unmeasured, and it is the
+#      larger of the two surfaces.
+#
+# Counting only (1) understates the deficit, so both are reported separately.
+# RAWRXD_BUILD_GRAPH_CENSUS_001 (second implementation) -- DISABLED.
+#
+# This block is retained for reference only and is deliberately disabled.
+# rawrxd/CMakeLists.txt already carries an integrated, stricter census which
+# also emits the machine-readable TSV manifest and the RESTORED_EMPTY_UNITS
+# count. Running both produced two contradictory receipts in the same
+# configure (RAWRXD_GRAPH_SOURCES_ABSENT=141 here versus =0 there), because
+# this parser is cruder: its area extraction mis-tokenises some paths, and it
+# does not recognise the graph-restoration units.
+#
+# Two disagreeing numbers in one configure log is worse than one number,
+# because a reader cannot tell which is wrong. The integrated block wins.
+if(FALSE AND NOT DEFINED RAWRXD_GRAPH_CENSUS_DONE)
+    set(RAWRXD_GRAPH_CENSUS_DONE 1)
+
+    set(_rg_referenced 0)
+    set(_rg_present    0)
+    set(_rg_absent     0)
+    set(_rg_absent_cpp 0)
+    set(_rg_commented  0)
+    set(_rg_act_missing 0)
+    set(_rg_com_missing 0)
+    set(_rg_com_present  0)
+    set(_rg_seen "")
+    set(_rg_area "")
+
+    set(_rg_files "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt")
+        list(APPEND _rg_files "${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt")
+    endif()
+
+    foreach(_rg_file IN LISTS _rg_files)
+        file(STRINGS "${_rg_file}" _rg_lines)
+        foreach(_rg_line IN LISTS _rg_lines)
+            string(STRIP "${_rg_line}" _rg_s)
+            set(_rg_active TRUE)
+            if(_rg_s MATCHES "^#")
+                set(_rg_active FALSE)
+            endif()
+            string(REGEX MATCHALL "[A-Za-z0-9_./\\\\-]+[.](cpp|cc|cxx|c|hpp|h|hxx|asm|rc)" _rg_hits "${_rg_s}")
+            foreach(_rg_h IN LISTS _rg_hits)
+                string(REPLACE "\\" "/" _rg_p "${_rg_h}")
+                if(_rg_p MATCHES "^\\.\\./")
+                    continue()
+                endif()
+                if(NOT _rg_p MATCHES "/")
+                    continue()
+                endif()
+                if("${_rg_seen}" MATCHES ";${_rg_p};")
+                    continue()
+                endif()
+                string(APPEND _rg_seen ";${_rg_p}")
+                math(EXPR _rg_referenced "${_rg_referenced} + 1")
+
+                # Area: second segment for src/ paths, else the first. Grouping
+                # on the first segment alone collapses all of src/ into one
+                # bucket and hides src/win32app, which is the priority surface.
+                set(_rg_a "${_rg_p}")
+                if(_rg_p MATCHES "^src/([^/]+)/")
+                    set(_rg_a "${CMAKE_MATCH_1}")
+                elseif(_rg_p MATCHES "^rawrxd/src/([^/]+)/")
+                    set(_rg_a "${CMAKE_MATCH_1}")
+                else()
+                    string(REGEX REPLACE "^([^/]+).*$" "\\1" _rg_a "${_rg_p}")
+                endif()
+
+                # Existence resolves against this directory, except for
+                # explicitly "rawrxd/"-prefixed paths which are spelled relative
+                # to the parent's root.
+                if(_rg_p MATCHES "^rawrxd/")
+                    set(_rg_abs "${CMAKE_CURRENT_SOURCE_DIR}/../${_rg_p}")
+                else()
+                    set(_rg_abs "${CMAKE_CURRENT_SOURCE_DIR}/${_rg_p}")
+                endif()
+
+                if(EXISTS "${_rg_abs}")
+                    math(EXPR _rg_present "${_rg_present} + 1")
+                    if(NOT _rg_active)
+                        math(EXPR _rg_com_present "${_rg_com_present} + 1")
+                        math(EXPR _rg_commented "${_rg_commented} + 1")
+                    endif()
+                else()
+                    math(EXPR _rg_absent "${_rg_absent} + 1")
+                    # Per-area tally. The counter variable is named after the
+                    # area so areas can be counted independently, then emitted
+                    # once at the end.
+                    if(NOT DEFINED _rg_cnt_${_rg_a})
+                        set(_rg_cnt_${_rg_a} 0)
+                    endif()
+                    math(EXPR _rg_cnt_${_rg_a} "${_rg_cnt_${_rg_a}} + 1")
+                    if(_rg_p MATCHES "[.]cpp$")
+                        math(EXPR _rg_absent_cpp "${_rg_absent_cpp} + 1")
+                    endif()
+                    if(_rg_active)
+                        math(EXPR _rg_act_missing "${_rg_act_missing} + 1")
+                    else()
+                        math(EXPR _rg_com_missing "${_rg_com_missing} + 1")
+                        math(EXPR _rg_commented "${_rg_commented} + 1")
+                    endif()
+                endif()
+            endforeach()
+        endforeach()
+    endforeach()
+
+    # Assemble the per-area tally by walking the dynamic _rg_cnt_* counters.
+    set(_rg_area "")
+    get_cmake_property(_rg_vars VARIABLES)
+    foreach(_rg_v IN LISTS _rg_vars)
+        if(_rg_v MATCHES "^_rg_cnt_(.+)$")
+            string(APPEND _rg_area " ${CMAKE_MATCH_1}:${${_rg_v}}")
+        endif()
+    endforeach()
+
+    # --- RAWRXD BUILD GRAPH DIAGNOSTIC RECEIPT ---
+    message(STATUS "RAWRXD_GRAPH_SOURCES_REFERENCED=${_rg_referenced}")
+    message(STATUS "RAWRXD_GRAPH_SOURCES_PRESENT=${_rg_present}")
+    message(STATUS "RAWRXD_GRAPH_SOURCES_ABSENT=${_rg_absent}")
+    message(STATUS "RAWRXD_GRAPH_ABSENT_CPP=${_rg_absent_cpp}")
+    message(STATUS "RAWRXD_GRAPH_COMMENTED_OUT_REFS=${_rg_commented}")
+    message(STATUS "RAWRXD_GRAPH_ABSENT_BY_AREA=${_rg_area}")
+    message(STATUS "RAWRXD_GRAPH_ACTIVE_MISSING=${_rg_act_missing}")
+    message(STATUS "RAWRXD_GRAPH_COMMENTED_MISSING=${_rg_com_missing}")
+    message(STATUS "RAWRXD_GRAPH_COMMENTED_PRESENT=${_rg_com_present}")
+
+    # =============================================================================
+    # RAWRXD_SOURCE_GRAPH_001 — structural visibility gate
+    # =============================================================================
+    # This certifies graph EXISTENCE and architectural VISIBILITY only. It
+    # makes no claim about functional correctness: a graph can be complete and
+    # the product still be broken. It is reported, not enforced, so that it can
+    # never be the reason a build does not run.
+    #
+    # FILTERED_MISSING_SOURCE_COUNT is reported as the count of ACTIVE declared
+    # paths that do not exist and are therefore eligible to be dropped by
+    # rawrxd_filter_missing_sources(). The filter's own internal counter is not
+    # observable from here, so it is not claimed.
+    set(_rg_gate_fails "")
+    if(NOT _rg_absent EQUAL 0)
+        list(APPEND _rg_gate_fails "ABSENT=${_rg_absent}")
+    endif()
+    if(NOT _rg_commented EQUAL 0)
+        list(APPEND _rg_gate_fails "COMMENTED_SOURCE_REFS=${_rg_commented}")
+    endif()
+    if(NOT _rg_act_missing EQUAL 0)
+        list(APPEND _rg_gate_fails "FILTERED_MISSING_SOURCE_COUNT=${_rg_act_missing}")
+    endif()
+
+    string(REPLACE ";" "," _rg_gate_join "${_rg_gate_fails}")
+    if(_rg_gate_fails)
+        set(RAWRXD_SOURCE_GRAPH_001_VERDICT "FAIL")
+        string(LENGTH "${_rg_gate_join}" _rg_glen)
+        if(_rg_glen GREATER 400)
+            string(SUBSTRING "${_rg_gate_join}" 0 400 _rg_gate_join)
+        endif()
+    else()
+        set(RAWRXD_SOURCE_GRAPH_001_VERDICT "PASS")
+        set(_rg_gate_join "none")
+    endif()
+
+    message(STATUS "RAWRXD_SOURCE_GRAPH_001_DECLARED_UNIQUE=${_rg_referenced}")
+    message(STATUS "RAWRXD_SOURCE_GRAPH_001_FAILS=${_rg_gate_join}")
+    message(STATUS "RAWRXD_SOURCE_GRAPH_001_VERDICT=${RAWRXD_SOURCE_GRAPH_001_VERDICT}")
+endif()
+
 include(cmake/P1_ProductRuntimeAuthority.cmake)
 include(cmake/GgufDynamicGeometry.fragment.cmake)
 
@@ -26,11 +221,11 @@ endif()
 # =============================================================================
 # MUST run before project() because CMake's compiler test needs these paths.
 # The environment on this machine has partial SDK installs:
-#   10.0.22621.0 +�-�+�-�+�-� has ucrt, shared, um includes BUT um/x64 libs are separate
-#   10.0.26100.0 +�-�+�-�+�-� has um/shared includes and um/x64 libs BUT no ucrt
+#   10.0.22621.0 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ has ucrt, shared, um includes BUT um/x64 libs are separate
+#   10.0.26100.0 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ has um/shared includes and um/x64 libs BUT no ucrt
 # We combine them to form a complete toolchain.
 if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
-    # Not running inside a VS Developer Prompt +�-�+�-�+�-� inject paths manually
+    # Not running inside a VS Developer Prompt +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ inject paths manually
     # Auto-detect Windows SDK: try D: first, fall back to C:
     if(EXISTS "D:/Program Files (x86)/Windows Kits/10")
         set(_WIN10_SDK_ROOT "D:/Program Files (x86)/Windows Kits/10")
@@ -81,7 +276,7 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
         message(FATAL_ERROR "[SDK Fix] Could not find a valid MSVC installation with cl.exe. Please install Visual Studio Build Tools or run from a Developer Command Prompt.")
     endif()
     
-    # SDK bin tools (rc.exe, mt.exe) +�-�+�-�+�-� use the version that actually has the bin directory
+    # SDK bin tools (rc.exe, mt.exe) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ use the version that actually has the bin directory
     if(EXISTS "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
         set(_SDK_BIN "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
     else()
@@ -151,7 +346,7 @@ endif()
 # Vulkan SDK Detection (Common - must run before targets are defined)
 # ============================================================================
 if(RAWR_ENABLE_VULKAN)
-    # Try manual path first +�-�+�-�+�-� D: first, then C:
+    # Try manual path first +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ D: first, then C:
     file(GLOB _VK_SDK_DIRS "D:/VulkanSDK/1.*")
     if(NOT _VK_SDK_DIRS)
         file(GLOB _VK_SDK_DIRS "C:/VulkanSDK/1.*")
@@ -469,7 +664,7 @@ function(rawrxd_filter_missing_sources list_var)
             list(LENGTH _rec_l _rec_n)
             message(STATUS
                 "[declared_unimplemented] accumulated ${_emptybodied} (running total: ${_rec_n})")
-        elseif(_unlisted_n GREATER 0 AND NOT RAWRXD_STRICT_EMPTY_SOURCES)
+        elseif(_unlisted_n GREATER 0 AND (RAWRXD_STRICT_EMPTY_SOURCES OR RAWRXD_RELEASE_CERT_BUILD))
             string(REPLACE ";" " " _unlisted_list "${_unlisted}")
             message(FATAL_ERROR
                 "[declared_unimplemented] ${list_var}: ${_unlisted_n} EMPTY-BODIED source(s) "
@@ -538,7 +733,7 @@ function(rawrxd_filter_missing_sources list_var)
 endfunction()
 
 # ============================================================================
-# nlohmann/json — VENDORED HEADER-ONLY DEPENDENCY (it was NOT removed).
+# nlohmann/json â€” VENDORED HEADER-ONLY DEPENDENCY (it was NOT removed).
 # include/nlohmann/json.hpp and include/nlohmann/json_fwd.hpp exist and
 # "include" is on the RawrXD-Win32IDE include path (target_include_directories
 # at :7086). src/core/json_instantiations.cpp includes <nlohmann/json.hpp> and
@@ -609,7 +804,7 @@ option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentatio
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 option(RAWRXD_BUILD_RAWRENGINE "Build RawrEngine.exe (set OFF for Win32IDE-only configure/P1)" ON)
 if(RAWRXD_BUILD_WIN32IDE AND NOT RAWRXD_BUILD_RAWRENGINE)
-    message(STATUS "[P1] RawrEngine target isolated (RAWRXD_BUILD_RAWRENGINE=OFF) +�-�+�-�+�-� Win32IDE-only configure")
+    message(STATUS "[P1] RawrEngine target isolated (RAWRXD_BUILD_RAWRENGINE=OFF) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Win32IDE-only configure")
 endif()
 if(RAWRXD_BUILD_CLI)
     # RAWRXD_B71_CMAKE_TARGET_CONSOLIDATION_001
@@ -715,7 +910,7 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/memory/WorkingSetPredictor.cpp
         src/inference/NegativeSpaceProfiler.cpp
         B014/build/b014_profiler.cpp
-        # Agentic stack +�-�+�-�+�-� headless CLI parity (no Win32IDE GUI dependencies)
+        # Agentic stack +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ headless CLI parity (no Win32IDE GUI dependencies)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -882,7 +1077,7 @@ if(RAWRXD_BUILD_CLI)
     endif()
 
     # =============================================================================
-    # RawrXD Serve +�-�+�-�+�-� Ollama-compatible HTTP server with shared model runtime
+    # RawrXD Serve +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Ollama-compatible HTTP server with shared model runtime
     # =============================================================================
     # RAWRXD_SERVE_NOT_BUILT_001
     #
@@ -1041,7 +1236,7 @@ if(RAWRXD_BUILD_CLI)
 
     # =========================================================================
     # Vulkan Compute Diagnostic Test
-    # Minimal proof: buffer allocation +�-�+�-�+�-� transfer +�-�+�-�+�-� compute fill +�-�+�-�+�-� readback
+    # Minimal proof: buffer allocation +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ transfer +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ compute fill +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ readback
     # =========================================================================
     if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_SDK_ROOT)
         add_executable(vulkan_compute_diagnostic
@@ -1082,7 +1277,7 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan Tensor Upload + Readback Verification Test
-        # Proves: staging buffer +�-�+�-�+�-� device-local buffer +�-�+�-�+�-� readback +�-�+�-�+�-� verification
+        # Proves: staging buffer +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ device-local buffer +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ readback +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ verification
         # =====================================================================
         add_executable(vulkan_tensor_upload_test
             tests/vulkan_tensor_upload_test.cpp
@@ -1112,7 +1307,7 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan GEMM Verification Test
-        # Proves: compute shader dispatch +�-�+�-�+�-� GPU GEMM +�-�+�-�+�-� readback +�-�+�-�+�-� CPU comparison
+        # Proves: compute shader dispatch +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ GPU GEMM +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ readback +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ CPU comparison
         # =====================================================================
         add_executable(vulkan_gemm_test
             tests/vulkan_gemm_test.cpp
@@ -1207,8 +1402,8 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan Transformer GEMM Integration Test
-        # Proves: real Qwen GGUF +�-�+�-�+�-� RawrXDInference +�-�+�-�+�-� model loader +�-�+�-�+�-� GPU-resident
-        #         weight +�-�+�-�+�-� Vulkan GEMM dispatch +�-�+�-�+�-� verified output.
+        # Proves: real Qwen GGUF +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ RawrXDInference +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ model loader +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ GPU-resident
+        #         weight +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Vulkan GEMM dispatch +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ verified output.
         # =====================================================================
         add_executable(vulkan_transformer_gemm_test
             tests/vulkan_transformer_gemm_test.cpp
@@ -1322,7 +1517,7 @@ if(RAWRXD_BUILD_CLI)
         message(STATUS "elastic_path_validation_test: Elastic path validation test configured")
 
         # =====================================================================
-        # fused_qkv_gguf_validation: Full GGUF parse +�-�+�-�+�-� elastic index +�-�+�-�+�-� fused
+        # fused_qkv_gguf_validation: Full GGUF parse +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ elastic index +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ fused
         # QKV execution gate. Exercises all new code paths.
         # =====================================================================
         add_executable(fused_qkv_gguf_validation
@@ -1440,7 +1635,7 @@ if(WIN32)
     )
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
 
-    # G3_K3C_E2E_REAL_001 +�-�-� k3c +�-�-� ProductRuntime one-step (PROMOTE=0)
+    # G3_K3C_E2E_REAL_001 +ï¿½-ï¿½-ï¿½ k3c +ï¿½-ï¿½-ï¿½ ProductRuntime one-step (PROMOTE=0)
     add_executable(smoke_k3c_e2e
         evidence/RAWRXD_PERFORMANCE_001/G3_K3C_E2E_REAL_001/smoke_k3c_e2e.cpp
     )
@@ -1694,7 +1889,7 @@ if(WIN32)
     message(STATUS "VAL-051.7: Residency Baseline / Fixture Gate configured")
 
     # =====================================================================
-    # RESIDENCY-A/B-CERT +�-�+�-�+�-� Elastic Residency A/B Certification Harness
+    # RESIDENCY-A/B-CERT +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Elastic Residency A/B Certification Harness
     # =====================================================================
     add_executable(residency_ab_cert
         tests/residency_ab_cert.cpp
@@ -1746,7 +1941,7 @@ if(WIN32)
     message(STATUS "RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured")
 
     # =====================================================================
-    # RAWRXD_DEEP2_EXPERT_CONTROL_PLANE_CERT_001 — runtime reachability cert
+    # RAWRXD_DEEP2_EXPERT_CONTROL_PLANE_CERT_001 â€” runtime reachability cert
     # for the adopted expert control plane. Executable, not linked into any
     # product binary; its verdict is measured at runtime and never asserted by
     # the build.
@@ -1777,7 +1972,7 @@ if(WIN32)
     message(STATUS "DEEP2_EXPERT_CONTROL_PLANE_CERT_001: harness configured")
 
     # =====================================================================
-    # RAWRXD_LOCAL_AGENT_FLEET_001 — per-model Deep2-only fleet gate
+    # RAWRXD_LOCAL_AGENT_FLEET_001 â€” per-model Deep2-only fleet gate
     # =====================================================================
     add_executable(fleet_gate
         tests/fleet_gate.cpp
@@ -1829,7 +2024,7 @@ if(WIN32)
     message(STATUS "RAWRXD_LOCAL_AGENT_FLEET_001: per-model fleet gate configured")
 
     # =====================================================================
-    # validate_val051_evidence +�-�+�-�+�-� Evidence JSON validator for VAL-051.2.A
+    # validate_val051_evidence +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Evidence JSON validator for VAL-051.2.A
     # =====================================================================
     add_executable(validate_val051_evidence
         tests/validate_val051_evidence.cpp
@@ -1852,7 +2047,7 @@ if(WIN32)
     message(STATUS "validate_val051_evidence: VAL-051.2.A evidence validator configured")
 
     # =====================================================================
-    # test_gguf_tokenizer_bounds +�-�+�-�+�-� Fuzz-style bounds validation for ParseGGUF
+    # test_gguf_tokenizer_bounds +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Fuzz-style bounds validation for ParseGGUF
     # =====================================================================
     add_executable(test_gguf_tokenizer_bounds
         tests/test_gguf_tokenizer_bounds.cpp
@@ -1884,7 +2079,7 @@ if(WIN32)
     message(STATUS "test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured")
 
     # =====================================================================
-    # test_parseheader_bounds +�-�+�-�+�-� Adversarial ParseHeader bounds validation
+    # test_parseheader_bounds +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Adversarial ParseHeader bounds validation
     # =====================================================================
     add_executable(test_parseheader_bounds
         tests/test_parseheader_bounds.cpp
@@ -1908,7 +2103,7 @@ if(WIN32)
 endif()
 
 # =====================================================================
-# test_parseheader_fuzz +�-�+�-�+�-� B32 Deterministic ParseHeader Fuzz Matrix
+# test_parseheader_fuzz +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ B32 Deterministic ParseHeader Fuzz Matrix
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
     add_executable(test_parseheader_fuzz
@@ -1933,7 +2128,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
 endif()
 
 # =====================================================================
-# test_gguf_metadata_bounds +�-�+�-�+�-� B33 GGUF Metadata Bounds Gate
+# test_gguf_metadata_bounds +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ B33 GGUF Metadata Bounds Gate
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
     add_executable(test_gguf_metadata_bounds
@@ -1958,7 +2153,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
 endif()
 
 # =====================================================================
-# test_gguf_tensor_bounds +�-�+�-�+�-� B34 GGUF Tensor/Offset Bounds Gate
+# test_gguf_tensor_bounds +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ B34 GGUF Tensor/Offset Bounds Gate
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp")
     add_executable(test_gguf_tensor_bounds
@@ -2209,7 +2404,7 @@ if(WIN32)
 endif()
 
 # =============================================================================
-# Batch 15A +�-�+�-�+�-� GGUF Alignment Diagnostic
+# Batch 15A +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ GGUF Alignment Diagnostic
 # Instruments a single tensor (default blk.29.attn_qkv.weight) for offset,
 # alignment, bounds, and dequant correctness.
 # =============================================================================
@@ -2253,7 +2448,7 @@ if(WIN32)
 endif()
 
 # =============================================================================
-# Batch 15B +�-�+�-�+�-� Q4_0 GEMV Certification
+# Batch 15B +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Q4_0 GEMV Certification
 # Verifies Q4_0 scalar GEMV path against independent reference implementation.
 # =============================================================================
 # AUTO-REMOVED: Q4_0_GEMV_Certification removed (stub-only sources)
@@ -2312,7 +2507,7 @@ endif()
 # CXX standard set above (MSVC 23, others 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Static link MSVC runtime +�-�+�-�+�-� required for RawrEngine and Gold builds
+# Static link MSVC runtime +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required for RawrEngine and Gold builds
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
@@ -2453,7 +2648,7 @@ if(RAWR_HAS_MASM)
         src/masm/rawrxd_math_masm.asm
         src/masm/rawrxd_transformer_masm_fixed.asm
         src/masm/rawrxd_transformer_full.asm
-        # Sovereign ABI bridge +�-�+�-�+�-� stable C++/MASM execution plane seam
+        # Sovereign ABI bridge +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ stable C++/MASM execution plane seam
         src/asm/Sovereign_KernelBridge_MASM.asm
         # src/asm/vision_projection_kernel.asm  # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/quantum_beaconism_backend.asm        # excluded: MASM build errors (undefined symbols / unwind prolog issues)
@@ -2485,7 +2680,7 @@ if(RAWR_HAS_MASM)
         
         # Keep C++ reverse_engineered_stubs.cpp as single source of truth for these symbols.
         # ASM unresolved stubs duplicate AllocateDMABuffer and cause LNK2005 in Win32IDE.
-        # src/unresolved_asm_stubs.asm
+src/unresolved_asm_stubs.asm
         # User-provided production ASM (need ML64 syntax fixes: .endprolog, REAL4, scale): agentic_deep_thinking_kernels.asm, ai_completion_provider_masm.asm, agentic_puppeteer_byte_ops.asm
         # src/RawrXD_Complete_ReverseEngineered.asm  # excluded: fragment missing struct defs/includes
     )
@@ -2662,7 +2857,7 @@ set(SOURCES
     src/core/local_ai_core.cpp
     src/core/native_inference_pipeline.cpp
     
-    # Layer Offload Manager +�-�+�-�+�-� RAM streaming for 74B+ models on 16GB VRAM
+    # Layer Offload Manager +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ RAM streaming for 74B+ models on 16GB VRAM
     src/core/layer_offload_manager.cpp
     
     # Three-layer hotpatch system (needed by decision tree)
@@ -2675,9 +2870,9 @@ set(SOURCES
     src/agent/agentic_hotpatch_orchestrator.cpp
 
     # Singleton subsystems referenced by UnifiedHotpatchManager
-    # src/core/agentic_task_graph.cpp
-    # src/core/embedding_engine.cpp
-    # src/core/vision_encoder.cpp
+src/core/agentic_task_graph.cpp
+src/core/embedding_engine.cpp
+src/core/vision_encoder.cpp
 
     # Vision Pipeline Extensions (Token Gating, Embedding Cache, KV Isolation, Quantized Encoder, GPU Staging)
     src/core/vision_token_gate.cpp
@@ -2696,43 +2891,43 @@ set(SOURCES
     # Agentic Loop State (iterative reasoning state machine)
     # AUTO-REMOVED: stub file
 
-    # Autonomous SubAgents +�-�+�-�+�-� Bulk Fix Orchestration for models/swarms
+    # Autonomous SubAgents +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Bulk Fix Orchestration for models/swarms
     src/agent/autonomous_subagent.cpp
     src/agent/agentic_failure_detector.cpp
     src/agent/agentic_puppeteer.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Sovereign Puppeteer Architecture +�-�+�-�+�-� Self-Modification System
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Sovereign Puppeteer Architecture +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Self-Modification System
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Intent-to-Execution Guardrails +�-�+�-�+�-� Model Control Plane
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Intent-to-Execution Guardrails +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Model Control Plane
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-    # AUTO-REMOVED: stub file
-
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Sovereign Agent Kernel +�-�+�-�+�-� Orchestration Layer
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
 
-    # HTTP Client +�-�+�-�+�-� WinHTTP/curl async with future retention
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Sovereign Agent Kernel +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Orchestration Layer
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+
+    # HTTP Client +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ WinHTTP/curl async with future retention
     src/agent/llm_http_client.cpp
     src/agent/model_invoker.cpp
     src/agent/planner.cpp
     src/agent/eval_framework.cpp
     # src/ollama_client.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
 
-    # LocalReasoningEngine +�-�+�-�+�-� API-free static analysis + pattern detection (no Qt, no API key)
+    # LocalReasoningEngine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ API-free static analysis + pattern detection (no Qt, no API key)
     src/agent/local_reasoning_engine.cpp
 
     # Agent Self-Repair (MASM64 self-patching kernel bridge)
@@ -2743,13 +2938,13 @@ set(SOURCES
     src/agentic/DeterministicReplayEngine.cpp
     src/agentic/AgentToolHandlers.cpp
 
-    # T4: Autonomous Recovery Orchestrator (FailureClass +�-�+�-�+�-� recovery +�-�+�-�+�-� verify +�-�+�-�+�-� commit)
+    # T4: Autonomous Recovery Orchestrator (FailureClass +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ recovery +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ verify +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ commit)
     src/agentic/autonomous_recovery_orchestrator.cpp
 
     # CoT Fallback System (required by unified_hotpatch_manager.cpp)
     src/core/cot_fallback_system.cpp
     
-    # T4.5: Agentic Deep Thinking Engine +�-�+�-�+�-� Autonomous monitoring, recovery, and orchestration
+    # T4.5: Agentic Deep Thinking Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Autonomous monitoring, recovery, and orchestration
     src/agentic/AgenticDeepThinkingEngine.cpp
 
     # T4.6: Validation Fault Injection and Recovery Telemetry (Mission 2.1-2.3)
@@ -2777,9 +2972,9 @@ set(SOURCES
     # Disk Recovery Agent (C++ wrapper for ASM SCSI kernel)
     src/agent/DiskRecoveryAgent.cpp
     
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # IDE Subsystems +�-�+�-�+�-� Repository Intelligence, Build, Diagnostics, etc.
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # IDE Subsystems +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Repository Intelligence, Build, Diagnostics, etc.
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     src/repo/FileIndex.cpp
     src/repo/SymbolTable.cpp
     src/repo/ASTCache.cpp
@@ -2841,84 +3036,84 @@ set(SOURCES
     src/core/swarm_worker.cpp
     # AUTO-REMOVED: stub file
 
-    # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) +�-�+�-�+�-� required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
+    # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
 
-    # Agentic config + enterprise feature manager + model name utils +�-�+�-�+�-� required by complete_server, subagent_core
+    # Agentic config + enterprise feature manager + model name utils +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by complete_server, subagent_core
     src/core/agentic_autonomous_config.cpp
     src/core/enterprise_feature_manager.cpp
     # AUTO-REMOVED: stub file
     src/model_config.cpp
 
-    # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) +�-�+�-�+�-� required by complete_server, execution_scheduler, local_ai_core
+    # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by complete_server, execution_scheduler, local_ai_core
     src/core/multi_gpu.cpp
 
-    # Engine registry (register_engine) +�-�+�-�+�-� required by sovereign_engines
+    # Engine registry (register_engine) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by sovereign_engines
     src/core/engine_registry.cpp
 
-    # Telemetry + observability +�-�+�-�+�-� required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
+    # Telemetry + observability +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
     src/agent/telemetry_collector.cpp
     # AUTO-REMOVED: stub file
 
-    # BoundedAgentLoop + FIMPromptBuilder +�-�+�-�+�-� required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
+    # BoundedAgentLoop + FIMPromptBuilder +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
     src/agentic/BoundedAgentLoop.cpp
     src/agentic/FIMPromptBuilder.cpp
 
-    # Subsystem registry +�-�+�-�+�-� required by AgentOrchestrator, ToolRegistry, feature_handlers
+    # Subsystem registry +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by AgentOrchestrator, ToolRegistry, feature_handlers
     src/core/rawrxd_subsystem_api.cpp
 
-    # IDEConfig +�-�+�-�+�-� required by OrchestratorBridge
+    # IDEConfig +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by OrchestratorBridge
     src/config/ide_project_config.cpp
 
-    # Disk recovery ASM agent + tool handler +�-�+�-�+�-� required by ToolRegistry
+    # Disk recovery ASM agent + tool handler +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by ToolRegistry
     src/agentic/DiskRecoveryAgent.cpp
     src/agentic/DiskRecoveryToolHandler.cpp
 
-    # Agentic bridge (ExecuteAgentCommand) +�-�+�-�+�-� headless stub for RawrEngine
+    # Agentic bridge (ExecuteAgentCommand) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ headless stub for RawrEngine
     # AUTO-REMOVED: stub file
 
-    # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) +�-�+�-�+�-� required by agentic_failure_detector
-    # src/core/ai_agent_masm_core_impl.cpp
+    # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by agentic_failure_detector
+src/core/ai_agent_masm_core_impl.cpp
 
-    # Context deterioration hotpatch + LSP hotpatch + symbol provider +�-�+�-�+�-� required by feature_handlers, auto_feature_registry
+    # Context deterioration hotpatch + LSP hotpatch + symbol provider +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by feature_handlers, auto_feature_registry
     src/core/context_deterioration_hotpatch.cpp
     src/lsp/lsp_hotpatch_bridge.cpp
     src/lsp/hotpatch_symbol_provider.cpp
 
-    # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) +�-�+�-�+�-� required by enterprise_licensev2_impl
+    # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by enterprise_licensev2_impl
     src/core/license_anti_tampering.cpp
 
     # Reverse-engineered bridge stubs (Heartbeat_Shutdown, GPU_*, GetHighResTick, TicksTo*, CalculateCRC32, AllocateDMABuffer, Tensor_QuantizedMatMul)
     # stub file removed
 
-    # Support tier manager (SupportTierManager::Instance, GenerateStatusReport) +�-�+�-�+�-� required by main, complete_server
+    # Support tier manager (SupportTierManager::Instance, GenerateStatusReport) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by main, complete_server
     src/core/support_tier.cpp
 
-    # Subsystem mode stubs (CompileMode, EncryptMode, InjectMode, etc.) +�-�+�-�+�-� required by rawrxd_subsystem_api
+    # Subsystem mode stubs (CompileMode, EncryptMode, InjectMode, etc.) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by rawrxd_subsystem_api
     # removed stub unit
 
-    # Feature registry (FeatureRegistry::instance, registerFeature) +�-�+�-�+�-� required by enterprise_feature_manager
+    # Feature registry (FeatureRegistry::instance, registerFeature) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by enterprise_feature_manager
     src/core/feature_registry.cpp
-    # Menu auditor (RawrXD::Audit::verifyCommandInMenu) +�-�+�-�+�-� required by feature_registry
+    # Menu auditor (RawrXD::Audit::verifyCommandInMenu) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by feature_registry
     src/core/menu_auditor.cpp
 
-    # GGUF diagnostic provider + LSP server +�-�+�-�+�-� required by lsp_hotpatch_bridge
+    # GGUF diagnostic provider + LSP server +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by lsp_hotpatch_bridge
     src/lsp/gguf_diagnostic_provider.cpp
     src/lsp/RawrXD_LSPServer.cpp
 
-    # Extension polyfill engine + VSCode API +�-�+�-�+�-� required by js_extension_host
+    # Extension polyfill engine + VSCode API +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by js_extension_host
     src/core/extension_polyfill_engine.cpp
     src/modules/vscode_extension_api.cpp
 
-    # JS extension host +�-�+�-�+�-� required by ssot_handlers_ext
-    # src/core/js_extension_host.cpp
+    # JS extension host +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by ssot_handlers_ext
+src/core/js_extension_host.cpp
 
-    # Model source resolver +�-�+�-�+�-� required by auto_feature_registry
+    # Model source resolver +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by auto_feature_registry
     src/model_source_resolver.cpp
 
-    # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
+    # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by auto_feature_registry
     # AUTO-REMOVED: stub file
 
     # AgenticDeepThinkingEngine full implementation
@@ -2938,7 +3133,7 @@ set(SOURCES
 
     # Stubgen: AnalyzerDistiller + StreamingOrchestrator (C++ fallbacks, guarded by RAWR_HAS_MASM)
 
-    # PT Driver Contract +�-�+�-�+�-� Page Table substrate (VEH watchpoints, COW snapshots, ASLR, large pages)
+    # PT Driver Contract +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Page Table substrate (VEH watchpoints, COW snapshots, ASLR, large pages)
     src/core/pt_driver_contract.cpp
 
     # Phase 21: Distributed Swarm Inference Orchestrator
@@ -2948,17 +3143,17 @@ set(SOURCES
     # Phase 33: Voice Chat Engine
     src/core/voice_chat.cpp
 
-    # Phase 44: Voice Automation +�-�+�-�+�-� Toggleable TTS Response Reader
+    # Phase 44: Voice Automation +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Toggleable TTS Response Reader
     src/core/voice_automation.cpp
 
-    # DirectML GPU Inference Engine +�-�+�-�+�-� D3D12 + DML operators for transformer forward pass
+    # DirectML GPU Inference Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ D3D12 + DML operators for transformer forward pass
     src/core/directml_compute.cpp
     src/core/gguf_dml_bridge.cpp
     src/core/dml_streaming_integration.cpp
     src/core/dml_asm_fallback.cpp
     # AUTO-REMOVED: stub file
 
-    # Agentic Watchdog +�-�+�-�+�-� .text Section Integrity Verification Service
+    # Agentic Watchdog +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ .text Section Integrity Verification Service
     src/core/watchdog_service.cpp
 
     # Phase 33: Quick-Win Ports
@@ -2967,7 +3162,7 @@ set(SOURCES
     src/core/alert_system.cpp
 
     # Shared Feature Dispatch System (CLI + GUI unified command routing)
-    # NOTE: shared_feature_dispatch.cpp REMOVED +�-�+�-�+�-� its 4 extern "C" symbols are
+    # NOTE: shared_feature_dispatch.cpp REMOVED +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ its 4 extern "C" symbols are
     # superseded by unified_command_dispatch.cpp (superset with AutoRegistrar)
     src/core/feature_registration.cpp
     src/core/feature_handlers.cpp
@@ -2979,7 +3174,7 @@ set(SOURCES
     src/core/ssot_handlers_ext_runtime_minimal.cpp
     src/core/ssot_validation.cpp
 
-    # Unified Command Dispatch +�-�+�-�+�-� Zero-drift SSOT dispatch (replaces manual registration)
+    # Unified Command Dispatch +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Zero-drift SSOT dispatch (replaces manual registration)
     src/core/unified_command_dispatch.cpp
 
     # Phase 32A: Chain-of-Thought Multi-Model Review Engine
@@ -2993,12 +3188,12 @@ set(SOURCES
     # Phase 36: Cross-Process MMF State Synchronization (shared with Win32IDE)
     src/core/rawrxd_state_mmf.cpp
 
-    # Phase 46: VulkanKernel +�-�+�-�+�-� Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
+    # Phase 46: VulkanKernel +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
     src/vulkan_compute.cpp
     src/backend/VulkanGemmDispatcher.cpp
 
-    # Phase 46: Live Binary Patcher +�-�+�-�+�-� Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
-    # src/core/live_binary_patcher.cpp
+    # Phase 46: Live Binary Patcher +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
+src/core/live_binary_patcher.cpp
 
     # Phase 37: Iterative Partial Inference with Adaptive Tensor Traversal
     src/core/traversal_strategy.cpp
@@ -3008,9 +3203,9 @@ set(SOURCES
     src/core/convergence_controller.cpp
     src/core/iterative_tensor_traversal.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Cursor-Parity Gaps +�-�+�-�+�-� META prerequisites + GAP 1-10
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Cursor-Parity Gaps +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ META prerequisites + GAP 1-10
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 
     # META 1: SQLite RAII Wrapper + Real Amalgamation
     src/core/sqlite_wrapper.cpp
@@ -3032,7 +3227,7 @@ set(SOURCES
     # GAP 1.5: Agentic Transaction Layer (Cursor-Composer-class orchestration)
     src/agentic/agentic_transaction.cpp
 
-    # P6: Agent Workflow Orchestrator (DAG-based plan+�-�+�-�+�-�execute+�-�+�-�+�-�validate+�-�+�-�+�-�commit)
+    # P6: Agent Workflow Orchestrator (DAG-based plan+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½execute+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½validate+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½commit)
     src/agentic/agent_workflow_orchestrator.cpp
 
     # GAP 2: HNSW Vector Index
@@ -3044,7 +3239,7 @@ set(SOURCES
     # GAP 4: Ghost-Text Context Assembler
     src/agentic/context_assembler.cpp
 
-    # GAP 5: Chat Message Renderer (Markdown +�-�+�-�+�-� HTML)
+    # GAP 5: Chat Message Renderer (Markdown +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ HTML)
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -3087,40 +3282,40 @@ set(SOURCES
     # T3-D: Hotpatch Telemetry Safety Layer
     # AUTO-REMOVED: stub file
 
-    # Unified Telemetry Core +�-�+�-�+�-� single entry point for all telemetry layers
+    # Unified Telemetry Core +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ single entry point for all telemetry layers
     # AUTO-REMOVED: stub file
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # GPU + Agentic + UI Integration (STL/Win32 native)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 
-    # GPU Backend +�-�+�-�+�-� Vulkan/CUDA/CPU fallback chain (fprintf logging)
+    # GPU Backend +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Vulkan/CUDA/CPU fallback chain (fprintf logging)
     src/gpu/gpu_backend.cpp
 
-    # KV-Cache Optimizer +�-�+�-�+�-� sliding-window eviction, std::chrono timing
+    # KV-Cache Optimizer +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ sliding-window eviction, std::chrono timing
     # AUTO-REMOVED: stub file
 
-    # Speculative Decoder v1 +�-�+�-�+�-� draft/verify with std::mt19937 RNG
+    # Speculative Decoder v1 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ draft/verify with std::mt19937 RNG
     # AUTO-REMOVED: stub file
 
-    # Agentic Controller +�-�+�-�+�-� callback-based event loop (no QObject/signals)
+    # Agentic Controller +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ callback-based event loop (no QObject/signals)
     # AUTO-REMOVED: stub file
 
-    # Phase 2 UI Integration +�-�+�-�+�-� Win32 MessageBox, std::filesystem, std::function callbacks
+    # Phase 2 UI Integration +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Win32 MessageBox, std::filesystem, std::function callbacks
     # AUTO-REMOVED: stub file
 
-    # Multi-Model Benchmark Tool +�-�+�-�+�-� has its own main(), built as separate target
+    # Multi-Model Benchmark Tool +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ has its own main(), built as separate target
     # src/tools/multi_model_benchmark.cpp  # EXCLUDED: duplicate main() symbol
 
-    # Agentic Agent Coordinator +�-�+�-�+�-� multi-agent lifecycle (ctor, dtor, createAgent, synchronize)
+    # Agentic Agent Coordinator +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ multi-agent lifecycle (ctor, dtor, createAgent, synchronize)
     src/agentic_agent_coordinator.cpp
 
-    # Production Config Manager +�-�+�-�+�-� singleton config loader (instance, loadConfig, value)
+    # Production Config Manager +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ singleton config loader (instance, loadConfig, value)
     src/production_config_manager.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # Core Production Subsystems (Verified Working)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 
     # Deterministic Swarm Reproducibility (same input + seed = same result)
     src/core/deterministic_swarm.cpp
@@ -3130,31 +3325,31 @@ set(SOURCES
     # Input Guard with Backend Slicing (OOM protection, chunk routing, budget)
     src/core/input_guard_slicer.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # Autonomous-Fix Replay Harness (Deterministic Validation Layer)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     src/test_harness/replay_fixture.cpp
     src/test_harness/replay_oracle.cpp
     src/test_harness/replay_mock_inference.cpp
     src/test_harness/replay_harness.cpp
     src/test_harness/replay_reporter.cpp
 
-    # Phase 34: Instructions Context Provider +�-�+�-�+�-� Read tools.instructions.md (All Lines)
+    # Phase 34: Instructions Context Provider +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Read tools.instructions.md (All Lines)
     src/core/instructions_provider.cpp
 
-    # Phase 13: Distributed Pipeline Orchestrator +�-�+�-�+�-� DAG scheduling, work-stealing
+    # Phase 13: Distributed Pipeline Orchestrator +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ DAG scheduling, work-stealing
     src/core/distributed_pipeline_orchestrator.cpp
 
-    # Phase 14: Hotpatch Control Plane +�-�+�-�+�-� Lifecycle, transactions, dependency graphs
+    # Phase 14: Hotpatch Control Plane +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Lifecycle, transactions, dependency graphs
     src/core/hotpatch_control_plane.cpp
 
-    # Phase 15: Static Analysis Engine +�-�+�-�+�-� CFG/SSA, dominators, optimizations
+    # Phase 15: Static Analysis Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ CFG/SSA, dominators, optimizations
     src/core/static_analysis_engine.cpp
 
     # Top-50: Unified Problems (LSP + SAST + SCA + Secrets)
     src/core/problems_aggregator.cpp
 
-    # Top-50: Secrets scanning (API keys, high-entropy) +�-�+�-�+�-� Security
+    # Top-50: Secrets scanning (API keys, high-entropy) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Security
     # AUTO-REMOVED: stub file
 
     # Top-50: In-house SCA (manifest parsing, no external deps)
@@ -3169,16 +3364,16 @@ set(SOURCES
     # Google Dork Scanner + bug-safe SQLi (maxIterations, replaceSuffix, boolean payloads)
     # AUTO-REMOVED: stub file
 
-    # Universal Dorker +�-�+�-�+�-� LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
+    # Universal Dorker +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
     # AUTO-REMOVED: stub file
 
     # Security hardening (AuditLog, SecurityManager, InputValidator)
     # AUTO-REMOVED: stub file
 
-    # Phase 15b: Code Linter +�-�+�-�+�-� Real-time syntax/semantic linting (C++, ASM, Python, JS)
-# src/core/code_linter.cpp
+    # Phase 15b: Code Linter +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Real-time syntax/semantic linting (C++, ASM, Python, JS)
+src/core/code_linter.cpp
 
-    # Phase 16: Semantic Code Intelligence +�-�+�-�+�-� Cross-refs, type inference, indexing
+    # Phase 16: Semantic Code Intelligence +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Cross-refs, type inference, indexing
     src/core/semantic_code_intelligence.cpp
     # RAWRXD_REPOSITORY_INTELLIGENCE_001. buildFileIndex() in the TU above used
     # to increment a counter and report 100% completion without parsing
@@ -3191,11 +3386,11 @@ set(SOURCES
     src/repointel/ScopeTree.cpp
     src/repointel/RepositoryUniverse.cpp
 
-    # Phase 17: Enterprise Telemetry & Compliance +�-�+�-�+�-� OTLP tracing, audit, GDPR
+    # Phase 17: Enterprise Telemetry & Compliance +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ OTLP tracing, audit, GDPR
     src/core/enterprise_telemetry_compliance.cpp
 
     # Core workflow/reasoning engines (required by unified_hotpatch_manager, etc.)
-    # src/core/autonomous_workflow_engine.cpp
+src/core/autonomous_workflow_engine.cpp
     src/core/workspace_reasoning_profiles.cpp
     src/core/reasoning_schema_versioning.cpp
     src/core/safe_refactor_engine.cpp
@@ -3222,28 +3417,28 @@ set(SOURCES
     # src/core/unlinked_symbols_batch_020.cpp  # excluded: duplicate symbols with unlinked_symbols_batch_001.cpp
 
     # Streaming orchestrator and analyzer distiller removed - symbols provided by unlinked_symbols_batch_*.cpp
-    # src/core/streaming_orchestrator.cpp
-    # src/core/analyzer_distiller.cpp
+src/core/streaming_orchestrator.cpp
+src/core/analyzer_distiller.cpp
 
     # Link shims for Win32IDE symbols (required by vscode_extension_api when Win32IDE is not built)
     # NOTE: rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
-    # src/core/rawrengine_missing_stubs.cpp
+src/core/rawrengine_missing_stubs.cpp
 
-    # Phase 50: Enterprise Hardening +�-�+�-�+�-� Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
-    # src/core/update_signature.cpp
+    # Phase 50: Enterprise Hardening +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
+src/core/update_signature.cpp
     src/core/cursor_github_parity_bridge.cpp
     src/core/local_parity_bridge.cpp
     src/core/swarm_reconciliation.cpp
-    # src/core/quickjs_sandbox.cpp
-    # src/core/plugin_signature.cpp
+src/core/quickjs_sandbox.cpp
+src/core/plugin_signature.cpp
     src/core/enterprise_stress_tests.cpp
     src/core/auto_update_system.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Autonomy Gap Closure +�-�+�-�+�-� Phase A-D + Tier 1.4 + Tier 2.3
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Autonomy Gap Closure +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Phase A-D + Tier 1.4 + Tier 2.3
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 
-    # Phase A: Closed-Loop Verification (Write +�-�+�-�+�-� Compile +�-�+�-�+�-� Test +�-�+�-�+�-� Fix)
+    # Phase A: Closed-Loop Verification (Write +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Compile +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Test +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Fix)
     # AUTO-REMOVED: stub file
 
     # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
@@ -3261,10 +3456,10 @@ set(SOURCES
     # Tier 2.3: Autonomous Communication (standup reports, approval requests)
     # AUTO-REMOVED: stub file
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # Cursor/JB-Parity Feature Modules (telemetry, composer, @mention,
     # vision, refactoring, language, semantic index, resource gen)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -3309,9 +3504,9 @@ set(SOURCES
 
     # NOTE: Removed Transcendence IDE Panel - part of valuation theater fiction
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Cognitive Architecture +�-�+�-�+�-� Autonomous Reverse Engineering OS
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Cognitive Architecture +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Autonomous Reverse Engineering OS
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -3319,9 +3514,9 @@ set(SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # TrailBrake / HotPatcher / AntiPatcher Safety System
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -3341,6 +3536,8 @@ set(SOURCES
     src/deep2/Deep2ModelRuntime.cpp
     # AUTO-REMOVED: stub file
      src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
+     src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
     src/deep2/Deep2Engine_Speculative.cpp
     src/deep2/Sampler.cpp
     src/deep2/Tokenizer.cpp
@@ -3427,7 +3624,7 @@ set(SOURCES
     src/deep2/mars/MARSController.cpp
     # AUTO-REMOVED: stub file
 
-    # Sovereign ABI runtime +�-�+�-�+�-� stable C++/MASM execution plane seam
+    # Sovereign ABI runtime +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ stable C++/MASM execution plane seam
     # AUTO-REMOVED: stub file
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
@@ -3518,7 +3715,7 @@ endif()
 if(RAWR_REPLACE_SSOT_HANDLERS)
     list(REMOVE_ITEM SOURCES
         src/core/ssot_handlers_ext_runtime_minimal.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+src/core/ssot_handlers_ext_isolated.cpp
     )
     list(APPEND SOURCES
         src/core/ssot_handlers_ext.cpp
@@ -3606,7 +3803,7 @@ if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "CORE")
     set(_RAWR_SSOT_CORE 1)
     list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/core/ssot_handlers_ext_runtime_minimal.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+src/core/ssot_handlers_ext_isolated.cpp
     src/core/ssot_handlers_ext.cpp
         src/core/auto_feature_registry.cpp
         src/core/feature_handlers.cpp
@@ -3617,14 +3814,14 @@ elseif(RAWR_SSOT_PROVIDER_UPPER STREQUAL "EXT")
         src/core/ssot_handlers.cpp
         src/core/auto_feature_registry.cpp
         src/core/ssot_handlers_ext_runtime_minimal.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+src/core/ssot_handlers_ext_isolated.cpp
     )
 elseif(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     set(_RAWR_SSOT_AUTO 1)
     set(_RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 1)
     list(REMOVE_ITEM RAWR_ENGINE_SOURCES
         src/core/ssot_handlers_ext_runtime_minimal.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+src/core/ssot_handlers_ext_isolated.cpp
         src/core/ssot_handlers.cpp
     )
     # AUTO lane uses `auto_feature_registry.cpp` + unified dispatch; do not also link EXT handlers or ssot_handlers.cpp.
@@ -3639,7 +3836,7 @@ elseif(RAWR_SSOT_PROVIDER_UPPER STREQUAL "STUBS")
         src/core/auto_feature_registry.cpp
         src/core/feature_handlers.cpp
         src/core/ssot_handlers_ext_runtime_minimal.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+src/core/ssot_handlers_ext_isolated.cpp
         src/core/ssot_handlers_ext.cpp
     )
 elseif(RAWR_SSOT_PROVIDER_UPPER STREQUAL "FEATURES")
@@ -3648,7 +3845,7 @@ elseif(RAWR_SSOT_PROVIDER_UPPER STREQUAL "FEATURES")
         src/core/ssot_handlers.cpp
         src/core/auto_feature_registry.cpp
         src/core/ssot_handlers_ext_runtime_minimal.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+src/core/ssot_handlers_ext_isolated.cpp
         src/core/ssot_handlers_ext.cpp
     )
 endif()
@@ -3691,7 +3888,7 @@ list(APPEND RAWR_ENGINE_SOURCES
 
     # NOTE: rawrengine_command_handlers.cpp removed - depends on SelfHostEngine,
     # SpeciatorEngine, TranscendenceCoordinator which are excluded from RawrEngine
-    # src/core/rawrengine_command_handlers.cpp
+src/core/rawrengine_command_handlers.cpp
 )
 
 list(REMOVE_DUPLICATES RAWR_ENGINE_SOURCES)
@@ -3701,7 +3898,7 @@ message(STATUS "[SSOT Ownership] RawrEngine provider=${RAWR_SSOT_PROVIDER_UPPER}
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/modules/vscode_extension_api.cpp
     src/win32app/Win32IDE_VSCodeExtAPI.cpp
-    # src/core/js_extension_host.cpp
+src/core/js_extension_host.cpp
     src/core/extension_polyfill_engine.cpp
     src/modules/quickjs_extension_host.cpp
     src/modules/quickjs_vscode_bindings.cpp
@@ -3724,7 +3921,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
-    # +�-�+�-�+�-�+�-�+�-�+�-� Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) +�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     src/deep2/Chamber.cpp
     src/deep2/PlasmaGovernor.cpp
      src/deep2/SovereignOutOfCoreRuntime.cpp
@@ -3735,10 +3932,10 @@ list(APPEND RAWR_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     src/vulkan_compute.cpp
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Kimi K2.6 300-Agent Swarm Architecture (subset +�-�+�-�+�-� excluded files
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Kimi K2.6 300-Agent Swarm Architecture (subset +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ excluded files
     # reference symbols not available in RawrEngine target)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -3758,25 +3955,83 @@ list(APPEND RAWR_ENGINE_SOURCES
 )
 
 # =============================================================================
-# Command Table Audit +�-�+�-�+�-� Build-time coverage validation targets
+# Command Table Audit +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Build-time coverage validation targets
 # =============================================================================
 include(cmake/AutoFeatureRegistry.cmake)
 
+# RAWRXD_SSOT_BEACON_GATE_HONESTY_001
+#
+# The two targets below were declared unconditionally, but every script they
+# invoke has never existed in this repository:
+#
+#   tools/sync_ssot_beacon_symbols.ps1      never tracked by git
+#   tools/generate_ssot_beacon_table.ps1    never tracked by git
+#   tools/verify_ssot_ext_ownership.ps1     never tracked by git
+#
+# `git log --diff-filter=AD -- <paths>` returns nothing, and rawrxd/tools/
+# contains 36 other .ps1 files but none of these three. They were never
+# written and were never deleted.
+#
+# Because a custom target runs its COMMAND unconditionally, and
+# `powershell -File <missing>` exits non-zero, declaring these targets made
+# every build that depends on them fail:
+#
+#   FAILED: CMakeFiles/verify-ssot-ext-ownership
+#   The argument 'F:/~dev/rawrxd/tools/verify_ssot_ext_ownership.ps1' to the
+#   -File parameter does not exist.
+#
+# and that propagated to every consumer of RawrEngine and RawrXD_Gold, which
+# is why `ninja` on a default target stopped at step 3 of 835.
+#
+# This is the same defect class as the 219 never-written translation units
+# named in the IDE source list: the build graph asserts work that has no
+# implementation behind it. The graph must not name a gate that cannot run,
+# because a target in the dependency chain reads as "this was verified" even
+# when it never executed.
+#
+# The gate is therefore NOT silently dropped and NOT stubbed. It is recorded
+# UNIMPLEMENTED at configure time, where it is visible, and the targets are
+# created only when the scripts they need actually exist. When the scripts
+# land, the targets and their dependencies return with no edit here.
 if(WIN32)
-    add_custom_target(regen-ssot-beacons
-        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/tools/sync_ssot_beacon_symbols.ps1 -RepoRoot ${CMAKE_SOURCE_DIR}
-        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/tools/generate_ssot_beacon_table.ps1 -RepoRoot ${CMAKE_SOURCE_DIR}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Sync + regenerate SSOT beacon ownership artifacts"
-        VERBATIM
+    set(RAWRXD_SSOT_BEACON_SCRIPTS
+        sync_ssot_beacon_symbols.ps1
+        generate_ssot_beacon_table.ps1
+        verify_ssot_ext_ownership.ps1
     )
 
-    add_custom_target(verify-ssot-ext-ownership
-        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/tools/verify_ssot_ext_ownership.ps1 -RepoRoot ${CMAKE_SOURCE_DIR}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Verify SSOT EXT ownership artifacts are consistent"
-        VERBATIM
-    )
+    set(RAWRXD_SSOT_BEACON_SCRIPTS_MISSING "")
+    foreach(_ssot_script IN LISTS RAWRXD_SSOT_BEACON_SCRIPTS)
+        if(NOT EXISTS "${CMAKE_SOURCE_DIR}/tools/${_ssot_script}")
+            list(APPEND RAWRXD_SSOT_BEACON_SCRIPTS_MISSING "${_ssot_script}")
+        endif()
+    endforeach()
+
+    if(RAWRXD_SSOT_BEACON_SCRIPTS_MISSING)
+        list(JOIN RAWRXD_SSOT_BEACON_SCRIPTS_MISSING ", " _ssot_missing_pretty)
+        message(WARNING
+            "[RAWRXD_SSOT_BEACON_GATE_HONESTY_001] SSOT beacon ownership gate is UNIMPLEMENTED. "
+            "Missing script(s): ${_ssot_missing_pretty}. "
+            "The targets regen-ssot-beacons and verify-ssot-ext-ownership are NOT created, and "
+            "are NOT attached as dependencies of RawrEngine or RawrXD_Gold, because a build "
+            "gate that cannot execute must not appear in the graph as though it had verified "
+            "anything. This gate is recorded UNIMPLEMENTED. It is not PASS and not SKIPPED.")
+    else()
+        add_custom_target(regen-ssot-beacons
+            COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/tools/sync_ssot_beacon_symbols.ps1 -RepoRoot ${CMAKE_SOURCE_DIR}
+            COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/tools/generate_ssot_beacon_table.ps1 -RepoRoot ${CMAKE_SOURCE_DIR}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Sync + regenerate SSOT beacon ownership artifacts"
+            VERBATIM
+        )
+
+        add_custom_target(verify-ssot-ext-ownership
+            COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/tools/verify_ssot_ext_ownership.ps1 -RepoRoot ${CMAKE_SOURCE_DIR}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Verify SSOT EXT ownership artifacts are consistent"
+            VERBATIM
+        )
+    endif()
 endif()
 
 # =============================================================================
@@ -3855,7 +4110,7 @@ if(EXISTS ${RAWRXD_COMPRESSION_ASM_DIR}/RawrXD_Compression.asm)
     target_compile_definitions(RawrXD_Compression PRIVATE HAS_MASM_COMPRESSION=1)
 endif()
 
-message(STATUS "+�-�+�-�+�-� RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
+message(STATUS "+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
 
 # =============================================================================
 # Reverse Engineering Suite (sub-module)
@@ -3863,18 +4118,18 @@ message(STATUS "+�-�+�-�+�-� RawrXD_Compression configured (runtime 
 add_subdirectory(src/reverse_engineering)
 
 # =============================================================================
-# CEO Agent Module +�-�+�-�+�-� Autonomous Software Engineering Layer
+# CEO Agent Module +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Autonomous Software Engineering Layer
 # =============================================================================
 add_subdirectory(src/ceo)
 
 # =============================================================================
-# Repository Intelligence Module +�-�+�-�+�-� Deep Code Understanding
+# Repository Intelligence Module +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Deep Code Understanding
 # =============================================================================
 add_subdirectory(src/repository)
 add_subdirectory(src/generation)
 
 # =============================================================================
-# RGUF (RawrXD GGUF Unified Format) +�-�+�-�+�-� Pack/inspect/patch encrypted model blocks
+# RGUF (RawrXD GGUF Unified Format) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Pack/inspect/patch encrypted model blocks
 # =============================================================================
 add_subdirectory(rguf_source)
 
@@ -3900,14 +4155,18 @@ else()
 endif()
 
 if(WIN32)
-    if(TARGET RawrEngine)
+    # RAWRXD_SSOT_BEACON_GATE_HONESTY_001: `if(TARGET ...)` rather than a bare
+    # add_dependencies, so this edge exists exactly when the gate does. The
+    # precedent is inference_authority_ladder, which was guarded on
+    # `if(TARGET InferenceEngine)` for the same reason.
+    if(TARGET RawrEngine AND TARGET regen-ssot-beacons AND TARGET verify-ssot-ext-ownership)
     add_dependencies(RawrEngine regen-ssot-beacons verify-ssot-ext-ownership)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 # OMEGA-1 Post-Build Manifest Generation
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 if(WIN32)
     add_custom_command(TARGET RawrEngine POST_BUILD
         COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
@@ -4120,7 +4379,7 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/memory_production\\.cpp$")
 # Exclude unified_command_dispatch.cpp and agentic_transaction.cpp - they need many command handlers
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unified_command_dispatch\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agentic_transaction\\.cpp$")
-# Fix: Case-sensitive regex misses mixed-case files +�-�+�-�+�-� use explicit REMOVE_ITEM
+# Fix: Case-sensitive regex misses mixed-case files +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ use explicit REMOVE_ITEM
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
     src/agentic/AgenticDeepThinkingEngine.cpp
     src/agentic/DeterministicReplayEngine.cpp
@@ -4134,7 +4393,7 @@ if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
         src/core/missing_handler_stubs.cpp
         src/core/ssot_handlers_ext_runtime_minimal.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+src/core/ssot_handlers_ext_isolated.cpp
     )
     list(APPEND GOLD_UNDERSCORE_SOURCES src/core/ssot_handlers_ext.cpp)
     set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 1)
@@ -4144,7 +4403,7 @@ else()
         src/core/auto_feature_registry.cpp
         src/core/ssot_handlers.cpp
         src/core/ssot_handlers_ext_runtime_minimal.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+src/core/ssot_handlers_ext_isolated.cpp
     )
     list(APPEND GOLD_UNDERSCORE_SOURCES
          src/core/auto_feature_stub_impl.cpp
@@ -4190,7 +4449,7 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     )
 endif()
 # Gold: MultiResponseEngine methods are defined inline in win32app/multi_response_engine.h; the
-# standalone .cpp duplicates those symbols. AUTO SSOT lane links ssot_handlers_ext (superset)+�-�+�-�+�-�drop
+# standalone .cpp duplicates those symbols. AUTO SSOT lane links ssot_handlers_ext (superset)+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½drop
 # ssot_handlers + auto_feature_registry to avoid LNK2005 duplicate CommandResult handlers.
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES src/core/multi_response_engine.cpp)
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
@@ -4203,7 +4462,7 @@ list(REMOVE_DUPLICATES GOLD_UNDERSCORE_SOURCES)
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
     # AUTO-REMOVED: stub file
     src/modules/vscode_extension_api.cpp
-    # src/core/js_extension_host.cpp
+src/core/js_extension_host.cpp
     src/ui/entry_point.cpp
 )
 
@@ -4264,12 +4523,20 @@ else()
 endif()
 
 if(WIN32)
+    # RAWRXD_SSOT_BEACON_GATE_HONESTY_001: two defects at this site, not one.
+    # `regen-ssot-beacons` never existed as a runnable target, and
+    # RawrXD_Gold itself is conditional (see the else() above, which only
+    # emits a STATUS when no sources are available), so the unguarded
+    # add_dependencies could also fire against a target that was never
+    # created. Both conditions are now required.
+    if(TARGET RawrXD_Gold AND TARGET regen-ssot-beacons)
     add_dependencies(RawrXD_Gold regen-ssot-beacons)
+    endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 # OMEGA-1 Post-Build Manifest Generation for Gold
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 if(WIN32)
     add_custom_command(TARGET RawrXD_Gold POST_BUILD
         COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
@@ -4391,7 +4658,7 @@ target_sources(RawrXD_Gold PRIVATE
      tests/gguf_link_impl.cpp
     # REMOVED: src/core/rawrengine_command_handlers.cpp - references UpdateSignatureVerifier, PerfTelemetry (unresolved)
     # AUTO-REMOVED: stub file
-    # src/core/native_gguf_loader_link_impl.cpp
+src/core/native_gguf_loader_link_impl.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/core/gold_inference_profiler_minimal.cpp
@@ -4413,20 +4680,20 @@ target_sources(RawrXD_Gold PRIVATE
     src/asm/RawrXD_PE_Exporter.asm
 )
 
-# Vulkan SDK for Gold build +�-�+�-�+�-� linked later after find_package(Vulkan)
+# Vulkan SDK for Gold build +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ linked later after find_package(Vulkan)
 
 message(STATUS "[Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)")
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# MASM x64 Assembly +�-�+�-�+�-� Phase 20/21 AVX-512 Requantization + Swarm Streaming
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# MASM x64 Assembly +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Phase 20/21 AVX-512 Requantization + Swarm Streaming
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 if(MSVC)
     # Prefer prebuilt MASM objects when available (some checked-in .asm files are placeholders).
     set(RAWRXD_PREBUILT_OBJ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/obj")
     set(RAWRXD_PREBUILT_GENESIS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build_genesis")
     set(RAWRXD_PREBUILT_SRCASM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
 
-    # Phase 20: AVX-512 Q4_K_M +�-�+�-�+�-� Q2_K requantization kernel
+    # Phase 20: AVX-512 Q4_K_M +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Q2_K requantization kernel
     set(ASM_REQUANTIZE_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/requantize_q4km_to_q2k_avx512.asm")
 
@@ -4438,39 +4705,39 @@ if(MSVC)
     set(ASM_SWARM_TENSOR_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/swarm_tensor_stream.asm")
 
-    # Phase 28: MonacoCore Native Editor Engine +�-�+�-�+�-� Gap Buffer + Tokenizer
+    # Phase 28: MonacoCore Native Editor Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Gap Buffer + Tokenizer
     set(ASM_MONACOCORE_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MonacoCore.asm")
 
-    # Phase 29: PDB Symbol Server +�-�+�-�+�-� Native MSF v7.00 Parser Kernel
+    # Phase 29: PDB Symbol Server +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Native MSF v7.00 Parser Kernel
     set(ASM_PDBKERNEL_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PDBKernel.asm")
 
-    # Phase 30: Accelerator Router +�-�+�-�+�-� MASM Fast-Path Bridge
+    # Phase 30: Accelerator Router +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MASM Fast-Path Bridge
     set(ASM_ROUTERBRIDGE_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RouterBridge.asm")
 
-    # Phase 29.2: GSI Hash +�-�+�-�+�-� MASM Accelerated Hash + Bucket Probe
+    # Phase 29.2: GSI Hash +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MASM Accelerated Hash + Bucket Probe
     set(ASM_GSIHASH_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GSIHash.asm")
 
-    # Phase 29.2: Reference Provider +�-�+�-�+�-� FNV-1a Hash + Pattern Match
+    # Phase 29.2: Reference Provider +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ FNV-1a Hash + Pattern Match
     set(ASM_REFPROVIDER_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RefProvider.asm")
 
-    # Phase 31: IDE Self-Audit +�-�+�-�+�-� Stub Detection Kernel
+    # Phase 31: IDE Self-Audit +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Stub Detection Kernel
     set(ASM_STUBDETECTOR_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_StubDetector.asm")
 
-    # Phase 37: Chain-of-Thought Engine +�-�+�-�+�-� Pure MASM CoT DLL Core
+    # Phase 37: Chain-of-Thought Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Pure MASM CoT DLL Core
     set(ASM_COT_ENGINE_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_engine.asm")
 
-    # Phase 37: Chain-of-Thought Engine +�-�+�-�+�-� DLL Entry + SRW Lock
+    # Phase 37: Chain-of-Thought Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ DLL Entry + SRW Lock
     set(ASM_COT_DLL_ENTRY_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_dll_entry.asm")
 
-    # Phase 39+�-�+�-�+�-�42: CoT Enterprise Finishers +�-�+�-�+�-� Snapshot, Telemetry, Copy Engine, Security
+    # Phase 39+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½42: CoT Enterprise Finishers +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Snapshot, Telemetry, Copy Engine, Security
     set(ASM_COT_PHASE39_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_phase39.asm")
 
@@ -4478,72 +4745,72 @@ if(MSVC)
     set(ASM_LSP_SYMINDEX_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_SymbolIndex.asm")
 
-    # Phase 45: RawrCodex +�-�+�-�+�-� Agentic Decision Tree Core (295KB, 21 procs)
+    # Phase 45: RawrCodex +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Agentic Decision Tree Core (295KB, 21 procs)
     set(ASM_RAWRCODEX_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrCodex.asm")
 
-    # Phase 45: Debug Engine +�-�+�-�+�-� Native Debugger Kernel (51KB, DynTrace symbolic resolution)
+    # Phase 45: Debug Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Native Debugger Kernel (51KB, DynTrace symbolic resolution)
     set(ASM_DEBUG_ENGINE_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Debug_Engine.asm")
 
-    # Phase 45: QuadBuffer Streamer +�-�+�-�+�-� High-Performance Memory Streaming (52KB)
+    # Phase 45: QuadBuffer Streamer +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ High-Performance Memory Streaming (52KB)
     set(ASM_QUADBUFFER_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_QuadBuffer_Streamer.asm")
 
-    # Phase 45: Swarm Network +�-�+�-�+�-� Distributed Composition Protocol (36KB)
+    # Phase 45: Swarm Network +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Distributed Composition Protocol (36KB)
     set(ASM_SWARM_NETWORK_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Swarm_Network.asm")
 
-    # Phase 45: Enterprise License +�-�+�-�+�-� Feature Gate + Hardware Fingerprint (31KB)
+    # Phase 45: Enterprise License +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Feature Gate + Hardware Fingerprint (31KB)
     set(ASM_ENTERPRISE_LIC_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_EnterpriseLicense.asm")
 
-    # Phase 45: License Shield +�-�+�-�+�-� Anti-Tamper + Integrity Guard (34KB)
+    # Phase 45: License Shield +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Anti-Tamper + Integrity Guard (34KB)
     set(ASM_LICENSE_SHIELD_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_License_Shield.asm")
 
-    # Phase 46: VulkanBridge +�-�+�-�+�-� MASM64 GPU Dispatch Shim (VkBridge_Init, MatMul, FlashAttn, Hotswap)
+    # Phase 46: VulkanBridge +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MASM64 GPU Dispatch Shim (VkBridge_Init, MatMul, FlashAttn, Hotswap)
     set(ASM_VULKANBRIDGE_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_VulkanBridge.asm")
 
-    # Phase 49: SocketResponder +�-�+�-�+�-� MASM64 IOCP Zero-Copy HTTP Server
+    # Phase 49: SocketResponder +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MASM64 IOCP Zero-Copy HTTP Server
     set(ASM_SOCKETRESP_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SocketResponder.asm")
 
-    # Phase 49: TridentBeacon +�-�+�-�+�-� MASM64 COM Trident Host + Beacon JS Bridge
+    # Phase 49: TridentBeacon +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MASM64 COM Trident Host + Beacon JS Bridge
     set(ASM_TRIDENTBEACON_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon.asm")
 
-    # Phase 49: TridentBeacon GPU +�-�+�-�+�-� MASM64 GPU Acceleration + WebGL Bridge
+    # Phase 49: TridentBeacon GPU +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MASM64 GPU Acceleration + WebGL Bridge
     set(ASM_TRIDENTGPU_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon_GPU.asm")
 
-    # Phase 50: AgenticOrchestrator +�-�+�-�+�-� VTable Dispatch + SPSC Task Queue
+    # Phase 50: AgenticOrchestrator +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ VTable Dispatch + SPSC Task Queue
     set(ASM_AGENTIC_ORCH_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_AgenticOrchestrator.asm")
 
-    # Phase 50: GGUF Vulkan Loader +�-�+�-�+�-� Memory-Mapped Parser + Staging Buffer
+    # Phase 50: GGUF Vulkan Loader +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Memory-Mapped Parser + Staging Buffer
     set(ASM_GGUF_VKLOAD_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GGUF_Vulkan_Loader.asm")
 
-    # Phase 50: LSP-AI Bridge +�-�+�-�+�-� SymbolIndex +�-�+�-�+�-� ContextAnalyzer Fusion
+    # Phase 50: LSP-AI Bridge +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ SymbolIndex +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ ContextAnalyzer Fusion
     set(ASM_LSP_BRIDGE_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_AI_Bridge.asm")
 
-    # Phase 50: Streaming QuadBuffer +�-�+�-�+�-� HWND Token Rendering + GDI Double-Buffer
+    # Phase 50: Streaming QuadBuffer +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ HWND Token Rendering + GDI Double-Buffer
     set(ASM_STREAM_QBUF_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Streaming_QuadBuffer.asm")
 
-    # Phase 50: SelfPatch Engine +�-�+�-�+�-� Runtime Code Morphing + CPU Optimization
+    # Phase 50: SelfPatch Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Runtime Code Morphing + CPU Optimization
     set(ASM_SPENGINE_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfPatch_Engine.asm")
 
-    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels +�-�-� Q4MatMul, KV Attention, Tile Streamer
+    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels +ï¿½-ï¿½-ï¿½ Q4MatMul, KV Attention, Tile Streamer
     # Prebuilt kernel object with embedded RDNA3 ISA (gfx1101+)
     set(ASM_RDNA3_KERNELS_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/RDNA3_Full_Test.asm")
 
-    # Phase Camellia: Camellia-256 Encryption Engine +�-�+�-�+�-� MASM x64 CTR-mode workspace encryption
+    # Phase Camellia: Camellia-256 Encryption Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MASM x64 CTR-mode workspace encryption
     set(ASM_CAMELLIA256_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256.asm")
 
@@ -4555,35 +4822,35 @@ if(MSVC)
     set(ASM_KQUANT_KERNEL_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_KQuant_Kernel.asm")
 
-    # Phase WD: Agentic Watchdog +�-�+�-�+�-� .text Section Integrity Verification (HMAC-SHA256)
+    # Phase WD: Agentic Watchdog +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ .text Section Integrity Verification (HMAC-SHA256)
     set(ASM_WATCHDOG_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Watchdog.asm")
 
-    # Phase E: SelfHost Engine +�-�+�-�+�-� Recursive Self-Compilation
+    # Phase E: SelfHost Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Recursive Self-Compilation
     set(ASM_SELFHOST_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfHost_Engine.asm")
 
-    # Phase F: Hardware Synthesizer +�-�+�-�+�-� FPGA/ASIC Acceleration
+    # Phase F: Hardware Synthesizer +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ FPGA/ASIC Acceleration
     set(ASM_HWSYNTH_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_HardwareSynthesizer.asm")
 
-    # Phase G: Mesh Brain +�-�+�-�+�-� Distributed Consciousness P2P Mesh
+    # Phase G: Mesh Brain +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Distributed Consciousness P2P Mesh
     set(ASM_MESHBRAIN_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MeshBrain.asm")
 
-    # Phase H: Speciator Engine +�-�+�-�+�-� Metamorphic Evolution
+    # Phase H: Speciator Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Metamorphic Evolution
     set(ASM_SPECIATOR_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Speciator.asm")
 
-    # Phase I: Neural Bridge +�-�+�-�+�-� Direct Cortex Interface
+    # Phase I: Neural Bridge +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Direct Cortex Interface
     set(ASM_NEURALBRIDGE_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NeuralBridge.asm")
 
-    # Phase +�-�-�+�-�-�: Omega Orchestrator +�-�+�-�+�-� Autonomous Development Pipeline
+    # Phase +ï¿½-ï¿½-ï¿½+ï¿½-ï¿½-ï¿½: Omega Orchestrator +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Autonomous Development Pipeline
     set(ASM_OMEGA_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_OmegaOrchestrator.asm")
 
-    # Phase +�-�+�-�+�-�-�: PerfCounters +�-�+�-�+�-� RDTSC Per-Kernel Cycle Histogram
+    # Phase +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½-ï¿½: PerfCounters +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ RDTSC Per-Kernel Cycle Histogram
     set(ASM_PERFCOUNTERS_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PerfCounters.asm")
 
@@ -4611,7 +4878,7 @@ if(MSVC)
     set(ASM_NATIVE_SPEED_KERNELS_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/native_speed_kernels.asm")
 
-    # Brutal gzip deflate +�-�+�-�+�-� stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
+    # Brutal gzip deflate +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
     set(ASM_DEFLATE_BRUTAL_OBJ "")
     message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_masm/deflate_brutal_masm.asm")
 
@@ -4687,9 +4954,9 @@ if(MSVC)
     endif()
 
     # =========================================================================
-    # NanoQuant Engine +�-�+�-�+�-� Sub-1-Bit Quantization Static Library
+    # NanoQuant Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Sub-1-Bit Quantization Static Library
     # MASM64 kernel (ADMM, AVX2/AVX-512) + C++ bridge + GGML type registration
-    # Disabled by default +�-�+�-�+�-� ASM kernel requires ml64 port fixes (A2008/A2083).
+    # Disabled by default +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ ASM kernel requires ml64 port fixes (A2008/A2083).
     # Enable with: cmake -DRAWR_ENABLE_NANOQUANT=ON
     # =========================================================================
     option(RAWR_ENABLE_NANOQUANT "Enable NanoQuant sub-1-bit quantization engine (requires working NanoQuant ASM)" OFF)
@@ -4721,12 +4988,12 @@ if(MSVC)
 
     message(STATUS "[NanoQuant] Sub-1-bit quantization engine enabled (NQ_1 + NQ_R4)")
     else()
-    message(STATUS "[NanoQuant] DISABLED +�-�+�-�+�-� enable with -DRAWR_ENABLE_NANOQUANT=ON")
+    message(STATUS "[NanoQuant] DISABLED +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ enable with -DRAWR_ENABLE_NANOQUANT=ON")
     endif()
 endif()
 
 # =============================================================================
-# Vulkan SDK (optional +�-�+�-�+�-� GPU compute acceleration)
+# Vulkan SDK (optional +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ GPU compute acceleration)
 # =============================================================================
 # Phase 4A: Apply Vulkan detection fix for Windows
 include(${CMAKE_SOURCE_DIR}/cmake/RawrXD-Vulkan-Fix.cmake OPTIONAL)
@@ -4803,7 +5070,7 @@ endif()
 # =============================================================================
 # Phase 6: Standalone Inference Engine Executable (T4)
 # =============================================================================
-# Produces RawrXD-InferenceEngine.exe +�-�+�-�+�-� loads GGUF and emits tokens with no IDE.
+# Produces RawrXD-InferenceEngine.exe +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ loads GGUF and emits tokens with no IDE.
 # This is the self-hosting blocker: inference must run independently.
 # T4 integration: the AutonomousRecoveryOrchestrator invokes this for reasoning.
 # =============================================================================
@@ -4901,9 +5168,23 @@ set(INFERENCE_ENGINE_SOURCES
     # src/codec/compression.cpp  # Removed: requires zlib.h and lz4.h (not installed)
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    # Deep2 core +�-�+�-�+�-� unified into InferenceEngine for canonical local inference
+    # Deep2 core +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ unified into InferenceEngine for canonical local inference
      src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
+     src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
     src/deep2/Deep2Engine_Speculative.cpp
+    # RAWRXD_INFERENCE_WIRE_001: src/deep2/InferenceWire.cpp is an UNTRACKED translation
+    # unit that was a member of no target, while Deep2Engine.cpp calls into it. The symbol
+    # was declared and defined in the tree yet absent from every binary:
+    #     LNK2019 unresolved external symbol Deep2::Wire::WireRecordDispatch
+    #     LNK1120 1 unresolved externals
+    # The failed relink also DELETED the previously built bin\rawr-server.exe, so this
+    # single missing source line took out every runtime certification as collateral.
+    #   declaration : src/deep2/InferenceWire.hpp:404
+    #   definition  : src/deep2/InferenceWire.cpp:558
+    # Placed beside its only caller. If this list is ever filtered, re-check that this
+    # entry survives -- a silently stripped entry restores LNK2019 with no other signal.
+    src/deep2/InferenceWire.cpp
     src/deep2/strict_gpu_violations.cpp
     src/deep2/VramStreamingController.cpp
     src/deep2/expert_cache/ExpertCache.cpp
@@ -5137,7 +5418,7 @@ set(INFERENCE_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    # Reverse Knowledge Compiler (RKC) +�-�-� proof-state before LLM
+    # Reverse Knowledge Compiler (RKC) +ï¿½-ï¿½-ï¿½ proof-state before LLM
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -5159,9 +5440,9 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/mars/MARSController.cpp
     # BackendOrchestrator required by AgentOllamaClient in InferenceEngine
     # AUTO-REMOVED: stub file
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Agentic Core +�-�+�-�+�-� minimal verified set (add more after individual validation)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Agentic Core +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ minimal verified set (add more after individual validation)
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     src/agentic/ErrorRecoveryManager.cpp
     src/agentic/BoundedAgentLoop.cpp
     src/agentic/OrchestratorBridge.cpp
@@ -5217,9 +5498,9 @@ set(INFERENCE_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Sovereign Runtime +�-�+�-�+�-� verified .cpp files only
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Sovereign Runtime +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ verified .cpp files only
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -5334,7 +5615,7 @@ option(RAWRXD_DEEP2_CERT "Enable Deep2 production/reference parity hooks" OFF)
 if(RAWRXD_DEEP2_CERT)
     target_compile_definitions(InferenceEngine PRIVATE RAWRXD_DEEP2_CERT=1)
     target_include_directories(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2")
-    message(STATUS "[Deep2Cert] RAWRXD_DEEP2_CERT=1 +�-�+�-�+�-� stage telemetry + reference parity enabled")
+    message(STATUS "[Deep2Cert] RAWRXD_DEEP2_CERT=1 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ stage telemetry + reference parity enabled")
 endif()
 
 # Add Vulkan include directories if available
@@ -5485,7 +5766,7 @@ endif()
             src/asm/RuntimeEvidence512_IDEEmit.asm
             src/asm/RuntimeEvidence512_IDECollect.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
-            # src/asm/RawrXD_Pyre_Compute.asm
+src/asm/RawrXD_Pyre_Compute.asm
         )
     rawrxd_filter_missing_sources(INFERENCE_ASM_SOURCES)
     set_source_files_properties(${INFERENCE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
@@ -5526,7 +5807,7 @@ endif()
 
 # set_target_properties(RawrXD-InferenceEngine PROPERTIES ...) -- target removed
 
-# Telemetry_Kernel.asm uses ADDR32 relocations +�-�+�-�+�-� require /LARGEADDRESSAWARE:NO
+# Telemetry_Kernel.asm uses ADDR32 relocations +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ require /LARGEADDRESSAWARE:NO
 if(MSVC)
     # target_link_options(RawrXD-InferenceEngine ...) -- target removed
     # All RawrXD-InferenceEngine link options removed -- target was stub-only
@@ -5605,7 +5886,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # AUTO provider: auto_feature_registry.cpp provides the real handlers
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
         list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
-        # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
+        # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ required by auto_feature_registry
         if(EXISTS "${CMAKE_SOURCE_DIR}/__DELETED_STUB__")
             # list(APPEND WIN32IDE_SOURCES ...) -- stub file deleted
         endif()
@@ -5706,12 +5987,38 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         src/inference/NegativeSpaceProfiler.cpp
         src/core/unlinked_symbols_batch_022.cpp
+        # RAWRXD_IDE_ENABLE_REAL_HANDLERS_001 -- entry REMOVED, blocker documented.
+        # src/core/auto_feature_real_impl.cpp holds 555 real CommandResult handler
+        # definitions and is not a member of this target, so none reach the IDE:
+        #     real handler defs in auto_feature_real_impl.cpp   = 555
+        #     hollow handler defs in win32ide_handler_impls.cpp = 371
+        #     of those 371, already implemented over there        = 265
+        #
+        # It CANNOT be added yet. Four of its headers were deleted from this tree by
+        # b41961cad and have been RESTORED from this repo's own history at b41961cad^ into
+        # include/ : chat_interface.h, universal_model_router.h, plan_orchestrator.h,
+        # lsp_client.h. Those compile. The remaining blocker is one genuine external
+        # dependency:
+        #
+        #     auto_feature_real_impl.cpp:14   #include <sstring>
+        #
+        # sstring is TinyString. It is used by exactly one file in the whole repository,
+        # was never vendored (3rdparty/ holds only nlohmann and quickjs), has no
+        # FetchContent or ExternalProject entry, and does not appear anywhere in git
+        # history. It must be obtained from upstream before this file can be compiled.
+        # Adding the entry without it turns a working target into a failing one, so the
+        # entry is absent until the header is present.
+        #
+        # Recovered and kept: include/chat_interface.h, include/universal_model_router.h,
+        # include/plan_orchestrator.h, include/lsp_client.h -- all four verified restored
+        # from b41961cad^ at this tree's own paths, not copied from an archive that holds
+        # five divergent variants of each.
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
         Ship/RawrXD_AgentCoordinator.cpp
 
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
-        # Deep2 completion provider and bridge +�-�+�-�+�-� real local inference for ghost text
+        # Deep2 completion provider and bridge +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ real local inference for ghost text
         src/ai_completion_real.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/ide/Deep2Bridge.cpp
         # AUTO-REMOVED: stub file
@@ -5760,7 +6067,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32TerminalManager.cpp
         src/win32app/TransparentRenderer.cpp
 
-        # Plugin System +�-�+�-�+�-� Phase 43: Native Win32 DLL loading (C ABI)
+        # Plugin System +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Phase 43: Native Win32 DLL loading (C ABI)
         src/plugin_system/win32_plugin_loader.cpp
         src/win32app/Win32IDE_Plugins.cpp
         src/win32app/Win32IDE_HandleExtensionCommand.cpp
@@ -5782,7 +6089,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/backend/vulkan_compute.cpp
         src/kernels/rdna3/RDNA3_GpuDispatcher.cpp
 
-        # Bounded Agent Loop + FIM Provider (Agent+�-�+�-�+�-�IDE Pivot)
+        # Bounded Agent Loop + FIM Provider (Agent+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
         src/agentic/BoundedAgentLoop.cpp
         src/agentic/OllamaProvider.cpp
@@ -5791,10 +6098,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
         src/agentic/DeterministicReplayEngine.cpp
 
-        # T4: Autonomous Recovery Orchestrator (FailureClass +�-�+�-�+�-� recovery +�-�+�-�+�-� verify +�-�+�-�+�-� commit)
+        # T4: Autonomous Recovery Orchestrator (FailureClass +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ recovery +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ verify +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ commit)
         src/agentic/autonomous_recovery_orchestrator.cpp
         
-        # T4.5: Agentic Deep Thinking Engine +�-�+�-�+�-� Autonomous monitoring, recovery, and orchestration
+        # T4.5: Agentic Deep Thinking Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Autonomous monitoring, recovery, and orchestration
         src/agentic/AgenticDeepThinkingEngine.cpp
 
         # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
@@ -5812,7 +6119,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_001.cpp
         src/core/unlinked_symbols_batch_002.cpp  # ggml/matmul; asm_pyre_* gated when RAWRXD_HAS_ASM_PYRE
         src/core/unlinked_symbols_batch_003.cpp
-        # src/core/unlinked_symbols_batch_004.cpp  # EXCLUDED: asm_hotpatch_*/asm_snapshot_* +�-�+�-�+�-� ASM
+        # src/core/unlinked_symbols_batch_004.cpp  # EXCLUDED: asm_hotpatch_*/asm_snapshot_* +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ ASM
         src/core/win32ide_watchdog_init.cpp        # sole C provider for asm_watchdog_init
         src/core/unlinked_symbols_batch_005.cpp
         src/core/unlinked_symbols_batch_006.cpp
@@ -5823,9 +6130,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_011.cpp
         src/core/unlinked_symbols_batch_012.cpp
         # Prefer single provider for symbols that also live in batch_001/005 (ODR).
-        # src/core/unlinked_symbols_batch_018.cpp
-        # src/core/unlinked_symbols_batch_019.cpp
-        # src/core/unlinked_symbols_batch_020.cpp
+src/core/unlinked_symbols_batch_018.cpp
+src/core/unlinked_symbols_batch_019.cpp
+src/core/unlinked_symbols_batch_020.cpp
         src/core/unlinked_symbols_batch_021.cpp
         src/ANSIParser.cpp
         src/vulkan_kernel_bridge.cpp
@@ -5856,7 +6163,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         src/win32app/Win32IDE_SemanticIndex.cpp  # REAL: Semantic code intelligence (file is clean, 509 lines)
-        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations +�-�+�-�+�-� real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
+        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
@@ -5874,7 +6181,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # T5: Agentic Transaction Layer (multi-step command execute/rollback)
         src/agentic/agentic_transaction.cpp
 
-        # P6: Agent Workflow Orchestrator (DAG-based plan+�-�+�-�+�-�execute+�-�+�-�+�-�validate+�-�+�-�+�-�commit)
+        # P6: Agent Workflow Orchestrator (DAG-based plan+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½execute+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½validate+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½commit)
         src/agentic/agent_workflow_orchestrator.cpp
 
         # P1-P5: AI Developer Tooling (Copilot/Cursor parity modules)
@@ -5990,7 +6297,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Agent-Driven Hotpatch Orchestration (Phase 18)
         src/agent/agentic_hotpatch_orchestrator.cpp
 
-        # HTTP Client +�-�+�-�+�-� WinHTTP async with future retention (CLI+GUI)
+        # HTTP Client +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ WinHTTP async with future retention (CLI+GUI)
         src/agent/llm_http_client.cpp
         src/agent/model_invoker.cpp
         src/agent/planner.cpp
@@ -6001,21 +6308,21 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/agentic_deep_thinking_engine.cpp
         
         # Quantum Autonomous Systems - Real implementations (DUPLICATED - see main SOURCES)
-        # src/agent/quantum_autonomous_todo_system.cpp
-        # src/agent/quantum_multi_model_agent_cycling.cpp
-        # src/agent/quantum_dynamic_time_manager.cpp
-        # src/agent/quantum_missing_impl.cpp
-        # src/agent/quantum_production_orchestrator.cpp
-        # src/agent/quantum_agent_orchestrator.cpp
+src/agent/quantum_autonomous_todo_system.cpp
+src/agent/quantum_multi_model_agent_cycling.cpp
+src/agent/quantum_dynamic_time_manager.cpp
+src/agent/quantum_missing_impl.cpp
+src/agent/quantum_production_orchestrator.cpp
+src/agent/quantum_agent_orchestrator.cpp
         
-    # src/core/ai_agent_masm_core_impl.cpp
+src/core/ai_agent_masm_core_impl.cpp
         src/agent/agentic_puppeteer.cpp
         src/cloud_api_client.cpp
 
-        # LocalReasoningEngine +�-�+�-�+�-� API-free static analysis + pattern detection
+        # LocalReasoningEngine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ API-free static analysis + pattern detection
         src/agent/local_reasoning_engine.cpp
 
-        # Agent Self-Repair +�-�+�-�+�-� MASM64 self-patching kernel bridge
+        # Agent Self-Repair +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MASM64 self-patching kernel bridge
         src/agent/agent_self_repair.cpp
         src/agent/agent_self_healing_orchestrator.cpp
         
@@ -6062,7 +6369,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/accelerator_router.cpp
         
         # Phase 29.2: GSI Hash Table + TPI Type Parser
-        # EXCLUDED: missing pdb_gsi_hash.h — src/core/pdb_gsi_hash.cpp
+        # EXCLUDED: missing pdb_gsi_hash.h â€” src/core/pdb_gsi_hash.cpp
         
         # Phase 29.2: Multi-Reference Provider + Tools/Instructions Hook
         src/core/pdb_reference_provider.cpp
@@ -6077,24 +6384,24 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/lsp/RawrXD_LSPServer.cpp
         src/win32app/Win32IDE_LSPServer.cpp
 
-        # Phase 27b: LSP +�-�+�-�+�-� Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
+        # Phase 27b: LSP +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
         src/lsp/lsp_hotpatch_bridge.cpp
         src/lsp/hotpatch_symbol_provider.cpp
         src/lsp/gguf_diagnostic_provider.cpp
 
         # Phase 28: MonacoCore Native Editor Engine + Toggleable Engine System
         # EXCLUDED: missing RawrXD_MonacoCore.h, IDETheme.h
-        # src/core/MonacoCoreEngine.cpp
-        # src/core/WebView2EditorEngine.cpp
-        # src/core/RichEditEditorEngine.cpp
-        # src/core/EditorEngineFactory.cpp
+src/core/MonacoCoreEngine.cpp
+src/core/WebView2EditorEngine.cpp
+src/core/RichEditEditorEngine.cpp
+src/core/EditorEngineFactory.cpp
         src/win32app/Win32IDE_EditorEngine.cpp
 
         # Phase 29: Native PDB Symbol Server + MSF v7.00 Parser + Symbol Cache
         # EXCLUDED: missing pdb_gsi_hash.h
-        # src/core/pdb_native.cpp
+src/core/pdb_native.cpp
         # EXCLUDED: missing lsp/RawrXD_LSPServer.h
-        # src/core/pdb_lsp_bridge.cpp
+src/core/pdb_lsp_bridge.cpp
         src/win32app/Win32IDE_PDBSymbols.cpp
 
         # Phase 31: IDE Self-Audit & Verification System
@@ -6104,7 +6411,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_AuditDashboard.cpp
 
         # Phase 32: The Final Gauntlet + Pre-Packaging Runtime Verification
-        # EXCLUDED: missing RawrXD_MonacoCore.h — src/core/final_gauntlet.cpp
+        # EXCLUDED: missing RawrXD_MonacoCore.h â€” src/core/final_gauntlet.cpp
         src/win32app/Win32IDE_Gauntlet.cpp
 
         # Phase 33: Voice Chat Engine
@@ -6120,7 +6427,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_QuickWins.cpp
 
         # Shared Feature Dispatch System (CLI + GUI unified command routing)
-        # NOTE: shared_feature_dispatch.cpp REMOVED +�-�+�-�+�-� duplicated by unified_command_dispatch.cpp
+        # NOTE: shared_feature_dispatch.cpp REMOVED +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ duplicated by unified_command_dispatch.cpp
         src/core/feature_registration.cpp
         # EXCLUDED: missing agentic_failure_detector.hpp, agentic_puppeteer.hpp
         # src/core/feature_handlers.cpp  # EXCLUDED: requires missing headers (GGUFServerHotpatch, AgenticFailureDetector, AgenticPuppeteer, etc.)
@@ -6143,22 +6450,22 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         src/modules/autonomous_agentic_orchestrator.cpp
-    # src/core/native_gguf_loader_link_impl.cpp
+src/core/native_gguf_loader_link_impl.cpp
         # src/codec/compression.cpp  # Removed: requires zlib.h (not installed)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        # EXCLUDED: missing native_gguf_loader.h — src/core/ssot_handlers.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+        # EXCLUDED: missing native_gguf_loader.h â€” src/core/ssot_handlers.cpp
+src/core/ssot_handlers_ext_isolated.cpp
         # src/core/beacon_link_stub.cpp  # REMOVED: File does not exist
         src/win32app/v280_link_bridge.cpp
         src/core/ssot_validation.cpp
 
-        # Unified Command Dispatch +�-�+�-�+�-� Zero-drift SSOT dispatch (replaces manual registration)
+        # Unified Command Dispatch +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Zero-drift SSOT dispatch (replaces manual registration)
         src/core/unified_command_dispatch.cpp
         src/core/startup_phase_registry.cpp
 
         # RawrEngine Command Handlers (required for Win32IDE link closure)
-        # EXCLUDED: missing plugin_signature.h — src/core/rawrengine_command_handlers.cpp
+        # EXCLUDED: missing plugin_signature.h â€” src/core/rawrengine_command_handlers.cpp
         src/core/jsonrpc_parser.cpp
 
         # Phase 21: Distributed Swarm Inference Orchestrator
@@ -6170,11 +6477,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Phase 34: Telemetry Export
         src/win32app/Win32IDE_Telemetry.cpp
 
-        # Phase 36: MCP Integration +�-�-� Model Context Protocol Server + Client
+        # Phase 36: MCP Integration +ï¿½-ï¿½-ï¿½ Model Context Protocol Server + Client
         src/mcp_integration.cpp
         src/win32app/Win32IDE_MCP.cpp
 
-        # Phase 36: Flight Recorder +�-�+�-�+�-� memory-mapped binary ring-buffer logger
+        # Phase 36: Flight Recorder +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ memory-mapped binary ring-buffer logger
         src/win32app/Win32IDE_FlightRecorder.cpp
 
         # Phase 36: QuickJS VSIX JavaScript Extension Host
@@ -6185,18 +6492,18 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/rawrxd_state_mmf.cpp
 
         # Phase 37: JS Extension Host + Auto-Polyfill Engine
-    # src/core/js_extension_host.cpp
+src/core/js_extension_host.cpp
         src/core/extension_polyfill_engine.cpp
 
-        # Phase 46: VulkanKernel +�-�+�-�+�-� Full GPU Compute Engine
+        # Phase 46: VulkanKernel +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Full GPU Compute Engine
         src/vulkan_compute.cpp
 
-        # Phase 46: Live Binary Patcher +�-�+�-�+�-� Layer 5 Hotpatch
-    # src/core/live_binary_patcher.cpp
+        # Phase 46: Live Binary Patcher +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Layer 5 Hotpatch
+src/core/live_binary_patcher.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # Core Production Subsystems (Verified Working)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         src/core/deterministic_swarm.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
@@ -6205,10 +6512,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/production_config_manager.cpp
 
         # Singleton subsystems referenced by UnifiedHotpatchManager
-    # src/core/agentic_task_graph.cpp
-    # src/core/embedding_engine.cpp
+src/core/agentic_task_graph.cpp
+src/core/embedding_engine.cpp
         src/core/vector_index.cpp
-    # src/core/vision_encoder.cpp
+src/core/vision_encoder.cpp
 
         # Vision Pipeline Extensions (Token Gating, Embedding Cache, KV Isolation, Quantized Encoder, GPU Staging)
         src/core/vision_token_gate.cpp
@@ -6226,7 +6533,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Transaction Journal (WAL journal for atomic file operations)
         src/core/transaction_journal.cpp
 
-        # Instructions Provider +�-�+�-�+�-� unified *.instructions.md loader (HTTP+CLI+GUI)
+        # Instructions Provider +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ unified *.instructions.md loader (HTTP+CLI+GUI)
         src/core/instructions_provider.cpp
         src/win32app/Win32IDE_Instructions.cpp
 
@@ -6254,7 +6561,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # Phase 15: Static Analysis Engine
         src/core/static_analysis_engine.cpp
-        # src/core/code_linter.cpp
+src/core/code_linter.cpp
         # AUTO-REMOVED: stub file
         src/win32app/Win32IDE_StaticAnalysisPanel.cpp
 
@@ -6292,7 +6599,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_MarketplacePanel.cpp
         src/win32app/Win32IDE_Collab.cpp
 
-        # Phase 51: mIRC Control Bridge +�-�+�-�+�-� IRC bot for remote IDE control
+        # Phase 51: mIRC Control Bridge +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ IRC bot for remote IDE control
         src/win32app/Win32IDE_IRCBridge.cpp
         src/win32app/Win32IDE_IRCBridgeCommands.cpp
         src/collab/websocket_hub.cpp
@@ -6318,7 +6625,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/autonomous_workflow_engine.cpp   # MOVED: to main SOURCES
         src/core/reasoning_profile.cpp
         # src/core/win32ide_link_stubs.cpp  # Conflicts with existing fallbacks
-        # src/win32app/Win32IDE_TranscendencePanel.cpp
+src/win32app/Win32IDE_TranscendencePanel.cpp
         src/win32app/VulkanRenderer.cpp
         src/win32app/OSExplorerInterceptor.cpp
         src/win32app/Win32IDE_MCPHooks.cpp
@@ -6328,7 +6635,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/ConsentPrompt.cpp
         src/win32app/AutonomousAgent.cpp
 
-        # UI Rendering +�-�+�-�+�-� Chat message renderer + tool action status + chat panel
+        # UI Rendering +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Chat message renderer + tool action status + chat panel
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -6343,20 +6650,20 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # ASM Stub Implementations - REMOVED: All stub files deleted, real implementations only
 
-        # Phase 50: Enterprise Hardening +�-�+�-�+�-� Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
-    # src/core/update_signature.cpp
+        # Phase 50: Enterprise Hardening +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
+src/core/update_signature.cpp
         src/core/cursor_github_parity_bridge.cpp
         src/core/swarm_reconciliation.cpp
-    # src/core/quickjs_sandbox.cpp
-    # src/core/plugin_signature.cpp
+src/core/quickjs_sandbox.cpp
+src/core/plugin_signature.cpp
         src/core/enterprise_stress_tests.cpp
         src/core/auto_update_system.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        # Autonomy Gap Closure +�-�+�-�+�-� Phase A-D + Tier 1.4 + Tier 2.3
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+        # Autonomy Gap Closure +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Phase A-D + Tier 1.4 + Tier 2.3
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 
-        # Phase A: Closed-Loop Verification (Write +�-�+�-�+�-� Compile +�-�+�-�+�-� Test +�-�+�-�+�-� Fix)
+        # Phase A: Closed-Loop Verification (Write +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Compile +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Test +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Fix)
         # AUTO-REMOVED: stub file
 
         # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
@@ -6378,9 +6685,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Unified Telemetry Core
         # AUTO-REMOVED: stub file
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # Cursor/JB-Parity Feature Modules
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -6392,20 +6699,20 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_CursorParity.cpp
         src/win32app/Win32IDE_GUILayoutHotpatch.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # Compile-Debt Resolved: IDE Feature Modules (Tasks, Git, Search,
         # Fuzzy Search, Refactor, CallStack, Multi-File Search)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         src/win32app/Win32IDE_Tasks.cpp
         src/win32app/Win32IDE_GitPanel.cpp
         src/win32app/Win32IDE_Refactor.cpp
         src/win32app/Win32IDE_SearchPanel.cpp
         src/win32app/Win32IDE_FuzzySearch.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # Compile-Debt Resolved: IDE Cosmetics & Intelligence Layer
         # (Minimap, DiffView, SettingsGUI, CodeLens, InlayHints, Hover)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         src/win32app/Win32IDE_Minimap.cpp
         src/win32app/Win32IDE_DiffView.cpp
         src/win32app/Win32IDE_SettingsGUI.cpp
@@ -6413,9 +6720,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_InlayHints.cpp
         src/win32app/Win32IDE_HoverTooltips.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # Flagship Product Pillars (Provable Agent, AI RE, Airgapped)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         src/win32app/Win32IDE_ProvableAgent.cpp
         src/win32app/Win32IDE_AIReverseEngineering.cpp
         src/win32app/Win32IDE_AirgappedEnterprise.cpp
@@ -6426,7 +6733,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/universal_model_router.cpp
         src/model_registry.cpp
         # AUTO-REMOVED: stub file
-    # src/core/checkpoint_manager.cpp
+src/core/checkpoint_manager.cpp
         # AgenticAutonomousConfig, EnterpriseFeatureManager, ContextDeteriorationHotpatch
         src/core/agentic_autonomous_config.cpp
         src/core/enterprise_feature_manager.cpp
@@ -6459,31 +6766,31 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/multi_file_search.cpp
         # Legacy support unit wiring removed from production lane.
         # Completed modules previously documented as shipped
-    # src/core/license_manager_panel.cpp
+src/core/license_manager_panel.cpp
         # Qt-based logger disabled (project is Qt-free; Win32IDE_Logger.cpp provides logging)
-        # src/telemetry/logger.cpp
+src/telemetry/logger.cpp
         # License Creator + Feature Registry dialogs (showLicenseCreatorDialog, showFeatureRegistryDialog)
         src/win32app/Win32IDE_LicenseCreator.cpp
         # License enforcement + manifest (g_FeatureManifest + featureName from license_validator_manifest.cpp; LicenseEnforcer from license_enforcement.cpp)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # 10x Dual Engine + Unified Overclock + Quantum Beaconism Fusion
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # Batch 2 Parity Enhancements (Peek, AutoSave, TermSplit, Snippets, MultiCursor)
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         src/win32app/Win32IDE_PeekView.cpp
         src/win32app/Win32IDE_AutoSave.cpp
         src/win32app/Win32IDE_TerminalSplit.cpp
         src/win32app/Win32IDE_SnippetEngine.cpp
         src/win32app/Win32IDE_MultiCursor.cpp
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        # Cognitive Architecture +�-�+�-�+�-� Autonomous Reverse Engineering OS
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+        # Cognitive Architecture +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Autonomous Reverse Engineering OS
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -6491,9 +6798,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
 
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # TrailBrake / HotPatcher / AntiPatcher Safety System
-        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -6536,10 +6843,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             # NOTE: Quantum fiction files already removed from SOURCES
             src/vulkan_compute.cpp
             src/runtime/TensorExecutionRouter.cpp
-    # src/core/embedding_engine.cpp
+src/core/embedding_engine.cpp
             src/core/vector_index.cpp
-    # src/core/agentic_task_graph.cpp
-    # src/core/vision_encoder.cpp
+src/core/agentic_task_graph.cpp
+src/core/vision_encoder.cpp
             src/win32app/Win32IDE_Minimap.cpp
             src/win32app/Win32IDE_SettingsGUI.cpp
             src/win32app/VulkanRenderer.cpp
@@ -6656,7 +6963,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     if(RAWRXD_ENABLE_MISSING_HANDLER_STUBS)
         list(REMOVE_ITEM WIN32IDE_SOURCES
             src/core/ssot_handlers.cpp
-    # src/core/ssot_handlers_ext_isolated.cpp
+src/core/ssot_handlers_ext_isolated.cpp
             src/core/ssot_auto_missing_handlers.cpp
             src/core/ssot_linker_gap_handlers.cpp
             src/core/win32ide_missing_handlers.cpp
@@ -6769,13 +7076,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/ui/ExportBridge.cpp
         src/terminal/embedded_terminal.cpp
         # REMOVED: src/win32app/sovereign_gpu_link_stubs.cpp - stub file deleted
-        # HEXMAG_IDE_ROUTE +�-�+�-�+�-� controller + MASM client + FINALIZE_POLICY
+        # HEXMAG_IDE_ROUTE +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ controller + MASM client + FINALIZE_POLICY
         src/core/hexmag_ide_link_probe.cpp
         src/win32app/Win32IDE_HexMagCopilotRoute.cpp
         # Win32IDE_HexMag.cpp excluded: G HexMag UI transplant; CopilotRoute owns control-plane + link stubs
-    # src/core/hexmag_control_plane.cpp
-    # src/core/hexmag_oracle_binder.cpp
-    # src/core/hexmag_runtime_controller.cpp
+src/core/hexmag_control_plane.cpp
+src/core/hexmag_oracle_binder.cpp
+src/core/hexmag_runtime_controller.cpp
         src/agent/hexmag_client.cpp
     )
 
@@ -6799,7 +7106,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # - Neural_Entropy_Shield.asm: Marketing word salad
         # All src/asm/gpu/RawrXD_RDNA3_*.asm files removed from build.
         set(RAWRXD_HAS_SOVEREIGN_GPU_ASM 0)
-        message(STATUS "[Win32IDE] Sovereign GPU ASM disabled +�-�+�-�+�-� fraudulent claims removed")
+        message(STATUS "[Win32IDE] Sovereign GPU ASM disabled +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ fraudulent claims removed")
 
         set_source_files_properties(${WIN32IDE_EXTRA_ASM} PROPERTIES LANGUAGE ASM_MASM)
     endif()
@@ -6906,11 +7213,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             if(src MATCHES "(_stubs\\.cpp$|/stubs\\.cpp$|_stub\\.cpp$|/stub_.*\\.cpp$|_stubs\\.asm$|/stubs\\.asm$|_stub\\.asm$|/stub_.*\\.asm$|/shim_.*\\.(cpp|asm)$|/missing_handler|/link_stubs_.*\\.(cpp|asm)$|_link_shims?\\.(cpp|asm)$|_fallback[^/]*\\.(cpp|asm)$|_(mock|fake)\\.(cpp|asm)$)" OR
                src MATCHES "(stub_|_stub\\.(cpp|asm)$|shim_|_shims?\\.(cpp|asm)$|shims?\\.(cpp|asm)$|/stubs\\.(cpp|asm)$)" OR
                src MATCHES "(mock_|fake_|_(mock|fake)\\.(cpp|asm)$)")
-                                # ai_agent_masm_core_impl.cpp provides required MASM symbols +�-�+�-�+�-� exempt
+                                # ai_agent_masm_core_impl.cpp provides required MASM symbols +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ exempt
                                 if(src MATCHES "ai_agent_masm_core_impl\\.cpp$")
                                     continue()
                                 endif()
-                                # These are real production implementations, not stubs +�-�+�-�+�-� exempt
+                                # These are real production implementations, not stubs +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ exempt
                                 if(src MATCHES "cot_fallback_system\\.cpp$" OR
                                    src MATCHES "dml_asm_fallback\\.cpp$" OR
                                    src MATCHES "link_stubs_gold\\.cpp$")
@@ -6946,7 +7253,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
                 message(WARNING "[EMERGENCY OVERRIDE] Stub files linked to ${target_name} (CI will reject)")
             endif()
         else()
-            message(STATUS "+�-�+�-�+�-� ${target_name}: No stub policy violations")
+            message(STATUS "+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ ${target_name}: No stub policy violations")
         endif()
     endfunction()
     
@@ -7037,7 +7344,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         endif()
     endif()
 
-    # v14.7.6 Batch 2 parity files +�-�+�-�+�-� compilation fixes applied, re-enabled
+    # v14.7.6 Batch 2 parity files +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ compilation fixes applied, re-enabled
     # (PeekView, AutoSave, TerminalSplit now compile cleanly)
 
     list(REMOVE_DUPLICATES WIN32IDE_SOURCES)
@@ -7089,17 +7396,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_ResourceGenerator.cpp
     )
 
-    # Runtime surface +�-�+�-�+�-� unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
+    # Runtime surface +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
     list(APPEND WIN32IDE_SOURCES
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
     )
 
-    # +�-�+�-�+�-�+�-�+�-�+�-� Performance-optimization batches 3+�-�+�-�+�-�6 +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Performance-optimization batches 3+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½6 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # Batch 3: Unified tiered memory pool (CPU / GPU / disk / compressed)
     # Batch 4: Work-stealing ExecutionScheduler (resolves friend-class declaration)
-    # Batch 5: InferenceProfiler +�-�+�-�+�-� per-layer profiling + Prometheus export
-    # Batch 6: BackendOrchestrator +�-�+�-�+�-� dynamic switching, sharding, semantic cache
+    # Batch 5: InferenceProfiler +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ per-layer profiling + Prometheus export
+    # Batch 6: BackendOrchestrator +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ dynamic switching, sharding, semantic cache
     list(APPEND WIN32IDE_SOURCES
         src/memory/UnifiedMemoryPool.cpp
         # AUTO-REMOVED: stub file
@@ -7120,6 +7427,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/runtime/memory/TensorPlacementManager.cpp
         B014/build/b014_profiler.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         src/deep2/CycloneScheduler.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -7209,14 +7518,30 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/ScaleQuality.cpp
         # AUTO-REMOVED: stub file
-         src/deep2/TheDualityExample.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/TheDualityExample.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/TheDualityExample.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2Discovery.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2Benchmark.cpp
         src/deep2/Deep2InferenceEndpoint.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2InferenceGateway.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2Integration.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2LocalServer.cpp
-         src/deep2/Deep2Server_Minimal.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/Deep2Server_Minimal.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/Deep2Server_Minimal.cpp
            # RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: src/deep2/Deep2Server_Sovereign.cpp
            # is NOT appended here. It was appended and then immediately stripped by
            # the list(REMOVE_ITEM) block below, so it reached no target while the source
@@ -7236,8 +7561,24 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2APIServer.cpp
         # AUTO-REMOVED: stub file
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/GGUFDiagnostics.cpp
-         src/deep2/GGUFLoader_Fixed.cpp
-         src/deep2/GGUFVerifier.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/GGUFLoader_Fixed.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/GGUFLoader_Fixed.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/GGUFVerifier.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/GGUFVerifier.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/mcp_bridge.cpp
@@ -7262,21 +7603,133 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
            # sits in the SAME block and is 411 lines of REAL code. CMAKE_PATTERN=PHANTOM
            # is not evidence of PURE_STUB; the body was read first.
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/deep2_http_gateway.cpp
-         src/deep2/Deep2Engine_KernelTest.cpp
-         src/deep2/moe_microbench.cpp
-         src/deep2/moe_simple_bench.cpp
-         src/deep2/moe_test.cpp
-         src/deep2/moe_validation_test.cpp
-         src/deep2/router_bench.cpp
-         src/deep2/router_latency_test.cpp
-         src/deep2/test_api_server.cpp
-         src/deep2/test_real_gguf_load.cpp
-         src/deep2/test_real_gguf_validate.cpp
-         src/deep2/test_tool_limit_hotpatch.cpp
-         src/deep2/VAL063_Deep2Certification.cpp
-         src/deep2/VAL038_Benchmark_Harness.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/Deep2Engine_KernelTest.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/Deep2Engine_KernelTest.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/moe_microbench.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/moe_microbench.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/moe_simple_bench.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/moe_simple_bench.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/moe_test.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/moe_test.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/moe_validation_test.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/moe_validation_test.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/router_bench.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/router_bench.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/router_latency_test.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/router_latency_test.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/test_api_server.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/test_api_server.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/test_real_gguf_load.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/test_real_gguf_load.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/test_real_gguf_validate.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/test_real_gguf_validate.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/test_tool_limit_hotpatch.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/test_tool_limit_hotpatch.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/VAL063_Deep2Certification.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/VAL063_Deep2Certification.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/VAL038_Benchmark_Harness.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/VAL038_Benchmark_Harness.cpp
         src/deep2/deep2_end_to_end_bench.cpp
-         src/deep2/deep2_moe_bench_standalone.cpp
+        # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/deep2_moe_bench_standalone.cpp is NOT listed here.
+        # It was appended, then stripped by the list(REMOVE_ITEM) block below, so it
+        # reached no target while this source list still advertised it. Retired as a
+        # Bucket-A pure stub: 1-line tombstone, no header, no live consumers, no
+        # historical real content, 6 same-basename locations searched repo-wide with
+        # zero richer twins. Ladder ACTION=RETIRE_ELIGIBLE (9/9 rungs cleared).
+        # Cohort escape that forced the body-first rule: src/deep2/deep2_end_to_end_bench.cpp
+        # shares this block and is 411 lines of REAL code.
+        # RESTORE = git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/deep2_moe_bench_standalone.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -7300,7 +7753,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # set_target_properties(Deep2Engine_MetadataRegressionTest PROPERTIES ...)
     # message(STATUS "Deep2Engine Metadata Regression Test configured")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-� SDMA GPU Scheduler (C++ replacement for MASM) +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ SDMA GPU Scheduler (C++ replacement for MASM) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # Replaced broken MASM syntax with portable C++ implementations
     # sdma_scheduler: GPU DMA event loop, burst coalescing, TSC-based scheduling
     # sdma_ring_allocator: O(1) tensor slot bitmap allocator with spinlock
@@ -7311,7 +7764,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     # Core workflow/reasoning engines required by unified_hotpatch_manager and agentic_task_graph
     list(APPEND WIN32IDE_SOURCES
-    # src/core/autonomous_workflow_engine.cpp
+src/core/autonomous_workflow_engine.cpp
         src/core/workspace_reasoning_profiles.cpp
         src/core/reasoning_schema_versioning.cpp
         src/core/safe_refactor_engine.cpp
@@ -7343,9 +7796,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/sovereign_autonomy/SovereignAgentRuntime.cpp
     )
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # OMEGA-1 v2.0 IDE Integration - IPC Layer for Ghost Text & Telemetry
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     list(APPEND WIN32IDE_SOURCES
         src/win32ide/Omega1IPCClient.cpp
         src/win32ide/GhostTextRenderer.cpp
@@ -7354,9 +7807,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32ide/Win32IDE_Omega1Integration.cpp
     )
     
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Elastic Engine +�-�+�-�+�-� Predictive tensor residency + governance
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Elastic Engine +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Predictive tensor residency + governance
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     list(APPEND WIN32IDE_SOURCES
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -7390,51 +7843,33 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
     )
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # OMEGA-1 Engine Server - IPC Server for IDE integration
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     list(APPEND RAWR_ENGINE_SOURCES
          src/engine/Omega1Engine_Server.cpp
     )
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # P1_UI_WINDOW_OWNERSHIP_001 +�-�+�-�+�-� partial ODR purge (tests/mains only).
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # P1_UI_WINDOW_OWNERSHIP_001 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ partial ODR purge (tests/mains only).
     # Broader stub removal (batch_021 / ssot / LSP / CursorParity) caused
-    # LNK1120+�-�-�+�-�334; those need symbol-level dedupe, not TU deletion.
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # LNK1120+ï¿½-ï¿½-ï¿½+ï¿½-ï¿½334; those need symbol-level dedupe, not TU deletion.
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     list(REMOVE_ITEM WIN32IDE_SOURCES
-         src/deep2/TheDualityExample.cpp
-         src/deep2/Deep2Server_Minimal.cpp
         # RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: the matching
         # src/deep2/Deep2Server_Sovereign.cpp entry was removed from this
         # REMOVE_ITEM list because it is no longer appended above. Leaving it here
         # would strip a name the list never contained.
         # AUTO-REMOVED: stub file
-         src/deep2/GGUFVerifier.cpp
-         src/deep2/GGUFLoader_Fixed.cpp
-        # keep MASMKernelStubs.cpp +�-�+�-�+�-� provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
-         src/deep2/Deep2Engine_KernelTest.cpp
-         src/deep2/moe_microbench.cpp
-         src/deep2/moe_simple_bench.cpp
-         src/deep2/moe_test.cpp
-         src/deep2/moe_validation_test.cpp
-         src/deep2/router_bench.cpp
-         src/deep2/router_latency_test.cpp
-         src/deep2/test_api_server.cpp
-         src/deep2/test_real_gguf_load.cpp
-         src/deep2/test_real_gguf_validate.cpp
-         src/deep2/test_tool_limit_hotpatch.cpp
-         src/deep2/VAL063_Deep2Certification.cpp
-         src/deep2/VAL038_Benchmark_Harness.cpp
+        # keep MASMKernelStubs.cpp +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
         src/deep2/deep2_end_to_end_bench.cpp
-         src/deep2/deep2_moe_bench_standalone.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
     )
     message(STATUS "[Win32IDE] Partial ODR purge: Deep2 test/main TUs removed")
 
     # ADDR32 MASM objs cannot link with /LARGEADDRESSAWARE (required for amdvlk
-    # ProductOpenSession +�-�-� R01). Drop them from IDE; feature flags already gate calls.
+    # ProductOpenSession +ï¿½-ï¿½-ï¿½ R01). Drop them from IDE; feature flags already gate calls.
     set(_WIN32IDE_ASM ${ASM_KERNEL_SOURCES})
     list(REMOVE_ITEM _WIN32IDE_ASM
         src/asm/RawrXD_Telemetry_Kernel.asm
@@ -7457,7 +7892,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
     list(APPEND WIN32IDE_SOURCES src/agentic/RawrXDAgenticE2E.cpp)
     # Real IDE agentic gate driver (resolves RawrXD::IDE::runAgenticGate from main_win32.cpp)
     list(APPEND WIN32IDE_SOURCES src/win32app/ide_agentic_gate.cpp)
-    # BATCH B (W3): LiveBinaryPatcher real implementation TU — previously
+    # BATCH B (W3): LiveBinaryPatcher real implementation TU â€” previously
     # excluded because hotpatch_telemetry_safety.h was never committed; the
     # header now exists (real T3-D safety layer) so the 33KB real TU compiles.
     list(APPEND WIN32IDE_SOURCES src/core/live_binary_patcher.cpp)
@@ -7489,7 +7924,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
     # BATCH D (W3): sole non-const g_FeatureManifest definition matching
     # include/enterprise_license.h (5-member FeatureDefV2, FeatureID order).
     list(APPEND WIN32IDE_SOURCES src/core/enterprise_license_manifest.cpp)
-    # BATCH C (W3): real IDE UI engine TUs — they existed in win32app but
+    # BATCH C (W3): real IDE UI engine TUs â€” they existed in win32app but
     # were never listed in WIN32IDE_SOURCES (category: library-not-linked).
     list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_StatusBar.cpp)
     list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_EditorEngine.cpp)
@@ -7506,7 +7941,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
     # VisionEncoder: the zone-streaming loader contract (LoadZone/GetAllZones/
     # BuildTensorIndex on StreamingGGUFLoader) had no implementation TU in the
     # tree. Rewritten to the real Deep2::GGUFLoader (memory-mapped shards,
-    # listTensors/getTensor/close) — the same loader the Deep2 inference path
+    # listTensors/getTensor/close) â€” the same loader the Deep2 inference path
     # uses. Now wired fail-closed with a real body.
     list(APPEND WIN32IDE_SOURCES src/core/vision_encoder.cpp)
     # LSP hotpatch real impls (written by RAWRXD_AGENTIC_E2E_001 follow-on).
@@ -7521,12 +7956,12 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
     # deterministic multi-phase reasoning, no LLM required, fail-closed).
     list(APPEND WIN32IDE_SOURCES src/agent/local_reasoning_engine_real.cpp)
     list(APPEND WIN32IDE_SOURCES src/agent/local_reasoning_integration.cpp)
-    # BATCH G (W3): remaining real singleton TUs — autonomous workflow engine
+    # BATCH G (W3): remaining real singleton TUs â€” autonomous workflow engine
     # (33KB), agentic task graph (77KB), PDB native parser (72KB).
     list(APPEND WIN32IDE_SOURCES src/core/autonomous_workflow_engine.cpp)
     list(APPEND WIN32IDE_SOURCES src/core/agentic_task_graph.cpp)
     list(APPEND WIN32IDE_SOURCES src/core/pdb_native.cpp)
-    # BATCH G3 (W3): pdb_gsi_hash.cpp — GSI hash + TPI parser; header
+    # BATCH G3 (W3): pdb_gsi_hash.cpp â€” GSI hash + TPI parser; header
     # (pdb_gsi_hash.h) reconstructed, so the TU un-excludes cleanly.
     list(APPEND WIN32IDE_SOURCES src/core/pdb_gsi_hash.cpp)
     # BATCH G (W3): real debugger C bridge (Dbg_ Win32 API bodies, HexMag
@@ -7636,7 +8071,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
     endif()
 
     # Ensure link output dir exists; clear prior exe/pdb before link (mitigates MSVC LNK1104 when
-    # a stale handle, indexer, or crashed link left the binary busy +�-�+�-�+�-� harmless if files are absent).
+    # a stale handle, indexer, or crashed link left the binary busy +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ harmless if files are absent).
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     # PRE_LINK REMOVED: the prior exe deletion was causing build failures
     # when the exe was locked by running test processes (W7 gate, detached
@@ -7710,20 +8145,20 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
         # /DEBUG:FULL REQUIRED: FASTLINK and no-DEBUG both produce broken
         # exes (HEXMAG_INIT=0, EXIT=-1). Only FULL produces a working exe.
         # LNK1201 (PDB write failure) is caused by a locked PDB from a
-        # running RawrXD-Win32IDE.exe process — NOT by /DEBUG:FULL itself.
+        # running RawrXD-Win32IDE.exe process â€” NOT by /DEBUG:FULL itself.
         # Fix: kill all RawrXD processes before building. Do NOT delete the
         # PDB (LNK1318 if deleted while linker expects it).
         # PRE_LINK REMOVED: no more exe/pdb deletion before link.
         # The linker handles overwriting the output naturally.
         # /FORCE:MULTIPLE REMOVED (W3 dedupe wave 7a73ec687): all LNK4006
-        # duplicate symbols eliminated — 0 LNK4006, 0 LNK4088, 0 unresolved.
+        # duplicate symbols eliminated â€” 0 LNK4006, 0 LNK4088, 0 unresolved.
         # The link is now strict (no force-override of duplicate definitions).
         # Mirror the map at the build root for audit tools that scan ${CMAKE_BINARY_DIR}.
         add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
             VERBATIM
         )
-        # R25: keep PE LAA:YES. Do not clear LAA -� 2GB VA breaks mmap streaming.
+        # R25: keep PE LAA:YES. Do not clear LAA -ï¿½ 2GB VA breaks mmap streaming.
         # Certify after link: dumpbin /headers | findstr Large
         # GPU/ICD remains deferred; DualStick not reopened.
     endif()
@@ -7868,7 +8303,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
         if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
             message(FATAL_ERROR "[ProductionLane] QuickJS not found at ${QUICKJS_DIR} and Win32IDE would require QuickJS stubs; strict production strip requires a real QuickJS provider.")
         endif()
-        message(STATUS "QuickJS not found at ${QUICKJS_DIR} +�-�+�-�+�-� JS extension host uses stubs")
+        message(STATUS "QuickJS not found at ${QUICKJS_DIR} +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ JS extension host uses stubs")
         # Create stub include directory so headers compile
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_QUICKJS_STUB=1)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_QUICKJS=0)
@@ -7951,7 +8386,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
         # If monolithic objects are linked, avoid also compiling/linking the overlapping C++ fallback provider.
         if(_WIN32IDE_LINKED_MONOLITHIC_OBJS)
             list(REMOVE_ITEM WIN32IDE_SOURCES src/core/model_loader_fallbacks.cpp)
-            message(STATUS "[Win32IDE] Monolithic ASM objects linked +�-�+�-�+�-� removing src/core/model_loader_fallbacks.cpp to avoid duplicate symbols")
+            message(STATUS "[Win32IDE] Monolithic ASM objects linked +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ removing src/core/model_loader_fallbacks.cpp to avoid duplicate symbols")
         endif()
     else()
         message(STATUS "[Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)")
@@ -7983,7 +8418,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
     endif()
 
     # nlohmann/json: this is a REAL, header-only dependency, not an unused one.
-    # The previous comment here claimed the "include removed — dependency unused
+    # The previous comment here claimed the "include removed â€” dependency unused
     # in source"; that was false. 34 "#include <nlohmann/json.hpp>" sites exist
     # under src/, and this target already has "include" on its include path
     # (target_include_directories(RawrXD-Win32IDE PRIVATE ... ${CMAKE_CURRENT_SOURCE_DIR}/include)).
@@ -8004,7 +8439,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
         add_dependencies(RawrXD-Win32IDE re_deobfuscator)
         target_link_libraries(RawrXD-Win32IDE PRIVATE ${RE_DEOBF_OBJECTS})
     endif()
-    # Skip RE_MODEL_OBJECTS (model_llm_harvester.asm) +�-�+�-�+�-� it defines main() and conflicts with WinMain
+    # Skip RE_MODEL_OBJECTS (model_llm_harvester.asm) +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ it defines main() and conflicts with WinMain
     # if(TARGET re_model_reverse)
     #     add_dependencies(RawrXD-Win32IDE re_model_reverse)
     #     target_link_libraries(RawrXD-Win32IDE PRIVATE ${RE_MODEL_OBJECTS})
@@ -8094,7 +8529,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
         endif()
     endforeach()
 
-    # Product Finish 100 +�-�-� Waves 3-4 (git/search/session/approval/smoke)
+    # Product Finish 100 +ï¿½-ï¿½-ï¿½ Waves 3-4 (git/search/session/approval/smoke)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/RawrXD_Product100.cmake)
 endif()
 
@@ -8145,22 +8580,22 @@ endif()
 # Duplicate/partial RawrXD_Gold source block removed here.
 # Canonical RawrXD_Gold target is defined in the standalone Gold section above.
     # ============================================================================
-    # CI Gating Targets +�-�+�-�+�-� Release / Debug / AddressSanitizer
+    # CI Gating Targets +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Release / Debug / AddressSanitizer
     # ============================================================================
 # Usage:
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release           (production)
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug             (dev)
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAWR_ASAN=ON  (ASAN)
 #
-# ASAN (MSVC): /fsanitize=address +�-�+�-�+�-� detects heap overflows, use-after-free
+# ASAN (MSVC): /fsanitize=address +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ detects heap overflows, use-after-free
 option(RAWR_ASAN "Enable AddressSanitizer (MSVC /fsanitize=address)" OFF)
 
-# PMASSA: bye Ollama +�-�+�-�+�-� prefer local GGUF / inference; Ollama code can be excluded when ON
+# PMASSA: bye Ollama +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ prefer local GGUF / inference; Ollama code can be excluded when ON
 # See docs/PMASSA_BYE_OLLAMA.md
 option(RAWRXD_PMASSA "PMASSA: phase out Ollama (prefer local GGUF; define RAWRXD_PMASSA)" OFF)
 if(RAWRXD_PMASSA)
     add_compile_definitions(RAWRXD_PMASSA=1)
-    message(STATUS "[PMASSA] Bye Ollama +�-�+�-�+�-� RAWRXD_PMASSA=ON")
+    message(STATUS "[PMASSA] Bye Ollama +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ RAWRXD_PMASSA=ON")
 endif()
 
 if(RAWR_ASAN AND MSVC)
@@ -8283,10 +8718,10 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_Suite +�-�+�-�+�-� Pre-Build CI/CD Gate (beaconism pattern)
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# SovereignTest_Suite +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Pre-Build CI/CD Gate (beaconism pattern)
 # Validates: atomic rollback, cache coherency, patch correctness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_SOVEREIGN_TEST_SUITE "Build SovereignTest_Suite pre-build gate" OFF)
 if(BUILD_SOVEREIGN_TEST_SUITE)
     add_executable(SovereignTest_Suite EXCLUDE_FROM_ALL
@@ -8314,10 +8749,10 @@ if(BUILD_SOVEREIGN_TEST_SUITE)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_VAL038_E2E +�-�+�-�+�-� Integration E2E Harness for VAL-038 Kernel
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# SovereignTest_VAL038_E2E +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Integration E2E Harness for VAL-038 Kernel
 # Live-fire validation: Cold-start -> Hot-patch -> Inference -> Hash validation
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_SOVEREIGN_VAL038_E2E "Build VAL-038 E2E integration test" OFF)
 if(BUILD_SOVEREIGN_VAL038_E2E)
     add_executable(SovereignTest_VAL038_E2E EXCLUDE_FROM_ALL
@@ -8343,10 +8778,10 @@ if(BUILD_SOVEREIGN_VAL038_E2E)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# Deep2_Batch_Test +�-�+�-�+�-� Model Stress-Test Harness with PageFaultMonitor
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# Deep2_Batch_Test +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Model Stress-Test Harness with PageFaultMonitor
 # Discovery-Load-Benchmark-Validation sequence for all models
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_DEEP2_BATCH_TEST "Build Deep2 batch model stress-test harness" OFF)
 if(BUILD_DEEP2_BATCH_TEST)
     add_executable(Deep2_Batch_Test EXCLUDE_FROM_ALL
@@ -8372,9 +8807,9 @@ if(BUILD_DEEP2_BATCH_TEST)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# test_generate_one_token +�-�+�-�+�-� Minimal Codestral One-Token Validation Gate
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# test_generate_one_token +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Minimal Codestral One-Token Validation Gate
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_DEEP2_TOKEN_GATE "Build minimal one-token generation gate" OFF)
 if(BUILD_DEEP2_TOKEN_GATE)
     add_executable(test_generate_one_token
@@ -8397,7 +8832,7 @@ if(BUILD_DEEP2_TOKEN_GATE)
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
 
-# test_generate_313_tokens — BATCH007 313-token regression gate for Gemma3
+# test_generate_313_tokens â€” BATCH007 313-token regression gate for Gemma3
 option(BUILD_DEEP2_313_TOKEN_GATE "Build 313-token regression gate" OFF)
 if(BUILD_DEEP2_313_TOKEN_GATE)
     add_executable(test_generate_313_tokens
@@ -8420,7 +8855,7 @@ if(BUILD_DEEP2_313_TOKEN_GATE)
     message(STATUS "[Deep2] 313-token regression gate: test_generate_313_tokens")
 endif()
 
-# test_q2k_single_tensor_oracle — Minimal Q2_K GEMV oracle
+# test_q2k_single_tensor_oracle â€” Minimal Q2_K GEMV oracle
 add_executable(test_q2k_single_tensor_oracle
     src/deep2/test_q2k_single_tensor_oracle.cpp
 )
@@ -8484,7 +8919,7 @@ set_target_properties(generation_quality_gate PROPERTIES
 )
 message(STATUS "[Deep2] Generation quality differential gate: generation_quality_gate")
 
-# test_tokenizer — Tokenizer encode/decode verification
+# test_tokenizer â€” Tokenizer encode/decode verification
 add_executable(test_tokenizer
     src/deep2/test_tokenizer.cpp
 )
@@ -8504,7 +8939,7 @@ set_target_properties(test_tokenizer PROPERTIES
 )
 message(STATUS "[Deep2] Tokenizer test: test_tokenizer")
 
-# test_q4k_gemv_parity +�-�+�-�+�-� BATCH2_Q4K_GEMV_001 standalone cert
+# test_q4k_gemv_parity +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ BATCH2_Q4K_GEMV_001 standalone cert
 option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" OFF)
 if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     add_executable(test_q4k_gemv_parity
@@ -8632,8 +9067,8 @@ if(BUILD_DEEP2_STREAMING)
     message(STATUS "[Deep2] Streaming test: test_streaming")
 endif()
 
-# deep2_streamer_cert +�-�+�-�+�-� STREAMER-CERT-001: Full streaming certification harness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# deep2_streamer_cert +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ STREAMER-CERT-001: Full streaming certification harness
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 # NOTE: kept OFF. The canonical STREAMER-CERT-001 target is declared later in
 # this file as `deep2_streamer_cert` from tools/deep2_streamer_cert.cpp plus the
 # deep2_streamer_discovery library, EXCLUDE_FROM_ALL. Turning this legacy
@@ -8662,7 +9097,7 @@ if(BUILD_DEEP2_STREAMER_CERT)
     message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
 endif()
 
-# OLLAMA_PARITY_STREAMER_001 +�-�-� Deep2 owns stream surface; zero Ollama HTTP
+# OLLAMA_PARITY_STREAMER_001 +ï¿½-ï¿½-ï¿½ Deep2 owns stream surface; zero Ollama HTTP
 option(BUILD_DEEP2_STREAMER_PARITY "Build Deep2 Ollama-parity streamer" OFF)
 if(BUILD_DEEP2_STREAMER_PARITY)
     add_executable(deep2_streamer_parity
@@ -8689,7 +9124,7 @@ if(BUILD_DEEP2_STREAMER_PARITY)
     message(STATUS "[Deep2] Ollama-parity streamer: deep2_streamer_parity")
 endif()
 
-# STREAMER_GPU_SOLO_001 +�-�-� SingleGpu plan: enum all, open one primary (no GGUF claim yet)
+# STREAMER_GPU_SOLO_001 +ï¿½-ï¿½-ï¿½ SingleGpu plan: enum all, open one primary (no GGUF claim yet)
 option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 SingleGpu device gate" OFF)
 if(BUILD_DEEP2_GPU_SOLO_CERT)
     add_executable(deep2_gpu_solo_cert
@@ -9528,7 +9963,7 @@ if(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001)
     message(STATUS "[Deep2] LOCAL_AGENT_AUDIT_001: deep2_local_agent_audit_001")
 endif()
 
-# A0 +�-�-� product floor: process stays alive (no model / no VWA / no InferenceEngine)
+# A0 +ï¿½-ï¿½-ï¿½ product floor: process stays alive (no model / no VWA / no InferenceEngine)
 option(BUILD_P0_PROCESS_ALIVE_001 "Build P0_PROCESS_ALIVE_001 cert" OFF)
 if(BUILD_P0_PROCESS_ALIVE_001)
     add_executable(p0_process_alive_001
@@ -9545,7 +9980,7 @@ if(BUILD_P0_PROCESS_ALIVE_001)
     message(STATUS "[Deep2] P0_PROCESS_ALIVE_001: p0_process_alive_001")
 endif()
 
-# B0 +�-�-� VWA range contract (RMV-layered; no second mount)
+# B0 +ï¿½-ï¿½-ï¿½ VWA range contract (RMV-layered; no second mount)
 option(BUILD_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_RANGE_CONTRACT_001)
     add_executable(vwa_range_contract_001
@@ -9565,7 +10000,7 @@ if(BUILD_VWA_RANGE_CONTRACT_001)
     message(STATUS "[Deep2] VWA_RANGE_CONTRACT_001: vwa_range_contract_001")
 endif()
 
-# C1 substrate +�-�-� K2 logits physical lineage (VWA on RMV; GPU_DISPATCH separate)
+# C1 substrate +ï¿½-ï¿½-ï¿½ K2 logits physical lineage (VWA on RMV; GPU_DISPATCH separate)
 option(BUILD_K2_LOGITS_VWA_LINEAGE_001 "Build K2 logits VWA lineage cert" OFF)
 if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     add_executable(deep2_k2_logits_vwa_lineage_001
@@ -9588,7 +10023,7 @@ if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     message(STATUS "[Deep2] K2 logits VWA lineage: deep2_k2_logits_vwa_lineage_001")
 endif()
 
-# B0 +�-�-� VWA address contract (types + ResolvePhysicalSpan only)
+# B0 +ï¿½-ï¿½-ï¿½ VWA address contract (types + ResolvePhysicalSpan only)
 option(BUILD_VWA_ADDRESS_CONTRACT_001 "Build VWA_ADDRESS_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_ADDRESS_CONTRACT_001)
     add_executable(vwa_address_contract_001
@@ -9608,7 +10043,7 @@ if(BUILD_VWA_ADDRESS_CONTRACT_001)
     message(STATUS "[Deep2] VWA_ADDRESS_CONTRACT_001: vwa_address_contract_001")
 endif()
 
-# B1 +�-�-� VWA POC-1: RMV +�-�-� MASM resolve +�-�-� exact ReadFile + dequant (real GGUF)
+# B1 +ï¿½-ï¿½-ï¿½ VWA POC-1: RMV +ï¿½-ï¿½-ï¿½ MASM resolve +ï¿½-ï¿½-ï¿½ exact ReadFile + dequant (real GGUF)
 option(BUILD_VWA_POC_1_001 "Build VWA_POC_1_001 cert" OFF)
 if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
     set(_VWA_POC_ML64 "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe")
@@ -10642,7 +11077,7 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
     )
     message(STATUS "[Deep2] K2 TryGpu logits split: deep2_k2_trygpu_logits_split_cert")
 
-    # C1 live +�-�-� fulfilled+�-�-�TryGpuHot range attribution under BOUNDED_STREAM
+    # C1 live +ï¿½-ï¿½-ï¿½ fulfilled+ï¿½-ï¿½-ï¿½TryGpuHot range attribution under BOUNDED_STREAM
     add_executable(deep2_k2_logits_gpu_range_attribution_001
          src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp)
     target_link_libraries(deep2_k2_logits_gpu_range_attribution_001
@@ -10662,7 +11097,7 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
                    "deep2_k2_logits_gpu_range_attribution_001")
 endif()
 
-# C1+�-�-�C9 additive helpers (observational lineage + cut/overlap/bound validators)
+# C1+ï¿½-ï¿½-ï¿½C9 additive helpers (observational lineage + cut/overlap/bound validators)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2C1C9.fragment.cmake)
 if(TARGET deep2_c1_c9 AND TARGET InferenceEngine)
     target_link_libraries(InferenceEngine PUBLIC deep2_c1_c9)
@@ -10673,7 +11108,7 @@ if(TARGET deep2_c1_c9 AND TARGET InferenceEngine)
     message(STATUS "[Deep2] C1-C9 helpers: deep2_c1_c9 linked to InferenceEngine")
 endif()
 
-# VWA B3+�-�-�B8 no-fiction range core (resolve/fulfill/IOCP; no manager)
+# VWA B3+ï¿½-ï¿½-ï¿½B8 no-fiction range core (resolve/fulfill/IOCP; no manager)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaB3B8.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaConsumerGates.fragment.cmake)
 if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
@@ -10681,7 +11116,7 @@ if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
     message(STATUS "[Deep2] VWA B3-B8 range core: deep2_vwa_range_core")
 endif()
 
-# RAWRXD_RUN_MODELNAME_001 +�-�-� Ollama-style `rawr run <alias>` front door (Deep2).
+# RAWRXD_RUN_MODELNAME_001 +ï¿½-ï¿½-ï¿½ Ollama-style `rawr run <alias>` front door (Deep2).
 option(BUILD_RAWRXD_RUN_MODELNAME_001 "Build RAWRXD_RUN_MODELNAME_001 + rawr CLI" OFF)
 # RAWRXD_CLI_REACHABILITY_001
 #
@@ -10740,7 +11175,7 @@ if((BUILD_RAWRXD_RUN_MODELNAME_001 OR RAWRXD_BUILD_CLI) AND TARGET InferenceEngi
         src/agentmodes/RawrCertAuthority.cpp
         src/agentmodes/RawrFailureLedger.cpp
         src/agentmodes/RawrModesCli.cpp
-        # RAWRXD_REPOSITORY_INTELLIGENCE_001 — the `rawr repo` surface, so the
+        # RAWRXD_REPOSITORY_INTELLIGENCE_001 â€” the `rawr repo` surface, so the
         # whole-repository index is reachable from the shipping agentic CLI and
         # is not a test-only island. Compiled in directly rather than linked
         # from rawrxd_repo_intel: this target already owns the agent-mode
@@ -10819,7 +11254,7 @@ endif()
     message(STATUS "[Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL")
 endif()
 
-# RAWRXD_SAMPLER_COMBINED_OOB_001 — regression gate for an out-of-bounds read in
+# RAWRXD_SAMPLER_COMBINED_OOB_001 â€” regression gate for an out-of-bounds read in
 # CombinedSampler::sample (vocab ids used as subscripts into a topK-sized
 # probability vector). Deliberately standalone: it compiles Sampler.cpp directly
 # and does not depend on InferenceEngine, so it stays buildable even while the
@@ -10843,7 +11278,7 @@ else()
     message(STATUS "[RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_sampler_combined_oob_001: missing certs/rawrxd_sampler_combined_oob_001.cpp")
 endif()
 
-# RAWRXD_HTTP_TEMPLATE_MARKER_PROBE_001 — diagnostic for the CONTENT_CORRECTNESS
+# RAWRXD_HTTP_TEMPLATE_MARKER_PROBE_001 â€” diagnostic for the CONTENT_CORRECTNESS
 # failure recorded in audit/RAWRXD_HTTP_AUTHORITY_CHAIN_001.md.
 #
 # That gate left ROOT_CAUSE=NARROWED_NOT_CONFIRMED because the vocabulary
@@ -10875,7 +11310,7 @@ set_target_properties(http_template_marker_probe_001 PROPERTIES
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-# RAWRXD_HTTP_ORACLE_SUITE_001 — the 2x2 (RAW vs TEMPLATE) deterministic oracle
+# RAWRXD_HTTP_ORACLE_SUITE_001 â€” the 2x2 (RAW vs TEMPLATE) deterministic oracle
 # suite. RAWRXD_HTTP_AUTHORITY_CHAIN_001 proved a byte-count gate cannot detect
 # a wrong answer; this measures content instead, on one engine and one set of
 # weights, so a column disagreement cannot be blamed on the model.
@@ -10897,7 +11332,7 @@ set_target_properties(http_oracle_suite_001 PROPERTIES
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-# RAWRXD_HTTP_TEMPLATE_FORMAT_SWEEP_001 — corrects an inference in
+# RAWRXD_HTTP_TEMPLATE_FORMAT_SWEEP_001 â€” corrects an inference in
 # RAWRXD_HTTP_TEMPLATE_ROOT_CAUSE_002. That entry read "role markers absent from
 # the vocabulary" as evidence that the template was incompatible with the model.
 # Upstream TinyLlama-1.1B-Chat-v1.0 declares exactly THREE added tokens
@@ -10906,7 +11341,7 @@ endif()
 # trained on them as ordinary text. Absence from vocab is therefore the
 # model's real design, not a defect, and the earlier conclusion was wrong.
 #
-# This sweep measures the remaining suspect — byte-level whitespace — across
+# This sweep measures the remaining suspect â€” byte-level whitespace â€” across
 # six candidate renderings on one engine, one seed, greedy.
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/certs/http_template_format_sweep_001.cpp" AND TARGET InferenceEngine)
 add_executable(http_template_format_sweep_001
@@ -11008,7 +11443,7 @@ endif()
 message(STATUS "[Deep2] OpenAI-compatible server target: rawr-server (port 11435)")
 endif()
 
-# RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 +�-�-� run/chat/agent/steer/resume + certs
+# RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 +ï¿½-ï¿½-ï¿½ run/chat/agent/steer/resume + certs
 # Q2 / RAWRXD_AGENTIC_CLI_QUARANTINE_001: the previous include of
 # cmake/RawrAgenticCli.fragment.cmake is removed. That fragment declared 63
 # nonexistent sources and 25 nonexistent cert targets and then skipped itself
@@ -11016,7 +11451,7 @@ endif()
 # configure. Canonical agent authority is src/rawr_agent.cpp -> rawr_monolith.
 include(${CMAKE_SOURCE_DIR}/cmake/RawrAgenticCliQuarantine.cmake)
 
-# Deep2 Gateway cert island +�-�-� Win32 only (no Ship / no C++23)
+# Deep2 Gateway cert island +ï¿½-ï¿½-ï¿½ Win32 only (no Ship / no C++23)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2GatewayCertStandalone.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2BenchmarkCert.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2ProductLavapath.fragment.cmake)
@@ -11418,8 +11853,8 @@ if(BUILD_DEEP2_PLACEMENT_COST_CERT)
     message(STATUS "[Deep2] Placement cost cert: deep2_placement_cost_cert")
 endif()
 
-# deep2_mars_e2e +�-�+�-�+�-� MARS dual-GPU placement + hotpatch + generate smoke
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# deep2_mars_e2e +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MARS dual-GPU placement + hotpatch + generate smoke
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" OFF)
 if(BUILD_DEEP2_MARS_E2E)
     add_executable(deep2_mars_e2e
@@ -11464,7 +11899,7 @@ if(BUILD_TEST_MARS_CONTROLLER)
     message(STATUS "[Deep2] MARS controller unit smoke: test_mars_controller")
 endif()
 
-# deep2_execution_policy_smoke +�-�+�-�+�-� user-owned ExecutionPolicy validate/store
+# deep2_execution_policy_smoke +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ user-owned ExecutionPolicy validate/store
 option(BUILD_DEEP2_EXECUTION_POLICY_SMOKE "Build ExecutionPolicy smoke harness" OFF)
 if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     add_executable(deep2_execution_policy_smoke
@@ -11488,7 +11923,7 @@ if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     message(STATUS "[Deep2] ExecutionPolicy smoke: deep2_execution_policy_smoke")
 endif()
 
-# p1_ide_exec_policy_apply_001 +�-�+�-�+�-� IDE load enforces ExecutionPolicy placement
+# p1_ide_exec_policy_apply_001 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ IDE load enforces ExecutionPolicy placement
 option(BUILD_P1_IDE_EXEC_POLICY_APPLY "Build P1_IDE_EXEC_POLICY_APPLY_001 harness" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     add_executable(p1_ide_exec_policy_apply_001
@@ -11511,7 +11946,7 @@ if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     message(STATUS "[Deep2] P1 IDE exec policy apply: p1_ide_exec_policy_apply_001")
 endif()
 
-# p1_ide_exec_policy_live_gguf_001 +�-�+�-�+�-� real GGUF +�-�+�-�+�-� residency +�-�+�-�+�-� generate
+# p1_ide_exec_policy_live_gguf_001 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ real GGUF +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ residency +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ generate
 option(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF "Build P1_IDE_EXEC_POLICY_LIVE_GGUF_001" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     add_executable(p1_ide_exec_policy_live_gguf_001
@@ -11534,7 +11969,7 @@ if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     message(STATUS "[Deep2] P1 IDE exec policy LIVE GGUF: p1_ide_exec_policy_live_gguf_001")
 endif()
 
-# p1_real_speedup_001 +�-�+�-�+�-� external wall REAL_SPEEDUP (frozen contract)
+# p1_real_speedup_001 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ external wall REAL_SPEEDUP (frozen contract)
 option(BUILD_P1_REAL_SPEEDUP "Build P1_REAL_SPEEDUP_001 gate" OFF)
 if(BUILD_P1_REAL_SPEEDUP)
     add_executable(p1_real_speedup_001
@@ -11557,7 +11992,7 @@ if(BUILD_P1_REAL_SPEEDUP)
     message(STATUS "[Deep2] P1 REAL_SPEEDUP gate: p1_real_speedup_001")
 endif()
 
-# p1_repeatability_trial_validity_diag_001 +�-�+�-�+�-� MeasuredGenerate acceptance diagnostic
+# p1_repeatability_trial_validity_diag_001 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MeasuredGenerate acceptance diagnostic
 option(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG
     "Build P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001" OFF)
 if(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG)
@@ -11627,7 +12062,7 @@ if(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG)
     message(STATUS "[Deep2] P1 repeatability state drift diag")
 endif()
 
-# p1_ui_encoding_cert +�-�+�-�+�-� P1_UI_ENCODING_001 (UTF-8+�-�+�-�+�-�UTF-16 Win32 boundary)
+# p1_ui_encoding_cert +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ P1_UI_ENCODING_001 (UTF-8+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½UTF-16 Win32 boundary)
 option(BUILD_P1_UI_ENCODING_CERT "Build UI encoding certification harness" OFF)
 if(BUILD_P1_UI_ENCODING_CERT)
     add_executable(p1_ui_encoding_cert
@@ -11649,7 +12084,7 @@ if(BUILD_P1_UI_ENCODING_CERT)
     message(STATUS "[Win32] UI encoding cert: p1_ui_encoding_cert")
 endif()
 
-# p1_ui_menu_e2e_cert +�-�+�-�+�-� P1_UI_MENU_E2E_001 (black-box menu SendInput certification)
+# p1_ui_menu_e2e_cert +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ P1_UI_MENU_E2E_001 (black-box menu SendInput certification)
 option(BUILD_P1_UI_MENU_E2E_CERT "Build UI menu E2E certification harness" OFF)
 if(BUILD_P1_UI_MENU_E2E_CERT)
     add_executable(p1_ui_menu_e2e_cert
@@ -11668,7 +12103,7 @@ if(BUILD_P1_UI_MENU_E2E_CERT)
     message(STATUS "[Win32] UI menu E2E cert: p1_ui_menu_e2e_cert")
 endif()
 
-# p1_ui_sidebar_encoding_cert +�-�+�-�+�-� P1_UI_SIDEBAR_ENCODING_001 (ListView W-struct sidebar headers)
+# p1_ui_sidebar_encoding_cert +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ P1_UI_SIDEBAR_ENCODING_001 (ListView W-struct sidebar headers)
 option(BUILD_P1_UI_SIDEBAR_ENCODING_CERT "Build sidebar ListView encoding certification harness" OFF)
 if(BUILD_P1_UI_SIDEBAR_ENCODING_CERT)
     add_executable(p1_ui_sidebar_encoding_cert
@@ -11705,9 +12140,9 @@ if(BUILD_P1_UI_MENU_LIFETIME_CERT)
     message(STATUS "[Win32] UI menu lifetime cert: p1_ui_menu_lifetime_cert")
 endif()
 
-# deep2_parity_cert +�-�+�-�+�-� PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)
+# deep2_parity_cert +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)
 # External llama.cpp measuring stick is tools/parity_ref (separate process only).
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_DEEP2_PARITY_CERT "Build Deep2 parity certification harness (Deep2-only)" OFF)
 if(BUILD_DEEP2_PARITY_CERT)
     add_executable(deep2_parity_cert
@@ -11729,10 +12164,10 @@ if(BUILD_DEEP2_PARITY_CERT)
     message(STATUS "[Deep2] Parity certification harness: deep2_parity_cert (deps=NONE)")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 # Deep2 end-to-end streaming benchmark (non-blocking, TimeReverseDigest + VramStreaming)
 # Replaces the stubbed deep2_end_to_end_bench.cpp with a real event-driven streaming harness.
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_DEEP2_END_TO_END_BENCH "Build Deep2 end-to-end streaming benchmark" OFF)
 if(BUILD_DEEP2_END_TO_END_BENCH)
     add_executable(deep2_end_to_end_bench
@@ -11759,8 +12194,8 @@ if(BUILD_DEEP2_END_TO_END_BENCH)
     message(STATUS "[Deep2] End-to-end streaming benchmark: deep2_end_to_end_bench")
 endif()
 
-# ide_agent_loop_cert +�-�+�-�+�-� Win32IDE agent spine: read +�-�+�-�+�-� edit +�-�+�-�+�-� diag +�-�+�-�+�-� build +�-�+�-�+�-� run
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# ide_agent_loop_cert +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Win32IDE agent spine: read +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ edit +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ diag +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ build +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ run
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_IDE_AGENT_LOOP_CERT "Build IDE agent loop spine certification harness" OFF)
 if(BUILD_IDE_AGENT_LOOP_CERT)
     add_executable(ide_agent_loop_cert
@@ -11791,8 +12226,8 @@ if(BUILD_IDE_AGENT_LOOP_CERT)
     message(STATUS "[Agentic] IDE agent loop cert: ide_agent_loop_cert")
 endif()
 
-# test_deterministic_replay +�-�+�-�+�-� STREAMER-CERT-001: deterministic replay gate
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# test_deterministic_replay +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ STREAMER-CERT-001: deterministic replay gate
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_DETERMINISTIC_REPLAY "Build deterministic replay certification gate" OFF)
 if(BUILD_DETERMINISTIC_REPLAY)
     add_executable(test_deterministic_replay
@@ -11814,8 +12249,8 @@ if(BUILD_DETERMINISTIC_REPLAY)
     message(STATUS "[Deep2] Deterministic replay gate: test_deterministic_replay")
 endif()
 
-# dump_qwen35_meta +�-�+�-�+�-� Dump Qwen3.5 GGUF metadata + tensor topology
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# dump_qwen35_meta +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Dump Qwen3.5 GGUF metadata + tensor topology
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" OFF)
 if(BUILD_DUMP_QWEN35_META)
     add_executable(dump_qwen35_meta
@@ -11889,12 +12324,12 @@ if(BUILD_RAWRXD_AGENTIC)
     )
     message(STATUS "[Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert")
 
-    # HEXMAG_IDE_E2E_001 +�-�+�-�+�-� Copilot send path +�-�+�-�+�-� controller +�-�+�-�+�-� tuner +�-�+�-�+�-� FinalizePolicy
+    # HEXMAG_IDE_E2E_001 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Copilot send path +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ controller +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ tuner +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ FinalizePolicy
     add_executable(hexmag_ide_e2e_cert
          tests/hexmag_ide_e2e_cert.cpp
-    # src/core/hexmag_runtime_controller.cpp
-    # src/core/hexmag_control_plane.cpp
-    # src/core/hexmag_oracle_binder.cpp
+src/core/hexmag_runtime_controller.cpp
+src/core/hexmag_control_plane.cpp
+src/core/hexmag_oracle_binder.cpp
         src/agent/hexmag_client.cpp
         src/asm/RawrXD_HexMag_Swarm.asm
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
@@ -11917,10 +12352,10 @@ if(BUILD_RAWRXD_AGENTIC)
 
     add_executable(hexmag_runtime_controller_cert
          tests/hexmag_runtime_controller_cert.cpp
-    # src/core/hexmag_runtime_controller.cpp
+src/core/hexmag_runtime_controller.cpp
         src/agent/hexmag_client.cpp
-    # src/core/hexmag_control_plane.cpp
-    # src/core/hexmag_oracle_binder.cpp
+src/core/hexmag_control_plane.cpp
+src/core/hexmag_oracle_binder.cpp
         src/asm/RawrXD_HexMag_Swarm.asm
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
@@ -11940,8 +12375,8 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert")
 endif()
 
-# layer_harness +�-�+�-�+�-� Single-layer Qwen3.5 correctness harness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# layer_harness +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Single-layer Qwen3.5 correctness harness
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_LAYER_HARNESS "Build single-layer Qwen3.5 correctness harness" OFF)
 if(BUILD_LAYER_HARNESS)
     add_executable(layer_harness
@@ -11980,8 +12415,8 @@ if(BUILD_LAYER_HARNESS)
     message(STATUS "[Deep2] L10 FFN_INP same-source: test_l10_ffn_inp_same_source")
 endif()
 
-# qwen35_attn_contract +�-�+�-�+�-� Establish Qwen3.5 full-attention contract
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# qwen35_attn_contract +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Establish Qwen3.5 full-attention contract
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_QWEN35_ATTN_CONTRACT "Build Qwen3.5 attention contract harness" OFF)
 if(BUILD_QWEN35_ATTN_CONTRACT)
     add_executable(qwen35_attn_contract
@@ -12004,8 +12439,8 @@ if(BUILD_QWEN35_ATTN_CONTRACT)
     message(STATUS "[Deep2] Qwen3.5 attention contract: qwen35_attn_contract")
 endif()
 
-# test_val_051_3_multi_token +�-�+�-�+�-� VAL-051.3: 4-Token Autoregressive Generation Gate
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# test_val_051_3_multi_token +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ VAL-051.3: 4-Token Autoregressive Generation Gate
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" OFF)
 if(BUILD_VAL_051_3)
     add_executable(test_val_051_3_multi_token
@@ -12030,9 +12465,9 @@ if(BUILD_VAL_051_3)
     message(STATUS "[Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_fifteen_token +�-�+�-�+�-� VAL-051.5: 15-Token KV Stability Gate
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_fifteen_token +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ VAL-051.5: 15-Token KV Stability Gate
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5 "Build VAL-051.5 15-token KV stability gate" OFF)
 if(BUILD_VAL_051_5)
     add_executable(val_051_5_fifteen_token
@@ -12057,14 +12492,16 @@ if(BUILD_VAL_051_5)
     message(STATUS "[Deep2] VAL-051.5 15-token KV stability gate: val_051_5_fifteen_token")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_diag_1_token +�-�+�-�+�-� VAL-051.5-DIAG: 1-Token Diagnostic Harness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_diag_1_token +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ VAL-051.5-DIAG: 1-Token Diagnostic Harness
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_DIAG "Build VAL-051.5 1-token diagnostic harness" OFF)
 if(BUILD_VAL_051_5_DIAG)
     add_executable(val_051_5_diag_1_token
          tests/val_051_5_diag_1_token.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12137,14 +12574,16 @@ if(BUILD_VAL_051_5_DIAG)
     message(STATUS "[Deep2] VAL-051.5 1-token diagnostic harness: val_051_5_diag_1_token")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_bp16_int_1_token +�-�+�-�+�-� BP16 +�-�+�-�+�-� Deep2 Integration Test
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-option(BUILD_VAL_BP16_INT "Build BP16 +�-�+�-�+�-� Deep2 integration test" OFF)
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_bp16_int_1_token +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ BP16 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Deep2 Integration Test
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+option(BUILD_VAL_BP16_INT "Build BP16 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Deep2 integration test" OFF)
 if(BUILD_VAL_BP16_INT)
     add_executable(val_bp16_int_1_token
          tests/val_bp16_int_1_token.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12210,12 +12649,12 @@ if(BUILD_VAL_BP16_INT)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME val_bp16_int_1_token
     )
-    message(STATUS "[Deep2] BP16 +�-�+�-�+�-� Deep2 integration test: val_bp16_int_1_token")
+    message(STATUS "[Deep2] BP16 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Deep2 integration test: val_bp16_int_1_token")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q6k_synthetic +�-�+�-�+�-� Synthetic Q6_K Layout & Dequant Correctness Test
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_q6k_synthetic +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Synthetic Q6_K Layout & Dequant Correctness Test
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_Q6K "Build VAL-051.5 Q6_K synthetic correctness test" OFF)
 if(BUILD_VAL_051_5_Q6K)
     add_executable(val_051_5_q6k_synthetic
@@ -12235,9 +12674,9 @@ if(BUILD_VAL_051_5_Q6K)
     message(STATUS "[Deep2] VAL-051.5 Q6_K synthetic test: val_051_5_q6k_synthetic")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_streamer +�-�+�-�+�-� BP16 Streaming Reader Round-Trip Validation
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_bp16_streamer +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ BP16 Streaming Reader Round-Trip Validation
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_BP16_STREAMER "Build VAL-051.5 BP16 streamer test" OFF)
 if(BUILD_VAL_051_5_BP16_STREAMER)
     add_executable(val_051_5_bp16_streamer
@@ -12259,14 +12698,16 @@ if(BUILD_VAL_051_5_BP16_STREAMER)
     message(STATUS "[Deep2] VAL-051.5 BP16 streamer test: val_051_5_bp16_streamer")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_e2e +�-�+�-�+�-� End-to-End BP16 Inference Test
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_bp16_e2e +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ End-to-End BP16 Inference Test
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_BP16_E2E "Build VAL-051.5 BP16 end-to-end inference test" OFF)
 if(BUILD_VAL_051_5_BP16_E2E)
     add_executable(val_051_5_bp16_e2e
          tests/val_051_5_bp16_e2e.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12335,14 +12776,16 @@ if(BUILD_VAL_051_5_BP16_E2E)
     message(STATUS "[Deep2] VAL-051.5 BP16 E2E test: val_051_5_bp16_e2e")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_compare +�-�+�-�+�-� GGUF vs BP16 Weight & Inference Comparison
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_bp16_compare +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ GGUF vs BP16 Weight & Inference Comparison
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_BP16_COMPARE "Build VAL-051.5 BP16 comparison test" OFF)
 if(BUILD_VAL_051_5_BP16_COMPARE)
     add_executable(val_051_5_bp16_compare
          tests/val_051_5_bp16_compare.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12418,14 +12861,16 @@ if(BUILD_VAL_051_5_BP16_COMPARE)
     message(STATUS "[Deep2] VAL-051.5 BP16 comparison test: val_051_5_bp16_compare")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_weights +�-�+�-�+�-� GGUF vs BP16 Weight Correctness (no inference)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_bp16_weights +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ GGUF vs BP16 Weight Correctness (no inference)
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_BP16_WEIGHTS "Build VAL-051.5 BP16 weights test" OFF)
 if(BUILD_VAL_051_5_BP16_WEIGHTS)
     add_executable(val_051_5_bp16_weights
          tests/val_051_5_bp16_weights.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12494,9 +12939,9 @@ if(BUILD_VAL_051_5_BP16_WEIGHTS)
     message(STATUS "[Deep2] VAL-051.5 BP16 weights test: val_051_5_bp16_weights")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_verify +�-�+�-�+�-� Direct BP16 Weight Verification (no Deep2Engine)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_bp16_verify +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Direct BP16 Weight Verification (no Deep2Engine)
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_BP16_VERIFY "Build VAL-051.5 BP16 verify test" OFF)
 if(BUILD_VAL_051_5_BP16_VERIFY)
     add_executable(val_051_5_bp16_verify
@@ -12523,14 +12968,16 @@ if(BUILD_VAL_051_5_BP16_VERIFY)
     message(STATUS "[Deep2] VAL-051.5 BP16 verify test: val_051_5_bp16_verify")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_logits +�-�+�-�+�-� GGUF vs BP16 1-Token Forward & Logits Equivalence
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_bp16_logits +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ GGUF vs BP16 1-Token Forward & Logits Equivalence
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_BP16_LOGITS "Build VAL-051.5 BP16 logits equivalence test" OFF)
 if(BUILD_VAL_051_5_BP16_LOGITS)
     add_executable(val_051_5_bp16_logits
          tests/val_051_5_bp16_logits.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12599,14 +13046,16 @@ if(BUILD_VAL_051_5_BP16_LOGITS)
     message(STATUS "[Deep2] VAL-051.5 BP16 logits test: val_051_5_bp16_logits")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_6_bp16_perf +�-�+�-�+�-� BP16 Performance Benchmark & Prefetch Optimization
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_6_bp16_perf +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ BP16 Performance Benchmark & Prefetch Optimization
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_6_BP16_PERF "Build VAL-051.6 BP16 performance benchmark" OFF)
 if(BUILD_VAL_051_6_BP16_PERF)
     add_executable(val_051_6_bp16_perf
          tests/val_051_6_bp16_perf.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12675,14 +13124,16 @@ if(BUILD_VAL_051_6_BP16_PERF)
     message(STATUS "[Deep2] VAL-051.6 BP16 perf benchmark: val_051_6_bp16_perf")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_7_bp16_profile +�-�+�-�+�-� Forward-Path Profiling
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_7_bp16_profile +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Forward-Path Profiling
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_7_BP16_PROFILE "Build VAL-051.7 BP16 forward profiling" OFF)
 if(BUILD_VAL_051_7_BP16_PROFILE)
     add_executable(val_051_7_bp16_profile
          tests/val_051_7_bp16_profile.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12751,14 +13202,16 @@ if(BUILD_VAL_051_7_BP16_PROFILE)
     message(STATUS "[Deep2] VAL-051.7 BP16 profile: val_051_7_bp16_profile")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_7_bp16_lightweight_profile +�-�+�-�+�-� Lightweight forward-path profiler
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_7_bp16_lightweight_profile +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Lightweight forward-path profiler
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE "Build VAL-051.7 lightweight profile" OFF)
 if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     add_executable(val_051_7_bp16_lightweight_profile
          tests/val_051_7_bp16_lightweight_profile.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12827,13 +13280,15 @@ if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     message(STATUS "[Deep2] VAL-051.7 lightweight profile: val_051_7_bp16_lightweight_profile")
 endif()
 
-# minimal_1token_profiler +�-�+�-�+�-� Minimal 1-token production profiler
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# minimal_1token_profiler +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Minimal 1-token production profiler
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_MINIMAL_1TOKEN_PROFILER "Build minimal 1-token profiler" OFF)
 if(BUILD_MINIMAL_1TOKEN_PROFILER)
     add_executable(minimal_1token_profiler
          tests/minimal_1token_profiler.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12902,13 +13357,15 @@ if(BUILD_MINIMAL_1TOKEN_PROFILER)
     message(STATUS "[Deep2] Minimal 1-token profiler: minimal_1token_profiler")
 endif()
 
-# quick_1layer_profiler +�-�+�-�+�-� Fast 1-layer quant breakdown
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# quick_1layer_profiler +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Fast 1-layer quant breakdown
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_QUICK_1LAYER_PROFILER "Build quick 1-layer profiler" OFF)
 if(BUILD_QUICK_1LAYER_PROFILER)
     add_executable(quick_1layer_profiler
          tests/quick_1layer_profiler.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -12977,9 +13434,9 @@ if(BUILD_QUICK_1LAYER_PROFILER)
     message(STATUS "[Deep2] Quick 1-layer profiler: quick_1layer_profiler")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# q4k_gemv_bench +�-�+�-�+�-� Q4_K GEMV micro-benchmark (reference vs stack-buffer)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# q4k_gemv_bench +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Q4_K GEMV micro-benchmark (reference vs stack-buffer)
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_Q4K_GEMV_BENCH)
     add_executable(q4k_gemv_bench
@@ -12999,9 +13456,9 @@ if(BUILD_Q4K_GEMV_BENCH)
     message(STATUS "[Deep2] Q4_K GEMV bench: q4k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# q5k_gemv_bench +�-�+�-�+�-� Q5_K GEMV micro-benchmark (reference vs SIMD)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# q5k_gemv_bench +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Q5_K GEMV micro-benchmark (reference vs SIMD)
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_Q5K_GEMV_BENCH)
     add_executable(q5k_gemv_bench
@@ -13021,14 +13478,16 @@ if(BUILD_Q5K_GEMV_BENCH)
     message(STATUS "[Deep2] Q5_K GEMV bench: q5k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_diag +�-�+�-�+�-� Minimal BP16 forward crash isolation
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_bp16_diag +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Minimal BP16 forward crash isolation
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_BP16_DIAG "Build VAL-051.5 BP16 diagnostic" OFF)
 if(BUILD_VAL_051_5_BP16_DIAG)
     add_executable(val_051_5_bp16_diag
          tests/val_051_5_bp16_diag.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -13098,14 +13557,16 @@ if(BUILD_VAL_051_5_BP16_DIAG)
     message(STATUS "[Deep2] VAL-051.5 BP16 diagnostic: val_051_5_bp16_diag")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_bench +�-�+�-�+�-� GGUF vs BP16 Inference Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_bp16_bench +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ GGUF vs BP16 Inference Benchmark
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_BP16_BENCH "Build VAL-051.5 BP16 benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_BENCH)
     add_executable(val_051_5_bp16_bench
          tests/val_051_5_bp16_bench.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -13175,9 +13636,9 @@ if(BUILD_VAL_051_5_BP16_BENCH)
     message(STATUS "[Deep2] VAL-051.5 BP16 benchmark: val_051_5_bp16_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_bp16_loadbench +�-�+�-�+�-� Load-Time Only Benchmark (no inference)
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_bp16_loadbench +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Load-Time Only Benchmark (no inference)
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_BP16_LOADBENCH "Build VAL-051.5 BP16 load benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_LOADBENCH)
     add_executable(val_051_5_bp16_loadbench
@@ -13205,9 +13666,9 @@ if(BUILD_VAL_051_5_BP16_LOADBENCH)
     message(STATUS "[Deep2] VAL-051.5 BP16 load benchmark: val_051_5_bp16_loadbench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q4k_fused_verify +�-�+�-�+�-� Synthetic Q4_K fused vs reference correctness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_q4k_fused_verify +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Synthetic Q4_K fused vs reference correctness
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_Q4K_FUSED_VERIFY "Build Q4_K fused kernel correctness test" OFF)
 if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     add_executable(val_051_5_q4k_fused_verify
@@ -13223,9 +13684,9 @@ if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     message(STATUS "[Deep2] Q4_K fused verify: val_051_5_q4k_fused_verify")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q4k_gemv_bench +�-�+�-�+�-� Isolated Q4_K GEMV Micro-Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_q4k_gemv_bench +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Isolated Q4_K GEMV Micro-Benchmark
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     add_executable(val_051_5_q4k_gemv_bench
@@ -13244,9 +13705,9 @@ if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     message(STATUS "[Deep2] Q4_K GEMV bench: val_051_5_q4k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q2k_gemv_verify +�-�+�-�+�-� Synthetic Q2_K SIMD vs scalar correctness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_q2k_gemv_verify +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Synthetic Q2_K SIMD vs scalar correctness
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_Q2K_GEMV_VERIFY "Build Q2_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     add_executable(val_051_5_q2k_gemv_verify
@@ -13262,9 +13723,9 @@ if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     message(STATUS "[Deep2] Q2_K GEMV verify: val_051_5_q2k_gemv_verify")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q2k_gemv_bench +�-�+�-�+�-� Isolated Q2_K GEMV Micro-Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_q2k_gemv_bench +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Isolated Q2_K GEMV Micro-Benchmark
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_Q2K_GEMV_BENCH "Build Q2_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     add_executable(val_051_5_q2k_gemv_bench
@@ -13280,9 +13741,9 @@ if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     message(STATUS "[Deep2] Q2_K GEMV bench: val_051_5_q2k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q5k_gemv_verify +�-�+�-�+�-� Synthetic Q5_K scalar vs dequant-dot correctness
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_q5k_gemv_verify +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Synthetic Q5_K scalar vs dequant-dot correctness
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_Q5K_GEMV_VERIFY "Build Q5_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     add_executable(val_051_5_q5k_gemv_verify
@@ -13298,9 +13759,9 @@ if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     message(STATUS "[Deep2] Q5_K GEMV verify: val_051_5_q5k_gemv_verify")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q5k_gemv_bench +�-�+�-�+�-� Isolated Q5_K GEMV Micro-Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_q5k_gemv_bench +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Isolated Q5_K GEMV Micro-Benchmark
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     add_executable(val_051_5_q5k_gemv_bench
@@ -13316,9 +13777,9 @@ if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     message(STATUS "[Deep2] Q5_K GEMV bench: val_051_5_q5k_gemv_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q5k_forward_bench +�-�+�-�+�-� Simulated Full Forward Pass Q5_K Timing
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_q5k_forward_bench +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Simulated Full Forward Pass Q5_K Timing
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_Q5K_FORWARD_BENCH "Build Q5_K forward pass benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     add_executable(val_051_5_q5k_forward_bench
@@ -13334,14 +13795,16 @@ if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     message(STATUS "[Deep2] Q5_K forward bench: val_051_5_q5k_forward_bench")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_8_linearw_thread_scaling +�-�+�-�+�-� Row-Parallel LinearW Scaling Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_8_linearw_thread_scaling +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Row-Parallel LinearW Scaling Benchmark
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_8_LINEARW_THREAD_SCALING "Build LinearW thread-scaling benchmark" OFF)
 if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     add_executable(val_051_8_linearw_thread_scaling
          tests/val_051_8_linearw_thread_scaling.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -13410,14 +13873,16 @@ if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     message(STATUS "[Deep2] LinearW thread-scaling bench: val_051_8_linearw_thread_scaling")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_8_layer_profile +�-�+�-�+�-� Synthetic Full Transformer Layer Profiler
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_8_layer_profile +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Synthetic Full Transformer Layer Profiler
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_8_LAYER_PROFILE "Build full layer profiler" OFF)
 if(BUILD_VAL_051_8_LAYER_PROFILE)
     add_executable(val_051_8_layer_profile
          tests/val_051_8_layer_profile.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -13486,9 +13951,9 @@ if(BUILD_VAL_051_8_LAYER_PROFILE)
     message(STATUS "[Deep2] Layer profiler: val_051_8_layer_profile")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# val_051_5_q2k_profile +�-�+�-�+�-� Q2_K vs Q4_K GEMV Profiling Benchmark
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# val_051_5_q2k_profile +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Q2_K vs Q4_K GEMV Profiling Benchmark
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_VAL_051_5_Q2K_PROFILE "Build Q2_K GEMV profiling benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_PROFILE)
     add_executable(val_051_5_q2k_profile
@@ -13504,10 +13969,10 @@ if(BUILD_VAL_051_5_Q2K_PROFILE)
     message(STATUS "[Deep2] Q2_K profile: val_051_5_q2k_profile")
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_PatchRegistry +�-�+�-�+�-� PatchRegistry Abstraction Layer Tests
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# SovereignTest_PatchRegistry +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ PatchRegistry Abstraction Layer Tests
 # Validates CI/CD mock path and prepares for production hot-patching
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_PATCHREGISTRY_TEST "Build PatchRegistry abstraction tests" OFF)
 if(BUILD_PATCHREGISTRY_TEST)
     add_executable(SovereignTest_PatchRegistry EXCLUDE_FROM_ALL
@@ -13535,10 +14000,10 @@ if(BUILD_PATCHREGISTRY_TEST)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_HotPatcher +�-�+�-�+�-� Production Live Binary Patching Tests
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# SovereignTest_HotPatcher +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Production Live Binary Patching Tests
 # Validates VirtualProtectEx, WriteProcessMemory, FlushInstructionCache
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_HOTPATCHER_TEST "Build HotPatcher production tests" OFF)
 if(BUILD_HOTPATCHER_TEST)
     add_executable(SovereignTest_HotPatcher EXCLUDE_FROM_ALL
@@ -13567,10 +14032,10 @@ if(BUILD_HOTPATCHER_TEST)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# SovereignTest_AutonomousAgent +�-�+�-�+�-� End-to-End Autonomous Agent Integration Test
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# SovereignTest_AutonomousAgent +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ End-to-End Autonomous Agent Integration Test
 # Validates: SessionStore -> AgentGraphRuntime -> ToolRegistry -> AutonomousAgent
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_AUTONOMOUS_AGENT_TEST "Build Autonomous Agent integration tests" OFF)
 if(BUILD_AUTONOMOUS_AGENT_TEST)
     add_executable(SovereignTest_AutonomousAgent EXCLUDE_FROM_ALL
@@ -13604,10 +14069,10 @@ if(BUILD_AUTONOMOUS_AGENT_TEST)
     endif()
 endif()
 
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-# AntiHallucinationHotPatcher +�-�+�-�+�-� MASM Anti-Hallucination Guard
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+# AntiHallucinationHotPatcher +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ MASM Anti-Hallucination Guard
 # Validates patches before application to prevent logic drift
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 option(BUILD_ANTI_HALLUCINATION "Build Anti-Hallucination MASM patcher" OFF)
 if(BUILD_ANTI_HALLUCINATION AND MSVC)
     # Assemble the MASM file
@@ -13650,9 +14115,9 @@ if(BUILD_ANTI_HALLUCINATION AND MSVC)
         add_dependencies(SovereignTest_Suite SovereignTest_AntiHallucination)
     endif()
 endif()
-# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
 
-# CI gate: stress_test +�-�+�-�+�-� build and note availability
+# CI gate: stress_test +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ build and note availability
 message(STATUS "[CI] self_test_gate target available (cmake --build . --target self_test_gate)")
 message(STATUS "[CI] RAWR_ASAN=${RAWR_ASAN}")
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -13677,7 +14142,7 @@ if(Python3_FOUND)
         COMMAND ${Python3_EXECUTABLE} 
             ${CMAKE_SOURCE_DIR}/tools/validate_command_registry.py --strict
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Validating command registry (STRICT +�-�+�-�+�-� all IDM_* must be in COMMAND_TABLE)..."
+        COMMENT "Validating command registry (STRICT +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ all IDM_* must be in COMMAND_TABLE)..."
         VERBATIM
     )
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -13708,7 +14173,7 @@ endif()
 # )
 # message(STATUS "[Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)")
 
-# Autonomous Agentic Pipeline unit test (Task 5 +�-�+�-�+�-� buildable)
+# Autonomous Agentic Pipeline unit test (Task 5 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ buildable)
 if(WIN32)
     add_executable(test_autonomous_pipeline
          tests/test_autonomous_pipeline.cpp
@@ -13753,9 +14218,9 @@ if(WIN32)
         message(STATUS "RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Hotpatch Stress Test +�-�+�-�+�-� Acquisition-grade memory hotpatch validation
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Hotpatch Stress Test +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Acquisition-grade memory hotpatch validation
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     add_executable(hotpatch_stress_test EXCLUDE_FROM_ALL
         # AUTO-REMOVED: stub file
         src/core/model_memory_hotpatch.cpp
@@ -13773,9 +14238,9 @@ if(WIN32)
     )
     set_property(TARGET hotpatch_stress_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Hotpatch E2E Test +�-�+�-�+�-� Real GGUF tensor +�-�+�-�+�-� hotpatch +�-�+�-�+�-� inference +�-�+�-�+�-� rollback
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Hotpatch E2E Test +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Real GGUF tensor +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ hotpatch +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ inference +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ rollback
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     add_executable(hotpatch_e2e_test EXCLUDE_FROM_ALL
         # AUTO-REMOVED: stub file
         src/core/model_memory_hotpatch.cpp
@@ -13795,9 +14260,9 @@ if(WIN32)
     )
     set_property(TARGET hotpatch_e2e_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # ARCH-CERT-001: GGUF Tensor/Operation Inventory
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: arch_cert_tensor_inventory removed (stub-only sources)
     # add_executable(arch_cert_tensor_inventory EXCLUDE_FROM_ALL
     #     # AUTO-REMOVED: stub file
@@ -13807,9 +14272,9 @@ if(WIN32)
     # )
     # set_property(TARGET arch_cert_tensor_inventory PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # FWD-CERT-001: Deterministic Forward-Pass Certification
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     add_executable(fwd_cert_001 EXCLUDE_FROM_ALL
         # AUTO-REMOVED: stub file
         src/tokenizer/gguf_embedded_tokenizer.cpp
@@ -13822,9 +14287,9 @@ if(WIN32)
     )
     set_property(TARGET fwd_cert_001 PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Production Benchmark +�-�+�-�+�-� Batch 1: Repeatable 1/10/32/128 token benchmark
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Production Benchmark +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Batch 1: Repeatable 1/10/32/128 token benchmark
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -13833,6 +14298,8 @@ if(WIN32)
         # AUTO-REMOVED: stub file
         src/deep2/ProductionProfiler.cpp
          src/deep2/Deep2Engine.cpp
+         src/deep2/Deep2Engine.cpp
+         src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -13953,16 +14420,16 @@ if(WIN32)
     )
     message(STATUS "[Batch 1] Production benchmark target: RawrXD-ProductionBenchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Production Certification Test +�-�+�-�+�-� validates certification framework
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Production Certification Test +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ validates certification framework
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     if(MSVC)
     endif()
     message(STATUS "[Batch 1] Production cert test target: RawrXD-ProductionCertTest")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # GPU Inference Benchmark +�-�+�-�+�-� v16.2-GPU-HYBRID Phase C
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # GPU Inference Benchmark +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ v16.2-GPU-HYBRID Phase C
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: RawrXD-Benchmark removed (stub-only sources)
     if(FALSE)
     add_executable(RawrXD-Benchmark EXCLUDE_FROM_ALL
@@ -14008,9 +14475,9 @@ if(WIN32)
     message(STATUS "[Phase C] GPU Benchmark target: RawrXD-Benchmark")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Fused Layer Benchmark +�-�+�-�+�-� v16.3 Phase D Layer Fusion
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Fused Layer Benchmark +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ v16.3 Phase D Layer Fusion
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: RawrXD-FusedBenchmark removed (stub-only sources)
     if(FALSE)
     add_executable(RawrXD-FusedBenchmark EXCLUDE_FROM_ALL
@@ -14042,9 +14509,9 @@ if(WIN32)
     message(STATUS "[Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # KV Cache Benchmark +�-�+�-�+�-� v16.4 Phase E GPU-Resident KV Cache
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # KV Cache Benchmark +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ v16.4 Phase E GPU-Resident KV Cache
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: RawrXD-KVBenchmark removed (stub-only sources)
     if(FALSE)
     add_executable(RawrXD-KVBenchmark EXCLUDE_FROM_ALL
@@ -14076,15 +14543,15 @@ if(WIN32)
     message(STATUS "[Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Fix #3 NHWC Layout Benchmark +�-�+�-�+�-� REMOVED: stub file deleted
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Fix #3 NHWC Layout Benchmark +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ REMOVED: stub file deleted
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # add_executable(Fix3_NHWC_Benchmark EXCLUDE_FROM_ALL ...)
     # TARGET REMOVED: src/benchmark/Fix3_NHWC_Benchmark_Stub.cpp was deleted
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Fix #4 Flash Attention v2 Benchmark +�-�+�-�+�-� Memory-efficient attention
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Fix #4 Flash Attention v2 Benchmark +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Memory-efficient attention
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: Fix4_FlashAttention_Benchmark removed (stub-only sources)
     if(FALSE)
     add_executable(Fix4_FlashAttention_Benchmark EXCLUDE_FROM_ALL
@@ -14112,9 +14579,9 @@ if(WIN32)
     message(STATUS "[Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Fix #5 Fused Quantized Kernels +�-�+�-�+�-� Q4_0/Q8_0 fused dequantize+GEMM
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Fix #5 Fused Quantized Kernels +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Q4_0/Q8_0 fused dequantize+GEMM
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: Fix5_FusedQuantized_Benchmark removed (stub-only sources)
     if(FALSE)
     add_executable(Fix5_FusedQuantized_Benchmark EXCLUDE_FROM_ALL
@@ -14142,9 +14609,9 @@ if(WIN32)
     message(STATUS "[Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # VAL-032: Speculative Decoding (Medusa-style) Benchmark
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: VAL032_SpeculativeDecoding_Benchmark removed (stub-only sources)
     if(FALSE)
     add_executable(VAL032_SpeculativeDecoding_Benchmark EXCLUDE_FROM_ALL
@@ -14172,9 +14639,9 @@ if(WIN32)
     message(STATUS "[VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # VAL-032: AVX-512 Assembly Kernel Benchmark
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: VAL032_AVX512_Benchmark removed (stub-only sources)
     if(FALSE)
     add_executable(VAL032_AVX512_Benchmark EXCLUDE_FROM_ALL
@@ -14203,9 +14670,9 @@ if(WIN32)
     message(STATUS "[VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-032 Simple Intrinsics Benchmark +�-�+�-�+�-� Direct AVX-512 performance measurement
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-032 Simple Intrinsics Benchmark +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Direct AVX-512 performance measurement
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: tree_attention_bench_simple removed (stub-only sources)
     if(FALSE)
     add_executable(tree_attention_bench_simple EXCLUDE_FROM_ALL
@@ -14229,9 +14696,9 @@ if(WIN32)
     message(STATUS "[VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-033 Profiling Instrumentation +�-�+�-�+�-� Per-stage cycle-accurate timing
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-033 Profiling Instrumentation +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Per-stage cycle-accurate timing
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: tree_attention_profiled removed (stub-only sources)
     if(FALSE)
     add_executable(tree_attention_profiled EXCLUDE_FROM_ALL
@@ -14254,9 +14721,9 @@ if(WIN32)
     message(STATUS "[VAL-033] Profiling instrumentation: tree_attention_profiled")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-034 Q@K^T Alignment Optimization +�-�+�-�+�-� 64-byte aligned loads
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-034 Q@K^T Alignment Optimization +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ 64-byte aligned loads
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: tree_attention_aligned removed (stub-only sources)
     if(FALSE)
     add_executable(tree_attention_aligned EXCLUDE_FROM_ALL
@@ -14279,9 +14746,9 @@ if(WIN32)
     message(STATUS "[VAL-034] Q@K^T alignment optimization: tree_attention_aligned")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-035 Tiled Q@K^T +�-�+�-�+�-� Register-resident Q, streaming K
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-035 Tiled Q@K^T +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Register-resident Q, streaming K
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: tree_attention_tiled removed (stub-only sources)
     if(FALSE)
     add_executable(tree_attention_tiled EXCLUDE_FROM_ALL
@@ -14304,9 +14771,9 @@ if(WIN32)
     message(STATUS "[VAL-035] Tiled Q@K^T: tree_attention_tiled")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-036 Vectorized Softmax +�-�+�-�+�-� AVX-512 polynomial exp approximation
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-036 Vectorized Softmax +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ AVX-512 polynomial exp approximation
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: tree_attention_vectorized removed (stub-only sources)
     if(FALSE)
     add_executable(tree_attention_vectorized EXCLUDE_FROM_ALL
@@ -14329,9 +14796,9 @@ if(WIN32)
     message(STATUS "[VAL-036] Vectorized softmax: tree_attention_vectorized")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-037 Tree Sparsity +�-�+�-�+�-� Exploit tree structure to reduce computation
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-037 Tree Sparsity +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Exploit tree structure to reduce computation
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: tree_attention_sparse removed (stub-only sources)
     if(FALSE)
     add_executable(tree_attention_sparse EXCLUDE_FROM_ALL
@@ -14354,9 +14821,9 @@ if(WIN32)
     message(STATUS "[VAL-037] Tree sparsity: tree_attention_sparse")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # VAL-037.1 Fused Online Softmax + Block-Sparse Attention
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: tree_attention_fused_sparse removed (stub-only sources)
     if(FALSE)
     add_executable(tree_attention_fused_sparse EXCLUDE_FROM_ALL
@@ -14379,9 +14846,9 @@ if(WIN32)
     message(STATUS "[VAL-037.1] Fused online softmax: tree_attention_fused_sparse")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-037.2 Tree-Specialized Fused Attention +�-�+�-�+�-� Exploit 4x4 tree topology
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-037.2 Tree-Specialized Fused Attention +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Exploit 4x4 tree topology
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: tree_attention_tree_specialized removed (stub-only sources)
     if(FALSE)
     add_executable(tree_attention_tree_specialized EXCLUDE_FROM_ALL
@@ -14404,9 +14871,9 @@ if(WIN32)
     message(STATUS "[VAL-037.2] Tree-specialized: tree_attention_tree_specialized")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-038.1 MASM Mechanical Translation +�-�+�-�+�-� Same algorithm, optimal registers
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-038.1 MASM Mechanical Translation +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Same algorithm, optimal registers
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # Create the executable with C++ wrapper and ASM source
     add_executable(tree_attention_masm_val038 EXCLUDE_FROM_ALL
         # AUTO-REMOVED: stub file
@@ -14431,9 +14898,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-038.1] MASM mechanical: tree_attention_masm_val038")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-038 Fused Attention +�-�+�-�+�-� Q@K^T +�-�+�-�+�-� Softmax +�-�+�-�+�-� A@V in single kernel
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-038 Fused Attention +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Q@K^T +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Softmax +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ A@V in single kernel
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # AUTO-REMOVED: VAL038_FusedAttention_Benchmark removed (stub-only sources)
     if(FALSE)
     add_executable(VAL038_FusedAttention_Benchmark EXCLUDE_FROM_ALL
@@ -14458,11 +14925,11 @@ if(WIN32)
     message(STATUS "[VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark")
     endif()
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # VAL-038 Validation Benchmark (B +�-�+�-�+�-� C +�-�+�-�+�-� A)
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # VAL-038 Validation Benchmark (B +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ C +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ A)
     # Step B: Control flow validation with debug counters
     # Step C: Numerical correctness vs scalar reference
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     # add_executable(VAL038_Validation_Benchmark EXCLUDE_FROM_ALL
     #     # AUTO-REMOVED: stub file
     # )
@@ -14482,11 +14949,11 @@ if(WIN32)
     #     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     #     OUTPUT_NAME VAL038_Validation_Benchmark
     # )
-    # message(STATUS "[VAL-038] Validation benchmark (B+�-�+�-�+�-�C+�-�+�-�+�-�A): VAL038_Validation_Benchmark")
+    # message(STATUS "[VAL-038] Validation benchmark (B+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½C+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½A): VAL038_Validation_Benchmark")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # TPS smoke +�-�+�-�+�-� GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # TPS smoke +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL
         # RAWRXD_TPS_SMOKE_ENTRY_001: the entry point was stripped, leaving a
         # target with three library sources and no main(), which is why
@@ -14522,10 +14989,10 @@ if(WIN32)
     )
     message(STATUS "[Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)")
 
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    # Model analysis +�-�+�-�+�-� shared lib (Win32IDE + CLI) + CLI tool (docs/ANALYSIS_QUICKSTART.md)
-    # Note: gguf_k_quants.cpp stays out of the lib +�-�+�-�+�-� Win32IDE already links one copy.
-    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
+    # Model analysis +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ shared lib (Win32IDE + CLI) + CLI tool (docs/ANALYSIS_QUICKSTART.md)
+    # Note: gguf_k_quants.cpp stays out of the lib +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Win32IDE already links one copy.
+    # +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½
     add_library(RawrXD-ModelAnalysisLib STATIC EXCLUDE_FROM_ALL
         src/core/model_anatomy.cpp
         src/core/neurological_diff.cpp
@@ -14962,13 +15429,13 @@ endif()
 # Applied to whichever rawrxd target exists (GUI or Sovereign CLI)
 # =============================================================================
 if(RAWRXD_ENABLE_VALIDATION AND TARGET rawrxd)
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON +�-�+�-�+�-� runtime tensor dumping enabled")
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ runtime tensor dumping enabled")
     target_compile_definitions(rawrxd PRIVATE RAWRXD_ENABLE_VALIDATION=1)
     target_include_directories(rawrxd PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/inference_validation/harness
     )
 elseif(TARGET rawrxd)
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF +�-�+�-�+�-� runtime tensor dumping disabled")
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ runtime tensor dumping disabled")
 endif()
 
 # ============================================================================
@@ -15406,7 +15873,7 @@ endif()
 # =============================================================================
 
 # =============================================================================
-# SoloIDE +�-�+�-�+�-� Sovereign Agentic Desktop Environment
+# SoloIDE +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Sovereign Agentic Desktop Environment
 # =============================================================================
 set(SOLOIDE_SOURCES
     src/soloide/main.cpp
@@ -15442,7 +15909,7 @@ set(SOLOIDE_HEADERS
 )
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
-    # Find Qt6 +�-�+�-�+�-� try qmake-based detection first, then manual paths
+    # Find Qt6 +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ try qmake-based detection first, then manual paths
     find_package(Qt6 COMPONENTS Widgets Network Core QUIET)
     if(NOT Qt6_FOUND)
         find_package(Qt6 COMPONENTS Widgets Network Core
@@ -15473,10 +15940,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
         )
         message(STATUS "[SoloIDE] RawrXD-SoloIDE target configured with Qt6")
     else()
-        message(WARNING "[SoloIDE] Qt6 not found +�-�+�-�+�-� SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
+        message(WARNING "[SoloIDE] Qt6 not found +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
     endif()
 endif()
-# test_generation: sources were all stubs or link stubs — target disabled
+# test_generation: sources were all stubs or link stubs â€” target disabled
 # if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_generation.cpp")
 # add_executable(test_generation tests/test_generation.cpp ...)
 # set_target_properties(test_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15487,6 +15954,8 @@ endif()
  add_executable(test_llama_native tests/test_llama_native.cpp
     # AUTO-REMOVED: stub file
      src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
+     src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -15539,6 +16008,8 @@ add_test(NAME test_llama_native COMMAND test_llama_native WORKING_DIRECTORY "${C
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
      src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
+     src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -15610,6 +16081,8 @@ endif()
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
      src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
+     src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
     # AUTO-REMOVED: stub file
@@ -15660,6 +16133,8 @@ add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTOR
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
      src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
+     src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
@@ -15709,6 +16184,8 @@ add_test(NAME k2_002_tensor_streaming COMMAND k2_002_tensor_streaming WORKING_DI
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
      src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
+     src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
@@ -15786,6 +16263,8 @@ add_test(NAME k2_003c_single_layer_forward COMMAND k2_003c_single_layer_forward 
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
      src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
+     src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
@@ -15855,7 +16334,7 @@ target_link_libraries(k2_005_autoregressive_kv_cache PRIVATE InferenceEngine)
 add_test(NAME k2_005_autoregressive_kv_cache COMMAND k2_005_autoregressive_kv_cache WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-006: Bounded Autoregressive Token Generation
-# Proves logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� decode +�-�+�-�+�-� repeat pipeline works
+# Proves logits +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ argmax +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ token +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ decode +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ repeat pipeline works
  add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -15887,7 +16366,7 @@ add_test(NAME k2_007_real_output_projection COMMAND k2_007_real_output_projectio
  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/k2_007a_tokenizer_metadata.cpp")
 endif()
 
-# K2-007B: Projection +�-�+�-�+�-� Logits Interface
+# K2-007B: Projection +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Logits Interface
 # Narrow integration gate: proves real output projection produces a valid
 # logits vector consumable by deterministic argmax. Reuses K2-007 streaming.
  add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
@@ -15902,7 +16381,7 @@ add_test(NAME k2_007b_projection_logits_interface COMMAND k2_007b_projection_log
 
 # K2-008: End-to-End Semantic Generation
 # Proves tokenizer + real output projection communicate end-to-end:
-# text +�-�+�-�+�-� tokens +�-�+�-�+�-� real K2 inference +�-�+�-�+�-� logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� text.
+# text +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ tokens +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ real K2 inference +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ logits +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ argmax +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ token +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ text.
 # Independent of K2-006 synthetic baseline.
  add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
     # AUTO-REMOVED: stub file
@@ -16901,7 +17380,7 @@ if(BUILD_TESTING)
 endif()
 
 # ============================================================================
-# B010/B011 Fast Experiment +�-�+�-�+�-� Direct StreamingMatMul residency test
+# B010/B011 Fast Experiment +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Direct StreamingMatMul residency test
 # ============================================================================
 set(B010B011_FAST_SOURCES
     tests/b010_b011_fast_experiment.cpp
@@ -17308,12 +17787,14 @@ target_link_libraries(b009_t128_instrumented PRIVATE
 )
 
 # ============================================================================
-# Certification Harness +�-�+�-�+�-� Adversarial Evidence-Producing Benchmark Suite
+# Certification Harness +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ Adversarial Evidence-Producing Benchmark Suite
 # ============================================================================
 add_executable(certification_harness EXCLUDE_FROM_ALL
     certification/CertificationHarness.cpp
     src/tokenizer/gguf_embedded_tokenizer.cpp
      src/deep2/Deep2Engine.cpp
+     src/deep2/Deep2Engine.cpp
+     src/deep2/InferenceWire.cpp   # RAWRXD_INFERENCEWIRE_CMAKE_WIRING_001
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -17442,7 +17923,7 @@ endif()
 include(cmake/RawrXDSovereignFinish.cmake)
 
 
-# test_v_proj_parity +�-�-�+�-�-�+�-�-� BATCH2_V_PROJ_001
+# test_v_proj_parity +ï¿½-ï¿½-ï¿½+ï¿½-ï¿½-ï¿½+ï¿½-ï¿½-ï¿½ BATCH2_V_PROJ_001
 if(TARGET InferenceEngine)
     add_executable(test_v_proj_parity
         src/deep2/test_v_proj_parity.cpp
@@ -17461,7 +17942,7 @@ if(TARGET InferenceEngine)
     )
 endif()
 
-# rawrxd_real_gguf_parity +─── RAWRXD_REAL_GGUF_PARITY_001 (CPU-reference vs engine, position-0 ladder)
+# rawrxd_real_gguf_parity +â”€â”€â”€ RAWRXD_REAL_GGUF_PARITY_001 (CPU-reference vs engine, position-0 ladder)
 if(TARGET InferenceEngine)
     add_executable(rawrxd_real_gguf_parity
         src/deep2/RealGGUFParity.cpp
@@ -17604,7 +18085,7 @@ endif()
 
 
 # ============================================================================
-# RAWRXD_SINGLE_WRITER_AUTHORITY_001 — canonical implementation
+# RAWRXD_SINGLE_WRITER_AUTHORITY_001 â€” canonical implementation
 #
 # src/authority/SingleWriterAuthority.{h,cpp} is the canonical mechanism:
 #   - the authorized path set is PERSISTED in the lease file, not held in a
@@ -17635,7 +18116,7 @@ set_target_properties(rawrxd_single_writer PROPERTIES
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # ============================================================================
-# RAWRXD_SINGLE_WRITER_AUTHORITY_001 — legacy implementation, SUPERSEDED
+# RAWRXD_SINGLE_WRITER_AUTHORITY_001 â€” legacy implementation, SUPERSEDED
 #
 # src/agentmodes/WriterLeaseAuthority.{h,cpp} is retained for provenance and is
 # NOT in the build graph. It was the only implementation that compiled, and it
@@ -17849,12 +18330,12 @@ if(TARGET InferenceEngine)
 endif()
 
 # ============================================================================
-# RAWRXD_DEEP2_MODEL_REGISTRY_001 — model admission authority
+# RAWRXD_DEEP2_MODEL_REGISTRY_001 â€” model admission authority
 #
 # src/deep2/ModelRegistry.cpp was previously a one-line "// STUB" file. That
 # mattered: Deep2::ModelRegistry was declared in Deep2ModelRegistry.hpp and had
 # NO definition anywhere in the build graph, so every resolve() call site had no
-# linkable implementation and architecture dispatch could not fail closed —
+# linkable implementation and architecture dispatch could not fail closed â€”
 # because it could not run at all.
 #
 # This target makes the registry a real, compiled authority:
@@ -17868,7 +18349,7 @@ endif()
 #     registered GEMV/dequant pointers. A format that parses but has no linked
 #     kernel (every IQ type, since RegisterIQKernels() is an empty stub) reports
 #     false. BF16 reports true because dequant_bf16 + gemv_bf16_scalar really
-#     are registered — measured, not assumed from parseability.
+#     are registered â€” measured, not assumed from parseability.
 #   - Unknown architecture, no registered implementation, structurally
 #     incomplete tensors, and SpecialGraph architectures all FAIL CLOSED.
 #
@@ -17911,7 +18392,7 @@ set_target_properties(rawrxd_deep2_model_registry PROPERTIES
 # There is no `QuantKernelRegistry` CMake target in this tree (verified: the
 # target does not exist), so QuantKernelRegistry.cpp is a source of this library
 # directly. Without it, quantExecutable() reports false for every format and the
-# admission gate would reject every model — fail-closed, but useless.
+# admission gate would reject every model â€” fail-closed, but useless.
 message(STATUS "[Deep2] Model registry: QuantKernelRegistry.cpp compiled in for measured quant capability")
 
 # RAWRXD_DEEP2_MODEL_REGISTRY_001 admission + registry gate.
@@ -17921,7 +18402,7 @@ message(STATUS "[Deep2] Model registry: QuantKernelRegistry.cpp compiled in for 
 # against the real ModelRegistry code. There are no literal PASS strings.
 #
 # Contrast with the 26 no-op "cert" targets in this file whose sources are
-# `int main(){ return 0; }` — those exit 0 having tested nothing.
+# `int main(){ return 0; }` â€” those exit 0 having tested nothing.
 add_executable(deep2_model_registry_admission_test
     tools/deep2_model_registry_admission_test.cpp)
 
@@ -17952,7 +18433,7 @@ set_target_properties(deep2_model_registry_admission_test PROPERTIES
 
 message(STATUS "[Deep2] Model registry admission gate: deep2_model_registry_admission_test")
 
-# RAWRXD_DEEP2_MODEL_REGISTRY_001 — real load-path admission probe.
+# RAWRXD_DEEP2_MODEL_REGISTRY_001 â€” real load-path admission probe.
 #
 # The admission gate above registers its OWN fixture architectures and therefore
 # proves registry logic only. This probe links InferenceEngine and calls
@@ -18297,8 +18778,8 @@ message(STATUS "thread_geometry_probe: CONFIGURED")
 #
 # Four hardcoded roots under a 1600-file cap, against a repository the audit
 # itself measured at 1968 implementation files. Enumeration is alphabetical and
-# recurses in place, so the cap truncated the TAIL of src/ — reverse_engineering,
-# runtime, serve, tokenizer, win32app — and nothing recorded that it had.
+# recurses in place, so the cap truncated the TAIL of src/ â€” reverse_engineering,
+# runtime, serve, tokenizer, win32app â€” and nothing recorded that it had.
 #
 # Three properties here are structural, not conventions:
 #
@@ -18460,7 +18941,7 @@ set_target_properties(git_safety_authority_cert PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     OUTPUT_NAME git_safety_authority_cert)
 
-# RAWRXD_GIT_SAFETY_AUTHORITY_001 — build seal.
+# RAWRXD_GIT_SAFETY_AUTHORITY_001 â€” build seal.
 #
 # A failed build leaves the PREVIOUS executable in place. It still runs, it still
 # prints a plausible CHECKS_TOTAL and VERDICT, and it can therefore certify
@@ -18511,7 +18992,7 @@ add_custom_command(TARGET git_safety_authority_cert POST_BUILD
 # enable_testing() is called here rather than relying on the call at the
 # tests/ subdirectory gate above: that call is inside an EXISTS() condition, so
 # a tree without tests/CMakeLists.txt would silently produce a target that
-# cannot be run by ctest at all — which is precisely the failure this gate
+# cannot be run by ctest at all â€” which is precisely the failure this gate
 # exists to prevent.
 enable_testing()
 add_test(NAME git_safety_authority_cert
@@ -18818,6 +19299,47 @@ target_include_directories(deep2_streamer_discovery PUBLIC
 
 add_executable(deep2_streamer_cert EXCLUDE_FROM_ALL
     tools/deep2_streamer_cert.cpp
+    # RAWRXD_LAYER0_STACK_ATTRIBUTION_001
+    #
+    # The Kimi K2 MLA path terminates with
+    #     exit code -1073741571 = 0xC00000FD STATUS_STACK_OVERFLOW
+    # inside loadModel, AFTER MLA_ELIGIBLE layersBound=61/61 and BEFORE the
+    # harness can observe loadModel returning. A guard-page fault has no unwind
+    # path, so the C++ try/catch instrumentation cannot see it -- that is a
+    # property of the fault, not of the instrumentation.
+    #
+    # Both guards below already exist and were written for exactly this class.
+    # Neither was reachable from any target that links the engine, and they were
+    # wired into MUTUALLY EXCLUSIVE build trees:
+    #     Deep2StackGuard.cpp  -> rawrxd/CMakeLists.txt only
+    #     Layer0Guard.cpp      -> root    CMakeLists.txt only
+    # so no single binary could ever contain both. This is the first target that
+    # has both, and it is the first wiring that can attribute a stack overflow.
+    #
+    #   Layer0Guard       installs a vectored handler + UEF in-process, captures
+    #                     EXCEPTION_RECORD/CONTEXT directly (RIP, RSP, RCX,
+    #                     ExceptionInformation[]) and dumps 16 stack words from
+    #                     RSP -- which for a recursive overflow IS the repeating
+    #                     frame list. No cdb, no dump tooling, no PDB required.
+    #   Deep2StackGuard   ForwardDepthGuard: a thread_local depth counter with a
+    #                     limit of 8, plus HeapScratchArena for moving large
+    #                     frames off the stack. These are the preventive half.
+    #
+    # Adoption census before this edit (measured, not assumed):
+#   ForwardDepthGuard  9 hits, all inside Deep2StackGuard.{h,cpp} -> 0 callers
+    #   HeapScratchArena   5 hits, all inside Deep2StackGuard.{h,cpp} -> 0 callers
+    #   Layer0::Arm()      0 call sites anywhere in the tree
+    #   recursionRejects   declared, 0 writers
+    #
+    # Deep2StackGuard.cpp is deliberately NOT listed here. It is already in
+    # INFERENCE_ENGINE_SOURCES via src/deep2/expert_cache/Deep2StackGuard.cpp
+    # (:4935), and that copy is byte-identical to src/deep2/Deep2StackGuard.cpp
+    # (both SHA256 4C5B0C90...E56C9). Since this target links InferenceEngine, the
+    # symbols are already present. Listing the sibling copy here would compile the
+    # same TU twice; static-archive semantics mean the linker would silently prefer
+    # the object file over the archive member and the duplicate would never
+    # announce itself. Absence of LNK2005 would therefore be luck, not a check.
+    src/deep2/Layer0Guard.cpp
 )
 target_compile_options(deep2_streamer_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
 target_link_libraries(deep2_streamer_cert PRIVATE deep2_streamer_discovery InferenceEngine psapi)

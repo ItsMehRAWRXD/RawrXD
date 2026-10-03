@@ -1,0 +1,166 @@
+RAWRXD_MOE_EXPERT_MEASURED_001
+================================
+THE MoE EXPERT CASE, MEASURED. 4/4 CASES. LOW-RANK LOSES IN ALL.
+
+MODEL  = F:\OllamaModels\blobs\sha256-764636b0...  103,999,401,280 bytes
+         GGUF v3, 1328 tensors, 43 layers, arch=deepseek4, TRUE MoE
+TYPE   = 39 (MXFP4)  -- blk.41 / blk.42 .ffn_down_exps.weight, 3D 2048x4096x256
+WINDOW = 256 rows x 1024 cols (32 quant blocks wide), 2 window origins each
+CHECKS = 18 per case, 1 failure per case (see section 4)
+
+
+----------------------------------------------------------------------------
+1. RESULT
+----------------------------------------------------------------------------
+ #  tensor                       row0  order0_b  rank99  cost_b/e  s1/sR  beats?
+ 1  blk.41.ffn_down_exps.weight     0    3.5472     247    38.594   2.99     NO
+ 2  blk.41.ffn_down_exps.weight  1024    3.5439     247    38.594   3.04     NO
+ 3  blk.42.ffn_down_exps.weight     0    3.5448     247    38.594   3.07     NO
+ 4  blk.42.ffn_down_exps.weight  1024    3.5421     247    38.594   3.09     NO
+
+  LOW_RANK_BEATS_ORDER0 = 0 / 4
+  DELTA_L1_RATIO        = 0.892 .. 0.899
+  SPREAD entropy 3.5421 - 3.5472  (0.14% across 2 tensors x 2 windows)
+
+
+----------------------------------------------------------------------------
+2. THE FINDING, WHICH CUTS BOTH WAYS
+----------------------------------------------------------------------------
+COMPARED WITH THE DENSE MATRIX (11 cases):
+
+  quantity                    dense Q4_K/Q6_K     MoE MXFP4
+  order0 entropy              6.86 .. 7.22         3.54 .. 3.55
+  sigma_1 / sigma_R           482 .. 3146          2.99 .. 3.09
+  rank for 99% energy         188 .. 197           247 (of 256)
+  rank cost                    47.0 .. 49.3        38.59
+  beats order0                 0/11                 0/4
+
+THE MOE DELTA IS CHEAPER IN ABSOLUTE TERMS -- 3.54 bits/element is roughly HALF
+the 6.9-7.2 measured on dense Q4_K and Q6_K. That is a real and somewhat
+surprising result: the coarser the base, the more one might expect the residual
+to become structured. Half the entropy is a genuine improvement.
+
+BUT THE SPECTRUM IS NEARLY FLAT. sigma_1/sigma_R is 3.0, against 482-3146 on
+dense weights. The MoE expert delta is not merely cheap -- it is ISOTROPIC.
+It is the least structured delta measured in this entire investigation, more so
+even than the dense case it was hoped would behave differently.
+
+AND THAT DECIDES IT. Reaching 99% of its energy requires rank 247 of 256 at
+38.59 bits/element -- 10.9x worse than simply order-0 coding the delta. So:
+
+    Making the delta cheaper helped the ORDER-0 option by 2x, and helped the
+    LOW-RANK option not at all.
+
+The residual overlay was never only about low rank; order-0 coding of the delta
+is the competing baseline, and that baseline moved in the same direction as the
+proposal rather than against it. A cheaper delta is not a structured delta.
+
+=> On real MoE expert weights at MXFP4 precision, the residual overlay still
+   does not pay. Not because the delta is large, but because it is diffuse.
+
+
+----------------------------------------------------------------------------
+3. WHY WINDOW WIDTH IS CONTROLLED FOR
+----------------------------------------------------------------------------
+The low-rank factor cost of an R x C matrix is r*(R+C)*32/(R*C) bits/element.
+WIDENING THE WINDOW MAKES LOW RANK LOOK BETTER. Measured at both widths:
+
+  C=256 :  rank99 = 191,  cost 47.750
+  C=1024:  rank99 = 247,  cost 38.594
+
+Reporting only one width would have confounded "MXFP4 differs from Q4_K" with
+"a wider window flatters low rank", and the two would have been
+indistinguishable in the output. Both are reported. The C=1024 figure is the
+one used above because a 32-column window is one MXFP4 block wide and cannot
+support a covariance estimate.
+
+Note also that the first C=256 run was produced by a BUFFER OVERRUN and is void;
+see section 5. The C=256 numbers above are from the corrected build.
+
+
+----------------------------------------------------------------------------
+4. DECODE VALIDATION -- WHY THESE NUMBERS ARE TRUSTWORTHY
+----------------------------------------------------------------------------
+  MXFP4_POST_NORM_WITHIN_E2M1_LATTICE  post_norm_max = 6.000000
+  MXFP4_NORMALISED_STATIONARY          post_norm_row_rms_cv = 0.0409 .. 0.0433
+  MXFP4_LATTICE_BOUNDED                max_distinct_per_32group = 15 (allows 16)
+  MXFP4_SIGN_SYMMETRIC                 max_sign_skew_of_32 = 17 .. 20
+  DEQUANT_SUBBLOCK_STATIONARY          group_rms_cv = 0.0269 .. 0.0606
+  ROW_BLOCKS_READ                      exact, 139264 B per window at C=1024
+
+post_norm_max landing EXACTLY on 6.0 is the signature of a correct E2M1
+magnitude table: 6.0 IS the top magnitude of the format, so a decode that
+slightly mis-set the table could not land on it.
+
+The 1 remaining FAIL per case is ALL_TYPES_UNDERSTOOD (unknown=130). That is the
+DELIBERATE SCOPE DECISION: types 17/18/26 are IQ2_XXS / IQ2_XS / IQ4_XS, which
+decode through 256-entry kvalues tables. Reproducing 256 magic bytes from
+memory is not verifiable after the fact -- one wrong entry yields a
+self-consistent decode that passes every stationarity test and produces a rank
+curve indistinguishable from a real one. Those are left unimplemented on
+purpose. This is a scope boundary, not a defect, and it is the only thing
+between this receipt and the other 98% of the expert population.
+
+
+----------------------------------------------------------------------------
+5. DEFECTS FOUND AND FIXED IN THIS PASS
+----------------------------------------------------------------------------
+D1  BUFFER OVERRUN, INTRODUCED BY ME, CAUGHT BY THE INSTRUMENT.
+    Making the window width a parameter did NOT widen the read loop. `raw` was
+    sized for R x blocksWide blocks but filled with R blocks, so every
+    subsequent index ran past the end of the buffer. `MXFP4_POST_NORM_MAX` came
+    back as 1.6e37 against an E2M1 ceiling of 6.0, and the check refused it.
+
+    This is worth stating plainly: the overrun produced entropy=3.539 and
+    rank99=30 with cost 7.5 bits/elem -- numbers that, read without the FAIL,
+    would have been the FIRST favourable result in this whole investigation.
+    The instrument refused a result its own author produced by an out-of-bounds
+    read. That is the entire argument for these checks existing.
+
+D2  CRITERION MISMATCH, REPLACED NOT RELAXED.
+    DEQUANT_DISTINCT_VALUES gated on >= 64 distinct values, a floor inherited
+    from Q4_K/Q6_K where the scale is shared per 256 elements. MXFP4 confines
+    every 32-element block to the 16-value E2M1 lattice BY CONSTRUCTION, so a
+    correct decode yields a SMALL global count -- 23 was measured. Gating that
+    with the Q4_K floor would fail every correct MXFP4 decode.
+
+    The fix was NOT to lower the floor until it passed. The gate is now
+    type-conditional and, for MXFP4, is SUPERSEDED BY THE PROPERTY THAT ACTUALLY
+    MATTERS: the per-block lattice bound (MXFP4_LATTICE_BOUNDED) plus the
+    normalised lattice ceiling. A criterion that cannot distinguish a correct
+    decode from a broken one is worse than no criterion.
+
+D3  STATIONARITY CRITERION REPLACED FOR MXFP4, NOT RELAXED.
+    Raw per-group RMS cv for MXFP4 was 5.96 and always will be: the format
+    carries a per-32-element E8M0 power-of-two scale. After dividing each block
+    by its own scale the criterion is STRICTER, not looser -- normalised
+    per-row RMS cv must be < 1.0 and measures 0.041-0.043.
+
+D4  The first MXFP4 run reported sigma_1/sigma_R = 6.3e29. That is the signature
+    of a numerically degenerate Gram matrix, not of a diffuse error field, and
+    it is why the run was not interpreted before the window was widened.
+
+
+----------------------------------------------------------------------------
+6. STILL NOT MEASURED
+----------------------------------------------------------------------------
+  127 of 129 routed-expert tensors are IQ2_XXS / IQ2_XS. MXFP4 covers 2, both
+  in the LAST TWO LAYERS (41, 42 of 43). A last-two-layers result is not a MoE
+  result for the model.
+
+  To measure them, the exact kvalues tables are required. They must be obtained
+  from a reference implementation or extracted from the file by a method that
+  does not depend on recall. Until then, any MoE statement in this project must
+  carry the qualifier "MXFP4 ffn_down_exps, layers 41-42, 2 of 129 tensors".
+
+
+----------------------------------------------------------------------------
+VERDICT
+  MXFP4_MOE_DELTA_ENTROPY            = 3.5421 .. 3.5472 bits/elem
+  MXFP4_MOE_SPECTRUM                 = NEARLY FLAT (s1/sR 2.99 .. 3.09)
+  MXFP4_RANK_FOR_99PCT               = 247 of 256, 38.594 bits/elem
+  LOW_RANK_BEATS_ORDER0              = 0 / 4
+  DENSE_Q4_K / DENSE_Q6_K            = REFUTED (11/11, unchanged)
+  MOE_EXPERT_MXFP4                    = REFUTED (4/4)
+  MOE_EXPERT_IQUANTS (98.4%)          = NOT MEASURED  <- scope boundary
+  RESIDUAL_OVERLAY_COMPRESSION       = NOT VIABLE on every class measured

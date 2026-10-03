@@ -1,0 +1,19 @@
+=== RAWRXD_DEEP2_STREAMER_DISCOVERY_001 ===
+DISCOVERY_BY=GGUF_MAGIC_47_47_55_46
+ADMISSION_POLICY=NONE_BY_SIZE
+FILES_SCANNED=2
+GGUF_BY_MAGIC=2
+NON_GGUF_SKIPPED=0
+LOGICAL_MODELS=2
+SINGLE_FILE=1
+SHARDED_COMPLETE=0
+SHARDED_INCOMPLETE=0
+PROJECTORS=1
+MANIFESTS_NO_PAYLOAD=0
+CORRUPT_HEADERS=0
+TOTAL_BYTES=22069579744
+ENGINE_NOTE=deep2_streamer_cert requested=6
+NOTE=Discovery is an INVENTORY. It admits nothing on size and decides
+     nothing about capability. Every capable-looking artifact is handed
+     to Deep2 and the verdict is whatever Deep2 does.
+=== RECEIPT_END ===

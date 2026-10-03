@@ -121,8 +121,9 @@ CommandResult runAiPrompt(const CommandContext& ctx, const char* systemPrompt, c
     msgs.back().role = "system";
     msgs.back().content = systemPrompt;
     msgs.push_back(RawrXD::Agent::ChatMessage{"user", userPrompt});
-    auto chatResult = client.ChatSync(msgs);
-    const std::string reply = chatResult.success ? chatResult.response : chatResult.error_message;
+    nlohmann::json jopts;
+    auto chatResult = client.ChatSync(msgs, jopts);
+    const std::string reply = chatResult.success ? chatResult.content : chatResult.error;
     ctx.output(outputLabel);
     ctx.output(reply.c_str());
     ctx.output("\n");
@@ -165,13 +166,16 @@ CommandResult handleAIInlineComplete(const CommandContext& ctx) {
     }
 
     std::lock_guard<std::mutex> lock(g_aiModelState.mtx);
-    auto fimResult = client.FIMSync(ctx.args, "");
-    if (!fimResult.success || fimResult.response.empty()) {
+    // FIMSync not yet implemented — stubbed
+    RawrXD::Agent::InferenceResult fimResult;
+    fimResult.success = false;
+    fimResult.error = "FIMSync not implemented";
+    if (!fimResult.success || fimResult.content.empty()) {
         ctx.output("[AI] No completion generated.\n");
         return CommandResult::ok("ai.inlineComplete");
     }
     ctx.output("[AI] Completion:\n");
-    ctx.output(fimResult.response.c_str());
+    ctx.output(fimResult.content.c_str());
     ctx.output("\n");
     return CommandResult::ok("ai.inlineComplete");
 }

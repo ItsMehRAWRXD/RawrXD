@@ -1,0 +1,159 @@
+RAWRXD_RESIDUAL_OVERLAY_VERDICT_001
+======================================
+THE COMPARISON THAT WAS NEVER MADE, NOW RUN.
+OVERLAY vs THE BEST SINGLE-FORMAT QUANTISER AT MATCHED BITRATE.
+
+TOOL   rawrxd/certs/gguf_tensor_slice_001.cpp  (stage 4)
+METHOD RTN min/max quantisers at the EXACT bits-per-weight of each shipped
+       format (bits + 16/groupSize), scored against the SAME fixed probe x as
+       the overlay points, so the two curves are directly comparable.
+       All 4 cases: CHECKS_FAIL=0, FINAL_VERDICT=PASS
+
+
+----------------------------------------------------------------------------
+1. RESULT
+----------------------------------------------------------------------------
+tensor                    overlay_bpw  overlay_L2 | best_direct<=overlay   direct_L2
+                                                              premium_bpw
+--------------------------------------------------------------------------
+MoE blk.20.ffn_down_exps      7.2993    0.000000 |  7.0000  0.017120     +0.30
+MoE blk.0.ffn_gate_exps       7.2568    0.000000 |  7.0000  0.016852     +0.26
+dense blk.31.attn_q          11.7107    0.000000 |  8.5000  0.002356     +3.21
+dense blk.63.ffn_down        13.4188    0.000000 |  9.0000  0.003559     +4.42
+
+  OVERLAY_IS_DOMINATED_AT_THAT_FIDELITY = 1   in ALL FOUR cases
+
+AND at a conventional quality bar rather than exactness:
+
+  tensor                    cheapest_direct_reaching_L2<=0.05   overlay_bpw
+  MoE IQ3_XXS                                 6.0000                 7.2993
+  MoE IQ2_XS                                  5.0000                 7.2568
+  dense Q4_K                                  4.5000                11.7107
+  dense Q6_K                                  5.2500                13.4188
+
+A SINGLE quantiser reaches rel_L2 <= 0.05 for 4.5-6.0 bits/element, while the
+overlay spends 7.3-13.4 to reach exactly zero error. On the dense tensors the
+overlay costs 2.6x more than a rival that already clears the bar.
+
+
+----------------------------------------------------------------------------
+2. THE BASELINE WAS BIASED AGAINST THIS CONCLUSION, AND IT STILL HELD
+----------------------------------------------------------------------------
+RTN is a GENEROUS baseline. Production k-quants and i-quants beat RTN at the
+same rate -- they use better scale placement, outlier handling and (for i-quants)
+learned codebooks. So:
+
+  * losing to RTN   means losing to the real shipped formats as well;
+  * beating RTN     would have left a HARDER test, not an easier one.
+
+The comparison was therefore constructed to favour the overlay, and the overlay
+lost anyway. Every other number in this investigation had a defensible
+alternative reading; this one does not.
+
+
+----------------------------------------------------------------------------
+3. WHY IT LOSES -- THE MECHANISM, NOT JUST THE SCORE
+----------------------------------------------------------------------------
+The overlay buys exactness. That is its only real advantage, and it is bought
+with three costs that do not appear in a bits-per-weight column:
+
+  1. A SECOND storage tier. The delta is not co-resident with the base; it is
+     fetched, which is the entire premise of the architecture.
+  2. A SECOND decode pass, per layer, on the hot path.
+  3. A FETCH whose latency is paid during forward execution -- the exact cost the
+     Direct-I/O residual overlay was designed to hide, and which measurement
+     shows is not hidden, only relocated.
+
+And what it buys for that: exactness from rel_L2 0.017 to 0.000, at a fidelity
+level a single format already reaches within its own budget. The overlay is
+buying a difference that does not matter, with costs that do.
+
+For the dense tensors the premium is 3.2-4.4 bpw -- larger than the entire
+base. That is not a marginal loss; it is the wrong shape.
+
+
+----------------------------------------------------------------------------
+4. A SECONDARY FINDING: RTN DEGRADES AT FINER GROUP SIZES
+----------------------------------------------------------------------------
+Not every row is monotone in bits, and the reason is worth recording:
+
+  dense blk.31.attn_q   4 bits/group32 = 4.50 bpw -> rel_L2 0.044853
+                        4 bits/group16 = 5.00 bpw -> rel_L2 0.059944
+
+MORE bits produced a WORSE reconstruction. That is not a bug in the harness; it
+is the classic RTN failure on outlier-heavy weight tensors. With a 16-element
+group, one outlier consumes most of the group's dynamic range and the other 15
+values are crushed into few levels. Halving the group size increases scale
+overhead AND increases outlier sensitivity, so it can lose.
+
+The consequence for this receipt is that the reported direct figures are the
+BEST over all configurations, which is the conservative choice for the overlay.
+Any single-format number chosen by an author rather than by a min-over-configs
+would be worse, and would flatter the overlay further.
+
+
+----------------------------------------------------------------------------
+5. FINAL VERDICT ON THE RESIDUAL OVERLAY
+----------------------------------------------------------------------------
+  LOW_RANK_RESIDUAL_VARIANT   REFUTED PROVABLY
+      rank(W) <= rank(base) + rank(delta) puts the floor for any two-factor
+      split at 36.9-38.6 bits/element for a 32-bit original. Measured on real
+      tensors, 92-96% full rank. Not a tuning problem; arithmetic.
+
+  RESIDUAL_OVERLAY_GENERAL     REFUTED ON THE MERITS
+      7.3-13.4 bpw for exactness, against 4.5-6.0 bpw from a single format to
+      reach rel_L2 <= 0.05. Dominated on bits at every fidelity tested, and
+      carrying a second tier, a second decode and a hot-path fetch on top.
+
+  DELTA_STRUCTURE              NONE FOUND
+      not sparse (2-13% near-zero), not low-rank (rank 188-248 of 256), not
+      low-entropy (3.5-7.2 bits/element, and that IS the floor).
+
+  The premise -- "split the weights so the correction becomes cheap" -- is
+  false for these tensors. The correction is neither cheap nor structured, and
+  the direct-quantisation path that already exists in every shipped format is
+  strictly better on the only axis that was measured.
+
+
+----------------------------------------------------------------------------
+6. WHAT WOULD CHANGE THIS
+----------------------------------------------------------------------------
+The overlay fails because the delta is expensive and unstructured. A delta
+becomes cheap only if the BASE is chosen so its error is small AND structured.
+That is a different, testable proposal -- and it has a sharp formulation:
+
+      minimise  bits(base) + H(residual)   subject to  residual low-rank
+
+rather than minimising base bits alone. The harness now measures both terms
+plus the exact rank curve, so that optimisation is runnable without new
+instrumentation.
+
+It is worth attempting ONLY if the win would exceed the 3.2-4.4 bpw the
+structureless version already gives away. That is a high bar, and the honest
+starting position is that the direct-format path has not been beaten.
+
+
+----------------------------------------------------------------------------
+7. LIMITS
+----------------------------------------------------------------------------
+  * Direct figures are RTN, not llama.cpp's tuned k-quants. This FAVOURS the
+    overlay; a tuned Q4_K/Q5_K would push the direct numbers lower still.
+  * rel_L2 is measured against a single fixed Gaussian probe vector per tensor.
+    Two points on one probe; a matrix of probes would tighten it.
+  * Windows are 256x1024; layer coverage 0/20/31/63, not exhaustive.
+  * Point B has rel_L2 = 0.000000 BY CONSTRUCTION, since the delta is defined
+    as W - base. That is the overlay's definition of correctness, not a
+    measurement of reconstruction quality; the direct figures at the same
+    bitrate are the meaningful comparison and they are the ones used here.
+  * No engine, GPU, I/O or residency linkage. This is arithmetic on real weights
+    read directly out of real GGUF files.
+
+
+----------------------------------------------------------------------------
+SCOREBOARD, WHOLE INVESTIGATION
+  synthetic 75-config sweep        cross-validated against real weights
+  dense Q4_K / Q6_K                11 cases, low-rank 0/11
+  MoE IQ2_XS / IQ3_XXS / MXFP4     10 cases, low-rank 0/10
+  rank bound                       floor 36.9-38.6 bits > 32-bit original
+  matched-bitrate comparison       OVERLAY DOMINATED 4/4
+  RESIDUAL_OVERLAY                 NOT VIABLE on the evidence available

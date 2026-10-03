@@ -1,0 +1,132 @@
+RAWRXD_SPARSE_BASE_ATTEMPT_001
+================================
+THE LAST MECHANISM: A BASE CHOSEN SO THE RESIDUAL IS SPARSE BY CONSTRUCTION.
+STATUS: RESULT NOT TRUSTWORTHY. REPORTED AS UNRESOLVED, NOT AS A WIN.
+
+TOOL   rawrxd/certs/gguf_tensor_slice_001.cpp  (stage 6)
+
+
+----------------------------------------------------------------------------
+1. WHAT RAN, AND WHY IT IS NOT A RESULT
+----------------------------------------------------------------------------
+A mode-seeking quantiser was implemented: within each group, the 2^b code
+levels are chosen as the 2^b MOST FREQUENT distinct values rather than an even
+min/max grid. Every element landing exactly on a level contributes a residual of
+exactly zero, so the residual becomes sparse by construction. The residual was
+then charged as sparse coding -- log2(group) plus nonzero-magnitude entropy, on
+the nonzero fraction only.
+
+IT REPORTED:
+
+  tensor                  TYPE      sparsity  nz_entropy  TOTAL   vs RTN@0.05
+  MoE blk.20.ffn_down_exps IQ3_XXS    1.0000      0.0000    4.5000    -1.5000
+  MoE blk.0.ffn_gate_exps  IQ2_XS     0.9150      2.5513    3.5567    -1.4433
+  dense blk.31.attn_q      Q4_K       1.0000      0.0000    4.5000     0.0000
+  dense blk.63.ffn_down    Q6_K       1.0000      0.0000    5.0000    -0.2500
+
+  SPARSE_BY_CONSTRUCTION_WINS = 1 in 3 of 4
+
+THAT NUMBER IS NOT CLAIMED. Three of four cases report a residual that is
+EXACTLY ZERO EVERYWHERE. A dictionary of 16 entries cannot losslessly encode 32
+arbitrary fp32 values, so either the window being read has far fewer distinct
+values than a 256x1024 block of real weights should, or the assignment path is
+degenerate. The diagnostic that would distinguish those two -- mean distinct
+values per group -- was added, then failed to compile because its counters are
+scoped inside the search function rather than in wmain. The output quoted above
+is therefore from a STALE BINARY and is not evidence.
+
+
+----------------------------------------------------------------------------
+2. WHY THE COMPARISON IS A STRAWMAN REGARDLESS OF THE SPARSITY NUMBER
+----------------------------------------------------------------------------
+This is the part that does not need the diagnostic, and it reverses the
+apparent result.
+
+The rival used throughout was RTN. RTN is a generous baseline for DENSE tensors,
+where production k-quants beat it. It is a PATHOLOGICAL baseline for i-quant
+data, because the data came FROM a small global codebook -- 256 entries for
+IQ3_XXS, 512 for IQ2_XS -- and RTN has no way to exploit that.
+
+The consequence is visible in the numbers already reported:
+
+  tensor                  native format bpw   "direct cost reaching L2<=0.05"
+  blk.0.ffn_gate_exps  IQ2_XS      2.3125            5.0000
+  blk.20.ffn_down_exps IQ3_XXS     3.0625            6.0000
+
+The "direct" cost is 2.2x and 2.0x the bitrate the tensor is ALREADY stored in.
+A baseline worse than simply keeping the file is not a rival.
+
+AGAINST THE CORRECT BASELINE -- the source format's own bpw:
+
+  tensor                  sparse-overlay TOTAL   native bpw   margin
+  blk.0.ffn_gate_exps          3.5567              2.3125     +1.244  LOSES
+  blk.20.ffn_down_exps         4.5000              3.0625     +1.438  LOSES
+
+So the sparse-by-construction base LOSES on the i-quant tensors too -- it simply
+loses by less than it appeared to when measured against RTN.
+
+For the two DENSE tensors there is no codebook to exploit, so the sparsity=1.0000
+is unexplained by this argument and remains an open instrument defect.
+
+
+----------------------------------------------------------------------------
+3. WHAT THIS CHANGES ABOUT THE OVERALL VERDICT
+----------------------------------------------------------------------------
+Nothing. The verdict did not rest on stage 6.
+
+  LOW_RANK_RESIDUAL   REFUTED PROVABLY by the rank bound (floor 36.9-38.6 bits
+                      against a 32-bit original). Arithmetic, unaffected.
+
+  OVERLAY_GENERAL     REFUTED across every independently-chosen base tested,
+                      including an OPTIMISED base family search whose optimum
+                      landed at 5.20-8.43 bpw against a direct 4.50-6.00 bpw.
+
+  The sparse-by-construction variant was the one mechanism not yet tested
+  against the correct baseline. On the i-quant tensors, where the comparison
+  IS valid, it loses by 1.24-1.44 bpw. On the dense tensors the measurement is
+  void and would need re-running.
+
+
+----------------------------------------------------------------------------
+4. WHAT IS NEEDED TO SETTLE IT
+----------------------------------------------------------------------------
+  1. FIX THE BUILD. The distinct-per-group diagnostic must compile. Without it
+     a residual of exactly zero cannot be distinguished from a real result.
+  2. On IQ2_XS / IQ3_XXS, verify the window really does contain few distinct
+     values, and if so state WHY: a codebook source format, an over-read, or a
+     genuinely degenerate assignment.
+  3. RE-BASELINE EVERY i-quant COMPARISON against the source format's own bpw
+     rather than against RTN. Any earlier i-quant comparison framed against
+     RTN is inflated in the overlay's favour and should be re-read with
+     NATIVE_SOURCE_FORMAT_BPW as the reference line.
+  4. Re-run the dense cases, where no codebook explanation is available and
+     sparsity=1.0000 is therefore a genuine instrument defect.
+
+
+----------------------------------------------------------------------------
+5. THE GENERAL LESSON, WHICH IS THE PART WORTH KEEPING
+----------------------------------------------------------------------------
+Every favourable result in this campaign that turned out to be wrong was wrong
+in the SAME WAY: a broken or strawman baseline produced a number that flattered
+the hypothesis.
+
+  * A buffer overrun produced entropy=3.539 and the first apparent success.
+  * An over-narrow window produced a degenerate Gram matrix.
+  * A wrong stationarity criterion produced entropy=3.539 on MXFP4.
+  * And now RTN-as-rival produces a 1.44 bpw "win" on data that came from a
+    256-entry codebook.
+
+In every case the number was publishable, and in every case publishing it would
+have been an error. The checks did not merely reduce the error rate -- they are
+the only reason any of these were caught at all.
+
+The corollary for anything that follows: a baseline must be chosen by asking
+"what is the best existing way to do this, measured at the same bitrate?", not
+"what is convenient to implement right now?"
+
+
+----------------------------------------------------------------------------
+STATUS
+  SPARSE_BY_CONSTRUCTION_BASE    = UNRESOLVED (instrument defect, not a result)
+  LOST_TO_CORRECT_BASELINE_ON_IQUANT = YES (3.5567 vs 2.3125; 4.5000 vs 3.0625)
+  OVERALL_OVERLAY_VERDICT       = UNCHANGED, and does not depend on stage 6

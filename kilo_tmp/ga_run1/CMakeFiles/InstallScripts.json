@@ -1,0 +1,12 @@
+{
+	"InstallScripts" : 
+	[
+		"F:/~dev/kilo_tmp/ga_run1/cmake_install.cmake",
+		"F:/~dev/kilo_tmp/ga_run1/src/reverse_engineering/cmake_install.cmake",
+		"F:/~dev/kilo_tmp/ga_run1/src/ceo/cmake_install.cmake",
+		"F:/~dev/kilo_tmp/ga_run1/src/repository/cmake_install.cmake",
+		"F:/~dev/kilo_tmp/ga_run1/src/generation/cmake_install.cmake",
+		"F:/~dev/kilo_tmp/ga_run1/rguf_source/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

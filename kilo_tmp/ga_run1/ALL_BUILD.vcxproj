@@ -1,0 +1,463 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ResolveNugetPackages>false</ResolveNugetPackages>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B59630C9-D867-396F-A7AC-3F6381A1F99F}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>ALL_BUILD</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>F:\~dev\rawrxd\include;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt;D:\rawrxd\Ship\webview2\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>F:\~dev\rawrxd\include;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt;D:\rawrxd\Ship\webview2\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>F:\~dev\rawrxd\include;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt;D:\rawrxd\Ship\webview2\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>F:\~dev\rawrxd\include;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt;D:\rawrxd\Ship\webview2\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\~dev\rawrxd\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/kilo_tmp/ga_run1 --check-stamp-file F:/~dev/kilo_tmp/ga_run1/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASM_MASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCCompilerABI.c;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXCompilerABI.cpp;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCompilerIdDetection.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineASM_MASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerABI.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerId.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerSupport.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineRCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeFindBinUtils.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseImplicitIncludeInfo.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseImplicitLinkInfo.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseLibraryArchitecture.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystem.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestASM_MASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCompilerCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestRCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ADSP-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ARMCC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ARMClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\AppleClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Borland-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Bruce-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Clang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Clang-DetermineCompilerInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Compaq-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Compaq-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Cray-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CrayClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Diab-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Embarcadero-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Fujitsu-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\FujitsuClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GHS-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GNU-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GNU-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\HP-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\HP-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IAR-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMCPP-C-DetermineVersionInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMCPP-CXX-DetermineVersionInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMClang-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMClang-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Intel-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IntelLLVM-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\LCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\LCC-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\NVHPC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\NVIDIA-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\OpenWatcom-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\OrangeC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PGI-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PathScale-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PellesC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Renesas-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SCO-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SDCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SunPro-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SunPro-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TI-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TIClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Tasking-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TinyCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\VisualAge-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\VisualAge-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Watcom-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XL-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XL-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XLClang-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XLClang-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\zOS-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\zOS-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CompilerId\VS-10.vcxproj.in;C:\Program Files\CMake\share\cmake-4.4\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindVulkan.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeDetermineLinkerId.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectASMLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectASM_MASMLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectCLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectCXXLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\FeatureTesting.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Determine-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeASM_MASMCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeCCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeCXXCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeRCCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeSystem.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\cmake.verify_globs;F:\~dev\rawrxd\cmake\AutoFeatureRegistry.cmake;F:\~dev\rawrxd\cmake\Deep2BenchmarkCert.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2C1C9.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2GatewayCertStandalone.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2ProductLavapath.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaB3B8.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaConsumerGates.fragment.cmake;F:\~dev\rawrxd\cmake\GgufDynamicGeometry.fragment.cmake;F:\~dev\rawrxd\cmake\IntentGuardrails.cmake;F:\~dev\rawrxd\cmake\Interstellar.fragment.cmake;F:\~dev\rawrxd\cmake\P1_ProductRuntimeAuthority.cmake;F:\~dev\rawrxd\cmake\RawrAgenticCliQuarantine.cmake;F:\~dev\rawrxd\cmake\RawrBackgroundTerminals.fragment.cmake;F:\~dev\rawrxd\cmake\RawrProductLayer.fragment.cmake;F:\~dev\rawrxd\cmake\RawrRemainingStyleCli.fragment.cmake;F:\~dev\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake;F:\~dev\rawrxd\cmake\RawrXDSovereignFinish.cmake;F:\~dev\rawrxd\cmake\Remote64.cmake;F:\~dev\rawrxd\cmake\source_graph_census.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\~dev\kilo_tmp\ga_run1\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/kilo_tmp/ga_run1 --check-stamp-file F:/~dev/kilo_tmp/ga_run1/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASM_MASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCCompilerABI.c;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXCompilerABI.cpp;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCompilerIdDetection.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineASM_MASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerABI.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerId.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerSupport.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineRCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeFindBinUtils.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseImplicitIncludeInfo.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseImplicitLinkInfo.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseLibraryArchitecture.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystem.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestASM_MASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCompilerCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestRCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ADSP-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ARMCC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ARMClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\AppleClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Borland-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Bruce-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Clang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Clang-DetermineCompilerInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Compaq-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Compaq-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Cray-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CrayClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Diab-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Embarcadero-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Fujitsu-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\FujitsuClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GHS-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GNU-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GNU-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\HP-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\HP-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IAR-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMCPP-C-DetermineVersionInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMCPP-CXX-DetermineVersionInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMClang-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMClang-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Intel-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IntelLLVM-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\LCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\LCC-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\NVHPC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\NVIDIA-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\OpenWatcom-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\OrangeC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PGI-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PathScale-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PellesC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Renesas-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SCO-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SDCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SunPro-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SunPro-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TI-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TIClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Tasking-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TinyCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\VisualAge-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\VisualAge-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Watcom-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XL-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XL-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XLClang-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XLClang-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\zOS-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\zOS-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CompilerId\VS-10.vcxproj.in;C:\Program Files\CMake\share\cmake-4.4\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindVulkan.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeDetermineLinkerId.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectASMLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectASM_MASMLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectCLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectCXXLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\FeatureTesting.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Determine-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeASM_MASMCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeCCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeCXXCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeRCCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeSystem.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\cmake.verify_globs;F:\~dev\rawrxd\cmake\AutoFeatureRegistry.cmake;F:\~dev\rawrxd\cmake\Deep2BenchmarkCert.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2C1C9.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2GatewayCertStandalone.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2ProductLavapath.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaB3B8.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaConsumerGates.fragment.cmake;F:\~dev\rawrxd\cmake\GgufDynamicGeometry.fragment.cmake;F:\~dev\rawrxd\cmake\IntentGuardrails.cmake;F:\~dev\rawrxd\cmake\Interstellar.fragment.cmake;F:\~dev\rawrxd\cmake\P1_ProductRuntimeAuthority.cmake;F:\~dev\rawrxd\cmake\RawrAgenticCliQuarantine.cmake;F:\~dev\rawrxd\cmake\RawrBackgroundTerminals.fragment.cmake;F:\~dev\rawrxd\cmake\RawrProductLayer.fragment.cmake;F:\~dev\rawrxd\cmake\RawrRemainingStyleCli.fragment.cmake;F:\~dev\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake;F:\~dev\rawrxd\cmake\RawrXDSovereignFinish.cmake;F:\~dev\rawrxd\cmake\Remote64.cmake;F:\~dev\rawrxd\cmake\source_graph_census.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\~dev\kilo_tmp\ga_run1\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/kilo_tmp/ga_run1 --check-stamp-file F:/~dev/kilo_tmp/ga_run1/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASM_MASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCCompilerABI.c;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXCompilerABI.cpp;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCompilerIdDetection.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineASM_MASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerABI.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerId.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerSupport.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineRCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeFindBinUtils.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseImplicitIncludeInfo.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseImplicitLinkInfo.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseLibraryArchitecture.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystem.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestASM_MASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCompilerCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestRCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ADSP-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ARMCC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ARMClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\AppleClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Borland-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Bruce-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Clang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Clang-DetermineCompilerInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Compaq-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Compaq-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Cray-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CrayClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Diab-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Embarcadero-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Fujitsu-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\FujitsuClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GHS-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GNU-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GNU-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\HP-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\HP-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IAR-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMCPP-C-DetermineVersionInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMCPP-CXX-DetermineVersionInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMClang-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMClang-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Intel-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IntelLLVM-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\LCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\LCC-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\NVHPC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\NVIDIA-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\OpenWatcom-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\OrangeC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PGI-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PathScale-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PellesC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Renesas-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SCO-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SDCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SunPro-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SunPro-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TI-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TIClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Tasking-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TinyCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\VisualAge-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\VisualAge-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Watcom-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XL-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XL-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XLClang-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XLClang-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\zOS-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\zOS-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CompilerId\VS-10.vcxproj.in;C:\Program Files\CMake\share\cmake-4.4\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindVulkan.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeDetermineLinkerId.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectASMLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectASM_MASMLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectCLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectCXXLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\FeatureTesting.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Determine-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeASM_MASMCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeCCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeCXXCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeRCCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeSystem.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\cmake.verify_globs;F:\~dev\rawrxd\cmake\AutoFeatureRegistry.cmake;F:\~dev\rawrxd\cmake\Deep2BenchmarkCert.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2C1C9.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2GatewayCertStandalone.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2ProductLavapath.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaB3B8.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaConsumerGates.fragment.cmake;F:\~dev\rawrxd\cmake\GgufDynamicGeometry.fragment.cmake;F:\~dev\rawrxd\cmake\IntentGuardrails.cmake;F:\~dev\rawrxd\cmake\Interstellar.fragment.cmake;F:\~dev\rawrxd\cmake\P1_ProductRuntimeAuthority.cmake;F:\~dev\rawrxd\cmake\RawrAgenticCliQuarantine.cmake;F:\~dev\rawrxd\cmake\RawrBackgroundTerminals.fragment.cmake;F:\~dev\rawrxd\cmake\RawrProductLayer.fragment.cmake;F:\~dev\rawrxd\cmake\RawrRemainingStyleCli.fragment.cmake;F:\~dev\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake;F:\~dev\rawrxd\cmake\RawrXDSovereignFinish.cmake;F:\~dev\rawrxd\cmake\Remote64.cmake;F:\~dev\rawrxd\cmake\source_graph_census.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\~dev\kilo_tmp\ga_run1\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule F:/~dev/rawrxd/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/~dev/rawrxd -BF:/~dev/kilo_tmp/ga_run1 --check-stamp-file F:/~dev/kilo_tmp/ga_run1/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeASM_MASMInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCCompilerABI.c;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXCompilerABI.cpp;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCompilerIdDetection.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineASM_MASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerABI.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerId.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineCompilerSupport.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineRCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeDetermineSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeFindBinUtils.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseImplicitIncludeInfo.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseImplicitLinkInfo.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeParseLibraryArchitecture.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCCompiler.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystem.cmake.in;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestASM_MASMCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestCompilerCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeTestRCCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ADSP-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ARMCC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\ARMClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\AppleClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Borland-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Bruce-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Clang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Clang-DetermineCompilerInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Compaq-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Compaq-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Cray-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CrayClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Diab-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Embarcadero-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Fujitsu-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\FujitsuClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GHS-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GNU-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\GNU-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\HP-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\HP-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IAR-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMCPP-C-DetermineVersionInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMCPP-CXX-DetermineVersionInternal.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMClang-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IBMClang-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Intel-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\IntelLLVM-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\LCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\LCC-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\NVHPC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\NVIDIA-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\OpenWatcom-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\OrangeC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PGI-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PathScale-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\PellesC-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Renesas-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SCO-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SDCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SunPro-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\SunPro-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TI-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TIClang-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Tasking-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\TinyCC-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\VisualAge-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\VisualAge-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\Watcom-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XL-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XL-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XLClang-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\XLClang-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\zOS-C-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\zOS-CXX-DetermineCompiler.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CompilerId\VS-10.vcxproj.in;C:\Program Files\CMake\share\cmake-4.4\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\FindVulkan.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeDetermineLinkerId.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectASMLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectASM_MASMLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectCLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeInspectCXXLinker.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckCommon.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\FeatureTesting.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Determine-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeASM_MASMCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeCCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeCXXCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeRCCompiler.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\4.4.2\CMakeSystem.cmake;F:\~dev\kilo_tmp\ga_run1\CMakeFiles\cmake.verify_globs;F:\~dev\rawrxd\cmake\AutoFeatureRegistry.cmake;F:\~dev\rawrxd\cmake\Deep2BenchmarkCert.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2C1C9.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2GatewayCertStandalone.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2ProductLavapath.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaB3B8.fragment.cmake;F:\~dev\rawrxd\cmake\Deep2VwaConsumerGates.fragment.cmake;F:\~dev\rawrxd\cmake\GgufDynamicGeometry.fragment.cmake;F:\~dev\rawrxd\cmake\IntentGuardrails.cmake;F:\~dev\rawrxd\cmake\Interstellar.fragment.cmake;F:\~dev\rawrxd\cmake\P1_ProductRuntimeAuthority.cmake;F:\~dev\rawrxd\cmake\RawrAgenticCliQuarantine.cmake;F:\~dev\rawrxd\cmake\RawrBackgroundTerminals.fragment.cmake;F:\~dev\rawrxd\cmake\RawrProductLayer.fragment.cmake;F:\~dev\rawrxd\cmake\RawrRemainingStyleCli.fragment.cmake;F:\~dev\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake;F:\~dev\rawrxd\cmake\RawrXDSovereignFinish.cmake;F:\~dev\rawrxd\cmake\Remote64.cmake;F:\~dev\rawrxd\cmake\source_graph_census.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\~dev\kilo_tmp\ga_run1\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\ZERO_CHECK.vcxproj">
+      <Project>{25A7A6B9-30DE-38BA-8A9D-012FC4B55382}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\InferenceEngine.vcxproj">
+      <Project>{76C72371-D218-35CC-983D-04EF3A2F66B5}</Project>
+      <Name>InferenceEngine</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\RawrEngine.vcxproj">
+      <Project>{F9EFFC3A-FB6C-3100-8EE2-18F577D81824}</Project>
+      <Name>RawrEngine</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\RawrXD-AutoFixCLI.vcxproj">
+      <Project>{6EDB3A38-1A59-3C8F-B51C-0FAF78AEBF9E}</Project>
+      <Name>RawrXD-AutoFixCLI</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\RawrXD-Crypto.vcxproj">
+      <Project>{59F3817F-B14A-3BA7-B268-995C08B52FC9}</Project>
+      <Name>RawrXD-Crypto</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\src\reverse_engineering\RawrXD-RE-Library.vcxproj">
+      <Project>{9CDD1A3C-CC3A-3579-937F-3332F38EB35B}</Project>
+      <Name>RawrXD-RE-Library</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\RawrXDScriptDAPAdapter.vcxproj">
+      <Project>{7027338C-ED92-3C33-B5FE-8FACEF1E6086}</Project>
+      <Name>RawrXDScriptDAPAdapter</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\RawrXD_Compression.vcxproj">
+      <Project>{A11B0C1A-337E-3EB1-99A6-8991C8B6A9F9}</Project>
+      <Name>RawrXD_Compression</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\RawrXD_Gold.vcxproj">
+      <Project>{DABA035D-F618-30BD-8D00-3CF34DD0B484}</Project>
+      <Name>RawrXD_Gold</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\RawrXD_LSPServer.vcxproj">
+      <Project>{3069BEBA-ABD1-3915-BACB-D537BBAB4360}</Project>
+      <Name>RawrXD_LSPServer</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\ckpt_rollback_crash_cert.vcxproj">
+      <Project>{8419DF1C-801C-306B-8ABC-E4C06A6F3DF7}</Project>
+      <Name>ckpt_rollback_crash_cert</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\decode_step_instrument.vcxproj">
+      <Project>{B51436D2-BF13-325E-AA4C-FFAD44A02F81}</Project>
+      <Name>decode_step_instrument</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\deep2_benchmark.vcxproj">
+      <Project>{86F6AFCB-7477-3ED2-9689-623331D51ECA}</Project>
+      <Name>deep2_benchmark</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\deep2_canonical_inference_probe.vcxproj">
+      <Project>{471A17D0-839F-3440-9E45-605021BE3CD0}</Project>
+      <Name>deep2_canonical_inference_probe</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\deep2_generation_lifecycle_test.vcxproj">
+      <Project>{C03A3123-88C8-3EA2-AD71-D61F9231D7C4}</Project>
+      <Name>deep2_generation_lifecycle_test</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\deep2_loader_admission_probe.vcxproj">
+      <Project>{2041DC45-1DFB-336F-98CB-0E33C8C7DA9E}</Project>
+      <Name>deep2_loader_admission_probe</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\deep2_model_registry_admission_test.vcxproj">
+      <Project>{709BD091-D0DC-3C50-BB19-EEFEAB49B4B7}</Project>
+      <Name>deep2_model_registry_admission_test</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\deep2_ssm_norm_layout_gate.vcxproj">
+      <Project>{71235F46-AB5E-32BC-BAB2-BFE82ACF49B6}</Project>
+      <Name>deep2_ssm_norm_layout_gate</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\ev512_ide_gui_lifecycle_smoke.vcxproj">
+      <Project>{CC1C726A-C5CB-3E1E-8AA6-F07CD0336FFE}</Project>
+      <Name>ev512_ide_gui_lifecycle_smoke</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\ev512_ide_restore_reload_fault_smoke.vcxproj">
+      <Project>{5C86284F-8AFA-3072-9B1A-F3AFE3F06BE9}</Project>
+      <Name>ev512_ide_restore_reload_fault_smoke</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\ev512_ide_workflow_smoke.vcxproj">
+      <Project>{C310AE1E-CE6E-3367-9499-6ABE5EF6766C}</Project>
+      <Name>ev512_ide_workflow_smoke</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\ev512_ops_remaining_smoke.vcxproj">
+      <Project>{78A8EFC0-AE6F-3788-B8DE-8A4C20B7ADE5}</Project>
+      <Name>ev512_ops_remaining_smoke</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\flame_graph_profiler.vcxproj">
+      <Project>{0ACC9947-842E-38C2-9173-6FBD66BE9036}</Project>
+      <Name>flame_graph_profiler</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\generation_quality_gate.vcxproj">
+      <Project>{0BF35955-1695-37FE-AAE5-89E1FBE5AA7F}</Project>
+      <Name>generation_quality_gate</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\git_safety_authority_cert.vcxproj">
+      <Project>{187DFD0C-22B9-3FC4-8F21-768329E6B8A7}</Project>
+      <Name>git_safety_authority_cert</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_002_tensor_streaming.vcxproj">
+      <Project>{EC6EA6C1-DE5A-3AFC-BA8D-F1F9207882C1}</Project>
+      <Name>k2_002_tensor_streaming</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_003_layer_execution.vcxproj">
+      <Project>{AC9BD9E4-4C61-3C9E-A155-3BA7240D7971}</Project>
+      <Name>k2_003_layer_execution</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_003b_native_gemv_validation.vcxproj">
+      <Project>{BF276BC2-DEAF-3A87-AA7A-9542A37B4D7A}</Project>
+      <Name>k2_003b_native_gemv_validation</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_003c_single_layer_forward.vcxproj">
+      <Project>{54A4B45C-C34C-3532-8ED6-A767871E0DE5}</Project>
+      <Name>k2_003c_single_layer_forward</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_004_bounded_multi_layer_prefill.vcxproj">
+      <Project>{9C8A0366-174F-349C-A971-BBAD7694C5F4}</Project>
+      <Name>k2_004_bounded_multi_layer_prefill</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_004_bounded_prefill.vcxproj">
+      <Project>{6302E267-008D-3CC2-97C8-91D5ECA3FAAA}</Project>
+      <Name>k2_004_bounded_prefill</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_005_autoregressive_kv_cache.vcxproj">
+      <Project>{362E6244-4CAB-31DB-A024-607ACC0C828D}</Project>
+      <Name>k2_005_autoregressive_kv_cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_006_bounded_token_generation.vcxproj">
+      <Project>{7240F521-28A4-3A8B-A3E3-21253A6B5C8C}</Project>
+      <Name>k2_006_bounded_token_generation</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_007_real_output_projection.vcxproj">
+      <Project>{7600336B-C736-30C5-A4B3-9C6DEC64F107}</Project>
+      <Name>k2_007_real_output_projection</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_007b_projection_logits_interface.vcxproj">
+      <Project>{3E869266-B7F3-367D-8654-6AE999150543}</Project>
+      <Name>k2_007b_projection_logits_interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_008_end_to_end_semantic_generation.vcxproj">
+      <Project>{56ED55F6-5986-3807-9439-E8D77402D305}</Project>
+      <Name>k2_008_end_to_end_semantic_generation</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_009_token_embedding_lookup.vcxproj">
+      <Project>{6BBF7A9F-A583-3D01-8B0E-4F6C16B081D4}</Project>
+      <Name>k2_009_token_embedding_lookup</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_native_smoke_test.vcxproj">
+      <Project>{2F650BE2-9300-33C7-85D1-65E70BC3CDE4}</Project>
+      <Name>k2_native_smoke_test</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\k2_runtime_validation.vcxproj">
+      <Project>{2FCDC517-11AE-33EB-80EE-B0E39B35D187}</Project>
+      <Name>k2_runtime_validation</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\mla_cert_001.vcxproj">
+      <Project>{372F6D97-8A44-385A-B452-6124D2E452FB}</Project>
+      <Name>mla_cert_001</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\mla_forward_chain_cert.vcxproj">
+      <Project>{4DD44C98-510A-3421-9A41-48BE0BF1ECC2}</Project>
+      <Name>mla_forward_chain_cert</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\mla_upload_contract_cert.vcxproj">
+      <Project>{380614B8-55D9-35B5-B8D1-95DD1CA39568}</Project>
+      <Name>mla_upload_contract_cert</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\pmc_profiler.vcxproj">
+      <Project>{BB507B8F-EEF7-349D-B55A-A9C3D0E44730}</Project>
+      <Name>pmc_profiler</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\q4_preprocessed_avx512.vcxproj">
+      <Project>{B6BBA32F-F290-3532-947A-ED02E35497AC}</Project>
+      <Name>q4_preprocessed_avx512</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawr-server.vcxproj">
+      <Project>{882A7941-27C6-3F60-806D-831354207689}</Project>
+      <Name>rawr-server</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawrxd.vcxproj">
+      <Project>{9E72F235-DF5B-3E49-A1D6-AFC2DADB11EE}</Project>
+      <Name>rawrxd</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\src\ceo\rawrxd_ceo.vcxproj">
+      <Project>{B62B0D77-9FD9-303B-B209-8719A2B321E8}</Project>
+      <Name>rawrxd_ceo</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\src\ceo\rawrxd_ceo_cli.vcxproj">
+      <Project>{14821335-DAA5-3618-98AB-796327C5ABD3}</Project>
+      <Name>rawrxd_ceo_cli</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawrxd_deep2_model_registry.vcxproj">
+      <Project>{E34FECD3-906D-39AA-84EA-14C15CEE0183}</Project>
+      <Name>rawrxd_deep2_model_registry</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawrxd_git_safety.vcxproj">
+      <Project>{E000B16A-84FE-33AA-92C5-897EC2F2D307}</Project>
+      <Name>rawrxd_git_safety</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawrxd_real_gguf_parity.vcxproj">
+      <Project>{28D2B991-C036-3525-9F07-9567C710297C}</Project>
+      <Name>rawrxd_real_gguf_parity</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawrxd_refactor_chain.vcxproj">
+      <Project>{59C0B163-B8FB-374D-B03E-99237BEE08A8}</Project>
+      <Name>rawrxd_refactor_chain</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawrxd_remote64.vcxproj">
+      <Project>{8AFF627F-2423-3FE4-86E9-FA41849B370B}</Project>
+      <Name>rawrxd_remote64</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawrxd_repo_intel.vcxproj">
+      <Project>{CA503643-0037-337D-BAE5-8BA096C2CB74}</Project>
+      <Name>rawrxd_repo_intel</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\src\repository\rawrxd_repository.vcxproj">
+      <Project>{E3FD05ED-C9B9-3FA0-8E61-9402473FE094}</Project>
+      <Name>rawrxd_repository</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawrxd_sampler_combined_oob_001.vcxproj">
+      <Project>{4D91D276-01C8-3D79-B1E1-C4CA458FF6DF}</Project>
+      <Name>rawrxd_sampler_combined_oob_001</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rawrxd_single_writer.vcxproj">
+      <Project>{3EAE4019-6197-3FCC-9611-332C88EEA294}</Project>
+      <Name>rawrxd_single_writer</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\refactor_chain_cert.vcxproj">
+      <Project>{3C6160C5-4C68-3538-9E3D-F04677C91F49}</Project>
+      <Name>refactor_chain_cert</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rguf_source\rguf.vcxproj">
+      <Project>{3FD9C43E-3599-3342-8A65-82E47701A59D}</Project>
+      <Name>rguf</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\rguf_source\rguf_tool.vcxproj">
+      <Project>{63040F41-70F0-3DBB-827C-F05FDFADA778}</Project>
+      <Name>rguf_tool</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\single_writer_adversarial_test.vcxproj">
+      <Project>{68012C42-FCB2-3365-9FC3-D3040080286E}</Project>
+      <Name>single_writer_adversarial_test</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_attn_out_bisect.vcxproj">
+      <Project>{07CBBC06-D173-3AED-9FE2-81D5759D86AE}</Project>
+      <Name>test_attn_out_bisect</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_autonomous_pipeline.vcxproj">
+      <Project>{C587168F-319F-39EC-9047-6703D528896C}</Project>
+      <Name>test_autonomous_pipeline</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_embed_parity.vcxproj">
+      <Project>{D72B7005-139D-30B9-8987-EAFC92AF0BE8}</Project>
+      <Name>test_embed_parity</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_llama_native.vcxproj">
+      <Project>{45278ABD-A2A3-3230-996D-DF59B37FFD0B}</Project>
+      <Name>test_llama_native</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_o_proj_gemv.vcxproj">
+      <Project>{627ABCE1-DA26-336A-8F65-DF1795A8EE9F}</Project>
+      <Name>test_o_proj_gemv</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_o_proj_mulmat_002.vcxproj">
+      <Project>{C2974590-C3DC-38BC-950A-7F4158B020DD}</Project>
+      <Name>test_o_proj_mulmat_002</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_q2k_single_tensor_oracle.vcxproj">
+      <Project>{BC844626-A428-34FB-9855-06F7B4057BAE}</Project>
+      <Name>test_q2k_single_tensor_oracle</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_q4k_decoder.vcxproj">
+      <Project>{26516A88-7599-3734-BE9E-423BED09634A}</Project>
+      <Name>test_q4k_decoder</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_tokenizer.vcxproj">
+      <Project>{CD5595D7-4E6F-3C18-8DB3-E5615AB30E8F}</Project>
+      <Name>test_tokenizer</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\~dev\kilo_tmp\ga_run1\test_v_proj_parity.vcxproj">
+      <Project>{63F03E90-8A58-38CB-B491-19B11598643B}</Project>
+      <Name>test_v_proj_parity</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
+</Project>

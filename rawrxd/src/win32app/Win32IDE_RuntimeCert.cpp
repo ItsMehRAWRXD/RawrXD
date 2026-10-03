@@ -57,6 +57,10 @@ namespace RawrXD { namespace IDE {
     std::string EditorEngine_GetText();
     void        EditorEngine_InsertTextAtCursor(const std::string& text);
     bool        EditorEngine_HasSelection();
+    // RAWRXD_IDE_CERT_MODAL_HANG_001: needed so S04 can associate the document with the
+    // EDITOR. Without it g_editor.filePath stays empty and a routed Save escalates to a
+    // modal GetSaveFileNameA that no automated run can answer.
+    bool        EditorEngine_OpenFile(const std::string& path);
 }}
 // FileOps_* have C++ linkage in Win32IDE_FileOps.cpp (they return std::string,
 // which is incompatible with extern "C" and would warn C4190).
@@ -107,6 +111,24 @@ static void Record(const char* id, Verdict v, const std::string& detail) {
     Stage* s = StageFor(id);
     s->verdict = v;
     s->detail  = detail;
+    // RAWRXD_IDE_CERT_PROGRESS_TRACE_001
+    // WriteReceipt() runs only after RunStages() returns, so a hang anywhere in the stage
+    // list produces NO receipt and is indistinguishable from a cert that never ran. That
+    // ambiguity is expensive: the modal-dialog hang below was localised only by adding
+    // this, observing the last stage emitted, and then removing the instrumentation again.
+    //
+    // With RAWRXD_IDE_CERT_TRACE set to a path, each completed stage is appended and
+    // flushed immediately, so the last stage reached survives a hang. Unset by default:
+    // the file is never opened and this costs one getenv on a path that runs at most
+    // sixteen times.
+    if (const char* trace = getenv("RAWRXD_IDE_CERT_TRACE")) {
+        FILE* tf = nullptr;
+        if (fopen_s(&tf, trace, "a") == 0 && tf) {
+            fprintf(tf, "%s=%s\n", id, VerdictName(v));
+            fflush(tf);
+            fclose(tf);
+        }
+    }
 }
 
 static double NowMs() {
@@ -217,11 +239,28 @@ static void RunStages() {
     // ---- S04 workspace / file open ---------------------------------------
     {
         const bool wrote = FileOps_WriteFile(doc, seed);
+        // RAWRXD_IDE_CERT_MODAL_HANG_001
+        // The document has to be associated with the EDITOR, not merely written to disk.
+        // S04 previously tested only the FileOps round-trip and opened nothing, so
+        // g_editor.filePath stayed empty. S06 then routed the real IDM_FILE_SAVE and the
+        // product behaved CORRECTLY by escalating:
+        //     EditorEngine_FilePath()=="" -> DoFileSaveAs() -> FileOps_SaveDialog()
+        //     -> GetSaveFileNameA()  -- modal, blocks until a user answers.
+        // An automated run has no user, so the cert hung. Measured: 5 hangs in 6 launches,
+        // every one inside S06_SAVE, after the file was already written (which is why the
+        // workspace showed 68 bytes), and NO receipt at all because WriteReceipt() runs
+        // only after RunStages() returns. A hang is indistinguishable from a cert that
+        // never ran.
+        // S15 already knew this hazard -- its detail string reads "OpenDialog is modal,
+        // reopen is route-only" -- and avoided the route there. S06 did not.
+        // Opening the file also means S06 now exercises the real save-to-an-existing-path
+        // branch instead of an unsaved-document branch that cannot be automated.
+        const bool opened = RawrXD::IDE::EditorEngine_OpenFile(doc);
         const bool readBack = FileOps_Exists(doc) && FileOps_ReadFile(doc) == seed;
         char d[220];
-        std::snprintf(d, sizeof(d), "wrote=%d exists=%d content_roundtrip=%d",
-                      wrote, FileOps_Exists(doc), readBack);
-        Record("S04_WORKSPACE_FILE_OPEN", (wrote && readBack) ? Verdict::PASS : Verdict::FAIL, d);
+        std::snprintf(d, sizeof(d), "wrote=%d exists=%d content_roundtrip=%d opened_in_editor=%d",
+                      wrote, FileOps_Exists(doc), readBack, opened ? 1 : 0);
+        Record("S04_WORKSPACE_FILE_OPEN", (wrote && readBack && opened) ? Verdict::PASS : Verdict::FAIL, d);
     }
 
     // ---- S05 edit ---------------------------------------------------------
@@ -340,6 +379,25 @@ static void RunStages() {
             const std::string typed = RawrXD::IDE::EditorEngine_GetText();
             const bool grew = typed.size() > base.size() &&
                               typed.find("RAWRXD_CERT_TYPED") != std::string::npos;
+            // RAWRXD_IDE_CERT_UNDO_PUMP_001
+            // Undo is message-driven by design: EditorNotifyMutation() only ARMS a 250ms
+            // debounce timer, and the WM_TIMER handler is the sole caller of the mutation
+            // hook that pushes the snapshot. RunStages() executes from main_win32.cpp:3033,
+            // "immediately before the message loop", so no pump existed here and the timer
+            // never fired -- g_undoPos stayed at its initial value and DoEditUndo() had
+            // nothing to restore. That made this stage unable to observe undo working even
+            // if undo worked perfectly, which is a test defect, not a product verdict.
+            // Drain the queue for longer than the debounce window before undoing, which is
+            // what a running application does.
+            MSG pumpMsg;
+            const DWORD pumpUntil = GetTickCount() + 400;
+            do {
+                while (PeekMessageW(&pumpMsg, nullptr, 0, 0, PM_REMOVE)) {
+                    TranslateMessage(&pumpMsg);
+                    DispatchMessageW(&pumpMsg);
+                }
+                Sleep(10);
+            } while (GetTickCount() < pumpUntil);
             const bool routed = Win32IDE_Commands_Route(IDM_EDIT_UNDO);
             const std::string afterUndo = RawrXD::IDE::EditorEngine_GetText();
             const bool undoWorked = (afterUndo != typed);
@@ -352,7 +410,17 @@ static void RunStages() {
                           grew ? 1 : 0, routed ? 1 : 0, undoWorked ? 1 : 0,
                           routedRedo ? 1 : 0, (afterRedo == typed) ? 1 : 0,
                           base.size(), typed.size(), afterUndo.size());
-            const bool ok = grew && routed && routedRedo;
+            // RAWRXD_IDE_CERT_FALSE_PASS_001
+            // undoWorked and the redo comparison were MEASURED and printed, but were
+            // not part of `ok`. The stage therefore reported PASS whenever the text
+            // grew and both routes returned success, regardless of whether undo
+            // changed anything. Measured consequence on this build, before the fix:
+            //     STAGE S12_UNDO_REDO=PASS | grew=1 undo_route=1 undo_changed=0 ...
+            //                                      len_typed=34 len_after_undo=34
+            // i.e. undo did nothing (length unchanged) and the stage passed anyway.
+            // A gate must enforce the value it reports. Both measured conditions are
+            // now load-bearing in the verdict.
+            const bool ok = grew && undoWorked && routed && routedRedo && (afterRedo == typed);
             Record("S12_UNDO_REDO", ok ? Verdict::PASS : Verdict::FAIL, d);
         }
     }

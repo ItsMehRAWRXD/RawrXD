@@ -82,13 +82,6 @@ if ($live) {
     try { if ($live.Path -eq $Exe) { $imgOk = 1 } } catch { }
     Say "SERVER_IMAGE_PATH=$(try { $live.Path } catch { '<unreadable>' })"
 }
-# confirm the live process really is our exe at our path
-$live = Get-Process -Id $serverPid -ErrorAction SilentlyContinue
-$imgOk = 0
-if ($live) {
-    try { if ($live.Path -eq $Exe) { $imgOk = 1 } } catch { }
-    Say "SERVER_IMAGE_PATH=$(try { $live.Path } catch { '<unreadable>' })"
-}
 Say "SERVER_IMAGE_MATCH=$imgOk"
 if ($imgOk -ne 1) {
     Say 'ABORT: the live process image is not the binary this harness launched.'

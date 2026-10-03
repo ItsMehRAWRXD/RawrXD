@@ -1,7 +1,8 @@
 // IdeChatAuthority.cpp — RAWRXD_IDE_CHAT_AUTHORITY_001
 #include "IdeChatAuthority.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <atomic>
+#include <mutex>
 #include <string>
 namespace rawrxd { namespace ide {
 static std::atomic<int> g_promptsSubmitted{0};

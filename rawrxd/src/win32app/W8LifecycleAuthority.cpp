@@ -7,6 +7,7 @@
 #include "W8LifecycleAuthority.h"
 #include "../deep2/ReceiptAuthority.h"
 #include <atomic>
+#include <mutex>
 #include <string>
 namespace rawrxd { namespace lifecycle {
 static std::atomic<uint32_t> g_durationSec{0};

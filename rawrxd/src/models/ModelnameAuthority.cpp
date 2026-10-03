@@ -1,6 +1,6 @@
 // ModelnameAuthority.cpp — RAWRXD_MODELNAME_AUTHORITY_001
 #include "ModelnameAuthority.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <cstdio>
 #include <sys/stat.h>
 namespace rawrxd { namespace models {

@@ -348,6 +348,52 @@ if(MSVC)
     target_compile_options(residual_overlay_fusion_001 PRIVATE /FS)
 endif()
 
+# ---- RAWRXD_RESIDUAL_OVERLAY_SWEEP_001 ----
+#
+# Sweeps the base quantizer over levels x group_size to locate the Pareto
+# frontier, and measures the one quantity the single-point receipt declared
+# UNMEASURED: whether the delta is COMPRESSIBLE, not merely large.
+#
+# Deliberately re-implements the quantizer instead of including the other lane's
+# harness, because that file is untracked and owned elsewhere. Two quantizers
+# could disagree, so CONTROL 0 reproduces that harness's published single point
+# (rel_L2 0.734019, delta ratio 0.786882) and refuses to report the sweep unless
+# it matches -- agreement is proven, not assumed.
+add_executable(residual_overlay_sweep_001 EXCLUDE_FROM_ALL
+    rawrxd/certs/residual_overlay_sweep_001.cpp
+)
+
+target_compile_options(residual_overlay_sweep_001 PRIVATE
+    /std:c++17 /EHsc /O2 /W3 /utf-8
+)
+
+if(MSVC)
+    target_compile_options(residual_overlay_sweep_001 PRIVATE /FS)
+endif()
+
+# ---- RAWRXD_GGUF_TENSOR_SLICE_001 ----
+#
+# Minimal self-validating GGUF reader. Exists because the in-tree loader cannot
+# supply a real weight tensor: src/deep2/GGUFLoader.cpp is 35 bytes (emptied by
+# commit 964eed96f) and no target builds a GGUF-reading probe, so every
+# quantisation measurement so far has been made on SYNTHETIC weights.
+#
+# Reads one quant block from one tensor. No whole-file copy, no engine, no
+# Vulkan. Dequantisation is deliberately NOT done here: a wrong dequantiser
+# would silently corrupt every result computed on top of it, so it is a separate
+# stage with its own validation.
+add_executable(gguf_tensor_slice_001 EXCLUDE_FROM_ALL
+    rawrxd/certs/gguf_tensor_slice_001.cpp
+)
+
+target_compile_options(gguf_tensor_slice_001 PRIVATE
+    /std:c++17 /EHsc /O2 /W3 /utf-8
+)
+
+if(MSVC)
+    target_compile_options(gguf_tensor_slice_001 PRIVATE /FS)
+endif()
+
 target_include_directories(deep2_benchmark PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src

@@ -10,6 +10,9 @@ void IDECore_Layout(int, int);
 void IDECore_RegisterPanel(int, HWND, const std::string&);
 HWND EditorEngine_Create(HWND, int, int, int, int, HINSTANCE);
 void EditorEngine_Register(HINSTANCE);
+// RAWRXD_IDE_UNDO_COVERAGE_003: the undo router's attach entry point. It is exported
+// from Win32IDE_Commands.cpp and is what installs the editor mutation hook.
+extern "C" void Win32IDE_Commands_AttachUndo();
 HWND TabManager_Create(HWND, int, int, int, int, HINSTANCE);
 void TabManager_Register(HINSTANCE);
 HWND ChatPanel_Create(HWND, int, int, int, int, HINSTANCE);
@@ -49,6 +52,20 @@ void ShellLayout_RegisterAll(HINSTANCE hInst)
 {
     TabManager_Register(hInst);
     EditorEngine_Register(hInst);
+    // RAWRXD_IDE_UNDO_COVERAGE_003
+    // Win32IDE_Commands_AttachUndo() registers the editor mutation hook and seeds the
+    // undo stack. It had ZERO callers anywhere in src/, so despite its own comment
+    // ("Called once from WM_CREATE after the editor exists") it never ran. Consequences,
+    // all measured via the IDE runtime cert S12:
+    //     g_mutationHook stayed null, so the WM_TIMER debounce handler's
+    //     `if (g_mutationHook) g_mutationHook();` could never push a snapshot
+    //     g_undoStack stayed empty and g_undoPos stayed -1
+    //     DoEditUndo()'s `if (g_undoPos > 0)` was therefore never true
+    // and every keystroke was silently un-undoable:
+    //     STAGE S12_UNDO_REDO  undo_route=1 undo_changed=0 len_typed=34 len_after_undo=34
+    // AttachUndo is exported from Win32IDE_Commands.cpp, so calling it from here is the
+    // intended wiring: the editor engine exists, which is its only precondition.
+    Win32IDE_Commands_AttachUndo();
     ChatPanel_Register(hInst);
     AgentPanel_Register(hInst);
     TerminalSplit_Register(hInst);

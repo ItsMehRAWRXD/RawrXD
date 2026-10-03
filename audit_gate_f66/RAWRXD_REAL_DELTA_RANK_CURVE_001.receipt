@@ -1,0 +1,182 @@
+RAWRXD_GGUF_TENSOR_SLICE_001  +  REAL-DELTA RANK CURVE
+=========================================================
+THIS CLOSES THE QUESTION RAWRXD_RESIDUAL_OVERLAY_SWEEP_001 DECLARED OPEN.
+
+SOURCE            = rawrxd/certs/gguf_tensor_slice_001.cpp
+MODEL             = F:\OllamaModels\blobs\sha256-6150cb38...c5c613e93
+FILE_BYTES        = 19851335552
+GGUF_VERSION      = 3   TENSOR_COUNT = 771   METADATA_KV_COUNT = 26
+GENERAL_ALIGNMENT = 32  DATA_START = 5977984
+CHECKS            = 15 / 15 PASS     FINAL_VERDICT = PASS
+TENSOR            = blk.0.attn_q.weight
+TYPE              = 12 (Q4_K)   2D 5120 x 5120
+N_ELEMS           = 26214400   N_BLOCKS = 102400   BYTE_LEN = 14745600
+FILE_OFFSET       = 1100351360
+TYPE_CENSUS       = 385 x Q4_K, 65 x Q6_K, 321 x F32
+SLACK_BYTES       = 0     <-- the directory exactly accounts for the file size
+
+
+----------------------------------------------------------------------------
+1. WHY THIS STAGE HAD TO BE BUILT FIRST
+----------------------------------------------------------------------------
+The in-tree loader cannot supply a real weight tensor:
+
+  src/deep2/GGUFLoader.cpp  = 35 bytes  ("// STUB: src/deep2/GGUFLoader.cpp")
+  emptied by commit 964eed96f "Delete 1006 stub .cpp files"
+  no CMake target anywhere in the repo builds a GGUF-reading probe
+
+So EVERY quantisation measurement in this project to date was made on synthetic
+Gaussian weights. That was the single largest caveat on the sweep's negative
+result, stated explicitly in its own receipt: "inputs are Gaussian, which is the
+WRONG distribution for this question... a real-data version could disagree."
+
+It did not disagree.
+
+
+----------------------------------------------------------------------------
+2. READER VALIDATION -- STRUCTURAL, NOT ASSERTED
+----------------------------------------------------------------------------
+  MAGIC_GGUF                    got=GGUF
+  VERSION_SUPPORTED             v=3
+  METADATA_PARSED               kv=26
+  TENSOR_DIRECTORY_PARSED       parsed=771 expect=771
+  DATA_SECTION_INSIDE_FILE      start=5977984 size=19851335552
+  ALL_OFFSETS_IN_BOUNDS         bad=0
+  ALL_TYPES_UNDERSTOOD          unknown=0
+  ALL_BLOCKS_ALIGNED            misaligned=0
+  ROW_BLOCKS_READ               read=36864 expect=36864
+  SLICE_READ_WITHOUT_WHOLE_FILE_COPY = 1
+
+SLACK_BYTES = 0 is the strongest single signal here: the sum of every tensor's
+byte range lands exactly on the end of the file, so no offset is misparsed and
+none is missing. A reader with an off-by-one in the scale index would still
+satisfy that; it would not satisfy section 3.
+
+
+----------------------------------------------------------------------------
+3. DEQUANT VALIDATION -- THE CHECK THAT ACTUALLY CAN FAIL
+----------------------------------------------------------------------------
+A Q4_K block is 144 bytes -> 256 values, with scales packed into 12 bytes across
+8 sub-blocks. Re-encoding a decode would only prove SELF-CONSISTENCY, and a wrong
+sub-block scale index is perfectly self-consistent -- it produces a plausible
+matrix whose structure is an artefact, and such an artefact survives every
+downstream check.
+
+What a wrong scale index destroys is STATIONARITY. Adjacent groups of a weight
+matrix have similar magnitude, so a correct decode yields a tight spread of
+per-group RMS.
+
+  DEQUANT_ALL_FINITE              1
+  DEQUANT_NEAR_ZERO_MEAN          mean=0.00002384
+  DEQUANT_DISTINCT_VALUES         6551 of 16384
+  DEQUANT_GROUP_RMS_CV            0.1389
+  DEQUANT_GROUP_RMS_MEAN          0.01786508
+  DEQUANT_MIN/MAX                 -0.118541 / 0.133379
+  DEQUANT_VALIDATED               1
+
+group_rms_cv = 0.139 is the load-bearing number. A mis-indexed scale inflates it
+by orders of magnitude. 6551 distinct magnitudes out of 16384 is exactly what a
+correct 4-bit decode with varying scales produces; a collapsed scale index would
+yield a handful.
+
+
+----------------------------------------------------------------------------
+4. THE ANSWER -- IS THE REAL DELTA LOW RANK?  NO.
+----------------------------------------------------------------------------
+Ternary-quantised with the SAME group size (32), SAME 1/3 deadband and SAME
++/-1 representatives as the synthetic sweep, so the two are comparable. The
+spectrum is the EXACT singular spectrum of the R x R Gram matrix by Jacobi
+rotations -- not power iteration, because an approximate spectrum would make the
+rank curve a function of iteration count, and a rank curve that moves when the
+iteration count changes cannot decide anything.
+
+  REAL_DELTA_L1_RATIO          = 0.791996
+  REAL_DELTA_ORDER0_ENTROPY    = 7.2138 bits/elem
+  SIGMA_1 / SIGMA_R             = 542.91
+
+  rank   energy_captured   factor_bits_per_elem
+      1      0.02509100          0.250
+      2      0.04839480          0.500
+      4      0.09251944          1.000
+      8      0.17440489          2.000
+     16      0.30665533          4.000
+     32      0.49770186          8.000
+
+  RANK_FOR_99PCT_ENERGY = 188   ITS_COST = 47.000 bits/elem
+  ORDER0_COST           = 7.214  bits/elem
+  LOW_RANK_BEATS_ORDER0 = 0
+
+READ THIS CAREFULLY. Reaching 99% of the delta's energy requires rank 188 out of
+256. That factor costs 47 bits per element -- 6.5x worse than order-0 coding of
+the delta, and WORSE THAN THE 32-BIT ORIGINAL WEIGHTS IT IS SUPPOSED TO REPLACE.
+
+The spectrum does decay (sigma_1/sigma_R = 543), so the delta is not perfectly
+isotropic. But the decay is far too shallow: rank 8 buys 17% of the energy, and
+rank 32 buys half. This is a diffuse, high-rank error field.
+
+=> RESIDUAL_FORMAT = low_rank_delta    : REFUTED, on real weights
+=> RESIDUAL_FORMAT = sparse_delta      : REFUTED on the synthetic sweep (2-13% sparse)
+=> RESIDUAL_FORMAT = FP16_FULL_DELTA   : the only format any measurement supports
+
+
+----------------------------------------------------------------------------
+5. THE SYNTHETIC CAVEAT IS NOW REMOVED
+----------------------------------------------------------------------------
+  quantity              synthetic (Gaussian)    real (Q4_K MoE weight)   delta
+  DELTA_L1_RATIO               0.786882              0.791996            +0.6%
+  DELTA_ORDER0_ENTROPY         7.2369               7.2138             -0.3%
+
+The real tensor reproduces the synthetic statistics to within 0.6%. The sweep's
+stated weakness -- that Gaussian inputs might not transfer -- is retired for
+this tensor family. The negative result is no longer an artefact of the toy
+distribution.
+
+
+----------------------------------------------------------------------------
+6. DEFECTS CAUGHT WHILE BUILDING THIS
+----------------------------------------------------------------------------
+D1  GGML BOOL is ONE byte, not four. Parsed as 4 bytes, every subsequent key
+    desynchronised and METADATA_PARSED failed with no indication of where. Fixed,
+    AND the parser now records the key/index/offset it was reading when the
+    cursor went bad, so the next failure names itself instead of requiring a
+    bisect.
+D2  Exact-name match was missing, so "blk.0.attn_q" resolved to
+    blk.0.attn_q.bias -- a 1-D F32 bias, not the 2-D Q4_K weight matrix. Every
+    geometry expectation was then being checked against the wrong tensor.
+D3  The liveness check gated on distinct_bytes > 8 and FAILED on the bias, whose
+    low bytes legitimately take few values. A heuristic that cannot tell a bias
+    from a misdirected read was replaced by the condition it stood in for
+    (all-zero block).
+D4  R was initially 64. A rank-r factor of an R x C matrix costs r*(R+C) floats,
+    so per-element cost is r*(R+C)*32/(R*C). At R=64 the measurement would have
+    been an artefact of the SAMPLE HEIGHT rather than of the delta. Raised to 256
+    so the economics match a real square weight tensor.
+D5  windows.h defines min/max as MACROS, rewriting std::max into C2589 rather
+    than failing at the call. NOMINMAX added ahead of the include.
+
+
+----------------------------------------------------------------------------
+7. NOT ATTEMPTED
+----------------------------------------------------------------------------
+  Only ONE tensor, one 256x256 window, at layer 0. Layer-to-layer and
+  layer-to-expert variation is unmeasured. MoE expert tensors in particular may
+  have different structure from a dense attention projection, and the
+  architecture is a MoE proposal.
+  Only Q4_K. The 65 Q6_K tensors (ffn_down, per the earlier census) are
+  unmeasured, and Q6_K has a different block geometry and error profile.
+  Higher-order (context) entropy of dW. Order-0 only, and order-0 is already
+    within a factor of 1.1 of the 8-bit raw symbol, so there is little there.
+  No engine, GPU, I/O, or residency linkage. This is a file read and arithmetic.
+
+
+----------------------------------------------------------------------------
+VERDICT
+  GGUF_READER                          = PROVEN   (15/15, slack=0)
+  Q4_K_DEQUANT                         = PROVEN   (group_rms_cv 0.139)
+  LOW_RANK_DELTA                       = REFUTED  (rank 188 for 99%, 47 b/elem)
+  SPARSE_DELTA                         = REFUTED  (synthetic sweep, 2-13%)
+  ORDER0_DELTA                         = 7.2138 bits/elem on real weights
+  SYNTHETIC_CAVEAT                     = RETIRED  (agrees within 0.6%)
+  RESIDUAL_OVERLAY_IS_A_COMPRESSION_SCHEME = 0
+  DELTA_IS_STRUCTURED_AT_ALL           = 0   (neither sparse, nor low-entropy,
+                                              nor low-rank, on real weights)

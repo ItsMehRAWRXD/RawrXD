@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\~dev\rawrxd\src\remote64\remote64_bridge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\~dev\rawrxd\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="F:\~dev\rawrxd\src\remote64\aead.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\audit.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\auth.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\authority.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b31_damage.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b32_tilequeue.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b33_lz.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b34_colors.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b35_bandwidth.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b36_latency.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b37_window_capture.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b38_dpi.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b39_clipboard_guard.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b40_file_guard.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b41_session_limits.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b42_sequence.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b43_rate_limit.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b44_health.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b45_parity_selftest2.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b46_crc32.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b47_packet_integrity.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b48_utf16.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b49_path_guard.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b50_rect_guard.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b51_mul_guard.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b52_copy_guard.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b53_nonce.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b54_auth_lockout.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b55_permission_transition.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b56_frame_id.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b57_tile_bounds.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b58_zeroize.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b59_close_state.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\b60_final_selftest.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\buffer.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\capture.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\clipboard.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\codec.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\consent.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\crypto.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\cursor.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\deep2_bridge.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\display.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\filexfer.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\framepacer.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\hashfile.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\input.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\keepalive.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\memory.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\multimon.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\parity_selftest.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\permissions.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\protocol.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\quality.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\reconnect.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\resume.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\scale.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\selftest.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\session.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\shutdown.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\stats.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\tiles.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\transport.asm" />
+    <MASM Include="F:\~dev\rawrxd\src\remote64\viewer.asm" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{48DE8EA2-8E2D-3866-ABBC-7F7AA0DD4D09}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

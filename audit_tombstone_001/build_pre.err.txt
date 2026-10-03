@@ -1,0 +1,9 @@
+CMake Warning at CMakeLists.txt:18609 (message):
+  VERDICT=FAIL_IDE_NOT_BUILT: RAWRXD_IDE_REQUIRED=1 but
+  RAWRXD_IDE_TARGET_CONFIGURED=0 and RAWRXD_SOURCE_CENSUS_EXECUTED=0.
+  RAWRXD_DROPPED_SOURCE_TOTAL=0 is a valid observation of a domain that was
+  NOT exercised, so DROPPED_SOURCE_MEASUREMENT_VALID=0 and source closure is
+  NOT established.  Re-configure with -DRAWRXD_BUILD_WIN32IDE=ON to make this
+  measurement real.
+
+

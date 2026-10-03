@@ -1,6 +1,6 @@
 // ForwardLogitsProfiler.cpp — RAWRXD_FORWARD_LOGITS_SPEED_001
 #include "ForwardLogitsProfiler.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <atomic>
 #include <cstring>
 namespace rawrxd { namespace perf {

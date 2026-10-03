@@ -1,0 +1,4 @@
+@echo off
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+set VULKAN_SDK=C:\VulkanSDK\1.4.357.0
+link /nologo /OUT:F:\~dev\kilo_tmp\deep2_streamer_cert_fixed2.exe F:\~dev\kilo_tmp\deep2_streamer_cert_fixed2.obj "F:\~dev\build_cert\Release\InferenceEngine.lib" "F:\~dev\build_cert\Release\deep2_streamer_discovery.lib" "F:\~dev\kilo_tmp\InferenceWire.obj" "F:\~dev\build_cert\Release\rawrxd_remote64.lib" "C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib" dxgi.lib psapi.lib kernel32.lib user32.lib gdi32.lib advapi32.lib ws2_32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib 2>&1

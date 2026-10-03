@@ -38,9 +38,41 @@
 #include <cstdint>
 #include <mutex>
 
-// Full IDETheme definition (extracted from Win32IDE.h)
-// #include "IDETheme.h"   /* header missing — recovered in build pass */
-struct IDETheme { int placeholder; };
+// Full IDETheme definition.
+//
+// RAWRXD_IDE_TRANCHE_THEME_001
+//
+// This was `struct IDETheme { int placeholder; };`, and was then rewritten
+// in-place as a 7-field uint32_t struct with hardcoded literals
+// (0x00FFFFFF, 0x00F0F0F0, 0x00B4D7FF, ...). That revision was reverted here
+// for three measured reasons:
+//
+//  1. WRONG TYPE. The colour members are uint32_t. MonacoCoreEngine.cpp:650
+//     reads them with GetRValue/GetGValue/GetBValue, which are Win32 GDI
+//     macros defined for COLORREF. The authoritative type is COLORREF.
+//  2. WRONG NAMES. It declared gutterBackground / selectionBackground /
+//     currentLineBackground, but the consumer at MonacoCoreEngine.cpp:654,
+//     658 and 660 reads lineNumberBg / selectionColor / currentLineBg. Three
+//     of the seven fields therefore still did not exist.
+//  3. FABRICATED VALUES. The literals are not drawn from any theme palette.
+//     Nothing in the repository defines the RawrXD palette; feeding
+//     0x00FFFFFF to GetRValue yields R=0xFF,G=0xFF,B=0xFF, i.e. a white
+//     editor background. That trades 84 loud compile diagnostics for a
+//     plausible-looking wrong render, which is strictly worse: a loud
+//     failure is evidence, a silent wrong value is not.
+//
+// IDETheme.h was recovered from this repository's own history at
+// 6cf7aeaea^:include/IDETheme.h (blob 22a12febf0527796611f95b88eff4e1d593ad120,
+// deleted by 6cf7aeaea "Rebuild index cleanly with ignore filters applied").
+// It carries 57 COLORREF members with the exact names the consumers read.
+//
+// NOT YET POPULATED: IDETheme.h names Win32IDE_Themes.cpp as the populator
+// ("populates theme structs"), and that file is currently a 459-byte
+// graph-restoration placeholder. So the contract is now real, but no palette
+// values are supplied yet and any IDETheme instance is default-initialised.
+// Implementing Win32IDE_Themes.cpp is the remaining implementation task for
+// this subsystem.
+#include "IDETheme.h"
 
 // ============================================================================
 // Editor Engine Result (PatchResult-compatible)

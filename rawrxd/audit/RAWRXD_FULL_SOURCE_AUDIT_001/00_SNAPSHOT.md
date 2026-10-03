@@ -1,0 +1,149 @@
+﻿# RAWRXD_FULL_SOURCE_AUDIT_001 - PHASE 0 SNAPSHOT
+
+REPOSITORY_ROOT   = F:\~dev\rawrxd
+GIT_BRANCH        = beacon-residency-001
+GIT_HEAD          = e7fb2efa0cc2d2fbfcb5e8d2585cd56452285253
+DIRTY_FILE_COUNT  = 137
+FROZEN_AT_UTC     = 2026-10-03T04:27:12Z
+
+## Dirty files at freeze
+
+```
+ M CMakeLists.txt
+ M _fusion_probe.cpp
+ M rawrxd/3rdparty/quickjs
+ M rawrxd/CMakeLists.txt
+ M rawrxd/audit/RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001/RECEIPT.md
+ M rawrxd/audit/RAWRXD_PHANTOM_COHORT_TRIAGE_001/RECEIPT.md
+ M rawrxd/src/deep2/Deep2Engine.cpp
+ M rawrxd/src/deep2/Deep2Engine_KernelTest.cpp
+ M rawrxd/src/deep2/Deep2Server_Minimal.cpp
+ M rawrxd/src/deep2/GGUFLoader_Fixed.cpp
+ M rawrxd/src/deep2/GGUFVerifier.cpp
+ M rawrxd/src/deep2/Layer0Guard.cpp
+ M rawrxd/src/deep2/TheDualityExample.cpp
+ M rawrxd/src/deep2/VAL038_Benchmark_Harness.cpp
+ M rawrxd/src/deep2/VAL063_Deep2Certification.cpp
+ M rawrxd/src/deep2/deep2_moe_bench_standalone.cpp
+ M rawrxd/src/deep2/deep2_streamer_cert.cpp
+ M rawrxd/src/deep2/dump_tensors.cpp
+ M rawrxd/src/deep2/moe_microbench.cpp
+ M rawrxd/src/deep2/moe_simple_bench.cpp
+ M rawrxd/src/deep2/moe_test.cpp
+ M rawrxd/src/deep2/moe_validation_test.cpp
+ M rawrxd/src/deep2/router_bench.cpp
+ M rawrxd/src/deep2/router_latency_test.cpp
+ M rawrxd/src/deep2/test_api_server.cpp
+ M rawrxd/src/deep2/test_real_gguf_load.cpp
+ M rawrxd/src/deep2/test_real_gguf_validate.cpp
+ M rawrxd/src/deep2/test_tool_limit_hotpatch.cpp
+ M rawrxd/src/win32app/Win32IDE_RuntimeCert.cpp
+ M rawrxd/tools/deep2_streamer_cert.cpp
+ M receipts/RAWRXD_DEEP2_STREAMER_DISCOVERY_001/inventory.json
+ M tools/validate_tombstone_binary_001.ps1
+ M tools/validate_tombstone_runtime_001.ps1
+?? _fusion_dead.cpp
+?? audit_gate_f66/RAWRXD_MOE_EXPERT_ATTEMPT_001.receipt
+?? audit_gate_f66/RAWRXD_MOE_EXPERT_MEASURED_001.receipt
+?? audit_gate_f66/RAWRXD_REAL_DELTA_MATRIX_001.receipt
+?? audit_gate_f66/RAWRXD_REAL_DELTA_RANK_CURVE_001.receipt
+?? audit_gate_f66/RAWRXD_RESIDUAL_OVERLAY_FINAL_001.receipt
+?? audit_gate_f66/RAWRXD_RESIDUAL_OVERLAY_SEGMENT_001.receipt
+?? audit_gate_f66/RAWRXD_RESIDUAL_OVERLAY_SWEEP_001.receipt
+?? audit_gate_f66/RAWRXD_STUB_CENSUS_CANONICAL_001.receipt
+?? audit_gate_f66/gguf_slice.txt
+?? audit_gate_f66/gguf_svd.txt
+?? audit_gate_f66/iquant_matrix.txt
+?? audit_gate_f66/moe_matrix.txt
+?? audit_gate_f66/moe_probe.txt
+?? audit_gate_f66/mxfp4_final.txt
+?? audit_gate_f66/mxfp4_matrix.txt
+?? audit_gate_f66/residual_sweep.txt
+?? audit_tombstone_001/.err.txt
+?? audit_tombstone_001/.out.txt
+?? audit_tombstone_001/CMakeLists.POST_BATCH.txt
+?? audit_tombstone_001/CMakeLists.PRE.txt
+?? audit_tombstone_001/CMakeLists.PRE_BATCH.txt
+?? audit_tombstone_001/CMakeLists.REPAIRED.txt
+?? audit_tombstone_001/SAFETY_CMakeLists.txt
+?? audit_tombstone_001/SAFETY_Deep2Server_Sovereign.cpp
+?? audit_tombstone_001/Stub.RETIRED.txt
+?? audit_tombstone_001/ab_run.txt
+?? audit_tombstone_001/batch_equiv.txt
+?? audit_tombstone_001/build_B.log
+?? audit_tombstone_001/build_final.log
+?? audit_tombstone_001/build_post.err.txt
+?? audit_tombstone_001/build_post.out.txt
+?? audit_tombstone_001/build_pre.err.txt
+?? audit_tombstone_001/build_pre.out.txt
+?? audit_tombstone_001/build_restore.log
+?? audit_tombstone_001/build_s04fix.log
+?? audit_tombstone_001/build_s04fix2.log
+?? audit_tombstone_001/build_trace.log
+?? audit_tombstone_001/census.txt
+?? audit_tombstone_001/cfg_ide.log
+?? audit_tombstone_001/cfg_ide_bypass.log
+?? audit_tombstone_001/cfg_post.log
+?? audit_tombstone_001/cfg_pre.log
+?? audit_tombstone_001/cmdlines_rawr-server.txt
+?? audit_tombstone_001/exports.txt
+?? audit_tombstone_001/exports_post.txt
+?? audit_tombstone_001/exports_pre.txt
+?? audit_tombstone_001/hang_localise.txt
+?? audit_tombstone_001/ide_build.log
+?? audit_tombstone_001/ide_cert_run.txt
+?? audit_tombstone_001/ide_cert_run2.txt
+?? audit_tombstone_001/ide_launch.txt
+?? audit_tombstone_001/ide_rebuild.log
+?? audit_tombstone_001/inputs_batch.txt
+?? audit_tombstone_001/inputs_prebatch.txt
+?? audit_tombstone_001/isolate.txt
+?? audit_tombstone_001/post_batch_runtime.txt
+?? audit_tombstone_001/post_build.log
+?? audit_tombstone_001/post_cfg.log
+?? audit_tombstone_001/repeat.txt
+?? audit_tombstone_001/repeat_after_fix.txt
+?? audit_tombstone_001/repeat_after_fix2.txt
+?? audit_tombstone_001/retire_batch.txt
+?? audit_tombstone_001/stub_census_canonical.csv
+?? build_rawr_ninja_build.log
+?? build_rawr_ninja_build2.log
+?? build_rawr_ninja_reconfigure.log
+?? build_tombstone_val_configure.log
+?? kilo_tmp/cert_run.err
+?? kilo_tmp/cert_run.out
+?? kilo_tmp/cert_run_fixed2.err
+?? kilo_tmp/cert_run_fixed2.out
+?? kilo_tmp/cert_run_fixed3.err
+?? kilo_tmp/cert_run_fixed3.out
+?? kilo_tmp/compile_fixed.bat
+?? kilo_tmp/compile_fixed2.bat
+?? kilo_tmp/compile_fixed2.log
+?? kilo_tmp/deep2_streamer_cert_fixed.cpp
+?? kilo_tmp/deep2_streamer_cert_fixed2.cpp
+?? kilo_tmp/filehash_kat.cpp
+?? kilo_tmp/hashprobe/
+?? kilo_tmp/link_fixed2.bat
+?? kilo_tmp/link_fixed2.log
+?? kilo_tmp/run_cert.bat
+?? kilo_tmp/run_kimi_k2.bat
+?? kilo_tmp/sha_kat.cpp
+?? rawrxd/audit/RAWRXD_IDE_RUNTIME_CERT_001/
+?? rawrxd/audit/RAWRXD_STUB_CENSUS_CANONICAL_001/
+?? rawrxd/audit/STUB_HEADER_REPORT.md
+?? rawrxd/certs/gguf_tensor_slice_001.cpp
+?? rawrxd/certs/iq_tables.inc
+?? rawrxd/certs/residual_overlay_sweep_001.cpp
+?? rawrxd/tools/iq_table_extract.ps1
+?? rawrxd/tools/streamer_status.cpp
+?? rawrxd/tools/stub_census_canonical.ps1
+?? receipts/RAWRXD_DEEP2_STREAMER_CERT_001/
+?? tools/ide_cert_hang_localise_001.ps1
+?? tools/ide_cert_isolate_001.ps1
+?? tools/ide_cert_repeat_001.ps1
+?? tools/ide_launch_probe_001.ps1
+?? tools/retire_phantom_cohort_001.ps1
+?? tools/run_ide_runtime_cert_001.ps1
+?? tools/stub_census_canonical_001.ps1
+?? tools/verify_batch_equivalence_001.ps1
+```

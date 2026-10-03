@@ -1,0 +1,135 @@
+RAWRXD_OVERLAY_FAMILY_SEARCH_001
+==================================
+THE LAST OPEN IDEA, TESTED AS AN OPTIMISATION RATHER THAN A GUESS.
+
+TOOL   rawrxd/certs/gguf_tensor_slice_001.cpp  (stage 5)
+QUESTION
+    Stages 1-4 tested SPECIFIC bases -- the shipped formats. That answers
+    "did this base work?", not "is there ANY base that works?"
+
+    The proposal restated as an optimisation is:
+        minimise   base_bpw + H(W - base)      over all bases
+    Every point on the overlay's curve has rel_L2 = 0 BY CONSTRUCTION, because
+    the delta is defined as W - base. So the whole overlay family collapses to
+    ONE number: the minimum of that sum.
+
+    If the MINIMUM loses to the direct curve, no base in the family rescues the
+    architecture. That is far stronger than four failed formats.
+
+FAMILY SEARCHED = RTN min/max over bits {1,2,3,4,5,6,8} x group {16,32,64,128,256}
+ALL CASES PASS, CHECKS_FAIL=0
+
+
+----------------------------------------------------------------------------
+1. RESULT
+----------------------------------------------------------------------------
+tensor                    family_MIN_total   at (base_bpw, delta_H)   direct@0.05  margin
+------------------------------------------------------------------------------------------------
+MoE blk.20.ffn_down_exps        6.6186        1.5000 + 5.1186  (1b/32)     6.0000    +0.62
+MoE blk.0.ffn_gate_exps         5.1992        2.0000 + 3.1992  (1b/16)     5.0000    +0.20
+dense blk.31.attn_q             6.1296        4.5000 + 1.6296  (4b/32)     4.5000    +1.63
+dense blk.63.ffn_down           8.4333        2.0000 + 6.4333  (1b/16)     5.2500    +3.18
+
+  ANY_BASE_IN_FAMILY_BEATS_DIRECT = 0   in ALL FOUR cases
+
+
+----------------------------------------------------------------------------
+2. THE NUANCE THAT MATTERS MOST: THE OPTIMISATION WORKS, AND IS STILL NOT ENOUGH
+----------------------------------------------------------------------------
+Compare the family minimum against what the SHIPPED base achieved in stage 4:
+
+  tensor                  shipped base total   optimised minimum   improvement
+  MoE IQ3_XXS                    7.2993             6.6186           -9.3%
+  MoE IQ2_XS                     7.2568             5.1992          -28.3%
+  dense Q4_K                    11.7107             6.1296          -47.7%
+  dense Q6_K                    13.4188             8.4333          -37.2%
+
+So the proposed optimisation -- choose the base to minimise base_bpw plus
+RESIDUAL entropy rather than base_bpw alone -- IS REAL AND IS SUBSTANTIAL. It
+cuts the overlay's cost by 9-48%, and on dense Q4_K it nearly halves it.
+
+It still loses. The architecture is not rescued, but the reason it loses is now
+precise: not that the base was chosen badly, but that base_bpw + H(residual) has
+a floor above the direct-quantiser cost for these tensors.
+
+Note where the optimum lands. Three of the four choose a ONE-BIT base, pushing
+almost everything into the delta. That is the optimiser correctly observing
+that the base is nearly worthless as storage and the delta is doing the work --
+which is a description of the overlay's failure mode, found by minimising it.
+
+
+----------------------------------------------------------------------------
+3. THE CLOSEST CALL, STATED PLAINLY
+----------------------------------------------------------------------------
+MoE blk.0.ffn_gate_exps (IQ2_XS): family minimum 5.1992 against a direct cost
+of 5.0000 for rel_L2 <= 0.05. That is a 4.0% gap.
+
+Every other case is 12-60% behind. This one is close enough that it should not
+be rounded away, and it is the case where a base OUTSIDE the searched family
+might plausibly win. It is a reason to keep the question open on one tensor,
+not a reason to call the architecture viable.
+
+
+----------------------------------------------------------------------------
+4. WHAT THIS DOES AND DOES NOT CLOSE
+----------------------------------------------------------------------------
+CLOSES:
+    Any base in {RTN min/max} x {bits 1..8} x {group 16..256}. The minimum over
+    that family loses in 4/4. The low-rank framing is dead by the rank bound;
+    the general overlay is dead by this minimisation.
+
+DOES NOT CLOSE:
+    Bases outside the family. In particular a base constructed so its error IS
+    structured -- a learned codebook, a vector-quantised base, or a
+    low-rank-plus-quantised base -- is not in this search, because RTN has no
+    objective that would produce one. The measured optima landing on 1-bit
+    bases are evidence that RTN actively WORKS AGAINST residual structure: a
+    minimiser of base bits has no reason to shape the error.
+
+    So the correct statement is: the overlay fails for every base that treats
+    the base and the residual independently. It has NOT been tested against a
+    base designed jointly with its residual -- which is a real gap, and the only
+    one left.
+
+FAMILY_SEARCH_IS_NOT_ALL_QUANTISERS = 1, reported by the tool itself.
+
+
+----------------------------------------------------------------------------
+5. FINAL STATE OF THE PROPOSAL
+----------------------------------------------------------------------------
+  LOW_RANK_RESIDUAL_VARIANT   REFUTED PROVABLY
+      rank(W) <= rank(base) + rank(delta) puts the floor for any two-factor
+      split at 36.9-38.6 bits/element for a 32-bit original.
+
+  RESIDUAL_OVERLAY_GENERAL     REFUTED for every independently-chosen base
+      family minimum 5.20-8.43 bpw against a direct 4.50-6.00 bpw for
+      rel_L2 <= 0.05. Dominated 4/4, including after the base is optimised
+      rather than assumed.
+
+  DELTA_STRUCTURE              NONE FOUND
+      not sparse, not low-rank, not low-entropy.
+
+  THE ONE UNTESTED VARIANT
+      A base optimised JOINTLY with its residual -- chosen so the error is
+      sparse or low-rank by construction, rather than being whatever RTN's
+      min/max happens to leave. The harness now measures both terms and the
+      exact rank curve, so it is runnable without new instrumentation.
+
+      The bar it must clear is a 0.20 bpw deficit on one MoE tensor and
+      0.62-3.18 on the others, against a direct-format path that has not been
+      beaten. That is a low bar on one case and a high one on the rest.
+
+
+----------------------------------------------------------------------------
+6. LIMITS
+----------------------------------------------------------------------------
+  * Family is RTN only, by the tool's own report.
+  * rel_L2 against one fixed Gaussian probe per tensor.
+  * Windows 256x1024; four tensors; one MoE family and one dense model.
+  * Residual entropy is order-0. Higher-order coding would lower the delta term
+    and could move the margins -- this is stated because order-0 has been within
+    a factor of ~1.1 of the 8-bit symbol everywhere measured, so the headroom is
+    small but it is not zero.
+  * No engine, GPU, I/O or residency linkage.
+
+Receipt written to audit_gate_f66\RAWRXD_OVERLAY_FAMILY_SEARCH_001.receipt

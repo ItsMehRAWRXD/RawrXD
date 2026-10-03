@@ -8,8 +8,8 @@
 #ifndef QUICKJS_SANDBOX_H
 #define QUICKJS_SANDBOX_H
 
-#include <cstdint.h>
-#include <cstddef.h>
+#include <cstdint>
+#include <cstddef>
 #include <string.h>
 #include <Windows.h>
 #include <mutex>

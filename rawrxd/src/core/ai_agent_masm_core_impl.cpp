@@ -10,10 +10,10 @@
 #include <windows.h>
 #include <vector>
 #include <string>
-#include "../rawrxd_tokenizer.h"
+#include "../rawrxd_tokenizer.hpp"
 
 // Global tokenizer instance for production tokenization
-static RawrXDTokenizer g_rawr_tokenizer;
+static rawrxd::Tokenizer g_rawr_tokenizer;
 static bool g_tokenizer_loaded = false;
 
 // Agent state structure

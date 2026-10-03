@@ -1,6 +1,6 @@
 // InstallAuthority.cpp — RAWRXD_INSTALL_AUTHORITY_001
 #include "InstallAuthority.h"
-#include "../perf/../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <cstdio>
 namespace rawrxd { namespace install {
 bool installProduct(const std::string& root, const std::string& version) {

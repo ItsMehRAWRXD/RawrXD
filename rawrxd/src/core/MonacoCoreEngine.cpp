@@ -38,7 +38,14 @@
 // ============================================================================
 
 #include "editor_engine.h"
-// #include "RawrXD_MonacoCore.h"   /* header missing — recovered in build pass */
+#include "RawrXD_MonacoCore.h"   // RAWRXD_IDE_RESTORE_001
+// The include above was previously commented out with the note "header missing -
+// recovered in build pass". It was missing: commit b41961cad had deleted it. It is
+// now recovered from this repository's own history at b41961cad^, at the path this
+// tree used (include/RawrXD_MonacoCore.h, 11,387 bytes), and it declares every
+// symbol the compiler reported as undeclared: MC_TokenType (14 occurrences),
+// MC_GapBuffer (20), MC_Colors (12), MC_OPT_LINE_NUMBERS (1). Without it this file
+// produced 84 diagnostics, all downstream of that one missing declaration surface.
 
 #include <d2d1.h>
 #include <dwrite.h>
@@ -60,6 +67,71 @@
 #ifndef MC_TAB_SIZE
 #define MC_TAB_SIZE 4
 #endif
+
+// MonacoCore forward declarations (headers not yet materialized)
+struct MC_Token { uint32_t type; uint32_t offset; uint32_t len; uint32_t color; };
+#ifndef MC_MAX_TOKENS_PER_LINE
+#define MC_MAX_TOKENS_PER_LINE 128
+#endif
+#ifndef MC_MAX_LINE_LENGTH
+#define MC_MAX_LINE_LENGTH 4096
+#endif
+#ifndef MC_OPT_LINE_NUMBERS
+#define MC_OPT_LINE_NUMBERS 0x01
+#endif
+#ifndef MC_OPT_CURSOR_BLINK
+#define MC_OPT_CURSOR_BLINK 0x02
+#endif
+enum class MC_TokenType : uint32_t { Text = 0 };
+namespace MC_Colors {
+    constexpr uint32_t BG_DEFAULT = 0x00FFFFFF;
+    constexpr uint32_t TEXT_DEFAULT = 0x00000000;
+    constexpr uint32_t BG_GUTTER = 0x00F0F0F0;
+    constexpr uint32_t LINE_NUMBER = 0x00606060;
+    constexpr uint32_t BG_SELECTION = 0x00B4D7FF;
+    constexpr uint32_t BG_CURRENT_LINE = 0x00E8F4FF;
+    constexpr uint32_t CURSOR = 0x00000000;
+}
+
+// MonacoCoreBuffer stub — full implementation required for materialization
+class MonacoCoreBuffer {
+    std::vector<char> m_data;
+    std::vector<uint32_t> m_lineOffsets;
+public:
+    MonacoCoreBuffer() {}
+    void clear() { m_data.clear(); m_lineOffsets.clear(); m_lineOffsets.push_back(0); }
+    uint32_t insertText(uint32_t offset, const char* text, uint32_t len) {
+        m_data.insert(m_data.begin() + offset, text, text + len);
+        rebuildOffsets(); return len;
+    }
+    uint32_t deleteRange(uint32_t start, uint32_t end) {
+        if (end <= start) return 0;
+        m_data.erase(m_data.begin() + start, m_data.begin() + end);
+        rebuildOffsets(); return end - start;
+    }
+    uint32_t getLineCount() const { return (uint32_t)m_lineOffsets.size() - 1; }
+    uint32_t getLine(uint32_t lineIdx, char* buf, uint32_t maxLen) const {
+        if (lineIdx + 1 >= m_lineOffsets.size()) return 0;
+        uint32_t start = m_lineOffsets[lineIdx];
+        uint32_t end = m_lineOffsets[lineIdx + 1];
+        if (end > start && m_data[end - 1] == '\n') --end;
+        uint32_t len = end - start;
+        if (len > maxLen - 1) len = maxLen - 1;
+        if (buf && maxLen > 0) { std::memcpy(buf, m_data.data() + start, len); buf[len] = '\0'; }
+        return len;
+    }
+    void setText(const char* text, uint32_t len) {
+        m_data.assign(text, text + len); rebuildOffsets();
+    }
+private:
+    void rebuildOffsets() {
+        m_lineOffsets.clear(); m_lineOffsets.push_back(0);
+        for (size_t i = 0; i < m_data.size(); ++i) {
+            if (m_data[i] == '\n') m_lineOffsets.push_back((uint32_t)(i + 1));
+        }
+        m_lineOffsets.push_back((uint32_t)m_data.size());
+    }
+};
 
 // ============================================================================
 // Line Cache Entry

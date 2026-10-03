@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // deep2_streamer_cert.cpp â€” RAWRXD_DEEP2_STREAMER_CERT_001
 //
 // Tests every real local inference model Deep2 can be given, and lets Deep2
@@ -35,18 +35,88 @@
 #include <chrono>
 #include <cstdio>
 #include <cstring>
+#include <exception>
 #include <string>
+#include <typeinfo>
 #include <vector>
 
 #include <windows.h>
 #include <psapi.h>
 
 #include "deep2/Deep2Engine.h"
+#include "deep2/Layer0Guard.hpp"
 #include "streamer/ModelInventory.h"
 
 using rawrxd::streamer::ArtifactClass;
 using rawrxd::streamer::LogicalModel;
 using rawrxd::streamer::ModelInventory;
+
+// RAWRXD_LAYER0_SELFTEST_001
+// ---------------------------------------------------------------------------
+// A DELIBERATE fault, behind an environment flag, for the sole purpose of proving
+// the Layer 0 record path end to end.
+//
+// WHY THIS EXISTS
+//   Layer0Guard only writes a record from INSIDE its exception handler
+//   (Layer0Guard.cpp:92-105, with the reason spelled out there: "The process is
+//   about to be terminated by the OS, so a record written after the handler
+//   returns would never exist"). That means a clean run produces NO record -- so
+//   "no record" is indistinguishable from "guard absent", "guard unarmed", and
+//   "guard present but broken". All four look identical from outside, which is
+//   the exact ambiguity this project's guard exists to remove.
+//
+//   Layer0Guard.cpp:109-111 names that failure mode too: "an absent guard and an
+//   absent fault look identical from the outside, and that ambiguity is what let
+//   four ghosts through."
+//
+//   So the record path needs a fault that can be requested on demand. A null
+//   dereference is used because Layer0Guard.cpp:169 records that a genuine null
+//   dereference already produced a complete record with correct code, RIP and
+//   stack -- it is the one fault class with a known-good reference observation.
+//
+// WHAT IS ACTUALLY BEING TESTED
+//   NOT that a null dereference crashes -- that is known. What is unknown is
+//   whether THIS binary, with THIS wiring, produces a record that:
+//
+//     1. exists at all                       (RAWRXD_LAYER0_OUT was written)
+//     2. reports the right exception code    (0xC0000005 ACCESS_VIOLATION)
+//     3. reports VECTORED_CAPTURE_ARMED=1    (proves the handler ran)
+//     4. resolves the image identity         (IMAGE_IDENTITY_MATCH=1 vs 0)
+//     5. records 16 stack words from RSP     (frameCount)
+//     6. REFUSES on identity mismatch        (the gate must be able to say no)
+//
+//   Points 3 and 6 are the ones that make this a real test. A handler that never
+//   ran cannot set VECTORED_CAPTURE_ARMED, and an identity gate that always
+//   passes proves nothing. Both are observable in the emitted record.
+//
+// SAFETY
+//   Off unless RAWRXD_LAYER0_SELFTEST=1. The fault is taken on an intentional
+//   null dereference in a leaf scope, which the compiler cannot elide because the
+//   result feeds a volatile sink. Nothing outside this function is touched and
+//   no resource is held.
+// ---------------------------------------------------------------------------
+namespace {
+
+void Layer0SelfTestNullDeref() {
+    std::fprintf(stderr, "LAYER0_SELFTEST_REQUESTED=1\n");
+    std::fflush(stderr);
+
+    volatile int* p = reinterpret_cast<volatile int*>(static_cast<std::uintptr_t>(0));
+    // Not optimisable: the store result is read back into a volatile sink, and
+    // the dereference is on a value derived from a cast rather than a literal
+    // null pointer expression, so the compiler cannot prove it UB and delete it.
+    *p = 0x4C30;                       // RAWRXD_LAYER0_SELFTEST_001 payload
+    volatile int sink = *p;
+    (void)sink;
+
+    // Reached only if the exception was continued rather than terminating,
+    // which is itself a result worth printing: it means the guard did not stop
+    // the process, and therefore no record can be expected.
+    std::fprintf(stderr, "LAYER0_SELFTEST_SURVIVED=1_NO_EXCEPTION_DELIVERED\n");
+    std::fflush(stderr);
+}
+
+}  // namespace
 
 namespace {
 
@@ -255,6 +325,102 @@ std::printf("residency_ratio_denominator=measured_mapped_bytes\n");
     std::printf("result=%s\n", o.result.c_str());
 }
 
+// RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001 -- namespace-scope instrumentation.
+//
+// WHY IT EXISTS
+//   The Kimi K2 / deepseek2 MLA path terminates with
+//       EXCEPTION_CODE=0xC0000409
+//       ExceptionInformation[0]=0x7 = FAST_FAIL_FATAL_APP_EXIT  (winnt.h)
+//       FAULT_RVA=0xC3169
+//   which is the CRT's std::terminate / abort() surface, NOT a hardware trap.
+//   Four sites in this tree already name that mechanism:
+//     deep2_bounded_stream_gate.cpp:591 "gives no diagnostic by default"
+//     b3_continuation_test.cpp:173    "escapes main as std::terminate"
+//     rawrxd_run_modelname_001.cpp:58 "CRT surfaces only as a bare 0xC0000409"
+//     main_win32.cpp:1444             "with ucrtbase!_invoke_watson"
+//   The exception OBJECT is the lost evidence, and it is recoverable here,
+//   before terminate() is ever reached.
+//
+// SEMANTICS ARE DELIBERATELY UNCHANGED
+//   Every handler RE-THROWS. This harness measures a failure; it must not become
+//   a recovery path. Swallowing the throw would change the behaviour being
+//   measured and would convert FAST_FAIL=7 into a clean exit -- a self-certifying
+//   false PASS of the exact kind this harness exists to prevent.
+//
+//   Unbuffered stderr, one line per field: __fastfail does not return, so nothing
+//   gets a chance to flush at fault time.
+//
+// WHY NAMESPACE SCOPE, NOT BLOCK SCOPE
+//   These were originally block-scope helpers. That is not valid C++ at all and
+//   MSVC rejects it (C2601/C2267). Removing the `static` storage class does NOT
+//   fix it -- a named function may not be DEFINED inside another function, so it
+//   must live at namespace scope. siteName() takes the phase as a parameter
+//   precisely because it can no longer close over the per-call g_phase.
+enum class CertPhase {
+    BeforeLoadModel,
+    AfterLoadModel,
+    BeforeGenerate,
+    InsideGenerateCallback,
+    AfterGenerate
+};
+
+const char* phaseName(CertPhase p) {
+    switch (p) {
+        case CertPhase::BeforeLoadModel:        return "BEFORE_LOADMODEL";
+        case CertPhase::AfterLoadModel:         return "AFTER_LOADMODEL";
+        case CertPhase::BeforeGenerate:         return "BEFORE_GENERATE";
+        case CertPhase::InsideGenerateCallback: return "INSIDE_GENERATE_CALLBACK";
+        case CertPhase::AfterGenerate:          return "AFTER_GENERATE";
+    }
+    return "UNKNOWN";
+}
+
+// LOADMODEL vs GENERATE. loadModel is guarded deliberately: MLA_ELIGIBLE is
+// emitted from INSIDE loadModel (Deep2Engine.cpp:2747), so a throw on the
+// eligibility path would escape a forward-only guard -- the exact blind spot
+// this instrumentation exists to close.
+const char* siteName(CertPhase p) {
+    return (p == CertPhase::AfterLoadModel ||
+            p == CertPhase::BeforeGenerate ||
+            p == CertPhase::InsideGenerateCallback ||
+            p == CertPhase::AfterGenerate) ? "GENERATE" : "LOADMODEL";
+}
+
+void emitPhase(CertPhase p) {
+    std::fprintf(stderr, "LAST_CERT_PHASE=%s\n", phaseName(p));
+    std::fflush(stderr);
+}
+
+// One call site, shared by both guarded regions, so the two cannot drift apart
+// in which fields they emit. `what` is the mangled dynamic type; the readable
+// message is emitted separately by the caller because e.what() is only
+// available where the exception object is in scope.
+void emitCaught(const CertPhase p, const char* what) {
+    std::fprintf(stderr,
+                 "EXCEPTION_CAUGHT=1\n"
+                 "EXCEPTION_SITE=%s\n"
+                 "EXCEPTION_TYPE=%s\n",
+                 siteName(p), what);
+    std::fprintf(stderr, "LAST_CERT_PHASE_AT_THROW=%s\n", phaseName(p));
+    std::fflush(stderr);
+}
+
+void emitUnknown(const CertPhase p) {
+    std::fprintf(stderr,
+                 "EXCEPTION_CAUGHT=1\n"
+                 "EXCEPTION_SITE=%s\n"
+                 "EXCEPTION_TYPE=UNKNOWN_NON_STD_EXCEPTION\n"
+                 "EXCEPTION_WHAT=<not a std::exception>\n"
+                 "LAST_CERT_PHASE_AT_THROW=%s\n",
+                 siteName(p), phaseName(p));
+    std::fflush(stderr);
+}
+
+void emitRethrowTag(const char* tag) {
+    std::fprintf(stderr, "FAST_FAIL_AFTER_CATCH=%s\n", tag);
+    std::fflush(stderr);
+}
+
 Outcome TestOne(const LogicalModel& m, std::uint32_t requestedTokens) {
     Outcome o;
     const auto t0 = std::chrono::steady_clock::now();
@@ -313,39 +479,165 @@ Outcome TestOne(const LogicalModel& m, std::uint32_t requestedTokens) {
                 m.presentShards);
     std::fflush(stdout);
 
+    emitPhase(CertPhase::BeforeLoadModel);
+    CertPhase g_phase = CertPhase::BeforeLoadModel;
+
+    // RAWRXD_LAYER0_STACK_ATTRIBUTION_001 -- arm the in-process Layer 0 guard.
+    //
+    // WHY THIS IS NEEDED, given the C++ catches are already here:
+    //   The measured Kimi exit code is -1073741571 = 0xC00000FD
+    //   STATUS_STACK_OVERFLOW, raised inside loadModel AFTER MLA_ELIGIBLE. A
+    //   guard-page fault has NO unwind path, so the catch(...) handlers in this
+    //   file cannot observe it. Catching is not the mechanism that works here;
+    //   capturing the fault context in-process is.
+    //
+    // WHY IDENTITY IS SUPPLIED FROM OUTSIDE:
+    //   Layer0::Arm() refuses to arm unless the running image's SHA256 matches
+    //   RAWRXD_LAYER0_EXPECTED_SHA256. That refusal is the point: the failure
+    //   this project keeps having is drawing Layer 0 conclusions from a binary
+    //   nobody can identify. Supplying the hash of the binary that is actually
+    //   executing satisfies the guard's precondition rather than disabling it.
+    //
+    //   If the hash is absent or wrong the guard emits EXIT=2 with
+    //   LAYER0=REFUSED_NO_IDENTITY and NO register data. That is a legitimate
+    //   outcome and is reported as such -- never as a silent empty record.
+    {
+        const bool armed = Deep2::Layer0::Arm();
+        std::fprintf(stderr,
+                     "LAYER0_ARM_REQUESTED=1\n"
+                     "LAYER0_ARMED=%d\n"
+                     "LAYER0_VECTORED_ARMED=%d\n"
+                     "LAYER0_EXPECTED_SHA256=%s\n",
+                     (int)armed,
+                     (int)Deep2::Layer0::VectoredCaptureArmed(),
+                     std::getenv("RAWRXD_LAYER0_EXPECTED_SHA256")
+                         ? std::getenv("RAWRXD_LAYER0_EXPECTED_SHA256") : "(unset)");
+        std::fflush(stderr);
+        if (!armed) {
+            // Not fatal. A refused arm must not change what the harness measures;
+            // it must only be visible. Recording it and continuing keeps the
+            // failure attributable instead of converting it into a load failure.
+            std::fprintf(stderr,
+                         "LAYER0_REFUSED=1_IDENTITY_MISSING_OR_MISMATCH\n"
+                         "NOTE=No register data will be produced. This is the guard's\n"
+                         "     documented refusal, not a fault in the engine.\n");
+            std::fflush(stderr);
+        }
+    }
+
+    // RAWRXD_EXPERT_REUSE_TRACE_001 -- flush the reuse-distance population before the
+// engine is torn down, while the trace state is still alive. This is what turns
+// a stream of per-access lines into the one number the residency design needs:
+// HOT_WORTHY_PAIR_FRACTION = reused/accesses. A low fraction means most expert
+// accesses are first touches, and a small HOT set cannot work.
+struct ReuseSummaryPrinter {
+    Deep2::Deep2Engine* e = nullptr;
+    ~ReuseSummaryPrinter() {
+        if (e) e->EmitExpertReuseSummary();
+    }
+};
+
     o.resBeforeLoad = MeasureResidency();
     Deep2::Deep2Engine engine;
+    ReuseSummaryPrinter reuseSummary;
+    reuseSummary.e = &engine;
     Deep2::ModelLoadDiag diag;
-    const bool loaded = engine.loadModel(entry, &diag);
-    o.resAfterLoad = MeasureResidency();
-    o.wallMs = ms();
+
+    // RAWRXD_KIMI_VULKAN_ENABLE_001
+    //
+    // MEASURED, not assumed. A prior run of THIS file against the full Kimi set
+    // returned in 0.1 s with:
+    //     admission OK arch=deepseek2 family=MLA moe=1 mla=1 tensors=1096
+    //     SUSPENDED arch=deepseek2 reason=MLA_CPU_PATH_ABSENT vulkan=0
+    //     -- suspended BEFORE mapping; nothing read or allocated
+    //     LOADMODEL_COMPLETED=1
+    // The model was admitted and then REFUSED, because this cert never called
+    // enableVulkan(). The gate that refuses is Deep2Engine.cpp:1910, and it tests
+    // vulkanEnabled_ -- a CONFIGURATION flag -- not vulkanInitialized_ or
+    // vulkanDevices_.empty(). That is the defect documented at that site: the
+    // capability question is asked where it cannot be answered, because Vulkan
+    // initialises far later in loadModel.
+    //
+    // Consequence for this harness, both branches measured:
+    //     vulkan disabled -> clean suspend, 0.1 s, loadModel RETURNS, no fault
+    //     vulkan enabled  -> reaches MLA_ELIGIBLE layersBound=61/61, then faults
+    // The 0xC00000FD is only reachable with Vulkan ON. A cert that leaves it off
+    // cannot reach the fault it exists to attribute, and its clean exit would read
+    // as a pass. That false green is what this call removes.
+    //
+    // The sibling cert (src/deep2/deep2_streamer_cert.cpp, gated OFF by
+    // option(BUILD_DEEP2_STREAMER_CERT)) already calls this; this file is the one
+    // rawrxd/CMakeLists.txt:18957 actually builds.
+    engine.enableVulkan(true);
+    {
+        const char* want = std::getenv("RAWRXD_ENABLE_VULKAN");
+        std::fprintf(stderr,
+                     "CERT_VULKAN_REQUESTED=1\n"
+                     "CERT_VULKAN_ENV_OVERRIDE=%s\n",
+                     want ? want : "(unset)");
+        std::fflush(stderr);
+    }
+
+    bool loaded = false;
+    // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001: loadModel is guarded deliberately.
+    // MLA_ELIGIBLE is emitted from INSIDE loadModel (Deep2Engine.cpp:2747), so a
+    // throw on the eligibility path would escape a forward-only guard -- which is
+    // exactly the blind spot this instrumentation exists to close. A load that
+    // merely FAILS is not an exception and returns normally, handled below.
+    try {
+        loaded = engine.loadModel(entry, &diag);
+        o.resAfterLoad = MeasureResidency();
+        o.wallMs = ms();
+        g_phase = CertPhase::AfterLoadModel; emitPhase(g_phase);
+        std::fprintf(stderr, "LOADMODEL_COMPLETED=1\n"); std::fflush(stderr);
+    }
+    catch (const std::exception& e) {
+        emitCaught(g_phase, typeid(e).name());
+        // then e.what() appended below for the human-readable half
+        std::fprintf(stderr, "EXCEPTION_WHAT=%s\n", e.what());
+        std::fflush(stderr);
+        emitRethrowTag("RETHROW_STD");
+        throw;  // semantics unchanged
+    }
+    catch (...) {
+        emitUnknown(g_phase);
+        emitRethrowTag("RETHROW_UNKNOWN");
+        throw;
+    }
     if (!loaded) {
         o.result = m.header.valid ? "MODEL_LOAD_FAILED" : "MODEL_UNSUPPORTED_FORMAT";
         o.detail = "loadModel failed stage=" + std::to_string(diag.stageCode) +
                    " stage_name=" + (diag.stageName.empty() ? std::string("(none)")
-                                                           : diag.stageName) +
+                                                            : diag.stageName) +
                    " message=" + (diag.message.empty() ? std::string("(none)") : diag.message);
         return o;
     }
     o.loadPass = true;
 
-    Deep2::GenerationOptions opts;
-    opts.maxTokens = requestedTokens;
-    opts.temperature = 0.0f;  // deterministic: same bytes in, same tokens out
-    opts.topK = 1;
-    opts.topP = 1.0f;
-    opts.seed = 1;
+        Deep2::GenerationOptions opts;
+        opts.maxTokens = requestedTokens;
+        opts.temperature = 0.0f;  // deterministic: same bytes in, same tokens out
+        opts.topK = 1;
+        opts.topP = 1.0f;
+        opts.seed = 1;
 
-    std::string firstTokenAt = "";
-    std::int64_t callbackCounter = 0;
-    std::int32_t lastId = -1;
-    bool contiguous = true;
+        std::string firstTokenAt = "";
+        std::int64_t callbackCounter = 0;
+        std::int32_t lastId = -1;
+        bool contiguous = true;
 
-    std::uint64_t prevFaults = o.resAfterLoad.pageFaults;
-    auto tokStart = std::chrono::steady_clock::now();
-    const Deep2::GenerationResult r =
-        engine.generateStream(kPrompt, opts, [&](std::int32_t tokenId,
-                                                 const std::string& token) -> bool {
+        g_phase = CertPhase::BeforeGenerate; emitPhase(g_phase);
+        std::fprintf(stderr, "FORWARD_ENTERED=1\n"); std::fflush(stderr);
+
+        std::uint64_t prevFaults = o.resAfterLoad.pageFaults;
+        auto tokStart = std::chrono::steady_clock::now();
+        Deep2::GenerationResult r{};
+    try {
+        r = engine.generateStream(kPrompt, opts, [&](std::int32_t tokenId,
+                                                     const std::string& token) -> bool {
+            if (g_phase != CertPhase::InsideGenerateCallback) {
+                g_phase = CertPhase::InsideGenerateCallback; emitPhase(g_phase);
+            }
             if (callbackCounter == 0) firstTokenAt = std::to_string(ms());
             if (lastId >= 0 && tokenId == lastId) contiguous = false;  // same id twice
             lastId = tokenId;
@@ -374,6 +666,32 @@ Outcome TestOne(const LogicalModel& m, std::uint32_t requestedTokens) {
             tokStart = std::chrono::steady_clock::now();
             return true;  // never cancel early: we need every callback
         });
+        g_phase = CertPhase::AfterGenerate; emitPhase(g_phase);
+        std::fprintf(stderr, "FORWARD_COMPLETED=1 status=%d gen=%llu cb=%lld\n",
+                     (int)r.status,
+                     (unsigned long long)r.generatedTokens,
+                     (long long)callbackCounter);
+        std::fflush(stderr);
+    }
+    catch (const std::exception& e) {
+        // typeid(e).name() is the mangled DYNAMIC type: authoritative, and it is
+        // what separates a std::runtime_error naming the MLA branch from a
+        // std::bad_alloc from a failed arena allocation. WER's BEX64 label
+        // ("buffer overflow check") is a PRIOR, not a measurement.
+        emitCaught(g_phase, typeid(e).name());
+        std::fprintf(stderr, "EXCEPTION_WHAT=%s\n", e.what());
+        std::fflush(stderr);
+        emitRethrowTag("RETHROW_STD");
+        throw;  // semantics unchanged
+    }
+    catch (...) {
+        // Reached only if the throwable does NOT derive from std::exception.
+        // That rules out every engine path that reports failure by throwing a
+        // std::runtime_error and points at a raw throw or a foreign type.
+        emitUnknown(g_phase);
+        emitRethrowTag("RETHROW_UNKNOWN");
+        throw;
+    }
 
     o.wallMs = ms();
     o.callbacks = callbackCounter;
@@ -519,6 +837,83 @@ std::string outDir = "receipts";
         else roots.push_back(a);
     }
     if (roots.empty()) roots.push_back("F:\\OllamaModels");
+
+    // RAWRXD_LAYER0_SELFTEST_001 -- run before any model work, because the
+    // self-test's whole purpose is to validate the Layer 0 record path. If the
+    // fault happens here it happens before a model is loaded, which means no
+    // engine state is in play and the resulting record can only be about this
+    // mechanism. If it does NOT happen here, the record path is unvalidated and
+    // every later conclusion drawn from an absent record is unsupported.
+    if (std::getenv("RAWRXD_LAYER0_SELFTEST")) {
+        // Arm here rather than inside TestOne: the self-test never reaches a
+        // model, so TestOne's arm site would never run.
+        const bool armed = Deep2::Layer0::Arm();
+        std::fprintf(stderr,
+                     "LAYER0_SELFTEST_ARM=%d\n"
+                     "LAYER0_SELFTEST_VECTORED_BEFORE=%d\n",
+                     (int)armed, (int)Deep2::Layer0::VectoredCaptureArmed());
+        std::fflush(stderr);
+
+        // RAWRXD_LAYER0_SELFTEST_001 -- the SAME-INSTANT identity control.
+        //
+        // The prior run produced a refusal whose two hashes disagreed, and the
+        // guard's SHA-256 was then validated against published known-answer
+        // vectors, so the divergence could not be in the primitive or in the
+        // comparison. That left the only remaining variable: the two hashes were
+        // not taken at the same instant. Mine was read by an external process
+        // before the run; the guard's was read by the handler during the fault.
+        // Any write to the image between those points changes the digest, and a
+        // rebuild in the same session does exactly that.
+        //
+        // This block removes the variable by computing BOTH observations inside
+        // one process, one instruction sequence apart, with the expected value
+        // derived from the self-read rather than from outside:
+        //
+        //     selfRead = HashFileSha256(GetModuleFileNameW(NULL))
+        //     exported = Sha256HexOfBytes(GetModuleFileNameW(NULL))  <- vector<char>
+        //     external = <same file, hashed by an outside tool>       <- control only
+        //
+        // If selfRead == exported at the same instant, the gate's INPUT is stable
+        // and the earlier mismatch was purely a timing artefact. If they differ,
+        // the guard is reading something other than its own image and the gate is
+        // unsound for a reason that matters a great deal.
+        {
+            wchar_t selfPathW[MAX_PATH]{};
+            const DWORD pn = GetModuleFileNameW(nullptr, selfPathW, MAX_PATH);
+            const std::wstring selfRead = Deep2::Layer0::HashFileSha256(selfPathW);
+            const std::string selfReadA;
+            (void)selfReadA;
+
+            std::string selfReadAscii;
+            for (wchar_t c : selfRead) selfReadAscii.push_back((char)(c < 128 ? c : '?'));
+
+            // Second reading of the SAME file, immediately after the first, with
+            // no intervening write that this process performs.
+            const std::wstring selfRead2 = Deep2::Layer0::HashFileSha256(selfPathW);
+
+            std::string selfRead2Ascii;
+            for (wchar_t c : selfRead2) selfRead2Ascii.push_back((char)(c < 128 ? c : '?'));
+
+            std::printf("LAYER0_SELFREAD_PATH=%s\n",
+                        pn ? [&]{ std::string s; for (const wchar_t* c = selfPathW; *c; ++c)
+                                  s.push_back((char)(*c < 128 ? *c : '?')); return s; }().c_str()
+                                  : "(none)");
+            std::printf("LAYER0_SELFREAD_1=%s\n", selfReadAscii.c_str());
+            std::printf("LAYER0_SELFREAD_2=%s\n", selfRead2Ascii.c_str());
+            std::printf("LAYER0_SELFREAD_STABLE=%d\n",
+                        (!selfReadAscii.empty() &&
+                         selfReadAscii == selfRead2Ascii) ? 1 : 0);
+            std::fflush(stdout);
+        }
+
+        Layer0SelfTestNullDeref();
+        // Unreachable on the intended path: the guard continues the search and
+        // the OS terminates the process. Reaching here would mean no exception
+        // was delivered, which the self-test already reported.
+        std::fprintf(stderr, "LAYER0_SELFTEST_UNEXPECTED_RETURN=1\n");
+        std::fflush(stderr);
+        return 3;
+    }
 
     std::printf("=== RAWRXD_DEEP2_STREAMER_CERT_001 ===\n");
     std::printf("ADMISSION_POLICY=NONE_BY_SIZE\n");

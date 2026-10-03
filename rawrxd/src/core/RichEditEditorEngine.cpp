@@ -33,8 +33,15 @@
 
 #pragma comment(lib, "comctl32.lib")
 
-// Forward declaration
-struct IDETheme;
+// RAWRXD_IDE_RESTORE_001: the local `struct IDETheme;` forward declaration that stood
+// here was removed. A forward declaration in a translation unit declares a DIFFERENT,
+// incomplete type from the real one in include/IDETheme.h, so every member read on it
+// failed to resolve -- which is why this file reported
+//     'backgroundColor': is not a member of 'IDETheme'
+// even though include/IDETheme.h declares `COLORREF backgroundColor;` and
+// editor_engine.h:75 already includes it. All four members this engine reads
+// (backgroundColor, lineNumberBg, selectionColor, currentLineBg) exist in the real
+// definition; only the local shadow hid them.
 
 // ============================================================================
 // RichEditEditorEngine Implementation

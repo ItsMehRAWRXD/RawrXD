@@ -1,7 +1,7 @@
 // IDE response completion authority implementation
 // RawrXD IDE Response Completion Authority - Gates all IDE response generation completion
 
-#include "src/win32app/IdeResponseCompletionAuthority.h"
+#include "IdeResponseCompletionAuthority.h"
 #include <iostream>
 #include <string>
 #include <chrono>

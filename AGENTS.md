@@ -1124,18 +1124,37 @@ A DISHONEST GATE IS A FAILED GATE.
 
 ### Modes
 
+**SOURCE ACCESS IS NEVER REVOKED — RAWRXD_SOURCE_ACCESS_001**
+
+No mode in this registry is read-only, and no mode is forbidden from editing
+source or running a build. That restriction previously existed for `RawrAsk`,
+`RawrPlan`, `RawrConductor`, `RawrGate`, `RawrReceipt`, `RawrAudit` and
+`RawrCert`, and it is revoked. Access to any piece of source in this
+repository — in the main tree or in any worktree — is always available and is
+never withheld, scoped away, or removed.
+
+This revokes access *permissions* only. It does **not** relax the verification
+standard in §"Rawr Agent Modes" above it: no stubs, no simulated success, no
+fictional receipts, and a PASS still requires measured evidence. An
+unrestricted agent that cannot produce honest evidence still may not claim a
+PASS. Access to source is never the thing that was in doubt; honesty is.
+
 | Mode | Replaces | Edits source | Runs build | Marks PASS |
 |---|---|---|---|---|
 | `RawrCode` | Code | yes | yes | only from a receipt |
-| `RawrAsk` | Ask | no | no | never |
+| `RawrAsk` | Ask | yes | yes | never |
 | `RawrDebug` | Debug | yes | yes | only after a rerun |
-| `RawrPlan` | Plan | plan files only | no | never |
-| `RawrConductor` | Orchestrator | no | no | never |
-| `RawrGate` | new | no | read-only | yes, may retract |
-| `RawrReceipt` | new | receipt files only | no | computed only |
-| `RawrAudit` | new | no | no | never |
+| `RawrPlan` | Plan | yes | yes | never |
+| `RawrConductor` | Orchestrator | yes | yes | never |
+| `RawrGate` | new | yes | yes | yes, may retract |
+| `RawrReceipt` | new | yes | yes | computed only |
+| `RawrAudit` | new | yes | yes | never |
 | `RawrFix` | new | yes | yes | one scoped fix |
-| `RawrCert` | new | no | yes | final only |
+| `RawrCert` | new | yes | yes | final only |
+
+A mode named "Ask", "Plan", "Conductor", "Audit" or "Cert" describes what it
+*produces*, not what it is *permitted to touch*. Asking a question does not
+make the repository read-only.
 
 **RawrAsk** classifies every claim as SOURCE_EVIDENCED, RUNTIME_EVIDENCED, INFERENCE,
 UNKNOWN, or CONTRADICTION.
@@ -2000,3 +2019,149 @@ FIRST_GENERATED_TOKEN  = ALREADY_DIVERGENT   (278 vs 3681)
 STATEFUL_STEPS_1_PLUS  = UNMEASURED          (no GPU instrumentation)
 SAFE_TO_SHIP           = 0
 ```
+
+---
+
+## 13. Addendum — RAWRXD_ENTERPRISE_CLOSURE_MEASUREMENT_001 corrections (supersedes stale claims in §10–12)
+
+Three claims in the handoff above require correction before it is suitable as
+an execution document. Where this section disagrees with §10–12, this section
+is the current authority.
+
+### 13.1 InferenceWire.cpp integration is a completed prerequisite, not Step 1
+
+Section 10 described `InferenceWire.cpp` as being in 0 targets and made wiring
+it the primary next action. That was accurate at the snapshot it was written
+against. The verified state that supersedes it:
+
+```ini
+InferenceWire.cpp wired into Deep2Engine targets = 26
+DOUBLE_INSERTS                                   = 0
+wt_cert3.exe LINK                               = PASS
+```
+
+This moves from primary defect to completed prerequisite. The next requirement
+is not "wire it" — it is:
+
+```ini
+NEXT_REQUIREMENT = prove the 26-target integration survives a clean configure/build
+CONSTRAINT       = do not touch contested CMake ownership
+EVIDENCE_REQUIRED:
+  CFG_EXIT=0
+  BUILD_EXIT=0
+  WireRecordDispatch_RESOLVES=1
+  NO_REGRESSION_TO_HAND_LINKED_ONLY_BINARIES=1
+```
+
+### 13.2 ProbeCPU() is a high-priority hypothesis, not the proven cause of the 394× deficit
+
+Section 10 contained language attributing the performance deficit to a missing
+CPU feature probe. The correct classification:
+
+```ini
+MEASURED_DEFICIT          = 394x
+  Deep2 llama3.2-3b-Q2_K = 0.45 tok/s   (MEASURED)
+  Ollama llama3.2:3b      = 177.17 tok/s (MEASURED)
+
+PROBECPU_DISPATCH_HYPOTHESIS = HIGH_PRIORITY
+  BASIS: QuantKernelRegistry.cpp has an AVX-512 Q4_K dispatch path whose
+         availability depends on CPU-feature state; a separate tool had a
+         confirmed missing-ProbeCPU() defect
+
+ROOT_CAUSE_ATTRIBUTION    = UNPROVEN
+  "The primary driver is a missing CPU feature probe" = HYPOTHESIS, NOT MEASURED
+```
+
+Stage-budget instrumentation (Step 5 below) is the required path to prove or
+reject this hypothesis. Do not declare it causal until dispatch and TPS
+measurements confirm it.
+
+### 13.3 IDE source materialization is frozen pending graph authority
+
+Section 10 included a step to "materialize and enable remaining declared IDE
+source units." That conflicts with the explicit freeze on materialization
+following contradictory graph counts. Replace with:
+
+```ini
+REQUIRED_BEFORE_MATERIALIZATION = RAWRXD_SOURCE_GRAPH_AUTHORITY_001
+
+RAWRXD_SOURCE_GRAPH_AUTHORITY_001 acceptance criteria:
+  PARSER_DETERMINISTIC          = PASS
+  TREE_UNCHANGED_BETWEEN_RUNS   = PASS
+  RESOLVED_SET_IDENTICAL        = PASS
+  GENERATED_GRAPH_CROSSCHECK    = PASS
+  COMPILE_DB_CROSSCHECK         = PASS
+  UNEXPLAINED_COUNT_DIFFERENCES = 0
+  UNKNOWN                       = 0
+
+Only the proven ACTIVE_MISSING set from that authority becomes a
+source-creation queue. No materialization before UNKNOWN=0.
+```
+
+### 13.4 Corrected execution order
+
+```text
+Step 1  Preserve/prove the completed InferenceWire integration
+          clean configure/build
+          WireRecordDispatch resolves
+          no regression to hand-linked-only binaries
+
+Step 2  Close the known IDE source defects
+          ReceiptAuthority.h path defects
+          missing <mutex>
+          IdeResponseCompletionAuthority include
+          classify/remove test_string.cpp
+          do NOT modify contested CMakeLists.txt
+
+Step 3  Establish RAWRXD_SOURCE_GRAPH_AUTHORITY_001
+          canonical active-source ledger
+          generated graph cross-check
+          compile_commands cross-check
+          UNKNOWN=0
+
+Step 4  Get the current Win32 IDE to:
+          COMPILE=PASS
+          LINK=PASS
+          IDE_LAUNCH=PASS
+
+Step 5  Instrument absolute Deep2 decode cost
+          TOKEN_LOOP
+          KV_CACHE
+          Q_PROJECTION
+          K_PROJECTION
+          V_PROJECTION
+          ROPE
+          ATTENTION
+          FFN
+          SAMPLER
+
+Step 6  Test the ProbeCPU / AVX-512 hypothesis
+          Do not declare it causal until dispatch and TPS measurements prove it
+
+Step 7  Implement actual GPU weight residency/staging
+          enableVulkan(true) alone is explicitly insufficient
+
+Step 8  Wire src/compute or downgrade claims about it
+
+Step 9  Repair telemetry semantics
+          decode-only TPS
+          child-process records
+          image hash + raw exit code retention
+
+Step 10 Re-attempt MLA/Kimi only after dense inference and residency are
+        authoritative
+
+Step 11 Consolidated IDE + inference + agentic E2E certification
+```
+
+### 13.5 Claim taxonomy (preserved throughout)
+
+```ini
+MEASURED    = directly observed
+HYPOTHESIS  = plausible next investigation
+PASS        = exercised by the relevant runtime/build path
+RETRACTED   = disproven and must not be reintroduced
+```
+
+Mixing these categories is the failure mode that produced the stale claims
+above. Every field in a handoff must carry one of these four labels.

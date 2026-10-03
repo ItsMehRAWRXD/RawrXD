@@ -285,56 +285,50 @@ std::wstring Sha256HexOfBytes(const void* data, std::size_t n) {
 }
 
 std::wstring HashFileSha256(const wchar_t* pathW) {
+    // RAWRXD_LAYER0_FILEHASH_001
+    //
+    // This used to stream the file in 1 MiB chunks, calling sha256Block() per
+    // chunk. That is only correct if the block helper carried message length
+    // between calls, and it does not: sha256Block() mutates h[8] and has no
+    // length state. The streaming loop therefore only ever worked when a chunk
+    // happened to end on a partial 64-byte tail, because that was the one path
+    // that fell back to Sha256HexOfBuffer, which does the padding correctly.
+    //
+    // For a file whose length is an EXACT multiple of 64 no tail ever exists, so
+    // control fell through to a branch that hashed one extra block containing
+    // only {0x80}. Valid SHA-256 padding requires the 0x80 marker, then zero
+    // fill, then the 64-bit big-endian message length. The length field was
+    // absent, so the digest was wrong.
+    //
+    // Measured, same process, same session, same function:
+    //     file size 1048576 (64 x 16384)  guard 6B162BC3.. != real 9672968E..
+    //     file size 1048577               guard FB908A3B.. == real FB908A3B..
+    //
+    // This matters more than an ordinary bug: PE images are aligned to 512 or
+    // 4096, so EVERY executable is a multiple of 64. This function had never
+    // produced a correct digest for the only kind of file it exists to verify,
+    // which is why IMAGE_IDENTITY_MATCH=1 had never been observed in this tree.
+    //
+    // The fix is deletion, not addition. The old tail path already built exactly
+    // the buffer this now builds unconditionally; the streaming branch and its
+    // special case were the entire bug. The earlier identity-comparison fix
+    // (RAWRXD_LAYER0_IDENTITY_COMPARISON_001) is what turned this latent
+    // wrong-digest into a loud refusal rather than a confident false match.
     HANDLE h = CreateFileW(pathW, GENERIC_READ, FILE_SHARE_READ, nullptr,
                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (h == INVALID_HANDLE_VALUE) return std::wstring();
-    std::uint32_t h8[8] = {0x6a09e667u, 0xbb67ae85u, 0x3c6ef372u, 0xa54ff53au,
-                           0x510e527fu, 0x9b05688cu, 0x1f83d9abu, 0x5be0cd19u};
     constexpr std::size_t kChunk = 1u << 20;
     std::vector<unsigned char> buf(kChunk);
-    bool anyRead = false;
+    std::vector<unsigned char> all;
     for (;;) {
         DWORD got = 0;
         if (!ReadFile(h, buf.data(), static_cast<DWORD>(kChunk), &got, nullptr) ||
             got == 0) break;
-        anyRead = true;
-        std::size_t off = 0;
-        while (got - off >= 64) { sha256Block(h8, buf.data() + off); off += 64; }
-        if (got - off > 0) {
-            // Feed the tail by buffering it as a partial block is not possible
-            // with this streaming shape, so the file is hashed by the buffer
-            // helper instead when it does not divide evenly.
-            CloseHandle(h);
-            (void)anyRead;
-            std::vector<unsigned char> all;
-            HANDLE h2 = CreateFileW(pathW, GENERIC_READ, FILE_SHARE_READ, nullptr,
-                                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-            if (h2 == INVALID_HANDLE_VALUE) return std::wstring();
-            for (;;) {
-                DWORD g2 = 0;
-                if (!ReadFile(h2, buf.data(), static_cast<DWORD>(kChunk), &g2,
-                              nullptr) || g2 == 0) break;
-                all.insert(all.end(), buf.begin(), buf.begin() + g2);
-            }
-            CloseHandle(h2);
-            return Sha256HexOfBuffer(all.data(), all.size());
-        }
+        all.insert(all.end(), buf.begin(), buf.begin() + got);
     }
     CloseHandle(h);
-    if (!anyRead) return std::wstring();
-    // Exact multiple of 64 bytes: pad the empty remainder.
-    unsigned char zeroPad[64] = {0x80};
-    sha256Block(h8, zeroPad);
-    static const char* kHex = "0123456789ABCDEF";
-    std::wstring out;
-    for (int i = 0; i < 8; ++i)
-        for (int b = 3; b >= 0; --b) {
-            const unsigned char v =
-                static_cast<unsigned char>((h8[i] >> (8 * b)) & 0xFF);
-            out.push_back(static_cast<wchar_t>(kHex[(v >> 4) & 0xF]));
-            out.push_back(static_cast<wchar_t>(kHex[v & 0xF]));
-        }
-    return out;
+    if (all.empty()) return std::wstring();
+    return Sha256HexOfBuffer(all.data(), all.size());
 }
 
 bool WriteRecord(const wchar_t* pathW, const wchar_t* stageW) {

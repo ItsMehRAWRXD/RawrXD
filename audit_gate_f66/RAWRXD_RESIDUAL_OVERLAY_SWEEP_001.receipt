@@ -1,0 +1,209 @@
+RAWRXD_RESIDUAL_OVERLAY_SWEEP_001
+==================================
+MEASURED. 75 CONFIGS. NO GPU. NO ENGINE.
+
+SOURCE             = rawrxd/certs/residual_overlay_sweep_001.cpp
+CROSS_VALIDATES    = rawrxd/tools/residual_overlay_fusion_001.cpp (other lane, untracked,
+                     NOT modified by this sweep)
+CROSS_VALIDATION_MATCH = 1   (exact, 6 decimals, both figures)
+VERDICT            = BREAK_EVEN_EXISTS
+EXIT_CODE          = 0
+SWEEP_CONFIGS      = 75   SWEEP_CONFIGS_SKIPPED = 0
+
+
+----------------------------------------------------------------------------
+1. WHAT THE SINGLE-POINT RECEIPT LEFT OPEN, AND WHAT CLOSED IT
+----------------------------------------------------------------------------
+The fusion receipt declared one quantity UNMEASURED and warned it must not be
+inferred from DELTA_MAGNITUDE_RATIO: whether the delta is COMPRESSIBLE.
+
+  DELTA_MAGNITUDE_RATIO = 0.786882   is an L1 magnitude ratio. A delta of that
+  magnitude could still be cheap if sparse, low-rank or clustered.
+
+MEASURED: order-0 entropy of the group-normalised delta, bits/element.
+
+  TERNARY (3 levels, group 32):
+      delta_entropy = 7.2369 b/elem
+      sparsity      = 5.03%   (|dW| < 1% of group amax)
+      l1_ratio      = 0.786882
+
+  Q4-LIKE (16 levels, group 64):
+      delta_entropy = 6.0993 b/elem
+      sparsity      = 6.60%
+      l1_ratio      = 0.367101
+
+  ACROSS ALL 75 CONFIGS:
+      delta entropy  = 5.9044 .. 7.2487 bits/element
+      sparsity       = 2.18% .. 13.42%
+
+READ THAT RANGE CAREFULLY. The raw symbol is int8 = 8 bits. Order-0 coding of
+the delta achieves 5.90-7.25 bits/element, i.e. a 9% to 26% saving and never
+better. The delta is NOT sparse (2-13%) and NOT low-entropy.
+
+  => RESIDUAL_FORMAT=sparse_delta      : NOT SUPPORTED (2-13% sparsity)
+  => RESIDUAL_FORMAT=low_rank_delta    : NOT SUPPORTED (order-0 entropy 5.9-7.2)
+  => RESIDUAL_FORMAT=FP16_FULL_DELTA   : the only variant this measurement supports
+
+Stated precisely, because it cuts both ways and the previous receipt's warning
+was about overclaiming:
+  * Order-0 entropy is an UPPER BOUND on what order-0 coding achieves, not a
+    lower bound on compressibility. So this does NOT prove the delta is
+    incompressible under a higher-order or low-rank model. It proves order-0
+    cannot help, which is already enough to kill the two formats named above.
+  * A genuinely low-rank dW would show LOW order-0 entropy after the low-rank
+    factorisation, not before. This sweep does NOT factorise. Low-rank
+    compressibility is therefore STILL UNMEASURED, and a negative low-rank
+    result is the single most valuable next measurement.
+  * Better base shrinks the delta's MAGNITUDE sharply (l1 0.787 -> 0.367) while
+    barely moving its ENTROPY (7.24 -> 6.10). Magnitude and compressibility are
+    decoupled here, which is exactly why the magnitude ratio could not have
+    answered this question.
+
+
+----------------------------------------------------------------------------
+2. THE PARETO FRONTIER
+----------------------------------------------------------------------------
+Break-even test: base_bits + delta_entropy_bits < 32 (fp32).
+
+BEST ACHIEVABLE ACCURACY across the whole sweep:
+  levels group deadband base_bits  base_rel_L2  delta_ent  sparse%  comb_bits
+      16    16   0.333       5.0     0.361409     5.9044    13.42   10.904
+       8    16   0.333       4.0     0.387346     6.1495    10.35   10.151
+      16    32   0.333       4.5     0.414053     6.0244     8.94   10.524
+
+CHEAPEST COMBINED across the whole sweep:
+  levels group deadband base_bits  base_rel_L2  delta_ent  sparse%  comb_bits
+       4   256   0.333     2.062     0.853982     6.8049     2.31    8.867
+       4   128   0.333     2.125     0.767112     6.8154     2.76    8.940
+
+ACCURACY TIERS:
+  rel_L2 <= 0.10  : NO CONFIGURATION REACHES THIS TIER
+  rel_L2 <= 0.05  : NO CONFIGURATION REACHES THIS TIER
+  rel_L2 <= 0.02  : NO CONFIGURATION REACHES THIS TIER
+
+BEST IN THE ENTIRE SWEEP = 0.361409 rel_L2. Not one of 75 configurations
+reaches even 10% relative error.
+
+DERIVED SUMMARY:
+  ANY_BREAKS_EVEN          = 1
+  REACHES_REL_L2_0.05      = 0
+  REACHES_REL_L2_0.02      = 0
+  BREAK_EVEN_BASE_EXISTS   = 1
+  FINAL_VERDICT            = BREAK_EVEN_EXISTS
+
+
+----------------------------------------------------------------------------
+3. WHAT THAT MEANS -- AND IT IS NOT GOOD NEWS FOR THE ARCHITECTURE
+----------------------------------------------------------------------------
+The verdict line is a trap if read alone. "BREAK_EVEN_EXISTS=1" is TRUE and
+MEANINGLESS on its own, because every one of the 75 configurations "breaks
+even" -- including the ones whose output is 36% to 100% wrong.
+
+THE REAL FINDING:
+  The overlay always fits in fewer bits than fp32, and it is always WRONG.
+
+  cheapest:   8.867 bits/elem   at rel_L2 = 0.854
+  most accurate: 10.904 bits/elem at rel_L2 = 0.361
+
+Both are ~3x smaller than 32 bits. Neither is usable. The overlay buys its
+size reduction by discarding accuracy that no downstream consumer can afford,
+and the sweep contains NO configuration that trades these acceptably.
+
+This is a stronger and less convenient result than "the delta is expensive":
+the delta is not merely large, it is incompressible AT EVERY BASE QUALITY
+TESTED. So "make the base better so the delta shrinks" -- the strategy the
+single-point receipt proposed -- does not work. A better base reduces the
+delta's magnitude (0.787 -> 0.367) but not its entropy (7.24 -> 6.10), so it
+buys almost no additional compression. The Pareto frontier is not reachable by
+improving the base within this family.
+
+CONSEQUENCE FOR THE PROPOSAL:
+  The residual-overlay split is not a compression scheme on this tensor
+  family. A direct quantizer that stores the weights once at the accuracy the
+  application actually needs -- Q4_K at ~4.5 bits/elem, fp8 at 8 -- dominates
+  base+delta at every point measured here, because it pays for the error once
+  instead of encoding a 6-bit-per-element error field on top of a base that is
+  also wrong.
+
+  That is the honest conclusion, and it is a NEGATIVE result for a proposed
+  architecture, obtained without a GPU, without I/O, and without the model.
+
+
+----------------------------------------------------------------------------
+4. FOUR DEFECTS THIS SWEEP CAUGHT IN ITSELF
+----------------------------------------------------------------------------
+Every one of these was caught by a check, not by inspection.
+
+DEFECT_1  CROSS-VALIDATION FAILED TWICE, AND WAS CORRECT TO VOID EVERYTHING
+  First failure:  measured rel_L2 0.677 vs published 0.734. My quantizer spaced
+  levels uniformly over [-1,1], which puts the 3-level decision boundary at
+  0.5; the other lane thresholds at 1/3 with representatives at +/-1. Two
+  different quantizers both describable as "3-level".
+  Second failure: measured rel_L2 0.810. Closer on the delta ratio (0.7859 vs
+  0.7869) but still wrong.
+  REAL CAUSE of the second failure: MY SEED DIFFERED FROM THEIRS. I was
+  comparing statistics from a DIFFERENT DATASET. This nearly passed for the
+  wrong reason, because DELTA_MAGNITUDE_RATIO is a stable aggregate and agreed
+  to 0.001 while rel_L2 -- which is sample-specific on a 64x256 draw -- did not.
+  LESSON: a cross-validation whose two figures have different variance
+  properties can agree on the robust one and disagree on the discriminative
+  one, and the robust one is the one that hides the bug.
+  FIX: seed and draw order are now part of the control. Matched exactly:
+        BASE_ONLY_REL_L2      0.734019 == 0.734019
+        DELTA_MAGNITUDE_RATIO 0.786882 == 0.786882
+
+DEFECT_2  levels=2 IS DEGENERATE AND REPORTED A FAKE MEASUREMENT
+  A 2-level codebook cannot represent zero, so the deadband rule emitted codes
+  outside the level range and the sweep reported
+        base_rel_L2 = 11691249503349320844312576
+  That is not a bad quantizer, it is an out-of-range index reading past a small
+  vector. An absurd number shaped like a result is worse than no number.
+  FIX: levels>=3 enforced, degenerate codebooks (zero cells on one side) skipped
+  and COUNTED rather than silently dropped. SKIPPED=0 in the reported run.
+
+DEFECT_3  OUTPUT TRUNCATED BY MY OWN PIPELINE
+  `... | Tee-Object file | Select-Object -First 30` terminated the upstream
+  before the file was written, so the run I first read had NO tier results and
+  NO summary -- and looked like a program that silently stopped producing
+  output. This is the stale-artifact class again, this time self-inflicted.
+
+DEFECT_4  SHELL TEXT SURGERY CORRUPTED A STRING LITERAL
+  A PowerShell regex replace intended to insert one printf turned "\\n" into a
+  real newline INSIDE a string constant (error C2001, then cascading syntax
+  errors). Source files are not a safe target for multiline shell substitution.
+  FIX: repaired with a real edit; the lesson is recorded because it is the kind
+  of edit that looks like it worked.
+
+
+----------------------------------------------------------------------------
+5. NOT ATTEMPTED
+----------------------------------------------------------------------------
+  Low-rank factorisation of dW -- the one remaining route that could make the
+    residual cheap, and therefore the one thing that could still rescue the
+    proposal. This sweep cannot speak to it.
+  Higher-order (context) entropy of dW. Order-0 only.
+  Any real weight tensor. Inputs are Gaussian, which is the WRONG distribution
+    for this question: real MoE weights have heavy tails and outliers, which
+    change both the base's error and the delta's structure. A conclusion drawn
+    here is a conclusion about a Gaussian toy, and the real-data version of
+    this sweep could disagree with it.
+  Any GPU, I/O, residency, or engine linkage.
+
+
+----------------------------------------------------------------------------
+VERDICT
+  CROSS_VALIDATION_MATCH              = PROVEN (exact, both figures)
+  SWEEP_CONFIGS                       = 75
+  BITWISE_BREAK_EVEN_EXISTS           = 1   (and meaningless alone)
+  ANY_CONFIG_REACHING_REL_L2_0.10     = 0
+  BEST_ACHIEVABLE_REL_L2              = 0.361409
+  DELTA_ENTROPY_RANGE_BITS_PER_ELEM   = 5.9044 .. 7.2487
+  DELTA_SPARSITY_RANGE                = 2.18% .. 13.42%
+  SPARSE_DELTA_VIABLE                 = 0
+  LOW_RANK_DELTA_VIABLE               = NOT MEASURED  <-- the open question
+  "IMPROVE THE BASE TO SHRINK THE DELTA" WORKS = 0
+      (magnitude 0.787 -> 0.367; entropy only 7.24 -> 6.10)
+  RESIDUAL_OVERLAY_IS_A_COMPRESSION_SCHEME = 0
+  NEXT_MEASURE = truncated-SVD rank curve of dW on a REAL weight tensor. Until
+                  that exists, RESIDUAL_FORMAT=low_rank_delta is aspirational,
+                  and this receipt must not be cited as refuting it.

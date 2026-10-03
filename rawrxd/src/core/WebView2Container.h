@@ -18,6 +18,11 @@ struct MonacoEditorOptions {
     int tabSize;
     bool wordWrap;
     bool minimapEnabled;
+    // Additional fields used by C++ wrapper
+    char fontFamily[64];
+    bool lineNumbers;
+    bool minimap;
+    bool readOnly;
 };
 
 /// WebView2 Result Structure

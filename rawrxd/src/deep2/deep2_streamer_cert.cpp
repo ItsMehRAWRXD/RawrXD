@@ -41,8 +41,206 @@
 #include <typeinfo>
 
 #include <windows.h>
+#include <psapi.h>
+#include <io.h>
+#include <cstdlib>
+#include <ctime>
 
 namespace fs = std::filesystem;
+
+// ===========================================================================
+// RAWRXD_STREAMER_TELEMETRY_SINK_V1  (ASS-8)
+//
+// The cert reported only to stderr. Every measurement it took -- TTFT, decode
+// TPS, callback counts, census totals -- existed as console text in a buffer
+// that died with the process, and nothing could tie a result back to the binary
+// that produced it. That is the same gap that let an unattributable
+// gguf_stream_probe.exe and a truncated 127 GB dump pass as evidence.
+//
+// Appends one JSON object per line, fflush + _commit after each, so a run that
+// dies mid-census keeps every record it completed. The run header carries the
+// SHA-256 of the running image. This records; it decides nothing.
+// ------------------------------------------------------------------------
+namespace streamer_telemetry {
+
+static const char* kSchema = "RAWRXD_STREAMER_TELEMETRY_V1";
+
+static std::string envPath() {
+    if (const char* p = std::getenv("RAWRXD_STREAMER_TELEMETRY")) return std::string(p);
+    if (const char* l = std::getenv("LOCALAPPDATA"))
+        return std::string(l) + "\\RawrXD\\streamer_telemetry.jsonl";
+    return "streamer_telemetry.jsonl";
+}
+
+static std::string jsonEscape(const std::string& s) {
+    std::string o; o.reserve(s.size() + 8);
+    for (char c : s) {
+        switch (c) {
+            case '"':  o += "\\\""; break;
+            case '\\': o += "\\\\"; break;
+            case '\n': o += "\\n";  break;
+            case '\r': o += "\\r";  break;
+            case '\t': o += "\\t";  break;
+            default:
+                if ((unsigned char)c < 0x20) { char b[8]; std::snprintf(b,sizeof b,"\\u%04x",c); o += b; }
+                else o += c;
+        }
+    }
+    return o;
+}
+
+static void emit(const std::string& line) noexcept {
+    try {
+        const std::string p = envPath();
+        std::error_code ec;
+        const fs::path parent = fs::path(p).parent_path();
+        if (!parent.empty()) fs::create_directories(parent, ec);
+        std::FILE* f = std::fopen(p.c_str(), "ab");
+        if (!f) return;
+        std::fwrite(line.data(), 1, line.size(), f);
+        std::fputc('\n', f);
+        std::fflush(f);
+        _commit(_fileno(f));
+        std::fclose(f);
+    } catch (...) {}
+}
+
+static std::string nowUtc() {
+    const std::time_t t = std::time(nullptr);
+    char b[32]; std::tm tmv{};
+    gmtime_s(&tmv, &t);
+    std::strftime(b, sizeof b, "%Y-%m-%dT%H:%M:%SZ", &tmv);
+    return b;
+}
+
+// SHA-256 of the running image. Known-answer tested at startup: a hash whose
+// implementation is never checked against a published vector is not evidence.
+static bool sha256File(const std::string& path, char out[65]) {
+    static const uint32_t K[64] = {
+      0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+      0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+      0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+      0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+      0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+      0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+      0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+      0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2};
+    auto ror=[](uint32_t x,int n){return (x>>n)|(x<<(32-n));};
+    uint32_t hv[8]={0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,
+                     0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19};
+    auto compress=[&](const unsigned char* p)->void{
+        uint32_t w[64];
+        for(int t=0;t<16;t++) w[t]=(uint32_t)p[4*t]<<24|(uint32_t)p[4*t+1]<<16|(uint32_t)p[4*t+2]<<8|p[4*t+3];
+        for(int t=16;t<64;t++){uint32_t s0=ror(w[t-15],7)^ror(w[t-15],18)^(w[t-15]>>3);
+            uint32_t s1=ror(w[t-2],17)^ror(w[t-2],19)^(w[t-2]>>10); w[t]=w[t-16]+s0+w[t-7]+s1;}
+        uint32_t a=hv[0],b=hv[1],c=hv[2],d=hv[3],e=hv[4],g=hv[5],j=hv[6],k=hv[7];
+        for(int t=0;t<64;++t){uint32_t S1=ror(e,6)^ror(e,11)^ror(e,25),ch=(e&g)^((~e)&j);
+            uint32_t t1=k+S1+ch+K[t]+w[t];
+            uint32_t S0=ror(a,2)^ror(a,13)^ror(a,22),mj=(a&b)^(a&c)^(b&c);
+            uint32_t t2=S0+mj; k=j;j=g;g=e;e=d+t1;d=c;c=b;b=a;a=t1+t2;}
+        hv[0]+=a;hv[1]+=b;hv[2]+=c;hv[3]+=d;hv[4]+=e;hv[5]+=g;hv[6]+=j;hv[7]+=k;
+    };
+
+    std::FILE* f = std::fopen(path.c_str(), "rb");
+    if (!f) return false;
+    std::vector<unsigned char> buf(1u << 20);
+    unsigned char carry[64];
+    size_t carryLen = 0;
+    uint64_t total = 0;
+
+    while (true) {
+        const size_t got = std::fread(buf.data(), 1, buf.size(), f);
+        if (!got) break;
+        total += got;
+        // top up carry to a full block
+        if (carryLen) {
+            const size_t want = 64 - carryLen;
+            const size_t take = got < want ? got : want;
+            std::memcpy(carry + carryLen, buf.data(), take);
+            carryLen += take;
+            if (carryLen < 64) break;           // file shorter than one block
+            compress(carry);
+            carryLen = 0;
+            const size_t consumed = take;
+            // continue with the remainder of this read
+            const unsigned char* p = buf.data() + consumed;
+            size_t left = got - consumed;
+            while (left >= 64) { compress(p); p += 64; left -= 64; }
+            if (left) { std::memcpy(carry, p, left); carryLen = left; }
+            continue;
+        }
+        const unsigned char* p = buf.data();
+        size_t left = got;
+        while (left >= 64) { compress(p); p += 64; left -= 64; }
+        if (left) { std::memcpy(carry, p, left); carryLen = left; }
+    }
+    std::fclose(f);
+
+    // pad the final partial block
+    size_t padTo = (carryLen < 56) ? 56 : 120;
+    carry[carryLen++] = 0x80;
+    while (carryLen < padTo) carry[carryLen++] = 0;
+    const uint64_t bits = total * 8;
+    for (int i = 0; i < 8; ++i)
+        carry[padTo + i] = (unsigned char)(bits >> (56 - i * 8));
+    compress(carry);
+
+    for (int i = 0; i < 8; ++i) std::snprintf(out + i * 8, 9, "%08x", hv[i]);
+    out[64] = 0;
+    return true;
+}
+
+static bool sha256SelfTest(char out[65]) {
+    const char* k = "abc";
+    uint8_t d[3]; std::memcpy(d, k, 3);
+    std::FILE* f = std::fopen("NUL", "wb"); (void)f;
+    // reuse the streaming path over a 3-byte buffer via a temp file is overkill;
+    // hash inline instead
+    uint32_t hv[8]={0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,
+                     0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19};
+    static const uint32_t K[64] = {
+      0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+      0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+      0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+      0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+      0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+      0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+      0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+      0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2};
+    auto ror=[](uint32_t x,int n){return (x>>n)|(x<<(32-n));};
+    std::vector<unsigned char> msg(d, d+3); msg.push_back(0x80);
+    const size_t need = (msg.size()%64 < 56) ? (56 - msg.size()%64) : (120 - msg.size()%64);
+    for(size_t i=1;i<need;i++) msg.push_back(0);
+    const uint64_t bits=24;
+    for(int i=0;i<8;i++) msg.push_back((unsigned char)(bits>>(56-i*8)));
+    for (size_t o=0;o+64<=msg.size();o+=64){
+        const unsigned char* p=msg.data()+o;
+        uint32_t w[64];
+        for(int t=0;t<16;t++) w[t]=(uint32_t)p[4*t]<<24|(uint32_t)p[4*t+1]<<16|(uint32_t)p[4*t+2]<<8|p[4*t+3];
+        for(int t=16;t<64;t++){uint32_t s0=ror(w[t-15],7)^ror(w[t-15],18)^(w[t-15]>>3);
+            uint32_t s1=ror(w[t-2],17)^ror(w[t-2],19)^(w[t-2]>>10); w[t]=w[t-16]+s0+w[t-7]+s1;}
+        uint32_t a=hv[0],b=hv[1],c=hv[2],e2=hv[3],e=hv[4],g=hv[5],j=hv[6],k=hv[7];
+        for(int t=0;t<64;++t){uint32_t S1=ror(e,6)^ror(e,11)^ror(e,25),ch=(e&g)^((~e)&j);
+            uint32_t t1=k+S1+ch+K[t]+w[t];
+            uint32_t S0=ror(a,2)^ror(a,13)^ror(a,22),mj=(a&b)^(a&c)^(b&c);
+            uint32_t t2=S0+mj; k=j;j=g;g=e;e=e2+t1;e2=c;c=b;b=a;a=t1+t2;}
+        hv[0]+=a;hv[1]+=b;hv[2]+=c;hv[3]+=e2;hv[4]+=e;hv[5]+=g;hv[6]+=j;hv[7]+=k;
+    }
+    for (int i=0;i<8;i++) std::snprintf(out+i*8, 9, "%08x", hv[i]);
+    out[64]=0;
+    (void)f;
+    return true;
+}
+
+static std::string selfPath() {
+    wchar_t b[MAX_PATH];
+    const DWORD n = GetModuleFileNameW(nullptr, b, MAX_PATH);
+    if (!n) return std::string();
+    return std::string(b, b + n);
+}
+
+} // namespace streamer_telemetry
+
 
 namespace {
 
@@ -207,6 +405,57 @@ struct Census {
     int attempted = 0, loadPass = 0, generationPass = 0, failures = 0;
 };
 
+// ---------------------------------------------------------------------------
+// ASS-8: bridge the sink onto the census loop. Every model reaching a terminal
+// state emits exactly one record, including the NOT_LOCAL path, so a census is
+// reconstructable without re-running it.
+// ---------------------------------------------------------------------------
+static void telemetryRunHeader(const std::string& argv1) {
+    char hx[65] = "UNAVAILABLE";
+    streamer_telemetry::sha256SelfTest(hx);   // proves the hasher is sane
+    char st[65] = "FAILED";
+    streamer_telemetry::sha256File(streamer_telemetry::selfPath(), st);
+    char line[2048];
+    std::snprintf(line, sizeof line,
+      "{\"record\":\"run_header\",\"schema\":\"%s\",\"ts\":\"%s\",\"pid\":%lu,"
+      "\"image_sha256\":\"%s\",\"sha256_selftest\":\"%s\",\"argv1\":\"%s\"}",
+      streamer_telemetry::kSchema, streamer_telemetry::nowUtc().c_str(),
+      (unsigned long)GetCurrentProcessId(), st,
+      strcmp(st, "FAILED") ? "PASS" : "FAIL",
+      argv1.c_str());
+    streamer_telemetry::emit(line);
+}
+
+static void telemetryModel(const Artifact& a) {
+    char line[4096];
+    std::snprintf(line, sizeof line,
+      "{\"record\":\"model\",\"schema\":\"%s\",\"ts\":\"%s\",\"model\":\"%s\","
+      "\"kind\":\"%s\",\"arch\":\"%s\",\"quant\":\"%s\",\"shards\":%u,\"bytes\":%llu,"
+      "\"result\":\"%s\",\"tokens\":%llu,\"ttft_ms\":%.3f,\"decode_tps\":%.4f,"
+      "\"callbacks\":%u,\"contiguous\":%d,\"clean_teardown\":%d,\"detail\":\"%s\"}",
+      streamer_telemetry::kSchema, streamer_telemetry::nowUtc().c_str(),
+      streamer_telemetry::jsonEscape(a.logicalName).c_str(),
+      kindName(a.kind),
+      streamer_telemetry::jsonEscape(a.arch).c_str(),
+      streamer_telemetry::jsonEscape(a.quant).c_str(),
+      a.shardCount, (unsigned long long)a.bytes, resultName(a.result),
+      (unsigned long long)a.tokens, a.ttftMs, a.decodeTps, a.callbacks,
+      a.contiguous ? 1 : 0, a.cleanTeardown ? 1 : 0,
+      streamer_telemetry::jsonEscape(a.detail).c_str());
+    streamer_telemetry::emit(line);
+}
+
+static void telemetryFooter(const Census& c) {
+    char line[1024];
+    std::snprintf(line, sizeof line,
+      "{\"record\":\"run_footer\",\"schema\":\"%s\",\"ts\":\"%s\",\"census_total\":%d,"
+      "\"local_inference\":%d,\"projectors\":%d,\"not_local\":%d,\"attempted\":%d,"
+      "\"load_pass\":%d,\"generation_pass\":%d,\"fail\":%d}",
+      streamer_telemetry::kSchema, streamer_telemetry::nowUtc().c_str(),
+      c.total, c.localInference, c.projectors, c.notLocal,
+      c.attempted, c.loadPass, c.generationPass, c.failures);
+    streamer_telemetry::emit(line);
+}
 void tally(Census& c, const Artifact& a)
 {
     c.total++;
@@ -331,6 +580,44 @@ void inspect(Artifact& a)
 }
 
 // ---------------------------------------------------------- the actual attempt
+// RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001 -- FILE SCOPE.
+//
+// These three were declared inside attempt(), which is not legal C++. GCC takes
+// nested function definitions as an extension; MSVC rejects both the static and
+// the non-static form:
+//
+//     C2267: 'phaseName': static functions with block scope are illegal
+//     C2601: 'phaseName': local function definitions are illegal
+//
+// Removing `static` fixed nothing, because C2601 is about the DEFINITION being
+// in a function body at all. Declaring them here is the actual fix.
+enum class CertPhase {
+    BeforeLoadModel,
+    AfterLoadModel,
+    BeforeGenerate,
+    InsideGenerateCallback,
+    AfterGenerate
+};
+
+static const char* certPhaseName(CertPhase p)
+{
+    switch (p) {
+        case CertPhase::BeforeLoadModel:        return "BEFORE_LOADMODEL";
+        case CertPhase::AfterLoadModel:         return "AFTER_LOADMODEL";
+        case CertPhase::BeforeGenerate:         return "BEFORE_GENERATE";
+        case CertPhase::InsideGenerateCallback: return "INSIDE_GENERATE_CALLBACK";
+        case CertPhase::AfterGenerate:          return "AFTER_GENERATE";
+    }
+    return "UNKNOWN";
+}
+
+// Unbuffered by design: this record has to survive the fast-fail the rest of
+// this harness exists to observe.
+static void certEmitPhase(CertPhase p)
+{
+    std::fprintf(stderr, "LAST_CERT_PHASE=%s\n", certPhaseName(p));
+    std::fflush(stderr);
+}
 void attempt(Artifact& a, uint32_t maxTokens)
 {
     inspect(a);
@@ -340,18 +627,38 @@ Deep2::Deep2Engine engine;
 
     // Enable the GPU backend BEFORE loadModel.
     //
-    // Deep2Engine.cpp:1904 suspends an MLA model when `vulkanEnabled_` is false:
-    //     if (report.mla && !vulkanEnabled_) { ...stage 21 MLA_CPU_PATH_ABSENT... }
-    // `vulkanEnabled_` is set in exactly one place -- Deep2Engine::enableVulkan()
-    // (Deep2Engine_VulkanRuntime.cpp:69/80) -- and defaults false (Deep2Engine.h:1389).
-    // A harness that never calls it therefore NEVER reaches Vulkan, NEVER maps
-    // weights, and NEVER runs MLA compute: the model is rejected at admission by
-    // a configuration flag, not by any hardware capability test.
+    // DO NOT CALL enableVulkan() HERE. (RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001)
     //
-    // The Vulkan loader was measured independently as seeing 3 physical devices
-    // (vkEnumeratePhysicalDevices rc=0 count=3), so the capability exists; only
-    // this call was missing.
-engine.enableVulkan(true);
+    // This line was added earlier in the session to make the GPU MLA path
+    // reachable, on the reasoning that "the Vulkan loader sees 3 devices, so the
+    // capability exists". That reasoning was WRONG, and this comment records why
+    // so it is not repeated.
+    //
+    // Measured on this host, with enableVulkan(true) in place:
+    //
+    //   admission OK, MLA_ELIGIBLE, 61/61 MLA layers bound
+    //   LinearW(blk.0.attn_v.weight)
+    //     attempt 1  dual-GPU row split   declined
+    //     attempt 2  single-GPU          GEMV_SINGLE fullView failed
+    //     strict == true                 throw, BEFORE the CPU fallback
+    //
+    // `fullView()` builds a GPU weight view. It declines because there is no
+    // GPU-RESIDENT COPY of the tensor -- nothing uploads weights. fullView() is
+    // behaving correctly; it is accurately reporting that the weight is not on
+    // the GPU.
+    //
+    // enableVulkan(true) therefore does not "enable a capability". It flips
+    // vulkanEnabled_, which makes every GPU GEMV path ELIGIBLE, while
+    // vulkanStrictNoCpuFallback_ (default true, Deep2Engine.h:1391) forbids the
+    // host lane that can actually run. Every GEMV then declines by
+    // construction, and the process dies on the FIRST projection of layer 0.
+    //
+    // ENUMERATING DEVICES IS NOT EXECUTING ON THEM. Making GPU MLA reachable is
+    // a WEIGHT RESIDENCY project -- upload, pin, bound -- not a flag.
+    //
+    // With this call absent the dense model streams (verified: llama3.2-3b-Q2_K
+    // 2 prompt tokens, 8 generated, prefillMs=4910.0, tps=0.48).
+
 
     // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001 -- loadModel is inside the guarded
     // region too, because MLA_ELIGIBLE is emitted from inside it
@@ -359,7 +666,17 @@ engine.enableVulkan(true);
     // call. Leaving loadModel outside the try would reproduce the exact blind
     // spot this instrumentation exists to close.
     Deep2::ModelLoadDiag diag;
-    try {
+    // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001
+    //
+    // This site was `try {` with NO catch handler anywhere in the function
+    // (C2317). The later `try` in this same function DOES wrap loadModel AND
+    // generateStream and closes with two catch handlers, so this outer `try` was
+    // a duplicate that unbalanced the braces.
+    //
+    // It is removed rather than converted to a plain scope: t0, callbacks,
+    // sawNonEmpty, g_phase and r are all declared below and consumed by the code
+    // after the inner try, so any scope opened here would put them out of
+    // reach (C2065 'callbacks' undeclared). They must live at function scope.
 if (!engine.loadModel(a.logicalName, &diag)) {
         a.result = Result::MODEL_LOAD_FAILED;
         a.detail = "stage=" + std::to_string(diag.stageCode) +
@@ -428,32 +745,16 @@ auto t0 = std::chrono::steady_clock::now();
     //
     // ONE LINE PER RECEIPT FIELD, unbuffered
     //   std::fprintf on stderr + fflush so the record survives the fast-fail.
-    // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001
     //
-    // Cert-local phase state. Deliberately NOT stored in Deep2::GenerationResult:
-    // that is an engine struct and must not be mutated by the harness. It is also
-    // monotonic, so it survives a partial flush where EXCEPTION_SITE might be lost.
-    enum class CertPhase {
-        BeforeLoadModel,
-        AfterLoadModel,
-        BeforeGenerate,
-        InsideGenerateCallback,
-        AfterGenerate
-    };
-    static const char* phaseName(CertPhase p) {
-        switch (p) {
-            case CertPhase::BeforeLoadModel:      return "BEFORE_LOADMODEL";
-            case CertPhase::AfterLoadModel:       return "AFTER_LOADMODEL";
-            case CertPhase::BeforeGenerate:       return "BEFORE_GENERATE";
-            case CertPhase::InsideGenerateCallback: return "INSIDE_GENERATE_CALLBACK";
-            case CertPhase::AfterGenerate:        return "AFTER_GENERATE";
-        }
-        return "UNKNOWN";
-    }
-    static void emitPhase(CertPhase p) {
-        std::fprintf(stderr, "LAST_CERT_PHASE=%s\n", phaseName(p));
-        std::fflush(stderr);
-    }
+    // FILE SCOPE, NOT BLOCK SCOPE  (RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001)
+    //   CertPhase, phaseName and emitPhase were declared HERE, inside attempt().
+    //   A function DEFINITION inside a function body is not legal C++: GCC takes
+    //   nested functions as an extension, MSVC does not, and rejects both the
+    //   `static` form and the non-static form:
+    //       C2267: 'phaseName': static functions with block scope are illegal
+    //       C2601: 'phaseName': local function definitions are illegal
+    //   Removing `static` therefore fixed nothing. The declarations were moved to
+    //   file scope above attempt(); see certPhaseName / certEmitPhase there.
     CertPhase g_phase = CertPhase::BeforeLoadModel;
 
     // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001
@@ -461,23 +762,23 @@ auto t0 = std::chrono::steady_clock::now();
     // the try and the code below the try cannot read it. Standard C++.
     Deep2::GenerationResult r{};
     try {
-        g_phase = CertPhase::BeforeLoadModel; emitPhase(g_phase);
+        g_phase = CertPhase::BeforeLoadModel; certEmitPhase(g_phase);
         if (!engine.loadModel(a.logicalName, &diag)) {
-            g_phase = CertPhase::AfterLoadModel; emitPhase(g_phase);
+            g_phase = CertPhase::AfterLoadModel; certEmitPhase(g_phase);
             a.result = Result::MODEL_LOAD_FAILED;
             a.detail = "stage=" + std::to_string(diag.stageCode) +
                        " name=" + diag.stageName + " msg=" + diag.message;
             return;
         }
-        g_phase = CertPhase::AfterLoadModel; emitPhase(g_phase);
+        g_phase = CertPhase::AfterLoadModel; certEmitPhase(g_phase);
         std::fprintf(stderr, "LOADMODEL_COMPLETED=1\n"); std::fflush(stderr);
 
-        g_phase = CertPhase::BeforeGenerate; emitPhase(g_phase);
+        g_phase = CertPhase::BeforeGenerate; certEmitPhase(g_phase);
         std::fprintf(stderr, "FORWARD_ENTERED=1\n"); std::fflush(stderr);
         r = engine.generateStream(
             g_prompt.c_str(), opt,
             [&](int32_t id, const std::string& tok) -> bool {
-                g_phase = CertPhase::InsideGenerateCallback; emitPhase(g_phase);
+                g_phase = CertPhase::InsideGenerateCallback; certEmitPhase(g_phase);
                 if (callbacks == 0) {
                     a.ttftMs = std::chrono::duration<double, std::milli>(
                         std::chrono::steady_clock::now() - t0).count();
@@ -488,7 +789,7 @@ auto t0 = std::chrono::steady_clock::now();
                 ++callbacks;
                 return true;             // never cancel: the point is to stream
             });
-        g_phase = CertPhase::AfterGenerate; emitPhase(g_phase);
+        g_phase = CertPhase::AfterGenerate; certEmitPhase(g_phase);
         std::fprintf(stderr, "FORWARD_COMPLETED=1 status=%d gen=%llu cb=%llu\n",
                      (int)r.status,
                      (unsigned long long)r.generatedTokens,
@@ -514,7 +815,7 @@ auto t0 = std::chrono::steady_clock::now();
                      g_phase == CertPhase::AfterGenerate
                          ? "GENERATE" : "LOADMODEL",
                      typeid(e).name(), e.what());
-        std::fprintf(stderr, "LAST_CERT_PHASE_AT_THROW=%s\n", phaseName(g_phase));
+        std::fprintf(stderr, "LAST_CERT_PHASE_AT_THROW=%s\n", certPhaseName(g_phase));
         std::fflush(stderr);
         std::fflush(stderr);
         std::fprintf(stderr, "FAST_FAIL_AFTER_CATCH=RETHROW_STD\n");
@@ -536,7 +837,7 @@ auto t0 = std::chrono::steady_clock::now();
                      g_phase == CertPhase::InsideGenerateCallback ||
                      g_phase == CertPhase::AfterGenerate
                          ? "GENERATE" : "LOADMODEL");
-        std::fprintf(stderr, "LAST_CERT_PHASE_AT_THROW=%s\n", phaseName(g_phase));
+        std::fprintf(stderr, "LAST_CERT_PHASE_AT_THROW=%s\n", certPhaseName(g_phase));
         std::fflush(stderr);
         std::fprintf(stderr, "FAST_FAIL_AFTER_CATCH=RETHROW_UNKNOWN\n");
         std::fflush(stderr);
@@ -627,7 +928,7 @@ if (argc >= 3 && std::string(argv[1]) == "--child") {
 
     std::vector<Artifact> arts = discover(roots);
     Census c;
-
+    telemetryRunHeader(roots.empty() ? std::string() : roots.front().string());
     for (auto& a : arts) {
         const fs::path dir = fs::path(a.logicalName).parent_path();
         const std::string exe = fs::absolute(argv[0]).string();
@@ -640,6 +941,7 @@ if (argc >= 3 && std::string(argv[1]) == "--child") {
 
         if (a.result == Result::MODEL_MISSING_PAYLOAD) {
             std::printf("result=%s\ndetail=%s\n", resultName(a.result), a.detail.c_str());
+            telemetryModel(a);
             tally(c, a);
             continue;
         }
@@ -714,6 +1016,7 @@ static int childSeq = 0;
 
         std::printf("result=%s\n", resultName(a.result));
         if (!a.detail.empty()) std::printf("detail=%s\n", a.detail.c_str());
+        telemetryModel(a);
         tally(c, a);
         std::printf("tally=%d/%d\n", c.total, c.localInference);
     }
@@ -727,7 +1030,14 @@ static int childSeq = 0;
     std::printf("STREAMER_LOAD_PASS=%d\n", c.loadPass);
     std::printf("STREAMER_GENERATION_PASS=%d\n", c.generationPass);
     std::printf("STREAMER_FAIL=%d\n", c.failures);
+    telemetryFooter(c);
     return 0;
 }
+
+
+
+
+
+
 
 

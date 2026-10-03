@@ -1,0 +1,137 @@
+RAWRXD_MOE_EXPERT_ATTEMPT_001
+================================
+ATTEMPTED THE ONE MEASUREMENT THAT COULD CHANGE THE VERDICT.
+IT FAILED VALIDATION. NO RESULT IS CLAIMED.
+
+MODEL  = F:\OllamaModels\blobs\sha256-764636b0...   103,999,401,280 bytes
+         GGUF v3, 1328 tensors, 43 layers, arch=deepseek4, TRUE MoE
+         (ffn_gate_inp / ffn_up_exps / ffn_down_exps / ffn_gate_exps all present)
+TOOL   = rawrxd/certs/gguf_tensor_slice_001.cpp
+TARGET = blk.41.ffn_down_exps.weight   TYPE=39 (MXFP4)   3D 2048 x 4096 x 256
+
+OUTCOME = FAIL   CHECKS_TOTAL=17  CHECKS_PASS=14  CHECKS_FAIL=3
+         FINAL_VERDICT=FAIL
+
+
+----------------------------------------------------------------------------
+1. WHY THIS MODEL, AND WHY MXFP4
+----------------------------------------------------------------------------
+The dense model used for the 11-case matrix cannot answer the MoE question --
+it has no experts (verified: ffn_gate_inp=0, 64 each of ffn_gate/up/down).
+
+Full type census of a real MoE model (43 layers, 1328 tensors):
+
+  type  0  F32       662   output_hc_base.weight
+  type  8  Q8_0      317   blk.0.attn_kv.weight
+  type 14  Q6_K      174   output.weight
+  type 17  IQ2_XXS    50   blk.0.ffn_gate_exps.weight    <- ROUTED EXPERTS
+  type 18  IQ2_XS     77   blk.0.ffn_down_exps.weight   <- ROUTED EXPERTS
+  type 26  IQ4_XS      3   blk.0.ffn_gate_tid2eid.weight
+  type 30  BF16       43   blk.0.ffn_gate_inp.weight    <- the router
+  type 39  MXFP4       2   blk.41.ffn_down_exps.weight  <- ROUTED EXPERTS
+
+THE ROUTED EXPERT WEIGHTS ARE THE I-QUANTS. That is not incidental: experts are
+quantised with 2-bit codebooks precisely because each expert must fit a far
+smaller budget than a dense projection.
+
+I-QUANTS ARE DELIBERATELY NOT IMPLEMENTED. IQ2_XXS and IQ2_XS decode through a
+256-entry `kvalues` table. Reproducing 256 magic bytes from memory cannot be
+checked after the fact: one wrong entry produces a decode that is perfectly
+self-consistent, passes stationarity, and yields a rank curve that is an
+ARTEFACT of the wrong table -- indistinguishable from a real result. That is
+exactly the fabrication this file exists to prevent.
+
+MXFP4 has NO codebook (E8M0 scale byte + 32 E2M1 nibbles), so it is the one
+exotic type that can be decoded from a specification and validated.
+
+
+----------------------------------------------------------------------------
+2. WHAT PASSED -- THE DECODE IS LIKELY CORRECT
+----------------------------------------------------------------------------
+  MXFP4_LATTICE_BOUNDED    max_distinct_per_32group = 15   (E2M1 allows 16)
+  MXFP4_SIGN_SYMMETRIC     max_sign_skew_of_32      = 13
+  DEQUANT_ALL_FINITE       1
+  ROW_BLOCKS_READ          read=4352 expect=4352
+  BLOCK_IS_NOT_ALL_ZERO    distinct_bytes=14
+
+The lattice check is the load-bearing one. A correct E2M1/E8M0 decode confines
+every 32-element group to at most 8 magnitudes x 2 signs. Getting 15 -- not 200,
+not 8192 -- is strong evidence the fp4 magnitude table and the nibble extraction
+are right. A wrong nibble order or wrong scale conversion breaks the lattice
+immediately.
+
+
+----------------------------------------------------------------------------
+3. WHAT FAILED, AND WHY THE PRINTED NUMBERS ARE VOID
+----------------------------------------------------------------------------
+  DEQUANT_DISTINCT_VALUES      distinct = 19 of 8192          (criterion was >=64)
+  DEQUANT_SUBBLOCK_STATIONARY  group_rms_cv = 5.9642        (criterion was <1.0)
+  SIGMA_1_OVER_SIGMA_R         6.3e29                      (numerically degenerate)
+
+ROOT CAUSE, diagnosed from the format rather than guessed:
+
+  MXFP4 carries a PER-32-ELEMENT E8M0 scale -- a bare power of two, spanning
+  2^-127 .. 2^127. Q4_K and Q6_K share one scale per 256 elements, so a
+  stationary-magnitude check is meaningful for them. For MXFP4 it is not: per
+  BLOCK RMS legitimately varies by orders of magnitude, and 5.96 is a property
+  of the format, not evidence of a wrong decode.
+
+  The consequences are structural, not cosmetic:
+    * The sampled window is 256 rows x 32 COLS (one MXFP4 block wide), because
+      C was bound to blockElems=32. A 32-column window cannot support a rank
+      curve over a covariance dominated by per-block scale.
+    * The Gram matrix is therefore dominated by the scale exponent rather than
+      by weight structure, which is why sigma_1/sigma_R reached 6.3e29. A
+      singular value ratio of 10^29 is the signature of a numerically
+      degenerate Gram matrix, not of a diffuse error field.
+
+  CONSEQUENCE, STATED PLAINLY AND AT LENGTH BECAUSE IT MATTERS:
+    The values this run printed -- REAL_DELTA_ORDER0_ENTROPY_B=3.5388,
+    RANK_FOR_99PCT_ENERGY=30, LOW_RANK_BEATS_ORDER0=0 -- ARE VOID. They were
+    computed from a window that failed validation. Citing them would be exactly
+    the error this whole measurement chain exists to prevent, and the fact that
+    they would have LOOKED like a favourable result (3.54 bits/elem, far below
+    the 6.9-7.2 seen on dense weights) is precisely why they must not be
+    quoted without the FAIL that accompanies them.
+
+    Note especially: 3.54 bits/elem would have been the FIRST result in this
+    entire investigation to suggest the residual overlay might work, and it
+    appeared only because the instrument was broken. A favourable number from a
+    failed check is the most dangerous kind of number.
+
+
+----------------------------------------------------------------------------
+4. WHAT IS REQUIRED BEFORE THE MoE QUESTION CAN BE ANSWERED
+----------------------------------------------------------------------------
+1. NORMALISE BY THE E8M0 SCALE before computing any statistic. Divide each
+   32-element block by its own scale, so the measurement sees weight STRUCTURE
+   rather than per-block scale exponent. Without this, MXFP4 cannot be compared
+   with Q4_K/Q6_K at all.
+2. WIDEN THE WINDOW. C must be a multiple of 32 but far larger -- 256 or 1024 --
+   so the covariance is dominated by structure. C=32 is not a covariance.
+3. RE-RUN THE STATIONARITY CHECK ON NORMALISED VALUES, not raw ones. The raw
+   criterion (cv < 1.0) is wrong for MXFP4 and must not be silently relaxed --
+   it must be replaced with the normalised equivalent, and the replacement
+   stated.
+4. REPEAT FOR BOTH MXFP4 TENSORS. There are only 2, both in blk.41, which is the
+   LAST layer. A last-layer-only measurement is not a MoE result.
+5. THE I-QUANTS REMAIN THE REAL BLOCKER. 127 of 129 routed-expert tensors are
+   IQ2_XXS/IQ2_XS. Even a perfect MXFP4 result covers 1.6% of the expert
+   population. A trustworthy i-quant decode requires the exact kvalues tables,
+   which must come from a reference implementation or the file itself, not from
+   recall.
+
+
+----------------------------------------------------------------------------
+VERDICT
+  MXFP4_DECODE                        = PROBABLY CORRECT (lattice 15/16, sign ok)
+  MXFP4_DELTA_MEASUREMENT             = VOID  (window invalid, Gram degenerate)
+  MOE_EXPERT_QUESTION                 = STILL OPEN
+  DENSE_Q4_K / DENSE_Q6_K             = REFUTED (11/11 cases, unchanged)
+  RESIDUAL_OVERLAY_COMPRESSION_MOE     = UNKNOWN
+
+  Nothing in this attempt weakens the dense result, and nothing in it supports
+  the overlay. The MoE case remains genuinely unmeasured, and the specific
+  reason is now named: the only decodable expert type is 1.6% of the expert
+  population, and its statistics require scale normalisation before they mean
+  anything.

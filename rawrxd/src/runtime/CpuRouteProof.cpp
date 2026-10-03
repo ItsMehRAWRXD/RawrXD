@@ -1,6 +1,6 @@
 // CpuRouteProof.cpp — RAWRXD_CPU_ROUTE_PROOF_001
 #include "CpuRouteProof.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <atomic>
 #include <string>
 namespace rawrxd { namespace cpu {

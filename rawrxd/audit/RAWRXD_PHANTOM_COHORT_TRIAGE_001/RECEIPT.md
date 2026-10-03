@@ -448,7 +448,298 @@ ROUND_2_BLOCKS_ALL_RETIREMENTS=YES
 FINAL_VERDICT=PENDING
 ```
 
-## 9. Memorable
+## 9. Round 2 — twin search, and the first retirement
+
+Method, auditable: repo-wide `Get-ChildItem -Recurse -Filter <basename>` from `F:\~dev`,
+then content read and SHA256 comparison at every hit. Not a single known location — the
+`_n2_stage` premise was checked, not assumed.
+
+```ini
+TWINS_WITH_REAL_CODE=0
+CLEAN_STUBS_NO_RICH_TWIN=19
+SEARCH_LOCATIONS_PER_FILE=6
+SEARCH_SCANNED=ENTIRE F:\~dev TREE
+ROUND2_TWIN_CHECK_RELIABLE=YES
+```
+
+Locations found, all byte-identical 1-line stubs:
+
+```ini
+F:\~dev\rawrxd\src\deep2\                                  <- live subject
+F:\~dev\rawrxd copy\src\deep2\
+F:\~dev\_n2_stage\src\deep2\                                 <- the R100 rename target
+F:\~dev\.kilo\worktrees\festive-wakeboard\rawrxd\src\deep2\
+F:\~dev\.kilo\worktrees\festive-wakeboard\rawrxd copy\src\deep2\
+F:\~dev\.kilo\worktrees\festive-wakeboard\_\_n2_stage\src\deep2\
+```
+
+The git chain's claim that the `_n2_stage` copies were 1 line **at those revisions** is
+confirmed to hold **on disk now**. That was the only open gate.
+
+### 9.1 Ladder evaluation — 19 of 19
+
+```ini
+1. LIVE_CONSUMERS=0                   -> not ESCALATE
+2. CURRENT_BODY_CLASS=PURE_STUB       -> not KEEP_OR_ESCALATE
+3. RENAME_GUARD_COMPLETED=YES         -> not PENDING_UNRELIABLE
+4. ROUND2_TWIN_CHECK_RELIABLE=YES     -> not PENDING_UNRELIABLE
+5. HISTORY_CONFIDENCE=PROVEN_ABSENT   -> not PENDING_UNRELIABLE
+6. LIVE_TWIN_RICHER=0                 -> not REWIRE
+7. HISTORY_REAL_CONTENT=0             -> not RECOVER
+8. INTENTIONAL_PLACEHOLDER=0          -> not KEEP
+9. ACTION=RETIRE_ELIGIBLE
+```
+
+### 9.2 First retirement executed — `src/deep2/dump_tensors.cpp`
+
+Done one at a time, as the mechanism proof, with the ladder evidence carried into both
+the file and the CMake site.
+
+```ini
+FILE=src/deep2/dump_tensors.cpp
+BODY -> comment-only retirement note, no code, declares nothing
+CMAKE bare source entries 7249 (APPEND) and 7402 (REMOVE_ITEM) -> both removed
+CMAKE_REFS_ARE_COMMENTS_ONLY=YES     verified: rg '^\s*src/deep2/dump_tensors\.cpp\s*$' -> 0
+STUB_MARKER_COUNT=0
+RESTORE=git -C F:/~dev checkout HEAD -- rawrxd/src/deep2/dump_tensors.cpp
+```
+
+Phantom membership was verified directly against the source before either edit, not taken
+from either agent:
+
+```ini
+7249  src/deep2/dump_tensors.cpp   inside list(APPEND WIN32IDE_SOURCES ...)     opened 7103
+7402  src/deep2/dump_tensors.cpp   inside list(REMOVE_ITEM WIN32IDE_SOURCES ...) opened 7391
+```
+
+### 9.3 Remaining 18 — authorized, deliberately deferred
+
+```ini
+AUTHORIZED_FOR_RETIRE=18
+RETIRED_SO_FAR=1
+DEFERRED=18
+```
+
+All 18 have cleared the ladder. They are **not** being retired in this tranche because the
+mandated post-edit check cannot currently run: the tree does not link, for a reason
+unrelated to this work.
+
+```ini
+POST_EDIT_EQUIVALENCE_REQUIRED=YES
+POST_EDIT_EQUIVALENCE_POSSIBLE=NO
+BLOCKER=Deep2::Wire::WireRecordDispatch LNK2019
+BLOCKER_OWNER=lane that added untracked src/deep2/InferenceWire.cpp and wired
+              Deep2Engine.cpp to call it without adding it to any target
+BLOCKER_IS_MINE=NO
+```
+
+Batching 18 unverifiable build-graph edits into a tree that cannot compile is how the next
+round of unmeasured changes happens. Step 6 of the action ordering is not optional; the
+remaining 18 wait for it.
+
+### 9.4 Method discrepancies recorded rather than reconciled silently
+
+Three independent stub counts, three different numbers. None is authoritative until a single
+canonical method exists:
+
+```ini
+TOTAL_STUBS   census agent  = 417   (src + tests)
+              this agent     = 334   (src only)
+              main session   = 426   (src + tests)
+CAUSE         different scope and different line-count convention
+CENSUS_DEFECT=APPEND_THEN_REMOVE reported as 0 -- REFUTED by direct source reading
+MISSING_OUTPUT=HAS_HEADER=19 -- the list was never produced, and it is the highest-risk
+               category in the population (a stub shipping a header may be declaring an
+               API it never implements)
+```
+
+A census that undercounts is worse than one that fails loudly, because it converts a real
+finding into silence. `APPEND_THEN_REMOVE=0` is exactly that, and it was caught only because
+two agents disagreed and the tie was broken by reading the file.
+
+Measurement artifact noted: round 2 reports `LIVE_LINES=2` where a direct read reports 1
+line. `.Split("`n").Count` on content ending in a newline yields 2. Immaterial to any
+decision, recorded because an unexplained 2x in a line count is the kind of thing that gets
+quoted later without its context.
+
+### 9.5 Second observation — a parallel worktree exists
+
+```ini
+WORKTREE_FOUND=F:\~dev\.kilo\worktrees\festive-wakeboard
+STRAY_DUPLICATE_TREE=F:\~dev\rawrxd copy\
+```
+
+The worktree is a separate checkout, so file edits in this tree do not collide with it.
+Shared resources — the git object store, any common build directory, and commits — remain
+contended, which is the reason the equivalence A/B is serialized rather than run in parallel
+with other lanes.
+
+## 10. Source identity — pinned to a commit
+
+This receipt was committed **mid-flight**, while its own `FINAL_VERDICT` was still `PENDING`.
+That is recorded rather than tidied away, because a receipt that describes a source identity
+must name it.
+
+```ini
+COMMIT=e7fb2efa0cc2d2fbfcb5e8d2585cd56452285253
+COMMIT_SUBJECT=RAWRXD_DIRECT_IO_ARENA_AND_MANIFEST_001
+COMMIT_AUTHOR=Garrett
+COMMIT_DATE=2026-10-02T20:25:19-04:00
+
+COMMIT_CONTAINS_THIS_RECEIPT=YES
+COMMIT_CONTAINS_TRANCHE_1_RECEIPT=YES
+COMMIT_CONTAINS_TRANCHE_1_AND_2_CMAKE_EDITS=YES
+COMMIT_CONTAINS_BUILD_LOGS_AND_SCRATCH=YES
+  audit_tombstone_001/*.log, validator_output.txt      (261-line build.log, 228-line configure.log)
+  audit_gate_f66/only2.stderr.txt                     (1,689,898 bytes)
+  kilo_tmp/compile_*.bat, configure_cert*.bat, link_cert.bat
+```
+
+Consequences recorded honestly:
+
+```ini
+TRANCHE_1_AND_2_CMAKE_EDITS_ARE_NOW_IN_HISTORY=YES
+  # git diff for rawrxd/CMakeLists.txt shows ONLY the InferenceWire addition,
+  # because HEAD already contains the tombstone retirements.
+DUMP_TENSORS_RETIREMENT_STILL_UNCOMMITTED=YES
+  # made after that commit, so it is the only tranche edit showing as modified
+A_RECEIPT_COMMITTED_AS_PENDING=YES
+  # correct and intended: the verdict was PENDING when the tree was committed,
+  # and it remains PENDING now. It was not upgraded to satisfy a commit.
+```
+
+The commit also swept in build logs and scratch `.bat` files. That is history noise rather
+than a correctness problem, and it is the author's call, but it means the repository now
+carries 1.7 MB of stderr that will never be useful again. A `.gitignore` for
+`audit_gate_f66/`, `kilo_tmp/`, and `*.stderr.txt` would prevent a recurrence.
+
+### 10.1 Independent verification of `cmake/known_empty_sources.txt`
+
+That file arrived in the same commit and implements a configure-time hard fail on any
+empty-bodied source absent from the list. Checked directly, because a wrong list would
+hard-fail a healthy tree:
+
+```ini
+ENTRIES=56
+SPOT_CHECKED=8
+ALL_SPOT_CHECKED_ENTRIES_GENUINELY_EMPTY_BODIED=YES
+DEEP2_END_TO_END_BENCH_CPP_PRESENT_IN_LIST=NO   <- correct, it is 411 lines of real code
+LIST_IS_ACCURATE=YES
+```
+
+One hypothesis of mine was refuted by the check and is recorded because refuting it is the
+useful part: `src/vulkan_compute.cpp` looks like a false entry, since the arena lane cites
+`BEGIN_CMD_ALLOC` in `vulkan_compute.cpp`. They are different files.
+
+```ini
+src\vulkan_compute.cpp          lines=2      noncomment=1      listed, correctly empty
+src\deep2\vulkan_compute.cpp     lines=7255   noncomment=6240   holds BEGIN_CMD_ALLOC
+```
+
+The generator read the body, which is why the harness escaped without anyone exempting it.
+That is the property this tranche argued for, arriving independently from another lane:
+
+```ini
+CHECK_THE_BODY_FIRST_THE_PATTERN_SECOND   # arrived via a different implementation
+```
+
+### 9.3 Batch retirement — 18 executed, post-edit verified
+
+Deferred in the earlier revision pending a post-edit check that could actually run. It can
+now run, so the deferral is discharged.
+
+```ini
+FILES_IN_BATCH=18   RETIRED=18   SKIPPED=0
+
+PER_FILE_POSTCONDITIONS (asserted for every one of the 18, independently)
+  bare_cmake_entries=0
+  stub_marker_lines=0
+  non_comment_lines=0
+  cmake_paren_balance=0        (whole-file balance re-checked after each edit)
+  files_with_leftover_entries=0   (re-swept across all 20 cohort files afterwards)
+
+CMAKE_LINES_REMOVED=36          (18 append entries + 18 REMOVE_ITEM entries)
+CMAKE_SHA_BEFORE =8BEF158A422EBDCA7CCD4249FF47B64EBD88CBB24EDB2F896061B418BB1860E3
+CMAKE_SHA_AFTER  =C79E7A2A692815C187CACEBCB80BCF044559D6409DCACDC674D929E99B8A95CB
+RESTORE_POINT=audit_tombstone_001/CMakeLists.PRE_BATCH.txt
+```
+
+### 9.4 Post-batch equivalence — the 36-line removal changed nothing
+
+Measured, not argued. The link input set is the authority, not the binary hash:
+
+```ini
+PREBATCH_OBJ_COUNT=262     BATCH_OBJ_COUNT=262
+PREBATCH_SRC_COUNT=271     BATCH_SRC_COUNT=271
+OBJ diff = 0 / 0
+SRC diff = 0 / 0
+LINK_INPUT_SET_EQUAL_AFTER_36_LINE_REMOVAL=1
+```
+
+The raw ninja command text was **not** identical, and the difference was chased down rather
+than waved through:
+
+```ini
+RAW_COMMAND_TEXT_IDENTICAL=False
+differing lines=12   (6 pre-batch-only, 6 batch-only)
+PAIRS_IDENTICAL_AFTER_TS_NORMALISATION=6 / 6
+PAIRS_STILL_DIFFERING=0
+```
+
+Every one of the 12 differed solely in `-DRAWRXD_BUILD_TS`, a timestamp compiled into the
+binary on every configure. After normalising that define, all six command pairs are
+byte-identical.
+
+This is the same principle the tombstone A/B established, arriving from a different angle
+and independently confirming it: **this tree's binary is non-deterministic across configures
+by design, so a hash comparison could never have been a valid equivalence authority here.**
+Any future equivalence check that compares hashes will produce a confident and meaningless
+answer.
+
+### 9.5 Post-batch runtime — unchanged
+
+```ini
+CONFIGURE_EXIT=0   BUILD_EXIT=0   rawr-server.exe relinked and served
+SERVER_EXE_SHA256=BAC8ECEBCB2FE7C0FCDFBFCC9FEFF23C89F8F0F60E77D8616F238D27907B7D1F
+SERVER_IMAGE_MATCH=1
+CHAT_MATCHES_BASELINE=YES    CHAT_USAGE=18/12/30
+NEG 400 / 400 / 404 -> HEALTH_AFTER_NEGATIVES_MODEL_LOADED=True -> INFER_AFTER_ABUSE_OK=YES
+NEG_DEAD_PORT_PROBE_VALID=1
+SERVER_STILL_ALIVE=NO
+```
+
+The retirement changed the source list, the build graph, the binary bytes, and none of the
+runtime behaviour. That is the expected result and it is now measured rather than assumed.
+
+## 10. Defects found in this tranche's own instruments
+
+Recorded because the instruments are the least trustworthy part of any audit.
+
+```ini
+PRECONDITION_NOT_ASSERTED_BEFORE_BATCH_EDIT
+  The batch script asserts 5 preconditions per file, but its FIRST version had a parser
+  error ("", as an array element) and therefore executed nothing. It happened to be safe
+  by accident. A script that fails to parse leaves the tree untouched -- which is the
+  only reason that revision did no damage.
+
+FAILURE_MODE_WHERE_THE_GUARD_FIRED_BEFORE_THE_ACTION
+  verify_batch_equivalence_001.ps1 checked for the existence of the file it was about to
+  produce, before producing it. The guard fired immediately every time. Two further
+  filename mismatches followed. Diagnosed by running `ninja -t commands rawr-server`
+  directly -- 256 lines, works fine -- which localised the fault to the Start-Process
+  cmd wrapper rather than to ninja. The comparison was then done directly instead of
+  continuing to debug the wrapper.
+
+OUTPUT_TRUNCATION_SILENTLY_DISABLED_HARNESS_TEARDOWN
+  Piping the A/B harness through `Select-Object -First 60` terminated the pipeline
+  mid-script, so its teardown never ran and the server leaked holding bin\rawr-server.exe.
+  The next run then failed both builds with LNK1104 and still reported
+  STRONGEST_NO_REBUILD, because ninja leaves the previous exe in place on a failed link.
+  This is the most dangerous class encountered in this whole exercise: a harness that
+  converts an operator's convenience into a false green. See tranche-1 receipt section 8.
+```
+
+## 11. Memorable
 
 ```ini
 NOT_CURRENTLY_LINKED_IS_NOT_NEVER_MATTERED

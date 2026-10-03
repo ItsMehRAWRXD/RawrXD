@@ -14,7 +14,23 @@ public:
     std::condition_variable cv_;
     std::atomic<bool> running_{false};
     std::atomic<bool> shutdown_requested_{false};
-    AutonomyPhase phase_ = AutonomyPhase::Idle;
+    // RAWRXD_CLI_AUTONOMY_PHASE_ATOMIC_001
+    //
+    // This was declared as a plain `AutonomyPhase`, which is the first bad
+    // state. Two independent uses in this file require it to be atomic, and
+    // both were already written as if it were:
+    //     line 28  AutonomyPhase old = phase_.exchange(new_phase);
+    //     line 175 return impl_->phase_.load();
+    // so the intent was unambiguous and only the declaration disagreed. With
+    // a plain enum, line 28 fails to compile (C2228: left of '.exchange' must
+    // have class/struct/union, note: type is 'rawrxd::cli::AutonomyPhase').
+    //
+    // Fixed at the declaration rather than at the two use sites, because
+    // editing the uses would have meant deleting the atomicity the code was
+    // written to have. TransitionTo() reads-modifies-writes the phase from the
+    // worker thread while GetCurrentPhase() reads it from the caller thread,
+    // so this must genuinely be atomic.
+    std::atomic<AutonomyPhase> phase_{AutonomyPhase::Idle};
     std::thread worker_;
     std::queue<AutonomyTask> task_queue_;
     std::map<uint64_t, TaskResult> results_;

@@ -1,4 +1,4 @@
-#include "../../native_gguf_loader.h"
+#include "../../include/native_gguf_loader.h"
 
 NativeGGUFLoader::NativeGGUFLoader()
     : fileHandle(nullptr),

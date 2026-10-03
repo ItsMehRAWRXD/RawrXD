@@ -6,6 +6,37 @@
 
 #ifdef _WIN32
 #include <windows.h>
+// RAWRXD_CLI_MACRO_COLLISION_001
+//
+// windows.h includes winsvc.h, which ends with the ANSI/UNICODE pair
+//     #define StartService StartServiceW
+//     #define StartService StartServiceA
+//
+// The class member CLIHeadlessSystems::StartService is declared in
+// cli_headless_systems.hpp, which is included on line 1 -- BEFORE this
+// include. So the declaration is parsed unmacro'd and is a real member, but
+// every occurrence of the token after this point is rewritten to
+// StartServiceA. The out-of-class definition then reads
+//
+//     bool CLIHeadlessSystems::StartServiceA(const std::string& name) {
+//     ^^^^^^^^ not a member
+//
+// which is one root cause and six symptoms. C2039 on StartServiceA, and then
+// because the definition is no longer a member definition the body has no
+// `this`, so `impl_` is undeclared at 72/73/74/75, the lock_guard loses its
+// argument (C2512), and `it` is used uninitialized (C3536). Nothing is wrong
+// with the class, the header, or the pimpl; a platform macro ate the name.
+//
+// Verified before patching: `StartService` appears only in the header
+// declaration and the definition below, with zero external call sites, so
+// undefining it here is local and complete. Renaming the member instead would
+// have edited the public API to work around a defect local to this file.
+#ifdef StartService
+#undef StartService
+#endif
+#ifdef StopService
+#undef StopService
+#endif
 #else
 #include <signal.h>
 #endif

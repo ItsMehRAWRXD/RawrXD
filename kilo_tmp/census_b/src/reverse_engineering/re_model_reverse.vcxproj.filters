@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="F:\~dev\kilo_tmp\census_b\CMakeFiles\d9bcaf2d09fc793137600af69efb6e29\model_llm_harvester.obj.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\~dev\kilo_tmp\census_b\CMakeFiles\011acb21b5b45526f3f375e9cb878e6c\re_model_reverse.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\~dev\rawrxd\src\reverse_engineering\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="F:\~dev\kilo_tmp\census_b\src\reverse_engineering\CMakeFiles\re_model_reverse" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{FBD680C9-79E8-3810-8A22-83C26AE12DBA}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

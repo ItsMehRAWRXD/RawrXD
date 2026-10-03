@@ -8,6 +8,8 @@ namespace RawrXD::License {
 
 enum class LicenseTierV2 : uint32_t { Community = 0, Professional = 1, Enterprise = 2, Sovereign = 3 };
 
+const char* tierName(LicenseTierV2 tier);
+
 struct LicenseResult {
     bool success = false;
     char message[256] = {};

@@ -1,6 +1,6 @@
 // GpuRouteProof.cpp — RAWRXD_GPU_ROUTE_PROOF_001
 #include "GpuRouteProof.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <atomic>
 namespace rawrxd { namespace gpu {
 static std::atomic<int> g_singleGpu{0}, g_dualGpu{0}, g_cpuFallback{0};

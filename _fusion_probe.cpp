@@ -55,6 +55,12 @@ constexpr int    kCols      = 256;
 constexpr int    kGroupSize = 32;          // scales per group of elements
 constexpr int    kGroups    = kCols / kGroupSize;
 constexpr double kBitsBase  = 1.5;         // nominal; ternary levels {-1,0,+1}
+// Threshold as a fraction of the per-group max. The density this produces is
+// MEASURED at runtime and printed -- it is not assumed to match any real tensor.
+constexpr double kTernaryThreshold = 0.3333333;
+// Reference only, from the prior RAWRXD bit-plane audit. NOT an assertion about
+// this harness: printed so a reader can compare regimes explicitly.
+constexpr double kPlane0AuditDensity = 0.061733;
 
 // ---------------------------------------------------------------- metrics
 double relL2(const std::vector<float>& a, const std::vector<float>& b) {
@@ -87,6 +93,17 @@ struct BaseQuantTensor {
     std::vector<int8_t>  q;        // ternary levels
     std::vector<float>   scale;    // one per group, per ROW (rows are independent)
     int rows = 0, cols = 0;
+    // Measured, not assumed. The density the quantizer ACTUALLY achieved is
+    // recorded here and printed. An earlier version of this file carried a
+    // comment claiming the 1/3 threshold "matches the measured ~6% nonzero
+    // density of a real plane 0" -- that was asserted from the audit and never
+    // derived from this code. With Gaussian weights and s = max|w| per 32-sample
+    // group, s sits near 2.5 sigma, so P(|w| > s/3) is materially higher than 6%.
+    // The realized density is now measured and reported so DELTA_MAGNITUDE_RATIO
+    // can be read against what the quantizer actually did.
+    double realizedNonzeroDensity = 0.0;
+    double realizedPosDensity    = 0.0;
+    double threshold             = 0.0;
 
     size_t bytes() const {
         return q.size() * sizeof(int8_t) + scale.size() * sizeof(float);
@@ -97,6 +114,7 @@ BaseQuantTensor quantizeTernary(const std::vector<float>& w, int rows, int cols)
     BaseQuantTensor t; t.rows = rows; t.cols = cols;
     t.q.assign(size_t(rows) * cols, 0);
     t.scale.assign(size_t(rows) * kGroups, 0.0f);
+    t.threshold = kTernaryThreshold;
 
     for (int r = 0; r < rows; ++r) {
         for (int g = 0; g < kGroups; ++g) {
@@ -109,15 +127,25 @@ BaseQuantTensor quantizeTernary(const std::vector<float>& w, int rows, int cols)
             for (int k = 0; k < kGroupSize; ++k) {
                 const size_t i = size_t(r) * cols + c0 + k;
                 const float v = w[i] / s;                       // in [-1,1]
-                // threshold at 1/3 of full scale => sparse ternary, matching the
-                // measured ~6% nonzero density of a real plane 0
-                t.q[i] = (v >  0.3333333f) ? int8_t( 1)
-                       : (v < -0.3333333f) ? int8_t(-1)
-                       :                     int8_t( 0);
+                // threshold relative to the group max => sparse ternary
+                t.q[i] = (v >  kTernaryThreshold) ? int8_t( 1)
+                       : (v < -kTernaryThreshold) ? int8_t(-1)
+                       :                            int8_t( 0);
             }
         }
     }
     return t;
+}
+
+void measureRealizedDensity(BaseQuantTensor& t) {
+    size_t nz = 0, pos = 0;
+    for (int8_t v : t.q) {
+        if (v != 0) ++nz;
+        if (v >  0) ++pos;
+    }
+    const double n = double(t.q.size());
+    t.realizedNonzeroDensity = (n > 0.0) ? double(nz) / n : 0.0;
+    t.realizedPosDensity    = (n > 0.0) ? double(pos) / n : 0.0;
 }
 
 float dequantAt(const BaseQuantTensor& t, size_t i) {
@@ -147,9 +175,10 @@ void residualDeltaMatVecAdd(const std::vector<float>& dW,
     for (size_t i = 0; i < dW.size(); i += size_t(cols)) {
         const int r = int(i / size_t(cols));
         float acc = 0.0f;
-        for (int c = 0; c < cols; ++c)
+        int c = 0;
+        for (c = 0; c < cols; ++c)
             acc += dW[i + size_t(c)] * x[size_t(c)];
-        y[size_t((r + 1) % kRows)] += acc;  // CORRUPTED: wrong row
+        y[size_t(c % kRows)] += acc;                 // <-- CORRUPTED: lands on wrong rows
     }
 }
 
@@ -256,7 +285,8 @@ int main() {
     for (auto& v : x) v = gauss(rng);
 
     // --- quantize, then build the FULL-PRECISION delta that would be required
-    const BaseQuantTensor base = quantizeTernary(W, kRows, kCols);
+    BaseQuantTensor base = quantizeTernary(W, kRows, kCols);
+    measureRealizedDensity(base);
     std::vector<float> dW;
     dW.resize(W.size());
     if (dW.size() != W.size()) {
@@ -322,6 +352,23 @@ int main() {
     std::printf("DELTA_NOTE=ratio_near_1_means_decomposition_saves_nothing\n");
     std::printf("BASE_OVERHEAD_BYTES_PER_ELEMENT=%.4f\n",
                 double(base.bytes()) / double(W.size()));
+    std::printf("BASE_EXPECTED_BYTES_PER_ELEMENT=%.4f_1BIT_PLUS_FP32_PER_32\n", 0.25);
+
+    // Density is MEASURED here, not assumed. See BaseQuantTensor's comment: an
+    // earlier version claimed the 1/3 threshold reproduced the audit's 6.17%
+    // plane-0 density. It does not, and asserting it would have made
+    // DELTA_MAGNITUDE_RATIO uninterpretable against the audit it cites.
+    std::printf("\n");
+    std::printf("--- realized quantization density (measured) ---\n");
+    std::printf("BASE_QUANT_THRESHOLD_FRAC_OF_GROUPMAX=%.6f\n", base.threshold);
+    std::printf("BASE_REALIZED_NONZERO_DENSITY=%.6f\n", base.realizedNonzeroDensity);
+    std::printf("BASE_REALIZED_POSITIVE_DENSITY=%.6f\n", base.realizedPosDensity);
+    std::printf("PLANE0_AUDIT_REFERENCE_DENSITY=%.6f_REFERENCE_ONLY\n",
+                kPlane0AuditDensity);
+    std::printf("DENSITY_REGIME_MATCHES_AUDIT=%d\n",
+                (int)(std::fabs(base.realizedNonzeroDensity -
+                                kPlane0AuditDensity) < 0.05));
+    std::printf("DENSITY_NOTE=synthetic_gaussian_group_max_scaling_differs_from_real_tensor\n");
 
     std::printf("\n");
     std::printf("--- mode results ---\n");

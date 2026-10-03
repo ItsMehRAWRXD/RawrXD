@@ -1,6 +1,6 @@
 // GpuCacheResidencyAuthority.cpp — RAWRXD_GPU_CACHE_RESIDENCY_AUTHORITY_001
 #include "GpuCacheResidencyAuthority.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <atomic>
 namespace rawrxd { namespace gpu {
 static std::atomic<uint64_t> g_uploadBytes{0}, g_perTokenUpload{0};

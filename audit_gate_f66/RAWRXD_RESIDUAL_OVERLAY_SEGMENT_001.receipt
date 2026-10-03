@@ -1,0 +1,163 @@
+RAWRXD_RESIDUAL_OVERLAY_SEGMENT_001
+=====================================
+THE OVERLAY'S OWN FIDELITY/BITRATE SEGMENT, AND AN ALGEBRAIC BOUND
+THAT CLOSES THE LOW-RANK VARIANT PROVABLY.
+
+TOOL   rawrxd/certs/gguf_tensor_slice_001.cpp
+MODELS dense blk31.attn_q(Q4_K) blk63.ffn_down(Q6_K)
+       MoE   blk20.ffn_down_exps(IQ3_XXS) blk0.ffn_gate_exps(IQ2_XS)
+WINDOW 256 x 1024     ALL CASES PASS, CHECKS_FAIL=0
+
+
+----------------------------------------------------------------------------
+1. THE SEGMENT -- WHAT THE OVERLAY ACTUALLY BUYS
+----------------------------------------------------------------------------
+tensor                        base fmt  base bpw  base-only rel_L2
+                                            |  +delta bpw  full rel_L2
+------------------------------------------------------------
+blk.31.attn_q.weight           Q4_K       4.5000    0.814574   11.711  0.000000
+blk.63.ffn_down.weight         Q6_K       6.5625    0.763574   13.419  0.000000
+blk.20.ffn_down_exps.weight    IQ3_XXS    3.0625    0.690447    7.299  0.000000
+blk.0.ffn_gate_exps.weight     IQ2_XS     2.3125    0.664453    7.257  0.000000
+
+Each row is the overlay's own Pareto segment: point A is the quantised base
+alone, point B is base plus delta and is EXACT BY CONSTRUCTION (the delta is
+defined as W - base, so point B has zero error and tells us nothing about
+quality -- only what it costs).
+
+THE OVERLAY DOES COMPRESS. For MoE experts it reaches exact reconstruction at
+7.26-7.30 bits/element against a 32-bit fp16 original -- a 4.4x reduction. That
+is a real result and it is not nothing.
+
+
+----------------------------------------------------------------------------
+2. CORRECTION TO MY OWN PRIOR VERDICT
+----------------------------------------------------------------------------
+The previous receipt concluded:
+
+    RESIDUAL_OVERLAY_COMPRESSION = NOT VIABLE on every reachable class
+
+That was stated as though it covered the whole proposal. IT DOES NOT. Every one
+of those 21 cases tested ONE variant -- the LOW-RANK residual. That variant is
+dead (section 3). The general overlay is not dead: the segment above shows it
+achieves 4.4x on MoE experts.
+
+The honest position is narrower:
+
+    LOW_RANK_RESIDUAL   = REFUTED, provably (section 3)
+    OVERLAY_GENERAL     = COMPRESSES 4.4x, but UNTESTED against the right rival
+
+A reader who took the earlier verdict as "the idea is dead" would have been
+misled, and the fault is mine for the wording rather than the measurement.
+
+
+----------------------------------------------------------------------------
+3. WHY THE LOW-RANK VARIANT IS PROVABLY DEAD -- AND THE VICTORY BELONGS TO ALGEBRA
+----------------------------------------------------------------------------
+If W = B + D then, by the subadditivity of rank,
+
+        rank(W)  <=  rank(B) + rank(D)
+
+So a LOW-RANK residual requires a HIGH-RANK base. And factor cost is
+proportional to rank, so for an R x C matrix:
+
+        two_factor_cost  =  (rank(B) + rank(D)) * (R + C) * 32 / (R * C)
+                         >=  rank(W) * per_rank_cost
+
+MEASURED rank(W) itself, same exact Jacobi spectrum:
+
+  dense Q4_K  blk.31.attn_q      rank(W)@99% = 236 / 256  (92.2% full rank)
+                                 MIN_TWO_FACTOR_COST = 36.875 bits/elem
+  dense Q6_K  blk.63.ffn_down    rank(W)@99% = 247 / 256  (96.5% full rank)
+                                 MIN_TWO_FACTOR_COST = 38.594 bits/elem
+  MoE IQ3_XXS blk.20.ffn_down_exps 247 / 256              38.594 bits/elem
+  MoE IQ2_XS  blk.0.ffn_gate_exps  247 / 256              38.594 bits/elem
+
+THE MINIMUM COST OF ANY TWO-FACTOR DECOMPOSITION EXCEEDS THE 32-BIT ORIGINAL.
+
+This is not an empirical loss of a race; it is a floor. W is 92-96% full rank,
+so no split into two factors can be cheaper than storing W. No cleverness in the
+factorisation changes it, and no better quantiser changes it. The only way out
+is for rank(W) to be small, and these tensors are not.
+
+This is why the earlier 0/21 on low-rank was not bad luck. It was arithmetic.
+
+
+----------------------------------------------------------------------------
+4. THE ONE COMPARISON THAT WAS NEVER MADE
+----------------------------------------------------------------------------
+The overlay's rival is NOT fp32. It is the best SINGLE-FORMAT quantiser at the
+same total bitrate.
+
+For the MoE experts, point B costs 7.26-7.30 bpw for exact reconstruction.
+Single formats in that neighbourhood are already shipped and need no second
+decode pass:
+
+    IQ2_XS   2.3125 bpw        Q4_K   4.5000 bpw
+    IQ3_XXS  3.0625 bpw        Q5_K   5.5000 bpw
+                              Q6_K   6.5625 bpw
+                              Q8_0   8.5000 bpw
+
+So the decisive question is:
+
+    At ~7.3 bpw total, does (base + delta) reconstruct W better than a single
+    7.3-bpw format reconstructs it?
+
+Point B has rel_L2 = 0.000000 BY CONSTRUCTION, so the overlay's advantage is
+that it is EXACT. The rival's error at the same bitrate is unmeasured.
+
+If a single format reaches rel_L2 < ~0.05 at 7.3 bpw, the overlay is dominated
+-- it costs the same, needs a second decode pass, a second memory tier, and a
+fetch for the delta, and returns an error that the single format nearly matches.
+If no single format does, the overlay wins on fidelity per bit and the
+architecture is justified.
+
+THIS MEASUREMENT HAS NOT BEEN RUN. It is cheap: the dequant machinery already
+exists for every one of these formats, and the harness already computes rel_L2
+against a fixed probe vector. What is missing is a direct re-quantisation sweep
+of W at each bpw.
+
+
+----------------------------------------------------------------------------
+5. WHAT IS SETTLED AND WHAT IS NOT
+----------------------------------------------------------------------------
+SETTLED, provably:
+    LOW-RANK RESIDUAL      DEAD. The rank bound puts the floor at 36.9-38.6
+                           bits/element for a 32-bit original. Not a tuning
+                           problem.
+    ORDER-0 CODING OF THE DELTA  Wins against low rank everywhere (0/21), but
+                           it costs 4.2-7.2 bits/element ON TOP of the base,
+                           which is why point B lands at 7.3-13.4 bpw.
+
+SETTLED, measured:
+    The overlay compresses 32 -> 7.3 bpw on MoE experts (4.4x), exact.
+    MoE deltas are cheaper than dense (3.5-4.9 vs 6.9-7.2 b/e) but their
+    spectra are nearly flat (sigma_1/sigma_R 2.99-3.41 vs 482-3146 dense).
+    The delta is neither sparse, nor low-rank, nor low-entropy.
+
+NOT SETTLED, and it is the only thing left:
+    Overlay vs best single format at equal bitrate. Unmeasured.
+
+
+----------------------------------------------------------------------------
+6. THE HONEST SUMMARY
+----------------------------------------------------------------------------
+The proposal arrived as "split the weights so the correction field becomes
+cheap." Measurement says the correction field is not cheap in ANY available
+sense -- not sparse, not low-rank, not low-entropy -- and that the low-rank
+framing is not merely ineffective but arithmetically excluded for tensors this
+dense.
+
+What survives is narrower and more interesting: a quantised base plus an
+order-0-coded exact residual, costing 7.3 bpw on real MoE experts, with the
+delta fetched separately and applied in a second pass. That is a real 4.4x, and
+it has a real cost -- a second tier of storage, a second decode, and a fetch
+whose latency is paid on the hot path.
+
+Whether that trade is worth making is a measurement, not an argument, and it is
+the next one. It is small.
+
+VERDICT
+  LOW_RANK_RESIDUAL_VARIANT   = REFUTED PROVABLY (rank bound > 32 bits)
+  RESIDUAL_OVERLAY_GENERAL     = COMPRESSES 4.4x, RIVAL NOT YET MEASURED
+  DELTA_STRUCTURE              = NONE FOUND (sparse / low-rank / low-entropy all fail)

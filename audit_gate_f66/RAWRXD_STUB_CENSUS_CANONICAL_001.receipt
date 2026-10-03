@@ -1,0 +1,165 @@
+RAWRXD_STUB_CENSUS_CANONICAL_001
+==================================
+THE LEDGER-AUTHORITY DEFECT, DECOMPOSED.
+
+TOOL = rawrxd/tools/stub_census_canonical.ps1
+HEAD AT MEASUREMENT = e7fb2efa0 "RAWRXD_DIRECT_IO_ARENA_AND_MANIFEST_001"
+  (NOTE: the baseline used earlier in this work was f66d63e05. HEAD has moved
+   again. The tree is not stationary, which is itself part of the finding.)
+
+
+----------------------------------------------------------------------------
+1. CANONICAL DEFINITION
+----------------------------------------------------------------------------
+A count is admissible only alongside its RULE, its ROOT and its EXTENSION SET.
+Five named rules, all implemented:
+
+  R1_FIRSTLINE_STUB    first non-blank line matches ^//\s*STUB
+                       -- THE HISTORICAL RULE. Reproduced only for comparison.
+  R2_ANY_STUB          any line matches ^\s*//\s*(STUB|Auto-generated stub)
+  R3_AUTO_STUB         any line matches "Auto-generated stub"
+  R4_ZERO_NONCOMMENT   no ; { } ( ) = survives stripping block comments, line
+                       comments and preprocessor lines.
+                       -- This is the rule rawrxd_filter_missing_sources()
+                          already applies in the build graph.
+  R5_TRIVIAL_MAIN      body reduces to int main(){ return 0; }
+
+  ROOT      = rawrxd_all | src_only | src_and_tests
+  EXT       = EXT_NO_HEADER (.cpp .c .cc .cxx) | EXT_WITH_HEADER (+ .h .hpp)
+  EXCLUDED  = build, build_*, .git, 3rdparty, out, bin, obj, node_modules, .vs
+  DUPLICATES= de-duplicated by full path (two roots must not double-count)
+
+
+----------------------------------------------------------------------------
+2. THE MATRIX
+----------------------------------------------------------------------------
+ROOT|EXT                           FILES    R1    R2    R3    R4
+------------------------------------------------------------------------
+rawrxd_all|EXT_NO_HEADER            2386   428   615   169   673
+rawrxd_all|EXT_WITH_HEADER         3733   430   637   182   728
+src_only|EXT_NO_HEADER              2000   316   474   140   531
+src_only|EXT_WITH_HEADER           3253   316   492   153   585
+src_and_tests|EXT_NO_HEADER         2170   399   575   157   631
+src_and_tests|EXT_WITH_HEADER      3425   399   593   170   685
+
+
+----------------------------------------------------------------------------
+3. THE ROOT CAUSE OF THE DISAGREEMENT
+----------------------------------------------------------------------------
+The historical rule, read directly from
+audit_ide_stubs.ps1.REPAIRED:
+
+    $first = FirstNonBlank $f.FullName
+    if ($first -match '^//\s*STUB\b') { $pure.Add(...) }
+
+It inspects ONLY the first non-blank line and requires the literal token STUB
+there. It therefore CANNOT SEE:
+
+  * `// Auto-generated stub` -- the regex needs STUB immediately after `//` and
+    optional whitespace, and "Auto-generated" is in the way. 153 files.
+  * files whose first line is a comment that merely MENTIONS a stub.
+  * body-less files with no banner at all.
+
+MEASURED CONSEQUENCE, on src_only|EXT_WITH_HEADER:
+
+    R1 sees                 316
+    R2 sees                 492
+    R4 sees                 585
+    MISSED BY R1            270   (46% of the canonical population)
+
+Sample of the 270 the historical rule cannot see:
+    src/agentic_agent_coordinator.cpp
+    src/agentic_controller.cpp
+    src/agentic_engine.cpp
+    src/agentic_loop_state.cpp
+    src/agentic_observability.cpp
+    src/agent_explainability.cpp
+    src/agent_history.cpp
+    src/agent_policy.cpp
+    src/ai_completion_real.cpp
+    src/ai_model_caller.cpp
+
+So the 338/339/417/424/426 spread is NOT measurement noise. It is five
+different questions, and the one that produced the most-quoted number used a
+rule blind to almost half the population.
+
+The build graph already knows better: rawrxd_filter_missing_sources() applies
+R4 plus R5 and declares 56 declared-unimplemented sources. The runtime census
+and the build-time census have been answering different questions for months.
+
+
+----------------------------------------------------------------------------
+4. REPRODUCTION ATTEMPT -- AND WHY THE HISTORICAL NUMBERS DO NOT REPRODUCE
+----------------------------------------------------------------------------
+Attempted reproduction of the historical figures with the historical rule R1:
+
+  historical claim                     measured R1        delta
+  src stubs, excluding .bak   (339)        316            -23
+  tests stubs                 (85)          83             -2
+  combined                    (424)        399            -25
+  pure_stub_paths.txt         (338)        316            -22
+  unattributed               (417)        --          not reproduced
+  unattributed               (426)        --          not reproduced
+
+Checked and ruled out as the cause:
+  * Directory exclusions are NOT responsible. Re-running R1 with NO exclusions
+    gives the same 316, and there are 0 R1 stubs inside build/vendor directories.
+    So the counts were not inflated by copies.
+  * Extension set is NOT the src/tests gap either; src_only and src_and_tests
+    differ from 339/85 by more than the header delta alone.
+
+The actual cause is TREE DRIFT plus MISSING PROVENANCE:
+
+  * STUB_HEADER_REPORT.md -- the source of 339 / 85 / 424 -- IS NOT TRACKED BY
+    GIT AT ALL. `git log` on it returns nothing. It records no commit.
+  * pure_stub_paths.txt and RAWRXD_STUB_CERTIFICATION_SURFACE_001.md were
+    committed in 9f1be7d05, an ancestor of the f66d63e05 baseline.
+  * HEAD has since moved again, to e7fb2efa0.
+
+A census that does not record the tree identity it ran against cannot be
+reproduced after the tree moves. That is not a flaw in any one script; it is a
+missing field.
+
+
+----------------------------------------------------------------------------
+5. CANONICAL NUMBERS
+----------------------------------------------------------------------------
+Population = TRANSLATION UNITS (.cpp .c .cc .cxx), excluding build output and
+vendored code, with no code surviving comment and preprocessor stripping (R4):
+
+    src only                        531
+    src + tests                     631
+    whole rawrxd tree               673
+
+R5 (trivial `int main(){return 0;}`) contributes 0 additional files under this
+definition -- every such file is already counted by R4, which is the correct
+relationship and is why the two rules do not double-count.
+
+The canonical population is therefore 531 translation units under src, of which
+the historical rule could see 316 (59%) and could not see 215 (41%).
+
+
+----------------------------------------------------------------------------
+6. LEDGER-AUTHORITY VERDICT
+----------------------------------------------------------------------------
+  CANONICAL_RULE_SET_DEFINED            = YES   (R1..R5, explicit axes)
+  HISTORICAL_RULE_BLIND_SPOT            = MEASURED  270 files (46%)
+  HISTORICAL_NUMBERS_REPRODUCED         = NO
+  HISTORICAL_NUMBERS_EXPLAINED          = PARTIAL
+      * the SPREAD is explained (rule blindness + tree drift)
+      * the individual VALUES 417 and 426 remain unattributed
+  ROOT_CAUSE_OF_IRREPRODUCIBILITY       = census artifacts record no commit
+      STUB_HEADER_REPORT_UNTRACKED      = 1  (source of the most-quoted 424)
+
+  GLOBAL_ZERO_IMPACT_CLAIM             = NOT PROVEN, AND NOT PROVABLE FROM THESE
+                                          ARTIFACTS. A statement of the form
+                                          "comment-only stubs are link-neutral and
+                                          zero-impact" is a claim about a
+                                          population defined by a rule that sees
+                                          59% of it. Retract it as unscoped and
+                                          re-derive it under R4 if it is wanted.
+
+  NEXT MEASURE, and it is a small one: record GIT_COMMIT in every census
+  artifact. Without it, every future disagreement about stub counts will be
+  indistinguishable from ordinary tree drift, and will be argued instead of
+  derived.

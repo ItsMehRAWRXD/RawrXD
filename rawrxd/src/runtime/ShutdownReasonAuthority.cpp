@@ -1,6 +1,6 @@
 // ShutdownReasonAuthority.cpp — RAWRXD_SHUTDOWN_REASON_AUTHORITY_001
 #include "ShutdownReasonAuthority.h"
-#include "../ReceiptAuthority.h"
+#include "../deep2/ReceiptAuthority.h"
 #include <atomic>
 namespace rawrxd { namespace shutdown {
 static std::atomic<Reason> g_reason{Reason::Unknown};
