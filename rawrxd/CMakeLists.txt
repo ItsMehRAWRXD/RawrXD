@@ -238,6 +238,33 @@ endif()
 if(NOT DEFINED RAWRXD_CERT_EMPTY_NAMES)
     set(RAWRXD_CERT_EMPTY_NAMES "")
 endif()
+# RAWRXD_DECLARED_UNIMPLEMENTED_001: load the declaration of known-empty
+# translation units once. An empty-bodied source that is not on this list is a
+# hard configure error; one that is on it is a KNOWN gap, reported as STATUS
+# rather than silently tolerated. Loading it here (not inside the filter) keeps
+# it out of the per-list hot path.
+if(NOT DEFINED RAWRXD_KNOWN_EMPTY_SOURCES)
+    set(RAWRXD_KNOWN_EMPTY_SOURCES "")
+    set(RAWRXD_RECORDED_EMPTY_COUNT 0 CACHE INTERNAL "declared-unimplemented running total")
+    set(_rawrxd_known_file "${CMAKE_CURRENT_SOURCE_DIR}/cmake/known_empty_sources.txt")
+    if(EXISTS "${_rawrxd_known_file}")
+        file(STRINGS "${_rawrxd_known_file}" _rawrxd_known_lines)
+        foreach(_line IN LISTS _rawrxd_known_lines)
+            string(STRIP "${_line}" _line)
+            if(NOT _line STREQUAL "" AND NOT _line MATCHES "^#")
+                list(APPEND RAWRXD_KNOWN_EMPTY_SOURCES "${_line}")
+            endif()
+        endforeach()
+    else()
+        message(WARNING
+            "[declared_unimplemented] cmake/known_empty_sources.txt is absent. Every empty-bodied\n"
+            "source is therefore UNDECLARED and fatal. Generate it with:\n"
+            "  cmake -DRAWRXD_RECORD_EMPTY_SOURCES=ON ...")
+    endif()
+    list(LENGTH RAWRXD_KNOWN_EMPTY_SOURCES _rawrxd_known_n)
+    message(STATUS
+        "[declared_unimplemented] loaded ${_rawrxd_known_n} declared-unimplemented source(s)")
+endif()
 # This function used to drop every missing path with only a message(WARNING).
 # Applied to WIN32IDE_SOURCES it silently discarded ~225 referenced
 # src/win32app/*.cpp files that do not exist, and the IDE target then configured
@@ -262,6 +289,18 @@ function(rawrxd_filter_missing_sources list_var)
     # abort configuration outright. Initialise it before use.
     if(NOT DEFINED RAWRXD_DROPPED_SOURCE_COUNT)
         set(RAWRXD_DROPPED_SOURCE_COUNT 0)
+    endif()
+    # RAWRXD_UNINITIALISED_ACCUMULATOR_001
+    # Same defect the comment above documents for RAWRXD_DROPPED_SOURCE_COUNT,
+    # in a second variable that was missed. Line 400 accumulated into
+    # RAWRXD_EMPTY_BODIED_SOURCE_TOTAL with no initialiser anywhere in the file,
+    # so `${RAWRXD_EMPTY_BODIED_SOURCE_TOTAL}` expanded to "" and the expression
+    # became " + N", which CMake's math parser rejects. It aborts configuration
+    # the moment `_emptybodied > 0` on a non-release configure -- which is
+    # precisely the case this gate exists to report. A gate that crashes the
+    # configure while reporting an uninitialised variable reports nothing.
+    if(NOT DEFINED RAWRXD_EMPTY_BODIED_SOURCE_TOTAL)
+        set(RAWRXD_EMPTY_BODIED_SOURCE_TOTAL 0)
     endif()
     foreach(_src IN LISTS ${list_var})
         if(IS_ABSOLUTE "${_src}")
@@ -380,10 +419,68 @@ function(rawrxd_filter_missing_sources list_var)
     # without containing a certification.
     if(_emptybodied GREATER 0)
         string(REPLACE ";" " " _eb_list "${_emptybodied_names}")
-        # RAWRXD_RELEASE_CERT_SOURCE_CLOSURE_001: in a release/certification build
-        # an empty-bodied TU is fatal, not a warning. It exists, it links, and it
-        # contains no code, so a green build and a passing link would both be
-        # worthless as evidence about it.
+        # RAWRXD_DECLARED_UNIMPLEMENTED_001
+        #
+        # An empty-bodied TU used to produce a WARNING, which is the mechanism
+        # behind every ghost artifact in this project: the build graph declared
+        # sources that contain no code, configuration succeeded, a target built,
+        # linked and ran, and a receipt described a system whose implementations
+        # were not present. Four independent ghosts were traced to this.
+        #
+        # A blanket FATAL_ERROR is not the fix. Measured on f66d63e05,
+        # RAWR_ENGINE_SOURCES alone declares 54 empty-bodied TUs -- the
+        # predictive-memory set (ResidencyTracker, WorkingSetPredictor,
+        # PredictiveMemoryManager, TensorPlacementManager, CapacityManager),
+        # quantum_*, validation/fault_injection/* and others. Failing on those
+        # unconditionally blocks all work on the tree while fixing nothing.
+        #
+        # So the class is DECLARED rather than tolerated. Each known-empty path is
+        # recorded in cmake/known_empty_sources.txt. An empty-bodied source that
+        # is NOT on that list is a REGRESSION -- a file that had code and no
+        # longer does, exactly like src/deep2/GGUFLoader.cpp reduced to a
+        # 35-byte stub -- and is fatal on every configure.
+        #
+        # RAWRXD_RELEASE_CERT_BUILD still fails on ALL empty-bodied sources,
+        # declared or not, because a certification must not contain stubs.
+        set(_known_file "${CMAKE_CURRENT_SOURCE_DIR}/cmake/known_empty_sources.txt")
+        set(_unlisted "")
+        foreach(_eb IN LISTS _emptybodied_names)
+            string(REGEX REPLACE "\\(trivial main\\)$" "" _eb_path "${_eb}")
+            list(FIND RAWRXD_KNOWN_EMPTY_SOURCES "${_eb_path}" _known_idx)
+            if(_known_idx EQUAL -1)
+                list(APPEND _unlisted "${_eb_path}")
+            endif()
+        endforeach()
+        list(LENGTH _unlisted _unlisted_n)
+
+        if(RAWRXD_RECORD_EMPTY_SOURCES)
+            # Accumulate across every filtered list and write ONCE at the end of
+            # configuration. An earlier revision wrote here, and because
+            # file(WRITE) truncates, each of the three filter calls overwrote the
+            # previous one and only the last list survived -- producing a
+            # declaration that silently described 22 of the 125 empty sources.
+            # A declaration that under-reports is worse than none: it converts a
+            # known gap back into an invisible one.
+            foreach(_eb2 IN LISTS _emptybodied_names)
+                string(REGEX REPLACE "\\(trivial main\\)$" "" _eb2 "${_eb2}")
+                set_property(GLOBAL APPEND PROPERTY RAWRXD_RECORDED_EMPTY "${_eb2}")
+            endforeach()
+            get_property(_rec_l GLOBAL PROPERTY RAWRXD_RECORDED_EMPTY)
+            list(LENGTH _rec_l _rec_n)
+            message(STATUS
+                "[declared_unimplemented] accumulated ${_emptybodied} (running total: ${_rec_n})")
+        elseif(_unlisted_n GREATER 0 AND NOT RAWRXD_STRICT_EMPTY_SOURCES)
+            string(REPLACE ";" " " _unlisted_list "${_unlisted}")
+            message(FATAL_ERROR
+                "[declared_unimplemented] ${list_var}: ${_unlisted_n} EMPTY-BODIED source(s) "
+                "are NOT on the declared-unimplemented list:\n"
+                "  ${_unlisted_list}\n"
+                "A source that used to contain code and now does not is a regression, not a\n"
+                "stub. Restore it, or -- if it was never implemented -- record it with:\n"
+                "  cmake -DRAWRXD_RECORD_EMPTY_SOURCES=ON ...\n"
+                "See cmake/known_empty_sources.txt and receipts/RAWRXD_STUB_CERTIFICATION_SURFACE_001.md")
+        endif()
+
         if(RAWRXD_RELEASE_CERT_BUILD)
             message(FATAL_ERROR
                 "[release_cert_source_closure] ${list_var}: ${_emptybodied} declared source(s) are "
@@ -392,11 +489,19 @@ function(rawrxd_filter_missing_sources list_var)
                 "RAWRXD_RELEASE_CERT_BUILD=ON: refusing to certify a build whose declared sources "
                 "contain no code. Either implement the file or remove the entry from the list.")
         endif()
-        message(WARNING
-            "[rawrxd_stub_gate] ${list_var}: ${_emptybodied} translation unit(s) "
-            "are EMPTY-BODIED (no code after stripping comments):\n  ${_eb_list}\n"
-            "  An empty TU provides no main() and cannot link, and cannot certify\n"
-            "  anything if it did. See receipts/RAWRXD_STUB_CERTIFICATION_SURFACE_001.md")
+        if(_unlisted_n GREATER 0)
+            # Only reachable when the strict check above was bypassed by an
+            # explicit -DRAWRXD_STRICT_EMPTY_SOURCES=ON, which is how the gate is
+            # proven able to fail.
+            message(WARNING
+                "[declared_unimplemented] ${list_var}: ${_unlisted_n} unlisted EMPTY-BODIED "
+                "source(s) allowed only because RAWRXD_STRICT_EMPTY_SOURCES=ON:\n"
+                "  ${_unlisted_list}")
+        else()
+            message(STATUS
+                "[declared_unimplemented] ${list_var}: ${_emptybodied} EMPTY-BODIED source(s), "
+                "all declared in cmake/known_empty_sources.txt")
+        endif()
         math(EXPR RAWRXD_EMPTY_BODIED_SOURCE_TOTAL
              "${RAWRXD_EMPTY_BODIED_SOURCE_TOTAL} + ${_emptybodied}")
     endif()
@@ -7112,7 +7217,22 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2Integration.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2LocalServer.cpp
          src/deep2/Deep2Server_Minimal.cpp
-         src/deep2/Deep2Server_Sovereign.cpp
+           # RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: src/deep2/Deep2Server_Sovereign.cpp
+           # is NOT appended here. It was appended and then immediately stripped by
+           # the list(REMOVE_ITEM) block below, so it reached no target while the source
+           # list still advertised it. Measured, not assumed:
+           #   - git log --follow over every commit touching the file: 7 revisions,
+           #     every one a single "// STUB: ..." line. It has NEVER had an
+           #     implementation, so there is no lost work to restore.
+           #   - no header exists, so it can declare no API.
+           #   - zero callers, zero #include sites, zero symbol references.
+           #   - no design doc, client, port assignment, or interface contract names a
+           #     "Sovereign Deep2 server"; sovereign_interface_contract.h is a ring
+           #     attention contract, not a server.
+           # The genuine OpenAI/Ollama-compatible Deep2 server is the rawr-server
+           # target (deep2_openai_server.cpp, port 11435), which is real and links.
+           # Inventing a Sovereign server here would fabricate a product with no
+           # consumer in order to have something to certify.
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/Deep2APIServer.cpp
         # AUTO-REMOVED: stub file
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/GGUFDiagnostics.cpp
@@ -7126,7 +7246,21 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/MultiGPU/MultiGPUScheduler.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/MultiGPU/VRAMAllocator.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/production/Deep2ProductionRuntime.cpp
-         src/deep2/dump_tensors.cpp
+         # RAWRXD_PHANTOM_COHORT_TRIAGE_001: src/deep2/dump_tensors.cpp
+           # is NOT appended here. It was appended and then stripped by the
+           # list(REMOVE_ITEM) block below, so it reached no target while this
+           # source list still advertised it.
+           # Ladder evaluation, all gates cleared:
+           #   LIVE_CONSUMERS=0  CURRENT_BODY_CLASS=PURE_STUB  HEADER_EXISTS=NO
+           #   RENAME_GUARD_COMPLETED=YES  ROUND2_TWIN_CHECK_RELIABLE=YES
+           #   HISTORY_CONFIDENCE=PROVEN_ABSENT  LIVE_TWIN_RICHER=0
+           #   HISTORY_REAL_CONTENT=0  INTENTIONAL_PLACEHOLDER=0
+           #   TWINS_WITH_REAL_CODE=0 -- 6 locations searched repo-wide, all
+           #   byte-identical 1-line stubs (rawrxd copy, _n2_stage, 3 worktrees)
+           #   SHA256_STUB=F8A1D62B...CB42
+           # Cohort escape that shaped this rule: src/deep2/deep2_end_to_end_bench.cpp
+           # sits in the SAME block and is 411 lines of REAL code. CMAKE_PATTERN=PHANTOM
+           # is not evidence of PURE_STUB; the body was read first.
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/deep2/deep2_http_gateway.cpp
          src/deep2/Deep2Engine_KernelTest.cpp
          src/deep2/moe_microbench.cpp
@@ -7271,12 +7405,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(REMOVE_ITEM WIN32IDE_SOURCES
          src/deep2/TheDualityExample.cpp
          src/deep2/Deep2Server_Minimal.cpp
-         src/deep2/Deep2Server_Sovereign.cpp
+        # RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: the matching
+        # src/deep2/Deep2Server_Sovereign.cpp entry was removed from this
+        # REMOVE_ITEM list because it is no longer appended above. Leaving it here
+        # would strip a name the list never contained.
         # AUTO-REMOVED: stub file
          src/deep2/GGUFVerifier.cpp
          src/deep2/GGUFLoader_Fixed.cpp
         # keep MASMKernelStubs.cpp +�-�+�-�+�-� provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
-         src/deep2/dump_tensors.cpp
          src/deep2/Deep2Engine_KernelTest.cpp
          src/deep2/moe_microbench.cpp
          src/deep2/moe_simple_bench.cpp
@@ -18728,3 +18864,26 @@ set_target_properties(deep2_streamer_parity PROPERTIES
 
 message(STATUS "[Deep2Streamer] cert target: deep2_streamer_cert")
 message(STATUS "[Deep2Streamer] parity target: deep2_streamer_parity")
+
+# RAWRXD_DECLARED_UNIMPLEMENTED_001: emit the declaration exactly once, after
+# every rawrxd_filter_missing_sources call has contributed to it.
+if(RAWRXD_RECORD_EMPTY_SOURCES)
+    get_property(_recorded GLOBAL PROPERTY RAWRXD_RECORDED_EMPTY)
+    list(REMOVE_DUPLICATES _recorded)
+    list(LENGTH _recorded _final_rec_n)
+    if(_final_rec_n GREATER 0)
+        list(SORT _recorded)
+        string(REPLACE ";" "\n" _recorded_text "${_recorded}")
+        file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/known_empty_sources.txt"
+             "# RAWRXD_DECLARED_UNIMPLEMENTED_SOURCES\n"
+             "# Generated by -DRAWRXD_RECORD_EMPTY_SOURCES=ON. One declared-but-\n"
+             "# unimplemented translation unit per line, exactly as CMake classified it.\n"
+             "# An empty-bodied source NOT listed here is a HARD configure error, so\n"
+             "# stubbing out a file that used to have code can never be silent again.\n"
+             "# Regenerate deliberately; never hand-edit.\n"
+             "${_recorded_text}\n")
+        message(STATUS
+            "[declared_unimplemented] wrote ${_final_rec_n} declared-unimplemented source(s) "
+            "to cmake/known_empty_sources.txt")
+    endif()
+endif()

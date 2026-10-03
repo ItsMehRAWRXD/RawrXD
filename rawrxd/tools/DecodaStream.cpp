@@ -40,7 +40,14 @@ int main(int argc, char** argv) {
     std::printf("mapped in %.3f s (no whole-file copy)  tensors=%zu\n", mapS, names.size());
 
     auto& reg = Deep2::QuantKernelRegistry::Instance();
-    reg.RegisterBuiltins();
+    // FIX_CLASS=HOST_ISA_GEMV_SELECTION
+    // Initialize() is ProbeCPU() + RegisterBuiltins(). Calling RegisterBuiltins()
+    // directly skips ProbeCPU(), so cpu_.avx512f / cpu_.avx2 stay false and every
+    // `if (hasAVX512) ... else ...` in RegisterBuiltins selects the scalar GEMV
+    // regardless of the actual host ISA.
+    // NOT_EXPECTED_EFFECT = Q4_K_DEQUANT_REGISTRATION: every RegisterDequant call
+    // is unconditional, so this cannot change whether type 12 resolves.
+    reg.Initialize();
 
     // Round each slice's element count up to a whole quant block, then treat it
     // as a single-column-per-row tensor whose row count fits Decoda's encoder.

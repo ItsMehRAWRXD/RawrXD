@@ -1,0 +1,112 @@
+############################################################
+# RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001 - regression validator
+# run: Fri 10/02/2026 19:51:14.86
+############################################################
+VCVARS_OK=1
+
+=== STEP1_FRESH_CONFIGURE ===
+CONFIGURE_EXIT=0
+CONFIGURE_TAIL_BEGIN
+  measurement real.
+
+
+-- RAWRXD_P1_REFACTOR_CHAIN_001: CONFIGURED (library rawrxd_refactor_chain, driver refactor_chain_cert)
+-- [release_cert_source_closure] mode=0 dropped=0 empty_bodied=0 verdict=NOT_A_CERT_BUILD
+-- [release_cert_source_closure] summary -> F:/~dev/build_tombstone_val/release_cert_source_closure.txt
+-- [ModelToolProtocol] cert target: model_tool_protocol_cert
+-- [Deep2Streamer] cert target: deep2_streamer_cert
+-- [Deep2Streamer] parity target: deep2_streamer_parity
+-- Configuring done (3.7s)
+-- Generating done (0.4s)
+-- Build files have been written to: F:/~dev/build_tombstone_val
+CONFIGURE_TAIL_END
+
+=== STEP2_BUILD_RAWR_SERVER ===
+BUILD_EXIT=-1
+BUILD_LOG_TAIL_BEGIN
+-- RAWRXD_P1_REFACTOR_CHAIN_001: CONFIGURED (library rawrxd_refactor_chain, driver refactor_chain_cert)
+-- [release_cert_source_closure] mode=0 dropped=0 empty_bodied=0 verdict=NOT_A_CERT_BUILD
+-- [release_cert_source_closure] summary -> F:/~dev/build_rawr_ninja/release_cert_source_closure.txt
+-- [ModelToolProtocol] cert target: model_tool_protocol_cert
+-- [Deep2Streamer] cert target: deep2_streamer_cert
+-- [Deep2Streamer] parity target: deep2_streamer_parity
+-- Configuring done (4.0s)
+-- Generating done (0.4s)
+-- Build files have been written to: F:/~dev/build_rawr_ninja
+[0/4] Re-checking globbed directories...
+[1/10] Building CXX object CMakeFiles\rawr-server.dir\src\agentic\AgentToolRegistry.cpp.obj
+[2/10] Building CXX object CMakeFiles\rawr-server.dir\src\agentic\CheckpointRollbackAuthority.cpp.obj
+[3/10] Building CXX object CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthorityTools.cpp.obj
+F:\~dev\rawrxd\src\agentic\GitSafetyAuthorityTools.cpp(266): warning C4189: 'mutatingMask': local variable is initialized but not referenced
+[4/10] Building CXX object CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server_main.cpp.obj
+F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1412): warning C4240: nonstandard extension used: access to 'Deep2::Deep2Engine::GpuForwardReceipt' now defined to be 'private', previously it was defined to be 'public'
+F:\~dev\rawrxd\src\deep2\Deep2Engine.h(671): note: see declaration of 'Deep2::Deep2Engine::GpuForwardReceipt'
+[5/10] Building CXX object CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthority.cpp.obj
+F:\~dev\rawrxd\src\agentic\GitSafetyAuthority.cpp(161): warning C4305: 'argument': truncation from 'int' to 'const _Elem'
+        with
+        [
+            _Elem=char
+        ]
+F:\~dev\rawrxd\src\agentic\GitSafetyAuthority.cpp(161): warning C4309: 'argument': truncation of constant value
+[6/10] Building CXX object CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server.cpp.obj
+F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1412): warning C4240: nonstandard extension used: access to 'Deep2::Deep2Engine::GpuForwardReceipt' now defined to be 'private', previously it was defined to be 'public'
+F:\~dev\rawrxd\src\deep2\Deep2Engine.h(671): note: see declaration of 'Deep2::Deep2Engine::GpuForwardReceipt'
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(635): warning C4100: 'tokenId': unreferenced parameter
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(693): warning C4100: 'tokenId': unreferenced parameter
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(66): warning C4505: 'Deep2::escapeJsonString': unreferenced function with internal linkage has been removed
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(144): warning C4505: 'Deep2::getHeader': unreferenced function with internal linkage has been removed
+[7/10] Linking CXX executable bin\rawr-server.exe
+FAILED: [code=4294967295] bin/rawr-server.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\rawr-server.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server_main.cpp.obj CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\AgentToolRegistry.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\CheckpointRollbackAuthority.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthority.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthorityTools.cpp.obj  /out:bin\rawr-server.exe /implib:rawr-server.lib /pdb:bin\rawr-server.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\x64   -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64 InferenceEngine.lib  dxgi.lib  F:\~dev\rawrxd\src\deep2\ResidencyTrace.obj  F:\~dev\rawrxd\src\deep2\QuantKB.obj  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  advapi32.lib  crypt32.lib  pdh.lib  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  advapi32.lib  crypt32.lib  pdh.lib  dxgi.lib  rawrxd_remote64.lib  kernel32.lib  user32.lib  gdi32.lib  ws2_32.lib  bcrypt.lib  ntdll.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server_main.cpp.obj CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\AgentToolRegistry.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\CheckpointRollbackAuthority.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthority.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthorityTools.cpp.obj /out:bin\rawr-server.exe /implib:rawr-server.lib /pdb:bin\rawr-server.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\x64 -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\onecore\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\ucrt\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\um\x64 -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64 InferenceEngine.lib dxgi.lib F:\~dev\rawrxd\src\deep2\ResidencyTrace.obj F:\~dev\rawrxd\src\deep2\QuantKB.obj C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib shlwapi.lib psapi.lib dbghelp.lib winhttp.lib advapi32.lib crypt32.lib pdh.lib C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib shlwapi.lib psapi.lib dbghelp.lib winhttp.lib advapi32.lib crypt32.lib pdh.lib dxgi.lib rawrxd_remote64.lib kernel32.lib user32.lib gdi32.lib ws2_32.lib bcrypt.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+InferenceEngine.lib(Deep2Engine.cpp.obj) : error LNK2019: unresolved external symbol "bool __cdecl Deep2::Wire::WireRecordDispatch(struct Deep2::Wire::DispatchDecision const &)" (?WireRecordDispatch@Wire@Deep2@@YA_NAEBUDispatchDecision@12@@Z) referenced in function "public: struct Deep2::Deep2Engine::ForwardResult __cdecl Deep2::Deep2Engine::forwardTokenAllLayers(float *,unsigned __int64)" (?forwardTokenAllLayers@Deep2Engine@Deep2@@QEAA?AUForwardResult@12@PEAM_K@Z)
+
+bin\rawr-server.exe : fatal error LNK1120: 1 unresolved externals
+
+ninja: build stopped: subcommand failed.
+BUILD_LOG_TAIL_END
+
+=== STEP3_ARTIFACT ===
+SERVER_EXE_MISSING=1
+
+=== STEP4_STALE_SERVERS_BEFORE ===
+INFO: No tasks are running which match the specified criteria.
+
+=== STEP5_START_SERVER_PORT_21500 ===
+SERVER_LAUNCHED=1
+SERVER_NEVER_BECAME_READY
+SERVER_LOG_TAIL_BEGIN
+The system cannot find the file F:\~dev\build_rawr_ninja\bin\rawr-server.exe.
+SERVER_LOG_TAIL_END
+
+=== STEP6_FALSIFICATION_DEAD_PORT ===
+curl: (7) Failed to connect to 127.0.0.1:21999 after 2027 ms: Could not connect to server
+DEADPORT_HTTP=000" DEADPORT_CURL_EXIT=7"
+
+=== STEP7_FALSIFICATION_BAD_MODEL ===
+BADMODEL_HEALTH_HTTP=000
+
+BADMODEL_LOG_TAIL_BEGIN
+The system cannot find the file F:\~dev\build_rawr_ninja\bin\rawr-server.exe.
+BADMODEL_LOG_TAIL_END
+
+=== STEP8_KILL_ALL_RAWR_SERVER ===
+ERROR: The process "rawr-server.exe" not found.
+
+=== STEP9_SOURCE_VERIFICATION ===
+--- git status of the two touched paths ---
+ M rawrxd/CMakeLists.txt
+ M rawrxd/src/deep2/Deep2Server_Sovereign.cpp
+--- every remaining Deep2Server_Sovereign mention in CMakeLists (expect comments only) ---
+7220:           # RAWRXD_DEEP2_SOVEREIGN_TOMBSTONE_001: src/deep2/Deep2Server_Sovereign.cpp
+7395:        # src/deep2/Deep2Server_Sovereign.cpp entry was removed from this
+--- bare source-list entries (expect none) ---
+BARE_SOURCE_ENTRY_COUNT_DONE
+--- STUB marker count in the retired file (expect 0) ---
+STUB_MARKER_SCAN_DONE
+--- non-comment, non-blank lines in the retired file (expect 0) ---
+CODE_LINE_SCAN_DONE
+
+############################################################
+# VALIDATOR_DONE
+############################################################

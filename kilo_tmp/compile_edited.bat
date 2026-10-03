@@ -1,0 +1,2 @@
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+cl /nologo /c /O2 /arch:AVX512 /EHsc /W4 /std:c++20 /DRAW_HAS_VULKAN=1 /DWIN32_LEAN_AND_MEAN /DNOMINMAX /I F:\~dev\rawrxd\src /I F:\~dev\rawrxd\src\deep2 /I F:\~dev\rawrxd\src\core /I F:\~dev\rawrxd\include /I F:\~dev\rawrxd\src\inference /I F:\~dev\rawrxd\src\engine /I F:\~dev\rawrxd\src\tokenizer /I C:\VulkanSDK\1.4.357.0\Include F:\~dev\rawrxd\src\deep2\deep2_streamer_cert.cpp /Fo:F:\~dev\kilo_tmp\deep2_streamer_cert_edited.obj 2>&1

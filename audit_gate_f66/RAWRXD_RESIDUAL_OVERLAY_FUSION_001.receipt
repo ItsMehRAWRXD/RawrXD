@@ -1,0 +1,142 @@
+RAWRXD_RESIDUAL_OVERLAY_FUSION_001
+====================================
+MEASURED. NOT A SPECIFICATION.
+
+SOURCE_IDENTITY_RUN   = rawrxd/tools/residual_overlay_fusion_001.cpp
+SOURCE_SHA256_RUN     = 1BE659F74E5B84F07E6BB48AF71E13FC13CEBA972BCADDD6EF7B3B8FE6686DB4
+SOURCE_SIZE           = 17727
+EXE_SHA256            = E343AAB14391BBFF2287FF060198C1EF795EA7F69327CBE1F0CF093AA5DA2D6A
+BUILD_GRAPH           = tracked target `residual_overlay_fusion_001` (root CMakeLists.txt)
+ENGINE_LINKAGE        = NONE  (deliberate: no working GPU forward lane to attach to)
+VERDICT               = PASS
+EXIT_CODE             = 0
+
+PROVENANCE NOTE
+  The source is UNTRACKED and was written by another lane. It was also being
+  edited concurrently: an intermediate state (16,600 B, SHA 7FE88530...)
+  compiled and produced the identical numbers, and a later state referenced
+  `kTernaryThreshold` before its definition was added, which fails to compile.
+  The figures below reproduced EXACTLY across that edit, which is itself
+  evidence the measurement is not an artifact of one revision.
+  This file was NOT modified by this lane. Ownership stays with its author.
+
+
+----------------------------------------------------------------------------
+1. WHAT IS PROVEN
+----------------------------------------------------------------------------
+FUSION_SEMANTICS_VERIFIED=1
+
+  BASE_EXECUTED_ALL_MODES     = 1     base path is mandatory in all four modes
+  CRASH_FREE_ALL_MODES        = 1     no fault, no non-finite output
+  MODE_A_BASE_EXECUTED        = 1
+  MODE_B_RESIDUAL_APPLIED     = 1
+  MODE_C_RESIDUAL_APPLIED     = 0     missing residual -> skip, not fatal
+  MODE_D_RESIDUAL_APPLIED     = 0     deadline miss  -> skip, not fatal
+  MODE_D_DEADLINE_MISS_RECORDED = 1   the miss is RECORDED, not merely survived
+  BASE_ONLY_FINITE            = 1
+
+  Resident residual matches the full-precision reference:
+    REFERENCE_MATCH_REL_L2     = 4.197e-07
+    REFERENCE_MATCH_MAX_ABS    = 2.289e-05
+
+  Residual liveness probe (blocks the vacuous-pass shape where the residual
+  branch never contributes and "matches reference" is measured over nothing):
+    RESIDENT_RESIDUAL_OUTPUT_DIFFERS_FROM_BASE_ONLY = 1
+    RESIDUAL_DELTA_REL_L2                            = 0.508673
+    RESIDUAL_PATH_CONTRIBUTES                        = 1
+
+  Shape guards:
+    VECTOR_X_SIZE_CHECK  = 1   (256/256)   guards the initializer_list trap
+    VECTOR_DW_SIZE_CHECK = 1   (16384/16384) which compiles and silently
+                                             produces a wrong-shaped vector
+
+  TAUTOLOGIES, REPORTED NOT SCORED:
+    MODE_C_EQUALS_MODE_A = 1_TAUTOLOGY_NO_WEIGHT
+    MODE_D_EQUALS_MODE_A = 1_TAUTOLOGY_NO_WEIGHT
+  Correct labelling: the kernel is `if (resident && data && !missed) apply; else
+  skip`, so base-only and missing-residual output are EQUAL BY CONSTRUCTION.
+  Scoring them would be self-certifying. Only CRASH_FREE carries weight there.
+
+  Near-tautology, declared by the author: MODE_B's match follows from linearity
+  (y=(Wb+dW)x == Wb*x + dW*x exactly). It tests that the residual was APPLIED
+  and that index mapping is not transposed. Worth having; does not test the idea.
+
+
+----------------------------------------------------------------------------
+2. WHAT IS REFUTED -- THE DECISIVE MEASUREMENTS
+----------------------------------------------------------------------------
+BASE_ONLY_REL_L2        = 0.734019
+DELTA_MAGNITUDE_RATIO   = 0.786882
+BASE_OVERHEAD_BYTES_PER_ELEMENT = 1.1250
+ARCHITECTURE_ECONOMICS_ESTABLISHED = 0
+
+The ternary base is 73% wrong, and the delta needed to repair it carries 78.7%
+of the original weight's L1 magnitude. The delta is not a small correction.
+
+Byte accounting (elements = 64 x 256 = 16384, measured):
+
+  ORIGINAL_FP32_BYTES   = 65536   4.000 B/elem   32.0 bits/elem
+  BASE_BYTES            = 18432   1.125 B/elem    9.0 bits/elem
+  RESIDUAL_FP32_BYTES   = 65536   4.000 B/elem
+  COMBINED              = 83968   = 1.281x the ORIGINAL
+
+  => At full-precision residual the decomposition is LARGER than simply
+     storing the weights. It relabels bytes; it does not save them.
+
+  If the residual were FP16:
+  BASE + FP16_RESIDUAL  = 51200   = 0.781x original   (22% saving)
+  If the residual were Q8:
+  BASE + Q8_RESIDUAL    = 34816   = 0.531x original   (47% saving)
+
+  And all of that buys a base with rel_L2 = 0.734, which is unusable.
+
+LABEL DEFECT, MEASURED NOT ASSUMED
+  The receipt prints BASE_QUANT_BITS=1.5. The MEASURED cost is 9.0 bits/element:
+  int8 ternary is 8 bits, plus one fp32 group scale per 32 elements is 1 bit.
+  The nominal label is not the cost. The file is honest about this -- it also
+  prints BASE_OVERHEAD_BYTES_PER_ELEMENT=1.1250 -- but a reader scanning only
+  the nominal field would be misled by 6x.
+
+THE CONDITION FOR THE OVERLAY TO WIN
+  Break-even requires DELTA_MAGNITUDE_RATIO small enough that
+  BASE_BYTES + residual_bytes < original_bytes. At ratio 0.787 that never
+  happens at fp16 or better. The base must improve until the delta is genuinely
+  sparse -- which is Q4_K-class accuracy (rel_L2 ~0.02-0.05), and a Q4_K base
+  already costs ~4.5 bits/element. At that point the base is not the cheap thing
+  and the overlay is not what is saving the bytes; the quantizer is.
+
+  So the open question is real and now MEASURABLE: is there a base that is both
+  cheap enough and accurate enough to sit under the break-even ratio? This
+  harness is the instrument to search that space -- and it is the first thing in
+  this project able to answer it without a GPU.
+
+
+----------------------------------------------------------------------------
+3. WHAT WAS NOT ATTEMPTED
+----------------------------------------------------------------------------
+  No engine linkage, no Vulkan, no Direct I/O, no residency, no I/O deadline.
+  DEADLINE_MISSED is a boolean supplied by the caller. Nothing here demonstrates
+  that a deadline can actually be missed under load, which is the property the
+  architecture depends on in the adversarial-routing worst case.
+
+  No measurement of whether the delta is COMPRESSIBLE. DELTA_MAGNITUDE_RATIO is
+  an L1 magnitude ratio, not an entropy figure. A delta with 0.787 magnitude
+  ratio could still be low-entropy (sparse, low-rank, clustered) and therefore
+  cheap. This harness cannot distinguish those cases and must not be cited as
+  if it did. That is the single most important limitation of this receipt.
+
+  Not connected to the layer-0 authority or the inference wire. No packet is
+  emitted, so the overlay's behaviour is not on the wire yet.
+
+
+----------------------------------------------------------------------------
+VERDICT
+  FUSION_SEMANTICS              = PROVEN
+  BOUNDED_DEGRADATION           = PROVEN (base mandatory, miss non-fatal, recorded)
+  RESIDUAL_LIVENESS             = PROVEN (not vacuous)
+  ECONOMICS_AT_1.5_BIT_TERNARY  = REFUTED  (1.281x original at fp32 residual)
+  ECONOMICS_GENERALLY           = NOT ESTABLISHED
+  DELTA_COMPRESSIBILITY         = UNMEASURED  <-- the open question
+  NEXT_MEASURE                  = entropy / sparsity of dW per group, which
+                                  decides whether RESIDUAL_FORMAT=low_rank_delta
+                                  or sparse_delta is real or aspirational

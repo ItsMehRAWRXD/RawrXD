@@ -1,0 +1,261 @@
+ninja: Entering directory `F:\~dev\build_rawr_ninja'
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- [Vulkan] Common SDK: C:/VulkanSDK/1.4.357.0
+-- [declared_unimplemented] loaded 56 declared-unimplemented source(s)
+-- VAL-051.2.A: Real Token Proof Harness configured
+-- G3_K3C_E2E_REAL_001: smoke_k3c_e2e configured
+-- P1: CPUInferenceEngine::LoadModel harness configured
+-- VAL-051.5: 32-Token KV Stability Gate configured
+-- VAL-051.6: 15-Token KV Stability Gate configured
+-- VAL-051.7: Residency Baseline / Fixture Gate configured
+-- RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured
+-- DEEP2_EXPERT_CONTROL_PLANE_CERT_001: harness configured
+-- RAWRXD_LOCAL_AGENT_FLEET_001: per-model fleet gate configured
+-- validate_val051_evidence: VAL-051.2.A evidence validator configured
+-- test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured
+-- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
+-- test_parseheader_fuzz: B32 deterministic fuzz matrix configured
+-- test_gguf_metadata_bounds: B33 metadata bounds gate configured
+-- test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured
+-- Dual GPU Smoke Test configured
+-- GGUF Inspector tool configured
+-- Comprehensive Dual GPU Test configured
+-- OMEGA-1 Bridge Test Harness configured
+-- K2 Router Injection Smoke Test configured
+-- Batch 15A GGUF Alignment Diagnostic configured
+-- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
+-- [Build Paths] MSVC CRT: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [Intent Guardrails] Configuring...
+-- [Intent Guardrails] Features:
+--   - Intent Guard: ON
+--   - Validation: ON
+--   - Transactions: ON
+--   - Capability Tokens: ON
+--   - Hotpatch Journal: ON
+--   - Patch Firewall: ON
+--   - Reflector Agent: ON
+--   - Atomic Activation: ON
+--   - First-Class Rollback: ON
+--   - Model Adapter: ON
+-- [Intent Guardrails] Added src/intent/intent_config.cpp to build
+-- [Intent Guardrails] Configuration complete
+-- MASM64 enabled: ASM kernels will be compiled
+-- [remote64] 64 MASM64 translation units
+-- [remote64] rawrxd_remote64 target defined
+-- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
+-- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
+-- +�-�+�-�+�-� RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- [RE] Deobfuscator MASM64 targets registered
+-- [RE] Model reverse pipeline MASM64 target registered
+-- [RE] NASM not found — Reverser compiler targets skipped
+-- [RE] Reverse Engineering Suite configured:
+--   C++ Library:       RawrXD-RE-Library (pe_tools/re_tools.cpp;disassembler.cpp;pe_analyzer.cpp;decompiler.cpp;binary_patcher.cpp;re_api_bridge.cpp;../compiler_backend/InstructionEncoderX64.cpp;../compiler_backend/RawrCOFFWriter.cpp;../compiler_backend/RawrPE64Linker.cpp)
+--   Headers:           4 HPP files (Codex, Compiler, DumpBin, ReverseEngine)
+--   Omega Suite:       19 ASM files across v3/v4/v5/v7 + src_variants
+--   Deobfuscator:      3 ASM files + 1 INC + build/test
+--   Reverser Compiler: 11 ASM + 6 tests + 1 .rev source
+--   PE Tools:          re_tools.cpp/h (PE analyzer + inline compiler)
+--   Model Reverse:     model-llm-harvester.asm
+--   Security Toolkit:  RawrXD_IDE_unified.asm
+--   RE Modules:        gpu_dma_complete_reverse_engineered.asm
+-- [declared_unimplemented] RAWR_ENGINE_SOURCES: 54 EMPTY-BODIED source(s), all declared in cmake/known_empty_sources.txt
+-- [declared_unimplemented] GOLD_UNDERSCORE_SOURCES: 49 EMPTY-BODIED source(s), all declared in cmake/known_empty_sources.txt
+-- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/requantize_q4km_to_q2k_avx512.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/gpu_requantize_rocm.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/swarm_tensor_stream.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_MonacoCore.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_PDBKernel.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_RouterBridge.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_GSIHash.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_RefProvider.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_StubDetector.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/rawrxd_cot_engine.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/rawrxd_cot_dll_entry.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/rawrxd_cot_phase39.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_LSP_SymbolIndex.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrCodex.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Debug_Engine.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_QuadBuffer_Streamer.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Swarm_Network.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_EnterpriseLicense.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_License_Shield.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_VulkanBridge.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_SocketResponder.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_TridentBeacon.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_TridentBeacon_GPU.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_AgenticOrchestrator.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_GGUF_Vulkan_Loader.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_LSP_AI_Bridge.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Streaming_QuadBuffer.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_SelfPatch_Engine.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/kernels/rdna3/RDNA3_Full_Test.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Camellia256.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Camellia256_Auth.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_KQuant_Kernel.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Watchdog.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_SelfHost_Engine.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_HardwareSynthesizer.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_MeshBrain.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Speciator.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_NeuralBridge.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_OmegaOrchestrator.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_PerfCounters.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Hotpatch_Kernel.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Snapshot.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_Pyre_Compute.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/RawrXD_CopilotGapCloser.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/asm/native_speed_kernels.asm
+-- [RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: F:/~dev/rawrxd/src/gpu_masm/deflate_brutal_masm.asm
+-- [NanoQuant] DISABLED +�-�+�-�+�-� enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix — Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [RawrXD] ✅ Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+-- [declared_unimplemented] INFERENCE_ENGINE_LIBRARY_SOURCES: 22 EMPTY-BODIED source(s), all declared in cmake/known_empty_sources.txt
+-- RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)
+-- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
+-- [Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle
+-- [Deep2] Embed parity test: test_embed_parity
+-- [Deep2] Generation quality differential gate: generation_quality_gate
+-- [Deep2] Tokenizer test: test_tokenizer
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_c1_c9: missing src/deep2/K2C1C9.cpp
+-- [Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL
+-- [Deep2] OpenAI-compatible server target: rawr-server (port 11435)
+-- [Agentic] Second agent stack QUARANTINED (RAWRXD_AGENTIC_CLI_QUARANTINE_001); canonical authority is src/rawr_agent.cpp -> rawr_monolith
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping Deep2_Gateway_Runtime_Certification: missing source files
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_benchmark: missing source files
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target k2_useful_tps_001: missing certs/k2_useful_tps_001.cpp
+-- [Deep2] Benchmark cert CLI: deep2_benchmark + k2_useful_tps_001 + mla_cert_001
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_product_lavapath: missing source files
+-- [Deep2] RAWRXD_BACKGROUND_TERMINALS kitchen-sink wired
+-- [Deep2] RAWRXD_REMAINING_STYLE_CLI wired
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping MASM: src/masm/rawr_product_x64.asm not found
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping MASM: src/masm/rawr_product_pipe_x64.asm not found
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_001: missing certs/rawrxd_product_layer_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_002: missing certs/rawrxd_product_layer_002.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_win32_editor_surface_001: missing certs/rawrxd_win32_editor_surface_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_rawr_pipe_001: missing certs/rawrxd_rawr_pipe_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_editor_agent_e2e_001: missing certs/rawrxd_editor_agent_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_ghost_bind_001: missing certs/rawrxd_product_ghost_bind_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_cancel_001: missing certs/rawrxd_autocomplete_cancel_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_installer_clean_machine_001: missing certs/rawrxd_installer_clean_machine_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_offline_demo_001: missing certs/rawrxd_offline_demo_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_repeatable_demo_record_001: missing certs/rawrxd_repeatable_demo_record_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_runtime_001: missing certs/rawrxd_product_runtime_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_local_api_compat_001: missing certs/rawrxd_local_api_compat_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_003: missing certs/rawrxd_product_layer_003.cpp
+-- [Deep2] RAWRXD_PRODUCT_LAYER wired
+-- [Interstellar] sources missing — skipping (BUILD_INTERSTELLAR gated)
+-- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
+-- [CI] RAWR_ASAN=OFF
+-- [Batch 1] Production benchmark target: RawrXD-ProductionBenchmark
+-- [Batch 1] Production cert test target: RawrXD-ProductionCertTest
+-- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
+-- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
+-- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
+-- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
+-- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
+-- [RAWRXD_B71_CMAKE_TARGET_CONSOLIDATION_001] `rawrxd` defined exactly once, here. Former duplicate is `rawrxd-cli-full`, built only when RAWRXD_BUILD_CLI=OFF. Do not add source fixes to that block.
+-- [SovereignRuntime] Vulkan SDK: C:/VulkanSDK/1.4.357.0
+-- [SovereignRuntime] rawrxd: Vulkan ENABLED (RAWRXD_NO_VULKAN not defined)
+-- [SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004
+-- [SovereignRuntime] rawrxd: manifest taken from src/res/Resource.rc (GenerateManifest=off)
+-- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
+-- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
+-- [ProductionRegimeSweep] target production_regime_sweep (build: cmake --build . --target production_regime_sweep)
+-- [Validation] RAWRXD_ENABLE_VALIDATION=ON +�-�+�-�+�-� runtime tensor dumping enabled
+-- [Test] Pure MASM inference test: TestMASMInference
+-- [VAL-Q4.0] Fused pipeline validation: test_q4_fused_pipeline
+-- [VAL-Q4.0] Cache alignment validation: test_q4_cache_alignment
+-- [VAL-Q4.0] ASM debug test: test_q4_asm_debug
+-- [VAL-Q4.0] AVX-512 kernel: q4_preprocessed_avx512
+-- [VAL-Q4.0] Scalar SIMD simulation: test_q4_scalar_simd
+-- ========================================
+-- Measurement Framework Tests
+-- ========================================
+--   [MEASURE] benchmark_dispatch_overhead - RDTSC dispatch latency
+--   [MEASURE] benchmark_planner_amortization - Break-even analysis
+--   [MEASURE] validate_end_to_end - Four independent gates
+--   [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a hashing
+--   [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring
+--   [MEASURE] benchmark_dispatch_pmc - PMC profiling
+-- ========================================
+-- certification_harness: Adversarial evidence-producing certification suite configured
+-- native_toolchain_cert: Native toolchain certification target configured
+-- server_generation_parity: PRODUCTION generateStream() driver CONFIGURED
+-- [Deep2] DEEP2 SSM numeric stage telemetry: OFF
+-- [Deep2] Model registry: QuantKernelRegistry.cpp compiled in for measured quant capability
+-- [Deep2] Model registry admission gate: deep2_model_registry_admission_test
+-- [Deep2] Loader admission probe: deep2_loader_admission_probe
+-- [Deep2] Canonical inference probe: deep2_canonical_inference_probe
+-- q4k_gemv_parity: SKIPPED (needs RAWR_ENABLE_VULKAN + built InferenceEngine.lib)
+-- inference_authority_ladder: canonical inference ladder + parity probe CONFIGURED
+-- q3k_block_diff: CONFIGURED
+-- prepared_cache_unit: CONFIGURED
+-- kquant_parity: CONFIGURED (AVX-512 Q4_K GEMV parity oracle)
+-- full_model_inference: CONFIGURED (real-model end-to-end gate)
+-- thread_geometry_probe: CONFIGURED
+-- rawrxd_repo_intel: CONFIGURED (RAWRXD_REPOSITORY_INTELLIGENCE_001)
+-- repo_intelligence_cert: CONFIGURED (repository intelligence receipt)
+-- semantic_code_intelligence_cert: CONFIGURED (query surface gate)
+-- RAWRXD_GIT_SAFETY_AUTHORITY_001: CONFIGURED (library rawrxd_git_safety, driver git_safety_authority_cert)
+-- RAWRXD_IDE_REQUIRED=1
+-- RAWRXD_IDE_TARGET_CONFIGURED=0
+-- RAWRXD_SOURCE_CENSUS_EXECUTED=0
+-- RAWRXD_IDE_BUILD_ATTEMPTED=not-observable-at-configure-time
+-- RAWRXD_IDE_BUILD_EXIT=not-observable-at-configure-time
+-- RAWRXD_DROPPED_SOURCE_TOTAL=0
+-- DROPPED_SOURCE_MEASUREMENT_VALID=0
+-- VERDICT=FAIL_IDE_NOT_BUILT
+CMake Warning at CMakeLists.txt:18603 (message):
+  VERDICT=FAIL_IDE_NOT_BUILT: RAWRXD_IDE_REQUIRED=1 but
+  RAWRXD_IDE_TARGET_CONFIGURED=0 and RAWRXD_SOURCE_CENSUS_EXECUTED=0.
+  RAWRXD_DROPPED_SOURCE_TOTAL=0 is a valid observation of a domain that was
+  NOT exercised, so DROPPED_SOURCE_MEASUREMENT_VALID=0 and source closure is
+  NOT established.  Re-configure with -DRAWRXD_BUILD_WIN32IDE=ON to make this
+  measurement real.
+
+
+-- RAWRXD_P1_REFACTOR_CHAIN_001: CONFIGURED (library rawrxd_refactor_chain, driver refactor_chain_cert)
+-- [release_cert_source_closure] mode=0 dropped=0 empty_bodied=0 verdict=NOT_A_CERT_BUILD
+-- [release_cert_source_closure] summary -> F:/~dev/build_rawr_ninja/release_cert_source_closure.txt
+-- [ModelToolProtocol] cert target: model_tool_protocol_cert
+-- [Deep2Streamer] cert target: deep2_streamer_cert
+-- [Deep2Streamer] parity target: deep2_streamer_parity
+-- Configuring done (4.0s)
+-- Generating done (0.4s)
+-- Build files have been written to: F:/~dev/build_rawr_ninja
+[0/4] Re-checking globbed directories...
+[1/10] Building CXX object CMakeFiles\rawr-server.dir\src\agentic\AgentToolRegistry.cpp.obj
+[2/10] Building CXX object CMakeFiles\rawr-server.dir\src\agentic\CheckpointRollbackAuthority.cpp.obj
+[3/10] Building CXX object CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthorityTools.cpp.obj
+F:\~dev\rawrxd\src\agentic\GitSafetyAuthorityTools.cpp(266): warning C4189: 'mutatingMask': local variable is initialized but not referenced
+[4/10] Building CXX object CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server_main.cpp.obj
+F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1412): warning C4240: nonstandard extension used: access to 'Deep2::Deep2Engine::GpuForwardReceipt' now defined to be 'private', previously it was defined to be 'public'
+F:\~dev\rawrxd\src\deep2\Deep2Engine.h(671): note: see declaration of 'Deep2::Deep2Engine::GpuForwardReceipt'
+[5/10] Building CXX object CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthority.cpp.obj
+F:\~dev\rawrxd\src\agentic\GitSafetyAuthority.cpp(161): warning C4305: 'argument': truncation from 'int' to 'const _Elem'
+        with
+        [
+            _Elem=char
+        ]
+F:\~dev\rawrxd\src\agentic\GitSafetyAuthority.cpp(161): warning C4309: 'argument': truncation of constant value
+[6/10] Building CXX object CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server.cpp.obj
+F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1412): warning C4240: nonstandard extension used: access to 'Deep2::Deep2Engine::GpuForwardReceipt' now defined to be 'private', previously it was defined to be 'public'
+F:\~dev\rawrxd\src\deep2\Deep2Engine.h(671): note: see declaration of 'Deep2::Deep2Engine::GpuForwardReceipt'
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(635): warning C4100: 'tokenId': unreferenced parameter
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(693): warning C4100: 'tokenId': unreferenced parameter
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(66): warning C4505: 'Deep2::escapeJsonString': unreferenced function with internal linkage has been removed
+F:\~dev\rawrxd\src\deep2\deep2_openai_server.cpp(144): warning C4505: 'Deep2::getHeader': unreferenced function with internal linkage has been removed
+[7/10] Linking CXX executable bin\rawr-server.exe
+FAILED: [code=4294967295] bin/rawr-server.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\rawr-server.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server_main.cpp.obj CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\AgentToolRegistry.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\CheckpointRollbackAuthority.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthority.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthorityTools.cpp.obj  /out:bin\rawr-server.exe /implib:rawr-server.lib /pdb:bin\rawr-server.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\x64   -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64 InferenceEngine.lib  dxgi.lib  F:\~dev\rawrxd\src\deep2\ResidencyTrace.obj  F:\~dev\rawrxd\src\deep2\QuantKB.obj  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  advapi32.lib  crypt32.lib  pdh.lib  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  advapi32.lib  crypt32.lib  pdh.lib  dxgi.lib  rawrxd_remote64.lib  kernel32.lib  user32.lib  gdi32.lib  ws2_32.lib  bcrypt.lib  ntdll.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server_main.cpp.obj CMakeFiles\rawr-server.dir\src\deep2\deep2_openai_server.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\AgentToolRegistry.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\CheckpointRollbackAuthority.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthority.cpp.obj CMakeFiles\rawr-server.dir\src\agentic\GitSafetyAuthorityTools.cpp.obj /out:bin\rawr-server.exe /implib:rawr-server.lib /pdb:bin\rawr-server.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\x64 -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\onecore\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\ucrt\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\um\x64 -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64 InferenceEngine.lib dxgi.lib F:\~dev\rawrxd\src\deep2\ResidencyTrace.obj F:\~dev\rawrxd\src\deep2\QuantKB.obj C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib shlwapi.lib psapi.lib dbghelp.lib winhttp.lib advapi32.lib crypt32.lib pdh.lib C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib shlwapi.lib psapi.lib dbghelp.lib winhttp.lib advapi32.lib crypt32.lib pdh.lib dxgi.lib rawrxd_remote64.lib kernel32.lib user32.lib gdi32.lib ws2_32.lib bcrypt.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+InferenceEngine.lib(Deep2Engine.cpp.obj) : error LNK2019: unresolved external symbol "bool __cdecl Deep2::Wire::WireRecordDispatch(struct Deep2::Wire::DispatchDecision const &)" (?WireRecordDispatch@Wire@Deep2@@YA_NAEBUDispatchDecision@12@@Z) referenced in function "public: struct Deep2::Deep2Engine::ForwardResult __cdecl Deep2::Deep2Engine::forwardTokenAllLayers(float *,unsigned __int64)" (?forwardTokenAllLayers@Deep2Engine@Deep2@@QEAA?AUForwardResult@12@PEAM_K@Z)
+bin\rawr-server.exe : fatal error LNK1120: 1 unresolved externals
+ninja: build stopped: subcommand failed.

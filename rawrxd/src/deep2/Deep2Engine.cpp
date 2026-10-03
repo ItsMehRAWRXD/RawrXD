@@ -14,6 +14,10 @@
 #include "AttnVisibilityTrace.h"
 #include "AttnCtx2Probe.h"
 #include "expert_cache/Deep2Batch005Integration.h"
+// RAWRXD_INFERENCE_WIRE_001: the layer-dispatch boundary records its decision
+// inputs. Include is unconditional so the boundary cannot drift out of the
+// capture because someone removed a header.
+#include "InferenceWire.hpp"
 #if defined(RAWRXD_REMOTE64_LINKED)
 #include "remote64_bridge.h"
 #endif
@@ -5406,13 +5410,72 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
 
     if(dualRowDense){
         size_t dualRowLayersDone=0;
+        // RAWRXD_DISPATCH_WIRE_001 / STRICT_GUARD_5407
+        //
+        // Every sibling lane in this dispatch honours vulkanStrictNoCpuFallback_
+        // (MoE/MLA hybrid at 5337, resident-first decline at 5399, dual-row
+        // EXCEPTION at 5444, Batch9 at 5464). This branch had no guard at all, and
+        // it is the DEFAULT lane for a dense non-MoE model when
+        // DEEP2_RESIDENT_FIRST is unset.
+        //
+        // Measured consequence, f66d63e05, qwen32_85tps_gate --only 2:
+        //   hostForwardLayerCalls = 1280   (20 tokens x 64 layers)
+        //   dualRowDenseTokens     = 20
+        //   GPU_LAYER_SUBMITS      = 0      GPU_OP_SUBMITS = 0
+        //   STRICT_GPU_VIOLATIONS  = 0      THRESHOLD_RESULT PASS, exit 0
+        //
+        // i.e. every layer executed on the CPU and the gate certified a GPU run,
+        // because this lane runs host code, increments a host counter, and returns
+        // ExecutionRoute::VulkanDualRow without ever consulting the strict flag.
+        // Under strict authority that is a false PASS, not a slow path.
+        const std::uint32_t dualRowToken = (std::uint32_t)(gpuFwd_.dualRowDenseTokens + 1);
+        {
+            // Pre-dispatch decision record, emitted BEFORE the strict guard so the
+            // capture contains the evidence in BOTH outcomes: an executed host
+            // lane and a refused one. A hook that only fires after the refusal
+            // would be silent in exactly the case worth recording. latencyNs is 0
+            // by design -- nothing has executed yet; this packet's job is the
+            // predicate set, not timing.
+            Deep2::Wire::DispatchDecision dd{};
+            dd.token = dualRowToken;
+            dd.layer = 0;
+            dd.seqLen = (std::uint32_t)seqLen;
+            dd.numLayers = (std::uint32_t)modelWeights.numLayers;
+            dd.deviceCount = (std::uint32_t)vulkanDevices_.size();
+            dd.vulkanEnabled = vulkanEnabled_;
+            dd.vulkanInitialized = vulkanInitialized_;
+            dd.strictNoCpuFallback = vulkanStrictNoCpuFallback_;
+            dd.residentFirst = residentFirst;
+            dd.forceLayerSplit = forceLayerSplit;
+            dd.isMoE = modelWeights.isMoE;
+            dd.useMLA = modelWeights.useMLA;
+            dd.latencyNs = 0;
+            dd.onHost = true;   // the selected lane IS the host lane
+            Deep2::Wire::WireRecordDispatch(dd);
+        }
+        if (vulkanStrictNoCpuFallback_) {
+            // Fail closed rather than silently execute the host lane. The route
+            // was going to be labelled VulkanDualRow regardless of what actually
+            // ran, so the label is removed as well as the execution.
+            vulkanStrictViolation_ = true;
+            gpuFwdCommitted_ = false;
+            std::fprintf(stderr,
+                "[DualRowStrict] DUAL_ROW_HOST_LANE_REFUSED strict=1 "
+                "residentFirst=%d forceLayerSplit=%d devices=%zu isMoE=%d useMLA=%d "
+                "reason=no_gpu_resident_lane_available\n",
+                (int)residentFirst, (int)forceLayerSplit, vulkanDevices_.size(),
+                (int)modelWeights.isMoE, (int)modelWeights.useMLA);
+            std::fflush(stderr);
+            return ForwardResult{false, ExecutionRoute::Unset, false,
+                                 "dual_row_host_lane_refused"};
+        }
         try {
             for(size_t l=0;l<modelWeights.numLayers;++l){
                 forwardLayer(l,hidden,layerOut,seqLen);
                 std::memcpy(
                     hidden,layerOut,config.hiddenDim*sizeof(float));
                 ++dualRowLayersDone;
-                ++gpuFwd_.hostForwardLayerCalls; // planned orchestration
+                ++gpuFwd_.hostForwardLayerCalls; // host execution, not GPU
             }
             ++gpuFwd_.dualRowDenseTokens;
             gpuFwdCommitted_=false; // not FULL_RESIDENT_GPU

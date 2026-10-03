@@ -116,9 +116,29 @@ endif()
 
 target_link_libraries(rawr_monolith PRIVATE rawrxd_screenpilot_e2e)
 
-# ---- Deep2 benchmark target ----
-add_executable(deep2_benchmark
-    rawrxd/src/deep2/deep2_benchmark_main.cpp
+# ---- Deep2 core translation units ----
+#
+# RAWRXD_GATE_TARGET_GHOST_001
+#
+# qwen32_85tps_gate.exe existed at build_p2/Debug/ (2026-09-17,
+# SHA256 2F0DD9329F1ADAE5D52E4A0D575067CC50E908CDCC36476825B66431CFA1086B)
+# and was cited as evidence for the 85 TPS ladder. It was built from a CMake
+# target that was NEVER COMMITTED:
+#
+#   git log -S 'qwen32_85tps_gate' -- CMakeLists.txt   ->  no commits, ever
+#   git ls-files build_p2/                            ->  untracked
+#
+# The generator input was untracked, so the exe could not be reproduced, could
+# not be tied to a source identity, and could not be symbolized. Every receipt
+# derived from it described a build graph that no longer exists. That is the
+# same defect class as the QKV_CPU_FALLBACK ghost: a real artifact, a real
+# measurement, and no way to name the code that produced it.
+#
+# The target is defined here so the gate is buildable FROM A TRACKED SOURCE
+# IDENTITY. The source list is shared rather than duplicated: deep2_benchmark and
+# the gate need the same Deep2 objects, and a private copy of a 40-entry list is
+# precisely how the two drift apart until one of them cannot link.
+set(RAWRXD_DEEP2_CORE_SOURCES
     rawrxd/src/deep2/AgentToolAuthority.cpp
     rawrxd/src/deep2/Deep2Engine.cpp
     rawrxd/src/deep2/Deep2Engine_Speculative.cpp
@@ -151,29 +171,25 @@ add_executable(deep2_benchmark
     rawrxd/src/deep2/expert_cache/VulkanExpertTransport.cpp
     rawrxd/src/deep2/expert_cache/HostStagingRing.cpp
     rawrxd/src/deep2/mars/MARSController.cpp
-    rawrxd/src/deep2/strict_gpu_violations.cpp
+    rawrxd/src/deep2/streaming/ContinuousExecution.cpp
+    rawrxd/src/deep2/streaming/Win32ContinuousBridge.cpp
     rawrxd/src/deep2/Beaconism.cpp
     rawrxd/src/deep2/GpuScheduler.cpp
     rawrxd/src/deep2/TimeReverseDigest.cpp
-    # Q2.6 entry-point authority: RealGGUFParity.cpp is
-    # RAWRXD_REAL_GGUF_PARITY_001, a standalone E2E parity harness with its own
-    # main(). It already has a dedicated executable target
-    # (rawrxd/CMakeLists.txt -> rawrxd_real_gguf_parity). Listing it here as a
-    # source of deep2_benchmark put two main() definitions in one target
-    # (LNK2005/LNK1169), so this target could never link.
-    rawrxd/src/deep2/streaming/ContinuousExecution.cpp
-    rawrxd/src/deep2/streaming/Win32ContinuousBridge.cpp
-    # Q2.5 / EventLedger authority: the canonical
-    # RAWRXD_CONTINUOUS_STREAM_REALITY_001 per-run durable ledger. The stale
-    # ContinuousEventLedger.cpp (a second class also named
-    # rawrxd::continuous::EventLedger, flat global sequence, different event
-    # type) is quarantined under rawrxd/src/deep2/streaming/quarantine/.
-    rawrxd/src/deep2/streaming/EventLedger.cpp
-    # Q2.5 link-authority parity with rawr_monolith: these TUs define symbols
-    # referenced by Deep2Engine.cpp and friends. Every target that compiles those
-    # objects must list them, or the target compiles clean and then fails to link.
     rawrxd/src/deep2/ModelRegistry.cpp
+    # RAWRXD_B66_LINK_AUTHORITY_001: Deep2Engine::loadModel calls
+    # B66RuntimeMetaBinder::bind, defined at Deep2B66RuntimeMeta.cpp:19. Omitting
+    # it compiles every TU clean and then fails at link with LNK2019 -- the
+    # target looks healthy right up to the point where it cannot be produced.
+    # This is the same link-authority defect the Q2.5 comments above describe,
+    # and it was still live in both targets built from this list.
+    rawrxd/src/deep2/Deep2B66RuntimeMeta.cpp
+    # RAWRXD_INFERENCE_WIRE_001: Deep2Engine.cpp calls WireRecordDispatch at the
+    # layer-dispatch boundary, so this TU must be in every target that links the
+    # engine. Omitting it reproduces exactly the LNK2019 class documented above.
+    rawrxd/src/deep2/InferenceWire.cpp
     rawrxd/src/deep2/Deep2PredictiveRouter.cpp
+    rawrxd/src/deep2/streaming/EventLedger.cpp
     rawrxd/src/deep2/lavapath/DualStickEnvSnap.cpp
     rawrxd/src/deep2/lavapath/DualStickStreamWindow.cpp
     rawrxd/src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
@@ -182,6 +198,155 @@ add_executable(deep2_benchmark
     rawrxd/src/rawr_classifier_scalar.asm
     rawrxd/src/rawr_classifier_avx2.asm
 )
+
+# ---- Deep2 benchmark target ----
+add_executable(deep2_benchmark
+    rawrxd/src/deep2/deep2_benchmark_main.cpp
+    # Shared with qwen32_85tps_gate below. deep2_benchmark adds exactly one TU:
+    # the strict-GPU violation counter definitions.
+    ${RAWRXD_DEEP2_CORE_SOURCES}
+    rawrxd/src/deep2/strict_gpu_violations.cpp
+)
+
+# ---- 85 TPS ladder gate ----
+#
+# tests/qwen32_85tps_gate.cpp is tracked at f66d63e05 and was previously
+# unbuildable: no target referenced it. It is the ladder the 85 TPS claim rests
+# on, and every artifact attributed to it came from an untracked generator input.
+#
+# /DEBUG:FULL + /DEBUG is not cosmetic here. It is the difference between a
+# fault offset and a fault source. The MLA fast-fail investigation was stuck at
+# RVA 0xC3139/0xC3134 because no symbol existed for the image; a Debug/FullOpt
+# binary with a matching PDB closes that class of question permanently.
+add_executable(qwen32_85tps_gate
+    tests/qwen32_85tps_gate.cpp
+    ${RAWRXD_DEEP2_CORE_SOURCES}
+    # NOTE: strict_gpu_violations.cpp is deliberately NOT listed.
+    # tests/qwen32_85tps_gate.cpp:12 defines g_strictGpuViolations itself and the
+    # engine increments that same symbol (Deep2Engine_Speculative.cpp:11 declares
+    # it extern; 407/482/505/522 increment it). Listing both definitions is
+    # LNK2005. The gate's own definition satisfies the engine's reference, which
+    # is the correct owner: the counter is the gate's verdict input, not a library
+    # global that outlives it.
+)
+
+target_include_directories(qwen32_85tps_gate PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2/streaming
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_compile_definitions(qwen32_85tps_gate PRIVATE
+    RAWR_HAS_SOVEREIGN_ENGINES=1
+    RAWR_HAS_RAWR_INFERENCE=1
+    WIN32_LEAN_AND_MEAN
+    NOMINMAX
+)
+
+target_compile_options(qwen32_85tps_gate PRIVATE
+    /arch:AVX512
+    /fp:fast
+    /Zi
+    /DEBUG:FULL
+)
+
+if(MSVC)
+    target_compile_options(qwen32_85tps_gate PRIVATE /W4 /permissive- /EHsc)
+    target_link_options(qwen32_85tps_gate PRIVATE /DEBUG)
+endif()
+
+target_link_libraries(qwen32_85tps_gate PRIVATE Vulkan::Vulkan)
+
+# ---- RAWRXD_INFERENCE_WIRE_001 ----
+#
+# The wire protocol and its falsification probe. Deliberately a STANDALONE
+# target: it links no engine object, so it cannot inherit a dependency on the
+# very runtime it is meant to observe. If the probe needed Deep2 to run, a Deep2
+# defect could masquerade as a wire defect.
+#
+# Excluded from `all`; request it explicitly.
+add_executable(inference_wire_001 EXCLUDE_FROM_ALL
+    rawrxd/certs/inference_wire_001.cpp
+    rawrxd/src/deep2/InferenceWire.cpp
+)
+
+target_include_directories(inference_wire_001 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
+
+target_compile_options(inference_wire_001 PRIVATE /O2 /W4 /permissive- /EHsc)
+
+if(MSVC)
+    target_compile_options(inference_wire_001 PRIVATE /Zi /DEBUG:FULL)
+    target_link_options(inference_wire_001 PRIVATE /DEBUG)
+endif()
+
+# ---- RAWRXD_LAYER0_AUTHORITY_001 ----
+#
+# The layer over Layer 0: in-process exception capture, so a fault's registers
+# and fast-fail sub-code are observed from inside the program that faulted --
+# no cdb, no dump, and no reverse-engineering of the CRT fast-fail table out of
+# the instruction stream.
+#
+# Standalone like the wire: it links no engine object, so an engine defect cannot
+# masquerade as a capture defect, and the guard is proven before anything
+# depends on it.
+add_executable(layer0_authority_001 EXCLUDE_FROM_ALL
+    rawrxd/certs/layer0_authority_001.cpp
+    rawrxd/src/deep2/Layer0Guard.cpp
+)
+
+target_include_directories(layer0_authority_001 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
+
+target_compile_options(layer0_authority_001 PRIVATE /O2 /W3 /permissive- /EHsc)
+
+if(MSVC)
+    target_compile_options(layer0_authority_001 PRIVATE /Zi /DEBUG:FULL /utf-8)
+    target_link_options(layer0_authority_001 PRIVATE /DEBUG)
+endif()
+
+# /FS is not optional here. With /Zi, MSBuild's multi-processor build hands the
+# same intermediate PDB to several CL.EXE processes, and a leftover compiler
+# from an earlier build makes that a C1041 "cannot open program database". /FS
+# serialises PDB access through mspdbsrv. The failure is invisible in a clean
+# single-lane build and appears only under concurrency, which is why it is set
+# permanently rather than worked around with /m:1.
+target_compile_options(layer0_authority_001 PRIVATE /FS)
+
+target_link_libraries(layer0_authority_001 PRIVATE bcrypt)
+
+# ---- RAWRXD_RESIDUAL_OVERLAY_FUSION_001 ----
+#
+# Proof harness only. Links no engine object: there is no working GPU forward
+# lane to attach a fusion kernel to yet (Deep2Engine.cpp:5407 dual-row host
+# lane), so a target that linked Deep2 would certify a path nothing reaches.
+#
+# Deliberately EXCLUDE_FROM_ALL so it does not become a build-graph citizen that
+# gets stubbed out and reported as a subsystem. Its verdict is about arithmetic,
+# and it must be run deliberately.
+add_executable(residual_overlay_fusion_001 EXCLUDE_FROM_ALL
+    rawrxd/tools/residual_overlay_fusion_001.cpp
+)
+
+target_compile_options(residual_overlay_fusion_001 PRIVATE
+    /std:c++17 /EHsc /O2 /W3 /utf-8
+)
+
+if(MSVC)
+    target_compile_options(residual_overlay_fusion_001 PRIVATE /FS)
+endif()
 
 target_include_directories(deep2_benchmark PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}

@@ -35,7 +35,10 @@
 #include <map>
 #include <set>
 #include <string>
+#include <typeinfo>
 #include <vector>
+#include <exception>
+#include <typeinfo>
 
 #include <windows.h>
 
@@ -348,15 +351,27 @@ Deep2::Deep2Engine engine;
     // The Vulkan loader was measured independently as seeing 3 physical devices
     // (vkEnumeratePhysicalDevices rc=0 count=3), so the capability exists; only
     // this call was missing.
-    engine.enableVulkan(true);
+engine.enableVulkan(true);
 
+    // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001 -- loadModel is inside the guarded
+    // region too, because MLA_ELIGIBLE is emitted from inside it
+    // (Deep2Engine.cpp:2747) and the exception, if any, is thrown from the same
+    // call. Leaving loadModel outside the try would reproduce the exact blind
+    // spot this instrumentation exists to close.
     Deep2::ModelLoadDiag diag;
-    if (!engine.loadModel(a.logicalName, &diag)) {
+    try {
+if (!engine.loadModel(a.logicalName, &diag)) {
         a.result = Result::MODEL_LOAD_FAILED;
         a.detail = "stage=" + std::to_string(diag.stageCode) +
                    " name=" + diag.stageName + " msg=" + diag.message;
         return;
     }
+    // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001: reaching here means loadModel
+    // returned normally. The MLA_ELIGIBLE line is printed inside loadModel, so
+    // its presence in the log plus the absence of FORWARD_ENTERED below is
+    // precisely the "eligibility without forward" state.
+    std::fprintf(stderr, "LOADMODEL_COMPLETED=1\n");
+    std::fflush(stderr);
 
 // NOTE: do NOT call engine.initialize() here.
     // loadModel() already resolves dynamic geometry and performs initialization
@@ -384,23 +399,149 @@ Deep2::Deep2Engine engine;
     opt.topK = 1;
     opt.seed = 12345;
 
-    auto t0 = std::chrono::steady_clock::now();
+auto t0 = std::chrono::steady_clock::now();
     uint64_t callbacks = 0;
     bool sawNonEmpty = false;
 
-Deep2::GenerationResult r = engine.generateStream(
-        g_prompt.c_str(), opt,
-        [&](int32_t id, const std::string& tok) -> bool {
-            if (callbacks == 0) {
-                a.ttftMs = std::chrono::duration<double, std::milli>(
-                    std::chrono::steady_clock::now() - t0).count();
-            }
-            if (a.firstIds.size() < 16) a.firstIds.push_back(id);
-            a.text += tok;
-            if (!tok.empty()) sawNonEmpty = true;
-            ++callbacks;
-            return true;                 // never cancel: the point is to stream
-        });
+    // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001
+    //
+    // WHY THIS EXISTS
+    //   The Kimi K2 / deepseek2 MLA path terminates with
+    //       EXCEPTION_CODE=0xC0000409
+    //       ExceptionInformation[0] = 0x7 = FAST_FAIL_FATAL_APP_EXIT (winnt.h)
+    //       FAULT_RVA=0xC3169
+    //   which is the CRT's std::terminate / abort() surface, NOT a hardware trap.
+    //   Four separate sites in this tree already name that mechanism:
+    //     deep2_bounded_stream_gate.cpp:591  "gives no diagnostic by default"
+    //     b3_continuation_test.cpp:173        "escapes main as std::terminate"
+    //     rawrxd_run_modelname_001.cpp:58    "CRT surfaces only as a bare 0xC0000409"
+    //     main_win32.cpp:1444                "with ucrtbase!_invoke_watson"
+    //   The exception OBJECT is therefore the lost evidence. It is recoverable
+    //   here, before terminate() is ever reached.
+    //
+    // SEMANTICS ARE DELIBERATELY UNCHANGED
+    //   Every handler RE-THROWS. This cert measures a failure; it must not become
+    //   a recovery path. Swallowing the throw would change the very behaviour
+    //   being measured and would convert FAST_FAIL=7 into a clean exit -- a
+    //   self-certifying false PASS of exactly the kind this harness exists to
+    //   prevent. The process still dies by terminate; we only print first.
+    //
+    // ONE LINE PER RECEIPT FIELD, unbuffered
+    //   std::fprintf on stderr + fflush so the record survives the fast-fail.
+    // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001
+    //
+    // Cert-local phase state. Deliberately NOT stored in Deep2::GenerationResult:
+    // that is an engine struct and must not be mutated by the harness. It is also
+    // monotonic, so it survives a partial flush where EXCEPTION_SITE might be lost.
+    enum class CertPhase {
+        BeforeLoadModel,
+        AfterLoadModel,
+        BeforeGenerate,
+        InsideGenerateCallback,
+        AfterGenerate
+    };
+    static const char* phaseName(CertPhase p) {
+        switch (p) {
+            case CertPhase::BeforeLoadModel:      return "BEFORE_LOADMODEL";
+            case CertPhase::AfterLoadModel:       return "AFTER_LOADMODEL";
+            case CertPhase::BeforeGenerate:       return "BEFORE_GENERATE";
+            case CertPhase::InsideGenerateCallback: return "INSIDE_GENERATE_CALLBACK";
+            case CertPhase::AfterGenerate:        return "AFTER_GENERATE";
+        }
+        return "UNKNOWN";
+    }
+    static void emitPhase(CertPhase p) {
+        std::fprintf(stderr, "LAST_CERT_PHASE=%s\n", phaseName(p));
+        std::fflush(stderr);
+    }
+    CertPhase g_phase = CertPhase::BeforeLoadModel;
+
+    // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001
+    // Structurally required: without an initializer, `r` is only assigned inside
+    // the try and the code below the try cannot read it. Standard C++.
+    Deep2::GenerationResult r{};
+    try {
+        g_phase = CertPhase::BeforeLoadModel; emitPhase(g_phase);
+        if (!engine.loadModel(a.logicalName, &diag)) {
+            g_phase = CertPhase::AfterLoadModel; emitPhase(g_phase);
+            a.result = Result::MODEL_LOAD_FAILED;
+            a.detail = "stage=" + std::to_string(diag.stageCode) +
+                       " name=" + diag.stageName + " msg=" + diag.message;
+            return;
+        }
+        g_phase = CertPhase::AfterLoadModel; emitPhase(g_phase);
+        std::fprintf(stderr, "LOADMODEL_COMPLETED=1\n"); std::fflush(stderr);
+
+        g_phase = CertPhase::BeforeGenerate; emitPhase(g_phase);
+        std::fprintf(stderr, "FORWARD_ENTERED=1\n"); std::fflush(stderr);
+        r = engine.generateStream(
+            g_prompt.c_str(), opt,
+            [&](int32_t id, const std::string& tok) -> bool {
+                g_phase = CertPhase::InsideGenerateCallback; emitPhase(g_phase);
+                if (callbacks == 0) {
+                    a.ttftMs = std::chrono::duration<double, std::milli>(
+                        std::chrono::steady_clock::now() - t0).count();
+                }
+                if (a.firstIds.size() < 16) a.firstIds.push_back(id);
+                a.text += tok;
+                if (!tok.empty()) sawNonEmpty = true;
+                ++callbacks;
+                return true;             // never cancel: the point is to stream
+            });
+        g_phase = CertPhase::AfterGenerate; emitPhase(g_phase);
+        std::fprintf(stderr, "FORWARD_COMPLETED=1 status=%d gen=%llu cb=%llu\n",
+                     (int)r.status,
+                     (unsigned long long)r.generatedTokens,
+                     (unsigned long long)callbacks);
+        std::fflush(stderr);
+    }
+    catch (const std::exception& e) {
+        // typeid(e).name() is the MANGLED dynamic type: authoritative, and it is
+        // what distinguishes a std::runtime_error thrown by the MLA branch from a
+        // std::bad_alloc from a failed arena allocation.
+        //
+        // WER's BEX64 classification ("buffer overflow check") is a PRIOR, not a
+        // measurement. std::bad_alloc is the exception that would actually
+        // support an out-of-memory reading, and this line is what settles it.
+        std::fprintf(stderr,
+                     "EXCEPTION_CAUGHT=1\n"
+                     "EXCEPTION_SITE=%s\n"
+                     "EXCEPTION_TYPE=%s\n"
+                     "EXCEPTION_WHAT=%s\n",
+                     g_phase == CertPhase::AfterLoadModel ||
+                     g_phase == CertPhase::BeforeGenerate ||
+                     g_phase == CertPhase::InsideGenerateCallback ||
+                     g_phase == CertPhase::AfterGenerate
+                         ? "GENERATE" : "LOADMODEL",
+                     typeid(e).name(), e.what());
+        std::fprintf(stderr, "LAST_CERT_PHASE_AT_THROW=%s\n", phaseName(g_phase));
+        std::fflush(stderr);
+        std::fflush(stderr);
+        std::fprintf(stderr, "FAST_FAIL_AFTER_CATCH=RETHROW_STD\n");
+        std::fflush(stderr);
+        throw;                            // unchanged semantics -- see header
+    }
+    catch (...) {
+        // Reached only if the throwable does NOT derive from std::exception.
+        // That distinction matters: it rules out every engine path that reports
+        // failure by throwing a std::runtime_error / std::invalid_argument, and
+        // points at a raw throw or a foreign exception type crossing the boundary.
+        std::fprintf(stderr,
+                     "EXCEPTION_CAUGHT=1\n"
+                     "EXCEPTION_SITE=%s\n"
+                     "EXCEPTION_TYPE=UNKNOWN_NON_STD_EXCEPTION\n"
+                     "EXCEPTION_WHAT=<not a std::exception>\n",
+                     g_phase == CertPhase::AfterLoadModel ||
+                     g_phase == CertPhase::BeforeGenerate ||
+                     g_phase == CertPhase::InsideGenerateCallback ||
+                     g_phase == CertPhase::AfterGenerate
+                         ? "GENERATE" : "LOADMODEL");
+        std::fprintf(stderr, "LAST_CERT_PHASE_AT_THROW=%s\n", phaseName(g_phase));
+        std::fflush(stderr);
+        std::fprintf(stderr, "FAST_FAIL_AFTER_CATCH=RETHROW_UNKNOWN\n");
+        std::fflush(stderr);
+        throw;
+    }
 
     double genMs = std::chrono::duration<double, std::milli>(
         std::chrono::steady_clock::now() - t0).count();
