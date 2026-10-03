@@ -417,6 +417,8 @@ STATUS=IN_PROGRESS
 BASELINE_CPU_INFERENCE=RECORDED_PASS
 TENSOR_IDENTITY=IMPLEMENTED_PASS
 TENSOR_IDENTITY_CERT=PASS
+EXECUTION_VIEW_PILOT=IMPLEMENTED_PASS
+EXECUTION_VIEW_GEMV_CERT=PASS
 
 BASELINE_RECEIPT=receipts/RAWRXD_SPACELESS_BASELINE_CPU_001/RECEIPT.md
 BASELINE_MODEL=llama3.2-3b-Q2_K.gguf
@@ -431,13 +433,27 @@ TENSOR_IDENTITY_ALIGN=8
 TENSOR_IDENTITY_CERT=tests/tensor_identity_cert.cpp
 TENSOR_IDENTITY_CERT_VERDICT=PASS
 
+EXECUTION_VIEW_HEADER=src/deep2/ExecutionView.hpp
+EXECUTION_VIEW_SIZE=64           (includes pointer; TensorIdentity does not)
+LEASE_TOKEN_SIZE=24
+EXECUTION_VIEW_GEMV_PILOT=tests/execution_view_gemv_pilot.cpp
+EXECUTION_VIEW_GEMV_PILOT_CHECKS=6/6 PASS
+EXECUTION_VIEW_GEMV_PILOT_MAX_DIFF=0.000e+00
+EXECUTION_VIEW_GEMV_PILOT_VERDICT=PASS
+
+EXECUTION_VIEW_KERNEL=gemvF32 in src/deep2/deep2_cpu_mla.cpp
+EXECUTION_VIEW_PATH=NEW (ExecutionView overload)
+LEGACY_PATH=PRESERVED (WeightTensor overload delegates to ExecutionView)
+A_B_REFERENCE=IDENTICAL_OUTPUT (same pointer, same bytes, no residency change)
+
+GAP_CLOSED=ExecutionView abstraction exists
 GAP_IDENTIFIED=ModelWeights monolithic allocation
 GAP_IDENTIFIED=ResidencyManager stub
 GAP_IDENTIFIED=TensorResidencyCache stub
-GAP_IDENTIFIED=No ExecutionView abstraction
+GAP_IDENTIFIED=ExecutionView not adopted by any production kernel path
 
-NEXT_STEP=Pilot ExecutionView on one dense-row GEMV kernel
 NEXT_STEP=Re-run baseline model and require token/logit parity
+NEXT_STEP=Pilot ExecutionView on a second kernel (quant GEMV path)
 
 VERDICT=DESIGN_IMPLEMENTING
 ```

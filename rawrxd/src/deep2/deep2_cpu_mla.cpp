@@ -55,11 +55,39 @@
 // KV-cache integration is NOT done -- see kvCacheLayoutIsKnown() below.
 
 #include "Deep2Engine.h"
+#include "ExecutionView.hpp"
 
 #include <cmath>
 #include <cstring>
 #include <string>
 #include <vector>
+
+// ============================================================================
+// RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_001
+// ExecutionView factory from existing WeightTensor (baseline bridge)
+//
+// This is the A/B reference bridge: it populates an ExecutionView from the
+// existing monolithic ModelWeights allocation WITHOUT changing residency.
+// The address is the same; the only difference is that the kernel receives
+// an ExecutionView instead of a raw pointer.
+// ============================================================================
+static Deep2::ExecutionView MakeExecutionView(const Deep2::WeightTensor& wt,
+                                               uint32_t layer, uint16_t role)
+{
+    Deep2::ExecutionView ev;
+    ev.identity.model   = 1;      // TODO: derive from actual model fingerprint
+    ev.identity.tensor  = wt.sizeBytes; // TODO: derive from tensor hash or GGUF name
+    ev.identity.layer   = layer;
+    ev.identity.role    = role;
+    ev.identity.variant = 0;
+
+    ev.transientAddress = wt.data;
+    ev.bytes            = wt.sizeBytes;
+    ev.lease.generation = 1;      // baseline: monolithic allocation is gen 1
+    ev.lease.owner      = 1;      // baseline: owned by ModelWeights block
+    ev.lease.epoch      = 0;
+    return ev;
+}
 
 namespace rawrxd::mla {
 
@@ -145,6 +173,33 @@ void applyRope(float* v, std::size_t heads, std::size_t dimStart,
 // Uses Deep2::WeightTensor.data in whatever quant layout it carries; this kernel
 // requires F32-backed tensors and refuses anything else rather than guessing.
 // ---------------------------------------------------------------------------
+// ============================================================================
+// RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_001
+//
+// gemvF32 is the FIRST kernel piloted with ExecutionView.
+// The ExecutionView overload is the NEW path; the WeightTensor overload is
+// the A/B reference and delegates to it.
+//
+// Invariant: the WeightTensor path produces IDENTICAL output to before this
+// change, because the ExecutionView is populated from the same pointer.
+// ============================================================================
+
+bool gemvF32(const Deep2::ExecutionView& ev, const float* x, float* y, std::size_t rows,
+             std::size_t cols, const char* what)
+{
+    if (!ev.hasBytes() || ev.identity.role != 0 /* F32 path: role 0 means F32 */) {
+        std::fprintf(stderr, "[CPU_MLA] %s ExecutionView has no bytes or wrong role\n", what);
+        return false;
+    }
+    const float* p = ev.as<float>();
+    for (std::size_t r = 0; r < rows; ++r) {
+        double acc = 0.0;
+        for (std::size_t c = 0; c < cols; ++c) acc += double(p[r * cols + c]) * double(x[c]);
+        y[r] = float(acc);
+    }
+    return true;
+}
+
 bool gemvF32(const WeightTensor& w, const float* x, float* y, std::size_t rows,
              std::size_t cols, const char* what)
 {
@@ -159,13 +214,9 @@ bool gemvF32(const WeightTensor& w, const float* x, float* y, std::size_t rows,
                      what, (std::size_t)w.rows, (std::size_t)w.cols, rows, cols);
         return false;
     }
-    const float* p = fdata(w);
-    for (std::size_t r = 0; r < rows; ++r) {
-        double acc = 0.0;
-        for (std::size_t c = 0; c < cols; ++c) acc += double(p[r * cols + c]) * double(x[c]);
-        y[r] = float(acc);
-    }
-    return true;
+    // A/B reference: delegate to ExecutionView path with the same pointer
+    Deep2::ExecutionView ev = Deep2::MakeExecutionView(w, /*layer*/0, /*role*/0);
+    return gemvF32(ev, x, y, rows, cols, what);
 }
 
 // ---------------------------------------------------------------------------
