@@ -5,7 +5,46 @@
 cert_run_output*.txt
 
 # CMake build trees
-build*/
+#
+# WAS: `build*/`
+#
+# That rule matched ANY directory whose name begins with "build", at any depth.
+# It therefore excluded SOURCE directories that happen to be named "build":
+#
+#     rawrxd/B012/build/amortization_test.cpp
+#     rawrxd/B013/build/stability_test.cpp
+#     rawrxd/B014/build/b014_profiler.cpp        (+5 more)
+#     rawrxd/B015/build/b015_cert_test.cpp
+#
+# All eight are referenced by rawrxd/CMakeLists.txt. Measured consequence: a
+# clean `git worktree add` of the pushed branch FAILS to configure with
+# "Cannot find source file" on exactly those paths, while a build inside the
+# existing working tree succeeds because the files are present but ignored.
+#
+# Git cannot re-include a file whose parent directory is excluded, so the fix is
+# to stop excluding the directory rather than to negate files inside it. The
+# rules below anchor the pattern to the repository root and to the known CMake
+# tree names, which is what the original comment always intended.
+/build/
+/build_*/
+/_build*/
+/rawrxd/build/
+/rawrxd/build*/
+/CMakeFiles/
+
+# Build trees that the anchored rules above no longer catch, listed explicitly.
+# Each was verified to be a generated tree, not a source directory named
+# "build". The B012-B015 source directories are deliberately NOT listed here:
+# they are compiled by rawrxd/CMakeLists.txt and excluding them is what made a
+# clean clone of beacon-residency-001 fail to configure.
+/_fleet_build/
+/_d2sl/
+/_n2_stage/src/build/
+/rawrxd/build2/
+/rawrxd/src/build/
+/rawrxd/src/deep2/build/
+/rawrxd/win32ide_strict/build*/
+/rawrxd_screenpilot_agent_bridge/*/build/
 !build_p2/Release/rawr_monolith.exe
 rawrxd/src/deep2/vulkan_compute_tmp.cpp
 
