@@ -13,7 +13,9 @@ using namespace RawrXD::License;
 // Tier Name Helpers
 // ============================================================================
 
-extern "C" const char* tierName(LicenseTierV2 tier) {
+namespace RawrXD::License {
+
+const char* tierName(LicenseTierV2 tier) {
     switch (tier) {
         case LicenseTierV2::Community:    return "Community";
         case LicenseTierV2::Professional: return "Professional";
@@ -22,6 +24,8 @@ extern "C" const char* tierName(LicenseTierV2 tier) {
         default:                          return "Unknown";
     }
 }
+
+} // namespace RawrXD::License
 
 const char* getTierNameForDisplay(uint32_t tier) {
     return RawrXD::License::tierName(static_cast<LicenseTierV2>(tier));
@@ -88,3 +92,31 @@ bool isSystemAnomalous() {
 }
 
 }  // extern "C"
+
+// ============================================================================
+// AuditTrailManager minimal definitions (stub implementations)
+// ============================================================================
+// These satisfy the link requirements for license_manager_panel.cpp and
+// license_helper_utilities.cpp. Full implementation lives in
+// license_audit_trail.cpp, which is not yet buildable due to Unicode/MBCS
+// mismatches in its Windows API calls. When that file is fixed, these stubs
+// should be removed so the real definitions take over.
+// ============================================================================
+
+namespace RawrXD::License {
+
+AuditTrailManager::AuditTrailManager() = default;
+AuditTrailManager::~AuditTrailManager() = default;
+
+uint32_t AuditTrailManager::getTotalEvents() const { return m_totalEvents; }
+uint32_t AuditTrailManager::getTotalDenials() const { return m_totalDenials; }
+float    AuditTrailManager::getDenialRate(uint32_t) const {
+    uint32_t total = m_totalEvents;
+    return total > 0 ? static_cast<float>(m_totalDenials) / static_cast<float>(total) : 0.0f;
+}
+bool AuditTrailManager::isInAnomalousState() const { return m_isAnomalous; }
+
+// Global instance
+AuditTrailManager g_auditTrailManager;
+
+} // namespace RawrXD::License

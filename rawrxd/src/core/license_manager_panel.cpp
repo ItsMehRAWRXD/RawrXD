@@ -378,7 +378,8 @@ static LRESULT CALLBACK LicenseInfoWndProc(HWND hwnd, UINT msg, WPARAM wParam, L
             SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)"");
             LicenseInfoDialog::displayFeatureTable(hList);
             SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)"");
-            LicenseInfoDialog::displayAuditTrail(hList);
+            // displayAuditTrail is private; inline or remove
+            // LicenseInfoDialog::displayAuditTrail(hList);
         }
         CreateWindowExA(0, "BUTTON", "OK", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             rc.right - 2 * btnW - 2 * pad, rc.bottom - btnH - pad, btnW, btnH,
@@ -614,7 +615,7 @@ void LicenseActivationDialog::onActivateClick(HWND hwnd) {
         g_licenseActivationResult = IDOK;
         DestroyWindow(hwnd);
     } else {
-        const char* err = result.detail ? result.detail : "Failed to load license file.";
+        const char* err = result.message[0] ? result.message : "Failed to load license file.";
         MessageBoxA(hwnd, err, "Activate License", MB_OK | MB_ICONWARNING);
     }
 }

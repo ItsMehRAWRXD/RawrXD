@@ -100,15 +100,15 @@ public:
     /// @return IDOK or IDCANCEL
     static INT_PTR show(HWND parentHwnd);
 
-private:
-    static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-    // Dialog initialization
-    static void onInitDialog(HWND hwnd);
-    static void onCancel(HWND hwnd);
+    // Dialog content helpers (used by panel UI)
     static void displayLicenseDetails(HWND hwndList);
     static void displayFeatureTable(HWND hwndList);
     static void displayAuditTrail(HWND hwndList);
+
+private:
+    static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+    static void onInitDialog(HWND hwnd);
+    static void onCancel(HWND hwnd);
 };
 
 // ============================================================================
@@ -121,12 +121,13 @@ public:
     /// @return IDOK (license loaded) or IDCANCEL
     static INT_PTR show(HWND parentHwnd);
 
-private:
-    static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-    static void onInitDialog(HWND hwnd);
+    // Button handlers (used by panel UI)
     static void onBrowseClick(HWND hwnd);
     static void onActivateClick(HWND hwnd);
+
+private:
+    static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+    static void onInitDialog(HWND hwnd);
     static void onCancel(HWND hwnd);
 };
 

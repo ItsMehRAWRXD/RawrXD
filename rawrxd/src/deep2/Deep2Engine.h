@@ -668,6 +668,18 @@ public:
     // Emits the population summary of the expert reuse-distance trace captured at
     // the MoE route site. No-op unless RAWRXD_EXPERT_REUSE_TRACE is set, so the
     // declaration is safe to call unconditionally from a harness.
+    //
+    // EmitExpertReuseSummaryFromDecodePath is the PRODUCTION emission point: the
+    // decode loop owns the receipt, so a run cannot complete without one. The
+    // no-argument overload remains as a fallback for callers that are not in the
+    // decode path (a harness destructor), and is a no-op once the decode path has
+    // emitted, so exactly one receipt exists per run.
+    //
+    // noexcept because it is called from an exit guard. A telemetry emitter must
+    // never convert an early return or a thrown exception in the decode loop into
+    // std::terminate -- that is the failure mode this whole lane exists to
+    // remove.
+    void EmitExpertReuseSummaryFromDecodePath() noexcept;
     void EmitExpertReuseSummary();
     void captureGpuForwardReceipt(uint64_t nanCount, uint64_t infCount);
     // Completed-generation evidence, captured before any transient cleanup.

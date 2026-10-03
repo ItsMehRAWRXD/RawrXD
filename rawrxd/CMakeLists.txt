@@ -828,6 +828,16 @@ if(RAWRXD_BUILD_CLI)
     add_executable(rawrxd-cli-full
         # Headless entry point (replaces GUI entry_point.cpp + RawrXD_MainLoop.cpp)
         src/win32app/cli_main_headless.cpp
+        # RAWRXD_BROWSER_AUTHORITY_001: the browser lane ships IN the product,
+        # not only in a standalone probe. CdpTransport is the hand-written
+        # RFC6455 + Chrome DevTools Protocol client; BrowserSession launches a
+        # real browser and verifies four measured launch conditions;
+        # BrowserAuthority performs semantic actions and derives their verdicts.
+        # The standalone probe calls THESE SAME FILES, so the probe and the
+        # product cannot hold two different opinions about a browser.
+        src/browser/CdpTransport.cpp
+        src/browser/BrowserSession.cpp
+        src/browser/BrowserAuthority.cpp
         # RAWRXD_CLI_SOURCE_CLOSURE_001: absent entries are listed at the end of
         # this source list with their reason; see src/modules/engine_manager.cpp
         # below. They are not silently dropped -- naming them here is how the gap
@@ -5598,6 +5608,8 @@ list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
     src/security/JwtValidator.cpp
     # TimeReverseDigest: reverse-time materialization scheduler
     src/deep2/TimeReverseDigest.cpp
+    # BowRain compute authority: map traversal + node execution evidence
+    src/compute/BowRainComputeAuthority.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 # list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES ...) -- stub file deleted
@@ -6130,9 +6142,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_011.cpp
         src/core/unlinked_symbols_batch_012.cpp
         # Prefer single provider for symbols that also live in batch_001/005 (ODR).
-src/core/unlinked_symbols_batch_018.cpp
-src/core/unlinked_symbols_batch_019.cpp
-src/core/unlinked_symbols_batch_020.cpp
+        src/core/unlinked_symbols_batch_018.cpp
+        src/core/unlinked_symbols_batch_019.cpp
+        # src/core/unlinked_symbols_batch_020.cpp  # EXCLUDED: asm_perf_begin, asm_perf_end duplicate batch_001
         src/core/unlinked_symbols_batch_021.cpp
         src/ANSIParser.cpp
         src/vulkan_kernel_bridge.cpp
@@ -6241,6 +6253,7 @@ src/core/unlinked_symbols_batch_020.cpp
         src/core/enterprise_licensev2_impl.cpp
         src/core/enterprise_devunlock_bridge.cpp
         src/core/monolithic_heap_globals.cpp
+        src/core/license_helper_utilities.cpp
         # AUTO-REMOVED: stub file
         src/core/license_anti_tampering.cpp
         src/core/camellia256_bridge.cpp
@@ -6391,6 +6404,7 @@ src/core/ai_agent_masm_core_impl.cpp
 
         # Phase 28: MonacoCore Native Editor Engine + Toggleable Engine System
         # EXCLUDED: missing RawrXD_MonacoCore.h, IDETheme.h
+src/core/WebView2Container.cpp
 src/core/MonacoCoreEngine.cpp
 src/core/WebView2EditorEngine.cpp
 src/core/RichEditEditorEngine.cpp
@@ -7083,6 +7097,7 @@ src/core/ssot_handlers_ext_isolated.cpp
 src/core/hexmag_control_plane.cpp
 src/core/hexmag_oracle_binder.cpp
 src/core/hexmag_runtime_controller.cpp
+        src/core/hexmag_masm_stubs.cpp
         src/agent/hexmag_client.cpp
     )
 
@@ -8030,6 +8045,7 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
         src/core/task_config_bridge.cpp
         src/win32app/launch_config.cpp
         src/core/file_watcher.cpp
+        src/core/monaco_core_stubs.cpp
     )
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     # BATCH N2: /FS prevents C1041 PDB contention under parallel builds
@@ -15186,6 +15202,24 @@ if(NOT TARGET rawrxd)
 add_executable(rawrxd
         # Headless CLI entry point with model router (RAWRXD_MODEL_ROUTER_001)
         src/win32app/cli_main_headless.cpp
+        # RAWRXD_BROWSER_AUTHORITY_001: the browser lane ships IN the product,
+        # not only in a standalone probe. CdpTransport is the hand-written
+        # RFC6455 + Chrome DevTools Protocol client; BrowserSession launches a
+        # real browser and verifies four measured launch conditions;
+        # BrowserAuthority performs semantic actions and derives their verdicts.
+        # The standalone probe calls THESE SAME FILES, so the probe and the
+        # product cannot hold two different opinions about a browser.
+        src/browser/CdpTransport.cpp
+        src/browser/BrowserSession.cpp
+        src/browser/BrowserAuthority.cpp
+        # RAWRXD_SHELL_AUTHORITY_001: one action envelope over four shell
+        # surfaces. ShellAuthority adapts the browser surface onto
+        # BrowserAuthority -- it owns no transport and re-derives no verdict.
+        src/shell/ShellAuthority.cpp
+        # RAWRXD_AGENT_BRIDGE_001: the narrow model->shell bridge. It contains
+        # no I/O and recomputes no verdict -- it normalizes a ToolIntent into a
+        # ShellAction and delegates to ShellAuthority.
+        src/agent/AgentBridge.cpp
         # RAWRXD_RESOURCE_LANGUAGE_ENABLED_001
         # This is the block that actually defines the shipped rawrxd target
         # (the earlier CLI block at :328 is gated behind RAWRXD_BUILD_CLI, which

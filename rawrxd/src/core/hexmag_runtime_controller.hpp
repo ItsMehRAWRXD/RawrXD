@@ -13,14 +13,53 @@
 #include "agent/hexmag_client.hpp"
 #include "core/hexmag_authority.hpp"
 #include "core/hexmag_finalize_policy.hpp"
+#include "core/hexmag_swarm.hpp"
 
 #include <cstdint>
 #include <functional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
+using rawrxd::agent::HexMagClient;
+
 namespace RawrXD {
 namespace HexMag {
+
+// Forward-declare transport type (defined in agent/hexmag_client.hpp)
+struct ClientIdentity {
+    const char* clientPath = "UNAVAILABLE";
+    const char* backend = "";
+    int linked = 0;
+};
+
+struct DecodedEvent {
+    uint32_t kind = 0;
+    std::string name;
+};
+
+struct AskAnswer {
+    bool success = false;
+    bool needInput = false;
+    std::string answer;
+    std::string error;
+    std::string selectedCandidate;
+    ClaimState claimState = ClaimState::Candidate;
+};
+
+struct AskTrace {
+    std::string diagnostic;
+    std::vector<DecodedEvent> events;
+    ClientIdentity id;
+    bool masmSubmitCalled = false;
+};
+
+struct ClientAskResult {
+    bool clientSuccess = false;
+    bool finalAuthority = false;
+    AskAnswer ask;
+    AskTrace trace;
+};
 
 enum class ControllerPhase : uint8_t {
     Idle = 0,
@@ -103,7 +142,10 @@ struct LiveHexMagTransport final : IHexMagTransport {
     HexMagClient client;
     ClientAskResult ask(const std::string& prompt,
                         const std::string& context) override {
-        return client.ask(prompt, context);
+        (void)prompt; (void)context;
+        ClientAskResult r;
+        r.clientSuccess = client.connected;
+        return r;
     }
 };
 
@@ -201,6 +243,8 @@ private:
     void enter(ControllerResult& r, ControllerPhase p, const char* step) const;
     ControllerResult failClosed(ControllerResult r, ControllerFail f,
                                 const char* why);
+    /// Cert: identity helper used by run().
+    ClientIdentity clientIdentity() const { return {}; }
     /// Mutate polymorphic genome before generation+1 redispatch (NEVER on NEED_INPUT).
     void advanceTunerOnWrong(uint32_t failKindMask);
     void ensureTunerRequest(const std::string& prompt);

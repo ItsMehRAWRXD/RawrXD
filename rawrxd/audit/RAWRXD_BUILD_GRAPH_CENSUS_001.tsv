@@ -11,6 +11,9 @@ src/core/json_instantiations.cpp	src/core	1	IMPLEMENT
 src/asm/RawrXD_IPC_Dispatcher.asm	src/asm	1	IMPLEMENT
 src/asm/RawrXD_Disasm_Kernel.asm	src/asm	1	IMPLEMENT
 src/win32app/cli_main_headless.cpp	src/win32app	1	IMPLEMENT
+src/browser/CdpTransport.cpp	src/browser	1	IMPLEMENT
+src/browser/BrowserSession.cpp	src/browser	1	IMPLEMENT
+src/browser/BrowserAuthority.cpp	src/browser	1	IMPLEMENT
 src/modules/engine_manager.cpp	src/modules	1	GRAPH_RESTORED_EMPTY
 src/win32app/HeadlessIDE_FileAliases.cpp	src/win32app	1	GRAPH_RESTORED_EMPTY
 src/asm/rawr_cpu_features.asm	src/asm	1	IMPLEMENT
@@ -541,6 +544,7 @@ src/agentic/AgentToolOrchestrator.cpp	src/agentic	1	IMPLEMENT
 src/agentic/ModelToolProtocol.cpp	src/agentic	1	IMPLEMENT
 src/security/JwtValidator.cpp	src/security	1	IMPLEMENT
 src/deep2/TimeReverseDigest.cpp	src/deep2	1	IMPLEMENT
+src/compute/BowRainComputeAuthority.cpp	src/compute	1	IMPLEMENT
 src/asm/RawrXD_KQuant_Kernel.asm	src/asm	1	IMPLEMENT
 src/deep2/QuantKB.asm	src/deep2	1	IMPLEMENT
 src/asm/Deep2Device_Score.asm	src/asm	1	IMPLEMENT
@@ -726,6 +730,7 @@ src/runtime_core.cpp	src/runtime_core.cpp	1	GRAPH_RESTORED_EMPTY
 src/utils/ErrorReporter.cpp	src/utils	1	GRAPH_RESTORED_EMPTY
 src/core/enterprise_devunlock_bridge.cpp	src/core	1	IMPLEMENT
 src/core/monolithic_heap_globals.cpp	src/core	1	IMPLEMENT
+src/core/license_helper_utilities.cpp	src/core	1	IMPLEMENT
 src/core/70b_gguf_hotpatch.cpp	src/core	1	IMPLEMENT
 src/core/governor_throttling.cpp	src/core	1	IMPLEMENT
 src/win32app/Win32IDE_SwarmPanel.cpp	src/win32app	1	GRAPH_RESTORED_EMPTY
@@ -742,6 +747,7 @@ src/win32app/Win32IDE_WebView2.cpp	src/win32app	1	GRAPH_RESTORED_EMPTY
 src/win32app/AgenticBrowserLayer.cpp	src/win32app	1	GRAPH_RESTORED_EMPTY
 src/win32app/Win32IDE_AgenticBrowser.cpp	src/win32app	1	GRAPH_RESTORED_EMPTY
 src/win32app/Win32IDE_MonacoThemes.cpp	src/win32app	1	GRAPH_RESTORED_EMPTY
+src/core/WebView2Container.cpp	src/core	1	IMPLEMENT
 src/core/MonacoCoreEngine.cpp	src/core	1	IMPLEMENT
 src/core/WebView2EditorEngine.cpp	src/core	1	IMPLEMENT
 src/core/RichEditEditorEngine.cpp	src/core	1	IMPLEMENT
@@ -889,6 +895,7 @@ src/win32app/Win32IDE_HexMagCopilotRoute.cpp	src/win32app	1	GRAPH_RESTORED_EMPTY
 src/core/hexmag_control_plane.cpp	src/core	1	IMPLEMENT
 src/core/hexmag_oracle_binder.cpp	src/core	1	IMPLEMENT
 src/core/hexmag_runtime_controller.cpp	src/core	1	IMPLEMENT
+src/core/hexmag_masm_stubs.cpp	src/core	1	IMPLEMENT
 src/agent/hexmag_client.cpp	src/agent	1	IMPLEMENT
 src/asm/RawrXD_PE_Importer.asm	src/asm	1	IMPLEMENT
 src/asm/ghost_text_ranker.asm	src/asm	1	IMPLEMENT
@@ -1023,6 +1030,7 @@ src/config/IDEConfig.cpp	src/config	1	IMPLEMENT
 src/core/task_config_bridge.cpp	src/core	1	IMPLEMENT
 src/win32app/launch_config.cpp	src/win32app	1	IMPLEMENT
 src/core/file_watcher.cpp	src/core	1	IMPLEMENT
+src/core/monaco_core_stubs.cpp	src/core	1	IMPLEMENT
 src/crypto_masm.asm	src/crypto_masm.asm	1	IMPLEMENT
 src/security/uac_bypass_impl_stub.cpp	src/security	1	GRAPH_RESTORED_EMPTY
 src/sovereign/tests/SovereignTest_Main.cpp	src/sovereign	1	GRAPH_RESTORED_EMPTY
@@ -1282,6 +1290,8 @@ src/core/neurological_diff.cpp	src/core	1	IMPLEMENT
 src/tests/swarm_smoke_stubs.cpp	src/tests	1	GRAPH_RESTORED_EMPTY
 src/tests/backend_orchestrator_shard_smoke_stubs.cpp	src/tests	1	GRAPH_RESTORED_EMPTY
 tests/autonomy/recovery/GoldenRecoveryTests.cpp	tests/autonomy	1	IMPLEMENT
+src/shell/ShellAuthority.cpp	src/shell	1	IMPLEMENT
+src/agent/AgentBridge.cpp	src/agent	1	IMPLEMENT
 tools/address_resolver_native.cpp	tools/address_resolver_native.cpp	1	GRAPH_RESTORED_EMPTY
 src/script/debug/minimal_dap_server.cpp	src/script	1	GRAPH_RESTORED_EMPTY
 src/kernels/q4_preprocessed_avx512.asm	src/kernels	1	IMPLEMENT

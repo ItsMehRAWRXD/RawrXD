@@ -21,6 +21,7 @@
 // ============================================================================
 
 #include "core/code_linter.hpp"
+#include "core/lsp_types.hpp"
 
 #include <cstring>
 #include <cmath>
@@ -35,9 +36,6 @@
 #include <atomic>
 #include <sstream>
 #include <filesystem>
-
-// Wire to LSP diagnostic consumer for real-time IDE integration
-#include "lsp/diagnostic_consumer.h"
 
 // ============================================================================
 // LintResult factory
@@ -1518,14 +1516,13 @@ LintResult CodeLinter::lintSource(const char* source, uint32_t length, Language 
             // Map source based on language
             switch (lang) {
                 case Language::Asm:
-                    lspD.source = RawrXD::LSP::DiagnosticSource::ASM_LINT; break;
+                    lspD.source = "ASM_LINT"; break;
                 default:
-                    lspD.source = RawrXD::LSP::DiagnosticSource::GGUF_LINT; break;
+                    lspD.source = "GGUF_LINT"; break;
             }
 
             lspD.code = d.code ? d.code : "";
             lspD.message = d.message ? d.message : "";
-            lspD.timestampMs = (uint64_t)now;
 
             lspDiags.push_back(std::move(lspD));
         }

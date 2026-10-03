@@ -47,7 +47,7 @@ CommandResult handleAgentMemoryView(const CommandContext& ctx) { (void)ctx; retu
 CommandResult handleAgentStop(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAgentViewStatus(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAgentViewTools(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleAIChatMode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleAIChatMode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAICtx128K(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAICtx1M(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAICtx256K(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
@@ -58,17 +58,17 @@ CommandResult handleAICtx64K(const CommandContext& ctx) { (void)ctx; return Comm
 CommandResult handleAIDeepResearch(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAIDeepThinking(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAIEngineSelect(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleAIExplainCode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleAIFixErrors(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleAIGenerateDocs(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleAIGenerateTests(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleAIInlineComplete(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleAIExplainCode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleAIFixErrors(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleAIGenerateDocs(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleAIGenerateTests(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleAIInlineComplete(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAIMaxMode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleAIModelSelect(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleAIModelSelect(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAIModeSet(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAINoRefusal(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleAIOptimizeCode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleAIRefactor(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleAIOptimizeCode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleAIRefactor(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAnalyze(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAsmAnalyzeBlock(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleAsmCallGraph(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
@@ -395,14 +395,14 @@ CommandResult handleVoiceRecord(const CommandContext& ctx) { (void)ctx; return C
 CommandResult handleVoiceSpeak(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleVoiceStatus(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult handleVoiceTranscribe(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtDeactivateAll(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtDiagnostics(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtExportConfig(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtExtensions(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtListCommands(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtListProviders(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtLoadNative(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtReload(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtStats(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
-CommandResult handleVscExtStatus(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtDeactivateAll(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtDiagnostics(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtExportConfig(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtExtensions(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtListCommands(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtListProviders(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtLoadNative(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtReload(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtStats(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
+// REMOVED: duplicate definition in ssot_handlers_ext_isolated.cpp  CommandResult handleVscExtStatus(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }
 CommandResult HandleVulkanRenderer(const CommandContext& ctx) { (void)ctx; return CommandResult::ok(); }

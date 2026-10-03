@@ -201,17 +201,5 @@ private:
 } // namespace Prediction
 } // namespace RawrXD
 
-// ASM stub implementations
-extern "C" {
-
-int asm_gguf_loader_close(void* ctx) {
-    (void)ctx;
-    return 0;
-}
-
-int asm_lsp_bridge_shutdown(void* bridge) {
-    (void)bridge;
-    return 0;
-}
-
-} // extern "C"
+// ASM stub implementations - REMOVED: real implementations exist in unlinked_symbols_batch_001.cpp
+// (asm_gguf_loader_close, asm_lsp_bridge_shutdown)

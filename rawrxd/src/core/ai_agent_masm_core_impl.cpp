@@ -113,10 +113,9 @@ int ai_agent_tokenize(const char* text, int* tokens, int max_tokens) {
     
     // Lazy-load tokenizer with byte-level fallback vocab if not loaded
     if (!g_tokenizer_loaded) {
-        g_rawr_tokenizer.Load(""); // Initialize with byte-level fallback
+        g_rawr_tokenizer.LoadFromFile(""); // Initialize with byte-level fallback
         g_tokenizer_loaded = true;
     }
-    
     std::vector<uint32_t> encoded = g_rawr_tokenizer.Encode(text);
     
     int count = 0;
@@ -132,7 +131,7 @@ int ai_agent_detokenize(const int* tokens, int num_tokens, char* text, int max_l
     if (!tokens || !text || num_tokens <= 0 || max_len <= 0) return 0;
     
     if (!g_tokenizer_loaded) {
-        g_rawr_tokenizer.Load("");
+        g_rawr_tokenizer.LoadFromFile("");
         g_tokenizer_loaded = true;
     }
     

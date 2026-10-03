@@ -2,7 +2,7 @@
 #pragma once
 #include <windows.h>
 #include <string>
-#include "src/core/WebView2ContainerCpp.h"
+#include "WebView2ContainerCpp.h"
 
 // Minimal WebView2 initialization stub
 bool InitializeWebView2(HWND hwnd);

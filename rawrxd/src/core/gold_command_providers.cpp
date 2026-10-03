@@ -213,22 +213,7 @@ std::vector<std::string> SovereignAgentRuntime::GetActiveMissions() const { retu
 
 } // namespace Autonomy
 
-// Update namespace stubs
-namespace Update {
-struct SignatureResult { bool valid; };
-class UpdateSignatureVerifier {
-public:
-    static UpdateSignatureVerifier& instance();
-    SignatureResult verifyAuthenticode(const wchar_t*);
-};
-UpdateSignatureVerifier& UpdateSignatureVerifier::instance() {
-    static UpdateSignatureVerifier inst;
-    return inst;
-}
-SignatureResult UpdateSignatureVerifier::verifyAuthenticode(const wchar_t*) { return {true}; }
-} // namespace Update
-
-// Perf namespace stubs REMOVED — real implementations in perf_telemetry.cpp
+// Update namespace stubs REMOVED — real implementations in update_signature.cpp
 // (PerfTelemetry::instance, initialize, captureBaseline, getDiagnostics, etc.).
 // The empty stubs that were here won /FORCE:MULTIPLE (LNK4006) and silenced
 // the real perf_telemetry.cpp bodies.

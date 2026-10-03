@@ -64,6 +64,15 @@ enum class ClaimState : uint8_t {
     FinalRejected,
 };
 
+enum class ClaimFinalizeClass : uint8_t {
+    Unverified = 0,
+    Verified,
+    Proven,
+    MissingInput,
+    Contradicted,
+    Unknown,
+};
+
 /// L0 — impossible for an agent to override.
 struct CoreInvariant {
     bool forbidUnsupportedClaims = true;
@@ -210,6 +219,21 @@ inline bool allowFinal(const Claim& c, const CoreInvariant& inv = kCoreInvariant
         return false;
     }
     return c.state == ClaimState::Verified || c.state == ClaimState::Proven || c.verified();
+}
+
+/// Finalize-class gate: which final claim classes may emit.
+inline bool isAllowedFinalClaim(ClaimFinalizeClass fin) {
+    switch (fin) {
+        case ClaimFinalizeClass::Verified:
+        case ClaimFinalizeClass::Proven:
+            return true;
+        case ClaimFinalizeClass::Unverified:
+        case ClaimFinalizeClass::MissingInput:
+        case ClaimFinalizeClass::Contradicted:
+        case ClaimFinalizeClass::Unknown:
+            return false;
+    }
+    return false;
 }
 
 inline const char* authorityName(Authority a) {

@@ -62,133 +62,21 @@ void Win32IDE_initializeChatPanelOllama(void* self) {
 // Sovereign subsystem stubs
 extern "C" {
 
-// AD_ProcessGGUF - Process GGUF file for Aperture/Deep2
-int AD_ProcessGGUF(const char* filepath, void* outContext) {
-    (void)filepath;
-    (void)outContext;
-    return 0; // Success
-}
+// AD_ProcessGGUF - REMOVED: real implementation exists in unlinked_symbols_batch_011.cpp
+// (AD_ProcessGGUF)
 
-// SO_* symbols - Sovereign subsystem operations
-int SO_LoadExecFile(const char* path, void** outHandle) {
-    (void)path;
-    *outHandle = nullptr;
-    return 0;
-}
-
-int SO_InitializeVulkan(void* instance, void* device) {
-    (void)instance;
-    (void)device;
-    return 0;
-}
-
-void* SO_CreateMemoryArena(size_t size) {
-    (void)size;
-    return nullptr;
-}
-
-int SO_CreateComputePipelines(void* device, void* pipelineLayout) {
-    (void)device;
-    (void)pipelineLayout;
-    return 0;
-}
-
-void SO_PrintStatistics(void) {
-    // Print statistics
-}
-
-int SO_InitializeStreaming(void* config) {
-    (void)config;
-    return 0;
-}
-
-void* SO_CreateThreadPool(int numThreads) {
-    (void)numThreads;
-    return nullptr;
-}
-
-int SO_StartDEFLATEThreads(void* threadPool) {
-    (void)threadPool;
-    return 0;
-}
-
-int SO_InitializePrefetchQueue(void* arena, size_t capacity) {
-    (void)arena;
-    (void)capacity;
-    return 0;
-}
-
-void SO_PrintMetrics(void) {
-    // Print metrics
-}
+// SO_* symbols - REMOVED: real implementations exist in rawrxd_subsystem_api.cpp
+// (SO_LoadExecFile, SO_InitializeVulkan, SO_InitializeStreaming, SO_CreateMemoryArena,
+//  SO_CreateThreadPool, SO_CreateComputePipelines, SO_StartDEFLATEThreads,
+//  SO_InitializePrefetchQueue, SO_PrintStatistics, SO_PrintMetrics)
 
 } // extern "C"
 
-// Camellia256 encryption stubs
-extern "C" {
+// Camellia256 encryption stubs - REMOVED: real implementations exist in unlinked_symbols_batch_005.cpp
+// (asm_camellia256_auth_encrypt_file, asm_camellia256_auth_decrypt_file)
 
-int asm_camellia256_auth_encrypt_file(const char* inPath, const char* outPath, 
-                                       const uint8_t* key, const uint8_t* iv) {
-    (void)inPath;
-    (void)outPath;
-    (void)key;
-    (void)iv;
-    return 0;
-}
+// Watchdog stubs - REMOVED: real implementations exist in unlinked_symbols_batch_001.cpp and unlinked_symbols_batch_005.cpp
+// (asm_watchdog_init, asm_watchdog_verify, asm_watchdog_get_baseline, asm_watchdog_get_status, asm_watchdog_shutdown)
 
-int asm_camellia256_auth_decrypt_file(const char* inPath, const char* outPath,
-                                       const uint8_t* key, const uint8_t* iv) {
-    (void)inPath;
-    (void)outPath;
-    (void)key;
-    (void)iv;
-    return 0;
-}
-
-} // extern "C"
-
-// Watchdog stubs
-extern "C" {
-
-static std::atomic<bool> g_watchdogInitialized{false};
-
-int asm_watchdog_init(void* config) {
-    (void)config;
-    g_watchdogInitialized = true;
-    return 0;
-}
-
-int asm_watchdog_verify(void) {
-    return g_watchdogInitialized ? 0 : -1;
-}
-
-int asm_watchdog_get_baseline(void* outBaseline) {
-    (void)outBaseline;
-    return 0;
-}
-
-int asm_watchdog_get_status(void* outStatus) {
-    (void)outStatus;
-    return 0;
-}
-
-int asm_watchdog_shutdown(void) {
-    g_watchdogInitialized = false;
-    return 0;
-}
-
-} // extern "C"
-
-// Pattern matching stub
-extern "C" {
-
-void* find_pattern_asm(const void* data, size_t dataLen, 
-                        const void* pattern, size_t patternLen) {
-    (void)data;
-    (void)dataLen;
-    (void)pattern;
-    (void)patternLen;
-    return nullptr;
-}
-
-} // extern "C"
+// Pattern matching stub - REMOVED: real implementation exists in byte_level_hotpatcher.cpp
+// (find_pattern_asm)

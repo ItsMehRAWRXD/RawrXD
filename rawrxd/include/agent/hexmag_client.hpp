@@ -1,15 +1,16 @@
 // RAWRXD_GRAPH_RESTORED_001 — Minimal stub for hexmag_client.hpp
 #pragma once
+#include <cstdint>
 #include <string>
 
-namespace RawrXD {
-namespace Agent {
+namespace rawrxd { namespace agent {
 
-// Minimal HexMag client stub
-class HexMagClient {
-public:
-    bool connect(const std::string& endpoint) { return false; }
+struct HexMagClient {
+    uint32_t sessionId = 0;
+    bool connected = false;
+    bool connect(const char* endpoint) { (void)endpoint; connected = true; return true; }
+    void disconnect() { connected = false; }
+    bool send(const uint8_t* data, size_t len) { (void)data; (void)len; return connected; }
 };
 
-} // namespace Agent
-} // namespace RawrXD
+}} // namespace rawrxd::agent

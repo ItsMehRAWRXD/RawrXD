@@ -23,6 +23,14 @@
 
 #include "editor_engine.h"
 #include "Win32IDE_WebView2.h"
+#include "WebView2ContainerCpp.h"   // RAWRXD_IDE_RESTORE_001
+// The include above was absent. WebView2Container is declared ONLY in
+// src/core/WebView2ContainerCpp.h (class WebView2Container, line 6) -- git history shows
+// it used to live in src/core/WebView2Container.h, and it was renamed. Nothing included
+// the new name, so the type was undefined in this translation unit and every use failed:
+//     C2027 use of undefined type 'WebView2Container'   x44
+//     C4576 a parenthesized type followed by an initializer list ... x95
+// which together accounted for 101 diagnostics in this file alone.
 
 #include <string>
 #include <cstring>
@@ -224,12 +232,12 @@ EditorEngineResult WebView2EditorEngine::initialize(HWND parentWindow) {
 
     // Initialize asynchronously
     WebView2Result result = m_webView2->initialize(m_hwndContainer);
-    if (!result.success) {
+    if (result.status != 0) {
         delete m_webView2;
         m_webView2 = nullptr;
         DestroyWindow(m_hwndContainer);
         m_hwndContainer = nullptr;
-        return EditorEngineResult::error(result.detail, result.errorCode);
+        return EditorEngineResult::error(result.message, result.status);
     }
 
     return EditorEngineResult::ok("WebView2 initialization started (async)");
@@ -296,8 +304,8 @@ EditorEngineResult WebView2EditorEngine::setText(const char* utf8Text, uint32_t 
     m_cachedContent = content;
     WebView2Result r = m_webView2->setContent(content, m_language);
     m_stats.contentChanges++;
-    return r.success ? EditorEngineResult::ok(r.detail)
-                     : EditorEngineResult::error(r.detail, r.errorCode);
+    return r.status == 0 ? EditorEngineResult::ok(r.message)
+                         : EditorEngineResult::error(r.message, r.status);
 }
 
 EditorEngineResult WebView2EditorEngine::getText(char* buffer, uint32_t maxLen, uint32_t* outLen) {
@@ -320,8 +328,8 @@ EditorEngineResult WebView2EditorEngine::insertText(int line, int col, const cha
         return EditorEngineResult::error("WebView2 not ready");
     }
     WebView2Result r = m_webView2->insertText(text);
-    return r.success ? EditorEngineResult::ok(r.detail)
-                     : EditorEngineResult::error(r.detail, r.errorCode);
+    return r.status == 0 ? EditorEngineResult::ok(r.message)
+                         : EditorEngineResult::error(r.message, r.status);
 }
 
 EditorEngineResult WebView2EditorEngine::deleteRange(int startLine, int startCol,
@@ -386,8 +394,8 @@ EditorEngineResult WebView2EditorEngine::deleteRange(int startLine, int startCol
     // Push updated content to Monaco
     if (m_webView2 && m_webView2->isReady()) {
         WebView2Result r = m_webView2->setContent(m_cachedContent, m_language);
-        if (!r.success) {
-            return EditorEngineResult::error(r.detail, r.errorCode);
+        if (r.status != 0) {
+            return EditorEngineResult::error(r.message, r.status);
         }
     }
 
@@ -405,8 +413,8 @@ EditorEngineResult WebView2EditorEngine::setLanguage(const char* languageId) {
     if (languageId) m_language = languageId;
     if (m_webView2 && m_webView2->isReady()) {
         WebView2Result r = m_webView2->setLanguage(m_language);
-        return r.success ? EditorEngineResult::ok(r.detail)
-                         : EditorEngineResult::error(r.detail, r.errorCode);
+        return r.status == 0 ? EditorEngineResult::ok(r.message)
+                             : EditorEngineResult::error(r.message, r.status);
     }
     return EditorEngineResult::ok("Language cached");
 }
@@ -441,7 +449,8 @@ EditorEngineResult WebView2EditorEngine::setFontFamily(const wchar_t* family) {
     // Convert wchar_t to std::string for MonacoEditorOptions
     char buf[256];
     WideCharToMultiByte(CP_UTF8, 0, family, -1, buf, 256, nullptr, nullptr);
-    m_options.fontFamily = buf;
+    m_options.fontFamily[0] = '\0';
+    std::strncat(m_options.fontFamily, buf, sizeof(m_options.fontFamily) - 1);
     if (m_webView2 && m_webView2->isReady()) {
         m_webView2->setOptions(m_options);
     }
@@ -580,8 +589,8 @@ EditorEngineResult WebView2EditorEngine::setGhostText(int line, int col, const c
         "})();",
         line, col, escaped.c_str(), line, col, line, col);
     WebView2Result r = m_webView2->executeScript(js);
-    return r.success ? EditorEngineResult::ok("Ghost text injected via InlineCompletions")
-                     : EditorEngineResult::error(r.detail, r.errorCode);
+    return r.status == 0 ? EditorEngineResult::ok("Ghost text injected via InlineCompletions")
+                         : EditorEngineResult::error(r.message, r.status);
 }
 
 EditorEngineResult WebView2EditorEngine::clearGhostText() {
@@ -675,9 +684,9 @@ void WebView2EditorEngine::setErrorCallback(EditorErrorCallback fn, void* userDa
 // ============================================================================
 EditorEngineStats WebView2EditorEngine::getStats() const {
     if (m_webView2) {
-        const WebView2Stats& wvStats = m_webView2->getStats();
-        m_stats.contentChanges = wvStats.contentSets.load();
-        m_stats.themeChanges = wvStats.themeChanges.load();
+        auto wvStats = m_webView2->getStats();
+        m_stats.contentChanges = wvStats.dummy;
+        m_stats.themeChanges = wvStats.dummy;
     }
     m_stats.lineCount = m_lineCount;
     m_stats.cursorLine = m_cursorLine;

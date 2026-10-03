@@ -2,6 +2,7 @@
 #include "../agentic/AgentOllamaClient.h"
 #include "js_extension_host.hpp"
 
+#include <nlohmann/json.hpp>
 #include <windows.h>
 #include <algorithm>
 #include <cctype>
@@ -137,18 +138,11 @@ CommandResult runAiPrompt(const CommandContext& ctx, const char* systemPrompt, c
 // These are real handlers: they route to the GUI command IDs when available.
 // ---------------------------------------------------------------------------
 
-CommandResult handleDecompRenameVar(const CommandContext& ctx) { return delegateToGui(ctx, 8001, "decomp.renameVar"); }
-CommandResult handleDecompGotoDef(const CommandContext& ctx)   { return delegateToGui(ctx, 8002, "decomp.gotoDef"); }
-// Note: handleDecompFindRefs, handleDecompCopyLine, handleDecompCopyAll defined in auto_feature_registry.cpp
-CommandResult handleDecompGotoAddr(const CommandContext& ctx)  { return delegateToGui(ctx, 8006, "decomp.gotoAddr"); }
-
-CommandResult handleVoiceAutoToggle(const CommandContext& ctx)    { return delegateToGui(ctx, 10200, "voice.autoToggle"); }
-CommandResult handleVoiceAutoSettings(const CommandContext& ctx)  { return delegateToGui(ctx, 10201, "voice.autoSettings"); }
-CommandResult handleVoiceAutoNextVoice(const CommandContext& ctx) { return delegateToGui(ctx, 10202, "voice.autoNextVoice"); }
-CommandResult handleVoiceAutoPrevVoice(const CommandContext& ctx) { return delegateToGui(ctx, 10203, "voice.autoPrevVoice"); }
-CommandResult handleVoiceAutoRateUp(const CommandContext& ctx)    { return delegateToGui(ctx, 10204, "voice.autoRateUp"); }
-CommandResult handleVoiceAutoRateDown(const CommandContext& ctx)  { return delegateToGui(ctx, 10205, "voice.autoRateDown"); }
-CommandResult handleVoiceAutoStop(const CommandContext& ctx)      { return delegateToGui(ctx, 10206, "voice.autoStop"); }
+// REMOVED: handleDecomp* and handleVoiceAuto* — real implementations exist in auto_feature_registry.cpp
+// (handleDecompRenameVar, handleDecompGotoDef, handleDecompGotoAddr,
+//  handleVoiceAutoToggle, handleVoiceAutoSettings, handleVoiceAutoNextVoice,
+//  handleVoiceAutoPrevVoice, handleVoiceAutoRateUp, handleVoiceAutoRateDown,
+//  handleVoiceAutoStop)
 
 CommandResult handleAIInlineComplete(const CommandContext& ctx) {
     if (ctx.isGui && ctx.idePtr) {

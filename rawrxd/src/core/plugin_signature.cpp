@@ -185,47 +185,47 @@ PluginSignatureResult PluginSignatureVerifier::winVerifyTrustCheck(const wchar_t
         case ERROR_SUCCESS:
             result.valid = true;
             result.status = SignatureStatus::Valid;
-            result.detail = "Authenticode signature valid";
+            strncpy_s(result.detail, sizeof(result.detail), "Authenticode signature valid", _TRUNCATE);
             result.errorCode = 0;
             break;
 
         case TRUST_E_NOSIGNATURE:
             result.valid = false;
             result.status = SignatureStatus::NoSignature;
-            result.detail = "File is not signed";
+            strncpy_s(result.detail, sizeof(result.detail), "File is not signed", _TRUNCATE);
             result.errorCode = (int)GetLastError();
             break;
 
         case TRUST_E_EXPLICIT_DISTRUST:
             result.valid = false;
             result.status = SignatureStatus::RevokedCertificate;
-            result.detail = "Certificate explicitly distrusted";
+            strncpy_s(result.detail, sizeof(result.detail), "Certificate explicitly distrusted", _TRUNCATE);
             result.errorCode = (int)status;
             break;
 
         case TRUST_E_SUBJECT_NOT_TRUSTED:
             result.valid = false;
             result.status = SignatureStatus::UntrustedRoot;
-            result.detail = "Certificate chain not trusted";
+            strncpy_s(result.detail, sizeof(result.detail), "Certificate chain not trusted", _TRUNCATE);
             result.errorCode = (int)status;
             break;
 
         case CERT_E_EXPIRED:
             result.valid = false;
             result.status = SignatureStatus::ExpiredCertificate;
-            result.detail = "Certificate has expired";
+            strncpy_s(result.detail, sizeof(result.detail), "Certificate has expired", _TRUNCATE);
             result.errorCode = (int)status;
             // Allow expired if policy permits
             if (m_policy.allowExpiredCerts) {
                 result.valid = true;
-                result.detail = "Certificate expired but allowed by policy";
+                strncpy_s(result.detail, sizeof(result.detail), "Certificate expired but allowed by policy", _TRUNCATE);
             }
             break;
 
         default:
             result.valid = false;
             result.status = SignatureStatus::UnknownError;
-            result.detail = "WinVerifyTrust failed";
+            strncpy_s(result.detail, sizeof(result.detail), "WinVerifyTrust failed", _TRUNCATE);
             result.errorCode = (int)status;
             break;
     }
@@ -404,9 +404,10 @@ PluginSignatureResult PluginSignatureVerifier::verifyVSIX(const wchar_t* vsixPat
             result.status = m_policy.requireSignature ?
                              SignatureStatus::NoSignature :
                              SignatureStatus::Valid;
-            result.detail = m_policy.requireSignature ?
+            strncpy_s(result.detail, sizeof(result.detail),
+                      m_policy.requireSignature ?
                              "VSIX not signed (required by policy)" :
-                             "VSIX unsigned but allowed by policy";
+                             "VSIX unsigned but allowed by policy", _TRUNCATE);
         }
     }
 

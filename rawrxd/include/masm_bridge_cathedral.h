@@ -6,4 +6,5 @@
 extern "C" {
     int MASM_Bridge_Initialize(void);
     void MASM_Bridge_Shutdown(void);
+    void asm_spengine_cpu_optimize(void);
 }

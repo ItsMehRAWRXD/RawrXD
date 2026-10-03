@@ -1,11 +1,10 @@
 // RAWRXD_GRAPH_RESTORED_001 — Minimal stub for HexMagAction.hpp
 // Full implementation required for materialization.
+// ClaimFinalizeClass is defined in core/hexmag_authority.hpp
 #pragma once
 
 namespace RawrXD {
 namespace HexMag {
-
-enum class ClaimFinalizeClass { Unverified = 0, Verified = 1 };
 
 // Minimal stub types
 struct HexMagAction {
