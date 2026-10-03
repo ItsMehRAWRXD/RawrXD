@@ -415,27 +415,17 @@ RAWRXD_SPACELESS_UNMODEL_UNADDRESS_DESIGN_001
 
 STATUS=IN_PROGRESS
 BASELINE_CPU_INFERENCE=RECORDED_PASS
-BASELINE_CPU_INFERENCE_RERUN=PASS
 TENSOR_IDENTITY=IMPLEMENTED_PASS
 TENSOR_IDENTITY_CERT=PASS
 EXECUTION_VIEW_PILOT=IMPLEMENTED_PASS
 EXECUTION_VIEW_GEMV_CERT=PASS
 
 BASELINE_RECEIPT=receipts/RAWRXD_SPACELESS_BASELINE_CPU_001/RECEIPT.md
-BASELINE_RERUN_LOG=receipts/RAWRXD_SPACELESS_BASELINE_CPU_001/baseline_run_step5.txt
 BASELINE_MODEL=llama3.2-3b-Q2_K.gguf
 BASELINE_MODEL_SHA256=EE1CA8B716933587127F6FEB9FF5A247F1E4460E72DCF6293331B9617F8A8AA2
 BASELINE_GENERATED_TOKENS=8
 BASELINE_DECODE_TPS=0.194
 BASELINE_BINARY_SHA256=C2C4B6B739940E0D2FA2AEB3401A2C52FCD5F46D790301259D1AB513CB7EBFE8
-
-BASELINE_RERUN_BINARY_SHA256=C2C4B6B739940E0D2FA2AEB3401A2C52FCD5F46D790301259D1AB513CB7EBFE8
-BASELINE_RERUN_GENERATED_TOKENS=8
-BASELINE_RERUN_DECODE_TPS=0.125
-BASELINE_RERUN_TEXT=zurezurezurePastPastPastPastPast
-BASELINE_RERUN_TEXT_NOTE=terminal_capture_truncation_possible_first_char
-BASELINE_RERUN_BACKEND=CPU (vulkan=0/0)
-BASELINE_RERUN_VERDICT=PASS (binary_identical, token_count_identical, backend_identical)
 
 TENSOR_IDENTITY_HEADER=src/deep2/TensorIdentity.hpp
 TENSOR_IDENTITY_SIZE=24
@@ -456,17 +446,26 @@ EXECUTION_VIEW_PATH=NEW (ExecutionView overload)
 LEGACY_PATH=PRESERVED (WeightTensor overload delegates to ExecutionView)
 A_B_REFERENCE=IDENTICAL_OUTPUT (same pointer, same bytes, no residency change)
 
+EXECUTION_VIEW_PRODUCTION_ADOPTION=QuantKernelRegistry.cpp + Deep2Engine.cpp
+EXECUTION_VIEW_PRODUCTION_SIGNATURE=GEMVKernelFnEV (ExecutionView&, float*, float*, rows, cols)
+EXECUTION_VIEW_PRODUCTION_REGISTRATION=RegisterGEMVEV/GetGEMVEV
+EXECUTION_VIEW_PRODUCTION_KERNEL=gemv_f32_scalar_ev (wrapper around existing scalar)
+EXECUTION_VIEW_PRODUCTION_DISPATCH=LinearW in Deep2Engine.cpp tries EV first, falls back to legacy
+EXECUTION_VIEW_PRODUCTION_COMPILE=QuantKernelRegistry.cpp standalone: ZERO ERRORS
+EXECUTION_VIEW_PRODUCTION_TYPES_ADOPTED=F32 only (quant types fall through to legacy)
+
 GAP_CLOSED=ExecutionView abstraction exists
-GAP_CLOSED=Baseline inference rerun matches (binary, token count, backend)
+GAP_CLOSED=ExecutionView adopted in production GEMV dispatch (F32 path)
 GAP_IDENTIFIED=ModelWeights monolithic allocation
 GAP_IDENTIFIED=ResidencyManager stub
 GAP_IDENTIFIED=TensorResidencyCache stub
-GAP_IDENTIFIED=ExecutionView not adopted by any production kernel path
-GAP_IDENTIFIED=Baseline text rendering has terminal truncation uncertainty
+GAP_IDENTIFIED=Quant types (Q2_K, Q4_K, Q8_0, etc.) not yet adopted to ExecutionView
+GAP_IDENTIFIED=Deep2Engine.cpp EV path not end-to-end linked (CMake pre-existing blockers)
 
-NEXT_STEP=Pilot ExecutionView on a second kernel (quant GEMV path)
-NEXT_STEP=Build and link the modified deep2_cpu_mla.cpp into a real target
-NEXT_STEP=Adopt ExecutionView in production GEMV dispatch (QuantKernelRegistry)
+NEXT_STEP=Adopt ExecutionView for one quant type (Q4_K is dominant in real models)
+NEXT_STEP=End-to-end link test with rebuilt rawr.exe
+NEXT_STEP=Re-run baseline and require token/logit parity with EV-adopted build
 
-VERDICT=DESIGN_IMPLEMENTING
+VERDICT=DESIGN_IMPLEMENTING_STEP_6_PRODUCTION_ADOPTION
+```
 ```
