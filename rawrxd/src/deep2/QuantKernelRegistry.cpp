@@ -10,6 +10,7 @@
 // ============================================================================
 
 #include "QuantKernelRegistry.hpp"
+#include "ExecutionView.hpp"
 #include "GGUFLoader.hpp"
 #include "QuantKernelRegistry_K.h"  // K-quant dequant/GEMV kernels
 #include "Deep2Q40Reference.hpp"    // Reference Q4_0 GEMV (VAL-051.7)
@@ -313,6 +314,20 @@ static void gemv_f32_scalar(
         }
         y[r] += acc;
     }
+}
+
+// RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_002
+// ExecutionView-aware wrapper for the F32 scalar GEMV.
+// This is the production adoption path: the kernel receives an ExecutionView
+// carrying TensorIdentity + transient address, then delegates to the same
+// scalar implementation. The output is IDENTICAL to the legacy path.
+static void gemv_f32_scalar_ev(
+    const Deep2::ExecutionView& ev,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    gemv_f32_scalar(reinterpret_cast<const uint8_t*>(ev.as<float>()), x, y, rows, cols);
 }
 
 // --- F16 GEMV (scalar via soft conversion) ---
@@ -1938,6 +1953,14 @@ void QuantKernelRegistry::RegisterGEMV(int quantType, GEMVKernelFn kernel) {
     gemvTable_[quantType] = kernel;
 }
 
+// RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_002
+// Register an ExecutionView-aware GEMV kernel. The kernel receives an
+// ExecutionView carrying TensorIdentity + transient address rather than
+// a raw pointer. This is the production adoption path.
+void QuantKernelRegistry::RegisterGEMVEV(int quantType, GEMVKernelFnEV kernel) {
+    gemvEvTable_[quantType] = kernel;
+}
+
 void QuantKernelRegistry::RegisterDequant(int quantType, DequantKernelFn kernel) {
     dequantTable_[quantType] = kernel;
 }
@@ -1957,6 +1980,8 @@ void QuantKernelRegistry::RegisterBuiltins() {
     if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_F32, gemv_f32_avx512);
     else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_F32, gemv_f32_avx2);
     else                RegisterGEMV((int)GGMLType::GGML_TYPE_F32, gemv_f32_scalar);
+    // RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_002: register ExecutionView-aware F32 kernel
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_F32, gemv_f32_scalar_ev);
 
     // --- F16 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_F16, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_F16));
@@ -2095,6 +2120,12 @@ UniversalTensorProxy QuantKernelRegistry::Resolve(
 GEMVKernelFn QuantKernelRegistry::GetGEMV(int quantType) const {
     auto it = gemvTable_.find(quantType);
     if (it != gemvTable_.end()) return it->second;
+    return nullptr;
+}
+
+GEMVKernelFnEV QuantKernelRegistry::GetGEMVEV(int quantType) const {
+    auto it = gemvEvTable_.find(quantType);
+    if (it != gemvEvTable_.end()) return it->second;
     return nullptr;
 }
 

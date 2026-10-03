@@ -180,6 +180,17 @@ using GEMVKernelFn = void (*)(
     size_t rows, size_t cols
 );
 
+// RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_002
+// ExecutionView-aware GEMV kernel signature. The kernel receives an
+// ExecutionView that carries TensorIdentity + transient address, rather
+// than a raw pointer. This is the production adoption path.
+using GEMVKernelFnEV = void (*)(
+    const class ExecutionView& ev,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+);
+
 using DequantKernelFn = void (*)(
     const uint8_t* src,
     float*         dst,
@@ -230,6 +241,7 @@ public:
     void Initialize();
 
     void RegisterGEMV   (int quantType, GEMVKernelFn    kernel);
+    void RegisterGEMVEV  (int quantType, GEMVKernelFnEV   kernel);
     void RegisterDequant(int quantType, DequantKernelFn kernel);
     void RegisterGeometry(int quantType, const BlockGeometry& geom);
 
@@ -244,8 +256,9 @@ public:
         size_t cols
     ) const;
 
-    GEMVKernelFn    GetGEMV   (int quantType) const;
-    DequantKernelFn GetDequant(int quantType) const;
+    GEMVKernelFn    GetGEMV    (int quantType) const;
+    GEMVKernelFnEV  GetGEMVEV  (int quantType) const;
+    DequantKernelFn GetDequant (int quantType) const;
     BlockGeometry   GetGeometry(int quantType) const;
 
     std::string DumpTable() const;
@@ -255,6 +268,7 @@ private:
     CPUFeatures cpu_;
 
     std::unordered_map<int, GEMVKernelFn>    gemvTable_;
+    std::unordered_map<int, GEMVKernelFnEV>   gemvEvTable_;
     std::unordered_map<int, DequantKernelFn> dequantTable_;
     std::unordered_map<int, BlockGeometry>   geometryTable_;
 

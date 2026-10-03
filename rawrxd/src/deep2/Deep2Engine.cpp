@@ -6,6 +6,7 @@
 #include "Tokenizer.hpp"
 #include "Sampler.hpp"
 #include "GGUFLoader.hpp"
+#include "ExecutionView.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "Deep2DualGpuRowSplit.hpp"
 #include "lavapath/GpuForwardChildLadder.hpp"
@@ -4001,6 +4002,46 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
 
     // CPU fallback
     RAWRXD_DEEP2_TRACE("LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn);
+
+    // RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_002
+    // Production adoption: try ExecutionView-aware kernel first.
+    // If no EV kernel is registered (nullptr), fall through to legacy path.
+    // Only F32 has an EV kernel registered; all quant types fall through.
+    {
+        auto kernelEv = QuantKernelRegistry::Instance().GetGEMVEV(wt.type);
+        if (kernelEv) {
+            Deep2::ExecutionView ev;
+            ev.identity.model   = 1;  // TODO: real model fingerprint
+            ev.identity.tensor  = wt.sizeBytes;
+            ev.identity.layer   = 0; // TODO: propagate layer
+            ev.identity.role    = 0;
+            ev.identity.variant = 0;
+            ev.transientAddress = wt.data;
+            ev.bytes            = wt.sizeBytes;
+            ev.lease.generation = 1;
+            ev.lease.owner      = 1;
+            ev.lease.epoch      = 0;
+            std::memset(output, 0, outDim * sizeof(float));
+            kernelEv(ev, input, output, rows, cols);
+            if (bias) {
+                for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
+            }
+            size_t outBad = SIZE_MAX;
+            for (size_t i = 0; i < outDim; ++i) {
+                if (!std::isfinite(output[i])) { outBad = i; break; }
+            }
+            if (outBad != SIZE_MAX) {
+                RAWRXD_DEEP2_TRACE(
+                    "LINEAR_CPU_NONFINITE name=%s type=%d firstBadIdx=%zu value=%.9g\n",
+                    wtn, wt.type, outBad,
+                    outBad < outDim ? output[outBad] : 0.0f);
+                throw std::runtime_error("LinearW: non-finite output");
+            }
+            RAWRXD_DEEP2_TRACE("LINEARW_RESULT=CPU_FALLBACK_EV name=%s\n",wtn);
+            return;
+        }
+    }
+
     auto kernel = QuantKernelRegistry::Instance().GetGEMV(wt.type);
     if (!kernel) {
         throw std::runtime_error("LinearW: no registered GEMV kernel");
