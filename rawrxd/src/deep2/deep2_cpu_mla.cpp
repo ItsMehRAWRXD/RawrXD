@@ -124,8 +124,6 @@ void applyMlaRopeCpu(float* qFull, float* kPe,
 
 } // namespace
 
-namespace Deep2 {
-
 // RAWRXD_CPU_MLA_KERNEL_001
 //
 // Returns true only when this layer's attention was actually computed on the CPU
@@ -133,6 +131,9 @@ namespace Deep2 {
 // the route is not available for this model. It never returns true on a partial
 // computation: any non-finite result or unbound tensor is a refusal, because a
 // silent wrong answer here is indistinguishable from a correct one downstream.
+
+namespace Deep2 {
+
 bool Deep2Engine::computeMLAAttentionCpu(size_t layer, const float* input,
                                         float* output, size_t seqLen)
 {

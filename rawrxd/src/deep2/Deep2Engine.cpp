@@ -7,6 +7,7 @@
 #include "Sampler.hpp"
 #include "GGUFLoader.hpp"
 #include "ExecutionView.hpp"
+#include "Nanof32BraidStreamer.hpp"
 // RAWRXD_REVERSE_001: identity -> backing registration at the real bind site.
 #include "ReverseLayer.hpp"
 // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: records where model-weight bytes are
@@ -2166,18 +2167,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         metaSize("expert_used_count", 0);
     modelWeights.numSharedExperts =
         metaSize("expert_shared_count", 0);
-    modelWeights.isMoE = modelWeights.numExperts > 0;
-    // RAWRXD_DEEPSEEK_CPU_E2E_001: the dense prefix length. Mixtral-style
-    // exports omit the key, which correctly means "no dense prefix".
     modelWeights.leadingDenseBlockCount =
         metaSize("leading_dense_block_count", 0);
-    if (modelWeights.leadingDenseBlockCount > modelWeights.numLayers) {
-        std::fprintf(stderr,
-            "[Deep2Engine] leading_dense_block_count=%zu exceeds block_count=%zu; "
-            "clamping to block_count\n",
-            modelWeights.leadingDenseBlockCount, modelWeights.numLayers);
-        modelWeights.leadingDenseBlockCount = modelWeights.numLayers;
-    }
+    modelWeights.isMoE = modelWeights.numExperts > 0;
 
     modelWeights.ropeDimensionCount =
         metaSize("rope.dimension_count", modelWeights.headDim);
@@ -5329,23 +5321,14 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
         ldiag("FFN_NORM_IN", layerTemp, H);
 
         RAWRXD_DEEP2_TRACE("FWD_LAYER layer=%zu FFN_ENTER\n",layer);
-        // RAWRXD_DEEPSEEK_CPU_E2E_001: the FFN topology is PER LAYER.
+        // RAWRXD_DEEPSEEK_CPU_E2E_001: per-layer MoE dispatch with dense prefix.
         //
-        // The predicate used to be the whole-model flag numExperts > 0, which
-        // sends every layer of a MoE model to computeMoEFFN. DeepSeek-V2 has
-        // leading_dense_block_count=1 and its layer 0 is a plain gated MLP
-        // (ffn_gate/ffn_up/ffn_down, no ffn_gate_inp), so layer 0 was sent to
-        // the MoE path and threw "MoE: router tensor not bound" at prefill
-        // token 0. The tensor was not missing; the dispatch was wrong.
-        //
-        // The predicate is now layer index against the declared dense prefix.
-        // It is deliberately NOT "is this layer's router bound": that would
-        // make a genuine missing-router defect silently degrade into a dense
-        // FFN on that layer instead of failing loudly, which is the opposite of
-        // what a fail-closed route should do.
+        // DeepSeek-V2 exports leading_dense_block_count=1, so layer 0 is dense
+        // (ffn_gate/up/down, no ffn_gate_inp). Sending it to computeMoEFFN throws
+        // "MoE: router tensor not bound". The predicate is now layer index against
+        // the declared dense prefix. Zero means "no dense prefix".
         const bool layerIsMoe = modelWeights.numExperts > 0 &&
-            (modelWeights.leadingDenseBlockCount == 0 ||
-             layer >= modelWeights.leadingDenseBlockCount);
+            (modelWeights.leadingDenseBlockCount == 0 || layer >= modelWeights.leadingDenseBlockCount);
         if (layerIsMoe) {
             computeMoEFFN(layer, layerTemp, ffnOutput);
         } else {
@@ -7097,6 +7080,7 @@ static const char* routeName(Deep2Engine::ExecutionRoute r) {
         case Deep2Engine::ExecutionRoute::VulkanMoeHybrid: return "VulkanMoeHybrid";
         case Deep2Engine::ExecutionRoute::VulkanDualRow:   return "VulkanDualRow";
         case Deep2Engine::ExecutionRoute::HostFallback:    return "HostFallback";
+        case Deep2Engine::ExecutionRoute::ReverseWebGPU: return "ReverseWebGPU";
         case Deep2Engine::ExecutionRoute::Unset:           break;
     }
     return "<unset>";
@@ -7119,6 +7103,21 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
         seqLen, (size_t)modelWeights.numLayers,
         modelWeights.isMoE ? 1 : 0, modelWeights.useMLA ? 1 : 0,
         vulkanEnabled_ ? 1 : 0, vulkanInitialized_ ? 1 : 0); std::fflush(stderr);
+
+    // RAWRXD_REVERSE_WEBGPU_STREAM_AUTHORITY_001
+    // If the user has explicitly enabled reverse WebGPU streaming, give that
+    // route first claim before any local GPU or CPU dispatch. Deep2 retains
+    // model authority; the browser receives only the working set required
+    // for the next dispatch.
+    if (reverseWebgpuEnabled_) {
+        if (tryReverseWebgpuTokenForward(hidden, seqLen)) {
+            std::fprintf(stderr, "[FWD_ALL] ReverseWebGPU route succeeded\n");
+            std::fflush(stderr);
+            return ForwardResult{true, ExecutionRoute::ReverseWebGPU, false, nullptr};
+        }
+        std::fprintf(stderr, "[FWD_ALL] ReverseWebGPU route declined; continuing to local dispatch\n");
+        std::fflush(stderr);
+    }
 
     // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — map traversal evidence
     // Bind once per process; record node per layer executed.
@@ -8691,6 +8690,235 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path) {
         (void)fileSize;
     }
     return true;
+}
+
+// =================== NANOF32BRAID STREAMER ====================
+bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
+    if (braidPath.empty()) return false;
+    if (!braidStreamer_) {
+        braidStreamer_ = std::make_unique<Deep2::Nanof32BraidStreamer>();
+    }
+    if (!braidStreamer_->isOpen()) {
+        if (!braidStreamer_->open(braidPath)) {
+            braidStreamer_.reset();
+            braidEnabled_ = false;
+            return false;
+        }
+    }
+
+    // Read architecture metadata
+    Deep2::Nanof32BraidArchMeta archMeta{};
+    if (!braidStreamer_->readArchMeta(archMeta)) {
+        std::fprintf(stderr, "[NQBRAID] ERROR: failed to read arch meta\n");
+        return false;
+    }
+
+    // Configure model weights from arch meta
+    modelWeights = {};
+    modelWeights.numLayers = archMeta.numLayers;
+    modelWeights.hiddenDim = archMeta.hiddenDim;
+    modelWeights.vocabSize = archMeta.vocabSize;
+    modelWeights.numHeads = archMeta.numHeads;
+    modelWeights.numKVHeads = archMeta.numKVHeads;
+    modelWeights.headDim = archMeta.headDim;
+    modelWeights.intermediateDim = archMeta.intermediateDim;
+    modelWeights.normEps = archMeta.normEps;
+    modelWeights.useMLA = (archMeta.ropeType == 3);
+    modelWeights.isMoE = (archMeta.numExperts > 0);
+    modelWeights.numExperts = archMeta.numExperts;
+    modelWeights.numExpertsPerToken = archMeta.activeExperts;
+
+    config.hiddenDim = archMeta.hiddenDim;
+    config.vocabSize = archMeta.vocabSize;
+    config.numLayers = archMeta.numLayers;
+    config.numHeads = archMeta.numHeads;
+    config.numKVHeads = archMeta.numKVHeads;
+    config.headDim = archMeta.headDim;
+    config.intermediateDim = archMeta.intermediateDim;
+    config.normEps = archMeta.normEps;
+
+    // Read all tensors from the braid file
+    std::vector<std::pair<std::string, Deep2::NQBraidBlock>> tensors;
+    if (!braidStreamer_->readAllTensors(tensors)) {
+        std::fprintf(stderr, "[NQBRAID] ERROR: failed to read all tensors\n");
+        return false;
+    }
+
+    // Build name → tensor map
+    std::unordered_map<std::string, Deep2::NQBraidBlock*> tensorMap;
+    for (auto& kv : tensors) {
+        tensorMap[kv.first] = &kv.second;
+    }
+
+    // Helper: find tensor by name substring match (first match)
+    auto findTensor = [&](const std::string& name) -> Deep2::NQBraidBlock* {
+        for (auto& kv : tensorMap) {
+            if (kv.first.find(name) != std::string::npos) {
+                return kv.second;
+            }
+        }
+        return nullptr;
+    };
+
+    // Helper: bind a tensor into WeightTensor
+    auto bindTensor = [](Deep2::NQBraidBlock& blk, WeightTensor& wt,
+                         size_t rows, size_t cols) {
+        if (!blk.ready || blk.bf16Data.empty()) return false;
+        wt.data = blk.bf16Data.data();
+        wt.type = 30;  // GGML_TYPE_BF16
+        wt.rows = rows;
+        wt.cols = cols;
+        wt.sizeBytes = blk.bf16Data.size() * sizeof(Deep2::bfloat16_t);
+        wt.mapped = true;
+        wt.name = blk.name;
+        wt.shape = {static_cast<int64_t>(cols), static_cast<int64_t>(rows)};
+        return true;
+    };
+
+    // Token embeddings (vocabSize x hiddenDim)
+    auto emb = findTensor("token_embd");
+    if (emb) {
+        bindTensor(*emb, modelWeights.tokenEmbed,
+                   archMeta.vocabSize, archMeta.hiddenDim);
+    }
+
+    // Output norm
+    auto outNorm = findTensor("output_norm");
+    if (outNorm) {
+        bindTensor(*outNorm, modelWeights.finalNorm,
+                   1, archMeta.hiddenDim);
+    }
+
+    // LM head / output.weight
+    auto lmHead = findTensor("output.weight");
+    if (!lmHead) lmHead = findTensor("lm_head");
+    if (lmHead) {
+        bindTensor(*lmHead, modelWeights.lmHead,
+                   archMeta.vocabSize, archMeta.hiddenDim);
+    }
+
+    // Allocate per-layer weights
+    modelWeights.layers.assign(archMeta.numLayers, LayerWeights{});
+
+    // Map each layer
+    for (uint32_t layer = 0; layer < archMeta.numLayers; ++layer) {
+        auto& lw = modelWeights.layers[layer];
+        std::string blk = "blk." + std::to_string(layer) + ".";
+
+        auto findLayerTensor = [&](const std::string& pattern) -> Deep2::NQBraidBlock* {
+            for (auto& kv : tensorMap) {
+                if (kv.first.find(pattern) != std::string::npos) {
+                    return kv.second;
+                }
+            }
+            return nullptr;
+        };
+
+        // Attention norms
+        auto attnNorm = findLayerTensor(blk + "attn_norm");
+        if (attnNorm) bindTensor(*attnNorm, lw.attnNorm, 1, archMeta.hiddenDim);
+
+        auto ffnNorm = findLayerTensor(blk + "ffn_norm");
+        if (ffnNorm) bindTensor(*ffnNorm, lw.ffnNorm, 1, archMeta.hiddenDim);
+
+        // Attention projections
+        if (archMeta.ropeType == 3) {
+            // MLA path
+            auto q_a = findLayerTensor(blk + "attn_q_a");
+            auto q_b = findLayerTensor(blk + "attn_q_b");
+            auto kv_a = findLayerTensor(blk + "attn_kv_a");
+            auto k_b = findLayerTensor(blk + "attn_k_b");
+            auto v_b = findLayerTensor(blk + "attn_v_b");
+            auto attn_o = findLayerTensor(blk + "attn_o");
+            auto q_a_norm = findLayerTensor(blk + "attn_q_a_norm");
+            auto kv_a_norm = findLayerTensor(blk + "attn_kv_a_norm");
+
+            if (q_a) bindTensor(*q_a, lw.attnQ_a, archMeta.hiddenDim, archMeta.hiddenDim);
+            if (q_b) bindTensor(*q_b, lw.attnQ_b, archMeta.numHeads * archMeta.headDim, archMeta.hiddenDim);
+            if (kv_a) bindTensor(*kv_a, lw.attnKV_a_mqa, archMeta.hiddenDim, archMeta.hiddenDim);
+            if (k_b) bindTensor(*k_b, lw.attnK_b, archMeta.numHeads * archMeta.headDim, archMeta.hiddenDim);
+            if (v_b) bindTensor(*v_b, lw.attnV_b, archMeta.numHeads * archMeta.headDim, archMeta.hiddenDim);
+            if (attn_o) bindTensor(*attn_o, lw.attnO, archMeta.hiddenDim, archMeta.numHeads * archMeta.headDim);
+            if (q_a_norm) bindTensor(*q_a_norm, lw.attnQ_a_norm, 1, archMeta.headDim);
+            if (kv_a_norm) bindTensor(*kv_a_norm, lw.attnKV_a_norm, 1, archMeta.hiddenDim);
+            lw.useMLA = true;
+        } else {
+            // Standard MHA / GQA path
+            auto wq = findLayerTensor(blk + "attn_q");
+            auto wk = findLayerTensor(blk + "attn_k");
+            auto wv = findLayerTensor(blk + "attn_v");
+            auto wo = findLayerTensor(blk + "attn_o");
+
+            size_t qDim = archMeta.numHeads * archMeta.headDim;
+            size_t kvDim = archMeta.numKVHeads * archMeta.headDim;
+
+            if (wq) bindTensor(*wq, lw.wq, qDim, archMeta.hiddenDim);
+            if (wk) bindTensor(*wk, lw.wk, kvDim, archMeta.hiddenDim);
+            if (wv) bindTensor(*wv, lw.wv, kvDim, archMeta.hiddenDim);
+            if (wo) bindTensor(*wo, lw.wo, archMeta.hiddenDim, qDim);
+        }
+
+        // FFN weights
+        auto gate = findLayerTensor(blk + "ffn_gate");
+        auto up = findLayerTensor(blk + "ffn_up");
+        auto down = findLayerTensor(blk + "ffn_down");
+
+        if (gate) bindTensor(*gate, lw.wGate, archMeta.intermediateDim, archMeta.hiddenDim);
+        if (up) bindTensor(*up, lw.wUp, archMeta.intermediateDim, archMeta.hiddenDim);
+        if (down) bindTensor(*down, lw.wDown, archMeta.hiddenDim, archMeta.intermediateDim);
+
+        // MoE weights (if applicable)
+        if (archMeta.numExperts > 0) {
+            auto router = findLayerTensor(blk + "ffn_gate_exps");
+            if (router) bindTensor(*router, lw.moeRouter, archMeta.numExperts, archMeta.hiddenDim);
+            // TODO: expert-specific gate/up/down — requires expert index matching
+        }
+    }
+
+    // Transfer ownership of tensor data to the streamer cache for residency
+    {
+        std::lock_guard<std::mutex> lk(braidStreamer_->cacheMutex());
+        auto& cache = braidStreamer_->cache();
+        uint32_t idx = 0;
+        for (auto& kv : tensors) {
+            cache[idx++] = std::move(kv.second);
+        }
+    }
+
+    modelWeights.loaded = true;
+    braidEnabled_ = true;
+
+    std::fprintf(stderr, "[NQBRAID] LOADED: %u layers, hidden=%u, vocab=%u, tensors=%zu\n",
+                 archMeta.numLayers, archMeta.hiddenDim, archMeta.vocabSize, tensors.size());
+    std::fflush(stderr);
+
+    return true;
+}
+
+// =================== REVERSE WEBGPU STREAM AUTHORITY ====================
+// RAWRXD_REVERSE_WEBGPU_STREAM_AUTHORITY_001
+// Deep2 retains model authority; browser becomes execution/view surface only.
+void Deep2Engine::enableReverseWebgpu(bool enable) {
+    reverseWebgpuEnabled_ = enable;
+    if (!enable) {
+        reverseWebgpuBound_ = false;
+    }
+}
+
+bool Deep2Engine::tryReverseWebgpuTokenForward(float* hidden, size_t seqLen) {
+    if (!reverseWebgpuEnabled_ || !modelWeights.loaded) {
+        return false;
+    }
+    // TODO: produce WebGPU-compatible compute packet from the current working set
+    // (identify required tensor/range → locate representation → materialize
+    //  WebGPU input → dispatch → receive result into hidden).
+    //
+    // For now: the route exists, the predicate is wired, the execution is
+    // a measured "not yet implemented" so the route does not silently claim
+    // a false PASS.
+    std::fprintf(stderr, "[REVERSE_WEBGPU] route reached; execution pending implementation\n");
+    std::fflush(stderr);
+    return false;
 }
 
 // =================== SOVEREIGN (TRUTHFUL LIFECYCLE) ====================

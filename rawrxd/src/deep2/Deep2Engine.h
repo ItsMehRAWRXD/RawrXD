@@ -16,6 +16,7 @@
 #include "lavapath/GgufDynamicGeometry.hpp"
 #include "lavapath/LocalModelAuthority_Bundle.hpp"
 #include "BP16Streamer.hpp"
+#include "Nanof32BraidStreamer.hpp"
 #include "Tokenizer.hpp"
 #include "../sampling/advanced_sampler.hpp"
 #include "Sampler.hpp"
@@ -211,6 +212,17 @@ struct ModelWeights {
     size_t numExperts     = 0;
     size_t numExpertsPerToken = 0;
     size_t numSharedExperts = 0;
+    // RAWRXD_DEEPSEEK_CPU_E2E_001: number of LEADING layers that are DENSE.
+    //
+    // isMoE above is a WHOLE-MODEL flag and it was used as a per-layer
+    // dispatch predicate in forwardLayer. DeepSeek-V2 exports
+    // deepseek2.leading_dense_block_count=1, so layer 0 carries ffn_gate/up/down
+    // and no ffn_gate_inp at all: it is a dense layer inside a MoE model. Sending
+    // it to computeMoEFFN produced "MoE: router tensor not bound" at prefill
+    // token 0, which reads like a missing tensor and is actually a wrong
+    // dispatch. Zero means "no dense prefix" -- every layer is MoE -- which is
+    // the correct reading for architectures that do not export the key.
+    size_t leadingDenseBlockCount = 0;
 
     // MLA (K2) architecture fields
     size_t qLoraRank      = 0;
@@ -234,17 +246,6 @@ struct ModelWeights {
     bool   ropeNeoxStyle  = false;  // true: NeoX rotated-half (llama/qwen); false: GPT-J adjacent
     bool   tieEmbeddings  = false;
     bool   isMoE          = false;
-    // RAWRXD_DEEPSEEK_CPU_E2E_001: number of LEADING layers that are DENSE.
-    //
-    // isMoE above is a WHOLE-MODEL flag and it was used as a per-layer
-    // dispatch predicate in forwardLayer. DeepSeek-V2 exports
-    // deepseek2.leading_dense_block_count=1, so layer 0 carries ffn_gate/up/down
-    // and no ffn_gate_inp at all: it is a dense layer inside a MoE model. Sending
-    // it to computeMoEFFN produced "MoE: router tensor not bound" at prefill
-    // token 0, which reads like a missing tensor and is actually a wrong
-    // dispatch. Zero means "no dense prefix" -- every layer is MoE -- which is
-    // the correct reading for architectures that do not export the key.
-    size_t leadingDenseBlockCount = 0;
     bool   loaded         = false;
 };
 
@@ -426,6 +427,9 @@ public:
     // Load model from BP16 file (exact weight extraction, no dequantization)
     bool loadModelFromBP16(const std::string& bp16Path);
 
+    // Load model from nanof32braidQuantless reverse-streamed format
+    bool loadModelFromNanof32Braid(const std::string& braidPath);
+
     // Load model weights (legacy API - from memory buffer)
     bool loadWeights(const void* weightData, size_t weightSize);
     
@@ -584,6 +588,11 @@ public:
     void setVramCeilingGiB(uint32_t gib);
     uint64_t vramCeilingBytes() const;
 
+    // RAWRXD_REVERSE_WEBGPU_STREAM_AUTHORITY_001
+    // Browser-side WebGPU dispatch control
+    void enableReverseWebgpu(bool enable);
+    bool isReverseWebgpuEnabled() const { return reverseWebgpuEnabled_; }
+
     // Per-token measurement helpers
     void beginTokenStreamingMeasurement(uint64_t tokenIndex);
     bool endTokenStreamingMeasurement(uint64_t& outBytesMoved);
@@ -739,6 +748,12 @@ public:
                                    const float* hostIn, float* hostOut);
     bool forwardGpuMultiMap(const float* hostIn, float* hostOut);
     bool tryGpuTokenForward(float* hidden);
+    bool forwardTokenGpuHybrid(float* hidden, size_t seqLen);
+
+    // RAWRXD_REVERSE_WEBGPU_STREAM_AUTHORITY_001
+    // Browser-side WebGPU dispatch — Deep2 produces the working set.
+    // Returns true if the WebGPU route produced a finite hidden state.
+    bool tryReverseWebgpuTokenForward(float* hidden, size_t seqLen);
     // Execution route tracking for strict no-fallback authority
     enum class ExecutionRoute : uint8_t {
         Unset,
@@ -746,7 +761,8 @@ public:
         VulkanResident,
         VulkanMoeHybrid,
         VulkanDualRow,
-        HostFallback
+        HostFallback,
+        ReverseWebGPU   // RAWRXD_REVERSE_WEBGPU_STREAM_AUTHORITY_001
     };
     struct ForwardResult {
         bool ok = false;
@@ -942,12 +958,6 @@ public:
         size_t count,
         const float* input,
         size_t inputCount,
-        // RAWRXD_LAYER0_ATTN_BISECT_001: optional, write-only. On entry *this
-        // is set to null; on a false return it names the guard that rejected the
-        // call, so "tryVulkanHostGEMVGroup was called" can be distinguished from
-        // "it ran and handled the operation". A caller that only records the
-        // boolean cannot tell those apart, which is what left
-        // forward:vulkan=0/0 and computeAttention:try... unreconciled.
         const char** rejectReason = nullptr);
     bool computeMoEFFNGpu(size_t layer, const float* input, float* output);
 
@@ -970,7 +980,6 @@ public:
         uint64_t lastPos = 0;
     };
     const CpuMlaCounters& cpuMlaCounters() const { return cpuMla_; }
-    bool forwardTokenGpuHybrid(float* hidden, size_t seqLen);
     PeerDeviceGroupProbe probeVulkanPeerGroup() const;
 
     // VAL-000 Phase 3: Advanced feature control
@@ -1431,6 +1440,16 @@ private:
     // BP16 streaming support (zero-copy mapped weight access)
     std::unique_ptr<BP16Streamer> bp16Streamer_;
     bool bp16Enabled_ = false;
+
+    // Nanof32Braid reverse-streamed format (1.15 bpw → BF16)
+    std::unique_ptr<Nanof32BraidStreamer> braidStreamer_;
+    bool braidEnabled_ = false;
+
+    // RAWRXD_REVERSE_WEBGPU_STREAM_AUTHORITY_001
+    // Reverse Local Browser WebGPU Stream — Deep2 retains model authority.
+    // Browser becomes execution/view surface only; never model owner.
+    bool reverseWebgpuEnabled_ = false;
+    bool reverseWebgpuBound_   = false;   // a route packet was produced
 
     // 24 GiB hard-residency / measured streaming controller
     std::unique_ptr<VramStreamingController> vramStreamingController_;

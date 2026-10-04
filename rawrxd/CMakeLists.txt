@@ -4969,14 +4969,19 @@ if(MSVC)
     # Disabled by default +ï¿½-ï¿½+ï¿½-ï¿½+ï¿½-ï¿½ ASM kernel requires ml64 port fixes (A2008/A2083).
     # Enable with: cmake -DRAWR_ENABLE_NANOQUANT=ON
     # =========================================================================
-    option(RAWR_ENABLE_NANOQUANT "Enable NanoQuant sub-1-bit quantization engine (requires working NanoQuant ASM)" OFF)
-    if(RAWR_ENABLE_NANOQUANT)
-    set(ASM_NANOQUANT_OBJ "")
-    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NanoQuant_Engine.asm")
+    option(RAWR_ENABLE_NANOQUANT "Enable NanoQuant sub-1-bit quantization engine" ON)
+    if(RAWR_ENABLE_NANOQUANT AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NanoQuant_Engine.asm)
+        list(APPEND ASM_KERNEL_SOURCES src/asm/RawrXD_NanoQuant_Engine.asm)
+        set(ASM_NANOQUANT_OBJ "")
+        message(STATUS "[NanoQuant] MASM kernel found: src/asm/RawrXD_NanoQuant_Engine.asm")
+    else()
+        message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT optional NanoQuant MASM source")
+    endif()
 
+    if(RAWR_ENABLE_NANOQUANT)
     add_library(RawrXD_NanoQuant STATIC
+         src/deep2/Nanof32BraidStreamer.cpp
          src/ggml/ggml_nanoquant.cpp
-        src/agentic/agent_tool_quantize.cpp
     )
     # Set MSVC runtime library to match RawrEngine (static CRT)
     set_property(TARGET RawrXD_NanoQuant PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -5257,6 +5262,12 @@ set(INFERENCE_ENGINE_SOURCES
     # that library also carries QuantKernelRegistry.cpp and would collide.
     src/deep2/ModelRegistry.cpp
     src/deep2/TensorResidencyCache.cpp
+    # RAWRXD_DEEPSEEK_CPU_E2E_001: Nanof32BraidStreamer for reverse-streamed decompression
+    # Braid format (1.15 bpw → BF16) used by Nanof32-braid models.
+    # Deep2Engine holds a unique_ptr to it and calls open()/decompressBraid().
+    # It was previously only built when RAWR_ENABLE_NANOQUANT=ON, but Deep2Engine
+    # uses it unconditionally, so it must be in the main InferenceEngine target.
+    src/deep2/Nanof32BraidStreamer.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file

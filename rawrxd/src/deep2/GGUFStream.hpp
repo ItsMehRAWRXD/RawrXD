@@ -71,6 +71,9 @@ public:
         }
         totalBlocks_ = (elems_ + blockElems_ - 1) / blockElems_;
         nextBlock_ = 0;
+        // Direction is per-open state, not sticky across tensors. Arming reverse
+        // on one tensor must not leave the next open() descending.
+        reverseMode_ = false;
         // whole blocks per row, floor: a block may straddle rows
         blocksPerRow_ = cols_ / blockElems_;
         // per-tensor telemetry MUST reset here. Leaving them accumulating made
@@ -91,6 +94,57 @@ public:
         ensureWindow();
     }
 
+    // =========================================================================
+    // RAWRXD_GGUF_REVERSE_CURSOR_006
+    //
+    // Reverse iteration over the SAME mapped window the forward path uses.
+    // This changes the already-wired path rather than promoting another
+    // unbuilt reader (ReverseStream.inc stays HOLD, unbuilt, per instruction).
+    //
+    // Forward default is deliberately RETAINED (FORWARD_DEFAULT_REMOVED=0):
+    // the acceptance criterion is that reverse ORDER is correct when selected,
+    // not that forward order is gone. Removing forward would break every
+    // existing caller for no measured gain.
+    //
+    // Direction is NOT caller-parameterised. There is deliberately no
+    // seekReverse(blockIndex) and no seekBlock(i): either would re-open the
+    // caller-supplied-random-direction hole that the contract forbids
+    // (CALLER_SUPPLIED_RANDOM_DIRECTION=0). The only public entry is
+    // beginReverse(), which arms the cursor at totalBlocks_; after that the
+    // caller can only step, and only backwards, until EOF.
+    //
+    // FILE_WRITE / FILE_GENERATION / NEW_FORMAT are all zero by construction:
+    // this header opens no handle, maps no view, and writes no byte. It reads
+    // t_->data, which the loader already mapped, through the kernel the
+    // registry already bound (dq_). No new format is introduced.
+    //
+    // The window (buf_) is allocated by setWindow()/ensureWindow() and is
+    // reused unchanged, so BUFFER_GROWTH across the whole reverse traversal
+    // is zero. workingSetBytes() is constant from arm() to EOF.
+    // =========================================================================
+
+    // Arm the cursor at totalBlocks_ so the next reverseNext() yields the LAST
+    // block (index totalBlocks_-1). Idempotent: re-arming restarts the descent.
+    // Any in-flight forward position is discarded, because a single cursor
+    // cannot be two directions at once.
+    void beginReverse() noexcept {
+        nextBlock_ = totalBlocks_;
+        reverseMode_ = true;
+    }
+
+    // Abandon reverse mode and restore plain forward iteration from block 0.
+    void endReverse() noexcept {
+        nextBlock_ = 0;
+        reverseMode_ = false;
+    }
+
+    bool reverseMode() const noexcept { return reverseMode_; }
+
+    // True once the armed reverse cursor has consumed block 0.
+    bool reverseExhausted() const noexcept {
+        return reverseMode_ && nextBlock_ == 0;
+    }
+
     void ensureWindow() {
         if (!blockElems_) return;
         const std::size_t want = std::size_t(blocksPerSlice_) * blockElems_;
@@ -98,7 +152,15 @@ public:
     }
 
     // Decode the next slice. Returns false at end of tensor.
+    //
+    // RAWRXD_GGUF_REVERSE_CURSOR_006: refuses while reverse mode is armed.
+    // reverseNext() already guards against being called unarmed; without the
+    // mirror guard here, a caller that reached for next() during a reverse
+    // traversal would advance nextBlock_ UPWARD and interleave the two orders,
+    // which is precisely what the reverse contract exists to make impossible.
+    // A single cursor cannot serve two directions at once.
     bool next(Slice& out) {
+        if (reverseMode_) return false;
         if (!t_ || nextBlock_ >= totalBlocks_) return false;
         ensureWindow();
         if (buf_.empty()) return false;
@@ -131,6 +193,64 @@ public:
         return true;
     }
 
+    // =========================================================================
+    // RAWRXD_GGUF_REVERSE_CURSOR_006 — reverse step.
+    //
+    // Strictly descending by construction: the cursor is decremented BEFORE
+    // the read, so every emitted block index is lower than the previous one.
+    // No block can be skipped (the cursor moves by exactly nb each call) and
+    // none can repeat (it never moves upward). EOF is reported only when the
+    // cursor is already at 0, which is what makes LAST_BLOCK=0 reachable and
+    // is why block 0 is delivered rather than skipped.
+    //
+    // Slice field semantics are IDENTICAL to next(): firstBlock is the LOWEST
+    // index in this slice and firstElement corresponds to it, because in
+    // descending order the lowest block is the one just read.
+    // rowsCovered/firstRow stay conservative for the same reason they are in
+    // next(): a quant block can straddle a row boundary.
+    //
+    // Returns false without touching out when reverse mode is not armed, so a
+    // caller cannot silently fall through into forward iteration and have the
+    // two orders interleaved.
+    // =========================================================================
+    bool reverseNext(Slice& out) {
+        if (!t_) return false;
+        if (!reverseMode_) return false;
+        if (nextBlock_ == 0) return false;   // EOF: block 0 already delivered
+        ensureWindow();
+        if (buf_.empty()) return false;
+
+        const std::uint64_t remaining = nextBlock_;          // blocks left below cursor
+        std::uint64_t nb = std::min<std::uint64_t>(blocksPerSlice_, remaining);
+        if (nb == 0) return false;
+
+        nextBlock_ -= nb;                                    // descend FIRST
+        const std::uint64_t firstBlock = nextBlock_;         // lowest index in slice
+        const std::uint64_t firstElem = firstBlock * blockElems_;
+        std::uint64_t count = nb * blockElems_;
+        if (firstElem + count > elems_) count = elems_ - firstElem;
+        if (!count) return false;
+
+        const std::uint8_t* src = t_->data + std::size_t(firstBlock) * blockBytes_;
+        dq_(src, buf_.data(), std::size_t(count));
+
+        out.firstBlock = firstBlock;
+        out.blocks = nb;
+        out.firstElement = firstElem;
+        out.elements = count;
+        // conservative row span: a block can straddle rows
+        out.firstRow = blocksPerRow_ ? firstElem / cols_ : 0;
+        out.rowsCovered = blocksPerRow_
+            ? ((firstElem + count - 1) / cols_) - out.firstRow + 1
+            : rows_;
+        out.data = buf_.data();
+
+        blocksServed_ += nb;
+        elementsServed_ += count;
+        bytesTouched_ += std::size_t(nb) * blockBytes_;
+        return true;
+    }
+
     // --- telemetry -------------------------------------------------------
     // Read-only view of the slice most recently returned by next().
     // Valid until the next next() call.
@@ -156,6 +276,8 @@ private:
     std::uint64_t totalBlocks_ = 0, nextBlock_ = 0;
     std::uint64_t blocksPerSlice_ = 1;
     std::uint64_t blocksServed_ = 0, elementsServed_ = 0, bytesTouched_ = 0;
+    // RAWRXD_GGUF_REVERSE_CURSOR_006: false = plain forward (default).
+    bool reverseMode_ = false;
     std::vector<float> buf_;
 };
 

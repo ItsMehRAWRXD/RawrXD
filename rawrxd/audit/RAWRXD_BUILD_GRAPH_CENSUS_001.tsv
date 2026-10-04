@@ -475,8 +475,9 @@ src/core/self_host_engine.cpp	src/core	1	IMPLEMENT
 src/core/hardware_synthesizer.cpp	src/core	1	IMPLEMENT
 src/ui/RawrXD_MainLoop.cpp	src/ui	1	GRAPH_RESTORED_EMPTY
 src/asm/RawrXD_PE_Exporter.asm	src/asm	1	IMPLEMENT
+src/asm/RawrXD_NanoQuant_Engine.asm	src/asm	1	IMPLEMENT
+src/deep2/Nanof32BraidStreamer.cpp	src/deep2	1	IMPLEMENT
 src/ggml/ggml_nanoquant.cpp	src/ggml	1	IMPLEMENT
-src/agentic/agent_tool_quantize.cpp	src/agentic	1	IMPLEMENT
 src/rawrxd_transformer_forwardbatch.cpp	src/rawrxd_transformer_forwardbatch.cpp	1	IMPLEMENT
 src/deep2/WeightConsumptionCensus.hpp	src/deep2	1	IMPLEMENT
 src/core/WeightConsumptionCensus.cpp	src/core	1	IMPLEMENT

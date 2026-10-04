@@ -15,6 +15,7 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -790,6 +791,54 @@ private:
                 return fail("unsupported/malformed GGML tensor type or shape: " + t.name);
 
             pending.emplace_back(std::move(t));
+        }
+
+        // RAWRXD_DEEPSEEK_CPU_E2E_001: infer the data-section alignment from
+        // tensor relative offsets when the file omits general.alignment.
+        //
+        // The GGUF spec makes general.alignment optional (default 32). Some
+        // writers omit the key even when they wrote the data section at a
+        // larger alignment. If all tensor relativeOffsets share a common
+        // divisor > kDefaultAlignment that is a power of two >= 8, that is
+        // the alignment the writer actually used. The DeepSeek-V2-Lite file
+        // omitted general.alignment but all 377 tensor offsets are multiples
+        // of 256; the file was written with alignment 256, yet the loader
+        // defaulted to 32, placing dataStart 238 bytes early and corrupting
+        // every Q8_0 decode.
+        {
+            uint64_t gcdAlign = 0;
+            for (const auto& pt : pending) {
+                gcdAlign = std::gcd(gcdAlign, pt.relativeOffset);
+            }
+            if (gcdAlign > localAlignment && gcdAlign >= 8 &&
+                (gcdAlign & (gcdAlign - 1)) == 0) {
+                // Validate: the inferred alignment must not push data past EOF.
+                const uint64_t tableEnd = static_cast<uint64_t>(p - mf->data);
+                const uint64_t trialStart = alignUp(tableEnd, gcdAlign);
+                uint64_t maxOffset = 0;
+                for (const auto& pt : pending) {
+                    size_t bytes = 0;
+                    tensorByteSize(pt, bytes);
+                    maxOffset = std::max(maxOffset, pt.relativeOffset + bytes);
+                }
+                if (trialStart + maxOffset <= mf->size) {
+                    std::fprintf(stderr,
+                        "[GGUFLoader] inferred alignment %llu from tensor offsets "
+                        "(file had general.alignment=%llu, default=%llu)\n",
+                        (unsigned long long)gcdAlign,
+                        (unsigned long long)localAlignment,
+                        (unsigned long long)kDefaultAlignment);
+                    localAlignment = gcdAlign;
+                } else {
+                    std::fprintf(stderr,
+                        "[GGUFLoader] GCD=%llu rejected: would exceed file size "
+                        "(trialStart=%llu, maxOffset=%llu, fileSize=%llu)\n",
+                        (unsigned long long)gcdAlign,
+                        (unsigned long long)trialStart,
+                        (unsigned long long)maxOffset,
+                        (unsigned long long)mf->size);
+                }
+            }
         }
 
         const uint64_t tableEnd =
