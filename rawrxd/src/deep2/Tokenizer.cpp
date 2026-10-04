@@ -3,10 +3,12 @@
 // ============================================================================
 #include "Tokenizer.hpp"
 #include "GGUFLoader.hpp"
+#include "Nanof32BraidFormat.hpp"  // Nanof32VocabHeader, NANO_F32_BRAID_VOCAB_MAGIC
 
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <limits>
 #include <sstream>
@@ -190,6 +192,126 @@ bool BPETokenizer::loadFromGGUF(const void* ggufData, size_t len) {
     // Parsing raw GGUF bytes here would duplicate GGUFLoader authority and lose
     // mapped lifetime guarantees. Kept only for source compatibility.
     return false;
+}
+
+bool BPETokenizer::loadFromBraidVocab(const void* section, size_t len,
+                                      uint32_t kind) {
+    // RAWRXD_NQBRAID_TOKENIZER_E2E_001
+    clear();
+    if (!section || len < sizeof(Nanof32VocabHeader)) return false;
+
+    Nanof32VocabHeader vh{};
+    std::memcpy(&vh, section, sizeof vh);
+    if (vh.magic != NANO_F32_BRAID_VOCAB_MAGIC) return false;
+    if (vh.entryCount == 0) return false;
+
+    // Every bound is checked against `len` BEFORE any pointer is formed. A
+    // crafted length field must not be able to walk off the section.
+    const uint64_t need = sizeof(Nanof32VocabHeader);
+    const uint64_t offTableBytes = static_cast<uint64_t>(vh.entryCount) * 4ull;
+    const uint64_t scoreBytes    = static_cast<uint64_t>(vh.entryCount) * 4ull;
+    const uint64_t typeBytes     = static_cast<uint64_t>(vh.entryCount) * 4ull;
+    if (need + offTableBytes + scoreBytes + typeBytes + 4ull + vh.mergeBytes > len)
+        return false;
+
+    // Only the three kinds this class implements are accepted. Anything else
+    // fails closed rather than guessing an algorithm.
+    if (kind > static_cast<uint32_t>(Kind::RWKV)) return false;
+    kind_ = static_cast<Kind>(kind);
+
+    const uint8_t* base = static_cast<const uint8_t*>(section);
+    size_t cursor = sizeof(Nanof32VocabHeader);
+
+    const uint8_t* strBlob = base + cursor;
+    if (vh.strBytes > len - cursor) return false;
+    cursor += vh.strBytes;
+
+    const uint8_t* offTable = base + cursor;  cursor += offTableBytes;
+    const uint8_t* scores    = base + cursor;  cursor += scoreBytes;
+    const uint8_t* types     = base + cursor;  cursor += typeBytes;
+    uint32_t mergeCount = 0;
+    std::memcpy(&mergeCount, base + cursor, 4);  cursor += 4;
+    const uint8_t* mergeBlob = base + cursor;
+
+    idToToken_.resize(vh.entryCount);
+    uint32_t prevOffset = 0;
+    for (uint32_t i = 0; i < vh.entryCount; ++i) {
+        uint32_t so = 0;
+        std::memcpy(&so, offTable + i * 4, 4);
+        // The offset must land inside the blob and the string must be
+        // NUL-terminated within it.
+        if (so >= vh.strBytes) return false;
+        // NQB_INVARIANT_TOKEN_DOMAIN_001 (vocab half): the offset table must be
+        // MONOTONIC NON-DECREASING.
+        //
+        // Without this, a single corrupted offset reinterprets one token as
+        // another's bytes and is undetectable: both entries still point into
+        // the blob and both are still terminated, so the loader accepts a
+        // vocabulary that is not the one that was written. Requiring
+        // non-decreasing order (not strictly increasing, because a real vocab
+        // may legitimately contain the same surface string under two ids)
+        // makes the table canonical, so any bit-rot in it is caught here
+        // rather than surfacing as inexplicable token substitutions.
+        if (i > 0 && so < prevOffset) return false;
+        prevOffset = so;
+        const char* s = reinterpret_cast<const char*>(strBlob + so);
+        const size_t maxLen = vh.strBytes - so;
+        const size_t n = ::strnlen(s, maxLen);
+        if (n == maxLen) return false;   // unterminated: refuse, do not guess
+        idToToken_[i].assign(s, n);
+    }
+
+    tokenToId_.reserve(idToToken_.size() * 2);
+    for (size_t i = 0; i < idToToken_.size(); ++i) {
+        if (tokenToId_.find(idToToken_[i]) == tokenToId_.end())
+            tokenToId_.emplace(idToToken_[i], static_cast<int>(i));
+    }
+
+    scores_.resize(vh.entryCount);
+    std::memcpy(scores_.data(), scores, scoreBytes);
+    tokenTypes_.resize(vh.entryCount);
+    std::memcpy(tokenTypes_.data(), types, typeBytes);
+
+    modelName_.assign(vh.model, ::strnlen(vh.model, sizeof vh.model));
+
+    bosId_ = vh.bosId;
+    eosId_ = vh.eosId;
+    unkId_ = vh.unkId;
+    sepId_ = vh.sepId;
+    padId_ = vh.padId;
+
+    addBos_ = (vh.flags & NQ_VOCAB_FLAG_ADD_BOS) != 0;
+    addEos_ = (vh.flags & NQ_VOCAB_FLAG_ADD_EOS) != 0;
+
+    // A declared BOS/EOS that is out of range would index past the token
+    // table inside encode(). Refuse rather than clamp.
+    if (addBos_ && (bosId_ < 0 || static_cast<size_t>(bosId_) >= idToToken_.size()))
+        return false;
+    if (addEos_ && (eosId_ < 0 || static_cast<size_t>(eosId_) >= idToToken_.size()))
+        return false;
+
+    // GPT2 BPE merges: "A B" per line, rank = line order, matching how
+    // loadFromGGUF(loader) derives them from tokenizer.ggml.merges.
+    if (vh.mergeBytes > 0 && mergeCount > 0 && kind_ == Kind::GPT2BPE) {
+        std::string blob(reinterpret_cast<const char*>(mergeBlob), vh.mergeBytes);
+        size_t pos = 0, rank = 0;
+        while (pos < blob.size() && rank < mergeCount) {
+            const size_t nl = blob.find('\n', pos);
+            const std::string line =
+                blob.substr(pos, (nl == std::string::npos ? blob.size() : nl) - pos);
+            pos = (nl == std::string::npos) ? blob.size() : nl + 1;
+            if (line.empty()) continue;
+            const size_t sp = line.find(' ');
+            if (sp == std::string::npos || sp == 0 || sp + 1 >= line.size())
+                return false;
+            mergeRanks_.emplace(pairKey(line.substr(0, sp), line.substr(sp + 1)), rank);
+            ++rank;
+        }
+    }
+
+    buildAuxiliaryIndexes();
+    ready_ = true;
+    return true;
 }
 
 bool BPETokenizer::loadFromGGUF(const GGUFLoader& loader) {

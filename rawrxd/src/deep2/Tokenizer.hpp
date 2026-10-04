@@ -48,6 +48,18 @@ public:
     // Batch 7 authority: bind tokenizer.ggml.* directly from parsed GGUF metadata.
     bool loadFromGGUF(const GGUFLoader& loader);
 
+    // RAWRXD_NQBRAID_TOKENIZER_E2E_001: bind from a Nanof32Braid vocabulary
+    // section. Same authority as loadFromGGUF(loader) -- same token table,
+    // scores, types and special ids, same auxiliary indexes -- but sourced
+    // from the braid vocab section instead of GGUF metadata.
+    //
+    // Needed because the braid loader cannot construct a GGUFLoader (a .nqb is
+    // not a GGUF), so every braid model fell back to a dummy tokenizer:
+    //     WARN=tokenizer_load_failed_using_dummy
+    //     OUTPUT=(tokenizer unavailable, N tokens)
+    // An unknown kind fails closed, matching loadFromGGUF.
+    bool loadFromBraidVocab(const void* section, size_t len, uint32_t kind);
+
     std::vector<int> encode(const std::string& text) override;
     std::string decode(const std::vector<int>& tokens) override;
     std::string decode(int token) override;

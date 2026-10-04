@@ -31,7 +31,19 @@ struct alignas(64) Nanof32BraidHeader {
     uint32_t numTensors;      // tensor count
     uint64_t tensorDirOffset; // absolute offset to tensor directory footer
     uint64_t fileSize;        // total file size in bytes
-    uint64_t reserved[4];     // padding to 64 bytes
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- vocabulary section.
+    //
+    // Without these the loader could only ever fall back to a dummy tokenizer
+    // and the end-to-end test could not decode a single token:
+    //     WARN=tokenizer_load_failed_using_dummy
+    //     OUTPUT=(tokenizer unavailable, N tokens)
+    // A reader that wants tokens but cannot get them will invent ids, so
+    // nothing downstream can be trusted. Both are 0 when the file carries no
+    // vocabulary, which is a valid state and is reported as such rather than
+    // treated as corruption.
+    uint64_t vocabSectionOffset;   // 0 = no vocabulary in this file
+    uint64_t vocabSectionBytes;    // 0 = no vocabulary in this file
+    uint64_t reserved[2];
 };
 
 // ----------------------------------------------------------------------------
@@ -55,13 +67,97 @@ struct alignas(64) Nanof32BraidArchMeta {
     float    normEps;              // RMSNorm epsilon
     uint32_t moeGateDim;           // MoE gate dimension
     uint32_t hasSharedExperts;     // 1 if shared expert present
-    uint32_t reserved[3];            // padding
+    // RAWRXD_NANOF32_BRAID_WRITER_001
+    // One reserved slot is now ropeTheta. The braid path could not execute a
+    // forward pass without it:
+    //     [Deep2Engine] forward failed: RoPE: theta not bound from model metadata
+    // because EngineConfig::ropeTheta is documented "unset until dynamic
+    // geometry" and the GGUF path fills it from GGUF metadata, while this
+    // format carried only ropeType. Rather than have every reader guess
+    // 10000.0f, the value is carried. This consumes one word of padding that
+    // existed for exactly this purpose, so sizeof(Nanof32BraidArchMeta) is
+    // unchanged at 128 and no file written against the previous field layout
+    // changes size. Values in the old reserved[0] slot are ignored on read.
+    float    ropeTheta;            // RoPE base theta; 0 means "unset"
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- MLA geometry.
+    //
+    // ropeType == 3 selects the MLA path, but the format carried no MLA
+    // dimensions at all, so Deep2Engine's CPU MLA route could never satisfy
+    // its own geometry guard and refused every MLA braid model:
+    //     [CPU_MLA] reject: incomplete geometry H=64 heads=4
+    //                kvRank=0 nope=0 rope=0 vlen=0
+    // deep2_cpu_mla.cpp requires kvLoraRank, qkNopeHeadDim, qkRopeHeadDim
+    // (and even), and vHeadDim, all from modelWeights.
+    //
+    // These five words consume the remaining reserved[] padding exactly:
+    // the previous layout ended at byte 108 of a 128-byte struct, and
+    // 108 + 5*4 == 128, so sizeof(Nanof32BraidArchMeta) is unchanged and no
+    // file offset moves. static_assert below enforces that.
+    uint32_t qLoraRank;          // attn_q_a output width
+    uint32_t kvLoraRank;         // attn_kv_a latent width (kvRank)
+    uint32_t qkNopeHeadDim;      // per-head non-positional key/query width
+    uint32_t qkRopeHeadDim;      // per-head positional width; MUST be even
+    uint32_t vHeadDim;           // per-head value width
 };
+
+static_assert(sizeof(Nanof32BraidArchMeta) == 128,
+              "Nanof32BraidArchMeta must stay 128 bytes: the MLA fields were "
+              "added into existing padding, not appended past the alignment "
+              "boundary. If this fires, every .nqb offset is wrong.");
 
 // ----------------------------------------------------------------------------
 // Per-tensor footer (read FIRST when reverse-streaming)
 // Appended at the end of each tensor's data block.
 // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// Vocabulary section
+//
+// RAWRXD_NQBRAID_TOKENIZER_E2E_001
+//
+// Stored between the arch meta and the first tensor. The reader walks tensors
+// BACKWARD from EOF, so inserting a forward section here does not disturb
+// tensor traversal at all -- only dataStart moves.
+//
+// Layout:
+//   [Nanof32VocabHeader]
+//   [string blob]                  entryCount NUL-terminated UTF-8 strings
+//   [offset table]  uint32[entryCount]  byte offset of each string in the blob
+//   [scores]        float[entryCount]
+//   [types]         int32[entryCount]
+//   [mergeCount]    uint32
+//   [merges blob]                  newline-joined "A B" merge pairs
+//
+// The offset table is explicit rather than implied by walking NULs. Walking
+// NULs couples the reader to the writer's exact encoding and turns one
+// truncated string into a silently shifted vocabulary.
+// ----------------------------------------------------------------------------
+
+constexpr uint32_t NANO_F32_BRAID_VOCAB_MAGIC = 0x564B514EU;  // 'NQKV'
+
+struct alignas(64) Nanof32VocabHeader {
+    uint32_t magic;            // NANO_F32_BRAID_VOCAB_MAGIC
+    uint32_t kind;             // mirrors Deep2::BPETokenizer::Kind
+    uint32_t entryCount;
+    uint32_t strBytes;         // size of the string blob
+    uint32_t flags;            // bit0 add_bos, bit1 add_eos
+    uint32_t mergeCount;
+    uint32_t mergeBytes;
+    int32_t  bosId;
+    int32_t  eosId;
+    int32_t  unkId;
+    int32_t  sepId;
+    int32_t  padId;
+    char     model[16];        // tokenizer.ggml.model, e.g. "llama"
+    uint64_t reserved[3];
+};
+
+static_assert(sizeof(Nanof32VocabHeader) == 128,
+              "Nanof32VocabHeader must stay 128 bytes so the string blob that "
+              "follows begins on a 64-byte boundary.");
+
+constexpr uint32_t NQ_VOCAB_FLAG_ADD_BOS = 1u;
+constexpr uint32_t NQ_VOCAB_FLAG_ADD_EOS = 2u;
+
 struct alignas(32) Nanof32BraidTensorFooter {
     uint32_t magic;           // NQ2R (validates structural integrity)
     uint32_t quantType;       // decompression dispatch index

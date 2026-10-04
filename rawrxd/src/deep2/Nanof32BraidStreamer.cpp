@@ -85,8 +85,67 @@ bool Nanof32BraidStreamer::readAt(uint64_t offset, void* buffer, size_t bytes) {
     return got == bytes;
 }
 
+// RAWRXD_NQBRAID_TOKENIZER_E2E_001
+//
+// Reads the vocabulary section named by header_->vocabSectionOffset.
+//
+// `present` distinguishes "this file declares no vocabulary" (valid, returns
+// true) from "this file declares one and it is broken" (returns false with
+// present=true). Those are different facts and the caller must not conflate
+// them: a missing vocabulary is a property of the model, a corrupt one is a
+// defect in the file.
+bool Nanof32BraidStreamer::readVocabSection(std::vector<uint8_t>& out,
+                                            bool& present) {
+    out.clear();
+    present = false;
+    if (!file_.is_open() || !header_) return false;
+    if (header_->vocabSectionBytes == 0) return true;   // valid: no vocabulary
+
+    present = true;
+    const uint64_t bytes = header_->vocabSectionBytes;
+    if (bytes < sizeof(Nanof32VocabHeader)) {
+        std::fprintf(stderr,
+            "[NQBRAID] vocab section too small: %llu < %zu\n",
+            (unsigned long long)bytes, sizeof(Nanof32VocabHeader));
+        return false;
+    }
+
+    // Bounds are checked against the REAL file size, not against the declared
+    // length. A header claiming a section that runs past EOF is refused here
+    // rather than yielding a short read that would look like a valid section.
+    file_.clear();
+    file_.seekg(0, std::ios::end);
+    const uint64_t fileSize = static_cast<uint64_t>(file_.tellg());
+    const uint64_t off = header_->vocabSectionOffset;
+    const uint64_t floorOff = sizeof(Nanof32BraidHeader) + sizeof(Nanof32BraidArchMeta);
+    if (off < floorOff || off > fileSize || bytes > fileSize - off) {
+        std::fprintf(stderr,
+            "[NQBRAID] vocab section out of range: off=%llu bytes=%llu fileSize=%llu\n",
+            (unsigned long long)off, (unsigned long long)bytes,
+            (unsigned long long)fileSize);
+        return false;
+    }
+
+    out.resize(static_cast<size_t>(bytes));
+    if (!readAt(off, out.data(), static_cast<size_t>(bytes))) {
+        std::fprintf(stderr, "[NQBRAID] vocab section short read\n");
+        out.clear();
+        return false;
+    }
+
+    Nanof32VocabHeader vh{};
+    std::memcpy(&vh, out.data(), sizeof vh);
+    if (vh.magic != NANO_F32_BRAID_VOCAB_MAGIC) {
+        std::fprintf(stderr, "[NQBRAID] vocab magic mismatch 0x%08X\n", vh.magic);
+        out.clear();
+        return false;
+    }
+    return true;
+}
+
 bool Nanof32BraidStreamer::readNextTensor(Nanof32BraidTensorFooter& outFooter,
-                                           std::vector<bfloat16_t>& outData) {
+                                           std::vector<bfloat16_t>& outData,
+                                           std::vector<float>* outF32) {
     if (!file_.is_open() || !header_) return false;
 
     // Guard: readHead must leave room for footer
@@ -123,7 +182,16 @@ bool Nanof32BraidStreamer::readNextTensor(Nanof32BraidTensorFooter& outFooter,
         return false;
     }
 
-    // Step 4: Decompress to BF16
+    // Step 4: materialise.
+    //
+    // RAWRXD_NQB_DENSE_F32_PRESERVE_F32_001 -- a dense F32 payload used to be
+    // narrowed to bfloat16 here, unconditionally, which discarded 16 of the 32
+    // bits the file actually stored. When the caller asks for F32 it is copied
+    // through untouched. Quantised formats are unaffected: they decompress to
+    // bfloat16 by construction and keep filling outData.
+    //
+    // outData is sized up front because the codebook and braid cases below
+    // write through outData.data() and have no other sizing of their own.
     outData.resize(elements);
     bool ok = false;
 
@@ -136,7 +204,16 @@ bool Nanof32BraidStreamer::readNextTensor(Nanof32BraidTensorFooter& outFooter,
             }
             break;
         case NQBRAID_DENSE_F32:
-            // Convert F32 → BF16
+            if (outF32) {
+                outData.clear();
+                if (compressed.size() >= elements * sizeof(float)) {
+                    const float* fp32 = reinterpret_cast<const float*>(compressed.data());
+                    outF32->assign(fp32, fp32 + elements);
+                    ok = true;
+                }
+                break;
+            }
+            // Convert F32 → BF16 (legacy path, only when F32 was not requested)
             if (compressed.size() >= elements * sizeof(float)) {
                 const float* fp32 = reinterpret_cast<const float*>(compressed.data());
                 for (size_t i = 0; i < elements; ++i) {
@@ -293,24 +370,66 @@ bool Nanof32BraidStreamer::readAllTensors(
     outTensors.clear();
     if (!file_.is_open() || !header_) return false;
 
-    // Re-arm cursor at EOF
-    uint64_t fileSize = static_cast<uint64_t>(file_.tellg());
-    if (fileSize == 0) fileSize = header_->fileSize;
-    readHead_ = fileSize;
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- re-arm the reverse cursor at true EOF.
+    //
+    // This previously read:
+    //     uint64_t fileSize = static_cast<uint64_t>(file_.tellg());
+    //     if (fileSize == 0) fileSize = header_->fileSize;
+    //     readHead_ = fileSize;
+    // tellg() is NOT the file size here. open() seeks to 0 and reads the
+    // header, leaving the position at 128; readArchMeta() then leaves it at
+    // 256. So readHead_ became 256, and the guard in readNextTensor
+    //     if (readHead_ <= sizeof(Nanof32BraidHeader) + FOOTER_SIZE)  // 256
+    // fired on the very first call and returned false. Measured against a
+    // structurally valid 17156-byte file produced by the writer:
+    //     [NQBRAID] readAllTensors failed at tensor 0
+    // readAllTensors therefore failed for EVERY input, which meant
+    // loadModelFromNanof32Braid always returned false and
+    // tests/nanof32_e2e_test.cpp could not pass no matter what .nqb existed.
+    // The defect was in the re-arm, not in any file.
+    //
+    // Seeking to end explicitly also removes the dependency on a writer
+    // filling header_->fileSize correctly; that field stays as a cross-check.
+    file_.clear();
+    file_.seekg(0, std::ios::end);
+    const uint64_t actualSize = static_cast<uint64_t>(file_.tellg());
+    readHead_ = actualSize;
+
+    if (header_->fileSize != 0 && header_->fileSize != actualSize) {
+        std::fprintf(stderr,
+            "[NQBRAID] WARN: header fileSize=%llu but file is %llu bytes\n",
+            (unsigned long long)header_->fileSize,
+            (unsigned long long)actualSize);
+    }
 
     for (uint32_t i = 0; i < header_->numTensors; ++i) {
         Nanof32BraidTensorFooter footer{};
         std::vector<bfloat16_t> data;
-        if (!readNextTensor(footer, data)) {
+        // RAWRXD_NQB_DENSE_F32_PRESERVE_F32_001 -- ask for F32 so a dense-F32
+        // payload is not narrowed on its way to the engine. Quantised payloads
+        // still land in `data`.
+        std::vector<float> f32;
+        if (!readNextTensor(footer, data, &f32)) {
             std::fprintf(stderr, "[NQBRAID] readAllTensors failed at tensor %u\n", i);
             return false;
         }
         NQBraidBlock blk;
         blk.fileOffset = readHead_;  // offset after this read
-        blk.byteCount = data.size() * sizeof(bfloat16_t);
+        blk.byteCount = f32.empty() ? (data.size() * sizeof(bfloat16_t))
+                                    : (f32.size() * sizeof(float));
         blk.bf16Data = std::move(data);
+        blk.f32Data  = std::move(f32);
+        // RAWRXD_NANOF32_BRAID_WRITER_001 -- carry the footer name into the
+        // block. This was left default-constructed, so every block reached the
+        // engine with an empty name. Deep2Engine::bindTensor copies blk.name
+        // into WeightTensor::name, which is why forward diagnostics reported
+        //     LinearW: non-finite output tensor=null type=30
+        // for a tensor that was in fact named. A diagnostic that cannot say
+        // which tensor it is looking at cannot localise a fault.
+        blk.name = std::string(footer.name);
+        blk.expertIndex = footer.expertIndex;
         blk.ready = true;
-        outTensors.emplace_back(std::string(footer.name), std::move(blk));
+        outTensors.emplace_back(blk.name, std::move(blk));
     }
     return true;
 }

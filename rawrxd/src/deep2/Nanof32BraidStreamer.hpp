@@ -29,10 +29,33 @@ struct WeightTensor;
 // ----------------------------------------------------------------------------
 struct NQBraidBlock {
     std::string name;             // tensor name from footer
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- carried from the footer so per-expert
+    // tensors can be grouped. 0xFFFFFFFF means dense, per the footer's own
+    // convention. The loader previously had no way to tell which expert a
+    // tensor belonged to, so every MoE expert slot stayed empty and
+    // computeMoE refused with "expert tensors not fully bound".
+    uint32_t    expertIndex = 0xFFFFFFFFu;
     uint64_t fileOffset = 0;
     size_t   byteCount = 0;
     std::vector<bfloat16_t> bf16Data;  // decompressed output
+    // RAWRXD_NQB_DENSE_F32_PRESERVE_F32_001
+    //
+    // A block stored as NQBRAID_DENSE_F32 held 32 bits per weight on disk and
+    // this class threw 16 of them away on the way in, unconditionally. The
+    // measured cost over the 3.21B weights of llama3.2-3b-Q2_K was a maximum
+    // absolute error of 0.0417309 per weight -- and because the loss happened
+    // inside the READER, no comparison downstream could tell "the file is
+    // wrong" from "the loader rounded it", so a F32 container could never be
+    // verified against the F32 model it came from.
+    //
+    // Quantised formats keep using bf16Data, which is the representation they
+    // actually decompress to. Dense F32 now populates this instead, so the
+    // engine binds the exact values that were written.
+    std::vector<float> f32Data;
     bool     ready = false;
+
+    // Element count regardless of which representation was materialised.
+    size_t elements() const { return f32Data.empty() ? bf16Data.size() : f32Data.size(); }
 };
 
 // ----------------------------------------------------------------------------
@@ -50,11 +73,28 @@ public:
 
     // Read next tensor footer from EOF backward, then its data
     // Returns false when no more tensors (readHead <= header size)
+    //
+    // RAWRXD_NQB_DENSE_F32_PRESERVE_F32_001: outF32, when supplied, receives
+    // NQBRAID_DENSE_F32 payloads WITHOUT narrowing and outData is left empty
+    // for them. Omit it and dense F32 falls back to bfloat16 materialisation.
     bool readNextTensor(Nanof32BraidTensorFooter& outFooter,
-                        std::vector<bfloat16_t>& outData);
+                        std::vector<bfloat16_t>& outData,
+                        std::vector<float>* outF32 = nullptr);
 
     // Seek to a specific tensor by index (0 = first tensor in file)
     bool seekTensor(uint32_t index);
+
+    // RAWRXD_NQBRAID_TOKENIZER_E2E_001: read the vocabulary section.
+    //
+    // Returns false when the file carries none (offset 0) OR when the section
+    // is structurally invalid. Those are different conditions and the caller
+    // must be able to tell them apart, so `present` reports whether the file
+    // CLAIMED a vocabulary. A file that claims one and has a broken one is a
+    // defect; a file with none is simply a model without text.
+    bool readVocabSection(std::vector<uint8_t>& out, bool& present);
+
+    // True when the header declares a vocabulary section.
+    bool hasVocab() const { return header_ && header_->vocabSectionBytes != 0; }
 
     // Direct load: given a tensor name pattern, decompress and return BF16
     // For Deep2Engine integration

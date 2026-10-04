@@ -504,6 +504,16 @@ public:
     // Model architecture from GGUF metadata (populated after loadModel succeeds)
     const std::string& modelArchitecture() const noexcept { return modelArchitecture_; }
 
+    // RAWRXD_NQBRAID_TOKENIZER_E2E_001 -- the bound tokenizer, or nullptr.
+    //
+    // The tokenizer is a private unique_ptr with no accessor, so a caller that
+    // wanted to verify tokenisation had no way to ask the engine what tokenizer
+    // it actually bound. That is why the braid path could report
+    //     WARN=tokenizer_load_failed_using_dummy
+    // and still exit 0: nothing could observe the substitution. Exposing the
+    // pointer (not ownership) lets a test assert the real thing.
+    ITokenizer* boundTokenizer() const noexcept { return tokenizer.get(); }
+
     // RAWRXD_DEEP2_BATCH5_CANONICAL_INFERENCE_001: geometry read accessors.
     // The canonical-inference gate must size decode buffers and bound a sampled
     // token id against the real vocabulary; without these it would have to guess
@@ -540,6 +550,63 @@ public:
     // Get engine info
     bool isInitialized() const { return initialized; }
     bool isModelLoaded() const { return modelWeights.loaded; }
+
+    // RAWRXD_NQB_GEOMETRY_OBSERVABILITY_001
+    //
+    // Read-only observers for geometry and topology that were previously
+    // visible only as stderr text. They exist because a test that has to parse a
+    // log to check a value is not checking the value -- it is checking that
+    // something printed something. Four real defects on the .nqb path were all
+    // invisible to any external caller for exactly this reason:
+    //
+    //   output.weight aliased to blk.N.attn_output.weight   (load refused)
+    //   `initialized` never set on the braid path           (generate refused)
+    //   headDim defaulted to 64 instead of 128              (wrong arithmetic)
+    //   contextLength ignored, KV cache 2048 not 131072     (64x too small)
+    //
+    // In every case the engine behaved correctly according to the value it held;
+    // the value itself was wrong, and nothing outside the class could see it.
+    // These observers let an external test assert on the held value.
+    struct ObservedGeometry {
+        size_t hiddenDim       = 0;
+        size_t vocabSize       = 0;
+        size_t numLayers       = 0;
+        size_t numHeads        = 0;
+        size_t numKVHeads      = 0;
+        size_t headDim         = 0;
+        size_t intermediateDim = 0;
+        size_t contextLength   = 0;   // what the model asked for
+        // What the KV cache was ACTUALLY sized to. Compared against
+        // contextLength this is the check that would have caught the 64x.
+        size_t kvCacheCapacity = 0;
+        size_t kvCacheHeadDim  = 0;
+        size_t kvCacheLayers   = 0;
+        size_t kvCacheHeads    = 0;
+        bool   kvCachePresent  = false;
+        bool   tieEmbeddings   = false;
+        // True when the LM head is the same buffer as the token embedding.
+        // A tied model must report true; a model with its own output.weight
+        // must report false. Anything else means the head was resolved by a
+        // rule that should not have been allowed to resolve it.
+        bool   lmHeadIsTokenEmbed = false;
+        bool   lmHeadBound        = false;
+        size_t lmHeadRows         = 0;
+        size_t lmHeadCols         = 0;
+        // RAWRXD_NQB_REPRESENTATION_OBSERVABILITY_001
+        //
+        // Which representation the LM head actually bound as. This exists
+        // because a precision claim is only meaningful if the precision is
+        // known: an experiment that concludes "BF16 narrowing did not cause
+        // this divergence" is worthless if the run silently fell back to BF16
+        // because the F32 buffer was empty. GGML_TYPE_F32 is 0 and
+        // GGML_TYPE_BF16 is 30; the engine sets one or the other at bind time.
+        bool   lmHeadIsF32        = false;
+        size_t lmHeadBytes        = 0;
+        // Fraction of bound projection tensors that bound as F32.
+        size_t f32BoundTensors    = 0;
+        size_t bf16BoundTensors   = 0;
+    };
+    ObservedGeometry observedGeometry() const;
     ModelState modelState() const { return modelState_; }
     bool hostQ8GemvSafe() const { return hostQ8GemvSafe_; }
     void emitHostQ8GemvReceipts(FILE* f) const {
@@ -622,6 +689,50 @@ public:
     bool isResidencyTelemetryEnabled() const { return telemetryEnabled_; }
     RouterPrefetchTelemetry* getResidencyTelemetry() const { return residencyTelemetry_.get(); }
     void printResidencyTelemetryReport() const;
+
+    // RAWRXD_DEEP2_SOVEREIGN_KERNEL_001: read-only observers for the sovereign
+    // components. These REPORT live state and cannot set it. They exist because
+    // a component whose state cannot be observed cannot be certified, and
+    // because the previous arrangement (a declared member with no accessor and
+    // no caller) is what made the gap invisible.
+    bool isSlidingWindowActive() const { return slidingWindowEnabled_; }
+    int  activeSlidingWindowSize() const {
+        return slidingWindow_ ? slidingWindow_->windowSize() : 0;
+    }
+    SlidingWindowEngine* slidingWindow() const { return slidingWindow_.get(); }
+    ResidencyManager* residencyManager() const { return residencyManager_.get(); }
+    // Public entry to the private initialiser, so the sovereign components can
+    // be brought up deliberately rather than only as a side effect of load.
+    bool initializeSovereignComponents();
+    // RAWRXD_DEEP2_SOVEREIGN_KERNEL_001: public entries to the private expert
+    // hooks. computeMoEFFN calls the private forms directly on the live MoE
+    // path; these expose the SAME machinery so it can also be driven from
+    // outside the FFN body. They do not create a second routing path.
+    void recordExpertAccessPublic(int layerId, int expertId, float weight);
+    void prefetchNextExpertsPublic(int layerId);
+    // Sampler ownership / requested sampling parameters. Read-only observers:
+    // they report what was actually installed, they do not set it.
+    bool  hasSampler() const { return sampler != nullptr; }
+    float samplingTemperature() const { return samplingTemperature_; }
+    float samplingTopP() const { return samplingTopP_; }
+    bool  samplerIsEngineDefault() const { return samplerIsDefault_; }
+    // RAWRXD_DEEP2_SOVEREIGN_KERNEL_001: the authoritative thread count and KV
+    // state, read back rather than assumed. setNumThreads(0) means "auto", and
+    // these make that distinction observable instead of implicit.
+    size_t activeNumThreads() const { return config.numThreads; }
+    bool   isKVCacheEnabled() const { return config.useKVCache; }
+    // Public, const reader for the private parser. Tensor-name layer parsing is
+    // a routing input other components legitimately need to inspect.
+    int    weightLayerIndexOf(const std::string& name) const {
+        return parseWeightLayerIndex(name);
+    }
+    // Read-only observers for the kernel-patch registry.
+    size_t kernelPatchCount() const { return kernelPatches_.size(); }
+    size_t activeKernelPatchCount() const;
+    bool   kernelPatchActive(const std::string& patchId) const;
+    bool   isReverseAnalysisEnabled() const { return reverseAnalysisEnabled_; }
+    size_t reverseAttachedCount() const;
+    size_t reverseActiveCount() const;
 
     // RAWRXD_DEEP2_PREDICTIVE_ROUTER_ADOPTION_001: measured runtime evidence
     // that the routing-heat predictor is reachable from real MoE inference and
@@ -845,6 +956,47 @@ public:
     uint64_t vulkanSlotQueueSubmits(unsigned slot) const;
     uint64_t vulkanSlotPinnedWeightBytes(unsigned slot) const;
     uint64_t vulkanSlotPinnedWeightEntries(unsigned slot) const;
+    // RAWRXD_GPU_WEIGHT_RESIDENCY_001: measured per-slot weight-residency
+    // snapshot (device-local bytes, uploads, resident vs host-staged
+    // dispatches, CPU fallback rows). Read-only; no setter exists.
+    CPUInference::VulkanCompute::WeightResidencySnapshot
+        vulkanSlotWeightResidency(unsigned slot) const;
+    // RAWRXD_GPU_DISPATCH_REJECTION_001: measured per-slot dispatch
+    // accounting (rows presented/completed/fallback/failed, conservation
+    // delta, and the per-reason rejection breakdown).
+    CPUInference::VulkanCompute::DispatchAccounting
+        vulkanSlotDispatchAccounting(unsigned slot) const;
+    // RAWRXD_GPU_ROUTE_RECEIPT_001: which forward route actually executed.
+    // A fix compiled and linked but never entered is not a fix.
+    struct RouteReceipt {
+        uint64_t contiguousRangeCalls = 0;
+        uint64_t multiMapCalls = 0;
+        uint64_t groupedDualRowCalls = 0;
+        uint64_t layerGpuResidentCalls = 0;
+        uint64_t contiguousPinPasses = 0;
+    };
+    // RAWRXD_GPU_ROUTE_RECEIPT_001: incremented at each forward entry point.
+    // A route that is never entered reads 0, which is how an unexercised fix
+    // is distinguished from a working one.
+    RouteReceipt routeReceipt_{};
+    RouteReceipt vulkanRouteReceipt() const noexcept { return routeReceipt_; }
+
+    // RAWRXD_GPU_GROUPED_REJECT_001: the grouped dual-row entry point already
+    // computed a named reject reason and handed it to a caller that discarded
+    // it, so a refusal was unattributable after the fact. Reasons are tallied
+    // by name into a bounded table; an unseen name lands in a named
+    // "OTHER" bucket whose count is itself reported, so a growing unclassified
+    // bucket is visible rather than silently absorbed.
+    static constexpr uint32_t kGroupedRejectSlots = 12;
+    struct GroupedRejectTally {
+        static constexpr uint32_t kSlots = kGroupedRejectSlots;
+        const char* names[kSlots] = {};
+        uint64_t counts[kSlots] = {};
+        uint64_t unclassified = 0;
+    };
+    GroupedRejectTally groupedRejects_{};
+    GroupedRejectTally groupedRejects() const noexcept { return groupedRejects_; }
+    void NoteGroupedReject(const char* name) noexcept;
     uint64_t vulkanSlotResidentBatchInputUploads(unsigned slot) const;
     uint64_t vulkanSlotDirectSpecKvAppends(unsigned slot) const;
     uint64_t vulkanSlotResidentGroupOutputReallocs(unsigned slot) const;
@@ -1299,6 +1451,41 @@ private:
     std::unique_ptr<ThreadPool> threadPool;
     std::unique_ptr<KVCache> kvCache;
     std::unique_ptr<rawrxd::sampling::ISampler> sampler;
+    // RAWRXD_DEEP2_SOVEREIGN_KERNEL_001: the sampling parameters the engine was
+    // actually asked for, and whether the installed sampler is one the engine
+    // built from them. A caller-installed sampler takes precedence and these
+    // record what was requested, not what an arbitrary sampler can honour --
+    // ISampler has no temperature setter, so pushing into a custom sampler would
+    // be a claim the interface cannot support.
+    float samplingTemperature_ = 1.0f;
+    float samplingTopP_ = 1.0f;
+    bool  samplerIsDefault_ = false;
+    // -1 means "not extended"; getExtendedToolCallLimit() reports that verbatim
+    // rather than substituting a default limit and calling it current.
+    int   extendedToolCallLimit_ = -1;
+    // RAWRXD_DEEP2_SOVEREIGN_KERNEL_001: kernel-patch registry.
+    //
+    // Deep2Engine declared registerKernelPatch / rollbackKernelPatch /
+    // emergencyRollbackAllPatches / printHotPatcherStatus with NO state behind
+    // them and NO definitions. Rolling back a patch requires knowing which
+    // patches exist, so the registry is the minimum honest substrate: it records
+    // what was registered, in order, with the epoch it was registered at, and
+    // rollback removes exactly the named entry.
+    //
+    // It deliberately stores no code and applies nothing to memory. It is an
+    // inventory, not an executor -- claiming it patched a kernel would be a
+    // capability this engine does not have.
+    struct KernelPatchRecord {
+        std::string patchId;
+        std::string target;      // what the patch claims to target
+        std::uint64_t epoch = 0; // registration order
+        bool active = false;
+    };
+    std::vector<KernelPatchRecord> kernelPatches_;
+    std::uint64_t kernelPatchEpoch_ = 0;
+    bool hotPatcherInitialized_ = false;
+    std::uint64_t rollbackCount_ = 0;      // rollbacks that found an active patch
+    std::uint64_t rollbackMissCount_ = 0;  // rollbacks that found nothing to do
     std::unique_ptr<rawrxd::sampling::RepetitionPenaltyProcessor> repPenaltyProcessor_;
     std::vector<int> generatedTokensHistory_; // for repetition penalty
     bool deterministicGreedy_ = false;
@@ -1532,6 +1719,17 @@ private:
 
     // B5_SLOT1_RANGE_RESIDENCY_001: per-slot layer-range pin state.
     bool layerRangePinned_[2] = {false, false};
+
+    // RAWRXD_GPU_WEIGHT_RESIDENCY_001: per-slot pin state for the SINGLE-GPU
+    // contiguous forward (forwardGpuContiguousRange).
+    //
+    // Why this needed its own flag: layerRangePinned_ belongs to the DUAL-GPU
+    // multi-map path and is keyed to multiGpuLayerPlan_.rangeLo/Hi. The
+    // contiguous path takes lo/hi as arguments and, before this change, pinned
+    // NOTHING -- so every ensureWeight* in every layer was a cold miss that
+    // staged weight bytes across PCIe on each token. Reusing the dual-GPU flag
+    // would have let the two paths suppress each other's pin pass.
+    bool contiguousRangePinned_[2] = {false, false};
 
     // B4_LMHEAD_PERMANENT_RESIDENCY_001: lmHead slices pinned on both
     // devices at the frozen dual-row split geometry. Pinning happens once

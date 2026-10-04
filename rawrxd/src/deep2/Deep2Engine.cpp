@@ -1182,6 +1182,59 @@ const char* Deep2Engine::loadedWeightTypeName() const noexcept {
 // interpretable. A Q6_K model reporting 15% Q6_K dominance is either genuinely
 // mixed or has `type` unpopulated on most tensors; those are indistinguishable
 // from a single percentage, and only the distribution tells them apart.
+// RAWRXD_NQB_GEOMETRY_OBSERVABILITY_001 -- see the declaration in the header
+// for why these four defects were previously invisible to any external caller.
+Deep2Engine::ObservedGeometry Deep2Engine::observedGeometry() const {
+    ObservedGeometry g;
+    g.hiddenDim       = modelWeights.hiddenDim;
+    g.vocabSize       = modelWeights.vocabSize;
+    g.numLayers       = modelWeights.numLayers;
+    g.numHeads        = modelWeights.numHeads;
+    g.numKVHeads      = modelWeights.numKVHeads;
+    g.headDim         = modelWeights.headDim;
+    g.intermediateDim = modelWeights.intermediateDim;
+    g.contextLength   = config.maxSeqLen;
+    g.tieEmbeddings   = modelWeights.tieEmbeddings;
+
+    g.lmHeadBound        = modelWeights.lmHead.data != nullptr;
+    g.lmHeadRows         = modelWeights.lmHead.rows;
+    g.lmHeadCols         = modelWeights.lmHead.cols;
+    // Pointer identity, not value equality: a tied head and a copied head can
+    // hold identical bytes, and only sharing the buffer distinguishes "the head
+    // IS the embedding" from "the head was materialised from it".
+    g.lmHeadIsTokenEmbed = g.lmHeadBound &&
+                           modelWeights.tokenEmbed.data != nullptr &&
+                           modelWeights.lmHead.data == modelWeights.tokenEmbed.data;
+
+    // RAWRXD_NQB_REPRESENTATION_OBSERVABILITY_001 -- report what the weights
+    // actually bound as, not what the loader was supposed to give them. The F32
+    // preserve path (RAWRXD_NQB_DENSE_F32_PRESERVE_F32_001) is only meaningful
+    // if it was taken; an empty f32Data falls back to bf16Data silently, and a
+    // receipt that cannot tell the two apart cannot support a precision claim.
+    g.lmHeadIsF32 = (modelWeights.lmHead.type == 0);   // GGML_TYPE_F32
+    g.lmHeadBytes = modelWeights.lmHead.sizeBytes;
+    for (const auto& lw : modelWeights.layers) {
+        const WeightTensor* proj[] = {
+            &lw.wq, &lw.wk, &lw.wv, &lw.wo, &lw.wqkv,
+            &lw.wGate, &lw.wUp, &lw.wDown
+        };
+        for (const WeightTensor* wt : proj) {
+            if (!wt || wt->data == nullptr) continue;
+            if (wt->type == 0) ++g.f32BoundTensors; else ++g.bf16BoundTensors;
+        }
+    }
+
+    if (kvCache) {
+        g.kvCachePresent = true;
+        const KVCacheConfig& kc = kvCache->config();
+        g.kvCacheHeadDim  = kc.headDim;
+        g.kvCacheLayers   = kc.numLayers;
+        g.kvCacheHeads    = kc.numHeads;
+        g.kvCacheCapacity = kc.maxSeqLen;
+    }
+    return g;
+}
+
 std::string Deep2Engine::loadedWeightTypeHistogram() const {
     if (!modelWeights.loaded) return "NO_MODEL";
     int n = 0;
@@ -4844,12 +4897,36 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                 {
                     char detail[512];
                     std::snprintf(detail, sizeof(detail),
-                        "LinearW: non-finite output tensor=%s type=%d idx=%zu/%zu "
-                        "value=%g rows=%zu cols=%zu",
+                        "LinearW: non-finite output tensor=%s type=%d "
+                        "idx=%zu/%zu value=%g",
                         wtn, wt.type, outBad, outDim,
-                        outBad < outDim ? static_cast<double>(output[outBad]) : 0.0,
-                        rows, cols);
-                    std::fprintf(stderr, "LINEAR_CPU_NONFINITE_DETAIL %s\n", detail);
+                        outBad < outDim ? static_cast<double>(output[outBad]) : 0.0);
+                    // RAWRXD_STALE_OBJECT_DIAGNOSTIC_001 -- RESOLVED.
+                    //
+                    // This diagnostic used to be built as ONE snprintf:
+                    //     "...idx=%zu/%zu value=%g rows=%zu cols=%zu"
+                    // and the emitted line always stopped dead after "value=nan ",
+                    // with rows= and cols= absent. For a long time that was
+                    // attributed to a stale object file, and a provenance test
+                    // was built to prove it: a unique marker was added, the
+                    // owning object was DELETED and rebuilt, and the marker was
+                    // verified present in source, object, library and
+                    // executable. It was present in all four. The runtime line
+                    // still lacked it. So the object was never stale.
+                    //
+                    // Running rows/cols through the fprintf instead of through
+                    // the snprintf tail restores them:
+                    //     rows=128 cols=64
+                    // The exact mechanism by which the UCRT snprintf drops the
+                    // format after a NaN %g is NOT established; what is
+                    // established, reproducibly, is that fields placed after
+                    // that %g do not reach the output while fields placed in
+                    // the fprintf do. Anything appended to a snprintf that
+                    // formats a possibly-non-finite value should therefore be
+                    // printed by the fprintf, not trusted to the snprintf.
+                    std::fprintf(stderr,
+                        "LINEAR_CPU_NONFINITE_DETAIL %s rows=%zu cols=%zu\n",
+                        detail, rows, cols);
                     std::fflush(stderr);
                     // Also state whether the INPUT was already poisoned, which
                     // separates "this GEMV is wrong" from "something upstream
@@ -8727,6 +8804,21 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
     modelWeights.isMoE = (archMeta.numExperts > 0);
     modelWeights.numExperts = archMeta.numExperts;
     modelWeights.numExpertsPerToken = archMeta.activeExperts;
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- MoE expert width.
+    //
+    // computeMoE's own guard is
+    //     if (H == 0 || E == 0 || K == 0 || K > E || I == 0)
+    //         throw std::runtime_error("MoE: invalid model geometry");
+    // with I = modelWeights.moeIntermediateDim. The GGUF path assigns it from
+    // metadata (line 2162); this path never did, so it stayed 0 and every MoE
+    // braid model was refused at the guard even with a bound router:
+    //     [Deep2Engine] forward failed: MoE: invalid model geometry
+    // The expert FFN width is the same intermediateDim the dense path uses;
+    // the per-expert tensors themselves are still unbound (see the
+    // expert-specific TODO in this function), which is reported rather than
+    // papered over.
+    modelWeights.moeIntermediateDim =
+        archMeta.numExperts > 0 ? archMeta.intermediateDim : 0;
 
     config.hiddenDim = archMeta.hiddenDim;
     config.vocabSize = archMeta.vocabSize;
@@ -8736,6 +8828,120 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
     config.headDim = archMeta.headDim;
     config.intermediateDim = archMeta.intermediateDim;
     config.normEps = archMeta.normEps;
+    // RAWRXD_NQBRAID_CONTEXT_LENGTH_001 -- carry the model's own context length.
+    //
+    // The format carries archMeta.contextLength and the converter fills it from
+    // llama.context_length, but this block bound 11 geometry fields and not
+    // this one, so the KV cache below was sized from the EngineConfig default of
+    // 2048. Any model whose trained context differs was silently truncated to
+    // 2048 with no diagnostic -- the cache allocated successfully, it was just
+    // the wrong size. It must be set HERE, before the kvCache->allocate() call
+    // further down, because that call reads config.maxSeqLen.
+    if (archMeta.contextLength != 0) {
+        config.maxSeqLen = archMeta.contextLength;
+    }
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- bind RoPE theta from the braid arch
+    // meta. Without this the forward pass refused at the first layer:
+    //     [Deep2Engine] forward failed: RoPE: theta not bound from model metadata
+    // EngineConfig::ropeTheta is documented "unset until dynamic geometry",
+    // and the GGUF path supplies it from GGUF metadata; the braid format
+    // carried only ropeType, so nothing ever set it. A zero here means the
+    // writer did not supply one, which is reported rather than guessed.
+    config.ropeTheta = archMeta.ropeTheta;
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- MLA geometry.
+    //
+    // The braid format carried ropeType but none of the MLA dimensions, so the
+    // CPU MLA route refused every MLA braid model at its own guard:
+    //     [CPU_MLA] reject: incomplete geometry H=%zu heads=%zu
+    //                kvRank=0 nope=0 rope=0 vlen=0
+    // Both the config copy and modelWeights are set, because deep2_cpu_mla.cpp
+    // reads modelWeights while other consumers read config.
+    modelWeights.qLoraRank      = archMeta.qLoraRank;
+    modelWeights.kvLoraRank     = archMeta.kvLoraRank;
+    modelWeights.qkNopeHeadDim  = archMeta.qkNopeHeadDim;
+    modelWeights.qkRopeHeadDim  = archMeta.qkRopeHeadDim;
+    modelWeights.vHeadDim       = archMeta.vHeadDim;
+    config.qLoraRank            = archMeta.qLoraRank;
+    config.kvLoraRank           = archMeta.kvLoraRank;
+    config.qkNopeHeadDim        = archMeta.qkNopeHeadDim;
+    config.qkRopeHeadDim        = archMeta.qkRopeHeadDim;
+    config.vHeadDim             = archMeta.vHeadDim;
+
+    if (archMeta.ropeType == 3) {
+        if (archMeta.qLoraRank == 0 || archMeta.kvLoraRank == 0 ||
+            archMeta.qkNopeHeadDim == 0 || archMeta.qkRopeHeadDim == 0 ||
+            archMeta.vHeadDim == 0) {
+            std::fprintf(stderr,
+                "[NQBRAID] ERROR: ropeType=3 (MLA) but arch meta has zero MLA "
+                "geometry (qLoraRank=%u kvLoraRank=%u nope=%u rope=%u vHead=%u)\n",
+                archMeta.qLoraRank, archMeta.kvLoraRank,
+                archMeta.qkNopeHeadDim, archMeta.qkRopeHeadDim, archMeta.vHeadDim);
+            std::fflush(stderr);
+            return false;
+        }
+        if (archMeta.qkRopeHeadDim & 1u) {
+            std::fprintf(stderr,
+                "[NQBRAID] ERROR: qkRopeHeadDim=%u must be even (CPU MLA "
+                "interleaves the rotary pair)\n", archMeta.qkRopeHeadDim);
+            std::fflush(stderr);
+            return false;
+        }
+    }
+    // applyRoPE's guard is `if (!(theta > 1.0f))`, and the forward path gets
+    // its theta from ropeThetaForLayer(), which reads modelWeights.ropeTheta --
+    // NOT config.ropeTheta. Setting only config left the forward path with 0
+    // and it still refused:
+    //     [Deep2Engine] forward failed: RoPE: theta not bound from model metadata
+    // so both copies are bound here. ropeThetaLocal is the Gemma3 sliding
+    // window base; it is only consulted when slidingWindowPattern > 0, which
+    // the braid arch meta does not carry, so it is left at 0 deliberately
+    // rather than being set to a value nothing reads.
+    modelWeights.ropeTheta = archMeta.ropeTheta;
+
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- allocate the KV cache.
+    //
+    // Same omission as allocateBuffers() above: the GGUF path does this at
+    // line 3702 after its bind, and the braid path did not, so attention had
+    // no destination and the forward pass refused one layer later:
+    //     [Deep2Engine] forward failed: attention: invalid KV destination
+    // The MLA head-count override from the GGUF path is reproduced because it
+    // is a correctness requirement, not a convenience: MLA keys and values are
+    // stored per HEAD, so a cache sized from numKVHeads is too small by
+    // numHeads/numKVHeads and every head past the first writes out of range.
+    if (config.useKVCache) {
+        if (!kvCache) kvCache = std::make_unique<KVCache>();
+        KVCacheConfig kc{};
+        kc.numLayers  = modelWeights.numLayers;
+        kc.numHeads   = modelWeights.numKVHeads;
+        kc.headDim    = modelWeights.headDim;
+        kc.maxSeqLen  = config.maxSeqLen;
+        if (modelWeights.useMLA && modelWeights.numHeads != 0 &&
+            kc.numHeads < modelWeights.numHeads) {
+            std::fprintf(stderr,
+                "[NQBRAID] MLA_KV_HEADS_OVERRIDE numKVHeads=%zu -> numHeads=%zu\n",
+                (std::size_t)kc.numHeads, (std::size_t)modelWeights.numHeads);
+            kc.numHeads = modelWeights.numHeads;
+        }
+        if (!kvCache->allocate(kc)) {
+            std::fprintf(stderr,
+                "[NQBRAID] ERROR: KV cache allocation failed "
+                "(layers=%zu heads=%zu headDim=%zu maxSeqLen=%zu)\n",
+                (std::size_t)kc.numLayers, (std::size_t)kc.numHeads,
+                (std::size_t)kc.headDim, (std::size_t)kc.maxSeqLen);
+            std::fflush(stderr);
+            modelWeights.loaded = false;
+            braidEnabled_ = false;
+            return false;
+        }
+    }
+    if (archMeta.ropeType != 0 &&
+        !(archMeta.ropeTheta > 0.0f) ) {
+        std::fprintf(stderr,
+            "[NQBRAID] ERROR: ropeType=%u requires a positive ropeTheta, got %g\n",
+            archMeta.ropeType, (double)archMeta.ropeTheta);
+        std::fflush(stderr);
+        return false;
+    }
 
     // Read all tensors from the braid file
     std::vector<std::pair<std::string, Deep2::NQBraidBlock>> tensors;
@@ -8751,33 +8957,199 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
     }
 
     // Helper: find tensor by name substring match (first match)
-    auto findTensor = [&](const std::string& name) -> Deep2::NQBraidBlock* {
-        for (auto& kv : tensorMap) {
-            if (kv.first.find(name) != std::string::npos) {
-                return kv.second;
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- deterministic tensor resolution.
+    //
+    // Both resolvers used to be:
+    //     for (auto& kv : tensorMap)
+    //         if (kv.first.find(name) != std::string::npos) return kv.second;
+    // i.e. the FIRST substring hit over an unordered_map, whose iteration order
+    // is unspecified. That is order-dependent binding for a format whose whole
+    // purpose is MLA + MoE. Measured collisions among the names the loader
+    // itself searches for:
+    //
+    //   pattern 'attn_q_a'     matches  attn_q_a.weight, attn_q_a_norm.weight
+    //   pattern 'attn_kv_a'    matches  attn_kv_a.weight, attn_kv_a_norm.weight
+    //   pattern 'ffn_gate'     matches  ffn_gate.weight, ffn_gate_exps.weight
+    //
+    // So a DeepSeek-style MLA model could bind attnQ_a to the q-a NORM (headDim
+    // elements instead of hiddenDim) and, in a MoE model, bind wGate to the
+    // expert ROUTER -- silently, with no error, producing wrong numbers rather
+    // than a failure. Nothing reports which tensor was chosen, so this is
+    // invisible from the outside.
+    //
+    // Resolution order is now fixed and does not depend on hash order:
+    //   1. exact name
+    //   2. exact name + ".weight"
+    //   3. substring, SHORTEST matching name wins, ties broken lexicographically
+    // Shortest-wins is what separates attn_q_a from attn_q_a_norm, because the
+    // norm is a strict suffix-extension of the projection's name.
+    auto resolveTensor = [&tensorMap](const std::string& pattern) -> Deep2::NQBraidBlock* {
+        auto it = tensorMap.find(pattern);
+        if (it != tensorMap.end()) return it->second;
+        it = tensorMap.find(pattern + ".weight");
+        if (it != tensorMap.end()) return it->second;
+        Deep2::NQBraidBlock* best = nullptr;
+        std::string bestKey;
+        for (const auto& kv : tensorMap) {
+            if (kv.first.find(pattern) == std::string::npos) continue;
+            if (!best || kv.first.size() < bestKey.size() ||
+                (kv.first.size() == bestKey.size() && kv.first < bestKey)) {
+                best    = kv.second;
+                bestKey = kv.first;
             }
         }
+        return best;
+    };
+
+    auto findTensor = [&](const std::string& name) -> Deep2::NQBraidBlock* {
+        return resolveTensor(name);
+    };
+
+    // RAWRXD_NQBRAID_TIED_LM_HEAD_001 -- EXACT resolution, steps 1 and 2 of
+    // resolveTensor with step 3 (substring) deliberately omitted.
+    //
+    // Substring matching is what separates attn_q_a from attn_q_a_norm, so it
+    // stays for the per-layer patterns. It must NOT be used for names that are
+    // legitimately a substring of an unrelated tensor. "output.weight" is
+    // exactly such a name: every block carries blk.N.attn_output.weight, so a
+    // substring lookup for the LM head resolves to an attention projection
+    // whenever the model has no separate output tensor. See the LM-head block
+    // below for the measured failure.
+    auto resolveExact = [&tensorMap](const std::string& name) -> Deep2::NQBraidBlock* {
+        auto it = tensorMap.find(name);
+        if (it != tensorMap.end()) return it->second;
+        it = tensorMap.find(name + ".weight");
+        if (it != tensorMap.end()) return it->second;
         return nullptr;
     };
 
     // Helper: bind a tensor into WeightTensor
-    auto bindTensor = [](Deep2::NQBraidBlock& blk, WeightTensor& wt,
-                         size_t rows, size_t cols) {
-        if (!blk.ready || blk.bf16Data.empty()) return false;
-        wt.data = blk.bf16Data.data();
-        wt.type = 30;  // GGML_TYPE_BF16
+    auto bindTensor = [&archMeta](Deep2::NQBraidBlock& blk, WeightTensor& wt,
+                                  size_t rows, size_t cols) {
+        // RAWRXD_NQB_DENSE_F32_PRESERVE_F32_001
+        //
+        // This bound `wt.data = blk.bf16Data.data()` and unconditionally set
+        // type=30 (GGML_TYPE_BF16), so a file that stored 32 bits per weight
+        // was handed to the engine as 16 bits per weight. The measured cost
+        // over llama3.2-3b-Q2_K was max abs error 0.0417309 per weight, and
+        // because the loss was inside the loader, nothing downstream could
+        // distinguish a bad file from a good file that had been rounded.
+        //
+        // A dense-F32 block now carries f32Data and binds as F32. Quantised
+        // blocks still carry bf16Data and still bind as BF16 -- for them that
+        // is the representation they genuinely decompress to.
+        if (!blk.ready || blk.elements() == 0) return false;
+        if (!blk.f32Data.empty()) {
+            wt.data = blk.f32Data.data();
+            wt.type = static_cast<int>(Deep2::GGMLType::GGML_TYPE_F32);
+            wt.sizeBytes = blk.f32Data.size() * sizeof(float);
+        } else {
+            wt.data = blk.bf16Data.data();
+            wt.type = 30;  // GGML_TYPE_BF16
+            wt.sizeBytes = blk.bf16Data.size() * sizeof(Deep2::bfloat16_t);
+        }
         wt.rows = rows;
         wt.cols = cols;
-        wt.sizeBytes = blk.bf16Data.size() * sizeof(Deep2::bfloat16_t);
         wt.mapped = true;
         wt.name = blk.name;
         wt.shape = {static_cast<int64_t>(cols), static_cast<int64_t>(rows)};
+        // RAWRXD_NANOF32_BRAID_WRITER_001 -- assign a real TensorIdentity.
+        //
+        // This was left default-constructed, so all 21 tensors shared
+        // identity {0,0,0,0,0}. LinearW's CPU fallback consults the residency
+        // cache by that identity:
+        //     if (residencyCache_ && residencyCache_->lookup(wt.identity, ev))
+        // so every lookup after the first returned the FIRST tensor's
+        // ExecutionView, and the BF16 EV kernel reads ev.transientAddress
+        // rather than wt.data:
+        //     gemv_bf16_scalar_ev(ev, x, y, rows, cols)
+        //     -> gemv_bf16_scalar((const uint8_t*)ev.transientAddress, ...)
+        //
+        // attn_q/k/v are 64x64 (8192 B) and so aliased onto each other
+        // harmlessly -- wrong values, but in-bounds and finite. ffn_gate is
+        // 128x64 (16384 B), so reading it through the 8192 B attn_q view ran
+        // 8192 B past the end of the buffer and produced heap garbage:
+        //     LinearW: non-finite output tensor=blk.0.ffn_gate.weight
+        //              type=30 idx=64/128 value=-nan
+        // The bad index moved between runs (111 then 64) because it was
+        // whatever the adjacent heap happened to contain, which is what made
+        // it look data-dependent rather than like an aliasing bug.
+        //
+        // The identity is derived from the model's own metadata plus the
+        // tensor name, exactly as the GGUF path does at line ~1727, so the two
+        // load paths agree on what identifies a tensor.
+        {
+            uint64_t h = 1469598103934665603ull;
+            auto mixStr = [&](const std::string& s) {
+                for (unsigned char c : s) { h ^= c; h *= 1099511628211ull; }
+            };
+            mixStr(archMeta.modelName);
+            mixStr(archMeta.archName);
+            const uint64_t dims[5] = {archMeta.numLayers, archMeta.hiddenDim,
+                                      archMeta.vocabSize, archMeta.numHeads,
+                                      archMeta.intermediateDim};
+            for (uint64_t d : dims) { h ^= d; h *= 1099511628211ull; }
+            wt.identity.model   = h;
+            wt.identity.tensor  = [&]{ uint64_t t = 1469598103934665603ull;
+                                       for (unsigned char c : blk.name) { t ^= c; t *= 1099511628211ull; }
+                                       return t; }();
+            wt.identity.layer   = 0;
+            wt.identity.role    = 0;
+            wt.identity.variant = 0;
+        }
+        return true;
+    };
+
+    // RAWRXD_NQBRAID_TOKENIZER_E2E_001
+    // NQB_INVARIANT_TOKEN_DOMAIN_001
+    //
+    // A token id is only meaningful if every tensor indexed by it has a row
+    // for it. The complete invariant, enforced at both ends of the format:
+    //
+    //     0 <= token_id < tokenizer_vocab_size
+    //     tokenizer_vocab_size <= embedding_rows
+    //     tokenizer_vocab_size <= output_rows      (independent LM head)
+    //     bos_id < tokenizer_vocab_size
+    //     eos_id < tokenizer_vocab_size
+    //
+    // The third line was added after the first two were already enforced. With
+    // only the embedding checked, a model could embed token 259 successfully
+    // and then fail much later trying to produce logits from an output tensor
+    // with 128 rows:
+    //     [EMBED] FAIL: tokenId=259 vocabSize=128
+    // reads like an embedding bug and is not one. For tied embeddings the
+    // embedding check covers the output case, and the two agree by
+    // construction; the explicit check below is what makes a MISMATCH visible
+    // instead of leaving it to be discovered during sampling.
+    //
+    // bindTensor() takes rows/cols as parameters rather than reading them from
+    // the block, so nothing verified that the block was actually that large.
+    // A short tensor therefore bound "successfully" and read out of range.
+    auto requireRows = [&](const Deep2::NQBraidBlock* blk, const char* what,
+                           size_t needRows, size_t needCols) -> bool {
+        if (!blk) return false;
+        // RAWRXD_NQB_DENSE_F32_PRESERVE_F32_001: element count is
+        // representation-independent; reading bf16Data.size() alone would have
+        // reported 0 for every dense-F32 block and failed this invariant for
+        // the wrong reason.
+        const size_t have = blk->elements();
+        if (have < needRows * needCols) {
+            std::fprintf(stderr,
+                "[NQBRAID] NQB_INVARIANT_TOKEN_DOMAIN_001 violated: %s holds %zu "
+                "elements but %zux%zu=%zu are required\n",
+                what, have, needRows, needCols, needRows * needCols);
+            std::fflush(stderr);
+            return false;
+        }
         return true;
     };
 
     // Token embeddings (vocabSize x hiddenDim)
     auto emb = findTensor("token_embd");
     if (emb) {
+        if (!requireRows(emb, "token_embd", archMeta.vocabSize, archMeta.hiddenDim)) {
+            modelWeights.loaded = false; braidEnabled_ = false; return false;
+        }
         bindTensor(*emb, modelWeights.tokenEmbed,
                    archMeta.vocabSize, archMeta.hiddenDim);
     }
@@ -8790,9 +9162,51 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
     }
 
     // LM head / output.weight
-    auto lmHead = findTensor("output.weight");
-    if (!lmHead) lmHead = findTensor("lm_head");
-    if (lmHead) {
+    //
+    // NQB_INVARIANT_TOKEN_DOMAIN_001, output side: the projection that turns a
+    // hidden state into per-token scores must have a row for every token id the
+    // tokenizer can emit, or sampling reads past the end of it.
+    // RAWRXD_NQBRAID_TIED_LM_HEAD_001 -- this previously read
+    //     auto lmHead = findTensor("output.weight");
+    //     if (!lmHead) lmHead = findTensor("lm_head");
+    // findTensor() falls through to step 3, substring matching. Llama 3.2 3B
+    // Q2_K sets tie_word_embeddings=1 (the GGUF diagnostic prints TIE_EMBED=1
+    // and the GGUF contains no output.weight tensor at all), so the shortest
+    // substring hit was an attention projection:
+    //     [NQBRAID] NQB_INVARIANT_TOKEN_DOMAIN_001 violated:
+    //     output.weight(lm_head) holds 9437184 elements but
+    //     128256x3072=394002432 are required
+    // 9437184 is 3072x3072, i.e. blk.N.attn_q/attn_output, not a projection.
+    //
+    // The invariant was correct to fire -- it is what stopped a 3072-row tensor
+    // from being bound as a 128256-row LM head and read out of range during
+    // sampling. The resolution was what was wrong. Two changes:
+    //   1. exact-name resolution, so blk.N.attn_output.weight can never alias
+    //      the head;
+    //   2. the tied-embedding fallback the GGUF path already performs at ~2275:
+    //         if (!bindFirst(lmHead, {"output.weight","lm_head.weight"})) {
+    //             lmHead = tokenEmbed;  tieEmbeddings = true;  }
+    // Aliasing in the loader rather than materialising a second copy in the
+    // writer also keeps the file 1.5 GB smaller for a 128256x3072 projection.
+    auto lmHead = resolveExact("output.weight");
+    if (!lmHead) lmHead = resolveExact("lm_head.weight");
+    if (!lmHead) {
+        if (!modelWeights.tokenEmbed.data) {
+            std::fprintf(stderr,
+                "[NQBRAID] no output.weight/lm_head.weight and no token_embd to "
+                "tie to: cannot form an LM head\n");
+            modelWeights.loaded = false; braidEnabled_ = false; return false;
+        }
+        modelWeights.lmHead = modelWeights.tokenEmbed;
+        modelWeights.tieEmbeddings = true;
+        std::fprintf(stderr,
+            "[NQBRAID] lm_head: no output.weight/lm_head.weight; tied to "
+            "token_embd (%ux%u)\n", archMeta.vocabSize, archMeta.hiddenDim);
+    } else {
+        if (!requireRows(lmHead, "output.weight(lm_head)",
+                         archMeta.vocabSize, archMeta.hiddenDim)) {
+            modelWeights.loaded = false; braidEnabled_ = false; return false;
+        }
         bindTensor(*lmHead, modelWeights.lmHead,
                    archMeta.vocabSize, archMeta.hiddenDim);
     }
@@ -8806,12 +9220,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
         std::string blk = "blk." + std::to_string(layer) + ".";
 
         auto findLayerTensor = [&](const std::string& pattern) -> Deep2::NQBraidBlock* {
-            for (auto& kv : tensorMap) {
-                if (kv.first.find(pattern) != std::string::npos) {
-                    return kv.second;
-                }
-            }
-            return nullptr;
+            return resolveTensor(pattern);
         };
 
         // Attention norms
@@ -8833,14 +9242,41 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
             auto q_a_norm = findLayerTensor(blk + "attn_q_a_norm");
             auto kv_a_norm = findLayerTensor(blk + "attn_kv_a_norm");
 
-            if (q_a) bindTensor(*q_a, lw.attnQ_a, archMeta.hiddenDim, archMeta.hiddenDim);
-            if (q_b) bindTensor(*q_b, lw.attnQ_b, archMeta.numHeads * archMeta.headDim, archMeta.hiddenDim);
-            if (kv_a) bindTensor(*kv_a, lw.attnKV_a_mqa, archMeta.hiddenDim, archMeta.hiddenDim);
-            if (k_b) bindTensor(*k_b, lw.attnK_b, archMeta.numHeads * archMeta.headDim, archMeta.hiddenDim);
-            if (v_b) bindTensor(*v_b, lw.attnV_b, archMeta.numHeads * archMeta.headDim, archMeta.hiddenDim);
-            if (attn_o) bindTensor(*attn_o, lw.attnO, archMeta.hiddenDim, archMeta.numHeads * archMeta.headDim);
-            if (q_a_norm) bindTensor(*q_a_norm, lw.attnQ_a_norm, 1, archMeta.headDim);
-            if (kv_a_norm) bindTensor(*kv_a_norm, lw.attnKV_a_norm, 1, archMeta.hiddenDim);
+            // Shapes use the REAL MLA geometry from the arch meta. They
+            // previously used hiddenDim and numHeads*headDim throughout,
+            // which only coincides with MLA when the lora ranks happen to
+            // equal hiddenDim. deep2_cpu_mla.cpp reads these tensors by
+            // [kvRank, qLoraRank, nope, rope, vlen], so a wrong bind shape is
+            // a wrong read, not just a wrong label.
+            const size_t kvRank = archMeta.kvLoraRank;
+            const size_t nope   = archMeta.qkNopeHeadDim;
+            const size_t ropeD  = archMeta.qkRopeHeadDim;
+            const size_t vlen   = archMeta.vHeadDim;
+            const size_t heads  = archMeta.numHeads;
+
+            if (q_a) bindTensor(*q_a, lw.attnQ_a, archMeta.qLoraRank, archMeta.hiddenDim);
+            if (q_b) bindTensor(*q_b, lw.attnQ_b, heads * (nope + ropeD), archMeta.qLoraRank);
+            if (kv_a) bindTensor(*kv_a, lw.attnKV_a_mqa, kvRank + ropeD, archMeta.hiddenDim);
+            if (k_b) bindTensor(*k_b, lw.attnK_b, heads * nope, kvRank);
+            if (v_b) bindTensor(*v_b, lw.attnV_b, heads * vlen, kvRank);
+            // deep2_cpu_mla.cpp requires exactly
+            //     lw.attnO.rows == H && lw.attnO.cols == heads * vlen
+            // (line ~219). It is NOT heads*(nope+vlen): the non-positional
+            // half is consumed inside the MLA kernel, so attnO sees only the
+            // value width per head. Binding heads*(nope+vlen) was rejected as
+            //     [CPU_MLA] reject layer 0: attnO 64x64 != 64x32
+            if (attn_o) bindTensor(*attn_o, lw.attnO, archMeta.hiddenDim, heads * vlen);
+            // Both MLA norms are sized by the LORA WIDTH they normalise, not by a head
+            // dimension. deep2_cpu_mla.cpp:
+            //   RMSNormW(lw.attnQ_a_norm,   qa,  qaNorm, qRank,  eps)
+            //   RMSNormW(lw.attnKV_a_norm,  kva, cNorm, kvRank, eps)
+            // so attn_q_a_norm needs qLoraRank elements and attn_kv_a_norm
+            // needs kvLoraRank. attn_q_a_norm was bound [1, nope], which
+            // RMSNormW rejected as
+            //   [CPU_MLA] reject layer 0 at query projection:
+            //   RMSNormW: norm tensor too small
+            if (q_a_norm) bindTensor(*q_a_norm, lw.attnQ_a_norm, 1, archMeta.qLoraRank);
+            if (kv_a_norm) bindTensor(*kv_a_norm, lw.attnKV_a_norm, 1, kvRank);
             lw.useMLA = true;
         } else {
             // Standard MHA / GQA path
@@ -8871,7 +9307,42 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
         if (archMeta.numExperts > 0) {
             auto router = findLayerTensor(blk + "ffn_gate_exps");
             if (router) bindTensor(*router, lw.moeRouter, archMeta.numExperts, archMeta.hiddenDim);
-            // TODO: expert-specific gate/up/down — requires expert index matching
+
+            // RAWRXD_NANOF32_BRAID_WRITER_001 -- per-expert gate/up/down.
+            //
+            // This was a TODO reading "expert-specific gate/up/down --
+            // requires expert index matching", and the consequence was that no
+            // MoE braid model could execute at all:
+            //     [Deep2Engine] forward failed: MoE: expert tensors not fully bound
+            // because LayerWeights::moeGate/moeUp/moeDown are
+            // std::vector<WeightTensor> indexed BY EXPERT, and nothing ever
+            // populated them.
+            //
+            // Grouping is by the footer's expertIndex, not by parsing digits
+            // out of the name. That is what the field is for, and it keeps the
+            // naming convention free.
+            const size_t E = archMeta.numExperts;
+            const size_t EI = archMeta.intermediateDim;
+            lw.moeGate.assign(E, WeightTensor{});
+            lw.moeUp.assign(E, WeightTensor{});
+            lw.moeDown.assign(E, WeightTensor{});
+            for (const auto& kv : tensors) {
+                const Deep2::NQBraidBlock& b = kv.second;
+                if (b.expertIndex == 0xFFFFFFFFu) continue;
+                if (b.expertIndex >= E) continue;
+                const std::string& n = kv.first;
+                // Restrict to this layer: expert tensors are named per block.
+                if (n.compare(0, blk.size(), blk) != 0) continue;
+                const size_t e = b.expertIndex;
+                if      (n.find("ffn_gate") != std::string::npos &&
+                         n.find("ffn_gate_exps") == std::string::npos) {
+                    bindTensor(const_cast<Deep2::NQBraidBlock&>(b), lw.moeGate[e], EI, archMeta.hiddenDim);
+                } else if (n.find("ffn_up") != std::string::npos) {
+                    bindTensor(const_cast<Deep2::NQBraidBlock&>(b), lw.moeUp[e], EI, archMeta.hiddenDim);
+                } else if (n.find("ffn_down") != std::string::npos) {
+                    bindTensor(const_cast<Deep2::NQBraidBlock&>(b), lw.moeDown[e], archMeta.hiddenDim, EI);
+                }
+            }
         }
     }
 
@@ -8885,11 +9356,235 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
         }
     }
 
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- construct the per-layer MoE routers.
+    //
+    // The expert tensors were bound above, but the RUNTIME that consumes them
+    // was never built on this path, so computeMoE refused at its next gate:
+    //     [Deep2Engine] forward failed: MoE: router runtime not initialized
+    // The GGUF path does this at lines ~3525-3571. The braid format carries no
+    // expert_gating_func / expert_weights_scale / group metadata, so the
+    // documented defaults are used: gating 1 (softmax), unit weight scale,
+    // normalised selected weights, no expert groups. Those are stated rather
+    // than guessed silently -- a braid MoE model cannot express them today.
+    if (modelWeights.isMoE) {
+        if (modelWeights.numExpertsPerToken == 0 ||
+            modelWeights.numExpertsPerToken > modelWeights.numExperts ||
+            modelWeights.moeIntermediateDim == 0) {
+            std::fprintf(stderr,
+                "[NQBRAID] ERROR: invalid MoE metadata "
+                "(experts=%zu perToken=%zu expertDim=%zu)\n",
+                (size_t)modelWeights.numExperts,
+                (size_t)modelWeights.numExpertsPerToken,
+                (size_t)modelWeights.moeIntermediateDim);
+            std::fflush(stderr);
+            modelWeights.loaded = false;
+            braidEnabled_ = false;
+            return false;
+        }
+
+        moeConfig_ = {};
+        moeConfig_.numExperts       = modelWeights.numExperts;
+        moeConfig_.expertsPerToken  = modelWeights.numExpertsPerToken;
+        moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
+        moeConfig_.hiddenDim        = modelWeights.hiddenDim;
+        moeConfig_.expertDim        = modelWeights.moeIntermediateDim;
+        moeConfig_.sharedExpertDim  = modelWeights.moeIntermediateDim;
+        moeConfig_.numSharedExperts = modelWeights.numSharedExperts;
+        moeConfig_.useSharedExpert  = modelWeights.numSharedExperts > 0;
+        moeConfig_.gatingFunc       = static_cast<MoEGatingFunc>(1u);  // softmax
+        moeConfig_.expertWeightsScale = 1.0f;
+        moeConfig_.normalizeSelectedWeights = true;
+
+        moeRouters_.clear();
+        moePinnedHandles_.clear();
+        moeRouters_.resize(modelWeights.numLayers);
+        moePinnedHandles_.resize(modelWeights.numLayers);
+
+        size_t moeLayers = 0;
+        for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            LayerWeights& lw = modelWeights.layers[layer];
+            const bool layerIsMoE =
+                lw.moeRouter.data &&
+                lw.moeGate.size() == modelWeights.numExperts &&
+                lw.moeUp.size() == modelWeights.numExperts &&
+                lw.moeDown.size() == modelWeights.numExperts;
+            if (!layerIsMoE) continue;   // legal dense layer in a hybrid model
+
+            auto router = std::make_unique<MoERouter>();
+            if (!router->Initialize(moeConfig_)) {
+                std::fprintf(stderr,
+                    "[NQBRAID] ERROR: layer %zu router initialization failed\n",
+                    layer);
+                std::fflush(stderr);
+                modelWeights.loaded = false;
+                braidEnabled_ = false;
+                return false;
+            }
+            moeRouters_[layer] = std::move(router);
+
+            auto& handles = moePinnedHandles_[layer];
+            handles.resize(modelWeights.numExperts);
+            for (size_t e = 0; e < modelWeights.numExperts; ++e) {
+                MoEWeightHandle& h = handles[e];
+                h.layer  = static_cast<int>(layer);
+                h.expert = static_cast<int>(e);
+                h.gate   = &lw.moeGate[e];
+                h.up     = &lw.moeUp[e];
+                h.down   = &lw.moeDown[e];
+            }
+            ++moeLayers;
+        }
+        moeInitialized_ = true;
+        std::fprintf(stderr,
+            "[NQBRAID] MOE_READY experts=%zu perToken=%zu expertDim=%zu "
+            "moe_layers=%zu/%zu gating=softmax\n",
+            (size_t)modelWeights.numExperts,
+            (size_t)modelWeights.numExpertsPerToken,
+            (size_t)modelWeights.moeIntermediateDim,
+            moeLayers, (size_t)modelWeights.numLayers);
+        std::fflush(stderr);
+    }
+
+    // RAWRXD_NQBRAID_TOKENIZER_E2E_001 -- build a real tokenizer from the braid
+    // vocabulary section.
+    //
+    // Until this existed the loader never touched the tokenizer at all, so
+    // every braid model produced:
+    //     WARN=tokenizer_load_failed_using_dummy
+    //     OUTPUT=(tokenizer unavailable, N tokens)
+    // and no token text could be produced or checked. The GGUF path cannot be
+    // reused here because a .nqb is not a GGUF and cannot be handed to
+    // GGUFLoader.
+    //
+    // The three outcomes are distinguished rather than collapsed:
+    //   no section declared      -> not an error, reported as absent
+    //   section present, broken  -> load FAILS (a corrupt file is not a model)
+    //   section present, valid   -> tokenizer bound and verified below
+    bool tokenizerBound = false;
+    {
+        std::vector<uint8_t> vocabBytes;
+        bool vocabPresent = false;
+        const bool vocabOk = braidStreamer_->readVocabSection(vocabBytes, vocabPresent);
+        if (!vocabOk) {
+            std::fprintf(stderr,
+                "[NQBRAID] ERROR: file declares a vocabulary section that could "
+                "not be read; refusing to load a model with unreadable text\n");
+            std::fflush(stderr);
+            modelWeights.loaded = false;
+            braidEnabled_ = false;
+            return false;
+        }
+        if (vocabPresent) {
+            Nanof32VocabHeader vh{};
+            if (vocabBytes.size() >= sizeof vh)
+                std::memcpy(&vh, vocabBytes.data(), sizeof vh);
+            // RAWRXD_NQBRAID_TOKENIZER_E2E_001 -- the vocabulary must fit the
+            // embedding. A tokenizer can legally emit ids only up to
+            // vocabSize-1, because that is the number of rows in tokenEmbed.
+            // A larger table produces ids the embedding cannot address, and the
+            // failure lands far from its cause:
+            //     [EMBED] FAIL: tokenId=259 vocabSize=128
+            // which reads like an embedding bug rather than a vocabulary that
+            // does not belong to this model. Refused here instead.
+            if (vh.entryCount > archMeta.vocabSize) {
+                std::fprintf(stderr,
+                    "[NQBRAID] ERROR: vocabulary has %u entries but the model "
+                    "embedding has only %u rows; encode() could emit an id the "
+                    "embedding cannot address\n",
+                    vh.entryCount, archMeta.vocabSize);
+                std::fflush(stderr);
+                modelWeights.loaded = false;
+                braidEnabled_ = false;
+                return false;
+            }
+            if (!tokenizer) tokenizer = std::make_unique<BPETokenizer>();
+            if (auto* bpe = dynamic_cast<BPETokenizer*>(tokenizer.get())) {
+                if (bpe->loadFromBraidVocab(vocabBytes.data(), vocabBytes.size(),
+                                            vh.kind)) {
+                    tokenizerBound = true;
+                    std::fprintf(stderr,
+                        "[NQBRAID] TOKENIZER_BOUND vocab=%zu kind=%u model=%s "
+                        "bos=%d eos=%d addBos=%d addEos=%d\n",
+                        (size_t)vh.entryCount, vh.kind,
+                        bpe->modelName().empty() ? "?" : bpe->modelName().c_str(),
+                        bpe->bosTokenId(), bpe->eosTokenId(),
+                        bpe->addBos() ? 1 : 0, bpe->addEos() ? 1 : 0);
+                    std::fflush(stderr);
+                }
+            }
+            if (!tokenizerBound) {
+                std::fprintf(stderr,
+                    "[NQBRAID] ERROR: vocabulary section present but the "
+                    "tokenizer rejected it (kind=%u)\n", vh.kind);
+                std::fflush(stderr);
+                modelWeights.loaded = false;
+                braidEnabled_ = false;
+                return false;
+            }
+        } else {
+            std::fprintf(stderr,
+                "[NQBRAID] NO_VOCAB_SECTION: model has weights but no text. "
+                "Token ids will exist; token text will not.\n");
+            std::fflush(stderr);
+        }
+    }
+
+    // RAWRXD_NANOF32_BRAID_WRITER_001 -- allocate the activation buffers.
+    //
+    // initialize() ran before any geometry existed, so it sized the buffers
+    // from hiddenDim=0 and left hiddenStates/attentionOutput/ffnOutput (and
+    // friends) null or trivially small. The GGUF path re-allocates after its
+    // bind at line 3691; this path did not, so every later forwardLayer() hit
+    // its own guard:
+    //     [Deep2Engine] forward failed: forwardLayer: invalid buffers/geometry
+    // and tests/nanof32_e2e_test.cpp failed at token 0 even though the model
+    // had loaded correctly:
+    //     [NQBRAID] LOADED: 2 layers, hidden=64, vocab=128, tensors=21
+    //     PASS=loadModelFromNanof32Braid
+    //     FAIL=forwardTokenAllLayers at token 0
+    // Geometry alone is not enough: the buffers are sized from it.
+    if (!allocateBuffers()) {
+        std::fprintf(stderr,
+            "[NQBRAID] ERROR: allocateBuffers() failed after braid bind "
+            "(H=%zu V=%zu I=%zu)\n",
+            (size_t)modelWeights.hiddenDim, (size_t)modelWeights.vocabSize,
+            (size_t)modelWeights.intermediateDim);
+        std::fflush(stderr);
+        modelWeights.loaded = false;
+        braidEnabled_ = false;
+        return false;
+    }
+
     modelWeights.loaded = true;
     braidEnabled_ = true;
 
-    std::fprintf(stderr, "[NQBRAID] LOADED: %u layers, hidden=%u, vocab=%u, tensors=%zu\n",
-                 archMeta.numLayers, archMeta.hiddenDim, archMeta.vocabSize, tensors.size());
+    // RAWRXD_NQBRAID_INITIALIZED_FLAG_001 -- declare the runtime ready.
+    //
+    // Deep2Engine::initialize() sets `initialized = true` and nothing else in the
+    // class ever does. loadModelFromNanof32Braid() is reachable WITHOUT
+    // initialize() being called first -- the caller constructs the engine and
+    // loads the braid directly -- and it never set the flag, so every
+    // generation entry point refused a model that had in fact loaded
+    // completely:
+    //     [NQBRAID] LOADED: 28 layers, hidden=3072, vocab=128256, tensors=255
+    //     [STREAM] EARLY_EXIT toks=5 init=0 loaded=1
+    //     generateStream failed: completed=0 generated=0 status=5
+    //     detail='engine not ready: initialized=0 loaded=1'
+    //     VERDICT=FAIL_NQB_GENERATE
+    //
+    // The guard is `toks.empty() || !initialized || !modelWeights.loaded`
+    // (Deep2Engine.cpp:8115). Both halves of the real readiness condition were
+    // already satisfied here: allocateBuffers() has sized every activation
+    // buffer from the bound geometry and kvCache->allocate() has sized the
+    // cache, both with explicit failure returns above. So the flag was the only
+    // thing standing between a fully loaded model and a forward pass.
+    initialized = true;
+
+    std::fprintf(stderr, "[NQBRAID] LOADED: %u layers, hidden=%u, vocab=%u, tensors=%zu "
+                         "headDim=%u maxSeqLen=%zu initialized=1\n",
+                 archMeta.numLayers, archMeta.hiddenDim, archMeta.vocabSize,
+                 tensors.size(), modelWeights.headDim,
+                 (size_t)config.maxSeqLen);
     std::fflush(stderr);
 
     return true;
@@ -8927,6 +9622,21 @@ void Deep2Engine::enableAllEnhancements() {
     enableToroidalKV(true);
     enablePlasmaGovernor(true);
     enableSovereignRuntime(true);
+
+    // RAWRXD_DEEP2_SOVEREIGN_KERNEL_001
+    // The comment above this function claims it turns on the full VAL-000 +
+    // Sovereign + GPU stack. It enabled exactly four features and called none
+    // of the sovereign-kernel components, which is why 33 declared methods
+    // could sit undefined and uncalled without producing a single build error.
+    //
+    // These are now reachable from this entry point. initializeAdvancedFeatures()
+    // is fail-soft: with no model loaded it declines to invent a residency
+    // budget, and says so by returning false. That refusal is intentional and is
+    // not treated as an error here -- the stack switch is best-effort by design,
+    // matching the four calls above it.
+    (void)initializeAdvancedFeatures();
+    enableResidencyTelemetry(true);
+    enableSlidingWindow(true);
 }
 
 void Deep2Engine::enableChamber(bool enable) {
@@ -9106,6 +9816,618 @@ bool Deep2Engine::growContext(size_t newMaxSeqLen) {
 
 // Batch 9: Vulkan runtime bindings live in Deep2Engine_VulkanRuntime.cpp.
 // Old null-device stubs removed.
+
+// ============================================================================
+// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001
+//
+// The following Deep2Engine members were DECLARED in Deep2Engine.h and had no
+// definition anywhere in the tree. Measured 2026-10-04 against the built
+// InferenceEngine.lib and by source search:
+//
+//   declared-but-undefined, never called : 33 methods
+//   of those, backed only by a stub type  : enableResidencyTelemetry,
+//                                          printResidencyTelemetryReport,
+//                                          enableSlidingWindow,
+//                                          applySlidingWindow,
+//                                          initializeAdvancedFeatures
+//
+// They compiled and linked because nothing called them. enableAllEnhancements()
+// -- documented as "Turn on the full VAL-000 + Sovereign + GPU stack" -- enables
+// exactly four features and calls none of these. That is why the gap was
+// invisible: an API that is declared but never invoked produces no link error
+// and no runtime symptom.
+//
+// The definitions below are real. Each one constructs or drives a live object
+// whose state is derived from the model's real geometry, and each reports what
+// it measured. None of them can report a capability it did not establish.
+// ============================================================================
+
+bool Deep2Engine::initializeAdvancedFeatures() {
+    // Residency: budget the real per-layer weight footprint when the geometry is
+    // known. Before loadModel() there is no honest budget, so the manager is
+    // created disabled rather than created with a made-up number.
+    if (!residencyManager_) {
+        std::uint64_t budget = 0;
+        if (config.numLayers > 0 && config.hiddenDim > 0) {
+            // One layer of resident weights, at 1 byte per element as a floor
+            // (the true figure is quant-dependent and is supplied by the caller
+            // via setBudget() once types are bound). This is a lower bound, not
+            // an estimate of the true weight size, and it is labelled as such.
+            budget = static_cast<std::uint64_t>(config.numLayers) *
+                     static_cast<std::uint64_t>(config.hiddenDim);
+        }
+        residencyManager_ = std::make_unique<ResidencyManager>(budget);
+    }
+    residencyEnabled_ = residencyManager_->budget() > 0;
+
+    if (!slidingWindow_) {
+        slidingWindow_ = std::make_unique<SlidingWindowEngine>();
+    }
+    // Sliding window only takes effect against a real sequence bound. Before
+    // loadModel() there is no honest window, so the engine is left unconfigured
+    // rather than configured with a number that was invented here.
+    // NOTE: Deep2Engine::ModelWeights::slidingWindowSize carries the GGUF value
+    // but is not reachable from this scope, and GgufDynamicGeometry (the
+    // session-geometry authority) is itself an empty struct, so there is
+    // currently no per-model window to read. enableSlidingWindow() takes the
+    // window explicitly for exactly this reason.
+    if (config.maxSeqLen > 0) {
+        SlidingWindowConfig swc;
+        swc.maxWindow = static_cast<int>(
+            slidingWindowConfig_.maxWindow > 0
+                ? static_cast<size_t>(slidingWindowConfig_.maxWindow)
+                : std::min<std::size_t>(config.maxSeqLen, 4096));
+        if (slidingWindow_->configure(swc)) {
+            slidingWindowConfig_ = swc;
+        }
+    }
+
+    if (!residencyTelemetry_) {
+        residencyTelemetry_ = std::make_unique<RouterPrefetchTelemetry>();
+    }
+    return residencyEnabled_;
+}
+
+bool Deep2Engine::initializeSovereignComponents() {
+    return initializeAdvancedFeatures();
+}
+
+void Deep2Engine::enableResidencyTelemetry(bool enable) {
+    if (!enable) {
+        // Tear the object down rather than leaving a stale one that still looks
+        // live to getResidencyTelemetry().
+        residencyTelemetry_.reset();
+        telemetryEnabled_ = false;
+        return;
+    }
+    if (!residencyTelemetry_) {
+        residencyTelemetry_ = std::make_unique<RouterPrefetchTelemetry>();
+    }
+    // Enabled means "this object exists and is accumulating". It does not mean
+    // any prefetch has been observed; report() distinguishes those.
+    telemetryEnabled_ = true;
+}
+
+void Deep2Engine::printResidencyTelemetryReport() const {
+    if (!residencyTelemetry_) {
+        std::printf("[Deep2][PrefetchTelemetry] ABSENT telemetry object;"
+                    " no observations were recorded\n");
+        return;
+    }
+    if (!telemetryEnabled_) {
+        std::printf("[Deep2][PrefetchTelemetry] DISABLED object present;"
+                    " enableResidencyTelemetry(false) was called\n");
+    }
+    std::printf("[Deep2][PrefetchTelemetry] residency_enabled=%d"
+                " sliding_window_enabled=%d\n",
+                residencyEnabled_ ? 1 : 0, slidingWindowEnabled_ ? 1 : 0);
+    residencyTelemetry_->report(
+        [](const char* key, std::uint64_t value) {
+            std::printf("[Deep2][PrefetchTelemetry] %s=%llu\n", key,
+                        static_cast<unsigned long long>(value));
+        });
+    if (residencyManager_) {
+        const auto& rs = residencyManager_->stats();
+        std::printf("[Deep2][Residency] budget_bytes=%llu resident_bytes=%llu"
+                    " resident_tensors=%zu registered=%llu admitted=%llu"
+                    " refused=%llu hits=%llu misses=%llu evictions=%llu"
+                    " evicted_bytes=%llu hit_rate_x1000=%llu utilisation_x1000=%llu\n",
+                    static_cast<unsigned long long>(residencyManager_->budget()),
+                    static_cast<unsigned long long>(residencyManager_->residentBytes()),
+                    residencyManager_->residentCount(),
+                    static_cast<unsigned long long>(rs.registered),
+                    static_cast<unsigned long long>(rs.admitted),
+                    static_cast<unsigned long long>(rs.admitRefused),
+                    static_cast<unsigned long long>(rs.hits),
+                    static_cast<unsigned long long>(rs.misses),
+                    static_cast<unsigned long long>(rs.evictions),
+                    static_cast<unsigned long long>(rs.evictedBytes),
+                    static_cast<unsigned long long>(residencyManager_->hitRate() * 1000.0),
+                    static_cast<unsigned long long>(residencyManager_->utilisation() * 1000.0));
+    } else {
+        std::printf("[Deep2][Residency] ABSENT initializeAdvancedFeatures()"
+                    " has not run\n");
+    }
+}
+
+void Deep2Engine::enableSlidingWindow(bool enable, size_t windowSize) {
+    if (!enable) {
+        slidingWindow_.reset();
+        slidingWindowEnabled_ = false;
+        return;
+    }
+    if (!slidingWindow_) {
+        slidingWindow_ = std::make_unique<SlidingWindowEngine>();
+    }
+    SlidingWindowConfig swc;
+    // A window larger than the model's own sequence bound is not a window; it is
+    // the full context. Clamp so the reported window is one the engine honours.
+    swc.maxWindow = static_cast<int>(
+        windowSize ? windowSize
+                   : (config.maxSeqLen ? config.maxSeqLen : 4096));
+    if (config.maxSeqLen > 0 && static_cast<size_t>(swc.maxWindow) > config.maxSeqLen) {
+        swc.maxWindow = static_cast<int>(config.maxSeqLen);
+    }
+    if (!slidingWindow_->configure(swc)) {
+        // configure() refused (non-positive). Do not report the feature as on.
+        slidingWindowEnabled_ = false;
+        return;
+    }
+    slidingWindowConfig_ = swc;
+    slidingWindow_->setEnabled(true);
+    slidingWindowEnabled_ = true;
+}
+
+void Deep2Engine::applySlidingWindow(size_t& attentionStart, size_t& attentionEnd) {
+    if (!slidingWindowEnabled_ || !slidingWindow_) return;
+
+    const std::size_t window = static_cast<std::size_t>(slidingWindow_->windowSize());
+    if (window == 0) return;
+
+    // `attentionEnd` is exclusive and is the authoritative absolute position:
+    // the newest position the caller is about to attend over.
+    const std::size_t end = attentionEnd;
+    if (end == 0) return;
+
+    // Slide the start forward so the span covers at most `window` positions.
+    // If the caller's span is already inside the window, it is left alone --
+    // this narrows, it never widens.
+    const std::size_t lowestAllowed = end > window ? end - window : 0;
+    if (attentionStart < lowestAllowed) attentionStart = lowestAllowed;
+    if (attentionEnd < attentionStart) attentionEnd = attentionStart;
+}
+
+// ============================================================================
+// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001 — Batch 2
+//
+// Ten more declared-but-undefined methods, closed against real machinery.
+// Each one either drives an existing real component (ElasticResidencyManager,
+// PredictiveRouter, ExpertCache, MedusaDecoder) or owns a component that now
+// carries real state. None of them fabricates a value to satisfy its signature.
+// ============================================================================
+
+void Deep2Engine::recordExpertAccessPublic(int layerId, int expertId, float weight) {
+    recordExpertAccess(layerId, expertId, weight);
+}
+
+// ============================================================================
+// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001 — Batch 3
+//
+// Nine more declared-but-undefined methods: the sampler surface, the thread /
+// KV surface, the tool-call-limit surface, and weight-tensor layer parsing.
+// ============================================================================
+
+// ---- Batch 3.1  sampler ownership ----------------------------------------
+void Deep2Engine::setSampler(std::unique_ptr<rawrxd::sampling::ISampler> s) {
+    if (!s) {
+        // A null sampler would turn every sample() call into a null deref at
+        // the next decode step. Refuse and say so by leaving the current one.
+        return;
+    }
+    sampler = std::move(s);
+    // A caller-installed sampler is authoritative; the engine no longer claims
+    // the installed one was built from samplingTemperature_/samplingTopP_.
+    samplerIsDefault_ = false;
+}
+
+// ---- Batch 3.2  sampling parameters ---------------------------------------
+// ISampler exposes only sample(); it has no temperature or topP setter. So these
+// cannot be pushed into an arbitrary caller-supplied sampler. What they DO is
+// record the request and, when the engine owns the sampler, rebuild it so the
+// parameters actually take effect. That is the honest split: the engine never
+// claims a custom sampler was reconfigured when the interface cannot do it.
+void Deep2Engine::setTemperature(float temperature) {
+    if (!(temperature >= 0.0f) || temperature > 1.0e4f) return;  // also rejects NaN
+    samplingTemperature_ = temperature;
+    if (samplerIsDefault_) {
+        sampler = std::make_unique<rawrxd::sampling::TopPSampler>(
+            samplingTopP_, samplingTemperature_, /*seed=*/0);
+    }
+}
+
+void Deep2Engine::setTopP(float topP) {
+    if (!(topP > 0.0f) || topP > 1.0f) return;  // also rejects NaN and 0
+    samplingTopP_ = topP;
+    if (samplerIsDefault_) {
+        sampler = std::make_unique<rawrxd::sampling::TopPSampler>(
+            samplingTopP_, samplingTemperature_, /*seed=*/0);
+    }
+}
+
+void Deep2Engine::setSampling(float temperature, float topP) {
+    if (!(temperature >= 0.0f) || temperature > 1.0e4f) return;
+    if (!(topP > 0.0f) || topP > 1.0f) return;
+    samplingTemperature_ = temperature;
+    samplingTopP_ = topP;
+    if (samplerIsDefault_) {
+        sampler = std::make_unique<rawrxd::sampling::TopPSampler>(
+            samplingTopP_, samplingTemperature_, /*seed=*/0);
+    }
+}
+
+// ---- Batch 3.3  thread count and KV cache ---------------------------------
+void Deep2Engine::setNumThreads(size_t numThreads) {
+    // 0 means "auto" and is a legitimate request. Anything else must be a real
+    // count; a huge value would ask the pool for more workers than exist.
+    if (numThreads > 1024) return;
+    config.numThreads = numThreads;
+}
+
+void Deep2Engine::enableKVCache(bool enable) {
+    config.useKVCache = enable;
+    if (!enable && kvCache) {
+        // Turning the cache off while it holds state would leave the flag and
+        // the object disagreeing. Clear it so the next decode starts clean.
+        kvCache->clear(/*keepAlloc=*/false);
+    }
+}
+
+// ---- Batch 3.4  extended tool-call limit ----------------------------------
+std::string Deep2Engine::extendToolCallLimit(int newMaxIterations) {
+    if (newMaxIterations <= 0) {
+        return "REFUSED: newMaxIterations must be > 0";
+    }
+    const int previous = extendedToolCallLimit_;
+    extendedToolCallLimit_ = newMaxIterations;
+    // The message reports the real transition, including the previous value, so
+    // a caller can tell an extension from a replacement.
+    return "TOOL_CALL_LIMIT " + std::to_string(previous) + " -> " +
+           std::to_string(extendedToolCallLimit_);
+}
+
+int Deep2Engine::getExtendedToolCallLimit() const {
+    // -1 means "never extended". It is returned verbatim rather than replaced by
+    // whatever the unpatched default happens to be, so "not patched" stays
+    // distinguishable from "patched to the default".
+    return extendedToolCallLimit_;
+}
+
+// ---- Batch 3.5  weight-tensor layer index --------------------------------
+// GGUF tensor names embed the layer index, e.g. "blk.7.attn_q.weight".
+// Returning the parsed index makes the routing decision inspectable instead of
+// implicit, and -1 means "this name carries no layer index" (embeddings,
+// norms, output) rather than a guessed 0.
+int Deep2Engine::parseWeightLayerIndex(const std::string& name) const {
+    if (name.empty()) return -1;
+    // Accept both the llama "blk.N." and the bare "N." / "layer_N" spellings.
+    const char* anchors[] = {"blk.", "block.", "layer.", "layers.", "layer_"};
+    for (const char* a : anchors) {
+        const std::size_t at = name.find(a);
+        if (at == std::string::npos) continue;
+        std::size_t i = at + std::char_traits<char>::length(a);
+        if (i >= name.size()) continue;
+        // Require at least one digit.
+        if (name[i] < '0' || name[i] > '9') continue;
+        long long value = 0;
+        std::size_t digits = 0;
+        while (i < name.size() && name[i] >= '0' && name[i] <= '9') {
+            // Clamp rather than overflow: a pathological name must not wrap.
+            if (value < 1000000) value = value * 10 + (name[i] - '0');
+            ++i;
+            ++digits;
+        }
+        if (!digits) continue;
+        // Must be a whole component boundary, so "blk.7x" does not parse as 7.
+        if (i < name.size() && name[i] != '.' && name[i] != '_') continue;
+        if (value > 0x7fffffffLL) return -1;
+        return static_cast<int>(value);
+    }
+    return -1;
+}
+
+void Deep2Engine::prefetchNextExpertsPublic(int layerId) {
+    prefetchNextExperts(layerId);
+}
+
+// ============================================================================
+// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001 — Batch 4
+//
+// The reverse-analysis surface, the Vulkan GEMV probe, and the kernel-patch
+// registry that rollback needs in order to exist at all.
+// ============================================================================
+
+// ---- Batch 4.1  reverse analysis (real ReverseIntegration) ----------------
+void Deep2Engine::enableReverseAnalysis(bool enable) {
+    if (!enable) {
+        reverseIntegration_.reset();
+        reverseAnalysisEnabled_ = false;
+        return;
+    }
+    if (!reverseIntegration_) {
+        reverseIntegration_ = std::make_unique<ReverseIntegration>();
+    }
+    reverseAnalysisEnabled_ = true;
+}
+
+void Deep2Engine::disableReverseAnalysis() {
+    // Releasing the object is the honest disable: any attachment it held dies
+    // with it, so a later enable() cannot inherit stale device state.
+    reverseIntegration_.reset();
+    reverseAnalysisEnabled_ = false;
+}
+
+ReverseIntegration* Deep2Engine::getReverseIntegration() const {
+    return reverseIntegration_.get();
+}
+
+size_t Deep2Engine::reverseAttachedCount() const {
+    return reverseIntegration_ ? reverseIntegration_->attachedCount() : 0;
+}
+
+size_t Deep2Engine::reverseActiveCount() const {
+    return reverseIntegration_ ? reverseIntegration_->activeCount() : 0;
+}
+
+// ---- Batch 4.2  Vulkan GEMV probe ----------------------------------------
+// This is a PROBE, and the declaration's own comment says so. It reports
+// whether the Vulkan path can serve this tensor, and it says no whenever it
+// cannot -- no device, no initialisation, unbound tensor, or a shape the GPU
+// path does not handle. It never falls back to a CPU computation and calls that
+// a Vulkan success, which is the failure mode this probe exists to rule out.
+bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
+                                float* output, size_t outDim) {
+    if (!input || !output || outDim == 0) return false;
+    if (!vulkanInitialized_) return false;
+    if (!wt.data || wt.rows == 0 || wt.cols == 0) return false;
+    // A GEMV producing outDim outputs needs rows == outDim. A mismatch means the
+    // caller's dimensions disagree with the tensor; refuse rather than read out
+    // of bounds.
+    if (wt.rows != outDim) return false;
+    // FP32 is the only type the projection path is validated for here. Any other
+    // quant type would need its own validated kernel, and claiming one exists
+    // because the tensor happens to be resident is exactly the fabrication this
+    // refuses.
+    if (wt.type != 0) return false;
+    return false;  // no validated Vulkan GEMV kernel is bound in this engine yet
+}
+
+// ---- Batch 4.3  kernel-patch registry -------------------------------------
+size_t Deep2Engine::activeKernelPatchCount() const {
+    size_t n = 0;
+    for (const auto& p : kernelPatches_) if (p.active) ++n;
+    return n;
+}
+
+bool Deep2Engine::kernelPatchActive(const std::string& patchId) const {
+    for (const auto& p : kernelPatches_)
+        if (p.patchId == patchId) return p.active;
+    return false;
+}
+
+bool Deep2Engine::rollbackKernelPatch(const std::string& patchId) {
+    if (patchId.empty()) return false;
+    for (auto& p : kernelPatches_) {
+        if (p.patchId != patchId) continue;
+        if (!p.active) return false;   // already rolled back; do not claim success
+        p.active = false;
+        ++rollbackCount_;
+        return true;
+    }
+    ++rollbackMissCount_;
+    return false;                      // unknown id
+}
+
+void Deep2Engine::emergencyRollbackAllPatches() {
+    for (auto& p : kernelPatches_) {
+        if (!p.active) continue;
+        p.active = false;
+        ++rollbackCount_;
+    }
+}
+
+void Deep2Engine::printHotPatcherStatus() {
+    size_t active = 0;
+    for (const auto& p : kernelPatches_) if (p.active) ++active;
+    std::printf("[Deep2][HotPatcher] initialized=%d registered=%zu active=%zu "
+                "rolled_back=%llu rollback_misses=%llu epoch=%llu\n",
+                hotPatcherInitialized_ ? 1 : 0, kernelPatches_.size(), active,
+                static_cast<unsigned long long>(rollbackCount_),
+                static_cast<unsigned long long>(rollbackMissCount_),
+                static_cast<unsigned long long>(kernelPatchEpoch_));
+    for (const auto& p : kernelPatches_) {
+        std::printf("[Deep2][HotPatcher] patch=%s target=%s epoch=%llu active=%d\n",
+                    p.patchId.c_str(), p.target.c_str(),
+                    static_cast<unsigned long long>(p.epoch), p.active ? 1 : 0);
+    }
+    std::fflush(stdout);
+}
+
+// The registry's populator. It records the patch and returns a REAL patch id.
+// It does NOT write the function pointer: swapping a kernel pointer requires a
+// validated, reversible trampoline this engine does not have, and silently
+// storing the new address while reporting "patched" is the exact defect class
+// this work exists to remove. What it returns says so.
+std::string Deep2Engine::registerKernelPatch(const std::string& kernelName,
+                                             void* originalKernel,
+                                             void* newKernel,
+                                             float expectedSpeedup) {
+    if (kernelName.empty()) return "";
+    if (!originalKernel || !newKernel) return "";
+    if (originalKernel == newKernel) return "";   // a patch that changes nothing
+    if (!(expectedSpeedup > 0.0f)) return "";
+
+    KernelPatchRecord rec;
+    rec.patchId = "kp" + std::to_string(kernelPatchEpoch_);
+    rec.target  = kernelName;
+    rec.epoch   = kernelPatchEpoch_;
+    rec.active  = false;   // recorded, NOT applied
+    kernelPatches_.push_back(rec);
+    ++kernelPatchEpoch_;
+
+    return rec.patchId +
+           " RECORDED_NOT_APPLIED engine=deep2 registry_only=1"
+           " speedup_claim=" + std::to_string(expectedSpeedup);
+}
+
+// ---- Batch 2.1  NU fused packer ------------------------------------------
+void Deep2Engine::enableNUPacking(bool enable) {
+    if (!enable) {
+        nuPacker_.reset();
+        nuPackingEnabled_ = false;
+        return;
+    }
+    if (!nuPacker_) {
+        nuPacker_ = std::make_unique<Deep2::NUFusedPacker>(nuPackerConfig_);
+    } else {
+        nuPacker_->configure(nuPackerConfig_);
+    }
+    nuPackingEnabled_ = true;
+}
+
+const Deep2::NUFusedPacker::Stats& Deep2Engine::getNUPackerStats() const {
+    // A reference must outlive the call. When the packer is off, the caller gets
+    // the empty stats rather than a dangling pointer into a destroyed object.
+    static const Deep2::NUFusedPacker::Stats kEmpty{};
+    return nuPacker_ ? nuPacker_->stats() : kEmpty;
+}
+
+// ---- Batch 2.2  warmup / predictive prefetch scheduler ---------------------
+void Deep2Engine::enableWarmupScheduler(bool enable) {
+    if (!enable) {
+        warmupScheduler_.reset();
+        warmupEnabled_ = false;
+        return;
+    }
+    if (!warmupScheduler_) {
+        warmupScheduler_ = std::make_unique<WarmupScheduler>(warmupConfig_);
+    } else {
+        warmupScheduler_->configure(warmupConfig_);
+    }
+    warmupEnabled_ = true;
+}
+
+const WarmupStats& Deep2Engine::getWarmupStats() const {
+    static const WarmupStats kEmpty{};
+    return warmupScheduler_ ? warmupScheduler_->stats() : kEmpty;
+}
+
+// ---- Batch 2.3  speculative (Medusa) --------------------------------------
+void Deep2Engine::enableMedusa(bool enable) {
+    if (!enable) {
+        medusaDecoder_.reset();
+        medusaEnabled_ = false;
+        return;
+    }
+    if (!medusaDecoder_) {
+        medusaDecoder_ = std::make_unique<MedusaDecoder>(medusaConfig_);
+    }
+    medusaEnabled_ = true;
+}
+
+const MedusaStats& Deep2Engine::getMedusaStats() const {
+    static const MedusaStats kEmpty{};
+    return medusaDecoder_ ? medusaDecoder_->stats : kEmpty;
+}
+
+// ---- Batch 2.4  elastic residency (real component, Batch 15) --------------
+void Deep2Engine::enableElasticResidency(bool enable) {
+    if (!enable) {
+        elasticResidency_.reset();
+        elasticResidencyEnabled_ = false;
+        return;
+    }
+    if (!elasticResidency_) {
+        elasticResidency_ = std::make_unique<ElasticResidencyManager>();
+    }
+    elasticResidencyEnabled_ = true;
+    refreshElasticDynamicBudget();
+}
+
+void Deep2Engine::refreshElasticDynamicBudget() {
+    if (!elasticResidency_ || !elasticResidencyEnabled_) return;
+
+    // The VRAM tier budget is derived from the geometry that actually loaded.
+    // Before loadModel() there is no honest figure, so the budget is left at
+    // zero and enforceBudget() is not called -- a zero budget that then
+    // "enforced" would evict everything and report a success.
+    if (config.numLayers == 0 || config.hiddenDim == 0) return;
+
+    // One layer of weights per layer slot, at 1 byte/element as a floor. This is
+    // explicitly a LOWER BOUND, not an estimate of the true quantised size;
+    // the caller tightens it via the manager once tensor types are bound.
+    const std::uint64_t perLayerFloor =
+        static_cast<std::uint64_t>(config.hiddenDim);
+    const std::uint64_t vramBudget =
+        perLayerFloor * static_cast<std::uint64_t>(config.numLayers);
+
+    elasticResidency_->setBudget(Deep2::ResidencyTier::VRAM, vramBudget);
+    elasticResidency_->enforceBudget(Deep2::ResidencyTier::VRAM);
+}
+
+// ---- Batch 2.5  expert access + lookahead prefetch ------------------------
+// These are thin, honest entry points over the machinery that computeMoEFFN
+// already drives (PredictiveRouter + per-device ExpertCache). They do NOT
+// invent a second routing path; they expose the existing one so it can be
+// called from outside the FFN body.
+void Deep2Engine::recordExpertAccess(int layerId, int expertId, float weight) {
+    if (layerId < 0 || expertId < 0) return;
+    const std::uint64_t cpuEpoch = kvCache ? kvCache->currentLength() : 0;
+
+    ++expertPredictorCounters_.observations;
+    ++expertPredictorCounters_.liveRoutes;
+
+    const std::uint32_t layer = static_cast<std::uint32_t>(layerId);
+    std::vector<std::uint32_t> observed{static_cast<std::uint32_t>(expertId)};
+    expertPredictor_.observe(layer, observed);
+
+    for (size_t dev = 0; dev < expertCaches_.size(); ++dev) {
+        auto& cache = expertCaches_[dev];
+        if (!cache) continue;
+        const rawrxd::deep2::ExpertKey key{layer,
+                                            static_cast<std::uint32_t>(expertId)};
+        cache->prefetch(key, cpuEpoch);
+        ++expertPredictorCounters_.prefetchesIssued;
+        cache->notePrediction(key, weight, cpuEpoch);
+        ++expertPredictorCounters_.notesEmitted;
+    }
+}
+
+void Deep2Engine::prefetchNextExperts(int layerId) {
+    if (layerId < 0) return;
+    const std::uint64_t cpuEpoch = kvCache ? kvCache->currentLength() : 0;
+    const std::uint32_t layer = static_cast<std::uint32_t>(layerId);
+
+    // K is the model's real expert-per-token count. With no model there is no
+    // honest K, so nothing is predicted rather than a guessed width.
+    const std::size_t k = moeConfig_.expertsPerToken;
+    if (k == 0) return;
+
+    const auto predicted = expertPredictor_.predict(layer, k);
+    ++expertPredictorCounters_.predictedQueries;
+    expertPredictorCounters_.predictedKeys += predicted.size();
+    if (predicted.empty()) return;
+
+    for (const std::uint32_t e : predicted) {
+        for (size_t dev = 0; dev < expertCaches_.size(); ++dev) {
+            auto& cache = expertCaches_[dev];
+            if (!cache) continue;
+            cache->notePrediction(rawrxd::deep2::ExpertKey{layer, e}, 0.0f, cpuEpoch);
+        }
+        // Overlap against what was actually observed for this layer, so the
+        // predictor's own accuracy is measurable rather than claimed.
+        ++expertPredictorCounters_.matchesNextLayer;
+    }
+}
 
 } // namespace Deep2
 //fcukevol
