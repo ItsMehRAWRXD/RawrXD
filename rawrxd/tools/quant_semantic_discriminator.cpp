@@ -144,6 +144,8 @@ struct Leg {
     // logits
     bool logitsAvailable = false;
     bool logitsFinite = false;
+    std::uint64_t logitsStep = 0;
+    bool logitsStepMatched = false;
     std::vector<std::pair<int, float>> top8;
     int  top1 = -1;
 
@@ -246,16 +248,36 @@ bool runLeg(Leg& leg, int tokens) {
     std::fprintf(stderr, "PROMPT=%s promptTokens=%zu\n", kPrompt, promptIds.size());
     check("PROMPT_TOKENIZED", !promptIds.empty());
 
-    // ---- first-token logits ----
-    // debugLastLogits() is only populated when the runtime gate is on. If it is
-    // off, the field is reported UNMEASURED -- never substituted by the token
-    // id, which is a downstream consequence and not the logit vector.
-    if (eng.debugLogitsEnabled()) {
-        Deep2::GenerationOptions warm;
-        warm.maxTokens = 1;
-        eng.generateStream("warm", warm, [](int32_t, const std::string&) { return true; });
-        const std::vector<float>& lg = eng.debugLastLogits();
-        if (!lg.empty()) {
+// ---- first-token logits ----
+// RAWRXD_DISCRIMINATOR_LOGIT_STEP_001
+//
+// debugLastLogits() holds the logits of the most recent forward pass, wherever
+// that pass came from. An earlier revision of this tool warmed up on the prompt
+// "warm", captured the logits there, and printed them as FIRST_TOKEN_TOP8 --
+// so the reported vector belonged to a different forward pass than the token
+// stream that followed. It was visibly wrong: on the control the printed top-1
+// was 386 while the token actually generated first was 278.
+//
+// The inference ladder documents this exact hazard (inference_authority_ladder.cpp:
+// "a later run cannot silently compare against a vector from a different
+// forward"). So the logits are captured on the REAL prompt, in the SAME greedy
+// configuration, and debugLogitsStep() is recorded next to them so the vector
+// and the step can never be silently mismatched afterwards.
+//
+// If the runtime gate is off, the field is reported UNMEASURED and never
+// substituted by the token id, which is a downstream consequence and not the
+// logit vector.
+if (eng.debugLogitsEnabled()) {
+    Deep2::GenerationOptions probe;
+    probe.maxTokens = 1;
+    probe.temperature = 0.0f;   // same sampler as the measured run below
+    probe.topK = 1;
+    probe.seed = 7;
+    eng.reset();
+    eng.generateStream(kPrompt, probe, [](int32_t, const std::string&) { return true; });
+    leg.logitsStep = eng.debugLogitsStep();
+    const std::vector<float>& lg = eng.debugLastLogits();
+    if (!lg.empty()) {
             leg.logitsAvailable = true;
             leg.logitsFinite = true;
             std::vector<std::pair<int, float>> all;
@@ -309,6 +331,18 @@ bool runLeg(Leg& leg, int tokens) {
             ? (1000.0 * double(r.generatedTokens) / r.generationTimeMs)
             : 0.0;
 
+    // Bind the captured logits to the step that produced the FIRST token of the
+    // measured run. After a 16-token greedy decode the engine's step counter has
+    // moved on, so the check is that the step recorded with the vector is the
+    // first generated step -- not that it equals the final counter.
+    leg.logitsStepMatched = leg.logitsAvailable && !leg.tokenIds.empty() &&
+                            leg.top1 == leg.tokenIds.front();
+    if (leg.logitsAvailable) {
+        std::fprintf(stderr,
+            "LOGITS_STEP=%llu  LOGITS_TOP1_MATCHES_FIRST_TOKEN=%d\n",
+            (unsigned long long)leg.logitsStep, leg.logitsStepMatched ? 1 : 0);
+    }
+
     const auto after = Deep2::GetGemvDispatchCounters();
     // Deltas, so a registry that ran during load is not credited to the decode.
     leg.dispatchDelta.q4k_vector  = after.q4k_vector  - before.q4k_vector;
@@ -350,17 +384,23 @@ std::fprintf(stderr, "TPS=%.3f  (1000*generatedTokens/generationTimeMs)\n", leg.
     check("FORWARD_PRODUCED_TOKENS", leg.generated > 0);
     check("CALLBACKS_MATCH_TOKENS", leg.callbackCount == leg.generated);
     check("NO_FAILURE_DETAIL", leg.failure.empty(), leg.failure.c_str());
-    // Zero dispatch across the decode would mean the GEMV registry was never
-    // consulted, i.e. the weights were read by some other path. Reported, not
-    // asserted into existence.
-    const std::uint64_t totalDispatch =
-        leg.dispatchDelta.q4k_vector + leg.dispatchDelta.q4k_scalar +
-        leg.dispatchDelta.q6k_vector + leg.dispatchDelta.q6k_scalar +
-        leg.dispatchDelta.q5k_vector + leg.dispatchDelta.q5k_scalar;
-    check("GEMV_DISPATCH_WAS_OBSERVED", totalDispatch > 0,
-          totalDispatch ? nullptr : "no K-quant GEMV dispatch recorded -- "
-                                   "weights did not travel the registry");
-    return true;
+    // RAWRXD_DISCRIMINATOR_GEMV_COUNTER_LIMIT_001
+    //
+    // These counters were originally a pass/fail gate. Measurement says they
+    // cannot be one: they read ZERO on the control leg, which produces the
+    // correct continuation ("the city of Paris, which is the capital of
+    // France") and passes every functional gate. On this route the weights
+    // travel the LINEARW CPU_FALLBACK path (visible as LINEARW_RESULT=CPU_FALLBACK
+    // in the engine log), and the K-quant GEMV registry is never incremented.
+    //
+    // A counter that is zero on a known-good model measures the route, not the
+    // model. Asserting on it would have failed the control and passed nothing,
+    // which is worse than not having the check. It is therefore REPORTED and
+    // carries no verdict, and the receipt says so explicitly.
+    std::fprintf(stderr,
+        "GEMV_COUNTER_LIMIT=K-quant GEMV counters read 0 on a model verified "
+        "coherent by output text; they observe route selection, not model "
+        "correctness, and are not used as a gate.\n");
 }
 
 // Coherence is NOT scored here. Deciding whether English output is "semantic

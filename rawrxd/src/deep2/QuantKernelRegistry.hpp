@@ -68,11 +68,14 @@ struct block_q8_0 {
 };
 
 // Q2_K: 256 weights, 16 scales — 84 bytes
+// Field order is load-bearing: d/dmin MUST be first to match GGUF on-disk
+// layout. A previous order (scales@0, qs@16, d@80, dmin@82) read d/dmin from
+// quant data and produced garbage output — RAWRXD_Q2K_FIELD_ORDER_001.
 struct block_q2_K {
-    uint8_t  scales[16];  // 4-bit scale/min pairs
-    uint8_t  qs[64];      // 2-bit weights (256 values)
-    uint16_t d;           // fp16 super-scale
-    uint16_t dmin;        // fp16 super-min
+    uint16_t d;           // fp16 super-scale    @ offset 0
+    uint16_t dmin;        // fp16 super-min      @ offset 2
+    uint8_t  scales[16];  // 4-bit scale/min pairs @ offset 4
+    uint8_t  qs[64];      // 2-bit weights (256 values) @ offset 20
 };
 static_assert(sizeof(block_q2_K) == 84, "GGUF block_q2_K must be 84 bytes");
 
