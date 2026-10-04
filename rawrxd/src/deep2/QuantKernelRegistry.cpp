@@ -1093,9 +1093,32 @@ static void gemv_q4_0_scalar(
             size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 32;
             if (elemsInBlock == 0) break;
             for (size_t i = 0; i < elemsInBlock; ++i) {
-                uint8_t byte = blk.qs[i / 2];
-                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                acc += (d * (q - 8.0f)) * x[base + i];
+                // RAWRXD_Q4_0_GEMV_NIBBLE_ORDER_001
+                //
+                // The nibble order was INTERLEAVED:
+                //     byte = blk.qs[i / 2];
+                //     q    = (i % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+                // which maps qs[0].low->0, qs[0].high->1, qs[1].low->2, ...
+                //
+                // The canonical GGML layout is SPLIT HALF:
+                //     y[j]        = (qs[j] & 0x0F)   for j = 0..15
+                //     y[j + 16]   = (qs[j] >>   4)   for j = 0..15
+                //
+                // The two agree at exactly TWO offsets -- i=0 (both qs[0]
+                // low) and i=31 (both qs[15] high) -- and disagree at
+                // i=1..30. Measured on gemma3-1b-Q2_K.gguf with
+                // tools/gemv_basis_probe.cpp: basis vector e_k diverged for
+                // k=1..30 of every 32-wide block and matched at k=0,31,32,
+                // 127,128,255,256. PREDICTED_MATCH={0,31} and
+                // MEASURED_MATCH={0,31}; no free parameters.
+                //
+                // `j = i & 15` is required, NOT `qs[i]`: qs is 16 bytes, so
+                // qs[16..31] would read past the block.
+                const size_t j = i & 15;
+                const uint8_t qb = blk.qs[j];
+                const int q = (i < 16) ? (int)(qb & 0x0F) - 8
+                                       : (int)(qb >>   4) - 8;
+                acc += d * (float)q * x[base + i];
             }
         }
         y[r] = acc;
@@ -1155,14 +1178,46 @@ static void gemv_q5_0_scalar(
             size_t base = b * 32;
             size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 32;
             if (elemsInBlock == 0) break;
+            // RAWRXD_Q5_0_GEMV_NIBBLE_ORDER_001
+            //
+            // TWO defects, both corrected against the canonical
+            // dequantize_row_q5_0 in tools/quant_format_reference.hpp:
+            //
+            // (1) NIBBLE ORDER was interleaved (qs[i/2] with a parity select).
+            //     Must be split-half, exactly as in Q4_0:
+            //         y[j] = (qs[j] & 0x0F) | xh0   for j = 0..15
+            //         y[j+16] = (qs[j] >> 4)   | xh1
+            //
+            // (2) THE FIFTH-BIT PLANE was NOT actually defective. It read
+            //         qhIdx = i / 8; qhShift = i % 8;
+            //         high1 = (blk.qh[qhIdx] >> qhShift) & 0x01;
+            //     which for a little-endian uint32 is exactly bit i of qh --
+            //     and that is correct, because the reference's split packing
+            //     resolves to bit i of qh for BOTH halves:
+            //         i <  16 : j = i,      ref bit = j      = i
+            //         i >= 16 : j = i - 16, ref bit = j + 16 = i
+            //     (Note ((qh >> (j+12)) & 0x10) selects bit 4 of the shifted
+            //     value, i.e. bit j+16 of qh, NOT bit j+12.)
+            //
+            //     An intermediate revision of this comment "corrected" the
+            //     shift to (i < 16 ? j : j + 12) and thereby BROKE the high
+            //     half: measured 16/32 basis match, all sixteen i>=16
+            //     diverging. The original contiguous-by-i mapping was right
+            //     and only the nibble order needed fixing.
+            //
+            // The fifth bit must stay attached to the same LOGICAL weight as
+            // its nibble, so both planes are indexed by i and only the byte
+            // lookup is indexed by j = i & 15.
+            uint32_t qh32;
+            std::memcpy(&qh32, blk.qh, sizeof qh32);
             for (size_t i = 0; i < elemsInBlock; ++i) {
-                uint8_t low4 = blk.qs[i / 2];
-                float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
-                int qhIdx = (int)(i / 8);
-                int qhShift = (int)(i % 8);
-                uint8_t high1 = (blk.qh[qhIdx] >> qhShift) & 0x01;
-                float q = q_low + (float)(high1 << 4);
-                acc += d * q * x[base + i];
+                const size_t j = i & 15;
+                const uint8_t qb = blk.qs[j];
+                const int q4 = (i < 16) ? (int)(qb & 0x0F)
+                                        : (int)(qb >> 4);
+                const int q5 = (int)((qh32 >> static_cast<uint32_t>(i)) & 1u) << 4;
+                const int q = (q4 | q5) - 16;
+                acc += d * (float)q * x[base + i];
             }
         }
         y[r] = acc;
@@ -1616,27 +1671,34 @@ static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
 }
 
 
-// RAWRXD_Q2K_SCALE_WIDTH_001 — BOTH ARMS RETAINED, DELIBERATELY.
+// RAWRXD_Q2K_SCALE_WIDTH_001 — DEFAULT ARM CONFIRMED SPEC-CONFORMANT BY
+// MEASUREMENT; THE "BOTH ARMS POISON" CONCLUSION IS RETRACTED.
 //
-// Measured on llama3.2-3b-Q2_K, layer 0, blk.0.attn_q.weight:
-//   4-bit arm (sc & 0x0F, sc >> 4)      -> Q_PROJ MIN=-6.9385e+06 MAX= 7.17912e+06
-//   6-bit arm (canonical get_scale_min_k2) -> Q_PROJ MIN=-3.14367e+07 MAX= 2.85224e+07
+// What this note originally said: both arms (4-bit `sc & 0xF` / `sc >> 4`, and
+// a 6-bit get_scale_min_k2 unpack) produced Q_PROJ magnitudes of ~7e6, therefore
+// "neither is correct, and the divergence is NOT located in the scale unpack".
 //
-// Neither is correct: both are orders of magnitude above the worst case that
-// correct d/dmin permit (|acc| <= ~8.6e3). The 6-bit arm is WORSE numerically
-// and is kept active anyway, because it is the spec-conformant decode and the
-// worse value is the more informative diagnostic: it proves the divergence is
-// NOT located in the scale unpack, since changing the unpack width moves the
-// answer without ever reaching a sane one. Deleting the falsifying arm would
-// destroy that evidence, so the 4-bit arm is retained behind an env switch
-// rather than reverted away.
+// What was actually true: `d` and `dmin` were being read from the wrong offsets
+// (RAWRXD_Q2K_FIELD_ORDER_002, in QuantKernelRegistry.hpp), so both arms were
+// multiplying quant bytes by nonsense scales. Changing the unpack width moved
+// the garbage without ever reaching a sane value, which is exactly what you
+// would expect when the defect is upstream of the unpack — the reasoning was
+// sound and the conclusion drawn from it was not, because "not located here"
+// was reported as "nothing is located".
 //
-// DEFAULT ARM = 4-bit (last-known-better baseline). The 6-bit arm is retained
-// as an EXPERIMENTAL control, selected with RAWRXD_Q2K_SCALE6=1.
-// Rationale: measured 6-bit Q_PROJ MAX = 2.85e7 vs 4-bit 7.18e6 — the 6-bit arm
-// is ~4x worse with no correctness advantage established, so leaving it default
-// contaminates every subsequent performance measurement. Both arms poison, so
-// neither is correct; the default must be the one that is not a regression.
+// ggml dequantize_row_q2_K is explicit and uses the 4-BIT reading:
+//     uint8_t sc = x[i].scales[is++];
+//     dl = d * (sc & 0xF);  ml = min * (sc >> 4);
+// get_scale_min_k2 is not used by the Q2_K decode at all. With the field order
+// corrected, the 4-bit arm reproduces the independent reference bit for bit:
+//
+//   llama3.2-3b-Q2_K, blk.0.ffn_gate.weight, 256 blocks:
+//     RAWRXD_Q2K_SCALE6 unset (default, 4-bit) -> Q2_K PARITY, 0 mismatched
+//
+// The 6-bit arm is RETAINED as a falsification control, off by default. It is
+// not a candidate and must never become one: a 6-bit unpack of a 4-bit field
+// cannot be right, and if it ever measures PARITY the reference is wrong, not
+// the arm.
 static inline bool q2k_use_6bit() {
     static const bool v = [] {
         const char* e = std::getenv("RAWRXD_Q2K_SCALE6");
@@ -1645,10 +1707,8 @@ static inline bool q2k_use_6bit() {
     return v;
 }
 
-// ggml get_scale_min_k2 — canonical SIX-bit scale/min unpack for block_q2_K.
-// scales[16] yields sixteen (sc,m) pairs with values 0..63 via a permuted
-// byte/shift schedule; reading it as two 4-bit halves per byte is a different
-// decode of the same bytes.
+// Six-bit scale/min unpack kept ONLY as the RAWRXD_Q2K_SCALE6=1 falsification
+// control. It is not what ggml's Q2_K decode does; see the note above.
 static inline void get_scale_min_k2(int j, const uint8_t* RESTRICT q,
                                     uint8_t* RESTRICT d, uint8_t* RESTRICT m) {
     if (j < 4) {
@@ -1690,7 +1750,13 @@ static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
                     for (int pos = 0; pos < 16; ++pos) {
                         int i = chunk * 128 + subBlock * 32 + group * 16 + pos;
                         size_t globalIdx = b * 256 + i;
-                        if (globalIdx >= n) return;
+                        // `continue`, not `return`: this is the innermost of four
+                        // nested loops, so a return here abandons the remaining
+                        // 3/4 of the buffer and every later block, leaving dst
+                        // holding whatever was there before. Only reachable on a
+                        // trailing partial block, which is exactly when a silent
+                        // truncation is least likely to be noticed.
+                        if (globalIdx >= n) continue;
                         int qsIdx = chunk * 32 + group * 16 + pos;
                         int qsShift = subBlock * 2;
                         int q = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
@@ -1748,6 +1814,35 @@ static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {
         }
     }
 }
+// RAWRXD_Q5K_DECODE_001 — pairing and fifth-bit index both corrected.
+//
+// ggml dequantize_row_q5_K:
+//
+//   is = 0; u1 = 1, u2 = 2;
+//   for j in {0,64,128,192} {
+//       get_scale_min_k4(is+0, scales, &sc, &m);  d1 = d*sc;  m1 = dmin*m;
+//       get_scale_min_k4(is+1, scales, &sc, &m);  d2 = d*sc;  m2 = dmin*m;
+//       for l in [0,32):  y[j + l]     = d1*((ql[l] & 0xF) + (qh[l] & u1 ? 16 : 0)) - m1
+//       for l in [0,32):  y[j + 32 + l] = d2*((ql[l] >>  4)  + (qh[l] & u2 ? 16 : 0)) - m2
+//       ql += 32; is += 2; u1 <<= 2; u2 <<= 2;
+//   }
+//
+// The previous body indexed qs by (element/2) with a 4-bit shift per element —
+// an interleaved reading, where byte l would supply elements 2l and 2l+1 — and
+// took the fifth bit from qh bit (element % 8). Both are wrong, and both were
+// wrong independently of the field order, so fixing the struct alone does not
+// make this type correct. Two separate defects, one type.
+//
+// The fifth-bit mask is a property of the GROUP (u1 = 1,4,16,64 for low nibbles
+// and u2 = 2,8,32,128 for high nibbles across the four 64-value groups), not of
+// the element. Both errors permute the 256 quants while leaving d and dmin
+// correct, so the output stays finite and in a plausible numeric range and only
+// a bit-exact comparison against the format definition finds it.
+//
+// MEASURED — tools/quant_block_oracle.cpp, Codestral-22B-v0.1-Q4_K_M.gguf,
+// blk.0.ffn_down.weight, 128 blocks, bit-exact:
+//   field order alone fixed, decode left as it was -> STILL MISMATCH
+//   both fixed                                  -> PARITY, 0 mismatched
 static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {
     const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(src);
     size_t numBlocks = (n + 255) / 256;
@@ -1756,24 +1851,29 @@ static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {
         float dmin = f16_to_f32(blocks[b].dmin);
         if (!std::isfinite(d))    d    = 0.0f;
         if (!std::isfinite(dmin)) dmin = 0.0f;
-        for (int sb = 0; sb < 8; ++sb) {
-            uint8_t scale, min;
-            get_scale_min_k4(sb, blocks[b].scales, scale, min);
-            float s = d * scale;
-            float m = dmin * min;
-            for (int i = 0; i < 32; ++i) {
-                int idx = sb * 32 + i;
-                size_t globalIdx = b * 256 + idx;
-                if (globalIdx >= n) return;
-                int qsIdx = idx / 2;
-                int qsShift = (idx % 2) * 4;
-                uint8_t low4 = (blocks[b].qs[qsIdx] >> qsShift) & 0x0F;
-                int qhIdx = idx / 8;
-                int qhShift = idx % 8;
-                uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
-                uint8_t q = low4 | (high1 << 4);
-                dst[globalIdx] = s * q - m;
+        const uint8_t* q  = blocks[b].qs;
+        const uint8_t* qh = blocks[b].qh;
+        float* y = dst + b * 256;
+        int is = 0;
+        uint8_t u1 = 1, u2 = 2;
+        for (int j = 0; j < 256; j += 64) {
+            uint8_t sc, m;
+            get_scale_min_k4(is + 0, blocks[b].scales, sc, m);
+            const float d1 = d * (float)sc, m1 = dmin * (float)m;
+            get_scale_min_k4(is + 1, blocks[b].scales, sc, m);
+            const float d2 = d * (float)sc, m2 = dmin * (float)m;
+            for (int l = 0; l < 32; ++l) {
+                const float v1 =
+                    d1 * (float)(int(q[l] & 0x0F) + ((qh[l] & u1) ? 16 : 0)) - m1;
+                const float v2 =
+                    d2 * (float)(int(q[l] >> 4)   + ((qh[l] & u2) ? 16 : 0)) - m2;
+                if (b * 256 + j + l      < n) y[j + l]      = v1;
+                if (b * 256 + j + 32 + l < n) y[j + 32 + l] = v2;
             }
+            q  += 32;
+            is += 2;
+            u1 = (uint8_t)(u1 << 2);
+            u2 = (uint8_t)(u2 << 2);
         }
     }
 }
@@ -1795,45 +1895,53 @@ static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
-// RAWRXD_Q4_0_ZERO_POINT_001 -- HYPOTHESIS TESTED AND REJECTED, RESTORED.
+// RAWRXD_Q4_0_ZERO_POINT_002 — CLOSED. The first attempt was the wrong
+// experiment, and closing it is the reason the Q2_K defect above was found.
 //
-// What was tried: y = (q - 8) * d, on the reasoning that a 4-bit unsigned code
-// with no stored minimum must have a non-zero zero point. The paired
-// discriminator was rerun on gemma3-1b-Q2_K.gguf. Output changed and stayed
-// garbage ("Nin  bse: right (/u  hrcganda close students" against the previous
-// "cre cuticiasruthto mahumalloy brokenifulho leukwort"). Some English tokens
-// appeared, which is suggestive and is NOT evidence: 16 tokens is far too small
-// a sample to call coherent, and the gate that matters is the text, not the
-// token count. The change is reverted.
+// ggml-common.h:
+//   block_q4_0 { ggml_half d; uint8_t qs[QK4_0/2]; }                  18 B
+//   static_assert(sizeof == sizeof(ggml_half) + QK4_0/2)
+// ONE fp16 field. There is no min; the 20-byte {d, m, qs[16]} reading is
+// block_q4_1, a different format, and it shifts every nibble by two bytes.
 //
-// The body below is the original. It is deliberately NOT commented as correct:
-// it decodes this writer's 18-byte Q4_0 block with zero point 0, which the
-// measurement above did not support and did not refute either. Its status is
-// UNRESOLVED, and closing it requires an independent decoder for this exact
-// layout, not another guess at one subtraction.
+// ggml quantize_row_q4_0_ref sets d = max / -8 and stores codes in [0,15], and
+// dequantize_row_q4_0 subtracts 8. The zero point is therefore -8. That is a
+// property of the format definition, not a hypothesis about this writer.
 //
-// What IS established, and is the useful part of this exercise:
-//   * RAWRXD_GGUF_STRIDE_GROUND_TRUTH_001 read the stride of every tensor out of
-//     the file's own offsets: this writer emits Q4_0 as 18-byte blocks and Q5_0
-//     as 22, matching the structs in QuantKernelRegistry.hpp and NOT ggml's
-//     current 20/24-byte forms that carry a second fp16 min. An earlier edit
-//     "correcting" the structs to 20/24 was reverted on that evidence.
-//   * RAWRXD_QUANT_BLOCK_ORACLE_001 found Q8_0 bit-exact against an independent
-//     canonical decode over 262144 real elements from the file, while Q4_0 and
-//     Q5_0 disagreed from element 0. Q8_0 is 47% of this model's bytes, so the
-//     defect is confined to the Q4_0/Q5_0 decode path, not to fp16 conversion,
-//     not to block striding, and not to the token or sampling path.
+// The pairing is SPLIT: byte j supplies element j (low nibble) and element j+16
+// (high nibble). The interleaved reading below — element 2j from qs[j] — is a
+// different format and differs from element 0 onward.
+//
+// RAWRXD_Q4_0_ZERO_POINT_001 tested ONLY y = (q-8)*d and rejected it against a
+// 16-token text sample. That experiment could not have passed: with the pairing
+// left interleaved the two halves stay transposed whatever the zero point is, so
+// the failure was unrelated to the hypothesis under test and the hypothesis was
+// rejected for the wrong reason. Two independent variables were wrong and one
+// was changed. The "22/20-byte blocks carry a second fp16 min" claim in that
+// note is also false: 18 and 22 bytes ARE ggml's current Q4_0 and Q5_0.
+//
+// MEASURED — tools/quant_block_oracle.cpp (RAWRXD_QUANT_BLOCK_ORACLE_002),
+// model G:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf, tensor
+// blk.0.ffn_gate.weight, 256 blocks, bit-exact comparison:
+//   BEFORE  FIRST_DIFF element=0, max|reference|=0.172851562
+//                               max|production|=0.280883789
+//   AFTER   PARITY, 0 mismatched
 static void dequant_q4_0(const uint8_t* src, float* dst, size_t n) {
     const block_q4_0* blocks = reinterpret_cast<const block_q4_0*>(src);
     size_t numBlocks = (n + 31) / 32;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
-        for (int i = 0; i < 32; ++i) {
-            size_t idx = b * 32 + i;
-            if (idx >= n) return;
-            uint8_t byte = blocks[b].qs[i / 2];
-            float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-            dst[idx] = d * q;
+        if (!std::isfinite(d)) d = 0.0f;
+        const uint8_t* qs = blocks[b].qs;
+        float* y = dst + b * 32;
+        for (size_t j = 0; j < 16; ++j) {
+            const float x0 = static_cast<float>(int(qs[j] & 0x0Fu) - 8);
+            const float x1 = static_cast<float>(int(qs[j] >> 4) - 8);
+            // Two separate guards, not one: a trailing partial block can have
+            // j in range while j+16 is not, and a single `j+16 >= n` test would
+            // then either overrun or silently drop valid low-nibble values.
+            if (b * 32 + j      < n) y[j]      = x0 * d;
+            if (b * 32 + j + 16 < n) y[j + 16] = x1 * d;
         }
     }
 }
@@ -1854,26 +1962,51 @@ static void dequant_q4_1(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
-// RAWRXD_Q5_0_ZERO_POINT_001 -- HYPOTHESIS TESTED AND REJECTED, RESTORED.
-// Same experiment as Q4_0 and the same outcome; see the note on dequant_q4_0.
-// The qh bit indexing below is (i/8, i%8). ggml's current layout uses
-// (i/8, i/4 + i%2), but this writer emits 22-byte blocks with no min field, so
-// which convention applies is UNRESOLVED rather than known-wrong.
+// RAWRXD_Q5_0_ZERO_POINT_002 — CLOSED, with the same reasoning as Q4_0.
+//
+// ggml-common.h:
+//   block_q5_0 { ggml_half d; uint8_t qh[4]; uint8_t qs[QK5_0/2]; }    22 B
+// so `qh` is bytes 2..5 and `qs` is bytes 6..21. One fp16 field; no min.
+//
+// dequantize_row_q5_0 reads qh as a uint32 and takes the fifth bit of element
+// j from bit j, and of element j+16 from bit j+12:
+//
+//     xh_0 = ((qh >> (j + 0)) << 4) & 0x10
+//     xh_1 = ((qh >> (j + 12))     ) & 0x10
+//     x0 = ((qs[j] & 0x0F) | xh_0) - 16
+//     x1 = ((qs[j] >>   4) | xh_1) - 16
+//
+// Neither (i/8, i%8) nor (i/4 + i%2) is that schedule, and both disagree from
+// element 1. This note previously asserted that "which convention applies is
+// UNRESOLVED" because the block is 22 bytes with no min field; the block size
+// and the min field were never evidence about the qh bit schedule, and the
+// convention was in fact fully specified all along.
+//
+// MEASURED — RAWRXD_QUANT_BLOCK_ORACLE_002, gemma3-1b-Q2_K.gguf, tensor
+// blk.0.attn_v.weight, 256 blocks, bit-exact comparison:
+//   BEFORE  FIRST_DIFF element=1 (element 0 coincides), max|reference| =
+//           max|production| = 0.159179688 — same magnitude, wrong values, which
+//           is why a magnitude-only check would have passed this
+//   AFTER   PARITY, 0 mismatched
 static void dequant_q5_0(const uint8_t* src, float* dst, size_t n) {
     const block_q5_0* blocks = reinterpret_cast<const block_q5_0*>(src);
     size_t numBlocks = (n + 31) / 32;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
-        for (int i = 0; i < 32; ++i) {
-            size_t idx = b * 32 + i;
-            if (idx >= n) return;
-            uint8_t low4 = blocks[b].qs[i / 2];
-            float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
-            int qhIdx = i / 8;
-            int qhShift = i % 8;
-            uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
-            float q = q_low + (float)(high1 << 4);
-            dst[idx] = d * q;
+        if (!std::isfinite(d)) d = 0.0f;
+        uint32_t qh;
+        std::memcpy(&qh, blocks[b].qh, sizeof qh);
+        const uint8_t* qs = blocks[b].qs;
+        float* y = dst + b * 32;
+        for (size_t j = 0; j < 16; ++j) {
+            const uint8_t xh0 = static_cast<uint8_t>(((qh >> (j + 0)) << 4) & 0x10u);
+            const uint8_t xh1 = static_cast<uint8_t>(((qh >> (j + 12))     ) & 0x10u);
+            const float x0 = static_cast<float>(int((qs[j] & 0x0Fu) | xh0) - 16);
+            const float x1 = static_cast<float>(int((qs[j] >>   4)   | xh1) - 16);
+            // See dequant_q4_0: the two halves are guarded separately because a
+            // trailing partial block can contain j but not j+16.
+            if (b * 32 + j      < n) y[j]      = x0 * d;
+            if (b * 32 + j + 16 < n) y[j + 16] = x1 * d;
         }
     }
 }
