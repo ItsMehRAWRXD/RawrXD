@@ -117,8 +117,15 @@ void decode_q8_0(const std::uint8_t* blk, std::size_t nBlocks, float* out) {
     }
 }
 
-// block_q4_0: fp16 d; fp16 m; uint8 qs[16].  Two nibbles per byte, high nibble
-// is element i+16.  y = (nibble - 8) * d + m
+// block_q4_0: fp16 d; fp16 m; uint8 qs[16].  32 values, two per byte: for
+// e = 0,2,4,... the low nibble is element e and the high nibble is element e+1.
+//   y = (nibble - 8) * d + m
+// NOTE ON ORDERING, learned the hard way: the reference below was first written
+// with the Q4_2/Q4_3 ordering (byte j holding elements 16j..16j+15). That is a
+// different format. ggml's block_q4_0 pairs CONSECUTIVE elements in one byte, so
+// element e reads qs[e/2]. The first run of this oracle reported a mismatch
+// that was half reference error and half production error, which is exactly the
+// situation where a discriminator stops being informative.
 void decode_q4_0(const std::uint8_t* blk, std::size_t nBlocks, float* out) {
     constexpr std::size_t kPer = 32, kBytes = 18;
     for (std::size_t b = 0; b < nBlocks; ++b) {
@@ -128,21 +135,18 @@ void decode_q4_0(const std::uint8_t* blk, std::size_t nBlocks, float* out) {
         std::memcpy(&m16, p + 2, 2);
         const float d = half_to_float(d16);
         const float m = half_to_float(m16);
-        for (std::size_t j = 0; j < 2; ++j) {
-            const std::uint8_t byte = p[4 + j];
-            for (std::size_t i = 0; i < 16; ++i) {
-                const float lo = float(int((byte & 0x0Fu)) - 8);
-                const float hi = float(int((byte >> 4)  ) - 8);
-                out[b * kPer + j * 16 + i]      = lo * d + m;
-                out[b * kPer + j * 16 + i + 16] = hi * d + m;
-            }
+        for (std::size_t e = 0; e < kPer; ++e) {
+            const std::uint8_t byte = p[4 + e / 2];
+            const int nib = (e % 2 == 0) ? int(byte & 0x0Fu) : int(byte >> 4);
+            out[b * kPer + e] = float(nib - 8) * d + m;
         }
     }
 }
 
-// block_q5_0: fp16 d; fp16 m; uint8 qh[4]; uint8 qs[16].
-// The high bit of each of the 32 values lives in qh, one bit per value, split as
-// qh[j] bit i -> value (j*16+i), and qh[j] bit (i+4) -> value (j*16+i+16).
+// block_q5_0: fp16 d; fp16 m; uint8 qh[4]; uint8 qs[16].  The 5th bit of each
+// value lives in qh: for the even element of a pair it is bit (e/4), for the odd
+// element bit (e/4 + 1), and it becomes the 0x10 bit before the −16 bias.
+//   y = ((nibble | highbit) - 16) * d + m
 void decode_q5_0(const std::uint8_t* blk, std::size_t nBlocks, float* out) {
     constexpr std::size_t kPer = 32, kBytes = 22;
     for (std::size_t b = 0; b < nBlocks; ++b) {
@@ -154,15 +158,12 @@ void decode_q5_0(const std::uint8_t* blk, std::size_t nBlocks, float* out) {
         const float m = half_to_float(m16);
         const std::uint8_t* qh = p + 4;     // 4 bytes
         const std::uint8_t* qs = p + 8;     // 16 bytes
-        for (std::size_t j = 0; j < 2; ++j) {
-            for (std::size_t i = 0; i < 16; ++i) {
-                const std::uint8_t xh0 = std::uint8_t(((qh[j] >> i)     << 4) & 0x10u);
-                const std::uint8_t xh1 = std::uint8_t(((qh[j] >> (i+4)) & 0x10u));
-                const float x0 = float(int(std::uint8_t((qs[j] & 0x0Fu) | xh0)) - 16);
-                const float x1 = float(int(std::uint8_t((qs[j] >> 4)    | xh1)) - 16);
-                out[b * kPer + j * 16 + i]      = x0 * d + m;
-                out[b * kPer + j * 16 + i + 16] = x1 * d + m;
-            }
+        for (std::size_t e = 0; e < kPer; ++e) {
+            const std::uint8_t byte = qs[e / 2];
+            const int nib = (e % 2 == 0) ? int(byte & 0x0Fu) : int(byte >> 4);
+            const int bit = int(e / 4) + int(e % 2);
+            const int high = int(((qh[e / 8] >> bit) & 1u) << 4);
+            out[b * kPer + e] = float((nib | high) - 16) * d + m;
         }
     }
 }
@@ -330,8 +331,8 @@ int main(int argc, char** argv) {
                 std::memcpy(&m16, raw + 2, 2);
                 std::fprintf(stderr,
                     "    block fp16 d=0x%04X (%s)  m=0x%04X (%s)\n",
-                    d16, half_bits_to_float(d16) ? "inf/NaN" : "finite",
-                    m16, half_bits_to_float(m16) ? "inf/NaN" : "finite");
+                    d16, half_bits_to_float_check(d16) ? "inf/NaN" : "finite",
+                    m16, half_bits_to_float_check(m16) ? "inf/NaN" : "finite");
             }
             std::fprintf(stderr, "    tensor=%s byteOffset=%zu\n",
                          loader.listTensors().empty() ? "?" : best->name.c_str(),

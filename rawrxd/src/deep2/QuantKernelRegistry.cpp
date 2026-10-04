@@ -1095,7 +1095,7 @@ static void gemv_q4_0_scalar(
             for (size_t i = 0; i < elemsInBlock; ++i) {
                 uint8_t byte = blk.qs[i / 2];
                 float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                acc += (d * q) * x[base + i];
+                acc += (d * (q - 8.0f)) * x[base + i];
             }
         }
         y[r] = acc;
@@ -1795,6 +1795,27 @@ static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
+// RAWRXD_Q4_0_ZERO_POINT_001
+//
+// Measured, not assumed. RAWRXD_GGUF_STRIDE_GROUND_TRUTH_001 read the stride of
+// every tensor out of the file's own offsets and established that this writer
+// stores Q4_0 as 18-byte blocks (9216 blocks for blk.0.attn_k.weight, 294912
+// elements) and Q5_0 as 22-byte blocks, matching the {d; qs[16]} and
+// {d; qh[4]; qs[16]} structs already in this header and NOT ggml's current
+// 20/24-byte forms that carry a second fp16 min. An earlier attempt to "fix"
+// the structs to the 20/24-byte layout was reverted: the file contradicted it,
+// and 104 of the 340 tensors became non-block-aligned the moment it landed.
+//
+// That leaves one question the strides cannot answer: with no min field, what
+// is the zero point of the raw 0..15 nibble? The body here computed d*q, i.e.
+// zero point 0. A 4-bit unsigned code with no stored minimum is still
+// asymmetric -- the conventional zero point is 8 -- and the model this reader
+// was measured on produced finite logits, in-vocabulary token ids, a completed
+// generation, and pure semantic garbage.
+//
+// So the zero point is 8: y = (q - 8) * d. This is the whole hypothesis, it is
+// one subtraction, and RAWRXD_QUANT_SEMANTIC_DISCRIMINATOR_001 is the
+// instrument that can disprove it by re-reading the generated text.
 static void dequant_q4_0(const uint8_t* src, float* dst, size_t n) {
     const block_q4_0* blocks = reinterpret_cast<const block_q4_0*>(src);
     size_t numBlocks = (n + 31) / 32;
@@ -1804,8 +1825,8 @@ static void dequant_q4_0(const uint8_t* src, float* dst, size_t n) {
             size_t idx = b * 32 + i;
             if (idx >= n) return;
             uint8_t byte = blocks[b].qs[i / 2];
-            float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-            dst[idx] = d * q;
+            int q = (i % 2 == 0) ? int(byte & 0x0F) : int(byte >> 4);
+            dst[idx] = float(q - 8) * d;
         }
     }
 }
@@ -1826,6 +1847,10 @@ static void dequant_q4_1(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
+// RAWRXD_Q5_0_ZERO_POINT_001 -- same reasoning as Q4_0. This writer's Q5_0 is
+// 22 bytes with no min field, so the 5-bit code has a zero point and it is not
+// zero: y = ((nibble | highbit<<4) - 16) * d. The previous body omitted it and
+// additionally indexed qh as (i/8, i%8) rather than (i/8, i/4 + i%2).
 static void dequant_q5_0(const uint8_t* src, float* dst, size_t n) {
     const block_q5_0* blocks = reinterpret_cast<const block_q5_0*>(src);
     size_t numBlocks = (n + 31) / 32;
@@ -1834,13 +1859,12 @@ static void dequant_q5_0(const uint8_t* src, float* dst, size_t n) {
         for (int i = 0; i < 32; ++i) {
             size_t idx = b * 32 + i;
             if (idx >= n) return;
-            uint8_t low4 = blocks[b].qs[i / 2];
-            float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
+            uint8_t byte = blocks[b].qs[i / 2];
+            int low4 = (i % 2 == 0) ? int(byte & 0x0F) : int(byte >> 4);
             int qhIdx = i / 8;
-            int qhShift = i % 8;
-            uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
-            float q = q_low + (float)(high1 << 4);
-            dst[idx] = d * q;
+            int qhShift = i / 4 + (i % 2);
+            int high1 = int((blocks[b].qh[qhIdx] >> qhShift) & 0x01);
+            dst[idx] = float((low4 | (high1 << 4)) - 16) * d;
         }
     }
 }
