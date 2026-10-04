@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <vector>
 #include <atomic>
+#include "ExecutionView.hpp"
 
 #ifdef _MSC_VER
 #define RESTRICT __restrict
@@ -185,7 +186,7 @@ using GEMVKernelFn = void (*)(
 // ExecutionView that carries TensorIdentity + transient address, rather
 // than a raw pointer. This is the production adoption path.
 using GEMVKernelFnEV = void (*)(
-    const class ExecutionView& ev,
+    const ExecutionView& ev,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
@@ -260,6 +261,12 @@ public:
     GEMVKernelFnEV  GetGEMVEV  (int quantType) const;
     DequantKernelFn GetDequant (int quantType) const;
     BlockGeometry   GetGeometry(int quantType) const;
+
+    // RAWRXD_REVERSE_001: read-only view of the flags ProbeCPU() actually set.
+    // The Heartbeat publishes these as the CPU half of execution reality. It
+    // is a VIEW, not a setter: no path may turn a feature on from outside, so
+    // a form can never be selected for an instruction set this CPU lacks.
+    const CPUFeatures& cpuFeatures() const { return cpu_; }
 
     std::string DumpTable() const;
     void        PrintBatch21Report() const;

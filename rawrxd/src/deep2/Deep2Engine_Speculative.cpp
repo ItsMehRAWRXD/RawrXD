@@ -1,5 +1,9 @@
 #include "Deep2Engine.h"
 #include "Deep2DualGpuRowSplit.hpp"
+// RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: speculative verification is its own
+// production compute graph, not a test helper, and it reaches model weights on
+// three operators that never enter LinearW().
+#include "WeightConsumptionCensus.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -204,6 +208,18 @@ bool Deep2Engine::trySpecRmsNormBatch(
         in,(const float*)w.data,out,(uint32_t)width,(uint32_t)count,
         modelWeights.normEps,kvCache?kvCache->currentLength():0);
     if(ok&&medusaDecoder_) ++medusaDecoder_->stats.exact.gpuBatchNormOps;
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: the spec norm tensor is consumed
+    // directly by the host batch norm operator, never through LinearW().
+    if(ok){
+        using namespace rawrxd::deep2::weightcensus;
+        Event v;
+        v.site  = Site::SpecRmsNorm;
+        v.route = Route::Bypass;
+        v.tensor = w.name;
+        v.bytes  = w.sizeBytes ? w.sizeBytes : width * sizeof(float);
+        v.tokenEpoch = (uint32_t)(kvCache?kvCache->currentLength():0);
+        WeightConsumptionCensus::instance().record(v);
+    }
     return ok;
 }
 
@@ -305,6 +321,19 @@ bool Deep2Engine::trySpecColumnSplitBatch(
         *vulkanDevices_[0],*vulkanDevices_[1],wt,in,out,
         (uint32_t)count,kvCache?kvCache->currentLength():0);
     if(ok&&medusaDecoder_) ++medusaDecoder_->stats.exact.dualColumnSplitOps;
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: O-projection / FFN-down column
+    // split. The dual-GPU batch operator resolves and materialises the weight
+    // itself, so this is a BYPASS rather than a delegation through LinearW.
+    if(ok){
+        using namespace rawrxd::deep2::weightcensus;
+        Event v;
+        v.site  = Site::SpecColumnSplit;
+        v.route = Route::Bypass;
+        v.tensor = wt.name;
+        v.bytes  = wt.sizeBytes ? wt.sizeBytes : wt.numElements();
+        v.tokenEpoch = (uint32_t)(kvCache?kvCache->currentLength():0);
+        WeightConsumptionCensus::instance().record(v);
+    }
     return ok;
 }
 
@@ -315,10 +344,28 @@ bool Deep2Engine::trySpecQ4KGroup(
     if(vulkanDevices_.size()<2||!w||!out||!input||
        weightCount<2||weightCount>3||count==0||count>4)
         return false;
-    return Deep2RunDualGpuRowSplitBatchGroupQ4K(
+    const bool ok=Deep2RunDualGpuRowSplitBatchGroupQ4K(
         *vulkanDevices_[0],*vulkanDevices_[1],
         w,out,weightCount,input,(uint32_t)count,
         kvCache?kvCache->currentLength():0);
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: grouped speculative QKV + FFN
+    // gate/up. This operator never calls LinearW on either the success or the
+    // failure path, so every grouped tensor here is a BYPASS.
+    if(ok){
+        using namespace rawrxd::deep2::weightcensus;
+        for(size_t i=0;i<weightCount;++i){
+            const WeightTensor* t=w[i];
+            if(!t||!t->data) continue;
+            Event v;
+            v.site  = Site::SpecQ4KGroup;
+            v.route = Route::Bypass;
+            v.tensor = t->name;
+            v.bytes  = t->sizeBytes ? t->sizeBytes : t->numElements();
+            v.tokenEpoch = (uint32_t)(kvCache?kvCache->currentLength():0);
+            WeightConsumptionCensus::instance().record(v);
+        }
+    }
+    return ok;
 }
 
 bool Deep2Engine::forwardSpeculativeBlock(

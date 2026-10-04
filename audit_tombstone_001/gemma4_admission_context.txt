@@ -1,0 +1,241 @@
+﻿===== RAWRXD_GEMMA4_ADMISSION_CONTEXT_001 =====
+generated 2026-10-03T07:54:17.2169175-04:00
+
+===== 1. MODEL_ADMISSION_REJECTED emission sites =====
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp:2016:                diag->stageName = "MODEL_ADMISSION_REJECTED";
+  F:\~dev\rawrxd\tools\deep2_loader_admission_probe.cpp:51:    // The admission path stamps stage 20 / MODEL_ADMISSION_REJECTED when the
+  F:\~dev\rawrxd\tools\deep2_loader_admission_probe.cpp:56:    const bool admissionStageReached = (stage == "MODEL_ADMISSION_REJECTED");
+
+===== 2. admission / architecture-gate symbols =====
+  --- admission ---
+    F:\~dev\rawrxd\src\deep2\Deep2Engine.h:821:    // warmup and measurement so admission-phase contention cannot
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:4:// Deep2 model admission + architecture dispatch.
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:5:// One registry lookup per model admission. Architecture owns its
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:145:    // A storage tag. Parseability is not capability: admission asks the kernel
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:153:    // Tensor names present in the GGUF, as parsed. Required-tensor admission
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:224:// architecture is this?"; admission answers "may this file actually run?".
+  --- Admission ---
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:150:    // GGMLType). Admission compares this against actually-registered kernels.
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:220:// Admission
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:223:// Admission is the enforcement layer above resolve(). resolve() answers "which
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:229:enum class AdmissionReject : uint8_t {
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:247:struct AdmissionReport {
+    F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:249:    AdmissionReject reject = AdmissionReject::None;
+  --- ModelArch ---
+    F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:9:#include "Deep2ModelArchitecture.hpp"
+  --- Architecture ---
+    F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:9:#include "Deep2ModelArchitecture.hpp"
+    F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:50:class ArchitectureRuntime {
+    F:\~dev\rawrxd\src\deep2\Deep2ModelArchitecture.hpp:6:// to stop treating every GGUF that is "close to llama" as llama.  Architectures
+    F:\~dev\rawrxd\src\deep2\Deep2Engine.h:199:    // Architecture metadata
+    F:\~dev\rawrxd\src\deep2\Deep2Engine.h:481:    const std::string& modelArchitecture() const noexcept { return modelArchitecture_; }
+    F:\~dev\rawrxd\src\deep2\Deep2Engine.h:1595:    std::string modelArchitecture_;               // <<< set from GGUF metadata after loadModel()
+
+===== 3. gemma / gemma4 references =====
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:47:        return ChatTemplateType::GEMMA2;
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:120:    // Gemma family (4 → 3 → 2)
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:121:    if (arch.find("gemma4") != std::string::npos || name.find("gemma4") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:122:        arch.find("gemma-4") != std::string::npos || name.find("gemma-4") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:123:        return ChatTemplateType::GEMMA3;
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:125:    if (arch.find("gemma3") != std::string::npos || name.find("gemma3") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:126:        arch.find("gemma-3") != std::string::npos || name.find("gemma-3") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:127:        return ChatTemplateType::GEMMA3;
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:129:    if (arch.find("gemma2") != std::string::npos || name.find("gemma2") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:130:        arch.find("gemma-2") != std::string::npos || name.find("gemma-2") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:131:        arch.find("gemma") != std::string::npos || name.find("gemma") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:132:        return ChatTemplateType::GEMMA2;
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:187:        case ChatTemplateType::GEMMA2:         return "gemma2";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:188:        case ChatTemplateType::GEMMA3:         return "gemma3";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:301:        case ChatTemplateType::GEMMA2:
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:302:        case ChatTemplateType::GEMMA3:         return formatGemma(messages);
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:336:        case ChatTemplateType::GEMMA2:
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:337:        case ChatTemplateType::GEMMA3:         return "<start_of_turn>model\n";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:369:        case ChatTemplateType::GEMMA2:
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:370:        case ChatTemplateType::GEMMA3:
+
+===== 4. architecture string comparisons in deep2 =====
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.hpp:210:    // and special-token boundaries match production llama.cpp chat apply.
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:67:    // TinyLlama / Zephyr chat (must beat generic "llama" → LLAMA2)
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:68:    if (name.find("tinyllama") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:69:        name.find("tiny-llama") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:75:    if (arch.find("phi3") != std::string::npos || name.find("phi3") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:76:        arch.find("phi-3") != std::string::npos || name.find("phi-3") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:79:    if (arch.find("phi4") != std::string::npos || name.find("phi4") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:80:        arch.find("phi-4") != std::string::npos || name.find("phi-4") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:85:    if (arch.find("llama3") != std::string::npos || name.find("llama3") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:86:        arch.find("llama-3") != std::string::npos || name.find("llama-3") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:89:    if (arch.find("llama2") != std::string::npos || name.find("llama2") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:90:        arch.find("llama-2") != std::string::npos || name.find("llama-2") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:93:    if (arch.find("llama") != std::string::npos || name.find("llama") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:94:        return ChatTemplateType::LLAMA2;  // default llama
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:98:    if (arch.find("mistral") != std::string::npos || name.find("mistral") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:106:    if (arch.find("qwen3") != std::string::npos || name.find("qwen3") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:107:        arch.find("qwen-3") != std::string::npos || name.find("qwen-3") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:110:    if (arch.find("qwen2.5") != std::string::npos || name.find("qwen2.5") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:111:        arch.find("qwen-2.5") != std::string::npos || name.find("qwen-2.5") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:114:    if (arch.find("qwen2") != std::string::npos || name.find("qwen2") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:115:        arch.find("qwen-2") != std::string::npos || name.find("qwen-2") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:116:        arch.find("qwen") != std::string::npos || name.find("qwen") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:121:    if (arch.find("gemma4") != std::string::npos || name.find("gemma4") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:122:        arch.find("gemma-4") != std::string::npos || name.find("gemma-4") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:125:    if (arch.find("gemma3") != std::string::npos || name.find("gemma3") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:126:        arch.find("gemma-3") != std::string::npos || name.find("gemma-3") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:129:    if (arch.find("gemma2") != std::string::npos || name.find("gemma2") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:130:        arch.find("gemma-2") != std::string::npos || name.find("gemma-2") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:131:        arch.find("gemma") != std::string::npos || name.find("gemma") != std::string::npos) {
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:136:    if (arch.find("deepseek") != std::string::npos || name.find("deepseek") != std::string::npos ||
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:178:        case ChatTemplateType::PHI3:           return "phi3";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:179:        case ChatTemplateType::PHI4:           return "phi4";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:180:        case ChatTemplateType::LLAMA2:         return "llama2";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:181:        case ChatTemplateType::LLAMA3:         return "llama3";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:182:        case ChatTemplateType::MISTRAL:        return "mistral";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:184:        case ChatTemplateType::QWEN2:          return "qwen2";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:185:        case ChatTemplateType::QWEN25:         return "qwen2.5";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:186:        case ChatTemplateType::QWEN3:          return "qwen3";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:187:        case ChatTemplateType::GEMMA2:         return "gemma2";
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.cpp:188:        case ChatTemplateType::GEMMA3:         return "gemma3";
+
+===== 5. header hits: Deep2Engine|ModelContext|Architecture|Admission|gemma|qwen|llama|bind|metadata =====
+  F:\~dev\rawrxd\src\deep2\AttnVisibilityTrace.h:176://   of the instrument is to bind the record to the same identity the KV
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.hpp:5:// Detects template style from GGUF metadata and formats multi-turn conversations.
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.hpp:22:class Deep2Engine;
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.hpp:34:// Chat Template Type (detected from GGUF metadata)
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.hpp:84:    // Initialize from GGUF metadata (auto-detects template type)
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.hpp:154:    ChatStreamer(ChatTemplate& tmpl, Deep2Engine& engine)
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.hpp:179:    Deep2Engine& engine_;
+  F:\~dev\rawrxd\src\deep2\ChatTemplate.hpp:210:    // and special-token boundaries match production llama.cpp chat apply.
+  F:\~dev\rawrxd\src\deep2\d2_engine_ssvk_decode_bind.h:45:int d2_decode_bind_open(D2DecodeBind* b, const D2DecodeBindOps* ops);
+  F:\~dev\rawrxd\src\deep2\d2_engine_ssvk_decode_bind.h:46:int d2_decode_bind_one(
+  F:\~dev\rawrxd\src\deep2\d2_engine_ssvk_decode_bind.h:52:int d2_decode_bind_reset(D2DecodeBind* b);
+  F:\~dev\rawrxd\src\deep2\d2_engine_ssvk_decode_bind.h:53:void d2_decode_bind_close(D2DecodeBind* b);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:4:// Deep2 architecture binder + autoregressive reference recurrent provider.
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:7:// Include this ONLY after Deep2Engine.h in Deep2Engine.cpp.
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:9:#include "Deep2ModelArchitecture.hpp"
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:50:class ArchitectureRuntime {
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:52:    bool bind(GGUFLoader& loader,const std::string& arch,std::size_t layers,
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:79:                error="recurrent architecture missing ssm.* geometry metadata";
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:89:            bind(loader,p+"ssm_conv1d.weight",w.conv);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:90:            bind(loader,p+"ssm_conv1d.bias",w.convBias);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:91:            bind(loader,p+"ssm_dt.bias",w.dtBias);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:92:            bind(loader,p+"ssm_a",w.a);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:93:            bind(loader,p+"ssm_d",w.d);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:94:            bind(loader,p+"ssm_norm.weight",w.norm);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:95:            bind(loader,p+"ssm_out.weight",w.out);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:98:                bind(loader,p+"attn_qkv.weight",w.qkv);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:99:                bind(loader,p+"attn_gate.weight",w.attnGate);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:100:                bind(loader,p+"ssm_beta_alpha.weight",w.betaAlpha);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:101:                bind(loader,p+"ssm_beta.weight",w.beta);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:102:                bind(loader,p+"ssm_alpha.weight",w.alpha);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:109:                bind(loader,p+"ssm_in.weight",w.ssmIn);
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:160:    static bool bind(GGUFLoader& loader,const std::string& name,WeightTensor& wt) {
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:235:        if(vHeads%kHeads||ssmInner_%vHeads) { error="GDN metadata geometry invalid"; return false; }
+  F:\~dev\rawrxd\src\deep2\Deep2ArchitectureRuntime.hpp:321:            error="Mamba2 metadata geometry invalid"; return false;
+  F:\~dev\rawrxd\src\deep2\Deep2B66RuntimeMeta.hpp:53:    static B66Result bind(const B66MetadataSource&) noexcept;
+  F:\~dev\rawrxd\src\deep2\Deep2B71GpuCounterAdapter.hpp:8:// Production integration should pass Deep2Engine::gpuForwardCounters()
+  F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.hpp:3:#include "Deep2Engine.h"
+  F:\~dev\rawrxd\src\deep2\Deep2InferenceEndpoint.hpp:43:    bool Initialize(const std::string& bind_address, uint16_t port);
+  F:\~dev\rawrxd\src\deep2\Deep2FleetContract.hpp:22:    uint32_t layers = 0;              // 0 => runtime metadata authoritative
+  F:\~dev\rawrxd\src\deep2\Deep2FleetContract.hpp:23:    uint32_t experts = 0;             // 0 => runtime metadata authoritative
+  F:\~dev\rawrxd\src\deep2\Deep2FleetContract.hpp:24:    uint32_t expertsPerToken = 0;     // 0 => runtime metadata authoritative
+  F:\~dev\rawrxd\src\deep2\Deep2FleetContract.hpp:26:    uint32_t hidden = 0;              // 0 => runtime metadata authoritative
+  F:\~dev\rawrxd\src\deep2\Deep2FleetContract.hpp:27:    uint32_t heads = 0;               // 0 => runtime metadata authoritative
+  F:\~dev\rawrxd\src\deep2\Deep2FleetContract.hpp:28:    uint32_t kvHeads = 0;             // 0 => runtime metadata authoritative
+  F:\~dev\rawrxd\src\deep2\Deep2FleetContract.hpp:124:    static bool metadataMatches(const ModelEnvelope&,
+  F:\~dev\rawrxd\src\deep2\Deep2Engine_SsVkDecodeBind.hpp:2:/* Deep2Engine_SsVkDecodeBind — product D2DecodeBindOps → real Deep2Engine.
+  F:\~dev\rawrxd\src\deep2\Deep2Engine_SsVkDecodeBind.hpp:8:#include "d2_engine_ssvk_decode_bind.h"
+  F:\~dev\rawrxd\src\deep2\Deep2Engine_SsVkDecodeBind.hpp:12:class Deep2Engine;
+  F:\~dev\rawrxd\src\deep2\Deep2Engine_SsVkDecodeBind.hpp:15:    Deep2Engine* engine = nullptr;
+  F:\~dev\rawrxd\src\deep2\Deep2Engine_SsVkDecodeBind.hpp:29:/* Fill D2DecodeBindOps (C ABI) for d2_decode_bind_open. */
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:5:// One registry lookup per model admission. Architecture owns its
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:7:// and destruction. Deep2Engine binds exactly one Architecture during
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:13:#include "Deep2Engine.h"
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:48:struct ArchitectureForwardResult;
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:50:class Deep2Engine;
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:53:// Architecture function signatures
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:59:    LoadResult (*)(Deep2Engine&, const ModelMetadata&);
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:62:    bool (*)(Deep2Engine&, const ModelMetadata&);
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:65:    ArchitectureForwardResult (*)(Deep2Engine&, const ForwardRequest&);
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:68:    void (*)(Deep2Engine&) noexcept;
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:71:    void (*)(Deep2Engine&) noexcept;
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:74:// Architecture descriptor — stable ABI
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:76:struct Architecture {
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:77:    std::string_view id;                // "qwen2", "llama", "nemotron_h", "gemma3", "phi3", ...
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:80:    LoadFn           load = nullptr;           // Full weight bind + geometry resolution
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:93:    const Architecture*   architecture;    // Architecture implementation
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:97:// Model metadata — parsed from GGUF + tokenizer + config
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:100:    std::string_view canonicalName;   // e.g., "nemotron_h", "qwen2", "gemma3"
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:101:    std::string_view family;          // e.g., "nemotron", "qwen2.5", "gemma"
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:150:    // GGMLType). Admission compares this against actually-registered kernels.
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:197:// ArchitectureForwardResult — result of an architecture forward step.
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:200:// Deep2Engine::ForwardResult (src/deep2/Deep2Engine.h), which reports
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:203:struct ArchitectureForwardResult {
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:206:        NoArchitecture = 1,
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:220:// Admission
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:223:// Admission is the enforcement layer above resolve(). resolve() answers "which
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:229:enum class AdmissionReject : uint8_t {
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:231:    NoParsedArchitecture,      // canonicalName empty: nothing authoritative to admit
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:232:    UnknownArchitecture,       // architecture authority says Unknown
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:233:    ArchitectureUnimplemented, // recognized, but no registered implementation
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:247:struct AdmissionReport {
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:249:    AdmissionReject reject = AdmissionReject::None;
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:276:    static const Architecture* resolve(std::string_view modelName) noexcept;
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:279:    static const Architecture* resolve(const ModelMetadata& metadata) noexcept;
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:282:    // "Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf" -> "qwen2"
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:284:    // "llama3.1" -> "llama"
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:291:    static void registerArchitecture(const Architecture* arch);
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:294:    static void listArchitectures(std::vector<std::string_view>& out);
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:300:    // Admission — the enforcement path used by the loader.
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:308:    static bool admit(const ModelMetadata& metadata,
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:310:                      AdmissionReport& report) noexcept;
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:319:    // metadata. Exposed so admission and tests agree on one list.
+  F:\~dev\rawrxd\src\deep2\Deep2ModelRegistry.hpp:320:    static std::size_t countMissingRequiredTensors(const ModelMetadata& metadata,
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:2:// Deep2Engine.h - Production Inference Engine
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:176:    // them. Reference: llm_build_nemotron_h (llama.cpp src/models/nemotron-h.cpp)
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:180:    // Selection rule (llama.cpp llama-model.cpp, nemotron_h hparams):
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:199:    // Architecture metadata
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:231:    bool   ropeNeoxStyle  = false;  // true: NeoX rotated-half (llama/qwen); false: GPT-J adjacent
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:386:class Deep2Engine {
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:388:    Deep2Engine();
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:389:    ~Deep2Engine();
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:392:    // prepared-weight cache, defined in Deep2Engine_GpuForward.cpp.
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:443:    // carried no data and could not be observed. The live model metadata
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:462:    // Switch to another GGUF (unload ΓåÆ load ΓåÆ re-init from metadata)
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:480:    // Model architecture from GGUF metadata (populated after loadModel succeeds)
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:481:    const std::string& modelArchitecture() const noexcept { return modelArchitecture_; }
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:486:    // or skip the finiteness check. Read-only views of already-parsed metadata,
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:535:    static constexpr const char* backendName() noexcept { return "Deep2Engine/Sovereign"; }
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:1256:    // Immutable session geometry from GGUF metadata (ONE_LOCAL_MODEL_AUTHORITY)
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:1422:    // (Deep2Engine::reset(), called from the tail of generateStream). A
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:1482:    // Deep2Engine). Do NOT redeclare it here: a nested `class
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:1486:    // Deep2::Deep2Engine::PreparedWeightCache" at `new PreparedWeightCache()`.
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:1498:    // Ollama model loading temp file cleanup
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:1499:    std::string tempOllamaGGUFPath_;
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:1564:    // Nemotron-H per-layer hybrid pattern metadata. These are ARRAYS in the
+  F:\~dev\rawrxd\src\deep2\Deep2Engine.h:1595:    std::string modelArchitecture_;               // <<< set from GGUF metadata after loadModel()
+  F:\~dev\rawrxd\src\deep2\Deep2ModelArchitecture.hpp:6:// to stop treating every GGUF that is "close to llama" as llama.  Architectures
+  F:\~dev\rawrxd\src\deep2\Deep2ModelArchitecture.hpp:89:    // llama-compatible dense families
+  F:\~dev\rawrxd\src\deep2\Deep2ModelArchitecture.hpp:90:    if (eq(a,"llama"))      return {Kind::Llama,   ForwardFamily::GenericTransformer,FfnActivation::SwiGLU,"llama",false,false,false,false,false,false,false,false,false,true,false};
+  F:\~dev\rawrxd\src\deep2\Deep2ModelArchitecture.hpp:95:    if (eq(a,"qwen"))       return {Kind::Qwen,    ForwardFamily::GenericTransformer,FfnActivation::SwiGLU,"qwen",false,true,false,false,false,false,false,false,false,true,false};
+
+===== 6. LAST_CERT_PHASE instrumentation in the cert =====
+  390:    std::fprintf(stderr, "LAST_CERT_PHASE=%s\n", phaseName(p));
+  404:    std::fprintf(stderr, "LAST_CERT_PHASE_AT_THROW=%s\n", phaseName(p));
+  414:                 "LAST_CERT_PHASE_AT_THROW=%s\n",
+
+===== 7. model path / admission call in the cert =====
+  360:    BeforeLoadModel,
+  361:    AfterLoadModel,
+  369:        case CertPhase::BeforeLoadModel:        return "BEFORE_LOADMODEL";
+  370:        case CertPhase::AfterLoadModel:         return "AFTER_LOADMODEL";
+  378:// LOADMODEL vs GENERATE. loadModel is guarded deliberately: MLA_ELIGIBLE is
+  379:// emitted from INSIDE loadModel (Deep2Engine.cpp:2747), so a throw on the
+  383:    return (p == CertPhase::AfterLoadModel ||
+  482:    emitPhase(CertPhase::BeforeLoadModel);
+  483:    CertPhase g_phase = CertPhase::BeforeLoadModel;
+  489:    //   STATUS_STACK_OVERFLOW, raised inside loadModel AFTER MLA_ELIGIBLE. A
+  559:    // initialises far later in loadModel.
+  562:    //     vulkan disabled -> clean suspend, 0.1 s, loadModel RETURNS, no fault
+  582:    // RAWRXD_CERT_ELIGIBLE_FORWARD_CATCH_001: loadModel is guarded deliberately.
+  583:    // MLA_ELIGIBLE is emitted from INSIDE loadModel (Deep2Engine.cpp:2747), so a
+  588:        loaded = engine.loadModel(entry, &diag);
+

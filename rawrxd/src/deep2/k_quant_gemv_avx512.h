@@ -121,7 +121,7 @@ inline void GemvQ4K(const uint8_t* w, const float* x, float* y,
             }
             (void)elems;
         }
-        y[r] += acc;
+        y[r] = acc;
     }
 }
 
@@ -182,7 +182,7 @@ inline void GemvQ4K_AVX512(const uint8_t* w, const float* x, float* y,
                 }
             }
         }
-        y[r] += _mm512_reduce_add_ps(vacc);
+        y[r] = _mm512_reduce_add_ps(vacc);
     }
 }
 #endif // __AVX512F__
@@ -251,7 +251,7 @@ inline void GemvQ5K(const uint8_t* w, const float* x, float* y,
                 u2 = (uint8_t)(u2 << 2);
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
 }
 
@@ -319,7 +319,7 @@ inline void GemvQ5K_AVX512(const uint8_t* w, const float* x, float* y,
                 u2 = (uint8_t)(u2 << 2);
             }
         }
-        y[r] += _mm512_reduce_add_ps(vacc);
+        y[r] = _mm512_reduce_add_ps(vacc);
     }
 }
 #endif
@@ -383,7 +383,7 @@ inline void GemvQ6K(const uint8_t* w, const float* x, float* y,
                 }
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
 }
 
@@ -474,7 +474,22 @@ inline void GemvQ6K_AVX512(const uint8_t* w, const float* x, float* y,
                 }
             }
         }
-        y[r] += _mm512_reduce_add_ps(vacc);
+        // RAWRXD_Q6K_AVX512_ACCUMULATE_BUG_001
+        //
+        // This was `y[r] += ...`, which makes the kernel an ACCUMULATOR rather
+        // than a producer. Every other GEMV in this tree assigns its result; a
+        // caller is entitled to pass an uninitialised output buffer, and this
+        // line silently added a correct dot product to whatever was already
+        // there. The observed symptom was a forward pass dying at prefill
+        // token 0 with
+        //
+        //     LinearW: non-finite output tensor=blk.0.attn_v.weight
+        //              type=14 idx=1/256 value=nan
+        //
+        // because garbage + finite = garbage, and the garbage was NaN. The
+        // kernel was not wrong about the arithmetic; it was wrong about who
+        // owns the destination buffer.
+        y[r] = _mm512_reduce_add_ps(vacc);
     }
 }
 #endif // __AVX512F__

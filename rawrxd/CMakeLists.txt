@@ -5096,12 +5096,6 @@ set(INFERENCE_ENGINE_SOURCES
     src/rawrxd_transformer_forwardbatch.cpp
     # rawrxd_cpu_math.cpp provides rawrxd::cpu::* used by rawrxd_transformer.cpp.
     src/rawrxd_cpu_math.cpp
-    # RAWRXD_KQUANT_PARITY_HARNESS_001
-    # Differential oracle for src/deep2/k_quant_gemv_avx512.h. Carried in the
-    # engine's source list so the AVX-512 Q4_K GEMV has a build-integrated parity
-    # harness rather than a header that is in no target at all. Its main() is
-    # never pulled into the static library (no undefined symbol references it).
-    kquant_parity_check.cpp
     src/rawrxd_tokenizer.cpp
      src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
@@ -5112,6 +5106,10 @@ set(INFERENCE_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     src/core/enterprise_licensev2_impl.cpp
+    # RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: header-only implementation in
+    # src/deep2/WeightConsumptionCensus.hpp — do NOT add a separate .cpp
+    # because it duplicates inline definitions and produces LNK4006.
+    # src/core/WeightConsumptionCensus.cpp
     src/core/license_anti_tampering.cpp
     # AUTO-REMOVED: stub file
     src/core/ignite_800b.cpp
@@ -5195,6 +5193,20 @@ set(INFERENCE_ENGINE_SOURCES
     # Placed beside its only caller. If this list is ever filtered, re-check that this
     # entry survives -- a silently stripped entry restores LNK2019 with no other signal.
     src/deep2/InferenceWire.cpp
+    # RAWRXD_REVERSELAYER_LINK_BINDING_001
+    #
+    # src/deep2/ReverseLayer.cpp defines Deep2::BackingDirectory::Instance(),
+    # BackingDirectory::registerBinding() and fnv1a64Bytes(). The loadModel
+    # tensor binder in Deep2Engine.cpp calls all three, so InferenceEngine
+    # failed to link with 3x LNK2019 because this file was referenced by NO
+    # target at all: the capability existed but had never been bound to the
+    # build. This adds the binding only -- it does not modify the file or the
+    # work of whoever wrote it.
+    #
+    # Same hazard as the InferenceWire entry above: if this list is ever
+    # filtered, re-check that this entry survives, because a stripped entry
+    # restores LNK2019 with no other signal.
+    src/deep2/ReverseLayer.cpp
     src/deep2/strict_gpu_violations.cpp
     src/deep2/VramStreamingController.cpp
     src/deep2/expert_cache/ExpertCache.cpp
@@ -5244,6 +5256,7 @@ set(INFERENCE_ENGINE_SOURCES
     # through it. Deliberately NOT linked as rawrxd_deep2_model_registry here:
     # that library also carries QuantKernelRegistry.cpp and would collide.
     src/deep2/ModelRegistry.cpp
+    src/deep2/TensorResidencyCache.cpp
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
     # AUTO-REMOVED: stub file
@@ -5318,6 +5331,20 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/vulkan_compute.cpp
     src/deep2/Deep2Engine_VulkanRuntime.cpp
     src/deep2/Deep2DualGpuRowSplit.cpp
+        # RAWRXD_NANOBANDWIDTH_VIEW_RESOLUTION_001
+        # Deep2Engine.cpp loadModel() calls BackingDirectory::Instance(),
+        # BackingDirectory::registerBinding() and fnv1a64Bytes(). All three are
+        # DECLARED in ReverseLayer.hpp and DEFINED in ReverseLayer.cpp, but the
+        # file was in no target, so the definitions were invisible to the linker:
+        #
+        #   LNK2019 unresolved external symbol Deep2::BackingDirectory::Instance
+        #   LNK2019 unresolved external symbol Deep2::BackingDirectory::registerBinding
+        #   LNK2019 unresolved external symbol Deep2::fnv1a64Bytes
+        #   LNK1120 3 unresolved externals
+        #
+        # This is RAWRXD_DROPPED_SOURCE inverted: the source exists and the
+        # REFERENCE was missing, so a fresh configure could not link the product.
+        src/deep2/ReverseLayer.cpp
     src/deep2/Deep2Engine_GpuMoEMLA.cpp
     # RAWRXD_MLA_LOAD_AUTHORITY_001 (M5d): the MLA metadata binder
     # (q_lora_rank / kv_lora_rank / useMLA derivation) existed only as
@@ -5616,9 +5643,48 @@ list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 rawrxd_filter_missing_sources(INFERENCE_ENGINE_LIBRARY_SOURCES)
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
-# Link precompiled MASM objects (tracer + quantKB)
-target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/ResidencyTrace.obj")
-target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/QuantKB.obj")
+
+# RAWRXD_MASM_FROM_SOURCE_001
+#
+# The tracer/quantizer stubs used to be linked as PREBUILT .obj files taken
+# straight out of the source tree:
+#
+#     target_link_libraries(InferenceEngine PRIVATE
+#         "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/ResidencyTrace.obj")
+#     target_link_libraries(InferenceEngine PRIVATE
+#         "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/QuantKB.obj")
+#
+# Those blobs are excluded by .gitignore (*.obj), so they existed only in a
+# developer's working tree. A clean 'git worktree add' of this branch built to
+# the final link and then failed:
+#
+#     LINK : fatal error LNK1181: cannot open input file
+#            '...\rawrxd\src\deep2\ResidencyTrace.obj'
+#
+# The .asm SOURCES are tracked, so they are compiled here instead. That removes
+# a binary dependency entirely rather than force-adding a blob to the repo.
+#
+# These two units are auto-generated stubs (ResidencyTrace_Stub returns 0).
+# Compiling them makes the build self-contained; it does NOT make them
+# implement a tracer. That deficit is tracked separately.
+if(NOT CMAKE_ASM_MASM_COMPILER)
+    include(CheckLanguage)
+    check_language(ASM_MASM)
+    if(CMAKE_ASM_MASM_COMPILER)
+        enable_language(ASM_MASM)
+    endif()
+endif()
+
+if(CMAKE_ASM_MASM_COMPILER)
+    target_sources(InferenceEngine PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/ResidencyTrace.asm"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/QuantKB.asm")
+else()
+    message(FATAL_ERROR
+        "MASM (ml64) is required to build ResidencyTrace.asm and QuantKB.asm. "
+        "These are tracked sources; the previous prebuilt .obj path is not "
+        "reproducible from a clean clone.")
+endif()
 # Set MSVC runtime library to match RawrEngine (static CRT)
 set_property(TARGET InferenceEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -8045,7 +8111,14 @@ set(RAWRXD_IDE_SOURCE_CENSUS_EXECUTED 1)
         src/core/task_config_bridge.cpp
         src/win32app/launch_config.cpp
         src/core/file_watcher.cpp
-        src/core/monaco_core_stubs.cpp
+        # RAWRXD_MONACO_REAL_IMPLEMENTATION_001: real gap-buffer text model and
+        # line tokenizer. Replaces src/core/monaco_core_stubs.cpp, which
+        # (a) reported success while discarding every inserted byte,
+        # (b) declared signatures that did not match RawrXD_MonacoCore.h and
+        #     omitted MC_GapBuffer_MoveGap entirely, and
+        # (c) tripped the production stub/shim gate at CMakeLists.txt:7290,
+        #     which is why this target previously refused to configure.
+        src/core/MonacoCore.cpp
     )
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     # BATCH N2: /FS prevents C1041 PDB contention under parallel builds

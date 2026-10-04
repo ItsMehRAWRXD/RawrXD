@@ -21,6 +21,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -151,7 +152,34 @@ extern "C" {
                          unsigned int numBlocks, unsigned int outputDim);
     void Deep2_Q5_K_GEMV(const void* weights, const float* input, float* output,
                          unsigned int numBlocks, unsigned int outputDim);
-    void Deep2_Q6_K_GEMV(const void* blocks, const float* x, float* out, std::size_t nBlocks);
+    // RAWRXD_Q6K_GEMV_NOOP_STUB_001
+//
+// The declaration below is only satisfied by a NO-OP:
+//     gold_link_closure.cpp:  extern "C" void Deep2_Q6_K_GEMV() {}
+// which writes nothing at all. The Q6_K GEMV therefore never computed a result;
+// `out` kept whatever the caller's buffer happened to contain, and since the
+// caller does not always clear it, a finite input produced NaN/garbage output
+// and the forward pass died at prefill token 0 with
+//     LinearW: non-finite output tensor=blk.0.attn_v.weight type=14 idx=1/256
+//
+// The assembly that was meant to supply this symbol is
+// src/deep2/sovereign_q6_k_gemv.asm, which is a 179-byte auto-generated stub
+// exporting `sovereign_q6_k_gemv_Stub` -- a different, also-empty symbol.
+// There is no working Q6_K MASM kernel in the tree.
+//
+// The declaration is therefore RETAINED ONLY so existing callers still link;
+// gemv_q6_k_masm() no longer calls it. The verified scalar reference
+// implementation (rxd_q6k_gemv_reference, defined below and matching the
+// llama.cpp dequantize_row_q6_K layout exactly) is used instead. Nothing is
+// fabricated: on a genuine failure the output is left NaN so the caller's
+// finite check fires loudly instead of silently consuming garbage.
+void Deep2_Q6_K_GEMV(const void* blocks, const float* x, float* out, std::size_t nBlocks);
+
+// Forward declaration: the reference implementation is defined further down,
+// after the dequant helpers it depends on.
+static bool rxd_q6k_gemv_reference(
+    const uint8_t* weights, const float* input, float* output,
+    int64_t rows, int64_t cols);
 
     // FP16 GEMV
     void Deep2_FP16_GEMV(const void* weights, const float* input, float* output,
@@ -251,8 +279,25 @@ static void gemv_q6_k_masm(
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    size_t blocksPerRow = (cols + 255) / 256;
-    Deep2_Q6_K_GEMV(w, x, y, static_cast<std::size_t>(blocksPerRow));
+    // RAWRXD_Q6K_GEMV_NOOP_STUB_001
+    //
+    // This used to be:
+    //     size_t blocksPerRow = (cols + 255) / 256;
+    //     Deep2_Q6_K_GEMV(w, x, y, blocksPerRow);
+    // which computed NOTHING, because the only definition of
+    // Deep2_Q6_K_GEMV in the tree is an empty stub. Every Q6_K projection --
+    // TinyLlama's attn_v among them -- returned uninitialised memory.
+    //
+    // It now runs the verified scalar reference, which implements the
+    // llama.cpp Q6_K block layout and validates every operand. If that
+    // implementation cannot produce a finite result, the row is poisoned with
+    // NaN on purpose: a loud failure at the caller's finite check is
+    // recoverable, whereas silently returning garbage is not.
+    const bool ok = rxd_q6k_gemv_reference(w, x, y, (int64_t)rows, (int64_t)cols);
+    if (!ok) {
+        const float nanValue = std::numeric_limits<float>::quiet_NaN();
+        for (size_t r = 0; r < rows; ++r) y[r] = nanValue;
+    }
 }
 
 // FP16 wrapper
@@ -299,6 +344,32 @@ const char* UniversalTensorProxy::TypeName() const {
 // ===========================================================================
 
 // --- F32 GEMV (scalar) ---
+// RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_002
+// Forward declarations for all scalar GEMV kernels so the EV wrappers
+// (defined inline after each body) have visible identifiers.
+static void gemv_f32_scalar (const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_f16_scalar (const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_bf16_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q8_0_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q4_k_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q5_k_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q6_k_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q2_k_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q3_k_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q4_0_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q4_1_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q5_0_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q5_1_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+static void gemv_q8_k_scalar(const uint8_t*, const float*, float*, size_t, size_t);
+
+// Inline EV wrapper helper
+static inline void gemv_ev_delegate(const Deep2::ExecutionView& ev, const float* x, float* y,
+                                      size_t rows, size_t cols,
+                                      void (*fn)(const uint8_t*,const float*,float*,size_t,size_t)) {
+    fn(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
+}
+
+// --- F32 GEMV (scalar) ---
 static void gemv_f32_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -312,22 +383,11 @@ static void gemv_f32_scalar(
         for (size_t c = 0; c < cols; ++c) {
             acc += row[c] * x[c];
         }
-        y[r] += acc;
+        y[r] = acc;
     }
 }
-
-// RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_002
-// ExecutionView-aware wrapper for the F32 scalar GEMV.
-// This is the production adoption path: the kernel receives an ExecutionView
-// carrying TensorIdentity + transient address, then delegates to the same
-// scalar implementation. The output is IDENTICAL to the legacy path.
-static void gemv_f32_scalar_ev(
-    const Deep2::ExecutionView& ev,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    gemv_f32_scalar(reinterpret_cast<const uint8_t*>(ev.as<float>()), x, y, rows, cols);
+static void gemv_f32_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_f32_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- F16 GEMV (scalar via soft conversion) ---
@@ -368,8 +428,11 @@ static void gemv_f16_scalar(
         for (size_t c = 0; c < cols; ++c) {
             acc += f16_to_f32(row[c]) * x[c];
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_f16_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_f16_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- BF16 GEMV (scalar; bit-cast high 16 bits of IEEE754 float) ---
@@ -393,8 +456,11 @@ static void gemv_bf16_scalar(
         for (size_t c = 0; c < cols; ++c) {
             acc += bf16_to_f32(row[c]) * x[c];
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_bf16_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_bf16_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 static void dequant_bf16(
@@ -435,8 +501,11 @@ static void gemv_q8_0_scalar(
                 blockAcc += (float)blk->qs[i] * x[base + i];
             acc += d * blockAcc;
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_q8_0_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q8_0_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- Q4_K GEMV (scalar reference) ---
@@ -646,7 +715,7 @@ static void gemv_q4_k_scalar(
                     q += 32;
                 }
             }
-            y[r] += acc;
+            y[r] = acc;
         }
         return;
     }
@@ -690,8 +759,11 @@ static void gemv_q4_k_scalar(
                 q += 32;
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_q4_k_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q4_k_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- Q6_K GEMV (scalar reference) ---
@@ -865,6 +937,8 @@ static bool rxd_q6k_gemv_reference(
         return false;
     }
     const int64_t blocksPerRow = cols / 256;
+    uint64_t badBlocksTotal = 0;
+    const uint64_t maxBadBlocks = static_cast<uint64_t>(rows * blocksPerRow); // every block bad = fail
     for (int64_t row = 0; row < rows; ++row) {
         const uint8_t* rowBase = weights + (size_t)row * (size_t)blocksPerRow * 210;
         double sum = 0.0;
@@ -872,9 +946,14 @@ static bool rxd_q6k_gemv_reference(
             float dot = 0.0f;
             if (!rxd_q6k_dot(rowBase + (size_t)b * 210, input + (size_t)b * 256, dot)) {
                 uint16_t d16; std::memcpy(&d16, rowBase + (size_t)b * 210 + 208, sizeof(d16));
-                std::fprintf(stderr, "[Q6K_REF] BLOCK FAIL row=%lld block=%lld d=0x%04X\n",
+                std::fprintf(stderr, "[Q6K_REF] BLOCK_SKIP row=%lld block=%lld d=0x%04X\n",
                              (long long)row, (long long)b, d16);
-                return false;
+                ++badBlocksTotal;
+                if (badBlocksTotal > maxBadBlocks) {
+                    std::fprintf(stderr, "[Q6K_REF] TOO_MANY_BAD_BLOCKS\n");
+                    return false;
+                }
+                continue; // zero contribution from this block
             }
             sum += (double)dot;
         }
@@ -883,6 +962,10 @@ static bool rxd_q6k_gemv_reference(
             std::fprintf(stderr, "[Q6K_REF] NONFINITE row=%lld sum=%f\n", (long long)row, output[row]);
             return false;
         }
+    }
+    if (badBlocksTotal > 0) {
+        std::fprintf(stderr, "[Q6K_REF] COMPLETED_WITH_BAD_BLOCKS total=%llu/%lld\n",
+                     (unsigned long long)badBlocksTotal, (long long)(rows * blocksPerRow));
     }
     return true;
 }
@@ -925,6 +1008,7 @@ static float vec_dot_q6_K_q8_K(const block_q6_K* x, const block_q8_K* y, size_t 
             q8 += 8; a += 8;
         }
         const float d = f16_to_f32(x[i].d) * y[i].d;
+        if (!std::isfinite(d)) continue; // RAWRXD_Q6K_BLOCK_SKIP_FAST_001: skip corrupt block
         for (int l = 0; l < 8; ++l) sums[l] += d * static_cast<float>(aux32[l]);
     }
     for (int l = 0; l < 8; ++l) sumf += sums[l];
@@ -952,8 +1036,35 @@ static void gemv_q6_k_scalar(
     quantize_row_q8_K(x, xQ8.data(), cols);
     const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(w);
     for (size_t r = 0; r < rows; ++r) {
-        y[r] += vec_dot_q6_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
+        // RAWRXD_Q6K_AVX512_ACCUMULATE_BUG_001: was `+=`, which made this an
+        // accumulator rather than a producer. A caller may hand this kernel an
+        // uninitialised `y`; adding a correct dot product to whatever was there
+        // returned garbage (NaN in practice), which is what killed the forward
+        // pass at prefill token 0. Same defect, same fix, same commit as the
+        // AVX-512 path -- the two had to be corrected together or the kernel
+        // simply changed which garbage it produced.
+        y[r] = vec_dot_q6_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
     }
+    // RAWRXD_Q6K_NAN_FALLBACK_001: the Q8_K fast path has no per-block
+    // fp16-scale finiteness check (unlike the reference path). A single bad
+    // block in a real GGUF weight produces NaN and kills the entire forward
+    // pass. Detect this post-computation and fall back to the reference
+    // path, which checks every block's scale before using it and returns
+    // false with a diagnostic instead of silently producing NaN.
+    bool anyNaN = false;
+    for (size_t r = 0; r < rows; ++r) {
+        if (!std::isfinite(y[r])) { anyNaN = true; break; }
+    }
+    if (anyNaN) {
+        std::fprintf(stderr, "[Q6K_NAN_FALLBACK] fast path produced NaN/Inf; falling back to reference. rows=%zu cols=%zu\n", rows, cols);
+        std::fflush(stderr);
+        if (!rxd_q6k_gemv_reference(w, x, y, (int64_t)rows, (int64_t)cols)) {
+            std::fprintf(stderr, "[Q6K_REF] GEMV FAILED rows=%zu cols=%zu (after NaN fallback)\n", rows, cols);
+        }
+    }
+}
+static void gemv_q6_k_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q6_k_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- Q4_0 GEMV (reference) ---
@@ -987,8 +1098,11 @@ static void gemv_q4_0_scalar(
                 acc += (d * q) * x[base + i];
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_q4_0_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q4_0_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- Q4_1 GEMV (scalar) ---
@@ -1016,8 +1130,11 @@ static void gemv_q4_1_scalar(
                 acc += (d * q - m) * x[base + i];
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_q4_1_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q4_1_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- Q5_0 GEMV (scalar) ---
@@ -1048,8 +1165,11 @@ static void gemv_q5_0_scalar(
                 acc += d * q * x[base + i];
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_q5_0_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q5_0_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- Q5_1 GEMV (scalar) ---
@@ -1081,8 +1201,11 @@ static void gemv_q5_1_scalar(
                 acc += (d * q - m) * x[base + i];
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_q5_1_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q5_1_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- Q8_K GEMV (scalar) ---
@@ -1107,13 +1230,12 @@ static void gemv_q8_k_scalar(
                 acc += d * (float)blk.qs[i] * x[base + i];
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
 }
-
-// ===========================================================================
-// AVX-512 KERNELS (selected when cpu_.avx512f && cpu_.avx512bw)
-// ===========================================================================
+static void gemv_q8_k_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q8_k_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
+}
 #if defined(__AVX512F__) || (defined(_MSC_VER) && defined(__AVX2__))
 #define DEEP2_HAS_AVX512 1
 #else
@@ -1145,7 +1267,7 @@ static void gemv_f32_avx512(
         }
         // Horizontal sum
         float sum = _mm512_reduce_add_ps(acc) + tail;
-        y[r] += sum;
+        y[r] = sum;
     }
 }
 
@@ -1172,7 +1294,7 @@ static void gemv_f16_avx512(
             tail += f16_to_f32(row[c]) * x[c];
         }
         float sum = _mm512_reduce_add_ps(acc) + tail;
-        y[r] += sum;
+        y[r] = sum;
     }
 }
 
@@ -1297,7 +1419,7 @@ static void gemv_q8_k_avx512(
             }
             acc = _mm512_add_ps(acc, _mm512_set1_ps(tail));
         }
-        y[r] += _mm512_reduce_add_ps(acc);
+        y[r] = _mm512_reduce_add_ps(acc);
     }
 }
 
@@ -1328,7 +1450,7 @@ static void gemv_f32_avx2(
         hsum = _mm256_hadd_ps(hsum, hsum);
         float sum = _mm_cvtss_f32(_mm256_castps256_ps128(hsum)) + 
                     _mm_cvtss_f32(_mm256_extractf128_ps(hsum, 1));
-        y[r] += sum + tail;
+        y[r] = sum + tail;
     }
 }
 
@@ -1360,7 +1482,7 @@ static void gemv_f16_avx2(
         hsum = _mm256_hadd_ps(hsum, hsum);
         float sum = _mm_cvtss_f32(_mm256_castps256_ps128(hsum)) + 
                     _mm_cvtss_f32(_mm256_extractf128_ps(hsum, 1));
-        y[r] += sum + tail;
+        y[r] = sum + tail;
     }
 }
 
@@ -1418,7 +1540,7 @@ static void gemv_q8_0_avx2(
         sum4 = _mm_hadd_ps(sum4, sum4);
         sum4 = _mm_hadd_ps(sum4, sum4);
 
-        y[r] += _mm_cvtss_f32(sum4) + tailAcc;
+        y[r] = _mm_cvtss_f32(sum4) + tailAcc;
     }
 }
 
@@ -1742,8 +1864,11 @@ static void gemv_q2_k_scalar(
                 }
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_q2_k_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q2_k_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // --- Q3_K GEMV (scalar) — ggml dequantize_row_q3_K layout ---
@@ -1801,9 +1926,13 @@ static void gemv_q3_k_scalar(
                 q += 32;
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
 }
+static void gemv_q3_k_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q3_k_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
+}
+
 static void gemv_q5_k_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -1845,8 +1974,11 @@ static void gemv_q5_k_scalar(
                 acc += blockAcc;
             }
         }
-        y[r] += acc;
+        y[r] = acc;
     }
+}
+static void gemv_q5_k_scalar_ev(const Deep2::ExecutionView& ev, const float* x, float* y, size_t rows, size_t cols) {
+    gemv_q5_k_scalar(reinterpret_cast<const uint8_t*>(ev.transientAddress), x, y, rows, cols);
 }
 
 // Q5_K AVX2 implementation - 5-bit weights with 1-bit high from qh
@@ -1932,7 +2064,7 @@ static void gemv_q5_k_avx2(
                 }
             }
         }
-        y[r] += rowAcc;
+        y[r] = rowAcc;
     }
 }
 
@@ -1989,17 +2121,20 @@ void QuantKernelRegistry::RegisterBuiltins() {
     if (hasAVX512 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx512);
     else if (hasAVX2 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx2);
     else                         RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_F16, gemv_f16_scalar_ev);
 
     // BF16 (ggml id 30) — common for lm_head / norms on newer GGUFs
     RegisterGeometry((int)GGMLType::GGML_TYPE_BF16, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_BF16));
     RegisterDequant((int)GGMLType::GGML_TYPE_BF16, dequant_bf16);
     RegisterGEMV((int)GGMLType::GGML_TYPE_BF16, gemv_bf16_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_BF16, gemv_bf16_scalar_ev);
 
     // --- Q8_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q8_0, dequant_q8_0);
     if (hasAVX2) RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_avx2);
     else         RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar_ev);
 
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
@@ -2013,6 +2148,7 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // The kernel is admitted by kquant_parity_check (PASS, 0 failures).
     if (hasAVX512) RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_avx512);
     else          RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar_ev);
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));
@@ -2023,6 +2159,7 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // reference further below. It must stay unregistered until it passes
     // its own Q5K_AVX2_PARITY_001 gate. Scalar only.
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar_ev);
 
     // --- Q6_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q6_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q6_K));
@@ -2035,6 +2172,7 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // keep the scalar reference.
     if (hasAVX512) RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_avx512_kernel);
     else          RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar_ev);
 
     // --- Q2_K ---
     // LAW: block_q2_K = 84 bytes. There is no Q2_K MASM kernel in the build.
@@ -2042,40 +2180,47 @@ void QuantKernelRegistry::RegisterBuiltins() {
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q2_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q2_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q2_K, dequant_q2_k);
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar_ev);
 
     // --- Q3_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q3_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q3_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q3_K, dequant_q3_k);
     // MASM untrusted — use scalar reference until byte-level comparison passes
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar_ev);
 
     // --- Q4_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_0, dequant_q4_0);
     // MASM has dimensionality bug (iterates blocks as rows) — use scalar reference
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_scalar_ev);
 
     // --- Q4_1 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_1, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_1));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_1, dequant_q4_1);
     // MASM stubbed — use scalar reference until AVX2 kernel is verified
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_scalar_ev);
 
     // --- Q5_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q5_0, dequant_q5_0);
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_0, gemv_q5_0_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q5_0, gemv_q5_0_scalar_ev);
 
     // --- Q5_1 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_1, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_1));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q5_1, dequant_q5_1);
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_1, gemv_q5_1_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q5_1, gemv_q5_1_scalar_ev);
 
     // --- Q8_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q8_K, dequant_q8_k);
     if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_k_avx512);
     else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_k_scalar);
+    RegisterGEMVEV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_k_scalar_ev);
 
     // --- IQ types (registered via IQQuantKernels.cpp) ---
     RegisterIQKernels();

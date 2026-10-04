@@ -1225,7 +1225,26 @@ RecoveryReport RecoverWorkspace(const std::string& workspaceRoot, bool writeRece
     r.workspaceRoot = absolutePath(workspaceRoot);
     const std::wstring rootW = widen(r.workspaceRoot);
 
-    r.identityBeforeSha256 = Transaction::CaptureIdentity(r.workspaceRoot).identitySha256;
+    // RAWRXD_IDE_WINDOW_LIFECYCLE_001
+    //
+    // The working-tree identity is a whole-tree walk that enumerates every file
+    // under the root and SHA-256 hashes every file <= 8 MB. It used to be
+    // captured unconditionally here, twice per call, BEFORE the journals were
+    // even read -- so a startup with nothing to recover paid two full-tree
+    // content hashes of the entire workspace and then discarded both, because
+    // every read of identityBeforeSha256 / identityAfterSha256 sits behind
+    // `writeReceipt && incompleteTransactions > 0`.
+    //
+    // On a monorepo root that is unbounded startup latency, and this call runs
+    // ahead of CreateWindowEx in the IDE, so it is the gate on IDE_LAUNCH.
+    //
+    // It is NOT removed: a pass that actually rolls a file back still records a
+    // real before/after pair, and the cert drivers that print
+    // RECOVER_IDENTITY_BEFORE/AFTER still get one. The capture is deferred to
+    // the first mutation instead, where it is still a true "before" (nothing has
+    // been written yet) and is skipped only when nothing is written at all.
+    //
+    // See RecoverWorkspace, `identityBeforeSha256` assignment site.
 
     const std::wstring jdir = journalDir(rootW);
     std::vector<std::wstring> journals;
@@ -1311,6 +1330,17 @@ bool alreadyRolledBack = false;
         r.incompleteTransactions += 1;
         r.recoveredTxIds.push_back(txId);
 
+        // Deferred whole-tree identity capture -- see the note at the top of this
+        // function. Taken here, immediately before the first write, so it is
+        // still the identity of the un-rolled-back tree. Taken at most once: a
+        // second pass that finds more open transactions would otherwise re-hash
+        // the same tree and call it "before" while the earlier rollbacks are
+        // already on disk.
+        if (r.identityBeforeSha256.empty()) {
+            r.identityBeforeSha256 =
+                Transaction::CaptureIdentity(r.workspaceRoot).identitySha256;
+        }
+
         // Roll back in reverse write order.
         for (std::size_t i = befores.size(); i-- > 0;) {
             const BeforeEntry& e = befores[i];
@@ -1390,7 +1420,18 @@ bool alreadyRolledBack = false;
         }
     }
 
-    r.identityAfterSha256 = Transaction::CaptureIdentity(r.workspaceRoot).identitySha256;
+    // Symmetric to the deferred before-capture: a pass that rolled nothing back
+    // changed nothing, so re-hashing the whole tree would compute a value that is
+    // by construction equal to the before-identity while costing another full
+    // pass over every file in the workspace. The receipt that prints these two
+    // fields only exists when incompleteTransactions > 0, so in the no-op case
+    // both fields are now empty rather than two identical hashes that were never
+    // read -- and an empty value reads as "not measured because nothing changed",
+    // which is the true statement.
+    if (r.incompleteTransactions > 0) {
+        r.identityAfterSha256 =
+            Transaction::CaptureIdentity(r.workspaceRoot).identitySha256;
+    }
 
     if (writeReceipt && r.incompleteTransactions > 0) {
         ensureDir(recoveryDir(rootW));

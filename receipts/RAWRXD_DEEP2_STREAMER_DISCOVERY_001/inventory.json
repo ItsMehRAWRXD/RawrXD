@@ -1,19 +1,24 @@
 {
   "census": {
-    "files_scanned": 2,
-    "gguf_by_magic": 2,
-    "non_gguf_skipped": 0,
-    "logical_models": 2,
-    "single_file": 1,
+    "files_scanned": 9,
+    "gguf_by_magic": 7,
+    "non_gguf_skipped": 2,
+    "logical_models": 7,
+    "single_file": 7,
     "sharded_complete": 0,
     "sharded_incomplete": 0,
-    "projectors": 1,
+    "projectors": 0,
     "manifests_no_payload": 0,
     "corrupt_headers": 0,
-    "total_bytes": 22069579744
+    "total_bytes": 15274948696
   },
   "models": [
-    {"logical_name": "Qwen3.6-35B-A3B-Q4_K_M.gguf", "directory": "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 21166757728, "entry_shard": "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf", "gguf_version": 3, "arch": "qwen35moe", "name": "Qwen_Qwen3.6 35B A3B", "tensor_count": 733, "quant": "Q4_K", "header_valid": true, "header_error": ""},
-    {"logical_name": "mmproj-Qwen3.6-35B-A3B-BF16.gguf", "directory": "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF", "artifact": "PROJECTOR", "present_shards": 1, "expected_shards": 1, "total_bytes": 902822016, "entry_shard": "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\mmproj-Qwen3.6-35B-A3B-BF16.gguf", "gguf_version": 3, "arch": "clip", "name": "Qwen_Qwen3.6 35B A3B", "tensor_count": 334, "quant": "F32", "header_valid": true, "header_error": ""}
+    {"logical_name": "DeepSeek-V2-Lite-Chat.Q4_K_M.gguf", "directory": "G:\\~dev\\rawrxd\\models", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 10364416768, "entry_shard": "G:\\~dev\\rawrxd\\models\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf", "gguf_version": 3, "arch": "deepseek2", "name": "DeepSeek-V2-Lite-Chat", "tensor_count": 377, "quant": "Q4_K", "header_valid": true, "header_error": ""},
+    {"logical_name": "phi3-mini-Q2_K.gguf", "directory": "G:\\~dev\\rawrxd\\models", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 1509949440, "entry_shard": "G:\\~dev\\rawrxd\\models\\phi3-mini-Q2_K.gguf", "gguf_version": 3, "arch": "phi3", "name": "Phi 3 Mini 128k Instruct", "tensor_count": 197, "quant": "Q3_K", "header_valid": true, "header_error": ""},
+    {"logical_name": "llama3.2-3b-Q2_K.gguf", "directory": "G:\\~dev\\rawrxd\\models", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 1363935456, "entry_shard": "G:\\~dev\\rawrxd\\models\\llama3.2-3b-Q2_K.gguf", "gguf_version": 3, "arch": "llama", "name": "Llama 3.2 3B Instruct", "tensor_count": 255, "quant": "Q2_K", "header_valid": true, "header_error": ""},
+    {"logical_name": "gemma3-1b-Q2_K.gguf", "directory": "G:\\~dev\\rawrxd\\models", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 699066720, "entry_shard": "G:\\~dev\\rawrxd\\models\\gemma3-1b-Q2_K.gguf", "gguf_version": 3, "arch": "gemma3", "name": "", "tensor_count": 340, "quant": "F32", "header_valid": true, "header_error": ""},
+    {"logical_name": "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf", "directory": "G:\\~dev\\rawrxd\\models", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 668788096, "entry_shard": "G:\\~dev\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf", "gguf_version": 3, "arch": "llama", "name": "tinyllama_tinyllama-1.1b-chat-v1.0", "tensor_count": 201, "quant": "Q4_K", "header_valid": true, "header_error": ""},
+    {"logical_name": "tinyllama.gguf", "directory": "G:\\~dev\\rawrxd\\models", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 668788096, "entry_shard": "G:\\~dev\\rawrxd\\models\\tinyllama.gguf", "gguf_version": 3, "arch": "llama", "name": "tinyllama_tinyllama-1.1b-chat-v1.0", "tensor_count": 201, "quant": "Q4_K", "header_valid": true, "header_error": ""},
+    {"logical_name": "model.gguf", "directory": "G:\\~dev\\rawrxd\\models", "artifact": "INFERENCE_MODEL", "present_shards": 1, "expected_shards": 1, "total_bytes": 4120, "entry_shard": "G:\\~dev\\rawrxd\\models\\model.gguf", "gguf_version": 3, "arch": "", "name": "", "tensor_count": 0, "quant": "", "header_valid": true, "header_error": ""}
   ]
 }

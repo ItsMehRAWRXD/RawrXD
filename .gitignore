@@ -178,3 +178,7 @@ rawrxd/audit/sweep_tmp/
 # run. Staging one records a gitlink (mode 160000) pointing at a commit that
 # does not exist on the remote, so a clone receives an empty directory.
 rawrxd/audit/RAWRXD_GIT_TRANSACTION_AUTHORITY_001/run_*/ws/repo/
+
+# Captured browser profile data (NOT project source; contains browsing history DB)
+agent_profile/
+shell_profile/

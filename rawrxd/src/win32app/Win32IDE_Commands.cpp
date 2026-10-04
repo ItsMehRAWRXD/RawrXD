@@ -683,12 +683,30 @@ void handleEditCommand(int cmd) {
 
 extern "C" void Win32IDE_Commands_SetMainWindow(HWND hwnd) { g_hwndMain = hwnd; }
 extern "C" void Win32IDE_Commands_SetEditorWindow(HWND hwnd) { (void)hwnd; }
+// RAWRXD_IDE_COMMAND_DISPATCH_COVERAGE_001
+//
+// CanRoute is the NON-INVOKING half of Route: it answers "is this command id
+// dispatchable through the router?" without running it.
+//
+// It exists because the gate receipts measure their own reachability by calling
+// Route() on the id that invoked them. That is a self-recursive measurement once
+// the id is registered: Route(IDM_MODEL_LOCAL) would call runInferenceGate(),
+// which calls Route(IDM_MODEL_LOCAL) again, and so on to a stack overflow.
+// Calling CanRoute keeps the field honest -- the claim "this command is
+// reachable through the real dispatcher" is exactly what CanRoute reports --
+// without re-entering the gate to prove it.
+extern "C" bool Win32IDE_Commands_CanRoute(int commandId) {
+  if (g_commandHandlers.find(commandId) != g_commandHandlers.end()) return true;
+  if (commandId >= 1000 && commandId < 2000) return true;
+  if (commandId >= 2100 && commandId < 2200) return true;
+  return false;
+}
 extern "C" bool Win32IDE_Commands_Route(int commandId) {
-    auto it = g_commandHandlers.find(commandId);
-    if (it != g_commandHandlers.end()) { it->second(); return true; }
-    if (commandId >= 1000 && commandId < 2000) { handleFileCommand(commandId); return true; }
-    if (commandId >= 2100 && commandId < 2200) { handleEditCommand(commandId); return true; }
-    return false;
+  auto it = g_commandHandlers.find(commandId);
+  if (it != g_commandHandlers.end()) { it->second(); return true; }
+  if (commandId >= 1000 && commandId < 2000) { handleFileCommand(commandId); return true; }
+  if (commandId >= 2100 && commandId < 2200) { handleEditCommand(commandId); return true; }
+  return false;
 }
 extern "C" void Win32IDE_Commands_Register(int id, void (*fn)()) { g_commandHandlers[id] = [fn]() { fn(); }; }
 extern "C" void Win32IDE_Commands_SetDirty(bool dirty) { g_dirty = dirty; UpdateTitle(); }

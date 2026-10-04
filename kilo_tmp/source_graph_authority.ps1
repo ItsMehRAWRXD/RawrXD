@@ -273,6 +273,28 @@ $verdict = 'PASS'
 if ($script:Fails.Count -gt 0) { $verdict = 'FAIL' }
 if ($unknown -ne 0)            { $verdict = 'FAIL' }
 
+# RAWRXD_BLACK_HOLE_001 -- WHY FAIL IS NOT A TERMINAL STATE
+#
+# `FAIL` on the same claim identity is not a stop. It is an invitation: the next
+# agent reads it, patches whatever produced the failure, and re-runs -- which is
+# how a black hole emits PASS. Observed in this repo, four times, all the same
+# shape:
+#     RAWRXD_SOURCE_GRAPH_001  ABSENT=355 -> placeholders created -> ABSENT=0 -> PASS
+#     InferenceEngine LNK2019 fresh tree, stale lib  -> fresh lib      -> LINK=PASS
+#     qwen32_85tps_gate        never committed      -> hand recipe    -> BUILD=PASS
+#     85 TPS gate              ladder died at ntok=16 -> no verdict   -> later quoted
+# In an autonomous system the expected actor after FAIL is an agent with write
+# access, so FAIL is the MOST dangerous state in the machine, not the safest.
+#
+# So the terminal state must not be reachable by re-running. BLACK_HOLE is keyed
+# to a claim identity AND to the exact fingerprint of the failure that produced
+# it. Same identity + same fingerprint = terminal, no exit, no re-entry. Only
+# new evidence -- which necessarily changes the fingerprint -- mints a new
+# identity and reopens the question.
+#
+# Without this, the four fields below are decorative: BLACK_HOLE_TERMINAL=1 and
+# NEW_EVIDENCE_REQUIRES_NEW_CLAIM_IDENTITY=1 would be printed by a script that
+# had neither property, which is the same defect as a gate that prints PASS.
 if ($script:PlaceholderUnits -gt 0) {
     Bad ("PLACEHOLDER_UNITS={0} graph present but NOT implemented" -f $script:PlaceholderUnits)
 }

@@ -29,6 +29,19 @@
 #include "deep2/Deep2Engine.h"
 #include "deep2/ReceiptAuthority.h"
 #include "agentic/CheckpointRollbackAuthority.h"
+
+// RAWRXD_WIN32IDE_WINDOW_ROOT_001 — forward declaration.
+//
+// The window procedure (WndProc) is defined well ABOVE WinMain, and the
+// breadcrumbs inside WM_CREATE call IdeBootMark. The definition sits next to
+// WinMain for locality with the entry-point brackets, so without this
+// declaration the WM_CREATE marks fail to compile:
+//
+//   main_win32.cpp(2177,9): error C3861: 'IdeBootMark': identifier not found
+//
+// which is the same class of defect as the receipt bugs: the instrumentation
+// looked correct and did not build.
+static void IdeBootMark(const char* text);
 // RAWRXD_IDE_AGENTIC_WIRING_001 â€” the agentic streaming pipeline. Same five
 // objects the certified gate drives (ide_agentic_gate.cpp:207-263).
 #include "StreamingResultChannel.h"
@@ -51,6 +64,7 @@ extern "C" bool Win32IDE_Sidebar_IsVisible();
 extern "C" void Win32IDE_Commands_SetMainWindow(HWND hwnd);
 extern "C" void Win32IDE_Commands_SetEditorWindow(HWND hwnd);
 extern "C" bool Win32IDE_Commands_Route(int commandId);
+extern "C" bool Win32IDE_Commands_CanRoute(int commandId);
 extern "C" void Win32IDE_Commands_Register(int id, void (*fn)());
 
 // RAWRXD_IDE_MODEL_OPEN_001: GGUF picker for the chat engine. Declared here
@@ -1244,6 +1258,15 @@ static std::string                       g_workspaceRootResolved;
 static std::atomic<unsigned long>        g_watcherEventsSeen{0};
 static std::atomic<unsigned long>        g_watcherErrors{0};
 
+// RAWRXD_IDE_WINDOW_LIFECYCLE_001 -- in-process window lifecycle measurements.
+// Written by writeWindowStatus(); read only by that receipt.
+static std::atomic<unsigned long>        g_ideWmCreateEntered{0};
+static std::atomic<unsigned long>        g_ideWmCreateCompleted{0};
+static DWORD                             g_ideCreateWindowLastError = 0;
+static int                               g_ideNCmdShow = -1;
+static bool                              g_ideMessageLoopEntered = false;
+static std::string                       g_ideCkptRoot;
+
 static void onFileChange(const RawrXD::Core::FileChangeEvent& evt) {
     (void)evt;
     g_watcherEventsSeen.fetch_add(1, std::memory_order_relaxed);
@@ -1326,6 +1349,108 @@ static void writeIntegrationStatus(const char* phase)
     if (dir.empty()) return;
     dir += "\\";
     std::string out = dir + "ide_integration_status.txt";
+    HANDLE h = CreateFileA(out.c_str(), GENERIC_WRITE, 0, NULL,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) return;
+    DWORD written = 0;
+    WriteFile(h, r.data(), (DWORD)r.size(), &written, NULL);
+    CloseHandle(h);
+}
+
+// RAWRXD_IDE_WINDOW_LIFECYCLE_001
+//
+// IDE_LAUNCH was reported PARTIAL on the basis that an EXTERNAL probe saw
+// MainWindowHandle=0 and enumerated zero top-level windows for the PID. That
+// probe cannot distinguish a product defect from a measurement artifact:
+// EnumWindows only enumerates the CALLING THREAD'S desktop. A probe launched on
+// a different desktop or window station sees zero windows for a perfectly
+// healthy process, and would have reported the same zero for a working IDE.
+//
+// So the process measures its own window. Every field below is read from the
+// live HWND inside this process; the verdict is computed from those readings.
+// The desktop/window-station name is recorded so a cross-desktop probe failure
+// becomes self-diagnosing instead of a mystery.
+static void writeWindowStatus(const char* phase)
+{
+    const HWND hwnd = g_hMainWnd;
+
+    // Window-station + desktop identity: the two values that decide whether an
+    // outside EnumWindows can possibly see our windows.
+    char station[128] = {0};
+    char desktop[128] = {0};
+    {
+        HWINSTA sta = GetProcessWindowStation();
+        HDESK   dsk = GetThreadDesktop(GetCurrentThreadId());
+        wchar_t wsta[128] = {0};
+        wchar_t wdsk[128] = {0};
+        if (sta && GetUserObjectInformationW(sta, UOI_NAME, wsta, sizeof(wsta), nullptr))
+            WideCharToMultiByte(CP_UTF8, 0, wsta, -1, station, sizeof(station), nullptr, nullptr);
+        if (dsk && GetUserObjectInformationW(dsk, UOI_NAME, wdsk, sizeof(wdsk), nullptr))
+            WideCharToMultiByte(CP_UTF8, 0, wdsk, -1, desktop, sizeof(desktop), nullptr, nullptr);
+        station[sizeof(station) - 1] = '\0';
+        desktop[sizeof(desktop) - 1] = '\0';
+    }
+
+    const bool  isWindow     = (hwnd != nullptr) && IsWindow(hwnd);
+    const bool  isVisible    = isWindow && IsWindowVisible(hwnd);
+    const LONG_PTR exStyle   = isWindow ? GetWindowLongPtrW(hwnd, GWL_EXSTYLE) : 0;
+    const LONG_PTR style     = isWindow ? GetWindowLongPtrW(hwnd, GWL_STYLE)   : 0;
+
+    // Enumerate OUR OWN top-level windows from inside our own desktop. This is
+    // the value an outside probe should have agreed with.
+    int ownTopLevelCount = 0;
+    {
+        struct Ctx { DWORD pid; int count; } ctx{ GetCurrentProcessId(), 0 };
+        BOOL CALLBACK cb(HWND h, LPARAM lp);
+        // Lambda-free: a file-static trampoline keeps the capture types simple.
+        struct Tramp { static BOOL CALLBACK fn(HWND h, LPARAM lp) {
+            Ctx* c = reinterpret_cast<Ctx*>(lp);
+            DWORD pid = 0;
+            GetWindowThreadProcessId(h, &pid);
+            if (pid == c->pid) ++c->count;
+            return TRUE;
+        } };
+        EnumWindows(&Tramp::fn, reinterpret_cast<LPARAM>(&ctx));
+        ownTopLevelCount = ctx.count;
+    }
+
+    RECT rc{};
+    const bool hasClientRect = isWindow && GetClientRect(hwnd, &rc);
+
+    std::string r;
+    r += "=== RAWRXD_IDE_WINDOW_STATUS ===\r\n";
+    r += std::string("PHASE=") + phase + "\r\n";
+    r += std::string("HWND=") + (hwnd ? ("0x" + std::to_string((uintptr_t)hwnd)) : std::string("NULL")) + "\n";
+    r += std::string("IS_WINDOW=") + (isWindow ? "1" : "0") + "\n";
+    r += std::string("IS_WINDOW_VISIBLE=") + (isVisible ? "1" : "0") + "\r\n";
+    r += std::string("WS_VISIBLE_BIT=") + ((style & WS_VISIBLE) ? "1" : "0") + "\r\n";
+    r += std::string("STYLE=0x") + std::to_string((uint64_t)style) + "\r\n";
+    r += std::string("EXSTYLE=0x") + std::to_string((uint64_t)exStyle) + "\r\n";
+    r += std::string("CLIENT_RECT_OK=") + (hasClientRect ? "1" : "0") + "\r\n";
+    r += "CLIENT_W=" + std::to_string(rc.right - rc.left) + "\r\n";
+    r += "CLIENT_H=" + std::to_string(rc.bottom - rc.top) + "\r\n";
+    r += std::string("OWN_TOP_LEVEL_WINDOW_COUNT=") + std::to_string(ownTopLevelCount) + "\r\n";
+    r += std::string("WINDOW_STATION=") + std::string(station) + "\r\n";
+    r += std::string("DESKTOP=") + std::string(desktop) + "\r\n";
+    r += std::string("WM_CREATE_ENTERED=") + std::to_string(g_ideWmCreateEntered.load(std::memory_order_relaxed)) + "\r\n";
+    r += std::string("WM_CREATE_COMPLETED=") + std::to_string(g_ideWmCreateCompleted.load(std::memory_order_relaxed)) + "\r\n";
+    r += std::string("CREATEWINDOW_LAST_ERROR=") + std::to_string((unsigned long)g_ideCreateWindowLastError) + "\r\n";
+    r += std::string("NCMD_SHOW=") + std::to_string((long)g_ideNCmdShow) + "\r\n";
+    r += std::string("HEADLESS_FLAG=") + (g_startupOptions.headless ? "1" : "0") + "\r\n";
+    r += std::string("MESSAGE_LOOP_ENTERED=") + std::string(g_ideMessageLoopEntered ? "1" : "0") + "\r\n";
+    r += std::string("CKPT_ROOT=") + g_ideCkptRoot + "\r\n";
+
+    // Derived. The launch claim is "a top-level window of this process exists
+    // and is visible". Anything less is not IDE_LAUNCH=PASS, whatever an
+    // external observer happened to see.
+    const bool windowOk = isWindow && isVisible && ownTopLevelCount > 0;
+    r += std::string("VERDICT=") + (windowOk ? "PASS" : "FAIL") + "\r\n";
+    r += "=== RECEIPT_END ===\r\n";
+
+    std::string dir = getExeDir();
+    if (dir.empty()) return;
+    dir += "\\";
+    const std::string out = dir + "ide_window_status.txt";
     HANDLE h = CreateFileA(out.c_str(), GENERIC_WRITE, 0, NULL,
                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (h == INVALID_HANDLE_VALUE) return;
@@ -1537,9 +1662,18 @@ static void AppendIdeLaunch(std::string& sink, bool crlf) {
 }
 
 static void AppendCommandDispatch(std::string& sink, int commandId, bool crlf) {
-    sink += "COMMAND_DISPATCH=";
-    sink += Win32IDE_Commands_Route(commandId) ? "PASS" : "FAIL";
-    sink += crlf ? "\r\n" : "\n";
+  // RAWRXD_IDE_COMMAND_DISPATCH_COVERAGE_001
+  //
+  // CanRoute, not Route. This function is called from INSIDE the gate that
+  // commandId invokes, so probing with Route() re-enters the gate: with
+  // IDM_MODEL_LOCAL registered that is Route -> runInferenceGate -> Route ->
+  // runInferenceGate, unbounded recursion, and the run dies of stack overflow
+  // before it can write a receipt. CanRoute answers the field's actual claim --
+  // "this command id is dispatchable through the real router" -- without
+  // invoking anything.
+  sink += "COMMAND_DISPATCH=";
+  sink += Win32IDE_Commands_CanRoute(commandId) ? "PASS" : "FAIL";
+  sink += crlf ? "\r\n" : "\n";
 }
 
 static void runToolchainGate()
@@ -1550,11 +1684,12 @@ static void runToolchainGate()
     RawrXD::IDE::ToolchainResult r = RawrXD::IDE::runNativeToolchainGate();
 
     // RAWRXD_IDE_RECEIPT_MEASURED_001: COMMAND_DISPATCH was the literal
-    // "COMMAND_DISPATCH=PASS". It is now the measured result of routing the
-    // build command through the real dispatcher, which is what the field claims
-    // to report.
+    // "COMMAND_DISPATCH=PASS". It is now the measured result of asking whether
+    // the build command is dispatchable through the real router, which is what
+    // the field claims to report. CanRoute rather than Route: this runs inside
+    // the gate that IDM_BUILD_NATIVE invokes, so invoking would recurse.
     appendOutputLine(std::string("COMMAND_DISPATCH=") +
-                     (Win32IDE_Commands_Route(IDM_BUILD_NATIVE) ? "PASS" : "FAIL"));
+                     (Win32IDE_Commands_CanRoute(IDM_BUILD_NATIVE) ? "PASS" : "FAIL"));
     appendOutputLine(std::string("SOURCE_COMPILE=") + (r.jitOk ? "PASS" : "FAIL"));
     appendOutputLine(std::string("COFF_EMIT=")     + (r.coffOk ? "PASS" : "FAIL"));
     appendOutputLine(std::string("PE_LINK=")       + (r.peOk ? "PASS" : "FAIL"));
@@ -2051,6 +2186,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
+        g_ideWmCreateEntered.fetch_add(1, std::memory_order_relaxed);
+        IdeBootMark("20_WM_CREATE_ENTER");
         HINSTANCE hInst = ((LPCREATESTRUCT)lParam)->hInstance;
         g_hMainWnd = hWnd;
 
@@ -2137,6 +2274,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         Win32IDE_Commands_SetMainWindow(hWnd);
         Win32IDE_Commands_SetEditorWindow(hEditor);
 
+        // RAWRXD_IDE_COMMAND_DISPATCH_COVERAGE_001
+        //
+        // The router covered only the 1000-1999 file range and the 2100-2199
+        // edit range. Build (2001), Model (3001-3002) and Agentic (4001-4002)
+        // were handled only by the WM_COMMAND switch in this file, so they were
+        // invisible to the router: Route() returned false for them, and every
+        // gate receipt reported COMMAND_DISPATCH=FAIL while claiming to measure
+        // "routing the command through the real dispatcher". The dispatcher was
+        // not the real path for those ids.
+        //
+        // Registering them makes the router a genuine single entry point for the
+        // gate commands. The WM_COMMAND switch is left in place for now: it runs
+        // first and produces the current, working behaviour, so registering adds
+        // dispatch capability without changing any existing menu action. IDM_FILE_EXIT
+        // in particular keeps its cert-stay-alive guard, which the 1000-1999
+        // file path would bypass.
+        Win32IDE_Commands_Register(IDM_BUILD_NATIVE,      &runToolchainGate);
+        Win32IDE_Commands_Register(IDM_MODEL_LOCAL,       &runInferenceGate);
+        Win32IDE_Commands_Register(IDM_MODEL_DIAG,        &runDiagnosticGate);
+        Win32IDE_Commands_Register(IDM_AGENTIC_GATE,      &runAgenticGate);
+        Win32IDE_Commands_Register(IDM_AGENTIC_E2E_GATE,  &runAgenticE2EGate);
+
         // Wire ChatPanel â†’ Deep2Engine streaming
         // Try --model path, then RAWRXD_AGENT_MODEL env, then default
         std::string chatModel = g_startupOptions.modelPath;
@@ -2168,11 +2327,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             0, 0, 400, 200,
             RawrXD::IDE::ShellLayout_GetTerminal(),
             NULL, hInst, NULL);
-        if (g_hOutput)
+if (g_hOutput)
         {
             SendMessageA(g_hOutput, WM_SETFONT, (WPARAM)GetStockObject(ANSI_FIXED_FONT), TRUE);
-            appendOutputLine("RawrXD Win32 IDE â€” Build -> Native Compile Test to run toolchain gate.\r\n");
+            appendOutputLine("RawrXD Win32 IDE Build -> Native Compile Test to run toolchain gate.\r\n");
         }
+        g_ideWmCreateCompleted.fetch_add(1, std::memory_order_relaxed);
+        IdeBootMark("21_WM_CREATE_EXIT");
         break;
     }
     case WM_SIZE:
@@ -2652,10 +2813,64 @@ static int runGpuCorrectnessGate()
 }
 
 // ---------------------------------------------------------------------------
+// RAWRXD_WIN32IDE_WINDOW_ROOT_001 -- boot breadcrumb
+//
+// Append-only, unbuffered, flushed per line. It must work from inside window
+// creation, so it cannot touch anything that initialises: no CRT, no globals
+// that might not be constructed yet, no logging framework.
+//
+// The path is taken from RAWRXD_IDE_BOOT_TRACE when set, otherwise it sits
+// beside the executable, so the tracer works in a clean clone too.
+// ---------------------------------------------------------------------------
+static void IdeBootMark(const char* text)
+{
+    char path[1024] = {};
+    DWORD n = GetEnvironmentVariableA("RAWRXD_IDE_BOOT_TRACE", path,
+                                     static_cast<DWORD>(sizeof(path)));
+    if (n == 0 || n >= sizeof(path)) {
+        char exePath[1024] = {};
+        const DWORD exeLen = GetModuleFileNameA(nullptr, exePath,
+                                                static_cast<DWORD>(sizeof(exePath)));
+        if (exeLen == 0 || exeLen >= sizeof(exePath)) return;
+        char* slash = strrchr(exePath, '\\');
+        if (slash) { slash[1] = '\0'; }
+        strncat_s(exePath, sizeof(exePath), "ide_boot_trace.txt", _TRUNCATE);
+        strncpy_s(path, sizeof(path), exePath, _TRUNCATE);
+    }
+
+    HANDLE h = CreateFileA(path, FILE_APPEND_DATA,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                           OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (h == INVALID_HANDLE_VALUE) return;
+
+    DWORD written = 0;
+    WriteFile(h, text, static_cast<DWORD>(strlen(text)), &written, nullptr);
+    WriteFile(h, "\r\n", 2, &written, nullptr);
+    FlushFileBuffers(h);
+    CloseHandle(h);
+}
+
+// ---------------------------------------------------------------------------
 // Entry Point
 // ---------------------------------------------------------------------------
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    IdeBootMark("01_WWINMAIN_ENTER");
+    {
+        // Record the command line the process actually received. A launch that
+        // silently entered command mode would otherwise look identical to a
+        // launch that blocked before creating a window.
+        //
+        // GetCommandLineA() takes no arguments and returns a pointer into the
+        // CRT-owned image; it does not copy into a caller buffer.
+        const char* cmdBuf = GetCommandLineA();
+        if (cmdBuf && *cmdBuf) {
+            char line[4400] = {};
+            _snprintf_s(line, sizeof(line), _TRUNCATE, "CMDLINE=%s", cmdBuf);
+            IdeBootMark(line);
+        }
+    }
+    writeWindowStatus("winmain_entry");
     // D-W6-003: catch access violations during post-generation shutdown.
     SetUnhandledExceptionFilter([](LPEXCEPTION_POINTERS ep) -> LONG {
         if (ep && ep->ExceptionRecord &&
@@ -2721,8 +2936,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             if (cwdGot > 0 && cwdGot < sizeof(cwdBuffer)) ckptRoot.assign(cwdBuffer, cwdGot);
         }
         if (!ckptRoot.empty()) {
+            g_ideCkptRoot = ckptRoot;
+            writeWindowStatus("before_recover_workspace");
             const rawrxd::ckpt::RecoveryReport report =
                 rawrxd::ckpt::RecoverWorkspace(ckptRoot, /*writeReceipt=*/true);
+            writeWindowStatus("after_recover_workspace");
             if (report.incompleteTransactions > 0 || report.filesFailed > 0) {
                 OutputDebugStringA("[ckpt] startup recovery pass completed; see "
                                    ".rawrxd\\ckpt\\recovery\\ for the measured receipt.\n");
@@ -2731,8 +2949,32 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     // RAWRXD_AUTOCLOSURE_001 â€” bounded autonomous CLI path before GUI startup.
-    if (RawrXD::AutoClosure::CommandLineRequested()) {
-        return RawrXD::AutoClosure::RunFromCurrentCommandLine();
+    IdeBootMark("02_BEFORE_COMMANDLINE_CHECK");
+    {
+        const bool commandRequested = RawrXD::AutoClosure::CommandLineRequested();
+        IdeBootMark(commandRequested ? "03_COMMANDLINE_REQUESTED_TRUE"
+                                     : "03_COMMANDLINE_REQUESTED_FALSE");
+        if (commandRequested) {
+            IdeBootMark("04_ENTERING_AUTOCLOSURE_CLI_PATH");
+            return RawrXD::AutoClosure::RunFromCurrentCommandLine();
+        }
+    }
+    // RAWRXD_IDE_GATE_TRACE_COVERAGE_001
+    //
+    // openHeadlessLog() used to be called from exactly one place: inside the
+    // `else if (arg == L"--headless")` branch. And headlessLogPrintf returns
+    // immediately when g_headlessLog is null. Together those two facts meant the
+    // gate trace wrote NOTHING in every normal GUI run -- including every run of
+    // the gates themselves, which are launched with --autorun / --cert-* and
+    // never with --headless. The agentic gate emitted MAIN_AGENT_GATE_CALL and
+    // MAIN_AGENT_GATE_RETURNED to a file that was never opened, so a gate that
+    // hung or died mid-flight left no trace of where it stopped.
+    //
+    // The trace must exist whenever a gate can run, not only when the UI is
+    // suppressed. Open it on that condition instead.
+    if (g_startupOptions.autoRun != AutoRunMode::None ||
+        g_startupOptions.certStayAlive || g_startupOptions.ideRuntimeCert) {
+        openHeadlessLog();
     }
 
     // Parse command line for autorun / cert mode
@@ -2893,12 +3135,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 
+    IdeBootMark("06_BEFORE_REGISTER_CLASS");
     if (!RegisterClassEx(&wc))
     {
+        char mark[128] = {};
+        _snprintf_s(mark, sizeof(mark), _TRUNCATE,
+                    "07_REGISTER_CLASS_FAIL_GLE=%lu", GetLastError());
+        IdeBootMark(mark);
         MessageBox(NULL, TEXT("Failed to register window class."), TEXT("RawrXD-Win32IDE"), MB_ICONERROR);
         return 1;
     }
-
+    IdeBootMark("08_REGISTER_CLASS_PASS");
+    g_ideCreateWindowLastError = ERROR_SUCCESS;
+    IdeBootMark("09_BEFORE_CREATE_WINDOW");
     g_hMainWnd = CreateWindowEx(
         0,
         wc.lpszClassName,
@@ -2906,10 +3155,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
         NULL, NULL, hInstance, NULL);
+    IdeBootMark("10_CREATE_WINDOW_RETURNED");
+    // Measured before the null check, because a failure here is the single most
+    // informative value in the whole launch: ERROR_CLASS_DOES_NOT_EXIST,
+    // ERROR_WINDOW_CLASS_DOES_NOT_EXIST and ERROR_OUTOFMEMORY each point at a
+    // different cause, and a check placed after the early return would discard
+    // the evidence for all three.
+    g_ideCreateWindowLastError = GetLastError();
 
     if (!g_hMainWnd)
     {
         MessageBox(NULL, TEXT("Failed to create window."), TEXT("RawrXD-Win32IDE"), MB_ICONERROR);
+        writeWindowStatus("create_failed");
         return 1;
     }
 
@@ -2997,13 +3254,24 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     };
     HACCEL hAccel = CreateAcceleratorTableA(accel, sizeof(accel)/sizeof(accel[0]));
 
+    g_ideNCmdShow = nCmdShow;
+    IdeBootMark("30_BEFORE_SHOW_WINDOW");
     ShowWindow(g_hMainWnd, g_startupOptions.headless ? SW_HIDE : nCmdShow);
+    IdeBootMark("31_AFTER_SHOW_WINDOW");
     UpdateWindow(g_hMainWnd);
+    // Measured AFTER ShowWindow: this is the first point at which the window's
+    // real visibility state is knowable, so the receipt cannot be written any
+    // earlier without asserting a state it has not yet observed.
+    writeWindowStatus("after_show");
 
     // RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001 â€” wire command router + MCP bridge
+    IdeBootMark("32_BEFORE_COMMAND_ROUTER_WIRING");
     Win32IDE_Commands_SetMainWindow(g_hMainWnd);
+    IdeBootMark("33_AFTER_COMMAND_ROUTER_WIRING");
     Win32IDE_Commands_SetEditorWindow(g_hOutput);
+    IdeBootMark("34_BEFORE_MCP_BRIDGE_INIT");
     RawrXD::MCPBridgeManager::GetInstance().Initialize(GetModuleHandle(NULL));
+    IdeBootMark("35_AFTER_MCP_BRIDGE_INIT");
 
     // Post autorun message after window is ready
     if (g_startupOptions.autoRun != AutoRunMode::None) {
@@ -3036,6 +3304,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
     }
 
+    g_ideMessageLoopEntered = true;
+    writeWindowStatus("message_loop");
+    IdeBootMark("40_MESSAGE_LOOP_ENTER");
     while (GetMessage(&msg, NULL, 0, 0))
     {
         // W8 stay-alive timer fired: post WM_CLOSE to end cleanly

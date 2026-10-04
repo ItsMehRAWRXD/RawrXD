@@ -5,6 +5,9 @@
 #include "Deep2DualGpuRowSplit.hpp"
 #include "Deep2GpuOverlapWitness.hpp"
 #include "Deep2PeerDeviceGroup.hpp"
+// RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: these GPU authorities consume model
+// weights directly and never route through LinearW().
+#include "WeightConsumptionCensus.hpp"
 #include "vulkan_compute.h"
 
 #include <algorithm>
@@ -187,6 +190,26 @@ bool Deep2Engine::tryVulkanHostGEMVGroup(
     ++gpuFwd_.matDualRowGroup; // grouped dual-row host round-trip
     gpuFwd_.dualArithmeticOverlapNs=
         std::max(gpuFwd_.dualArithmeticOverlapNs,r.calibratedOverlapNs);
+
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001
+    // Grouped dual-GPU QKV / gate+up is the second half of the attention and
+    // FFN bypass: the caller only calls LinearW() on the FAILURE branch, so on
+    // this success path none of these weights ever enter LinearW(). Each
+    // grouped tensor is recorded by name.
+    {
+        using namespace rawrxd::deep2::weightcensus;
+        for (size_t i = 0; i < count; ++i) {
+            const WeightTensor* t = weights[i];
+            if (!t || !t->data) continue;
+            Event gev;
+            gev.site = Site::GroupedGemm;
+            gev.route = Route::Bypass;   // never entered LinearW on this path
+            gev.tensor = t->name;
+            gev.bytes = t->sizeBytes ? t->sizeBytes : t->numElements();
+            gev.tokenEpoch = (uint32_t)epoch;
+            WeightConsumptionCensus::instance().record(gev);
+        }
+    }
     return true;
 }
 
@@ -318,6 +341,36 @@ bool Deep2Engine::computeMoEFFNGpu(
                      w.calibratedOverlapNs);
     }
 
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001
+    // GPU MoE is a whole-family bypass: the router, the per-expert gate/up/down
+    // and the shared expert are all resolved and dispatched on the device here.
+    // Note this is a BYPASS and not a delegation -- computeMoEFFNGpu is reached
+    // BEFORE any host-orchestrated LinearW() call, so on this route none of
+    // these weights ever enter LinearW(). The host-side MoE fallback below it
+    // does call LinearW(), which is why MoE as a whole is CONDITIONAL.
+    {
+        using namespace rawrxd::deep2::weightcensus;
+        auto addOne=[&](const WeightTensor* t){
+            if(!t||!t->data) return;
+            Event mev;
+            mev.site = Site::MoeGpu;
+            mev.route = Route::Bypass;
+            mev.tensor = t->name;
+            mev.bytes = t->sizeBytes ? t->sizeBytes : t->numElements();
+            mev.tokenEpoch = (uint32_t)epoch;
+            WeightConsumptionCensus::instance().record(mev);
+        };
+        addOne(&lw.moeRouter);
+        addOne(&lw.moeSharedGate);
+        addOne(&lw.moeSharedUp);
+        addOne(&lw.moeSharedDown);
+        // Per-expert families: one record per expert so the byte count is the
+        // real consumed extent rather than a single tensor's size.
+        for (size_t e = 0; e < lw.moeGate.size(); ++e)  addOne(&lw.moeGate[e]);
+        for (size_t e = 0; e < lw.moeUp.size();   ++e)  addOne(&lw.moeUp[e]);
+        for (size_t e = 0; e < lw.moeDown.size(); ++e)  addOne(&lw.moeDown[e]);
+    }
+
     return finiteVec(output,H);
 }
 
@@ -424,6 +477,32 @@ bool Deep2Engine::computeMLAAttentionGpu(
     // MLA projections are currently host-staged between device GEMVs. Keep
     // authority fail-closed until a fully resident absorbed-matrix path lands.
     ++gpuFwd_.hostMergeOps;
+
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001
+    // MLA is not a small exception inside LinearW() -- it is a separate
+    // attention authority, reached from computeAttention() BEFORE any ordinary
+    // QKV handling. The whole MLA weight family is resolved and dispatched
+    // here, so on this route none of them enter LinearW(). Every tensor the
+    // function itself declared required is recorded by name.
+    {
+        using namespace rawrxd::deep2::weightcensus;
+        const WeightTensor* mla[8] = {
+            &lw.attnQ_a, &lw.attnQ_a_norm, &lw.attnQ_b,
+            &lw.attnKV_a_mqa, &lw.attnKV_a_norm,
+            &lw.attnK_b, &lw.attnV_b, &lw.attnO
+        };
+        for (const WeightTensor* t : mla) {
+            if (!t || !t->data) continue;
+            Event v;
+            v.site  = Site::MlaGpu;
+            v.route = Route::Bypass;   // MLA never routes through LinearW
+            v.tensor = t->name;
+            v.bytes  = t->sizeBytes ? t->sizeBytes : t->numElements();
+            v.tokenEpoch = (uint32_t)epoch;
+            WeightConsumptionCensus::instance().record(v);
+        }
+    }
+
     return finiteVec(output,H);
 }
 

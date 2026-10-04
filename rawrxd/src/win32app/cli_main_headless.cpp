@@ -308,6 +308,12 @@ static std::string deep2RunEngine(const std::string& modelPath, const std::strin
 
     if (result.completed) {
         std::fprintf(stderr, "[CLI_DEEP2] SUCCESS: %zu chars generated\n", generatedText.size()); std::fflush(stderr);
+        // RAWRXD_NANOBANDWIDTH_VIEW_RESOLUTION_001: emit the mutually-exclusive
+        // fullView failure census for THIS run. Previously this printed only
+        // "fullView failed name=..." per request, which locates WHERE a request
+        // stopped but not WHY -- and 1008 such lines per run cannot be
+        // aggregated into a diagnosis.
+        Deep2::Deep2ReportFullViewCensus();
         // RAWRXD_TEARDOWN_VS_INFERENCE_001: `engine` is a local in this
         // function, so ~Deep2Engine runs before main() can print the result.
         // A destructor fault therefore destroys the output as collateral and

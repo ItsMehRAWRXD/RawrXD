@@ -1,0 +1,1487 @@
+=== RAWRXD_DEEP2_STREAMER_CERT_001 ===
+ADMISSION_POLICY=NONE_BY_SIZE
+REQUESTED_TOKENS=8
+PROMPT=The capital of France is
+STREAMER_CENSUS_FILES=9
+STREAMER_GGUF_BY_MAGIC=7
+STREAMER_LOGICAL_MODELS=7
+STREAMER_SHARDED_COMPLETE=0
+STREAMER_SHARDED_INCOMPLETE=0
+STREAMER_PROJECTORS=0
+STREAMER_MISSING_PAYLOAD=0
+STREAMER_TOTAL_GB=14.23
+INVENTORY_JSON=receipts/RAWRXD_DEEP2_STREAMER_DISCOVERY_001/inventory.json
+  attempting DeepSeek-V2-Lite-Chat.Q4_K_M.gguf (9.65 GB, 1 shard(s))...
+
+[MODEL]
+path=G:\~dev\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+logical_name=DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+artifact=INFERENCE_MODEL
+arch=deepseek2
+quant=Q4_K
+quant_basis=dominant_tensor_type types_distinct=5 dominant_count=229 of 377
+gguf_version=3
+tensor_count=377
+bytes=10364416768
+size_gb=9.65
+shards=1/1
+load=FAIL
+prefill=FAIL
+tokens=0
+requested_tokens=8
+ttft_ms=0.0
+decode_tps=0.00
+stream_callbacks=0
+stream_contiguous=0
+finite_logits=0
+wall_ms=3011
+model_gb=9.653
+resident_after_load_gb=0.413
+resident_after_tokens_gb=0.000
+mapped_gb=0.000
+bytes_touched_gb=0.000
+residency_ratio=0.000000
+residency_ratio_denominator=measured_mapped_bytes
+drop_residency_ok=0
+resident_after_drop_gb=0.000
+mapping_survived_drop=0
+faults_total_during_tokens=0
+faults_approx_mb=0.0
+per_token_faults=
+per_token_ms=
+token_ids=
+text=
+detail=loadModel failed stage=20 stage_name=MODEL_ADMISSION_REJECTED message=Model admission rejected the model: 4 required tensor role(s) absent; first: attn_q_a
+result=MODEL_LOAD_FAILED
+  attempting phi3-mini-Q2_K.gguf (1.41 GB, 1 shard(s))...
+
+[MODEL]
+path=G:\~dev\rawrxd\models\phi3-mini-Q2_K.gguf
+logical_name=phi3-mini-Q2_K.gguf
+artifact=INFERENCE_MODEL
+arch=phi3
+quant=Q3_K
+quant_basis=dominant_tensor_type types_distinct=4 dominant_count=96 of 197
+gguf_version=3
+tensor_count=197
+bytes=1509949440
+size_gb=1.41
+shards=1/1
+load=PASS
+prefill=PASS
+tokens=0
+requested_tokens=8
+ttft_ms=0.0
+decode_tps=0.00
+stream_callbacks=0
+stream_contiguous=0
+finite_logits=0
+wall_ms=4468
+model_gb=1.406
+resident_after_load_gb=2.007
+resident_after_tokens_gb=2.008
+mapped_gb=1.417
+bytes_touched_gb=0.000
+residency_ratio=0.000000
+residency_ratio_denominator=measured_mapped_bytes
+drop_residency_ok=0
+resident_after_drop_gb=0.000
+mapping_survived_drop=0
+faults_total_during_tokens=10
+faults_approx_mb=0.0
+per_token_faults=
+per_token_ms=
+token_ids=
+text=
+detail=loaded, produced no streamed tokens; status=4
+result=MODEL_STREAM_FAILED
+  attempting llama3.2-3b-Q2_K.gguf (1.27 GB, 1 shard(s))...
+
+[MODEL]
+path=G:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf
+logical_name=llama3.2-3b-Q2_K.gguf
+artifact=INFERENCE_MODEL
+arch=llama
+quant=Q2_K
+quant_basis=dominant_tensor_type types_distinct=4 dominant_count=112 of 255
+gguf_version=3
+tensor_count=255
+bytes=1363935456
+size_gb=1.27
+shards=1/1
+load=PASS
+prefill=PASS
+tokens=0
+requested_tokens=8
+ttft_ms=0.0
+decode_tps=0.00
+stream_callbacks=0
+stream_contiguous=0
+finite_logits=0
+wall_ms=3427
+model_gb=1.270
+resident_after_load_gb=1.113
+resident_after_tokens_gb=1.113
+mapped_gb=1.281
+bytes_touched_gb=0.000
+residency_ratio=0.000000
+residency_ratio_denominator=measured_mapped_bytes
+drop_residency_ok=0
+resident_after_drop_gb=0.000
+mapping_survived_drop=0
+faults_total_during_tokens=4
+faults_approx_mb=0.0
+per_token_faults=
+per_token_ms=
+token_ids=
+text=
+detail=loaded, produced no streamed tokens; status=4
+result=MODEL_STREAM_FAILED
+  attempting gemma3-1b-Q2_K.gguf (0.65 GB, 1 shard(s))...
+
+[MODEL]
+path=G:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf
+logical_name=gemma3-1b-Q2_K.gguf
+artifact=INFERENCE_MODEL
+arch=gemma3
+quant=F32
+quant_basis=dominant_tensor_type types_distinct=5 dominant_count=157 of 340
+gguf_version=3
+tensor_count=340
+bytes=699066720
+size_gb=0.65
+shards=1/1
+load=PASS
+prefill=PASS
+tokens=0
+requested_tokens=8
+ttft_ms=0.0
+decode_tps=0.00
+stream_callbacks=0
+stream_contiguous=0
+finite_logits=0
+wall_ms=5504
+model_gb=0.651
+resident_after_load_gb=0.867
+resident_after_tokens_gb=0.867
+mapped_gb=0.662
+bytes_touched_gb=0.000
+residency_ratio=0.000000
+residency_ratio_denominator=measured_mapped_bytes
+drop_residency_ok=0
+resident_after_drop_gb=0.000
+mapping_survived_drop=0
+faults_total_during_tokens=1
+faults_approx_mb=0.0
+per_token_faults=
+per_token_ms=
+token_ids=
+text=
+detail=loaded, produced no streamed tokens; status=4
+result=MODEL_STREAM_FAILED
+  attempting tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (0.62 GB, 1 shard(s))...
+
+[MODEL]
+path=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+logical_name=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+artifact=INFERENCE_MODEL
+arch=llama
+quant=Q4_K
+quant_basis=dominant_tensor_type types_distinct=3 dominant_count=135 of 201
+gguf_version=3
+tensor_count=201
+bytes=668788096
+size_gb=0.62
+shards=1/1
+load=PASS
+prefill=PASS
+tokens=0
+requested_tokens=8
+ttft_ms=0.0
+decode_tps=0.00
+stream_callbacks=0
+stream_contiguous=0
+finite_logits=0
+wall_ms=1984
+model_gb=0.623
+resident_after_load_gb=0.626
+resident_after_tokens_gb=0.626
+mapped_gb=0.634
+bytes_touched_gb=0.000
+residency_ratio=0.000000
+residency_ratio_denominator=measured_mapped_bytes
+drop_residency_ok=0
+resident_after_drop_gb=0.000
+mapping_survived_drop=0
+faults_total_during_tokens=2
+faults_approx_mb=0.0
+per_token_faults=
+per_token_ms=
+token_ids=
+text=
+detail=loaded, produced no streamed tokens; status=4
+result=MODEL_STREAM_FAILED
+  attempting tinyllama.gguf (0.62 GB, 1 shard(s))...
+
+[MODEL]
+path=G:\~dev\rawrxd\models\tinyllama.gguf
+logical_name=tinyllama.gguf
+artifact=INFERENCE_MODEL
+arch=llama
+quant=Q4_K
+quant_basis=dominant_tensor_type types_distinct=3 dominant_count=135 of 201
+gguf_version=3
+tensor_count=201
+bytes=668788096
+size_gb=0.62
+shards=1/1
+load=PASS
+prefill=PASS
+tokens=0
+requested_tokens=8
+ttft_ms=0.0
+decode_tps=0.00
+stream_callbacks=0
+stream_contiguous=0
+finite_logits=0
+wall_ms=2466
+model_gb=0.623
+resident_after_load_gb=0.641
+resident_after_tokens_gb=0.641
+mapped_gb=0.634
+bytes_touched_gb=0.000
+residency_ratio=0.000000
+residency_ratio_denominator=measured_mapped_bytes
+drop_residency_ok=0
+resident_after_drop_gb=0.000
+mapping_survived_drop=0
+faults_total_during_tokens=2
+faults_approx_mb=0.0
+per_token_faults=
+per_token_ms=
+token_ids=
+text=
+detail=loaded, produced no streamed tokens; status=4
+result=MODEL_STREAM_FAILED
+  attempting model.gguf (0.00 GB, 1 shard(s))...
+
+[MODEL]
+path=G:\~dev\rawrxd\models\model.gguf
+logical_name=model.gguf
+artifact=INFERENCE_MODEL
+arch=UNKNOWN
+quant=UNKNOWN
+quant_basis=dominant_tensor_type types_distinct=0 dominant_count=0 of 0
+gguf_version=3
+tensor_count=0
+bytes=4120
+size_gb=0.00
+shards=1/1
+load=FAIL
+prefill=FAIL
+tokens=0
+requested_tokens=8
+ttft_ms=0.0
+decode_tps=0.00
+stream_callbacks=0
+stream_contiguous=0
+finite_logits=0
+wall_ms=1798
+model_gb=0.000
+resident_after_load_gb=0.518
+resident_after_tokens_gb=0.000
+mapped_gb=0.000
+bytes_touched_gb=0.000
+residency_ratio=0.000000
+residency_ratio_denominator=measured_mapped_bytes
+drop_residency_ok=0
+resident_after_drop_gb=0.000
+mapping_survived_drop=0
+faults_total_during_tokens=0
+faults_approx_mb=0.0
+per_token_faults=
+per_token_ms=
+token_ids=
+text=
+detail=loadModel failed stage=2 stage_name=LOAD_GGUF_OPEN message=GGUFLoader::load() failed: GGUF contained no tensors
+result=MODEL_LOAD_FAILED
+
+--- CENSUS SUMMARY ---
+STREAMER_ATTEMPTED=7
+STREAMER_MISSING_PAYLOAD_TOTAL=0
+STREAMER_UNSUPPORTED_FORMAT=0
+STREAMER_CORRUPT=0
+STREAMER_LOAD_FAILED=2
+STREAMER_STREAM_FAILED=5
+STREAMER_LOAD_PASS=5
+STREAMER_GENERATION_PASS=0
+STREAMER_FAIL=7
+VERDICT=NO_MODEL_STREAMED
+RECEIPT=receipts/RAWRXD_DEEP2_STREAMER_CERT_001/streamer_cert.txt
+
+deep2_streamer_cert.exe : LAST_CERT_PHASE=BEFORE_LOADMODEL
+At line:1 char:18
++ ... m($e,$r,$o) & $e --root $r 1> "$o\stdout.txt" 2> "$o\stderr.txt"; $LA ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (LAST_CERT_PHASE=BEFORE_LOADMODEL:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+LAYER0_ARM_REQUESTED=1
+LAYER0_ARMED=1
+LAYER0_VECTORED_ARMED=0
+LAYER0_EXPECTED_SHA256=(unset)
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 
+discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+EXPERT_CACHE_INIT slot=1 budgetBytes=4290772992
+B5_PEER_HANDOFF_PROBE
+EXTERNAL_MEMORY_API_SUPPORTED=1
+EXTERNAL_SEMAPHORE_API_SUPPORTED=1
+DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN
+PHYSICAL_DEVICE_GROUP_COUNT=7
+SAME_DEVICE_GROUP=0
+SUBSET_ALLOCATION=0
+PEER_MEMORY_FEATURES=(device-group-bind-time)
+PEER_HANDOFF_SUPPORTED=0
+B5_HOST_IMPORT_PROBE_001
+GPU0_EXTERNAL_MEMORY_HOST=1
+GPU1_EXTERNAL_MEMORY_HOST=1
+GPU0_MIN_HOST_ALIGNMENT=4096
+GPU1_MIN_HOST_ALIGNMENT=4096
+COMMON_ALIGNMENT=4096
+B5_HOST_IMPORT_PROBE_001=PASS
+B5_SHARED_HOST_IMPORT_001
+HOST_ALLOC_PTR=00000253A4E9D000
+HOST_ALLOC_BYTES=4096
+COMMON_ALIGNMENT=4096
+HOST_ALLOC_ALIGNED=1
+GPU0_HOST_POINTER_QUERY_RESULT=0
+GPU0_MEMORY_TYPE_BITS=0xAAAA
+GPU0_IMPORT_MEMORY_RESULT=0
+GPU0_BIND_RESULT=0
+GPU1_HOST_POINTER_QUERY_RESULT=0
+GPU1_MEMORY_TYPE_BITS=0xAAAA
+GPU1_IMPORT_MEMORY_RESULT=0
+GPU1_BIND_RESULT=0
+SAME_HOST_POINTER_GPU0=1
+SAME_HOST_POINTER_GPU1=1
+SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=1
+CPU_PAYLOAD_READS=1
+CPU_PAYLOAD_WRITES=1
+B5_SHARED_HOST_IMPORT_001=PASS
+CERT_VULKAN_REQUESTED=1
+CERT_VULKAN_ENV_OVERRIDE=(unset)
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_kv_a_mqa.weight shape=[2048,576] type=12 bytes=663552
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_kv_a_norm.weight shape=[512] type=0 bytes=2048
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_kv_b.weight shape=[512,4096] type=12 bytes=1179648
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_norm.weight shape=[2048] type=0 bytes=8192
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_output.weight shape=[2048,2048] type=12 bytes=2359296
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_q.weight shape=[2048,3072] type=12 bytes=3538944
+[Deep2Engine] MLA_METADATA arch=deepseek2 layout=fused numHeads=16 kvLoraRank=512 qLoraRank=0 qkNopeHeadDim=128 
+qkRopeHeadDim=64 vHeadDim=128 keyLength=192 valueLength=128 geometryValidated=1
+[Deep2Engine] MLA_RECTANGULAR_DEFERRED arch=deepseek2 key_length=192 value_length=128 headDim=192 awaitingEligibility=1
+[Deep2Engine] ROPE_ARCH=deepseek2 ROPE_THETA_GLOBAL=10000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=0 
+SLIDING_WINDOW_PATTERN=0
+[Deep2Engine] MODEL ADMISSION REJECTED arch=deepseek2 reason=MissingRequiredTensor field=attn_q_a detail=4 required 
+tensor role(s) absent; first: attn_q_a
+LAST_CERT_PHASE=AFTER_LOADMODEL
+LOADMODEL_COMPLETED=1
+[CLEANUP_STAGE] ~Deep2Engine enter
+[CLEANUP_STAGE] ~Deep2Engine unloadModel done
+[CLEANUP_STAGE] ~Deep2Engine expert transport released
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+LAST_CERT_PHASE=BEFORE_LOADMODEL
+LAYER0_ARM_REQUESTED=1
+LAYER0_ARMED=1
+LAYER0_VECTORED_ARMED=1
+LAYER0_EXPECTED_SHA256=(unset)
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 
+discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+EXPERT_CACHE_INIT slot=1 budgetBytes=4290772992
+B5_PEER_HANDOFF_PROBE
+EXTERNAL_MEMORY_API_SUPPORTED=1
+EXTERNAL_SEMAPHORE_API_SUPPORTED=1
+DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN
+PHYSICAL_DEVICE_GROUP_COUNT=7
+SAME_DEVICE_GROUP=0
+SUBSET_ALLOCATION=0
+PEER_MEMORY_FEATURES=(device-group-bind-time)
+PEER_HANDOFF_SUPPORTED=0
+B5_HOST_IMPORT_PROBE_001
+GPU0_EXTERNAL_MEMORY_HOST=1
+GPU1_EXTERNAL_MEMORY_HOST=1
+GPU0_MIN_HOST_ALIGNMENT=4096
+GPU1_MIN_HOST_ALIGNMENT=4096
+COMMON_ALIGNMENT=4096
+B5_HOST_IMPORT_PROBE_001=PASS
+B5_SHARED_HOST_IMPORT_001
+HOST_ALLOC_PTR=000002538EABE000
+HOST_ALLOC_BYTES=4096
+COMMON_ALIGNMENT=4096
+HOST_ALLOC_ALIGNED=1
+GPU0_HOST_POINTER_QUERY_RESULT=0
+GPU0_MEMORY_TYPE_BITS=0xAAAA
+GPU0_IMPORT_MEMORY_RESULT=0
+GPU0_BIND_RESULT=0
+GPU1_HOST_POINTER_QUERY_RESULT=0
+GPU1_MEMORY_TYPE_BITS=0xAAAA
+GPU1_IMPORT_MEMORY_RESULT=0
+GPU1_BIND_RESULT=0
+SAME_HOST_POINTER_GPU0=1
+SAME_HOST_POINTER_GPU1=1
+SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=1
+CPU_PAYLOAD_READS=1
+CPU_PAYLOAD_WRITES=1
+B5_SHARED_HOST_IMPORT_001=PASS
+CERT_VULKAN_REQUESTED=1
+CERT_VULKAN_ENV_OVERRIDE=(unset)
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_norm.weight shape=[3072] type=0 bytes=12288
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_output.weight shape=[3072,3072] type=11 bytes=4055040
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_qkv.weight shape=[3072,9216] type=11 bytes=12165120
+[Deep2Engine] MLA_METADATA arch=phi3 layout=unknown numHeads=32 kvLoraRank=0 qLoraRank=0 qkNopeHeadDim=0 
+qkRopeHeadDim=0 vHeadDim=0 keyLength=0 valueLength=0 geometryValidated=0
+[Deep2Engine] ROPE_ARCH=phi3 ROPE_THETA_GLOBAL=10000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=262144 
+SLIDING_WINDOW_PATTERN=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] admission OK arch=phi3 family=GENERIC_TRANSFORMER moe=0 mla=0 recurrent=0 slidingWindow=0 
+quant=Q2_K(type 10) tensors=197
+[Deep2Engine] fused gate_up order=gate_up(default)
+[Deep2Engine] layer 0 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 1 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 2 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 3 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 4 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 5 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 6 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 7 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 8 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 9 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 10 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 11 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 12 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 13 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 14 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 15 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 16 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 17 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 18 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 19 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 20 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 21 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 22 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 23 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 24 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 25 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 26 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 27 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 28 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 29 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 30 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[Deep2Engine] layer 31 fused gate_up split: I=8192 order=gate_up (gate rows [0,8192), up rows [8192,16384))
+[INIT] Deep2Engine::initialize hiddenDim=3072 vocabSize=32064 numLayers=32 numHeads=32 maxSeqLen=2048 numThreads=0
+[INIT] remote64 authority linked observe=0 control=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[INIT] KVCache+tokenizer+sampler created
+[ALLOC] allocateBuffers H=3072 V=32064 I=8192
+[ALLOC] qDim=3072 kvDim=3072 numHeads=32 headDim=96 numKVHeads=32
+[ALLOC] all buffers allocated OK
+[INIT] allocateBuffers OK
+[INIT] KVCache::allocate OK layers=32 heads=32 headDim=96 maxSeqLen=2048
+[INIT] Deep2Engine::initialize SUCCESS
+[Deep2Engine] GGUF mapped: arch=phi3 shards=1 tensors=197 layers=32 hidden=3072 heads=32 kv_heads=32 vocab=32064
+ARCH=phi3
+HIDDEN=3072
+LAYERS=32
+HEADS=32
+KV_HEADS=32
+HEAD_DIM=96
+GQA_GROUP=1
+FFN_DIM=8192
+ROPE_THETA=10000
+ROPE_SCALING=1
+ROPE_DIM=96
+ROPE_NEOX=0
+RMS_EPS=1e-05
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=0
+LAST_CERT_PHASE=AFTER_LOADMODEL
+LOADMODEL_COMPLETED=1
+LAST_CERT_PHASE=BEFORE_GENERATE
+FORWARD_ENTERED=1
+[TOKENIZE] text='The capital of France is' -> 13 tokens
+[FWD_ALL] seqLen=1 numLayers=32 isMoE=0 useMLA=0 vulkan=1/1
+[DualRowStrict] DUAL_ROW_HOST_LANE_REFUSED strict=1 residentFirst=0 forceLayerSplit=0 devices=2 isMoE=0 useMLA=0 
+reason=no_gpu_resident_lane_available
+[PREFILL] forwardTokenAllLayers FAILED at prefill token 0 stage=dual_row_host_lane_refused route=0
+[STREAM] RESULT generated=0 promptTokens=13 prefillMs=0.0 decodeMs=0.0 tps=0.00 cancelled=0 completed=0 status=4
+LAST_CERT_PHASE=AFTER_GENERATE
+FORWARD_COMPLETED=1 status=4 gen=0 cb=0
+[CLEANUP_STAGE] ~Deep2Engine enter
+[CLEANUP_STAGE] ~Deep2Engine unloadModel done
+[CLEANUP_STAGE] ~Deep2Engine expert transport released
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+LAST_CERT_PHASE=BEFORE_LOADMODEL
+LAYER0_ARM_REQUESTED=1
+LAYER0_ARMED=1
+LAYER0_VECTORED_ARMED=1
+LAYER0_EXPECTED_SHA256=(unset)
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 
+discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+EXPERT_CACHE_INIT slot=1 budgetBytes=4290772992
+B5_PEER_HANDOFF_PROBE
+EXTERNAL_MEMORY_API_SUPPORTED=1
+EXTERNAL_SEMAPHORE_API_SUPPORTED=1
+DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN
+PHYSICAL_DEVICE_GROUP_COUNT=7
+SAME_DEVICE_GROUP=0
+SUBSET_ALLOCATION=0
+PEER_MEMORY_FEATURES=(device-group-bind-time)
+PEER_HANDOFF_SUPPORTED=0
+B5_HOST_IMPORT_PROBE_001
+GPU0_EXTERNAL_MEMORY_HOST=1
+GPU1_EXTERNAL_MEMORY_HOST=1
+GPU0_MIN_HOST_ALIGNMENT=4096
+GPU1_MIN_HOST_ALIGNMENT=4096
+COMMON_ALIGNMENT=4096
+B5_HOST_IMPORT_PROBE_001=PASS
+B5_SHARED_HOST_IMPORT_001
+HOST_ALLOC_PTR=000002538E472000
+HOST_ALLOC_BYTES=4096
+COMMON_ALIGNMENT=4096
+HOST_ALLOC_ALIGNED=1
+GPU0_HOST_POINTER_QUERY_RESULT=0
+GPU0_MEMORY_TYPE_BITS=0xAAAA
+GPU0_IMPORT_MEMORY_RESULT=0
+GPU0_BIND_RESULT=0
+GPU1_HOST_POINTER_QUERY_RESULT=0
+GPU1_MEMORY_TYPE_BITS=0xAAAA
+GPU1_IMPORT_MEMORY_RESULT=0
+GPU1_BIND_RESULT=0
+SAME_HOST_POINTER_GPU0=1
+SAME_HOST_POINTER_GPU1=1
+SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=1
+CPU_PAYLOAD_READS=1
+CPU_PAYLOAD_WRITES=1
+B5_SHARED_HOST_IMPORT_001=PASS
+CERT_VULKAN_REQUESTED=1
+CERT_VULKAN_ENV_OVERRIDE=(unset)
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_k.weight shape=[3072,1024] type=10 bytes=1032192
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_norm.weight shape=[3072] type=0 bytes=12288
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_output.weight shape=[3072,3072] type=11 bytes=4055040
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_q.weight shape=[3072,3072] type=10 bytes=3096576
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_v.weight shape=[3072,1024] type=11 bytes=1351680
+[Deep2Engine] MLA_METADATA arch=llama layout=unknown numHeads=24 kvLoraRank=0 qLoraRank=0 qkNopeHeadDim=0 
+qkRopeHeadDim=0 vHeadDim=128 keyLength=128 valueLength=128 geometryValidated=0
+[Deep2Engine] ROPE_ARCH=llama ROPE_THETA_GLOBAL=500000.0 ROPE_THETA_LOCAL=500000.0 SLIDING_WINDOW=0 
+SLIDING_WINDOW_PATTERN=0
+[Deep2Engine] admission OK arch=llama family=GENERIC_TRANSFORMER moe=0 mla=0 recurrent=0 slidingWindow=0 
+quant=Q6_K(type 14) tensors=255
+[INIT] Deep2Engine::initialize hiddenDim=3072 vocabSize=128256 numLayers=28 numHeads=24 maxSeqLen=2048 numThreads=0
+[INIT] remote64 authority linked observe=0 control=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[INIT] KVCache+tokenizer+sampler created
+[ALLOC] allocateBuffers H=3072 V=128256 I=8192
+[ALLOC] qDim=3072 kvDim=1024 numHeads=24 headDim=128 numKVHeads=8
+[ALLOC] all buffers allocated OK
+[INIT] allocateBuffers OK
+[INIT] KVCache::allocate OK layers=28 heads=8 headDim=128 maxSeqLen=2048
+[INIT] Deep2Engine::initialize SUCCESS
+[Deep2Engine] GGUF mapped: arch=llama shards=1 tensors=255 layers=28 hidden=3072 heads=24 kv_heads=8 vocab=128256
+ARCH=llama
+HIDDEN=3072
+LAYERS=28
+HEADS=24
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=3
+FFN_DIM=8192
+ROPE_THETA=500000
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-05
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=1
+LAST_CERT_PHASE=AFTER_LOADMODEL
+LOADMODEL_COMPLETED=1
+LAST_CERT_PHASE=BEFORE_GENERATE
+FORWARD_ENTERED=1
+[TOKENIZE] text='The capital of France is' -> 5 tokens
+[FWD_ALL] seqLen=1 numLayers=28 isMoE=0 useMLA=0 vulkan=1/1
+[DualRowStrict] DUAL_ROW_HOST_LANE_REFUSED strict=1 residentFirst=0 forceLayerSplit=0 devices=2 isMoE=0 useMLA=0 
+reason=no_gpu_resident_lane_available
+[PREFILL] forwardTokenAllLayers FAILED at prefill token 0 stage=dual_row_host_lane_refused route=0
+[STREAM] RESULT generated=0 promptTokens=5 prefillMs=0.0 decodeMs=0.0 tps=0.00 cancelled=0 completed=0 status=4
+LAST_CERT_PHASE=AFTER_GENERATE
+FORWARD_COMPLETED=1 status=4 gen=0 cb=0
+[CLEANUP_STAGE] ~Deep2Engine enter
+[CLEANUP_STAGE] ~Deep2Engine unloadModel done
+[CLEANUP_STAGE] ~Deep2Engine expert transport released
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+LAST_CERT_PHASE=BEFORE_LOADMODEL
+LAYER0_ARM_REQUESTED=1
+LAYER0_ARMED=1
+LAYER0_VECTORED_ARMED=1
+LAYER0_EXPECTED_SHA256=(unset)
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 
+discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+EXPERT_CACHE_INIT slot=1 budgetBytes=4290772992
+B5_PEER_HANDOFF_PROBE
+EXTERNAL_MEMORY_API_SUPPORTED=1
+EXTERNAL_SEMAPHORE_API_SUPPORTED=1
+DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN
+PHYSICAL_DEVICE_GROUP_COUNT=7
+SAME_DEVICE_GROUP=0
+SUBSET_ALLOCATION=0
+PEER_MEMORY_FEATURES=(device-group-bind-time)
+PEER_HANDOFF_SUPPORTED=0
+B5_HOST_IMPORT_PROBE_001
+GPU0_EXTERNAL_MEMORY_HOST=1
+GPU1_EXTERNAL_MEMORY_HOST=1
+GPU0_MIN_HOST_ALIGNMENT=4096
+GPU1_MIN_HOST_ALIGNMENT=4096
+COMMON_ALIGNMENT=4096
+B5_HOST_IMPORT_PROBE_001=PASS
+B5_SHARED_HOST_IMPORT_001
+HOST_ALLOC_PTR=000002538EE62000
+HOST_ALLOC_BYTES=4096
+COMMON_ALIGNMENT=4096
+HOST_ALLOC_ALIGNED=1
+GPU0_HOST_POINTER_QUERY_RESULT=0
+GPU0_MEMORY_TYPE_BITS=0xAAAA
+GPU0_IMPORT_MEMORY_RESULT=0
+GPU0_BIND_RESULT=0
+GPU1_HOST_POINTER_QUERY_RESULT=0
+GPU1_MEMORY_TYPE_BITS=0xAAAA
+GPU1_IMPORT_MEMORY_RESULT=0
+GPU1_BIND_RESULT=0
+SAME_HOST_POINTER_GPU0=1
+SAME_HOST_POINTER_GPU1=1
+SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=1
+CPU_PAYLOAD_READS=1
+CPU_PAYLOAD_WRITES=1
+B5_SHARED_HOST_IMPORT_001=PASS
+CERT_VULKAN_REQUESTED=1
+CERT_VULKAN_ENV_OVERRIDE=(unset)
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_k.weight shape=[1152,256] type=2 bytes=165888
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_k_norm.weight shape=[256] type=0 bytes=1024
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_norm.weight shape=[1152] type=0 bytes=4608
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_output.weight shape=[1024,1152] type=11 bytes=506880
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_q.weight shape=[1152,1024] type=2 bytes=663552
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_q_norm.weight shape=[256] type=0 bytes=1024
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_v.weight shape=[1152,256] type=6 bytes=202752
+[Deep2Engine] MLA_METADATA arch=gemma3 layout=unknown numHeads=4 kvLoraRank=0 qLoraRank=0 qkNopeHeadDim=0 
+qkRopeHeadDim=0 vHeadDim=256 keyLength=256 valueLength=256 geometryValidated=0
+[Deep2Engine] ROPE_ARCH=gemma3 ROPE_THETA_GLOBAL=1000000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=512 
+SLIDING_WINDOW_PATTERN=6
+[Deep2Engine] admission OK arch=gemma3 family=GENERIC_TRANSFORMER moe=0 mla=0 recurrent=0 slidingWindow=1 
+quant=Q8_0(type 8) tensors=340
+[INIT] Deep2Engine::initialize hiddenDim=1152 vocabSize=262144 numLayers=26 numHeads=4 maxSeqLen=2048 numThreads=0
+[INIT] remote64 authority linked observe=0 control=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[INIT] KVCache+tokenizer+sampler created
+[ALLOC] allocateBuffers H=1152 V=262144 I=6912
+[ALLOC] qDim=1024 kvDim=256 numHeads=4 headDim=256 numKVHeads=1
+[ALLOC] all buffers allocated OK
+[INIT] allocateBuffers OK
+[INIT] KVCache::allocate OK layers=26 heads=1 headDim=256 maxSeqLen=2048
+[INIT] Deep2Engine::initialize SUCCESS
+[Deep2Engine] GGUF mapped: arch=gemma3 shards=1 tensors=340 layers=26 hidden=1152 heads=4 kv_heads=1 vocab=262144
+ARCH=gemma3
+HIDDEN=1152
+LAYERS=26
+HEADS=4
+KV_HEADS=1
+HEAD_DIM=256
+GQA_GROUP=4
+FFN_DIM=6912
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=256
+ROPE_NEOX=0
+RMS_EPS=1e-06
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=1
+LAST_CERT_PHASE=AFTER_LOADMODEL
+LOADMODEL_COMPLETED=1
+LAST_CERT_PHASE=BEFORE_GENERATE
+FORWARD_ENTERED=1
+[TOKENIZE] text='The capital of France is' -> 13 tokens
+[FWD_ALL] seqLen=1 numLayers=26 isMoE=0 useMLA=0 vulkan=1/1
+[DualRowStrict] DUAL_ROW_HOST_LANE_REFUSED strict=1 residentFirst=0 forceLayerSplit=0 devices=2 isMoE=0 useMLA=0 
+reason=no_gpu_resident_lane_available
+[PREFILL] forwardTokenAllLayers FAILED at prefill token 0 stage=dual_row_host_lane_refused route=0
+[STREAM] RESULT generated=0 promptTokens=13 prefillMs=0.0 decodeMs=0.0 tps=0.00 cancelled=0 completed=0 status=4
+LAST_CERT_PHASE=AFTER_GENERATE
+FORWARD_COMPLETED=1 status=4 gen=0 cb=0
+[CLEANUP_STAGE] ~Deep2Engine enter
+[CLEANUP_STAGE] ~Deep2Engine unloadModel done
+[CLEANUP_STAGE] ~Deep2Engine expert transport released
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+LAST_CERT_PHASE=BEFORE_LOADMODEL
+LAYER0_ARM_REQUESTED=1
+LAYER0_ARMED=1
+LAYER0_VECTORED_ARMED=1
+LAYER0_EXPECTED_SHA256=(unset)
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 
+discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+EXPERT_CACHE_INIT slot=1 budgetBytes=4290772992
+B5_PEER_HANDOFF_PROBE
+EXTERNAL_MEMORY_API_SUPPORTED=1
+EXTERNAL_SEMAPHORE_API_SUPPORTED=1
+DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN
+PHYSICAL_DEVICE_GROUP_COUNT=7
+SAME_DEVICE_GROUP=0
+SUBSET_ALLOCATION=0
+PEER_MEMORY_FEATURES=(device-group-bind-time)
+PEER_HANDOFF_SUPPORTED=0
+B5_HOST_IMPORT_PROBE_001
+GPU0_EXTERNAL_MEMORY_HOST=1
+GPU1_EXTERNAL_MEMORY_HOST=1
+GPU0_MIN_HOST_ALIGNMENT=4096
+GPU1_MIN_HOST_ALIGNMENT=4096
+COMMON_ALIGNMENT=4096
+B5_HOST_IMPORT_PROBE_001=PASS
+B5_SHARED_HOST_IMPORT_001
+HOST_ALLOC_PTR=000002538A37B000
+HOST_ALLOC_BYTES=4096
+COMMON_ALIGNMENT=4096
+HOST_ALLOC_ALIGNED=1
+GPU0_HOST_POINTER_QUERY_RESULT=0
+GPU0_MEMORY_TYPE_BITS=0xAAAA
+GPU0_IMPORT_MEMORY_RESULT=0
+GPU0_BIND_RESULT=0
+GPU1_HOST_POINTER_QUERY_RESULT=0
+GPU1_MEMORY_TYPE_BITS=0xAAAA
+GPU1_IMPORT_MEMORY_RESULT=0
+GPU1_BIND_RESULT=0
+SAME_HOST_POINTER_GPU0=1
+SAME_HOST_POINTER_GPU1=1
+SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=1
+CPU_PAYLOAD_READS=1
+CPU_PAYLOAD_WRITES=1
+B5_SHARED_HOST_IMPORT_001=PASS
+CERT_VULKAN_REQUESTED=1
+CERT_VULKAN_ENV_OVERRIDE=(unset)
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_k.weight shape=[2048,256] type=12 bytes=294912
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_norm.weight shape=[2048] type=0 bytes=8192
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_output.weight shape=[2048,2048] type=12 bytes=2359296
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_q.weight shape=[2048,2048] type=12 bytes=2359296
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_v.weight shape=[2048,256] type=14 bytes=430080
+[Deep2Engine] MLA_METADATA arch=llama layout=unknown numHeads=32 kvLoraRank=0 qLoraRank=0 qkNopeHeadDim=0 
+qkRopeHeadDim=0 vHeadDim=0 keyLength=0 valueLength=0 geometryValidated=0
+[Deep2Engine] ROPE_ARCH=llama ROPE_THETA_GLOBAL=10000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=0 
+SLIDING_WINDOW_PATTERN=0
+[Deep2Engine] admission OK arch=llama family=GENERIC_TRANSFORMER moe=0 mla=0 recurrent=0 slidingWindow=0 
+quant=Q4_K(type 12) tensors=201
+[INIT] Deep2Engine::initialize hiddenDim=2048 vocabSize=32000 numLayers=22 numHeads=32 maxSeqLen=2048 numThreads=0
+[INIT] remote64 authority linked observe=0 control=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[INIT] KVCache+tokenizer+sampler created
+[ALLOC] allocateBuffers H=2048 V=32000 I=5632
+[ALLOC] qDim=2048 kvDim=256 numHeads=32 headDim=64 numKVHeads=4
+[ALLOC] all buffers allocated OK
+[INIT] allocateBuffers OK
+[INIT] KVCache::allocate OK layers=22 heads=4 headDim=64 maxSeqLen=2048
+[INIT] Deep2Engine::initialize SUCCESS
+[Deep2Engine] GGUF mapped: arch=llama shards=1 tensors=201 layers=22 hidden=2048 heads=32 kv_heads=4 vocab=32000
+ARCH=llama
+HIDDEN=2048
+LAYERS=22
+HEADS=32
+KV_HEADS=4
+HEAD_DIM=64
+GQA_GROUP=8
+FFN_DIM=5632
+ROPE_THETA=10000
+ROPE_SCALING=1
+ROPE_DIM=64
+ROPE_NEOX=1
+RMS_EPS=1e-05
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=0
+LAST_CERT_PHASE=AFTER_LOADMODEL
+LOADMODEL_COMPLETED=1
+LAST_CERT_PHASE=BEFORE_GENERATE
+FORWARD_ENTERED=1
+[TOKENIZE] text='The capital of France is' -> 6 tokens
+[FWD_ALL] seqLen=1 numLayers=22 isMoE=0 useMLA=0 vulkan=1/1
+[DualRowStrict] DUAL_ROW_HOST_LANE_REFUSED strict=1 residentFirst=0 forceLayerSplit=0 devices=2 isMoE=0 useMLA=0 
+reason=no_gpu_resident_lane_available
+[PREFILL] forwardTokenAllLayers FAILED at prefill token 0 stage=dual_row_host_lane_refused route=0
+[STREAM] RESULT generated=0 promptTokens=6 prefillMs=0.0 decodeMs=0.0 tps=0.00 cancelled=0 completed=0 status=4
+LAST_CERT_PHASE=AFTER_GENERATE
+FORWARD_COMPLETED=1 status=4 gen=0 cb=0
+[CLEANUP_STAGE] ~Deep2Engine enter
+[CLEANUP_STAGE] ~Deep2Engine unloadModel done
+[CLEANUP_STAGE] ~Deep2Engine expert transport released
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+LAST_CERT_PHASE=BEFORE_LOADMODEL
+LAYER0_ARM_REQUESTED=1
+LAYER0_ARMED=1
+LAYER0_VECTORED_ARMED=1
+LAYER0_EXPECTED_SHA256=(unset)
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 
+discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+EXPERT_CACHE_INIT slot=1 budgetBytes=4290772992
+B5_PEER_HANDOFF_PROBE
+EXTERNAL_MEMORY_API_SUPPORTED=1
+EXTERNAL_SEMAPHORE_API_SUPPORTED=1
+DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN
+PHYSICAL_DEVICE_GROUP_COUNT=7
+SAME_DEVICE_GROUP=0
+SUBSET_ALLOCATION=0
+PEER_MEMORY_FEATURES=(device-group-bind-time)
+PEER_HANDOFF_SUPPORTED=0
+B5_HOST_IMPORT_PROBE_001
+GPU0_EXTERNAL_MEMORY_HOST=1
+GPU1_EXTERNAL_MEMORY_HOST=1
+GPU0_MIN_HOST_ALIGNMENT=4096
+GPU1_MIN_HOST_ALIGNMENT=4096
+COMMON_ALIGNMENT=4096
+B5_HOST_IMPORT_PROBE_001=PASS
+B5_SHARED_HOST_IMPORT_001
+HOST_ALLOC_PTR=00000255C41E4000
+HOST_ALLOC_BYTES=4096
+COMMON_ALIGNMENT=4096
+HOST_ALLOC_ALIGNED=1
+GPU0_HOST_POINTER_QUERY_RESULT=0
+GPU0_MEMORY_TYPE_BITS=0xAAAA
+GPU0_IMPORT_MEMORY_RESULT=0
+GPU0_BIND_RESULT=0
+GPU1_HOST_POINTER_QUERY_RESULT=0
+GPU1_MEMORY_TYPE_BITS=0xAAAA
+GPU1_IMPORT_MEMORY_RESULT=0
+GPU1_BIND_RESULT=0
+SAME_HOST_POINTER_GPU0=1
+SAME_HOST_POINTER_GPU1=1
+SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=1
+CPU_PAYLOAD_READS=1
+CPU_PAYLOAD_WRITES=1
+B5_SHARED_HOST_IMPORT_001=PASS
+CERT_VULKAN_REQUESTED=1
+CERT_VULKAN_ENV_OVERRIDE=(unset)
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_k.weight shape=[2048,256] type=12 bytes=294912
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_norm.weight shape=[2048] type=0 bytes=8192
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_output.weight shape=[2048,2048] type=12 bytes=2359296
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_q.weight shape=[2048,2048] type=12 bytes=2359296
+[Deep2Engine] MLA_TENSOR name=blk.0.attn_v.weight shape=[2048,256] type=14 bytes=430080
+[Deep2Engine] MLA_METADATA arch=llama layout=unknown numHeads=32 kvLoraRank=0 qLoraRank=0 qkNopeHeadDim=0 
+qkRopeHeadDim=0 vHeadDim=0 keyLength=0 valueLength=0 geometryValidated=0
+[Deep2Engine] ROPE_ARCH=llama ROPE_THETA_GLOBAL=10000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=0 
+SLIDING_WINDOW_PATTERN=0
+[Deep2Engine] admission OK arch=llama family=GENERIC_TRANSFORMER moe=0 mla=0 recurrent=0 slidingWindow=0 
+quant=Q4_K(type 12) tensors=201
+[INIT] Deep2Engine::initialize hiddenDim=2048 vocabSize=32000 numLayers=22 numHeads=32 maxSeqLen=2048 numThreads=0
+[INIT] remote64 authority linked observe=0 control=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[INIT] KVCache+tokenizer+sampler created
+[ALLOC] allocateBuffers H=2048 V=32000 I=5632
+[ALLOC] qDim=2048 kvDim=256 numHeads=32 headDim=64 numKVHeads=4
+[ALLOC] all buffers allocated OK
+[INIT] allocateBuffers OK
+[INIT] KVCache::allocate OK layers=22 heads=4 headDim=64 maxSeqLen=2048
+[INIT] Deep2Engine::initialize SUCCESS
+[Deep2Engine] GGUF mapped: arch=llama shards=1 tensors=201 layers=22 hidden=2048 heads=32 kv_heads=4 vocab=32000
+ARCH=llama
+HIDDEN=2048
+LAYERS=22
+HEADS=32
+KV_HEADS=4
+HEAD_DIM=64
+GQA_GROUP=8
+FFN_DIM=5632
+ROPE_THETA=10000
+ROPE_SCALING=1
+ROPE_DIM=64
+ROPE_NEOX=1
+RMS_EPS=1e-05
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=0
+LAST_CERT_PHASE=AFTER_LOADMODEL
+LOADMODEL_COMPLETED=1
+LAST_CERT_PHASE=BEFORE_GENERATE
+FORWARD_ENTERED=1
+[TOKENIZE] text='The capital of France is' -> 6 tokens
+[FWD_ALL] seqLen=1 numLayers=22 isMoE=0 useMLA=0 vulkan=1/1
+[DualRowStrict] DUAL_ROW_HOST_LANE_REFUSED strict=1 residentFirst=0 forceLayerSplit=0 devices=2 isMoE=0 useMLA=0 
+reason=no_gpu_resident_lane_available
+[PREFILL] forwardTokenAllLayers FAILED at prefill token 0 stage=dual_row_host_lane_refused route=0
+[STREAM] RESULT generated=0 promptTokens=6 prefillMs=0.0 decodeMs=0.0 tps=0.00 cancelled=0 completed=0 status=4
+LAST_CERT_PHASE=AFTER_GENERATE
+FORWARD_COMPLETED=1 status=4 gen=0 cb=0
+[CLEANUP_STAGE] ~Deep2Engine enter
+[CLEANUP_STAGE] ~Deep2Engine unloadModel done
+[CLEANUP_STAGE] ~Deep2Engine expert transport released
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+LAST_CERT_PHASE=BEFORE_LOADMODEL
+LAYER0_ARM_REQUESTED=1
+LAYER0_ARMED=1
+LAYER0_VECTORED_ARMED=1
+LAYER0_EXPECTED_SHA256=(unset)
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E 
+reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 
+discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=1 ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+EXPERT_CACHE_INIT slot=1 budgetBytes=4290772992
+B5_PEER_HANDOFF_PROBE
+EXTERNAL_MEMORY_API_SUPPORTED=1
+EXTERNAL_SEMAPHORE_API_SUPPORTED=1
+DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN
+PHYSICAL_DEVICE_GROUP_COUNT=7
+SAME_DEVICE_GROUP=0
+SUBSET_ALLOCATION=0
+PEER_MEMORY_FEATURES=(device-group-bind-time)
+PEER_HANDOFF_SUPPORTED=0
+B5_HOST_IMPORT_PROBE_001
+GPU0_EXTERNAL_MEMORY_HOST=1
+GPU1_EXTERNAL_MEMORY_HOST=1
+GPU0_MIN_HOST_ALIGNMENT=4096
+GPU1_MIN_HOST_ALIGNMENT=4096
+COMMON_ALIGNMENT=4096
+B5_HOST_IMPORT_PROBE_001=PASS
+B5_SHARED_HOST_IMPORT_001
+HOST_ALLOC_PTR=000002538962D000
+HOST_ALLOC_BYTES=4096
+COMMON_ALIGNMENT=4096
+HOST_ALLOC_ALIGNED=1
+GPU0_HOST_POINTER_QUERY_RESULT=0
+GPU0_MEMORY_TYPE_BITS=0xAAAA
+GPU0_IMPORT_MEMORY_RESULT=0
+GPU0_BIND_RESULT=0
+GPU1_HOST_POINTER_QUERY_RESULT=0
+GPU1_MEMORY_TYPE_BITS=0xAAAA
+GPU1_IMPORT_MEMORY_RESULT=0
+GPU1_BIND_RESULT=0
+SAME_HOST_POINTER_GPU0=1
+SAME_HOST_POINTER_GPU1=1
+SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=1
+CPU_PAYLOAD_READS=1
+CPU_PAYLOAD_WRITES=1
+B5_SHARED_HOST_IMPORT_001=PASS
+CERT_VULKAN_REQUESTED=1
+CERT_VULKAN_ENV_OVERRIDE=(unset)
+[Deep2Engine] GGUF load failed: GGUF contained no tensors
+LAST_CERT_PHASE=AFTER_LOADMODEL
+LOADMODEL_COMPLETED=1
+[CLEANUP_STAGE] ~Deep2Engine enter
+[CLEANUP_STAGE] ~Deep2Engine unloadModel done
+[CLEANUP_STAGE] ~Deep2Engine expert transport released
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done
+[CLEANUP_STAGE] enter
+[CLEANUP_STAGE] ResetSpecKvMirror
+[CLEANUP_STAGE] ResetSpecKvMirror.done
+[CLEANUP_STAGE] ResetHotLane.done
+[CLEANUP_STAGE] ReclaimAllResidents.done
+[CLEANUP_STAGE] clearWeightCache.done
+[CLEANUP_STAGE] scratch.done
+[CLEANUP_STAGE] vkDestroyDevice.done
+[CLEANUP_STAGE] exit
+[CLEANUP_STAGE] ~VulkanCompute body done

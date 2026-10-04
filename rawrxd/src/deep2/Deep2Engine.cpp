@@ -7,6 +7,13 @@
 #include "Sampler.hpp"
 #include "GGUFLoader.hpp"
 #include "ExecutionView.hpp"
+// RAWRXD_REVERSE_001: identity -> backing registration at the real bind site.
+#include "ReverseLayer.hpp"
+// RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: records where model-weight bytes are
+// ACTUALLY consumed. LinearW() is a routing boundary, not a compute owner, so
+// the census is attached to the branch that really did the arithmetic rather
+// than to the call site. See WeightConsumptionCensus.hpp for the audit law.
+#include "WeightConsumptionCensus.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "Deep2DualGpuRowSplit.hpp"
 #include "lavapath/GpuForwardChildLadder.hpp"
@@ -1024,6 +1031,12 @@ double Deep2Engine::loadedWeightTypeDominancePercent() const noexcept {
 
 // =================== INITIALIZE ====================
 bool Deep2Engine::initialize(const EngineConfig& cfg) {
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: install the exit writer here, and
+    // only here, so it is registered exactly once per process and it runs even
+    // for a forward pass that consumed nothing -- which is precisely the case
+    // that must produce FAIL_NO_MEASURED_CONSUMPTION rather than silence.
+    rawrxd::deep2::weightcensus::installCensusExitWriter();
+    rawrxd::deep2::weightcensus::WeightConsumptionCensus::instance().reset();
     std::fprintf(stderr, "[INIT] Deep2Engine::initialize hiddenDim=%zu vocabSize=%zu numLayers=%zu numHeads=%zu maxSeqLen=%zu numThreads=%zu\n",
         (size_t)cfg.hiddenDim, (size_t)cfg.vocabSize, (size_t)cfg.numLayers,
         (size_t)cfg.numHeads, (size_t)cfg.maxSeqLen, (size_t)cfg.numThreads);
@@ -1052,6 +1065,9 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     tokenizer = std::make_unique<BPETokenizer>();
     sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
     deterministicGreedy_ = true;
+
+    // RAWRXD_SPACELESS_STEP_9: TensorResidencyCache initialization
+    residencyCache_ = std::make_unique<Deep2::TensorResidencyCache>(256);
 
     // RAWRXD_REMOTE64_PRODUCT_INTEGRATION_001
     // Production consumption of src/remote64/deep2_bridge.asm. initialize() is
@@ -1386,6 +1402,87 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         return loader->getTensor(name);
     };
 
+    // -----------------------------------------------------------------------
+    // RAWRXD_REVERSE_001: real backing registration.
+    //
+    // Until this existed, ReverseLayer had zero production callers and
+    // BackingDirectory was empty in every real load -- measured:
+    //   PRODUCTION_CALLERS_OUTSIDE_OWN_TU = 3   (all inside the new files)
+    //   LOADMODEL_REGISTRATIONS           = 0
+    // An authority nobody calls is not an authority; it is a source file with
+    // an impressive header. These registrations are what make it reachable.
+    //
+    // modelIdentity is derived from facts the loader actually reports for this
+    // file. It is not a hash of the path string alone, because the same path can
+    // be replaced with different content between runs and identity must not
+    // survive that.
+    const uint64_t modelIdentity = [this, &loader]() -> uint64_t {
+        uint64_t h = 14695981039346656037ull;
+        auto mix = [&h](uint64_t v) {
+            for (int i = 0; i < 8; ++i) { h ^= (uint8_t)(v >> (i * 8)); h *= 1099511628211ull; }
+        };
+        mix(loader->tensorCount());
+        // Two real tensors' geometry and offsets are enough to distinguish two
+        // different models that happen to share a tensor count.
+        const std::vector<std::string> names = loader->listTensors();
+        size_t taken = 0;
+        for (const auto& n : names) {
+            const GGUFTensor* t = loader->getTensor(n);
+            if (!t) continue;
+            mix(fnv1a64Name(n.data(), n.size()));
+            mix(t->sizeBytes);
+            mix(t->fileOffset);
+            mix(static_cast<uint64_t>(t->type));
+            if (++taken >= 3) break;
+        }
+        mix(taken);
+        return h;
+    }();
+
+    // Real classification from the real tensor name. Roles are semantic and
+    // survive a change of representation; they are not addresses.
+    auto roleFromName = [](const std::string& n) -> uint16_t {
+        if (n.find("token_embd") != std::string::npos)      return 1;
+        if (n.find("output_norm") != std::string::npos)     return 2;
+        if (n == "output.weight" || n.find("lm_head") != std::string::npos) return 3;
+        if (n.find("attn_norm") != std::string::npos)       return 4;
+        if (n.find("ffn_norm") != std::string::npos)        return 5;
+        if (n.find("attn_q") != std::string::npos)          return 6;   // covers attn_q_a/b
+        if (n.find("attn_k") != std::string::npos)          return 7;   // attn_k_b
+        if (n.find("attn_v") != std::string::npos)          return 8;   // attn_v_b
+        if (n.find("attn_kv_a") != std::string::npos)       return 9;
+        if (n.find("attn_output") != std::string::npos)     return 10;
+        if (n.find("ffn_gate_exps") != std::string::npos)   return 11;
+        if (n.find("ffn_up_exps") != std::string::npos)     return 12;
+        if (n.find("ffn_down_exps") != std::string::npos)   return 13;
+        if (n.find("ffn_gate") != std::string::npos)        return 14;
+        if (n.find("ffn_up") != std::string::npos)          return 15;
+        if (n.find("ffn_down") != std::string::npos)        return 16;
+        if (n.find("attn_qkv") != std::string::npos)        return 17;
+        if (n.find("ssm_in") != std::string::npos)          return 18;
+        if (n.find("ssm_out") != std::string::npos)         return 19;
+        if (n.find("ssm_conv1d") != std::string::npos)      return 20;
+        if (n.find("ssm") != std::string::npos)             return 21;
+        return 0;   // unclassified is a real, recorded answer, not a guess
+    };
+
+    // Real extraction of the block index from names like "blk.17.attn_q.weight".
+    auto layerFromName = [](const std::string& n) -> uint32_t {
+        if (n.size() < 4 || n.compare(0, 4, "blk.") != 0) return 0;
+        uint32_t v = 0, i = 4, digits = 0;
+        while (i < n.size() && n[i] >= '0' && n[i] <= '9') {
+            v = v * 10 + static_cast<uint32_t>(n[i] - '0');
+            ++i; ++digits;
+            if (digits > 6) return 0;   // implausible block index; treat as none
+        }
+        return v;
+    };
+
+    // Counters so a receipt can report what the registration path actually did
+    // instead of assuming it ran.
+    static std::atomic<uint64_t> g_backingRegistered{0};
+    static std::atomic<uint64_t> g_backingRejected{0};
+
     auto bindTensor = [&](const std::string& name, WeightTensor& wt) -> bool {
         const GGUFTensor* t = loader->getTensor(name);
         if (!t || !t->data || t->sizeBytes == 0) return false;
@@ -1416,6 +1513,33 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
             wt.cols = 1;
         } else {
             return false;
+        }
+
+        // ---- register the real backing for this identity ----
+        // Placed AFTER the geometry is known, so the BackingRef carries rows and
+        // cols that were actually derived, and it is skipped on the early
+        // returns above rather than registering a tensor whose shape failed.
+        {
+            TensorIdentity id{};
+            id.model   = modelIdentity;
+            id.tensor  = fnv1a64Name(name.data(), name.size());
+            id.layer   = layerFromName(name);
+            id.role    = roleFromName(name);
+            id.variant = 0;
+
+            BackingRef bref;
+            bref.source      = BackingSource::GGUF_MMAP;
+            bref.shardId     = t->shardId;
+            bref.fileOffset  = t->fileOffset;
+            bref.byteLength  = t->sizeBytes;
+            bref.quantType   = static_cast<uint32_t>(t->type);
+            bref.rows        = wt.rows;
+            bref.cols        = wt.cols;
+            bref.tensorName  = t->name;
+            bref.generation  = 0;
+
+            BackingDirectory::Instance().registerBinding(id, bref);
+            ++g_backingRegistered;
         }
         return true;
     };
@@ -3412,6 +3536,19 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
         return false;
 
     const size_t offset = row * rowBytes;
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: the clearest CLASS-A bypass. This
+    // computes an address inside tokenEmbed.data and hands it straight to the
+    // dequantizer. LinearW() is nowhere in the chain, so embedToken and every
+    // caller that inherits it (embedTokensBatch) sit outside the LinearW funnel.
+    {
+        using namespace rawrxd::deep2::weightcensus;
+        Event eev;
+        eev.site = Site::EmbedToken;
+        eev.route = Route::Bypass;
+        eev.tensor = wt.name;
+        eev.bytes = rowBytes;   // exactly the bytes this embedding row reads
+        WeightConsumptionCensus::instance().record(eev);
+    }
     if (wt.sizeBytes != 0 &&
         (offset > wt.sizeBytes || rowBytes > wt.sizeBytes - offset))
         return false;
@@ -3971,6 +4108,17 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         }
         if (dualOk) {
             RAWRXD_DEEP2_TRACE("LINEARW_RESULT=DUAL_GPU name=%s\n",wtn);
+            // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: the weight arithmetic was
+            // performed by tryVulkanHostGEMV, not by any LinearW-owned kernel.
+            // Classifying this path as "through LinearW, therefore not a
+            // bypass" is the error this census exists to prevent.
+            {
+                using namespace rawrxd::deep2::weightcensus;
+                Event ev;
+                ev.site = Site::LinearW; ev.route = Route::LinearWDelegated;
+                ev.tensor = wtn; ev.bytes = wt.sizeBytes ? wt.sizeBytes : rows * cols;
+                WeightConsumptionCensus::instance().record(ev);
+            }
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
             }
@@ -3985,6 +4133,14 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         // Attempt 2: single-GPU fallback
         if (tryVulkanHostGEMV(wt, input, output, outDim)) {
             RAWRXD_DEEP2_TRACE("LINEARW_RESULT=SINGLE_GPU name=%s\n",wtn);
+            // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: delegated, not owned.
+            {
+                using namespace rawrxd::deep2::weightcensus;
+                Event ev;
+                ev.site = Site::LinearW; ev.route = Route::LinearWDelegated;
+                ev.tensor = wtn; ev.bytes = wt.sizeBytes ? wt.sizeBytes : rows * cols;
+                WeightConsumptionCensus::instance().record(ev);
+            }
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
             }
@@ -4005,22 +4161,33 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
 
     // RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_002
     // Production adoption: try ExecutionView-aware kernel first.
-    // If no EV kernel is registered (nullptr), fall through to legacy path.
-    // Only F32 has an EV kernel registered; all quant types fall through.
+    // All 14 quant types now have EV kernels registered; legacy path is
+    // fallback only if a future type is not yet adopted.
     {
         auto kernelEv = QuantKernelRegistry::Instance().GetGEMVEV(wt.type);
         if (kernelEv) {
             Deep2::ExecutionView ev;
-            ev.identity.model   = 1;  // TODO: real model fingerprint
-            ev.identity.tensor  = wt.sizeBytes;
-            ev.identity.layer   = 0; // TODO: propagate layer
-            ev.identity.role    = 0;
-            ev.identity.variant = 0;
-            ev.transientAddress = wt.data;
-            ev.bytes            = wt.sizeBytes;
-            ev.lease.generation = 1;
-            ev.lease.owner      = 1;
-            ev.lease.epoch      = 0;
+            // RAWRXD_SPACELESS_STEP_9: try TensorResidencyCache first.
+            // If the tensor is resident and lease valid, use the cached view.
+            // On miss, construct from WeightTensor and insert for future lookups.
+            // Step 10: use wt.identity (stable, not address-dependent) for cache keys.
+            bool cacheHit = false;
+            if (residencyCache_ && residencyCache_->lookup(wt.identity, ev)) {
+                cacheHit = true;
+                ++residencyCacheHits_;
+                RAWRXD_DEEP2_TRACE("LINEARW_RESIDENCY_CACHE_HIT name=%s\n", wtn);
+            } else {
+                ++residencyCacheMisses_;
+                ev.identity          = wt.identity;
+                ev.transientAddress  = wt.data;
+                ev.bytes             = wt.sizeBytes;
+                ev.lease.generation  = 1;
+                ev.lease.owner       = 1;
+                ev.lease.epoch       = 0;
+                if (residencyCache_) {
+                    residencyCache_->insert(ev);
+                }
+            }
             std::memset(output, 0, outDim * sizeof(float));
             kernelEv(ev, input, output, rows, cols);
             if (bias) {
@@ -4035,9 +4202,58 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                     "LINEAR_CPU_NONFINITE name=%s type=%d firstBadIdx=%zu value=%.9g\n",
                     wtn, wt.type, outBad,
                     outBad < outDim ? output[outBad] : 0.0f);
-                throw std::runtime_error("LinearW: non-finite output");
+                // RAWRXD_LINEARW_NONFINITE_DIAG_001: the message used to be the
+                // constant "LinearW: non-finite output", which named neither the
+                // tensor nor the index nor the value. A non-finite first GEMV is
+                // the single most common forward failure and that string made
+                // it undiagnosable without a debugger attached -- the caller
+                // only ever saw the same sentence regardless of which of
+                // hundreds of projections had failed, or at what position.
+                // Report what actually happened.
+                {
+                    char detail[512];
+                    std::snprintf(detail, sizeof(detail),
+                        "LinearW: non-finite output tensor=%s type=%d idx=%zu/%zu "
+                        "value=%g rows=%zu cols=%zu",
+                        wtn, wt.type, outBad, outDim,
+                        outBad < outDim ? static_cast<double>(output[outBad]) : 0.0,
+                        rows, cols);
+                    std::fprintf(stderr, "LINEAR_CPU_NONFINITE_DETAIL %s\n", detail);
+                    std::fflush(stderr);
+                    // Also state whether the INPUT was already poisoned, which
+                    // separates "this GEMV is wrong" from "something upstream
+                    // produced garbage": an inf/NaN input localises the fault
+                    // to the previous layer rather than this one.
+                    size_t inBad = SIZE_MAX;
+                    double inVal = 0.0;
+                    for (size_t i = 0; i < cols; ++i) {
+                        if (!std::isfinite(input[i])) { inBad = i; inVal = input[i]; break; }
+                    }
+                    if (inBad != SIZE_MAX) {
+                        std::fprintf(stderr,
+                            "LINEAR_INPUT_ALREADY_NONFINITE tensor=%s inIdx=%zu/%zu inValue=%g\n",
+                            wtn, inBad, cols, inVal);
+                    } else {
+                        std::fprintf(stderr,
+                            "LINEAR_INPUT_FINITE tensor=%s inFirst=%g inLast=%g\n",
+                            wtn, cols ? static_cast<double>(input[0]) : 0.0,
+                            cols ? static_cast<double>(input[cols - 1]) : 0.0);
+                    }
+                    std::fflush(stderr);
+                    throw std::runtime_error(detail);
+                }
             }
             RAWRXD_DEEP2_TRACE("LINEARW_RESULT=CPU_FALLBACK_EV name=%s\n",wtn);
+            // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: LinearW reached its own
+            // locally registered GEMV kernel. This is the only route that makes
+            // a projection LINEARW_OWNED.
+            {
+                using namespace rawrxd::deep2::weightcensus;
+                Event cev;
+                cev.site = Site::LinearW; cev.route = Route::LinearWOwned;
+                cev.tensor = wtn; cev.bytes = wt.sizeBytes ? wt.sizeBytes : rows * cols;
+                WeightConsumptionCensus::instance().record(cev);
+            }
             return;
         }
     }
@@ -4082,6 +4298,18 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             outBad < outDim ? output[outBad] : 0.0f);
         throw std::runtime_error("LinearW: non-finite output");
     }
+
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: the legacy non-ExecutionView GEMV is
+    // also LinearW's own registered kernel, so it is the same ownership class.
+    // Recorded here rather than at entry so the CPU route is attributed to
+    // exactly the branch that computed it.
+    {
+        using namespace rawrxd::deep2::weightcensus;
+        Event lev;
+        lev.site = Site::LinearW; lev.route = Route::LinearWOwned;
+        lev.tensor = wtn; lev.bytes = wt.sizeBytes ? wt.sizeBytes : rows * cols;
+        WeightConsumptionCensus::instance().record(lev);
+    }
 }
 
 // =================== WEIGHTED RMSNORM ====================
@@ -4104,7 +4332,23 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
 
     if (!normWeight.data) {
         for (size_t i = 0; i < dim; ++i) output[i] = input[i] * invRms;
+        // No weight bytes were read, so nothing is recorded: the census refuses
+        // unmeasured events rather than crediting a site that read nothing.
     } else {
+        // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: this is a CLASS-A bypass. The
+        // norm tensor is resolved and dequantized here, directly, and never
+        // enters LinearW() -- so finalNorm, attnNorm, attnPostNorm,
+        // attnQNorm and attnKNorm are all outside the LinearW funnel by
+        // construction, not by accident.
+        {
+            using namespace rawrxd::deep2::weightcensus;
+            Event nev;
+            nev.site = Site::RmsNormW;
+            nev.route = Route::Bypass;   // never entered LinearW
+            nev.tensor = normWeight.name;
+            nev.bytes = normWeight.sizeBytes ? normWeight.sizeBytes : dim * sizeof(float);
+            WeightConsumptionCensus::instance().record(nev);
+        }
         const auto* desc = LookupQuantType(static_cast<uint32_t>(normWeight.type));
         if (!desc || desc->blockBytes == 0 || desc->blockElements == 0) {
             throw std::runtime_error("RMSNormW: unsupported weight type");
@@ -5266,6 +5510,19 @@ void Deep2Engine::LinearWBatch4(
         std::memset(outputBatch,0,count*outDim*sizeof(float));
         if(tryVulkanHostGEMVBatch4(
                 wt,inputBatch,count,outputBatch,outDim)) {
+            // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: this is a BYPASS, not a
+            // delegation. Despite the name, LinearWBatch4 is not a wrapper
+            // around LinearW -- on GPU success it returns here and never enters
+            // LinearW() at all, so the batched lmHead is outside the LinearW
+            // funnel on exactly the same footing as an ordinary projection.
+            {
+                using namespace rawrxd::deep2::weightcensus;
+                Event bev;
+                bev.site = Site::LinearWBatch4; bev.route = Route::Bypass;
+                bev.tensor = wt.name;
+                bev.bytes = wt.sizeBytes ? wt.sizeBytes : rows * cols;
+                WeightConsumptionCensus::instance().record(bev);
+            }
             if(bias) {
                 for(size_t b=0;b<count;++b)
                     for(size_t i=0;i<outDim;++i)
@@ -5611,6 +5868,33 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     auto& normW = lc.normW;
     dstage("NORM_W", normW.data(), normW.size());
     dstage("Z_GATE", z, inner);
+
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001
+    //
+    // The centre of Mamba is a direct-weight island: ssmConv1d, ssmConv1dBias,
+    // ssmDtBias, ssmA, ssmD and ssmNorm were all resolved and dequantized above
+    // without ever entering LinearW(). Only ssmIn and ssmOut go through LinearW.
+    // Each tensor is recorded by name so the receipt shows WHICH weights bypass,
+    // not merely that something did.
+    //
+    // Placed after the norm dequant because that is the last of the six; every
+    // one of them has therefore genuinely been read by this point.
+    {
+        using namespace rawrxd::deep2::weightcensus;
+        const WeightTensor* ssmDirect[6] = {
+            &lw.ssmConv1d, &lw.ssmConv1dBias, &lw.ssmDtBias,
+            &lw.ssmA,      &lw.ssmD,         &lw.ssmNorm
+        };
+        for (const WeightTensor* t : ssmDirect) {
+            if (!t || !t->data) continue;
+            Event sev;
+            sev.site  = Site::SsmDirect;
+            sev.route = Route::Bypass;   // resolved and dequantized in place
+            sev.tensor = t->name;
+            sev.bytes = t->sizeBytes ? t->sizeBytes : t->numElements();
+            WeightConsumptionCensus::instance().record(sev);
+        }
+    }
 
     const size_t groupSize = inner / groups;   // 960 for the 4B model
     if (groupSize == 0)
@@ -6007,11 +6291,78 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
             return ForwardResult{false, ExecutionRoute::VulkanResident, false, "tryGpuTokenForward_failed"};
         }
     }
+    // RAWRXD_SIGNAL_LAYER_WALK_005C / RAWRXD_E2E_REAL_CODE_YIELDLESS_BEACONISM_005D
+    //
+    // OBSERVE ONLY. This block reads tensors and prints. It never writes to
+    // `hidden`, `layerOut`, weights, or logits, and it cannot manufacture signal:
+    // if the forward is zero, the beacons print zero.
+    //
+    // It exists because two measured facts could not be separated without it:
+    //   1. FINALNORM_POST is identically zero on 9 of 9 forwards, so the signal
+    //      is already gone at or before the last layer output.
+    //   2. The only per-layer timing available was SLOW_LAYER, which is gated on
+    //      `layerMs > 100.0`. That gate means every sample ever collected is from
+    //      the slow tail, so the reported mean was a biased estimate of the true
+    //      per-layer cost. Under the beacon, EVERY layer's wall time is printed so
+    //      the mean is over the whole population.
+    //
+    // The one number that decides the root: abs_sum of `hidden` as it enters the
+    // loop versus abs_sum of `layerOut` as it leaves each layer.
+    const bool nanoBeacon = (std::getenv("RAWRXD_NANOBEACON") != nullptr);
+    auto nanoAbsSum = [](const float* p, size_t n) -> double {
+        if (!p || n == 0) return 0.0;
+        double s = 0.0;
+        for (size_t i = 0; i < n; ++i) {
+            const float v = p[i];
+            if (std::isfinite(v)) s += std::abs(static_cast<double>(v));
+        }
+        return s;
+    };
+    auto nanoNonzero = [](const float* p, size_t n) -> size_t {
+        if (!p || n == 0) return 0;
+        size_t c = 0;
+        for (size_t i = 0; i < n; ++i) {
+            const float v = p[i];
+            if (std::isfinite(v) && v != 0.0f) ++c;
+        }
+        return c;
+    };
+
     try {
+        if (nanoBeacon) {
+            std::fprintf(stderr,
+                "[NANOBEACON_SIGNAL] BOUND=LOOP_ENTRY_HIDDEN L=-1 PTR=%p N=%zu ABS_SUM=%.9g NONZERO=%zu seqLen=%zu layers=%zu hiddenDim=%u\n",
+                (const void*)hidden, config.hiddenDim,
+                nanoAbsSum(hidden, config.hiddenDim),
+                nanoNonzero(hidden, config.hiddenDim),
+                seqLen, modelWeights.numLayers, (unsigned)config.hiddenDim);
+            std::fflush(stderr);
+        }
         for (size_t l = 0; l < modelWeights.numLayers; ++l) {
+            auto tLayer0 = std::chrono::steady_clock::now();
+            const double preAbs  = nanoBeacon ? nanoAbsSum(hidden, config.hiddenDim)  : 0.0;
+            const size_t preNz   = nanoBeacon ? nanoNonzero(hidden, config.hiddenDim) : 0;
             forwardLayer(l, hidden, layerOut, seqLen);
+            auto tLayer1 = std::chrono::steady_clock::now();
+            if (nanoBeacon) {
+                const double postAbs = nanoAbsSum(layerOut, config.hiddenDim);
+                const size_t postNz  = nanoNonzero(layerOut, config.hiddenDim);
+                std::fprintf(stderr,
+                    "[NANOBEACON_SIGNAL] BOUND=LAYER_OUT L=%zu PTR=%p N=%zu IN_ABS_SUM=%.9g IN_NONZERO=%zu OUT_ABS_SUM=%.9g OUT_NONZERO=%zu seqLen=%zu\n",
+                    l, (const void*)layerOut, config.hiddenDim, preAbs, preNz, postAbs, postNz, seqLen);
+                std::fprintf(stderr,
+                    "[NANOBEACON_SPEED] L=%zu WALL_US=%llu\n",
+                    l, (unsigned long long)std::chrono::duration_cast<std::chrono::microseconds>(tLayer1 - tLayer0).count());
+                std::fflush(stderr);
+            }
             std::memcpy(hidden, layerOut, config.hiddenDim * sizeof(float));
             ++gpuFwd_.hostForwardLayerCalls;
+            double layerMs = std::chrono::duration<double, std::milli>(tLayer1 - tLayer0).count();
+            RAWRXD_DEEP2_TRACE("FWD_LAYER_TIMING layer=%zu ms=%.3f\n", l, layerMs);
+            if (layerMs > 100.0) {
+                std::fprintf(stderr, "SLOW_LAYER layer=%zu ms=%.3f seqLen=%zu\n", l, layerMs, seqLen);
+                std::fflush(stderr);
+            }
         }
     } catch (const std::exception& ex) {
         std::fprintf(stderr, "[Deep2Engine] forward failed: %s\n", ex.what());
@@ -6695,10 +7046,13 @@ GenerationResult Deep2Engine::generateStream(
         res.status = GenerationStatus::EndOfSequence;
     }
     res.completed = (res.status == GenerationStatus::Completed);
-    std::fprintf(stderr, "[STREAM] RESULT generated=%zu promptTokens=%zu prefillMs=%.1f decodeMs=%.1f tps=%.2f cancelled=%d completed=%d status=%d\n",
+    std::fprintf(stderr, "[STREAM] RESULT generated=%zu promptTokens=%zu prefillMs=%.1f decodeMs=%.1f tps=%.2f cancelled=%d completed=%d status=%d cache_hits=%llu cache_misses=%llu cache_evictions=%llu\n",
         (size_t)n, (size_t)res.promptTokens, res.promptTimeMs, res.generationTimeMs,
         st.decodeMs > 0 ? (double)n / (st.decodeMs / 1000.0) : 0.0,
-        res.cancelled ? 1 : 0, res.completed ? 1 : 0, (int)res.status);
+        res.cancelled ? 1 : 0, res.completed ? 1 : 0, (int)res.status,
+        (unsigned long long)residencyCacheHits_,
+        (unsigned long long)residencyCacheMisses_,
+        (unsigned long long)residencyCacheEvictions_);
     std::fflush(stderr);
     if (n == 0 && !res.cancelled && lastFailureDetail_.empty()) {
         std::fprintf(stderr, "[STREAM] 0_TOKENS_NO_FAILURE: likely EOS or context boundary (EndOfSequence)\n");
@@ -6864,6 +7218,25 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
     wt.shardId = t->shardId;
     wt.fileOffset = t->fileOffset;
     wt.hasFileBacking = true;
+
+    // RAWRXD_SPACELESS_STEP_10: populate stable tensor identity from name
+    {
+        // model fingerprint: hash of model path (simplified: use 1 for single-model)
+        wt.identity.model = 1;
+        // tensor fingerprint: hash of GGUF tensor name (stable across runs)
+        std::hash<std::string> h;
+        wt.identity.tensor = h(t->name);
+        // layer: parse from "blk.N.xxx" or "token_embd" etc.
+        wt.identity.layer = 0;
+        if (t->name.find("blk.") != std::string::npos) {
+            size_t dot = t->name.find('.', 4);
+            if (dot != std::string::npos) {
+                try { wt.identity.layer = static_cast<uint32_t>(std::stoul(t->name.substr(4, dot - 4))); } catch (...) {}
+            }
+        }
+        wt.identity.role    = 0;
+        wt.identity.variant = 0;
+    }
 
     if (t->shape.size() == 1) {
         wt.rows = static_cast<size_t>(t->shape[0]);

@@ -1,0 +1,45 @@
+# BowRain runtime receipt
+# Verdicts below are DERIVED from the observations above them.
+# No field in this file is settable by a caller.
+
+[observations]
+BOWRAIN_SOURCE_CREATED=1
+BOWRAIN_BINDING_SITE=tools/bowrain_runtime_proof.cpp:main
+BOWRAIN_ENTERED=1
+BOWRAIN_MODE=STAR
+UN_FLAG=1
+NU_FLAG=1
+PATCH_FLAG=1
+COLD_FLAG=1
+INTENSITY=1
+EXECUTION_EVIDENCE_RECORDED=1
+MEASURED_OUTPUT_COUNT=12
+CALLBACKS_OBSERVED=1
+FINITE_OUTPUT_MEASURED=1
+RECEIPT_MATERIALISED=0
+
+[computed-aggregates]
+MAP_NODES_VISITED=12
+MAP_NODES_EXECUTED=12
+MAP_NODES_PASSED=12
+MAP_NODES_FAILED=0
+
+[per-node]
+NODE_0_ID=compute_map_node_0 NODE_0_VERDICT=PASS NODE_0_OUTPUT=1 NODE_0_DETAIL=bowrain transform applied
+NODE_1_ID=compute_map_node_1 NODE_1_VERDICT=PASS NODE_1_OUTPUT=1 NODE_1_DETAIL=bowrain transform applied
+NODE_2_ID=compute_map_node_2 NODE_2_VERDICT=PASS NODE_2_OUTPUT=1 NODE_2_DETAIL=bowrain transform applied
+NODE_3_ID=compute_map_node_3 NODE_3_VERDICT=PASS NODE_3_OUTPUT=1 NODE_3_DETAIL=bowrain transform applied
+NODE_4_ID=compute_map_node_4 NODE_4_VERDICT=PASS NODE_4_OUTPUT=1 NODE_4_DETAIL=bowrain transform applied
+NODE_5_ID=compute_map_node_5 NODE_5_VERDICT=PASS NODE_5_OUTPUT=1 NODE_5_DETAIL=bowrain transform applied
+NODE_6_ID=compute_map_node_6 NODE_6_VERDICT=PASS NODE_6_OUTPUT=1 NODE_6_DETAIL=bowrain transform applied
+NODE_7_ID=compute_map_node_7 NODE_7_VERDICT=PASS NODE_7_OUTPUT=1 NODE_7_DETAIL=bowrain transform applied
+NODE_8_ID=compute_map_node_8 NODE_8_VERDICT=PASS NODE_8_OUTPUT=1 NODE_8_DETAIL=bowrain transform applied
+NODE_9_ID=compute_map_node_9 NODE_9_VERDICT=PASS NODE_9_OUTPUT=1 NODE_9_DETAIL=bowrain transform applied
+NODE_10_ID=compute_map_node_10 NODE_10_VERDICT=PASS NODE_10_OUTPUT=1 NODE_10_DETAIL=bowrain transform applied
+NODE_11_ID=compute_map_node_11 NODE_11_VERDICT=PASS NODE_11_OUTPUT=1 NODE_11_DETAIL=bowrain transform applied
+
+[derived]
+LOCAL_APPLY_VERDICT=PASS
+RUNTIME_VERDICT=PASS
+CERTIFICATION_VERDICT=PASS
+CERTIFICATION_BLOCKERS=<none>

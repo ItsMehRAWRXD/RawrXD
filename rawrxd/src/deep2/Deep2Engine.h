@@ -89,6 +89,9 @@ struct WeightTensor {
     std::string name;                 // Tensor name from GGUF
     std::vector<int64_t> shape;       // Full shape (from GGUF loader)
 
+    // RAWRXD_SPACELESS_STEP_10: stable tensor identity, independent of address
+    Deep2::TensorIdentity identity;
+
     size_t numElements() const {
         if (shape.empty()) return rows * cols;
         size_t n = 1;
@@ -383,6 +386,12 @@ class PreparedWeightCache;
 } // namespace Deep2
 
 namespace Deep2 {
+// RAWRXD_NANOBANDWIDTH_VIEW_RESOLUTION_001
+// Prints the mutually-exclusive fullView failure census. Declared here so a
+// driver can emit it after a real run; the counters themselves live in
+// Deep2DualGpuRowSplit.cpp next to the function that increments them.
+void Deep2ReportFullViewCensus();
+
 class Deep2Engine {
 public:
     Deep2Engine();
@@ -685,7 +694,31 @@ public:
     // Completed-generation evidence, captured before any transient cleanup.
     // isRealGpuForward() is derived from this, never from a flag the execution
     // path sets on itself.
-    struct GpuForwardReceipt;   // defined in the private section below
+    struct GpuForwardReceipt {
+        uint64_t forwardLayers = 0;
+        uint64_t qkvOps = 0;
+        uint64_t rmsNormOps = 0;
+        uint64_t attnScoreOps = 0;
+        uint64_t ffnActOps = 0;
+        uint64_t residualOps = 0;
+        uint64_t forwardSlot0 = 0;
+        uint64_t tokenForwards = 0;
+        uint64_t hostMaterializations = 0;
+        uint64_t matFinalDownload = 0;
+        uint64_t matCrossDeviceHandoff = 0;
+        uint64_t matGemvSingleRoundTrip = 0;
+        uint64_t matDualRowSingle = 0;
+        uint64_t matDualRowGroup = 0;
+        uint64_t matOther = 0;
+        uint64_t hostMatSite[8]{};
+        uint64_t hostMatSiteBytes[8]{};
+        uint64_t hostForwardLayerCalls = 0;
+        uint64_t nanCount = 0;
+        uint64_t infCount = 0;
+        uint64_t generationId = 0;
+        uint32_t expectedLayersPerToken = 0;
+        bool valid = false;
+    };
     const GpuForwardReceipt& gpuForwardReceipt() const { return gpuFwdReceipt_; }
     bool isRealGpuForward() const;
     bool ensureGpuForwardArena(unsigned slot);
@@ -1415,6 +1448,10 @@ private:
     uint64_t vulkanUnplannedFallbacks_ = 0;
     uint64_t plannedCpuGemvOps_ = 0;
     uint64_t plannedGpuGemvOps_ = 0;
+    // RAWRXD_SPACELESS_CACHE_TELEMETRY_001: TensorResidencyCache counters
+    uint64_t residencyCacheHits_ = 0;
+    uint64_t residencyCacheMisses_ = 0;
+    uint64_t residencyCacheEvictions_ = 0;
     GpuForwardCounters gpuFwd_{};
     // RAWRXD_REAL_GPU_FORWARD_002: completed-generation evidence.
     //
@@ -1426,38 +1463,6 @@ private:
     // any cleanup, and is the only thing isRealGpuForward() is allowed to
     // trust. gpuFwdCommitted_ is deliberately NOT consulted: it is set by the
     // execution path itself, so it would self-certify.
-    struct GpuForwardReceipt {
-        uint64_t forwardLayers = 0;
-        uint64_t qkvOps = 0;
-        uint64_t rmsNormOps = 0;
-        uint64_t attnScoreOps = 0;
-        uint64_t ffnActOps = 0;
-        uint64_t residualOps = 0;
-        uint64_t forwardSlot0 = 0;
-        uint64_t tokenForwards = 0;
-        uint64_t hostMaterializations = 0;
-        uint64_t matFinalDownload = 0;
-        // RAWRXD_REAL_GPU_FORWARD_002: full materialization class sum. The
-        // codebase already defines this as the exhaustive taxonomy
-        // (Deep2GpuForward_MatClassSum): every hostMaterializations increment
-        // belongs to exactly one class. hostMaterializations==matFinalDownload
-        // alone is NOT an accounting invariant -- it only holds when nothing
-        // else materialized. Asserting it as the accounting check conflates
-        // "unclassified" with "not resident".
-        uint64_t matCrossDeviceHandoff = 0;
-        uint64_t matGemvSingleRoundTrip = 0;
-        uint64_t matDualRowSingle = 0;
-        uint64_t matDualRowGroup = 0;
-        uint64_t matOther = 0;
-        uint64_t hostMatSite[8]{};
-        uint64_t hostMatSiteBytes[8]{};
-        uint64_t hostForwardLayerCalls = 0;
-        uint64_t nanCount = 0;
-        uint64_t infCount = 0;
-        uint64_t generationId = 0;
-        uint32_t expectedLayersPerToken = 0;
-        bool valid = false;
-    };
     GpuForwardReceipt gpuFwdReceipt_{};
     // Monotonic id of the most recent generation whose receipt was captured.
     uint64_t gpuFwdGenerationId_ = 0;

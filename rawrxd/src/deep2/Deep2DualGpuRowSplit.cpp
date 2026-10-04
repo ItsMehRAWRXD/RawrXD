@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <condition_variable>
 #include <cstring>
@@ -728,35 +729,114 @@ uint64_t sliceKey(const WeightTensor& wt,uint32_t begin,uint32_t count) noexcept
     return h;
 }
 
+// RAWRXD_NANOBANDWIDTH_VIEW_RESOLUTION_001
+//
+// "GEMV_SINGLE fullView failed" reports WHERE a request stopped, not WHY. With
+// 1008 such failures per run, the reason is the whole question: is the tensor
+// unsupported, unmapped, mis-offset, or simply not resolvable? Those imply
+// completely different work.
+//
+// Every failed request now records exactly ONE mutually exclusive reason.
+enum class FullViewFailure : uint8_t {
+    None = 0,
+    NoData,               // wt.data == nullptr
+    NoRowCount,           // rowCount == 0
+    InvalidShard,         // rowBegin >= wt.rows
+    RowCountOverrun,      // rowCount > wt.rows - rowBegin
+    ZeroCols,
+    UnsupportedType,      // supportedGpuType(wt.type) == false
+    F32Overflow,
+    SizeNotDivisible,     // quantized: sizeBytes % rows != 0
+    ZeroRowBytes,
+    SliceOverflow,
+    InvalidOffset,        // off/bytes exceed wt.sizeBytes
+    Count
+};
+
+static const char* kFullViewFailureName[static_cast<size_t>(FullViewFailure::Count)] = {
+    "NONE",
+    "NO_DATA",
+    "NO_ROWCOUNT",
+    "INVALID_SHARD",
+    "ROWCOUNT_OVERRUN",
+    "ZERO_COLS",
+    "UNSUPPORTED_TYPE",
+    "F32_OVERFLOW",
+    "SIZE_NOT_DIVISIBLE",
+    "ZERO_ROWBYTES",
+    "SLICE_OVERFLOW",
+    "INVALID_OFFSET",
+};
+
+// Counters. Deliberately plain globals: this is a diagnostic that must work
+// before any residency authority exists to own it.
+static std::atomic<uint64_t> g_fullViewRequests{0};
+static std::atomic<uint64_t> g_fullViewSuccess{0};
+static std::atomic<uint64_t> g_fullViewFailure[static_cast<size_t>(FullViewFailure::Count)];
+
+// Returns the accumulated census. A caller prints it; nothing here prints on
+// the hot path, because a per-request fprintf is itself a distortion.
+void Deep2ReportFullViewCensus() {
+    std::fprintf(stderr, "\n[FULLVIEW_CENSUS]\n");
+    std::fprintf(stderr, "FULLVIEW_REQUESTS=%llu\n",
+                 (unsigned long long)g_fullViewRequests.load());
+    std::fprintf(stderr, "FULLVIEW_SUCCESS=%llu\n",
+                 (unsigned long long)g_fullViewSuccess.load());
+    std::fprintf(stderr, "FULLVIEW_FAIL=%llu\n",
+                 (unsigned long long)g_fullViewRequests.load() -
+                     (unsigned long long)g_fullViewSuccess.load());
+    for (size_t i = 1; i < static_cast<size_t>(FullViewFailure::Count); ++i) {
+        const uint64_t n = g_fullViewFailure[i].load();
+        if (n) std::fprintf(stderr, "FAIL_REASON_%s=%llu\n",
+                            kFullViewFailureName[i], (unsigned long long)n);
+    }
+    std::fflush(stderr);
+}
+
 bool Deep2BuildGpuWeightView(
     const WeightTensor& wt,uint32_t rowBegin,uint32_t rowCount,
     GpuWeightView& out) noexcept
 {
     out={};
-    if(!wt.data || !rowCount || rowBegin>=wt.rows ||
-       rowCount>wt.rows-rowBegin || !wt.cols ||
-       !supportedGpuType(wt.type))
+    ++g_fullViewRequests;
+
+    // Each guard records its own reason and returns. The reasons are mutually
+    // exclusive by construction, so the counters sum to the failure total --
+    // which is itself a checkable property of this instrumentation.
+    auto fail = [](FullViewFailure r) {
+        g_fullViewFailure[static_cast<size_t>(r)].fetch_add(1,
+                                                             std::memory_order_relaxed);
         return false;
+    };
+
+    if(!wt.data)                      return fail(FullViewFailure::NoData);
+    if(!rowCount)                      return fail(FullViewFailure::NoRowCount);
+    if(rowBegin>=wt.rows)             return fail(FullViewFailure::InvalidShard);
+    if(rowCount>wt.rows-rowBegin)      return fail(FullViewFailure::RowCountOverrun);
+    if(!wt.cols)                       return fail(FullViewFailure::ZeroCols);
+    if(!supportedGpuType(wt.type))     return fail(FullViewFailure::UnsupportedType);
 
     size_t rowBytes=0;
     if(wt.type==0){
         if(wt.cols>std::numeric_limits<size_t>::max()/sizeof(float))
-            return false;
+            return fail(FullViewFailure::F32Overflow);
         rowBytes=wt.cols*sizeof(float);
     } else {
-        if(!wt.sizeBytes || wt.rows==0 || wt.sizeBytes%wt.rows!=0)
-            return false;
+        if(!wt.sizeBytes || wt.rows==0)
+            return fail(FullViewFailure::SizeNotDivisible);
+        if(wt.sizeBytes%wt.rows!=0)
+            return fail(FullViewFailure::SizeNotDivisible);
         rowBytes=wt.sizeBytes/wt.rows;
     }
-    if(!rowBytes ||
-       rowBegin>std::numeric_limits<size_t>::max()/rowBytes ||
+    if(!rowBytes)                      return fail(FullViewFailure::ZeroRowBytes);
+    if(rowBegin>std::numeric_limits<size_t>::max()/rowBytes ||
        rowCount>std::numeric_limits<size_t>::max()/rowBytes)
-        return false;
+        return fail(FullViewFailure::SliceOverflow);
 
     const size_t off=(size_t)rowBegin*rowBytes;
     const size_t bytes=(size_t)rowCount*rowBytes;
     if(wt.sizeBytes && (off>wt.sizeBytes || bytes>wt.sizeBytes-off))
-        return false;
+        return fail(FullViewFailure::InvalidOffset);
 
     out.data=static_cast<const uint8_t*>(wt.data)+off;
     out.bytes=bytes;
@@ -764,6 +844,7 @@ bool Deep2BuildGpuWeightView(
     out.rows=rowCount;
     out.cols=(uint32_t)wt.cols;
     out.key=sliceKey(wt,rowBegin,rowCount);
+    g_fullViewSuccess.fetch_add(1, std::memory_order_relaxed);
     return true;
 }
 

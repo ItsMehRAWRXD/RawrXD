@@ -2,6 +2,9 @@
 #include "Deep2Engine.h"
 #include "Deep2GpuForward.hpp"
 #include "Deep2DualGpuRowSplit.hpp"
+// RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001: the resident forward is a whole-layer
+// weight-consumption bypass that never reaches the host LinearW funnel.
+#include "WeightConsumptionCensus.hpp"
 #include "QuantKernelRegistry.hpp"
 // RAWRXD_B70_PREPARED_CACHE_UNIT_001: shared with tools/prepared_cache_unit.cpp
 // so the unit test and the engine compile the same cache implementation.
@@ -2396,6 +2399,36 @@ bool Deep2Engine::forwardLayerGpuResident(
         }
     }
     std::fprintf(stderr, "GPU_LAYER_END layer=%u\n", layer);
+
+    // RAWRXD_WEIGHT_CONSUMPTION_CENSUS_001
+    // This is the whole-layer bypass, and the largest single one. The resident
+    // route resolves layer weights through EnsureF32 / ResolveResidentF32 and
+    // submits QKV, attention, FFN and residual directly as device dispatches.
+    // tryGpuTokenForward can return a completed token from here BEFORE the host
+    // forwardLayer() loop runs, so on this route no host weight projection in
+    // the layer ever enters LinearW() -- not one, not a grouped subset: the
+    // entire layer. That is why forwardLayer() cannot be used as evidence that
+    // a layer is a LinearW path.
+    {
+        using namespace rawrxd::deep2::weightcensus;
+        const LayerWeights& lw = modelWeights.layers[layer];
+        const WeightTensor* resident[10] = {
+            &lw.wq, &lw.wk, &lw.wv, &lw.wo,
+            &lw.wGate, &lw.wUp, &lw.wDown,
+            &lw.attnNorm, &lw.ffnNorm, &lw.attnPostNorm
+        };
+        for (const WeightTensor* t : resident) {
+            if (!t || !t->data) continue;
+            Event rv;
+            rv.site  = Site::ResidentForward;
+            rv.route = Route::Bypass;   // device dispatch, host funnel skipped
+            rv.tensor = t->name;
+            rv.bytes  = t->sizeBytes ? t->sizeBytes : t->numElements();
+            rv.tokenEpoch = (uint32_t)(kvCache ? kvCache->currentLength() : 0);
+            WeightConsumptionCensus::instance().record(rv);
+        }
+    }
+
     return true;
 }
 

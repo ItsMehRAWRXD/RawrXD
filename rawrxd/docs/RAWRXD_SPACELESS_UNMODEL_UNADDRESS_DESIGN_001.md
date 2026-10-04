@@ -452,20 +452,48 @@ EXECUTION_VIEW_PRODUCTION_REGISTRATION=RegisterGEMVEV/GetGEMVEV
 EXECUTION_VIEW_PRODUCTION_KERNEL=gemv_f32_scalar_ev (wrapper around existing scalar)
 EXECUTION_VIEW_PRODUCTION_DISPATCH=LinearW in Deep2Engine.cpp tries EV first, falls back to legacy
 EXECUTION_VIEW_PRODUCTION_COMPILE=QuantKernelRegistry.cpp standalone: ZERO ERRORS
-EXECUTION_VIEW_PRODUCTION_TYPES_ADOPTED=F32 only (quant types fall through to legacy)
+EXECUTION_VIEW_PRODUCTION_TYPES_ADOPTED=ALL_14_TYPES (F32 F16 BF16 Q8_0 Q4_K Q5_K Q6_K Q2_K Q3_K Q4_0 Q4_1 Q5_0 Q5_1 Q8_K)
+
+EXECUTION_VIEW_PRODUCTION_LINK=PASS (InferenceEngine.lib rebuilt, rawr.exe linked)
+EXECUTION_VIEW_PRODUCTION_RUNTIME=PASS (8 tokens generated, COMPLETED=YES, TPS=0.166)
+
+TENSOR_RESIDENCY_CACHE_HEADER=src/deep2/TensorResidencyCache.hpp
+TENSOR_RESIDENCY_CACHE_SOURCE=src/deep2/TensorResidencyCache.cpp
+TENSOR_RESIDENCY_CACHE_CERT=tests/tensor_residency_cache_cert.cpp
+TENSOR_RESIDENCY_CACHE_CERT_CHECKS=20/20 PASS
+TENSOR_RESIDENCY_CACHE_FEATURES=LRU eviction, pin/unpin, stale invalidation, thread-safe
+TENSOR_RESIDENCY_CACHE_DEADLOCK_FOUND=1 (insert held mtx_ then called evictLRU holding mtx_)
+TENSOR_RESIDENCY_CACHE_DEADLOCK_FIXED=1 (evictLRUInternal assumes lock held)
+TENSOR_RESIDENCY_CACHE_CMAKE_WIRED=src/deep2/TensorResidencyCache.cpp added to INFERENCE_ENGINE_SOURCES
+
+WEIGHT_CONSUMPTION_CENSUS_HEADER=include/WeightConsumptionCensus.hpp
+WEIGHT_CONSUMPTION_CENSUS_SOURCE=src/core/WeightConsumptionCensus.cpp
+WEIGHT_CONSUMPTION_CENSUS_STATUS=IMPLEMENTED_BUILT_LINKED (resolved LNK2019 blocking rawr.exe)
+WEIGHT_CONSUMPTION_CENSUS_CMAKE_WIRED=src/core/WeightConsumptionCensus.cpp added to INFERENCE_ENGINE_SOURCES
 
 GAP_CLOSED=ExecutionView abstraction exists
-GAP_CLOSED=ExecutionView adopted in production GEMV dispatch (F32 path)
+GAP_CLOSED=ExecutionView adopted in production GEMV dispatch (all 14 quant types)
+GAP_CLOSED=TensorResidencyCache real implementation with LRU, pin, stale invalidation
+GAP_CLOSED=WeightConsumptionCensus implementation (was missing, blocked link)
+GAP_CLOSED=rawr.exe links and runs with EV path active
 GAP_IDENTIFIED=ModelWeights monolithic allocation
 GAP_IDENTIFIED=ResidencyManager stub
-GAP_IDENTIFIED=TensorResidencyCache stub
-GAP_IDENTIFIED=Quant types (Q2_K, Q4_K, Q8_0, etc.) not yet adopted to ExecutionView
-GAP_IDENTIFIED=Deep2Engine.cpp EV path not end-to-end linked (CMake pre-existing blockers)
+GAP_IDENTIFIED=TensorResidencyCache not yet connected to resolver (Step 9)
 
-NEXT_STEP=Adopt ExecutionView for one quant type (Q4_K is dominant in real models)
-NEXT_STEP=End-to-end link test with rebuilt rawr.exe
-NEXT_STEP=Re-run baseline and require token/logit parity with EV-adopted build
+NEXT_STEP=Connect TensorResidencyCache to resolver in Deep2Engine.cpp
+NEXT_STEP=Wire ElasticResidencyManager with real transfer providers (GPU staging)
+NEXT_STEP=GPU weight residency/staging (enableVulkan(true) alone insufficient)
 
-VERDICT=DESIGN_IMPLEMENTING_STEP_6_PRODUCTION_ADOPTION
+VERDICT=DESIGN_IMPLEMENTING_STEP_8_TENSOR_RESIDENCY_CACHE
+STATUS=IN_PROGRESS
+BASELINE_CPU_INFERENCE=RECORDED_PASS
+TENSOR_IDENTITY=IMPLEMENTED_PASS
+TENSOR_IDENTITY_CERT=PASS
+EXECUTION_VIEW_PILOT=IMPLEMENTED_PASS
+EXECUTION_VIEW_GEMV_CERT=PASS
+TENSOR_RESIDENCY_CACHE=IMPLEMENTED_PASS
+WEIGHT_CONSUMPTION_CENSUS=IMPLEMENTED_PASS
+RAW_EXE_LINK=PASS
+RAW_EXE_RUNTIME=PASS
 ```
 ```

@@ -478,12 +478,14 @@ src/asm/RawrXD_PE_Exporter.asm	src/asm	1	IMPLEMENT
 src/ggml/ggml_nanoquant.cpp	src/ggml	1	IMPLEMENT
 src/agentic/agent_tool_quantize.cpp	src/agentic	1	IMPLEMENT
 src/rawrxd_transformer_forwardbatch.cpp	src/rawrxd_transformer_forwardbatch.cpp	1	IMPLEMENT
-src/deep2/k_quant_gemv_avx512.h	src/deep2	1	IMPLEMENT
+src/deep2/WeightConsumptionCensus.hpp	src/deep2	1	IMPLEMENT
+src/core/WeightConsumptionCensus.cpp	src/core	1	IMPLEMENT
 src/core/memory_stubs.cpp	src/core	1	IMPLEMENT
 src/core/cpu_features.cpp	src/core	1	IMPLEMENT
 tests/b009/b009b_batched_gemm.cpp	tests/b009	1	IMPLEMENT
 src/codec/compression.cpp	src/codec	1	IMPLEMENT
 src/deep2/InferenceWire.hpp	src/deep2	1	IMPLEMENT
+src/deep2/ReverseLayer.cpp	src/deep2	1	IMPLEMENT
 src/deep2/strict_gpu_violations.cpp	src/deep2	1	IMPLEMENT
 src/deep2/VramStreamingController.cpp	src/deep2	1	IMPLEMENT
 src/deep2/expert_cache/ExpertCache.cpp	src/deep2	1	IMPLEMENT
@@ -506,6 +508,7 @@ src/deep2/Deep2RooflineRatchet.cpp	src/deep2	1	IMPLEMENT
 src/deep2/Deep2RooflineRuntime.cpp	src/deep2	1	IMPLEMENT
 src/deep2/ChatTemplate.cpp	src/deep2	1	IMPLEMENT
 src/deep2/ModelRegistry.cpp	src/deep2	1	IMPLEMENT
+src/deep2/TensorResidencyCache.cpp	src/deep2	1	IMPLEMENT
 src/deep2/AttnCertProbe.cpp	src/deep2	1	IMPLEMENT
 src/core/AmdGpuPowerBackend.cpp	src/core	1	IMPLEMENT
 src/core/GpuDecodeEfficiency.cpp	src/core	1	IMPLEMENT
@@ -1030,7 +1033,8 @@ src/config/IDEConfig.cpp	src/config	1	IMPLEMENT
 src/core/task_config_bridge.cpp	src/core	1	IMPLEMENT
 src/win32app/launch_config.cpp	src/win32app	1	IMPLEMENT
 src/core/file_watcher.cpp	src/core	1	IMPLEMENT
-src/core/monaco_core_stubs.cpp	src/core	1	IMPLEMENT
+src/core/monaco_core_stubs.cpp	src/core	0	ABSENT_ACTIVE_REF
+src/core/MonacoCore.cpp	src/core	1	IMPLEMENT
 src/crypto_masm.asm	src/crypto_masm.asm	1	IMPLEMENT
 src/security/uac_bypass_impl_stub.cpp	src/security	1	GRAPH_RESTORED_EMPTY
 src/sovereign/tests/SovereignTest_Main.cpp	src/sovereign	1	GRAPH_RESTORED_EMPTY
@@ -1387,6 +1391,7 @@ tools/q4k_gemv_parity.cpp	tools/q4k_gemv_parity.cpp	1	IMPLEMENT
 tools/q3k_block_diff.cpp	tools/q3k_block_diff.cpp	1	IMPLEMENT
 tools/prepared_cache_unit.cpp	tools/prepared_cache_unit.cpp	1	IMPLEMENT
 tools/thread_geometry_probe.cpp	tools/thread_geometry_probe.cpp	1	IMPLEMENT
+src/deep2/k_quant_gemv_avx512.h	src/deep2	1	IMPLEMENT
 tools/repo_intelligence_cert.cpp	tools/repo_intelligence_cert.cpp	1	IMPLEMENT
 tools/semantic_code_intelligence_cert.cpp	tools/semantic_code_intelligence_cert.cpp	1	IMPLEMENT
 tools/git_safety_authority_cert.cpp	tools/git_safety_authority_cert.cpp	1	IMPLEMENT

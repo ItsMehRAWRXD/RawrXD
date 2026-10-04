@@ -413,6 +413,133 @@ static bool runCase(VulkanCompute& vc, const char* role, const char* name,
 
 } // namespace
 
+// ---------------------------------------------------------------------------
+// CASE_B tensor-site resolution.
+//
+// RAWRXD_Q4K_GEMV_PARITY_001 DEFECT REPAIR.
+// CASE_B is the decisive case in this gate: it feeds "real model" bytes to the
+// isolated dispatch. It previously read them at the literal 1082616800LL,
+//   * through a (long) cast, so the address was neither derived from the file's
+//     own metadata nor safe above 2 GiB on MSVC (long is 32-bit), and
+//   * silently wrong is impossible to distinguish from right here, because a
+//     short read only skips and a plausible-looking read is accepted.
+// This resolver derives the address from the GGUF header and REFUSES rather
+// than falling back, so a missing or unsuitable tensor reports a reason instead
+// of executing against bytes at an address nobody verified.
+// ---------------------------------------------------------------------------
+struct Q4KTensorSite {
+    std::string name;
+    uint64_t absOffset   = 0;
+    uint64_t ne0         = 0;
+    uint64_t ne1         = 0;
+    uint64_t rowStride   = 0;   // (ne0/256)*144
+    uint64_t tensorBytes = 0;
+};
+
+namespace {
+
+struct GgufRd {
+    std::FILE* f = nullptr;
+    bool bad = false;
+    bool open(const char* p) { f = std::fopen(p, "rb"); return f != nullptr; }
+    void close() { if (f) std::fclose(f); f = nullptr; }
+    uint64_t pos() const { return f ? (uint64_t)_ftelli64(f) : 0; }
+    bool seek64(uint64_t o) { if (!f) { bad = true; return false; }
+                               return _fseeki64(f, (__int64)o, SEEK_SET) == 0; }
+    bool read(void* d, size_t n) { if (!f) { bad = true; return false; }
+                                   if (!n) return true;
+                                   if (std::fread(d, 1, n, f) != n) { bad = true; return false; }
+                                   return true; }
+    uint32_t u32() { uint32_t v = 0; read(&v, 4); return v; }
+    uint64_t u64() { uint64_t v = 0; read(&v, 8); return v; }
+    std::string str() { uint64_t n = u64(); std::string s;
+                        if (!n || n > (uint64_t)1 << 28) { bad = true; return s; }
+                        s.resize((size_t)n); if (!read(&s[0], (size_t)n)) s.clear(); return s; }
+};
+
+void ggufSkip(GgufRd& r, uint32_t t) {
+    switch (t) {
+        case 0: case 1: case 7: { uint8_t v = 0; r.read(&v, 1); return; }
+        case 2: case 3:         { uint16_t v = 0; r.read(&v, 2); return; }
+        case 4: case 5: case 6: { uint32_t v = 0; r.read(&v, 4); return; }
+        case 8: r.str(); return;
+        case 9: { const uint32_t et = r.u32(); const uint64_t n = r.u64();
+            int w = 0;
+            switch (et) {
+                case 0: case 1: case 7: w = 1; break;
+                case 2: case 3:         w = 2; break;
+                case 4: case 5: case 6: w = 4; break;
+                case 10: case 11: case 12: w = 8; break;
+                case 8: { for (uint64_t i = 0; i < n; i++) r.str(); w = -1; } break;
+                default: r.bad = true; return;
+            }
+            if (w > 0) r.seek64(r.pos() + n * (uint64_t)w);
+            return; }
+        case 10: case 11: case 12: { uint64_t v = 0; r.read(&v, 8); return; }
+        default: r.bad = true; return;
+    }
+}
+
+} // namespace
+
+// Pick the first Q4_K (type 12) tensor whose ne0 >= wantCols and ne1 >= wantRows.
+// Returns false and sets `why` rather than inventing an address.
+static bool resolveQ4KTensorSite(const char* path, uint64_t wantCols, uint64_t wantRows,
+                                 Q4KTensorSite& out, std::string& why) {
+    why.clear();
+    GgufRd r;
+    if (!r.open(path)) { why = "open_failed"; return false; }
+    char magic[4];
+    if (!r.read(magic, 4) || std::memcmp(magic, "GGUF", 4) != 0) {
+        why = "not_a_gguf"; r.close(); return false;
+    }
+    r.u32();                              // version
+    const uint64_t nTensors = r.u64();
+    const uint64_t nKV = r.u64();
+    for (uint64_t i = 0; i < nKV && !r.bad; i++) { r.str(); ggufSkip(r, r.u32()); }
+    if (r.bad) { why = "kv_parse_failed"; r.close(); return false; }
+
+    bool found = false;
+    std::string rejectedType, rejectedDims;
+    for (uint64_t i = 0; i < nTensors && !r.bad; i++) {
+        const std::string name = r.str();
+        const uint32_t nd = r.u32();
+        uint64_t ne[4] = {0, 0, 0, 0};
+        for (uint32_t j = 0; j < nd && j < 4; j++) ne[j] = r.u64();
+        for (uint32_t j = 4; j < nd; j++) r.u64();
+        const uint32_t type = r.u32();
+        const uint64_t relOff = r.u64();
+        if (found || r.bad) continue;
+        if (type != 12) { if (rejectedType.empty()) rejectedType = name; continue; }
+        if (ne[0] < wantCols || ne[1] < wantRows) {
+            if (rejectedDims.empty())
+                rejectedDims = name + "(" + std::to_string(ne[0]) + "x" + std::to_string(ne[1]) + ")";
+            continue;
+        }
+        out.name       = name;
+        out.ne0        = ne[0];
+        out.ne1        = ne[1];
+        out.rowStride  = (ne[0] / 256ull) * 144ull;
+        out.tensorBytes= out.rowStride * ne[1];
+        out.absOffset  = 0;                 // filled after the header is closed
+        out.absOffset  = relOff;           // provisional; dataStart added below
+        found = true;
+    }
+    const uint64_t headerEnd = r.pos();
+    r.close();
+    if (!found) {
+        why = "no_q4k_tensor_satisfying_ne0>=" + std::to_string(wantCols) +
+              "_ne1>=" + std::to_string(wantRows);
+        if (!rejectedDims.empty()) why += "; dims_too_small=" + rejectedDims;
+        else if (!rejectedType.empty()) why += "; first_non_q4k=" + rejectedType;
+        return false;
+    }
+    // Split shards carry no general.alignment, so the GGUF default of 32 applies.
+    const uint64_t dataStart = (headerEnd + 31) / 32 * 32;
+    out.absOffset += dataStart;
+    return true;
+}
+
 int main(int argc, char** argv) {
     // Accept the model path as ANY argument, so callers do not have to know
     // the positional layout. An earlier revision only looked at argv[3] and
@@ -633,18 +760,50 @@ int main(int argc, char** argv) {
             // span comes from the GGUF metadata (1024 x cols/256 x 144) and
             // must be clamped to the tensor's real size when sweeping, since
             // a narrower cols reads a prefix of each row.
+            //
+            // The OFFSET is now derived from the tensor's own metadata. It used
+            // to be the literal 1082616800LL read through a (long) cast, which
+            // made "real model bytes" an unverified claim: on MSVC `long` is
+            // 32-bit, so that form cannot address a tensor beyond 2 GiB, and the
+            // literal was never checked against any GGUF header.
             const uint32_t bRows = 1024, bCols = cols;
             const size_t span = (size_t)bRows * (bCols / 256) * 144;
-            const long long bOff = 1082616800LL;
+            Q4KTensorSite site;
+            std::string why;
+            if (!resolveQ4KTensorSite(mdl, bCols, bRows, site, why)) {
+                std::fprintf(stderr,
+                    "[Q4KPAR] CASE_B SKIP cannot resolve a Q4_K tensor site from metadata: %s\n",
+                    why.c_str());
+            } else {
+            const uint64_t bOff = site.absOffset;
+            std::fprintf(stderr,
+                "[Q4KPAR] CASE_B site name=%s ne0=%llu ne1=%llu rowStride=%llu absFileOff=%llu\n",
+                site.name.c_str(), (unsigned long long)site.ne0, (unsigned long long)site.ne1,
+                (unsigned long long)site.rowStride, (unsigned long long)bOff);
+            // A site that cannot supply the requested span is refused rather
+            // than partially read, so CASE_B can never run on a prefix it
+            // believes is a whole tensor.
+            if (span > site.tensorBytes) {
+                std::fprintf(stderr,
+                    "[Q4KPAR] CASE_B SKIP span=%llu exceeds tensor %s size=%llu\n",
+                    (unsigned long long)span, site.name.c_str(),
+                    (unsigned long long)site.tensorBytes);
+            } else {
             std::vector<uint8_t> wk(span);
-            if (std::fseek(f, (long)bOff, SEEK_SET) != 0 ||
-                std::fread(wk.data(), 1, wk.size(), f) != wk.size()) {
-                std::fprintf(stderr, "[Q4KPAR] CASE_B SKIP short read at off=%lld\n", bOff);
+            // 64-bit seek: the previous fseek(f,(long)bOff,...) silently wrapped
+            // modulo 2^32 on MSVC. A shard-local tensor can easily exceed 2 GiB.
+            bool readOk = (_fseeki64(f, (__int64)bOff, SEEK_SET) == 0) &&
+                          (std::fread(wk.data(), 1, wk.size(), f) == wk.size());
+            if (!readOk) {
+                std::fprintf(stderr, "[Q4KPAR] CASE_B SKIP short read at off=%llu\n",
+                             (unsigned long long)bOff);
             } else {
                 std::fclose(f); f = nullptr;
                 const bool ok = runCase(vc, "B", "real_model_wk", wk.data(), wk.size(),
                                         12, bRows, bCols, input, "B");
                 caseBState = ok ? 1 : 2;
+            }
+            }
             }
             if (f) std::fclose(f);
         }
