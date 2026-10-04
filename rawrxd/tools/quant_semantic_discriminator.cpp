@@ -401,6 +401,7 @@ std::fprintf(stderr, "TPS=%.3f  (1000*generatedTokens/generationTimeMs)\n", leg.
         "GEMV_COUNTER_LIMIT=K-quant GEMV counters read 0 on a model verified "
         "coherent by output text; they observe route selection, not model "
         "correctness, and are not used as a gate.\n");
+    return true;
 }
 
 // Coherence is NOT scored here. Deciding whether English output is "semantic
