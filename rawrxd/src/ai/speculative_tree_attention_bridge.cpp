@@ -9,8 +9,12 @@ SpeculativeTreeAttentionBridge::~SpeculativeTreeAttentionBridge() {
     StopWorkerThreads();
 }
 
-SpeculativeTreeAttentionBridge::SpeculativeTreeAttentionBridge(SpeculativeTreeAttentionBridge&&) noexcept = default;
-SpeculativeTreeAttentionBridge& SpeculativeTreeAttentionBridge::operator=(SpeculativeTreeAttentionBridge&&) noexcept = default;
+// RAWRXD_GOLD_LINK_BLOCKER_004: the move constructor and move assignment used
+// to be defined here as `= default`. Both are ill-formed for this class -- it
+// holds std::mutex, std::condition_variable, std::atomic members and a thread
+// pool -- and both are now deleted in the header, where the reason is recorded.
+// Removing the definitions here is required: leaving a definition of a member
+// the header has deleted is an error in its own right.
 
 bool SpeculativeTreeAttentionBridge::Initialize(
     std::vector<DraftModelConfig> draft_configs,

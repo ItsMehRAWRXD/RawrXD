@@ -86,10 +86,44 @@ if(TARGET InferenceEngine AND
 endif()
 
 # Ensure RawrXD-Agentic can resolve models through ModelCatalog.
+#
+# This named src/models/ModelCatalog.cpp UNCONDITIONALLY. That file has never
+# existed, so every configure of this project died at the generate step with
+#   Cannot find source file: .../src/models/ModelCatalog.cpp
+# before a single target could be built -- including the HexMag certs, which
+# have nothing to do with model resolution.
+#
+# Two facts decided how this is repaired, and both are worth stating:
+#   1. No ModelCatalog API exists. A repo-wide search finds no class, struct or
+#      namespace of that name. The implementation that does exist is
+#      models/ModelCatalogAuthority.{h,cpp}, and nothing in the agentic runtime
+#      references either spelling. So the reference was vestigial, not a
+#      contract that an implementation failed to meet.
+#   2. Creating an empty ModelCatalog.cpp to silence the error would be a stub
+#      wearing a real filename -- the exact failure mode the source census and
+#      this repository's own receipts exist to prevent. A file whose entire
+#      behaviour is nothing is not a model catalog.
+#
+# So the reference is removed and the outcome is reported in the configure log
+# rather than silently dropped. Note that every sibling target_sources() in this
+# file was already guarded by if(EXISTS ...); this was the only unguarded one.
+#
+# Wiring ModelCatalogAuthority into RawrXD-Agentic is a separate change with its
+# own dependency closure (it needs GgufMetadataProbe and ReceiptAuthority), and
+# is deliberately NOT smuggled in under this filename.
 if(TARGET RawrXD-Agentic)
-    target_sources(RawrXD-Agentic PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/models/ModelCatalog.cpp")
     target_include_directories(RawrXD-Agentic PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/models")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/models/ModelCatalog.cpp")
+        target_sources(RawrXD-Agentic PRIVATE
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/models/ModelCatalog.cpp")
+        message(STATUS "[Agentic] RawrXD-Agentic model resolution: ModelCatalog")
+    else()
+        message(STATUS
+            "[Agentic] RawrXD-Agentic model resolution: NONE. "
+            "src/models/ModelCatalog.cpp does not exist and no ModelCatalog API "
+            "is referenced; models/ModelCatalogAuthority.{h,cpp} is the real "
+            "implementation and is NOT linked into this target.")
+    endif()
 endif()

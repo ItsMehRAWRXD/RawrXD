@@ -106,11 +106,32 @@ public:
     explicit SpeculativeTreeAttentionBridge(const TreeAttentionConfig& config);
     ~SpeculativeTreeAttentionBridge();
 
-    // Non-copyable, movable
+    // RAWRXD_GOLD_LINK_BLOCKER_004
+    // The four special-member declarations below used to be: copy deleted, move
+    // `noexcept` and defined `= default` in the .cpp. The move pair cannot be
+    // defaulted, because this class holds members that are none of them movable:
+    // five std::mutex, a std::condition_variable, three std::atomic<uint64_t>,
+    // an std::atomic<bool>, and a std::vector<std::thread>. Each defaulted move
+    // therefore failed to compile:
+    //
+    //     speculative_tree_attention_bridge.cpp(12,33): error C2280:
+    //       'std::atomic<bool>::atomic(const std::atomic<bool> &)': attempting to
+    //       reference a deleted function
+    //     ... and the same C2280 for std::atomic<unsigned __int64>,
+    //         std::condition_variable, and std::mutex.
+    //
+    // Deleting the move pair is the correct outcome, not a workaround. Moving
+    // this object would transfer `workers_` to the new instance and leave the
+    // source object's ~SpeculativeTreeAttentionBridge calling StopWorkerThreads()
+    // against a pool it no longer owns -- a shutdown race, not a compile error.
+    // The class is constructed in place from a TreeAttentionConfig and used
+    // through that instance; nothing in the tree moves one.
+    //
+    // Non-copyable and non-movable.
     SpeculativeTreeAttentionBridge(const SpeculativeTreeAttentionBridge&) = delete;
     SpeculativeTreeAttentionBridge& operator=(const SpeculativeTreeAttentionBridge&) = delete;
-    SpeculativeTreeAttentionBridge(SpeculativeTreeAttentionBridge&&) noexcept;
-    SpeculativeTreeAttentionBridge& operator=(SpeculativeTreeAttentionBridge&&) noexcept;
+    SpeculativeTreeAttentionBridge(SpeculativeTreeAttentionBridge&&) = delete;
+    SpeculativeTreeAttentionBridge& operator=(SpeculativeTreeAttentionBridge&&) = delete;
 
     // â”€â”€â”€ Core API â”€â”€â”€
 

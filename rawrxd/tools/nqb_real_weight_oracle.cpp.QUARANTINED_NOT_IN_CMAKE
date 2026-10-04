@@ -1,0 +1,244 @@
+// nqb_real_weight_oracle.cpp
+// RAWRXD_NQBRAID_REAL_WEIGHT_ORACLE_001
+//
+// Loads the SAME real model through two paths:
+//   Path A: Deep2Engine::loadModel(GGUF)  — reference
+//   Path B: Deep2Engine::loadModelFromNanof32Braid(NQB) — converted
+//
+// Tokenizes once, feeds identical token IDs to both, captures final logits,
+// and reports numerical divergence metrics.
+//
+// IMPORTANT: runs sequentially (unload GGUF before loading NQB) to avoid
+// doubling RAM footprint of a 12 GB dense-F32 model.
+
+#include "Deep2Engine.h"
+#include "Tokenizer.hpp"
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <string>
+#include <vector>
+#include <fstream>
+
+static bool checkFinite(const float* data, size_t n, const char* tag) {
+    for (size_t i = 0; i < n; ++i) {
+        if (!std::isfinite(data[i])) {
+            std::fprintf(stderr, "FAIL=nonfinite tag=%s idx=%zu val=%f\n", tag, i, data[i]);
+            return false;
+        }
+    }
+    return true;
+}
+
+static double cosineSimilarity(const float* a, const float* b, size_t n) {
+    double dot = 0.0, na = 0.0, nb = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        dot += double(a[i]) * double(b[i]);
+        na  += double(a[i]) * double(a[i]);
+        nb  += double(b[i]) * double(b[i]);
+    }
+    const double denom = std::sqrt(na) * std::sqrt(nb);
+    return denom > 0.0 ? dot / denom : 0.0;
+}
+
+static double rmse(const float* a, const float* b, size_t n) {
+    double sum = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        const double d = double(a[i]) - double(b[i]);
+        sum += d * d;
+    }
+    return std::sqrt(sum / static_cast<double>(n));
+}
+
+static double maxAbsDiff(const float* a, const float* b, size_t n, size_t& idx) {
+    double maxD = 0.0;
+    idx = 0;
+    for (size_t i = 0; i < n; ++i) {
+        const double d = std::fabs(double(a[i]) - double(b[i]));
+        if (d > maxD) { maxD = d; idx = i; }
+    }
+    return maxD;
+}
+
+static int argmax(const float* data, size_t n) {
+    int best = 0;
+    float bestVal = data[0];
+    for (size_t i = 1; i < n; ++i) {
+        if (data[i] > bestVal) { bestVal = data[i]; best = static_cast<int>(i); }
+    }
+    return best;
+}
+
+int main(int argc, char** argv) {
+    const char* ggufPath = (argc > 1) ? argv[1]
+        : "G:\\~dev\\rawrxd\\models\\llama3.2-3b-Q2_K.gguf";
+    const char* nqbPath  = (argc > 2) ? argv[2]
+        : "f:\\~dev\\rawrxd\\build\\bin\\Release\\llama3.2-3b-Q2_K.nqb";
+    const char* prompt   = (argc > 3) ? argv[3] : "The capital of France is";
+
+    std::fprintf(stderr, "=== RAWRXD_NQBRAID_REAL_WEIGHT_ORACLE_001 ===\n");
+    std::fprintf(stderr, "GGUF=%s\n", ggufPath);
+    std::fprintf(stderr, "NQB=%s\n", nqbPath);
+    std::fprintf(stderr, "PROMPT=%s\n", prompt);
+
+    // ----------------------------------------------------------------
+    // Shared tokenizer — load from GGUF (the NQB vocab is identical)
+    // ----------------------------------------------------------------
+    Deep2::BPETokenizer tokenizer;
+    {
+        Deep2::GGUFLoader tokLoader;
+        if (!tokLoader.load(ggufPath) || !tokenizer.loadFromGGUF(tokLoader)) {
+            std::fprintf(stderr, "FAIL=tokenizer_load\n");
+            return 1;
+        }
+    }
+    std::vector<int> tokens = tokenizer.encode(prompt);
+    if (tokens.empty()) {
+        std::fprintf(stderr, "FAIL=no_tokens\n");
+        return 1;
+    }
+    std::fprintf(stderr, "TOKEN_COUNT=%zu\n", tokens.size());
+    std::fprintf(stderr, "TOKEN_IDS=");
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        std::fprintf(stderr, "%d%c", tokens[i], (i + 1 < tokens.size()) ? ',' : '\n');
+    }
+
+    // ----------------------------------------------------------------
+    // Path A: GGUF reference
+    // ----------------------------------------------------------------
+    std::vector<float> refLogits;
+    {
+        Deep2::Deep2Engine engine;
+        Deep2::EngineConfig cfg{};
+        cfg.maxSeqLen = 4096;
+        cfg.useKVCache = true;
+        cfg.useThreadPool = true;
+        cfg.numThreads = 8;
+        std::snprintf(cfg.modelPath, sizeof(cfg.modelPath), "%s", ggufPath);
+
+        if (!engine.initialize(cfg)) {
+            std::fprintf(stderr, "FAIL=gguf_initialize\n");
+            return 1;
+        }
+        if (!engine.loadModel(ggufPath)) {
+            std::fprintf(stderr, "FAIL=gguf_loadModel\n");
+            return 1;
+        }
+        std::fprintf(stderr, "GGUF_INIT=PASS\n");
+
+        const auto& mw = engine.getModelWeights();
+        if (mw.vocabSize == 0) {
+            std::fprintf(stderr, "FAIL=gguf_vocab_size_zero\n");
+            return 1;
+        }
+
+        std::vector<float> hidden(mw.hiddenDim);
+        std::vector<float> logits(mw.vocabSize);
+        int promptFed = 0;
+
+        for (int tok : tokens) {
+            if (!engine.embedToken(tok, hidden.data())) {
+                std::fprintf(stderr, "FAIL=gguf_embedToken\n");
+                return 1;
+            }
+            auto fr = engine.forwardTokenAllLayers(hidden.data(), 1);
+            if (!fr.ok) {
+                std::fprintf(stderr, "FAIL=gguf_forwardTokenAllLayers\n");
+                return 1;
+            }
+            engine.computeLogits(hidden.data(), logits.data());
+            if (!checkFinite(logits.data(), mw.vocabSize, "gguf_logits")) {
+                return 1;
+            }
+            ++promptFed;
+        }
+        std::fprintf(stderr, "GGUF_PREFILL=PASS tokens_fed=%d\n", promptFed);
+        refLogits = std::move(logits);
+        engine.unloadModel();
+    }
+
+    // ----------------------------------------------------------------
+    // Path B: NQB converted
+    // ----------------------------------------------------------------
+    std::vector<float> nqbLogits;
+    {
+        Deep2::Deep2Engine engine;
+        Deep2::EngineConfig cfg{};
+        cfg.maxSeqLen = 4096;
+        cfg.useKVCache = true;
+        cfg.useThreadPool = true;
+        cfg.numThreads = 8;
+        std::snprintf(cfg.modelPath, sizeof(cfg.modelPath), "%s", nqbPath);
+
+        if (!engine.initialize(cfg)) {
+            std::fprintf(stderr, "FAIL=nqb_initialize\n");
+            return 1;
+        }
+        if (!engine.loadModelFromNanof32Braid(nqbPath)) {
+            std::fprintf(stderr, "FAIL=nqb_loadModelFromNanof32Braid\n");
+            return 1;
+        }
+        std::fprintf(stderr, "NQB_INIT=PASS\n");
+
+        const auto& mw = engine.getModelWeights();
+        if (mw.vocabSize == 0) {
+            std::fprintf(stderr, "FAIL=nqb_vocab_size_zero\n");
+            return 1;
+        }
+
+        std::vector<float> hidden(mw.hiddenDim);
+        std::vector<float> logits(mw.vocabSize);
+        int promptFed = 0;
+
+        for (int tok : tokens) {
+            if (!engine.embedToken(tok, hidden.data())) {
+                std::fprintf(stderr, "FAIL=nqb_embedToken\n");
+                return 1;
+            }
+            auto fr = engine.forwardTokenAllLayers(hidden.data(), 1);
+            if (!fr.ok) {
+                std::fprintf(stderr, "FAIL=nqb_forwardTokenAllLayers\n");
+                return 1;
+            }
+            engine.computeLogits(hidden.data(), logits.data());
+            if (!checkFinite(logits.data(), mw.vocabSize, "nqb_logits")) {
+                return 1;
+            }
+            ++promptFed;
+        }
+        std::fprintf(stderr, "NQB_PREFILL=PASS tokens_fed=%d\n", promptFed);
+        nqbLogits = std::move(logits);
+        engine.unloadModel();
+    }
+
+    // ----------------------------------------------------------------
+    // Comparison
+    // ----------------------------------------------------------------
+    if (refLogits.size() != nqbLogits.size()) {
+        std::fprintf(stderr, "FAIL=logits_size_mismatch ref=%zu nqb=%zu\n",
+                     refLogits.size(), nqbLogits.size());
+        return 1;
+    }
+    const size_t V = refLogits.size();
+    std::fprintf(stderr, "VOCAB_SIZE=%zu\n", V);
+
+    size_t maxIdx = 0;
+    const double cosSim = cosineSimilarity(refLogits.data(), nqbLogits.data(), V);
+    const double rmseVal = rmse(refLogits.data(), nqbLogits.data(), V);
+    const double maxAbs = maxAbsDiff(refLogits.data(), nqbLogits.data(), V, maxIdx);
+    const int refBest = argmax(refLogits.data(), V);
+    const int nqbBest = argmax(nqbLogits.data(), V);
+
+    std::fprintf(stderr, "LOGIT_COSINE=%.9g\n", cosSim);
+    std::fprintf(stderr, "LOGIT_RMSE=%.9g\n", rmseVal);
+    std::fprintf(stderr, "LOGIT_MAX_ABS_DIFF=%.9g @ idx=%zu\n", maxAbs, maxIdx);
+    std::fprintf(stderr, "REF_ARGMAX=%d NQB_ARGMAX=%d ARGMAX_MATCH=%s\n",
+                 refBest, nqbBest, (refBest == nqbBest) ? "PASS" : "FAIL");
+
+    bool pass = checkFinite(refLogits.data(), V, "ref_final")
+             && checkFinite(nqbLogits.data(), V, "nqb_final")
+             && (refBest == nqbBest);
+
+    std::fprintf(stderr, "VERDICT=%s\n", pass ? "PASS" : "FAIL");
+    return pass ? 0 : 1;
+}

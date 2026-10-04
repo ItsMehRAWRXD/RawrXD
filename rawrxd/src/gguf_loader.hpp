@@ -110,6 +110,7 @@ public:
     size_t byte_size() const { return info_.byte_size; }
     size_t block_size() const { return info_.block_size; }
     GGUFType type() const;
+    GGMLType ggml_type() const { return info_.ggml_type; }
     const std::vector<uint64_t>& shape() const;
     std::string name() const;
 

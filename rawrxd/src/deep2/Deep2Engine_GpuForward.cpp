@@ -1334,6 +1334,8 @@ bool Deep2Engine::forwardLayerGpuResident(
     uint32_t layer, unsigned slot, bool uploadEntry, bool downloadExit)
 {
     std::fprintf(stderr, "GPU_LAYER_ENTER layer=%u slot=%u\n", layer, slot);
+    // RAWRXD_GPU_ROUTE_RECEIPT_001
+    ++routeReceipt_.layerGpuResidentCalls;
     if (!vulkanInitialized_ || vulkanDevices_.empty()) {
         std::fprintf(stderr, "GPU_FORWARD_FAIL_STAGE=VULKAN_INIT layer=%u reason=vulkan_uninitialized_or_no_devices\n", layer);
         return false;
@@ -2435,6 +2437,10 @@ bool Deep2Engine::forwardLayerGpuResident(
 bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t hi,
                                             const float* hostIn, float* hostOut) {
     rawr::gpu_iso::Begin();
+    // RAWRXD_GPU_ROUTE_RECEIPT_001: count ENTRY, before any early return, so a
+    // route that is entered and then refused is still distinguishable from one
+    // that is never reached.
+    ++routeReceipt_.contiguousRangeCalls;
     auto* vc = getVulkanComputeSlot(slot);
     if (!vc || !ensureGpuForwardArena(slot)) return false;
     const uint32_t H = (uint32_t)config.hiddenDim;
@@ -2467,6 +2473,61 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
 
     const bool rangeFuse = !vc->WeightPrefetchActive();
     const auto rangeStart = std::chrono::steady_clock::now();
+
+    // RAWRXD_GPU_WEIGHT_RESIDENCY_001 -- SINGLE-GPU WEIGHT RESIDENCY.
+    //
+    // Measured defect this removes: on this path every GEMV entered
+    // DispatchGemvDevice / DispatchGemvQuant with a HOST pointer, and each
+    // ensureWeight* lookup was a cold miss, so weight bytes were staged
+    // host->device-local on each token rather than being held in VRAM.
+    // The dual-GPU path already pinned its whole layer range
+    // (B5_SLOT1_RANGE_RESIDENCY_001, above in forwardGpuMultiMap); the
+    // contiguous single-GPU path had no equivalent, which is why
+    // ReadWeightResidency() reported hostStagedDispatches with no
+    // resident counterpart.
+    //
+    // Pinning makes the SAME dispatch calls become cache HITS: the buffers
+    // already exist in device-local memory, so ensureWeight* returns the
+    // existing entry instead of uploading. It does not add a second code
+    // path, does not change any numerics, and does not alter the dispatch
+    // contract -- it only changes whether the buffer is already there.
+    //
+    // Failure to pin is NOT fatal. If the budget cannot admit the full range,
+    // the loop leaves contiguousRangePinned_[slot] false and the existing
+    // upload-on-miss behaviour continues to produce correct output. This
+    // path degrades to the previous behaviour rather than failing the model,
+    // and the residency counters record what actually happened either way.
+    if (slot < 2 && !contiguousRangePinned_[slot]) {
+        bool allOk = true;
+        for (uint32_t L = lo; L <= hi && allOk; ++L) {
+            if (L >= modelWeights.layers.size()) { allOk = false; break; }
+            const auto& lw = modelWeights.layers[L];
+            // wqkv is the fused QKV form used by Phi-3 and others. It is
+            // skipped when absent (data == null), so one list covers both the
+            // split and the fused layouts without branching on architecture.
+            const WeightTensor* tensors[8] = {
+                &lw.wq, &lw.wk, &lw.wv, &lw.wqkv,
+                lw.wo.data ? &lw.wo : &lw.attnO,
+                &lw.wGate, &lw.wUp, &lw.wDown
+            };
+            for (const WeightTensor* t : tensors) {
+                if (!t || !t->data || !t->rows || !t->cols) continue;
+                GpuWeightView v{};
+                if (!Deep2BuildGpuWeightView(
+                        *t, 0, static_cast<uint32_t>(t->rows), v) ||
+                    !vc->PinWeightView(v)) { allOk = false; break; }
+            }
+        }
+        if (allOk) contiguousRangePinned_[slot] = true;
+        std::fprintf(stderr,
+            "[RAWRXD_GPU_WEIGHT_RESIDENCY_001] slot=%u layers=%u-%u "
+            "pin_complete=%d pinned_bytes=%llu pinned_entries=%llu\n",
+            slot, lo, hi, allOk ? 1 : 0,
+            (unsigned long long)vc->PinnedWeightBytes(),
+            (unsigned long long)vc->PinnedWeightEntries());
+        std::fflush(stderr);
+    }
+
     if (rangeFuse && !vc->BeginFusedLayer()) return false;
     // PARITY: resident lane tag for dispatches inside this range.
     vc->SetQ4kLaneTag(CPUInference::VulkanCompute::kQ4kLaneResident);
@@ -2524,6 +2585,7 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
 
 bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
     if (!multiGpuLayerPlan_.active || multiGpuLayerPlan_.gpuSlotCount < 1) return false;
+    ++routeReceipt_.multiMapCalls;
     const uint32_t H = (uint32_t)config.hiddenDim;
     const unsigned gpuN = multiGpuLayerPlan_.gpuSlotCount;
 

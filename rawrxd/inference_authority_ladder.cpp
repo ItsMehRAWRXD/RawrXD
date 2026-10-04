@@ -275,6 +275,31 @@ int main(int argc, char** argv) {
             const char* stepsEnv = std::getenv("RAWRXD_LADDER_PARITY_STEPS");
             const int maxSteps = stepsEnv ? std::atoi(stepsEnv) : 1;
             eng.enableParityProbe(parityPath, maxSteps);
+
+            // RAWRXD_GEMMA3_PROJECTION_ORACLE_001
+            //
+            // enableParityProbeFullVectors() existed and had no caller, so the
+            // VEC records it writes -- the only way to get exact activation
+            // values out of the engine rather than a summary -- could never be
+            // produced. An offline projection oracle has no input without them,
+            // and the host probe's scalar summaries (MIN/MAX/MEAN/L2/FIRST8/
+            // HASH) cannot be inverted back into a vector.
+            //
+            // This is what makes the three-authority comparison possible:
+            //   CPU runtime Q  vs  offline W_q x RMS_ATTN  vs  GPU runtime Q
+            // The activation is dumped from the CPU route, which is the route
+            // whose RMS_ATTN already matches the GPU bit-exactly, so both
+            // projections are over the SAME input vector.
+            //
+            // -1 is a valid value meaning "no layer"; 0 and above select one.
+            const char* vecEnv = std::getenv("RAWRXD_LADDER_PARITY_VEC_LAYER");
+            if (vecEnv && *vecEnv) {
+                const int vecLayer = std::atoi(vecEnv);
+                if (vecLayer >= 0) {
+                    eng.enableParityProbeFullVectors(vecLayer);
+                    std::printf("parity_vec_layer=%d\n", vecLayer);
+                }
+            }
             std::printf("parity_probe=%s max_steps=%d\n", parityPath, maxSteps);
         }
 
@@ -721,11 +746,14 @@ int main(int argc, char** argv) {
         }
         std::fflush(stdout);
     }
-    if (emitPath && *emitPath) {
-        SaveTokenFile(emitPath, R.greedy);
-        std::printf("emitted_greedy_tokens=%zu -> %s\n", R.greedy.size(), emitPath);
-    }
-
+    // RAWRXD_LADDER_SINGLE_EMIT_001
+    // This block was present twice, identically. The measured symptom was a
+    // doubled "emitted_greedy_tokens=N -> path" line in every run that set
+    // RAWRXD_LADDER_EMIT, and the reference file being rewritten with identical
+    // bytes. Harmless in isolation, but a duplicated emit is indistinguishable
+    // in the log from an emit that happened at two different points in the
+    // gate sequence -- and this file is the instrument that decides whether a
+    // route agrees with another. One emit, one line.
     if (emitPath && *emitPath) {
         SaveTokenFile(emitPath, R.greedy);
         std::printf("emitted_greedy_tokens=%zu -> %s\n", R.greedy.size(), emitPath);

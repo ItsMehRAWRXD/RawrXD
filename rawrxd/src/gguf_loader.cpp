@@ -256,17 +256,32 @@ namespace {
     }
 
     void DequantQ2_K(const uint8_t* src, size_t blk, float* out) {
-        const float d    = FP16ToFP32(ReadU16LE(src));
-        const float mins = FP16ToFP32(ReadU16LE(src + 2));
-        const uint8_t* scales = src + 4;
+        // RAWRXD_Q2K_DEQUANT_001 — corrected scalar Q2_K dequantizer.
+        // Q2_K superblock: 256 weights, 84 bytes.
+        //   [0..15]   scales[16]  — each byte = (min<<4) | scale
+        //   [16..79]  qs[64]      — 256 × 2-bit quantized values
+        //   [80..81]  d           (FP16 super-block scale)
+        //   [82..83]  dmin        (FP16 super-block minimum scale)
+        const uint8_t* scales = src;
         const uint8_t* qs     = src + 16;
-        uint8_t sc[16], m[16];
-        const size_t nsub = blk / 16;
-        for (size_t j = 0; j < nsub; ++j) GetScaleMinK4(j, scales, sc[j], m[j]);
+        const float d    = FP16ToFP32(ReadU16LE(src + 80));
+        const float dmin = FP16ToFP32(ReadU16LE(src + 82));
+
+        // Q2_K has 16 sub-blocks of 16 weights. Each sub-block gets one
+        // 4-bit scale and one 4-bit min from the 16 bytes of scales.
+        uint8_t sc[16], mn[16];
+        for (size_t j = 0; j < 16; ++j) {
+            sc[j] = scales[j] & 0x0F;
+            mn[j] = scales[j] >> 4;
+        }
+
         for (size_t j = 0; j < blk; ++j) {
-            const uint8_t sel = qs[j / 4] & (0x3u << (2 * (j % 4)));
-            const int val = static_cast<int>((sel >> (2 * (j % 4))) & 3u);
-            out[j] = d * sc[j / 16] * (val - mins) + m[j / 16] * mins;
+            const uint8_t shift = static_cast<uint8_t>(2 * (j & 3));
+            const uint8_t sel   = qs[j >> 2];
+            const int val = static_cast<int>((sel >> shift) & 0x3u);
+            const float ds = d    * static_cast<float>(sc[j >> 4]);
+            const float dm = dmin * static_cast<float>(mn[j >> 4]);
+            out[j] = ds * static_cast<float>(val) - dm;
         }
     }
 

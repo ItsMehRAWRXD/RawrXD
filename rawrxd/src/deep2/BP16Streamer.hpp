@@ -5,6 +5,7 @@
 // ============================================================================
 #include <cstdint>
 #include <cstddef>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <memory>
@@ -13,16 +14,34 @@
 
 namespace Deep2 {
 
+// RAWRXD_NQB_PRODUCTION_REOPEN_001
+//
+// THE canonical float32 -> bfloat16 bit conversion for this engine.
+//
+// It is a TRUNCATION of the high 16 bits, not round-to-nearest-even, and the
+// reader depends on that exactly: Nanof32BraidStreamer::readNextTensor
+// materialises every DENSE_F32 tensor as bfloat16_t(fp32[i]).
+//
+// It lives here, as one named function, rather than being written out again at
+// each site that needs to predict the reader's output. A verification tool that
+// reimplemented the conversion independently would be measuring its own
+// arithmetic, not the reader's; the honest form is to call the SAME primitive
+// and report the result as reader SELF-CONSISTENCY, which is strictly weaker
+// than proving the BF16 policy is numerically correct. Nothing in this file
+// claims the latter -- the ~0.4% relative truncation error is a property of the
+// policy, not a defect in this function.
+inline uint16_t Float32ToBF16Bits(float f) {
+    uint32_t u;
+    std::memcpy(&u, &f, sizeof(f));
+    return static_cast<uint16_t>(u >> 16);
+}
+
 // Lightweight BFloat16 type
 struct bfloat16_t {
     uint16_t v = 0;
     bfloat16_t() = default;
     explicit bfloat16_t(uint16_t raw) : v(raw) {}
-    explicit bfloat16_t(float f) {
-        uint32_t u;
-        std::memcpy(&u, &f, sizeof(f));
-        v = static_cast<uint16_t>(u >> 16);
-    }
+    explicit bfloat16_t(float f) { v = Float32ToBF16Bits(f); }
     float toFloat() const {
         uint32_t u = static_cast<uint32_t>(v) << 16;
         float f;

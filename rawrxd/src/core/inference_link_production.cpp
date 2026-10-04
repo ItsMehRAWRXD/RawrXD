@@ -23,10 +23,48 @@
 // ============================================================================
 // ExecutionScheduler KV cache counters
 // ============================================================================
-extern "C" {
-    int g_kv_aperture_hits = 0;
-    int g_kv_pages_flushed = 0;
-}
+// RAWRXD_OWNER_PROOF_001 -- REMOVED. These two definitions were:
+//
+//     extern "C" {
+//         int g_kv_aperture_hits = 0;
+//         int g_kv_pages_flushed = 0;
+//     }
+//
+// They are deleted rather than kept because the symbol names already have an
+// owner, this file's own two definitions were the redundant side of a collision,
+// and nothing in the tree needs them:
+//
+//   1. OCCUPIED. src/core/link_symbols_impl.cpp:212,214 already defines both,
+//      under `extern "C"` as well -- so with no C++ type mangling the linker
+//      cannot tell the two apart:
+//        inference_link_production.obj : error LNK2005: g_kv_aperture_hits
+//                                        already defined in link_symbols_impl.obj
+//        inference_link_production.obj : error LNK2005: g_kv_pages_flushed
+//                                        already defined in link_symbols_impl.obj
+//      link_symbols_impl.cpp annotates its pair `// STUB: ... (always 0)` and
+//      places them under a `// Global Symbols [STUB: ZERO-INITIALIZED]` banner.
+//      It is the incumbent, and it is a stub.
+//
+//   2. TYPELESS INCONSISTENT. The two sides disagree on the type -- int here,
+//      uint64_t there -- and a third definition exists as
+//      `std::atomic<uint64_t>` at src/core/gold_link_closure_v2.cpp:366-367.
+//      Three types for one name is not a duplicate to be resolved by picking a
+//      winner; it is a symbol nobody agreed on.
+//
+//   3. UNCONSUMED. No header anywhere declares either name, and no code reads or
+//      writes either one. Measured against the live link: 0 occurrences of
+//      "g_kv_" in the current RawrXD_Gold link log. They are referenced by
+//      nothing, so deleting these definitions cannot orphan a caller.
+//
+// With no declaration and no consumer there is no contract to preserve, so
+// there is nothing here that the incumbent stubs do not already provide. The 13
+// other definitions in this file ARE referenced and are unaffected.
+//
+// TEXTUAL_PRESENCE_IS_NOT_OWNERSHIP: these two names were visible in this file
+// to every grep-based ownership search ever run over it, which is exactly how a
+// candidate owner gets mistaken for the owner. Proving the object exports the
+// symbol is what separates the two, and here the object would export a symbol
+// nothing wants.
 
 // ============================================================================
 // LSP Diagnostic fromJson - Must match header declaration exactly

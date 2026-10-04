@@ -34,10 +34,53 @@ if(NOT EXISTS "${_SG_SELF}")
 endif()
 file(READ "${_SG_SELF}" _SG_TEXT)
 
+# RAWRXD_SOURCE_GRAPH_COMMENT_CLASSIFIER_001
+#
+# A `#` comment in CMake runs to END OF LINE. The previous classifier only
+# recognised a commented path when it appeared immediately after `#` plus
+# optional blanks:
+#
+#     string(REGEX MATCHALL "#[ \t]*[A-Za-z0-9_./-]+\\.(cpp|...|asm|rc)" ...)
+#
+# A path named later in the same comment sentence did not match, so the
+# active-token scan at line 40 claimed it and it was never subtracted. Measured
+# false positive on this tree:
+#
+#     CMakeLists.txt:8159
+#       # line tokenizer. Replaces src/core/monaco_core_stubs.cpp, which
+#
+# `src/core/monaco_core_stubs.cpp` is referenced ONLY inside that comment, yet it
+# was classified ABSENT_ACTIVE_REF while `src/unresolved_asm_stubs.asm` -- in
+# exactly the same situation, referenced only in comments -- was correctly
+# classified ABSENT_COMMENTED_REF. Same fact, two answers, and the wrong one is
+# the one that would fail a configure under RAWRXD_STRICT_SOURCES=ON over a file
+# no target builds.
+#
+# The fix is to stop pattern-matching where a comment starts. Comments are
+# stripped first, by line, and the two scans then run over disjoint text:
+#   _SG_CODE      = every line with its '#'-to-EOL tail removed  -> active
+#   _SG_COMMENTED = the removed tails                          -> commented
+# A path can no longer be both, and neither scan can miss a mention.
+string(REGEX MATCHALL "[^\n]*" _SG_LINES "${_SG_TEXT}")
+set(_SG_CODE "")
+set(_SG_COMTEXT "")
+foreach(_ln IN LISTS _SG_LINES)
+    # Keep a sentinel newline so the code text stays line-structured; without it
+    # two adjacent lines would concatenate and fuse the tail of one onto the
+    # head of the next.
+    string(REGEX REPLACE "#([^\n]*)" "\n" _ln_split "${_ln}\n")
+    string(REGEX REPLACE "#([^\n]*)" "" _ln_code "${_ln}")
+    string(APPEND _SG_CODE "${_ln_code}\n")
+    if(_ln MATCHES "#([^\n]*)")
+        set(_ln_com "${CMAKE_MATCH_1}")
+        string(APPEND _SG_COMTEXT "${_ln_com}\n")
+    endif()
+endforeach()
+
 # --- active references ------------------------------------------------------
-# A path token NOT preceded by '#'. Captures both `src/a/b.cpp` and the
-# continuation lines of a multi-line set()/add_executable() list.
-string(REGEX MATCHALL "[A-Za-z0-9_./-]+\\.(cpp|hpp|h|cc|cxx|asm|rc)" _SG_TOKENS "${_SG_TEXT}")
+# Paths in _SG_CODE only: a comment can no longer contribute to this list.
+string(REGEX MATCHALL "[A-Za-z0-9_./-]+\\.(cpp|hpp|h|cc|cxx|asm|rc)"
+       _SG_TOKENS "${_SG_CODE}")
 set(_SG_ACTIVE "")
 foreach(_t IN LISTS _SG_TOKENS)
     if(_t MATCHES "^(src|tools|certs|tests|include|examples|3rdparty)/")
@@ -49,11 +92,12 @@ if(_SG_ACTIVE)
 endif()
 
 # --- commented references ---------------------------------------------------
-string(REGEX MATCHALL "#[ \t]*[A-Za-z0-9_./-]+\\.(cpp|hpp|h|cc|cxx|asm|rc)"
-       _SG_CHITS "${_SG_TEXT}")
+# Paths anywhere inside a removed comment tail. The '#' is gone, so no
+# strip-and-retest is needed and a path in mid-sentence is now found.
+string(REGEX MATCHALL "[A-Za-z0-9_./-]+\\.(cpp|hpp|h|cc|cxx|asm|rc)"
+       _SG_CHITS "${_SG_COMTEXT}")
 set(_SG_COMMENTED "")
 foreach(_h IN LISTS _SG_CHITS)
-    string(REGEX REPLACE "#[ \t]*" "" _h "${_h}")
     if(_h MATCHES "^(src|tools|certs|tests|include|examples|3rdparty)/")
         list(APPEND _SG_COMMENTED "${_h}")
     endif()

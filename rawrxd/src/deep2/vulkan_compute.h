@@ -306,6 +306,123 @@ public:
     uint64_t WeightUploadCount() const noexcept { return weightUploads_; }
     uint64_t WeightHitCount() const noexcept { return weightHits_; }
 
+    // ===== RAWRXD_GPU_WEIGHT_RESIDENCY_001 ==============================
+    // Read-only MEASURED snapshot of the weight-residency state.
+    //
+    // Why this exists: the residency counters below were all private and had
+    // no reader outside this class, so "GPU weights are resident" could be
+    // asserted by any caller and nothing could contradict it. Every field here
+    // is a counter the runtime already increments; none of them can be set by
+    // a caller, and there is deliberately no setter and no "mark certified"
+    // entry point.
+    //
+    // A residency claim is only meaningful when it is expressed as a ratio of
+    // bytes actually served from device memory against bytes that had to be
+    // staged from the host, so both are reported in the same snapshot.
+    struct WeightResidencySnapshot {
+        // Bytes of weight data currently held in DEVICE_LOCAL memory.
+        uint64_t deviceLocalBytes = 0;
+        // Bytes of weight data the eviction policy permits (budget).
+        uint64_t budgetBytes = 0;
+        // Host->device transfers performed (each is a PCIe copy of weight bytes).
+        uint64_t uploads = 0;
+        // Cache hits (weight served from the device-local copy).
+        uint64_t hits = 0;
+        // GEMV dispatches served straight from a resident device buffer.
+        uint64_t residentDispatches = 0;
+        // GEMV dispatches that had to stage weight from the host.
+        uint64_t hostStagedDispatches = 0;
+        // Rows computed by a CPU kernel while nominally on the GPU path.
+        uint64_t cpuFallbackRows = 0;
+        // Total weight bytes staged host->device across all uploads.
+        uint64_t uploadedBytes = 0;
+        // Distinct weight tensors currently resident.
+        uint64_t residentTensorCount = 0;
+        // True when a physical device was actually selected.
+        bool deviceBacked = false;
+    };
+
+    WeightResidencySnapshot ReadWeightResidency() const noexcept;
+
+    // ===== RAWRXD_GPU_DISPATCH_REJECTION_001 =============================
+    // Why a weight that reached the GPU path did not execute on the device.
+    //
+    // MEASURED MOTIVATION: with a real 638 MB Q4_K_M model on an R9700 the
+    // residency counters read
+    //     UPLOADS=1  HITS=1741  HOST_STAGED=0  RESIDENT_PPM=1000000
+    // while GEMV_SUCCESS=0 and CPU_FALLBACK_ROWS=374824. Weights were proven
+    // resident AND proven unused. "GEMV_SUCCESS=0" alone cannot say which of
+    // the nine abandon-paths in RunWeightColdRowRace was taken, and six of
+    // those nine returned to the CPU WITHOUT incrementing any counter, so the
+    // fallback was previously unattributable.
+    //
+    // Every value below corresponds to one concrete branch. There is no
+    // catch-all that can absorb a large share of the traffic unnoticed: a
+    // branch that is not classified lands in Unclassified, and Unclassified
+    // is itself reported so a growing bucket is visible rather than hidden.
+    enum class RejectReason : uint32_t {
+        None = 0,
+        RowBytesUnknown,      // QuantPackedRowBytes==0 or bytes<rowBytes
+        RowCountInvalid,      // rowsPerSlice==0 or >UINT32_MAX
+        TooFewRows,           // totalRows<2
+        NoResidentHandle,     // GetHotHandle() returned null
+        PromotionNotOwned,    // TryBeginHotPromotion() lost the race
+        TargetAllocFailed,    // createBuffer(device-local) failed
+        ScratchAllocFailed,   // EnsureScratch failed
+        StagingAllocFailed,   // ensureMappedStaging failed
+        InputUploadFailed,    // begin/record/end of the input copy failed
+        KernelMissing,        // cpuKernel==nullptr for a packed type
+        CpuKernelRefused,     // RunCpuQuantRowsFull itself returned false
+        Unclassified,
+        Count_                // array bound, never a real reason
+    };
+    static constexpr uint32_t kRejectReasonCount =
+        static_cast<uint32_t>(RejectReason::Count_);
+
+    static const char* RejectReasonName(RejectReason r) noexcept;
+
+    // Row conservation. RAWRXD_GPU_ROW_CONSERVATION_001:
+    //   rowsPresented == gpuRows + cpuFallbackRows + failedRows
+    // Rows that vanish between scheduling and dispatch are invisible to every
+    // other counter in this class, so the identity is reported explicitly and
+    // a non-zero delta fails the gate rather than being absorbed.
+    struct DispatchAccounting {
+        uint64_t rowsPresented = 0;
+        uint64_t gpuRowsCompleted = 0;
+        uint64_t cpuFallbackRows = 0;
+        uint64_t failedRows = 0;
+        // rowsPresented - (gpuRowsCompleted + cpuFallbackRows + failedRows).
+        // Signed because a negative delta means rows were double-counted.
+        int64_t  conservationDelta = 0;
+        // Calls that abandoned the device path, by reason.
+        uint64_t rejectCalls[kRejectReasonCount] = {0};
+        // Rows surrendered to the CPU by each reason.
+        uint64_t rejectRows[kRejectReasonCount] = {0};
+        // Race telemetry (NOT rejections).
+        uint64_t raceCpuTailRows = 0;
+        uint64_t raceCpuTailIterations = 0;
+        uint64_t raceGpuChunkIterations = 0;
+        uint64_t raceCpuTailRowsMeanX100 = 0;
+        // RAWRXD_GPU_GROUPED_RACE_FAIRNESS_001 scheduler telemetry.
+        uint64_t raceOuterIterations = 0;
+        uint64_t raceGpuStarvedIterations = 0;
+        uint64_t raceCpuStarvedIterations = 0;
+        uint64_t raceMaxConsecutiveGpuStarved = 0;
+        uint64_t raceMaxConsecutiveCpuStarved = 0;
+        uint64_t raceGpuClaimFailures = 0;
+        uint64_t raceCpuClaimFailures = 0;
+        uint64_t raceDoubleClaimRows = 0;
+        uint64_t raceCpuBudget = 0;
+        // Claim conservation: rowsAvailable == gpuClaimed + cpuClaimed +
+        // unclaimed. Signed delta so an overlap (negative) is distinguishable
+        // from a leak (positive).
+        int64_t  claimAccountingDelta = 0;
+        // Share of presented rows the device actually completed, in ppm.
+        // Computed here so the caller cannot divide by the wrong denominator.
+        uint64_t gpuRowSharePpm = 0;
+    };
+    DispatchAccounting ReadDispatchAccounting() const noexcept;
+
     // ========== Batch Q4K GEMV ==========
     bool DispatchGemvQ4KBatch(
         const void* weights, size_t weightBytes,
@@ -1536,6 +1653,65 @@ private:
     uint64_t coldRaceRangeBytes_ = 0;
     uint64_t coldRacePromotionsCompleted_ = 0;
 
+    // ===== RAWRXD_GPU_DISPATCH_REJECTION_001 =============================
+    // Rows presented to the device path, and the classify-and-count helper
+    // every abandon-branch must call. Presenting a row is recorded exactly
+    // once, at the top of RunWeightColdRowRace, so the conservation identity
+    // has a denominator that cannot drift.
+    uint64_t dispatchRowsPresented_ = 0;
+    uint64_t dispatchFailedRows_ = 0;
+    uint64_t dispatchRejectCalls_[kRejectReasonCount] = {0};
+    uint64_t dispatchRejectRows_[kRejectReasonCount] = {0};
+    // RAWRXD_GPU_RACE_ASYMMETRY_001
+    //
+    // MEASURED: with a real Q4_K_M model the race completed
+    //     ROWS_PRESENTED=524544  GPU_ROWS=25984 (4.95%)  CPU_ROWS=498560 (95.05%)
+    // with EVERY reject bucket at zero. The CPU rows are therefore not a
+    // rejection at all: they are the CPU tail claiming rows INSIDE a race that
+    // is running correctly.
+    //
+    // The mechanism is a scheduling asymmetry, not a policy:
+    //   - the CPU tail loop is unbounded -- `while (cpuKernel && raceOk)` takes
+    //     chunkRows rows per iteration for as long as the race is alive;
+    //   - the GPU takes exactly ONE chunkRows slice per outer iteration.
+    // The CPU can therefore claim an arbitrary share of the tensor while the
+    // GPU is still rate-limited to one slice, so the outcome is decided by host
+    // speed rather than by device capability. These counters make that visible
+    // instead of leaving it to be inferred from a fallback total.
+    uint64_t raceCpuTailRows_ = 0;
+    uint64_t raceCpuTailIterations_ = 0;
+    uint64_t raceGpuChunkIterations_ = 0;
+    // RAWRXD_GPU_GROUPED_RACE_FAIRNESS_001 -- scheduler telemetry.
+    //
+    // The distinction these make permanent: the device is not REJECTED, it is
+    // starved of turns. A rejection counter stays at zero in both cases, so
+    // without these the two are indistinguishable from the fallback total.
+    uint64_t raceOuterIterations_ = 0;
+    uint64_t raceGpuStarvedIterations_ = 0;
+    uint64_t raceCpuStarvedIterations_ = 0;
+    uint32_t raceGpuStarvedRun_ = 0;
+    uint32_t raceCpuStarvedRun_ = 0;
+    uint32_t raceMaxConsecutiveGpuStarved_ = 0;
+    uint32_t raceMaxConsecutiveCpuStarved_ = 0;
+    // CAS failures on either frontier. A rising count under throttling means
+    // the two claimers are genuinely contending rather than one having
+    // pre-empted the other.
+    uint64_t raceGpuClaimFailures_ = 0;
+    uint64_t raceCpuClaimFailures_ = 0;
+    // Rows claimed by BOTH sides, measured rather than assumed: the CPU owns a
+    // contiguous tail and the GPU a contiguous head, so any overlap is a
+    // double-claim bug. Throttling makes this worth proving.
+    uint64_t raceDoubleClaimRows_ = 0;
+    uint64_t raceCpuBudget_ = 0;
+    // Rows the CPU took, per CPU-tail iteration. A mean near chunkRows means
+    // the tail is unbounded; a mean near 1 means it is paced.
+    uint64_t raceCpuTailRowsMeanX100() const noexcept {
+        if (!raceCpuTailIterations_) return 0;
+        return (raceCpuTailRows_ * 100ull) / raceCpuTailIterations_;
+    }
+    // Called by every abandon-branch in RunWeightColdRowRace.
+    void NoteDispatchReject(RejectReason why, uint64_t rows) noexcept;
+
     // ===== DEEP2_HOT_LANE_CONTEXT_001 ====================================
     uint64_t laneOwnerViolations_ = 0;
     uint64_t deviceGeneration_ = 0;
@@ -1593,6 +1769,11 @@ private:
     uint64_t gemvSuccess_ = 0;
     uint64_t weightUploads_ = 0;
     uint64_t weightHits_ = 0;
+    // RAWRXD_GPU_WEIGHT_RESIDENCY_001: measured staging/transfer accounting.
+    // Every weight byte that crosses PCIe is counted here, so "residency" is a
+    // ratio of two counters the runtime increments rather than a claim.
+    uint64_t weightUploadedBytes_ = 0;
+    uint64_t hostStagedDispatches_ = 0;
     bool lastCrossDeviceCopyUsedHost_ = false;
 
     mutable std::recursive_mutex apiMu_;

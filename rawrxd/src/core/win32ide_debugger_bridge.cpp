@@ -181,24 +181,36 @@ uint32_t Dbg_MemoryScan(uint64_t processHandle, uint64_t startAddress,
     return found > 0 ? found : kDbgNotFound;
 }
 
-// --- HexMag runtime authority (real counters) ----------------------------
-static std::atomic<int32_t> g_hexmagBots{0};
-static std::atomic<int32_t> g_hexmagInit{0};
-static std::atomic<uint32_t> g_hexmagTunerGen{0};
-
-void HexMag_ReportBotStart() {
-    ++g_hexmagBots;
-    ++g_hexmagTunerGen;
-}
-void HexMag_ReportBotStop() {
-    if (g_hexmagBots.load() > 0) --g_hexmagBots;
-}
-void HexMag_SetInitialized(int32_t v) { g_hexmagInit.store(v); }
-
-int32_t HexMag_BotCount() { return g_hexmagBots.load(); }
-int32_t HexMag_GetParallelAgents() { return g_hexmagBots.load(); }
-int32_t HexMag_IsInitialized() { return g_hexmagInit.load(); }
-uint32_t HexMag_Tuner_GenerationId() { return g_hexmagTunerGen.load(); }
+// --- HexMag runtime counters: REMOVED, the MASM owns them -------------------
+//
+// RAWRXD_HEXMAG_COUNTER_OWNERSHIP_001
+//
+// This block used to define g_hexmagBots / g_hexmagInit / g_hexmagTunerGen plus
+// four accessors (HexMag_BotCount, HexMag_GetParallelAgents, HexMag_IsInitialized,
+// HexMag_Tuner_GenerationId) that exposed them, fed by three reporters
+// (HexMag_ReportBotStart, HexMag_ReportBotStop, HexMag_SetInitialized).
+//
+// It was deleted, not repaired, because all four accessors are now real exports
+// of src/asm/RawrXD_HexMag_Swarm.asm and RawrXD_HexMag_RepeatTuner.asm, and
+// linking both produced four LNK2005 duplicate-definition errors. The MASM is
+// the authority: it keeps the authoritative counters, this file kept a private
+// shadow of the same numbers.
+//
+// Before deleting, the tree was searched for every symbol above. Each had
+// exactly ONE occurrence in the entire repository: its own definition.
+// g_hexmagBots appeared five times, all inside this one function block. Nothing
+// called any of the three reporters and nothing read any of the four accessors,
+// so this was not a live source of truth being migrated -- it was a dead
+// duplicate that had become a link error.
+//
+// Two further defects died with it: the accessors returned int32_t/uint32_t while
+// hexmag_swarm.hpp and hexmag_repeat_tuner.hpp declare uint32_t for three of the
+// four, and HexMag_GetParallelAgents returned the BOT count, a different quantity
+// from the parallel-agent count it claims to report.
+//
+// If a future caller needs to drive these counters, it must go through the MASM's
+// own entry points. Re-adding a C-side shadow here would reintroduce exactly the
+// split authority this deletion removes.
 
 // --- IsStubFunction (real prologue classification) -----------------------
 // A function image is a scaffold when it begins with a bare return sequence

@@ -1,16 +1,10 @@
-// RAWRXD_GRAPH_RESTORED_001 — Minimal stub for hexmag_client.hpp
+// ============================================================================
+// include/agent/hexmag_client.hpp
+// ============================================================================
+// This file previously carried its own complete copy of HexMagClient, so which
+// definition a translation unit saw depended on its include-path order
+// (src/agent and include/ are both on it).  Two declarations of one type that
+// can differ is a duplicate-authority hazard, so this one now forwards to the
+// single definition in src/agent/hexmag_client.hpp.
 #pragma once
-#include <cstdint>
-#include <string>
-
-namespace rawrxd { namespace agent {
-
-struct HexMagClient {
-    uint32_t sessionId = 0;
-    bool connected = false;
-    bool connect(const char* endpoint) { (void)endpoint; connected = true; return true; }
-    void disconnect() { connected = false; }
-    bool send(const uint8_t* data, size_t len) { (void)data; (void)len; return connected; }
-};
-
-}} // namespace rawrxd::agent
+#include "../../src/agent/hexmag_client.hpp"

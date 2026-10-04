@@ -591,8 +591,32 @@ void SovereignIDEBridge::setUIUpdateCallback(UIUpdateCallback cb) {
 // VSCodeExtensionAPI stubs (for js_extension_host.cpp / vscext_registry.cpp)
 // ============================================================================
 
-// Include the real header to get correct struct/class definitions
-#include "modules/vscode_extension_api.h"
+// RAWRXD_GOLD_LINK_BLOCKER_005
+// This used to be `#include "modules/vscode_extension_api.h"`, which resolves
+// to src/modules/vscode_extension_api.h -- a 313-byte RAWRXD_GRAPH_RESTORED_001
+// stub, not the interface. That stub declares a DIFFERENT class under a
+// DIFFERENT namespace:
+//
+//     namespace RawrXD { namespace Modules {
+//         class VSCodeExtensionAPI { public: bool initialize() { return false; } };
+//     }}
+//
+// The definitions immediately below are written against the real interface --
+// `namespace vscode`, VSCodeExtensionAPI with instance()/initialize/shutdown/
+// isInitialized, VSCodeAPIResult::ok()/error(), ProviderType, StatusBarAlignment
+// -- none of which the stub declares. Every one of them therefore failed with a
+// cascade of about 20 errors starting at:
+//     gold_link_closure.cpp(602,1): error C4430: missing type specifier - int assumed
+//     gold_link_closure.cpp(602,21): error C2825: 'vscode::VSCodeExtensionAPI':
+//         must be a class or namespace when followed by '::'
+//
+// The real header is include/vscode_extension_api.h (80,223 bytes) and it
+// declares namespace vscode at line 1342, which is what the code below expects.
+// The confusion is possible because the two files share a basename and the
+// build puts src/ ahead of include/ on the include path, so whichever header the
+// name resolves to is decided by ordering rather than by anything visible at the
+// include site.
+#include "vscode_extension_api.h"
 
 // Provide stub implementations for VSCodeExtensionAPI member functions
 // that are referenced but not linked in the Gold build.
@@ -630,8 +654,29 @@ VSCodeAPIResult VSCodeExtensionAPI::registerCommand(const char* commandId,
     return VSCodeAPIResult::error("Not implemented in Gold build");
 }
 
-VSCodeAPIResult VSCodeExtensionAPI::executeCommand(const char* commandId, const char* argsJson) {
-    (void)commandId; (void)argsJson;
+// RAWRXD_GOLD_LINK_BLOCKER_006
+// This was defined with two parameters, `executeCommand(const char* commandId,
+// const char* argsJson)`. No such overload exists on VSCodeExtensionAPI. The
+// class declares, at include/vscode_extension_api.h:1692:
+//
+//     VSCodeAPIResult executeCommand(const char* commandId);
+//
+// and a two-argument entry point exists only on a different, nested type
+// (executeCommandWithArgs at line 1365). So the definition below matched no
+// declaration and the compiler reported it as a missing overload:
+//
+//     gold_link_closure.cpp(657,37): error C2511:
+//       'VSCodeAPIResult vscode::VSCodeExtensionAPI::executeCommand(const char*,
+//        const char*)': overloaded member function not found in
+//        'vscode::VSCodeExtensionAPI'
+//
+// It is reduced to the declared one-argument form rather than renamed to
+// executeCommandWithArgs, because executeCommandWithArgs is not a member of this
+// class and the only caller in the tree -- src/core/auto_feature_real_impl.cpp
+// :123 -- passes a single command id. Nothing needed the two-argument form, so
+// nothing loses it.
+VSCodeAPIResult VSCodeExtensionAPI::executeCommand(const char* commandId) {
+    (void)commandId;
     return VSCodeAPIResult::error("Not implemented in Gold build");
 }
 
@@ -868,7 +913,25 @@ InferenceResult SovereignInferenceClient::ChatSync(const std::vector<ChatMessage
                                                     const nlohmann::json& tools) {
     (void)messages; (void)tools;
     m_totalRequests.fetch_add(1, std::memory_order_relaxed);
-    return InferenceResult::error("SovereignInferenceClient not implemented in Gold build");
+    // RAWRXD_GOLD_LINK_BLOCKER_007
+    // This returned `InferenceResult::error("SovereignInferenceClient not
+    // implemented in Gold build")`. No such factory exists, and none ever
+    // could: RawrXD::Agent::InferenceResult has a DATA MEMBER named `error`
+    // (a std::string), and a class cannot have a data member and a member
+    // function of the same name. The two InferenceResult types in this tree
+    // that DO have static ok()/error() factories -- local_ai_core.hpp:224 and
+    // the C struct in InferenceBackend.h:62 -- are different types in different
+    // namespaces (RawrXD::LocalAI, and global C respectively), and neither is
+    // the one AgentOllamaClient.h declares.
+    //
+    // The failure is constructed field-by-field instead, which is how every
+    // other producer in AgentOllamaClient.cpp reports one. success stays false,
+    // both answer fields stay empty -- matching the documented invariant that
+    // response is populated only on success -- and the reason goes in `error`.
+    InferenceResult failed;
+    failed.success = false;
+    failed.error   = "SovereignInferenceClient not implemented in Gold build";
+    return failed;
 }
 
 bool SovereignInferenceClient::ChatStream(const std::vector<ChatMessage>& messages,

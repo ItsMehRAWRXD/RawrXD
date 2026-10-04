@@ -174,17 +174,27 @@ bool Deep2Engine::tryVulkanHostGEMVGroup(
     // false result is attributable instead of indistinguishable from
     // "handled the operation but returned false later".
     if(rejectReason)*rejectReason="NONE";
-    if(!vulkanInitialized_) { if(rejectReason)*rejectReason="VULKAN_NOT_INITIALIZED"; return false; }
-    if(vulkanDevices_.size()<2){ if(rejectReason)*rejectReason="DEVICE_COUNT_LT_2"; return false; }
-    if(!weights||!outputs||!input){ if(rejectReason)*rejectReason="NULL_ARGUMENT"; return false; }
-    if(count<2||count>3){ if(rejectReason)*rejectReason="COUNT_OUT_OF_RANGE"; return false; }
-    if(inputCount==0||inputCount>UINT32_MAX){ if(rejectReason)*rejectReason="INPUT_COUNT_INVALID"; return false; }
+    // RAWRXD_GPU_ROUTE_RECEIPT_001: every early return below is tallied, so a
+    // guard that refuses is as visible as a dispatch that succeeds.
+    NoteGroupedReject("ATTEMPT");
+    if(!vulkanInitialized_) { if(rejectReason)*rejectReason="VULKAN_NOT_INITIALIZED"; NoteGroupedReject("VULKAN_NOT_INITIALIZED"); return false; }
+    if(vulkanDevices_.size()<2){ if(rejectReason)*rejectReason="DEVICE_COUNT_LT_2"; NoteGroupedReject("DEVICE_COUNT_LT_2"); return false; }
+    if(!weights||!outputs||!input){ if(rejectReason)*rejectReason="NULL_ARGUMENT"; NoteGroupedReject("NULL_ARGUMENT"); return false; }
+    if(count<2||count>3){ if(rejectReason)*rejectReason="COUNT_OUT_OF_RANGE"; NoteGroupedReject("COUNT_OUT_OF_RANGE"); return false; }
+    if(inputCount==0||inputCount>UINT32_MAX){ if(rejectReason)*rejectReason="INPUT_COUNT_INVALID"; NoteGroupedReject("INPUT_COUNT_INVALID"); return false; }
 
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
+    // RAWRXD_GPU_ROUTE_RECEIPT_001: count ENTRY before the dispatch so a route
+    // that is attempted and refused is distinguishable from one never reached.
+    ++routeReceipt_.groupedDualRowCalls;
     RowSplitReceipt r{};
     if(!Deep2RunDualGpuRowSplitGroup(
             *vulkanDevices_[0],*vulkanDevices_[1],
             weights,outputs,count,input,(uint32_t)inputCount,epoch,&r)){
+        // The reason is computed here and was previously handed back to a
+        // caller that discarded it, so a refusal was unattributable after the
+        // fact. It is now also tallied by name.
+        NoteGroupedReject(rejectReason?*rejectReason:"DUAL_ROW_SPLIT_GROUP_FAILED");
         if(rejectReason)*rejectReason="DUAL_ROW_SPLIT_GROUP_FAILED";
         return false;
     }

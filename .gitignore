@@ -41,8 +41,35 @@ cert_run_output*.txt
 /_d2sl/
 /_n2_stage/src/build/
 /rawrxd/build2/
-/rawrxd/src/build/
 /rawrxd/src/deep2/build/
+# RAWRXD_SOURCE_DURABILITY_001
+# `/rawrxd/src/build/` was here and has been REMOVED.
+#
+# It is a SOURCE directory, not a generated tree. It holds exactly two files:
+#     rawrxd/src/build/BuildIntelligence.cpp   15,421 bytes
+#     rawrxd/src/build/BuildIntelligence.hpp    5,175 bytes
+# rawrxd/src/build/BuildIntelligence.cpp is referenced by rawrxd/CMakeLists.txt
+# and is compiled into the RawrXD_Gold target, so excluding it produced a source
+# file that the build graph requires and version control could not deliver.
+# Measured before this change:
+#     git check-ignore rawrxd/src/build/BuildIntelligence.cpp  -> ignored (line 44)
+#     git ls-files rawrxd/src/build/                            -> 0 files
+# A clean checkout therefore lost a required translation unit, and `git clean
+# -xdf` would delete live source with no recovery path.
+#
+# This is the same defect, and the same remedy, as the B012-B015 source
+# directories documented at line 37 above: the rule was a build-output pattern
+# that happened to match a source directory sharing its name. Per the note at
+# line 24, Git cannot re-include a file whose parent directory is excluded, so
+# the fix is to stop excluding the directory -- not to negate files inside it.
+#
+# The genuinely generated neighbours are still excluded, deliberately:
+#   /rawrxd/src/deep2/build/            holds only a .receipt.txt and a .sha256
+#   /rawrxd/win32ide_strict/build*/     a CMake build tree (CMakeCache.txt,
+#                                       ALL_BUILD.vcxproj, cmake_install.cmake)
+#   rawrxd/src/masm/build/              only .exe and .obj output
+#   rawrxd/src/remote64/build/          only .obj output
+# Those four were each verified to contain no source that the build graph needs.
 /rawrxd/win32ide_strict/build*/
 /rawrxd_screenpilot_agent_bridge/*/build/
 !build_p2/Release/rawr_monolith.exe

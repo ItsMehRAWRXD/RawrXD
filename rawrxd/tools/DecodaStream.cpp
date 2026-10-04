@@ -20,7 +20,17 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
-#include <cstdio>\n#include <cstring>\n#include <cstdlib>
+// RAWRXD_DECODA_STREAM_INCLUDE_REPAIR_001
+// Three #include directives had been collapsed onto one line with literal
+// backslash-n text between them, so the file did not compile at all:
+//     #include <cstdio>\n#include <cstring>\n#include <cstdlib>
+// A '\n' outside a string literal is not a token separator, so the preprocessor
+// saw <cstdio> followed by garbage. This tool is the tree's only existing
+// block-granular streaming consumer, and it was unreachable for that reason
+// alone -- not because of anything about GGUFStream.
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <string>
 #include <vector>
 

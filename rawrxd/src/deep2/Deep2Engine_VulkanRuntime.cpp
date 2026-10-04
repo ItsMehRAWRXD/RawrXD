@@ -642,6 +642,50 @@ uint64_t Deep2Engine::vulkanSlotPinnedWeightBytes(unsigned slot) const {
     auto* vc=getVulkanComputeSlot(slot);
     return vc?vc->PinnedWeightBytes():0;
 }
+// RAWRXD_GPU_WEIGHT_RESIDENCY_001: expose the measured residency snapshot
+// per slot. Returns deviceBacked=false when the slot has no VulkanCompute, so
+// a caller cannot read a residency it did not run.
+CPUInference::VulkanCompute::WeightResidencySnapshot
+Deep2Engine::vulkanSlotWeightResidency(unsigned slot) const {
+    CPUInference::VulkanCompute::WeightResidencySnapshot s{};
+    auto* vc=getVulkanComputeSlot(slot);
+    if(vc) s=vc->ReadWeightResidency();
+    return s;
+}
+// RAWRXD_GPU_DISPATCH_REJECTION_001: measured rejection breakdown + row
+// conservation for a slot. Returns a zeroed accounting (with a zeroed delta)
+// when the slot has no device, so a CPU-only run cannot look accounted-for.
+CPUInference::VulkanCompute::DispatchAccounting
+Deep2Engine::vulkanSlotDispatchAccounting(unsigned slot) const {
+    CPUInference::VulkanCompute::DispatchAccounting a{};
+    auto* vc=getVulkanComputeSlot(slot);
+    if(vc) a=vc->ReadDispatchAccounting();
+    return a;
+}
+
+// RAWRXD_GPU_GROUPED_REJECT_001
+//
+// The slot table is first-writer-wins on the reason NAME, not the count, so a
+// reason keeps its slot for the process lifetime and two different names can
+// never share a counter. That matters: a name-indexed counter that could be
+// reassigned would make two reasons indistinguishable after the fact.
+void Deep2Engine::NoteGroupedReject(const char* name) noexcept {
+    if(!name) { ++groupedRejects_.unclassified; return; }
+    for(uint32_t i=0;i<kGroupedRejectSlots;++i){
+        if(groupedRejects_.names[i]==nullptr){
+            groupedRejects_.names[i]=name;
+            ++groupedRejects_.counts[i];
+            return;
+        }
+        if(groupedRejects_.names[i]==name ||
+           std::strcmp(groupedRejects_.names[i],name)==0){
+            ++groupedRejects_.counts[i];
+            return;
+        }
+    }
+    // Table full: a reason nobody enumerated. Counted, and visible.
+    ++groupedRejects_.unclassified;
+}
 uint64_t Deep2Engine::vulkanSlotPinnedWeightEntries(unsigned slot) const {
     auto* vc=getVulkanComputeSlot(slot);
     return vc?vc->PinnedWeightEntries():0;

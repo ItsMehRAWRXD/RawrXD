@@ -198,8 +198,15 @@ InferenceResult AgentOllamaClient::ChatSync(
 
     InferenceResult out;
     try {
-        nlohmann::json req;
-        req["model"]    = options.value("model", config_.defaultModel);
+nlohmann::json req;
+        // RAWRXD_AGENTOLLAMACLIENT_002: chat_model, when set, wins over
+        // defaultModel. Without this, SetConfig(cfg.chat_model = model) in
+        // ssot_handlers_ext.cpp would be a write that changes nothing --
+        // an accepted-looking call with no effect.
+        const std::string& defaultModel = !config_.chat_model.empty()
+                                        ? config_.chat_model
+                                        : config_.defaultModel;
+        req["model"]    = options.value("model", defaultModel);
         req["messages"] = nlohmann::json::array();
         for (const auto& m : messages) {
             nlohmann::json mj;
@@ -230,9 +237,12 @@ InferenceResult AgentOllamaClient::ChatSync(
         auto j = nlohmann::json::parse(r.body, nullptr, false);
         if (j.is_discarded()) { out.error = "Ollama: unparseable response"; return out; }
 
-        if (j.contains("message") && j["message"].contains("content") &&
+if (j.contains("message") && j["message"].contains("content") &&
             j["message"]["content"].is_string()) {
             out.content = j["message"]["content"].get<std::string>();
+            // RAWRXD_AGENTOLLAMACLIENT_001 invariant: response == content on
+            // success. Both must be assigned; see the header.
+            out.response = out.content;
         } else if (j.contains("error") && j["error"].is_string()) {
             out.error = j["error"].get<std::string>();
             return out;
@@ -248,13 +258,111 @@ InferenceResult AgentOllamaClient::ChatSync(
 
         out.success = true;
         return out;
-    } catch (const std::exception& e) {
+} catch (const std::exception& e) {
         out.error = std::string("Ollama exception: ") + e.what();
         return out;
     } catch (...) {
         out.error = "Ollama unknown exception";
         return out;
     }
+}
+
+// ============================================================================
+// RAWRXD_AGENTOLLAMACLIENT_003 -- one-argument ChatSync overload
+// ============================================================================
+// Forwards with an empty options object, so the model resolves through
+// chat_model or defaultModel. Every early return below leaves `response` empty,
+// which is correct: the header invariant says response is populated only on
+// success. Assigning both fields is done by the two-argument overload this
+// delegates to, so the invariant has exactly one implementation.
+InferenceResult AgentOllamaClient::ChatSync(const std::vector<ChatMessage>& messages) {
+    return ChatSync(messages, nlohmann::json::object());
+}
+
+// ============================================================================
+// RAWRXD_AGENTOLLAMACLIENT_004 -- fill-in-the-middle completion
+// ============================================================================
+// Ollama's fill-in-the-middle wire protocol is POST /api/generate with `prompt`
+// and `suffix` carried separately, returning the completion in `response`.
+// That endpoint shape is stable and is the same transport HttpCall already uses
+// for /api/chat, so this adds no new I/O mechanism.
+//
+// FIMStream in unlinked_symbols_batch_018.cpp was a placeholder that returned
+// a literal string; this is a real request instead, because the whole point of
+// restoring the member is that ai.inlineComplete can actually reach a model.
+// It still fails closed: any HTTP, parse or shape problem returns a failed
+// result with the reason in `error` and an empty response.
+InferenceResult AgentOllamaClient::FIMSync(const std::string& prefix,
+                                           const std::string& suffix,
+                                           const std::string& requestId) {
+    InferenceResult out;
+    try {
+        const std::string& model = !config_.fim_model.empty()
+                                 ? config_.fim_model
+                                 : config_.defaultModel;
+
+        nlohmann::json req;
+        req["model"]  = model;
+        req["prompt"] = prefix;
+        req["suffix"] = suffix;
+        req["stream"] = false;
+        if (!requestId.empty()) req["request_id"] = requestId;
+
+        nlohmann::json opts;
+        if (config_.contextLength > 0) {
+            opts["num_ctx"] = config_.contextLength;
+        }
+        if (!opts.empty()) req["options"] = opts;
+
+        HttpResult r = HttpCall(config_.host, config_.port, "POST",
+                                "/api/generate", req.dump(), config_.timeoutMs);
+        if (!r.ok) {
+            out.error = "Ollama FIM HTTP " + std::to_string(r.status) +
+                        (r.error.empty() ? "" : (": " + r.error));
+            return out;
+        }
+
+        auto j = nlohmann::json::parse(r.body, nullptr, false);
+        if (j.is_discarded()) { out.error = "Ollama FIM: unparseable response"; return out; }
+
+        if (j.contains("response") && j["response"].is_string()) {
+            out.content  = j["response"].get<std::string>();
+            out.response = out.content;      // RAWRXD_AGENTOLLAMACLIENT_001 invariant
+        } else if (j.contains("error") && j["error"].is_string()) {
+            out.error = j["error"].get<std::string>();
+            return out;
+        } else {
+            out.error = "Ollama FIM: missing response";
+            return out;
+        }
+
+        if (j.contains("eval_count") && j["eval_count"].is_number())
+            out.tokensGenerated = j["eval_count"].get<uint64_t>();
+
+        out.success = true;
+        return out;
+    } catch (const std::exception& e) {
+        out.error = std::string("Ollama FIM exception: ") + e.what();
+        return out;
+    } catch (...) {
+        out.error = "Ollama FIM unknown exception";
+        return out;
+    }
+}
+
+// ============================================================================
+// RAWRXD_AGENTOLLAMACLIENT_005 -- config accessors
+// ============================================================================
+// GetConfig returns by value so a caller can edit the copy without touching
+// internal state; SetConfig is the only writer. ChatSync's model resolution now
+// prefers chat_model over defaultModel (see below), which is what makes the
+// read-modify-write in ssot_handlers_ext.cpp meaningful.
+OllamaConfig AgentOllamaClient::GetConfig() const {
+    return config_;
+}
+
+void AgentOllamaClient::SetConfig(const OllamaConfig& config) {
+    config_ = config;
 }
 
 } // namespace Agent

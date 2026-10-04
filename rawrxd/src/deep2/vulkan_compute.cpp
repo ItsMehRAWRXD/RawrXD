@@ -1108,6 +1108,101 @@ bool VulkanCompute::checkLiveHeapAdmission(size_t bytes) const {
     return true;
 }
 
+// RAWRXD_GPU_WEIGHT_RESIDENCY_001
+//
+// Measured only. Every field is read from a counter the runtime already
+// increments; there is no setter, and a caller cannot make this report a
+// residency it did not achieve. deviceBacked is derived from the actual
+// VkPhysicalDevice handle, so a CPU-only or headless run reports false rather
+// than claiming a GPU.
+VulkanCompute::WeightResidencySnapshot
+VulkanCompute::ReadWeightResidency() const noexcept {
+    WeightResidencySnapshot s;
+    s.deviceLocalBytes    = (uint64_t)weightCacheBytes_;
+    s.budgetBytes         = (uint64_t)weightBudgetBytes_;
+    s.uploads             = weightUploads_;
+    s.hits                = weightHits_;
+    s.residentDispatches  = residentDirectDispatches_;
+    s.hostStagedDispatches= hostStagedDispatches_;
+    s.cpuFallbackRows     = coldRaceCpuRows_;
+    s.uploadedBytes       = weightUploadedBytes_;
+    s.residentTensorCount = (uint64_t)weightCache_.size();
+    s.deviceBacked        = (physical_ != VK_NULL_HANDLE) &&
+                            (info_.deviceLocalBytes > 0);
+    return s;
+}
+
+// RAWRXD_GPU_DISPATCH_REJECTION_001
+
+const char* VulkanCompute::RejectReasonName(RejectReason r) noexcept {
+    switch (r) {
+        case RejectReason::None:               return "NONE";
+        case RejectReason::RowBytesUnknown:    return "ROW_BYTES_UNKNOWN";
+        case RejectReason::RowCountInvalid:    return "ROW_COUNT_INVALID";
+        case RejectReason::TooFewRows:         return "TOO_FEW_ROWS";
+        case RejectReason::NoResidentHandle:   return "NO_RESIDENT_HANDLE";
+        case RejectReason::PromotionNotOwned:  return "PROMOTION_NOT_OWNED";
+        case RejectReason::TargetAllocFailed:  return "TARGET_ALLOC_FAILED";
+        case RejectReason::ScratchAllocFailed: return "SCRATCH_ALLOC_FAILED";
+        case RejectReason::StagingAllocFailed: return "STAGING_ALLOC_FAILED";
+        case RejectReason::InputUploadFailed:  return "INPUT_UPLOAD_FAILED";
+        case RejectReason::KernelMissing:      return "KERNEL_MISSING";
+        case RejectReason::CpuKernelRefused:   return "CPU_KERNEL_REFUSED";
+        case RejectReason::Unclassified:       return "UNCLASSIFIED";
+        case RejectReason::Count_:             break;
+    }
+    return "OUT_OF_RANGE";
+}
+
+void VulkanCompute::NoteDispatchReject(RejectReason why,
+                                       uint64_t rows) noexcept {
+    const uint32_t i = static_cast<uint32_t>(why);
+    if (i >= kRejectReasonCount) return; // never corrupt the arrays
+    ++dispatchRejectCalls_[i];
+    dispatchRejectRows_[i] += rows;
+}
+
+VulkanCompute::DispatchAccounting
+VulkanCompute::ReadDispatchAccounting() const noexcept {
+    DispatchAccounting a;
+    a.rowsPresented     = dispatchRowsPresented_;
+    a.gpuRowsCompleted  = coldRaceGpuRows_;
+    a.cpuFallbackRows   = coldRaceCpuRows_;
+    a.failedRows        = dispatchFailedRows_ + coldRaceUncomputedRows_;
+    a.conservationDelta = static_cast<int64_t>(a.rowsPresented) -
+        static_cast<int64_t>(a.gpuRowsCompleted) -
+        static_cast<int64_t>(a.cpuFallbackRows) -
+        static_cast<int64_t>(a.failedRows);
+    a.raceCpuTailRows        = raceCpuTailRows_;
+    a.raceCpuTailIterations  = raceCpuTailIterations_;
+    a.raceGpuChunkIterations = raceGpuChunkIterations_;
+    a.raceCpuTailRowsMeanX100= raceCpuTailRowsMeanX100();
+    a.raceOuterIterations        = raceOuterIterations_;
+    a.raceGpuStarvedIterations   = raceGpuStarvedIterations_;
+    a.raceCpuStarvedIterations   = raceCpuStarvedIterations_;
+    a.raceMaxConsecutiveGpuStarved = raceMaxConsecutiveGpuStarved_;
+    a.raceMaxConsecutiveCpuStarved = raceMaxConsecutiveCpuStarved_;
+    a.raceGpuClaimFailures       = raceGpuClaimFailures_;
+    a.raceCpuClaimFailures       = raceCpuClaimFailures_;
+    a.raceDoubleClaimRows        = raceDoubleClaimRows_;
+    a.raceCpuBudget              = raceCpuBudget_;
+    // Claim conservation over the same population as rowsPresented. gpuComputed
+    // is the contiguous head [0,g) and cpuComputed the contiguous tail
+    // [totalRows-c, totalRows); a sum above the presented total means the two
+    // claimers overlapped and is a correctness bug, not a perf number.
+    a.claimAccountingDelta = static_cast<int64_t>(a.rowsPresented) -
+        static_cast<int64_t>(a.gpuRowsCompleted) -
+        static_cast<int64_t>(a.cpuFallbackRows) -
+        static_cast<int64_t>(a.failedRows);
+    a.gpuRowSharePpm = a.rowsPresented
+        ? (a.gpuRowsCompleted * 1000000ull) / a.rowsPresented : 0;
+    for (uint32_t i = 0; i < kRejectReasonCount; ++i) {
+        a.rejectCalls[i] = dispatchRejectCalls_[i];
+        a.rejectRows[i]  = dispatchRejectRows_[i];
+    }
+    return a;
+}
+
 bool VulkanCompute::createBuffer(
     VkDeviceSize bytes, VkBufferUsageFlags usage,
     VkMemoryPropertyFlags required, DeviceBuf& out)
@@ -1589,6 +1684,11 @@ bool VulkanCompute::uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes
         return false;
     }
     std::fprintf(stderr, "UPLOAD_OK bytes=%zu\n", bytes);
+    // RAWRXD_GPU_WEIGHT_RESIDENCY_001: count only bytes that actually
+    // completed a staging->device-local copy. Counting on the failure paths
+    // would inflate the PCIe total and make residency look worse than it is;
+    // not counting at all would make it look better than it is.
+    weightUploadedBytes_ += (uint64_t)bytes;
     return true;
 }
 
@@ -3371,10 +3471,15 @@ bool VulkanCompute::DispatchGemvDevice(
 
     DeviceBuf* w=nullptr;
     std::fprintf(stderr, "DISPATCH_GEMV_DEVICE_ENSURE rows=%u cols=%u count=%zu\n", rows, cols, count);
+    // RAWRXD_GPU_WEIGHT_RESIDENCY_001: classify this dispatch BEFORE the
+    // ensure, because ensure() installs the cache entry and would turn a
+    // genuine cold miss into an indistinguishable hit.
+    const bool wasResident = (weightCache_.find(key) != weightCache_.end());
     if(!ensureWeightF32(weights,key,count*sizeof(float),w)) {
         std::fprintf(stderr, "DISPATCH_GEMV_DEVICE_ENSURE_FAIL rows=%u cols=%u\n", rows, cols);
         return false;
     }
+    (wasResident ? residentDirectDispatches_ : hostStagedDispatches_) += 1;
     std::fprintf(stderr, "DISPATCH_GEMV_DEVICE_DISPATCH rows=%u cols=%u\n", rows, cols);
     OpsPush p{}; p.op=OP_GEMV_F32; p.n=rows; p.p0=cols;
     bool ok=dispatchOps(*w,input,output,output,p,(rows+63u)/64u);
@@ -3405,7 +3510,13 @@ bool VulkanCompute::DispatchGemvQuant(
         return false;
 
     DeviceBuf* w=nullptr;
+    // RAWRXD_GPU_WEIGHT_RESIDENCY_001: same pre-ensure classification as
+    // DispatchGemvDevice. quantWeightKey() derives the key from the host
+    // pointer, which is what the cache is actually keyed on here.
+    const uint64_t qkey = quantWeightKey(weights, weightBytes, type);
+    const bool wasResident = (weightCache_.find(qkey) != weightCache_.end());
     if(!ensureWeightQuant(type,weights,weightBytes,w)) return false;
+    (wasResident ? residentDirectDispatches_ : hostStagedDispatches_) += 1;
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
@@ -4957,7 +5068,14 @@ bool VulkanCompute::RunCpuQuantRowsFull(
     }
     GEMVKernelFn kernel =
         QuantKernelRegistry::Instance().GetGEMV(weight.type);
-    if (!kernel) return false;
+    if (!kernel) {
+        // The host cannot execute this packed type either. Reported separately
+        // because "fell back to CPU and the CPU refused too" is a different
+        // defect from "fell back to CPU successfully".
+        NoteDispatchReject(RejectReason::CpuKernelRefused, weight.rows);
+        dispatchFailedRows_ += weight.rows;
+        return false;
+    }
     kernel(static_cast<const uint8_t*>(weight.data),
            input, output,
            weight.rows, weight.cols);
@@ -4974,27 +5092,48 @@ bool VulkanCompute::RunWeightColdRowRace(
         return false;
     const size_t rowBytes =
         QuantPackedRowBytes(weight.type, weight.cols);
-    if (!rowBytes || weight.bytes < rowBytes)
+    if (!rowBytes || weight.bytes < rowBytes) {
+        // Row count is unknown here, so the conservation denominator cannot be
+        // advanced. The CALL is still classified, which is the part that was
+        // previously invisible: this branch returned false having incremented
+        // nothing at all.
+        NoteDispatchReject(RejectReason::RowBytesUnknown, 0);
         return false;
+    }
     const uint64_t rowsPerSlice = weight.bytes / rowBytes;
-    if (rowsPerSlice == 0 || rowsPerSlice > UINT32_MAX)
+    if (rowsPerSlice == 0 || rowsPerSlice > UINT32_MAX) {
+        NoteDispatchReject(RejectReason::RowCountInvalid, 0);
         return false;
+    }
     const uint32_t totalRows = static_cast<uint32_t>(rowsPerSlice);
-    if (totalRows < 2)
+    // From here the row count is known, so every abandon-branch below can be
+    // charged to the conservation identity.
+    dispatchRowsPresented_ += totalRows;
+    if (totalRows < 2) {
+        NoteDispatchReject(RejectReason::TooFewRows, totalRows);
         return RunCpuQuantRowsFull(weight, input, output);
+    }
 
     ++coldRaceCalls_;
 
     // ---- Promotion ownership (review fix): take the Promoting()
     // sentinel BEFORE allocating the target. If another caller won,
     // this invocation still computes the current token on CPU-only
-    // (the winner's promotion is already in flight) — duplicate
+    // (the winner's promotion is already in flight) â€” duplicate
     // promotion is structurally impossible.
     ResidentHotHandle* handle = GetHotHandle(weight.key);
-    if (!handle) return RunCpuQuantRowsFull(weight, input, output);
-    const bool ownsPromotion = TryBeginHotPromotion(handle);
-    if (!ownsPromotion)
+    if (!handle) {
+        // This branch is the discriminator the user asked for: a weightCache_
+        // entry with a null HOT handle means the grouped route cannot see the
+        // residency that the residency counters report as proven.
+        NoteDispatchReject(RejectReason::NoResidentHandle, totalRows);
         return RunCpuQuantRowsFull(weight, input, output);
+    }
+    const bool ownsPromotion = TryBeginHotPromotion(handle);
+    if (!ownsPromotion) {
+        NoteDispatchReject(RejectReason::PromotionNotOwned, totalRows);
+        return RunCpuQuantRowsFull(weight, input, output);
+    }
 
     // ---- Promotion target: ONE complete whole-tensor allocation. ----
     DeviceBuf target{};
@@ -5005,14 +5144,46 @@ bool VulkanCompute::RunWeightColdRowRace(
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, target)) {
         ++coldRaceCpuOnlyCalls_;
+        NoteDispatchReject(RejectReason::TargetAllocFailed, totalRows);
         return RunCpuQuantRowsFull(weight, input, output);
     }
 
     GEMVKernelFn cpuKernel = weight.type == 0
         ? nullptr
         : QuantKernelRegistry::Instance().GetGEMV(weight.type);
+    // A packed type with no registered CPU kernel has NO correct execution
+    // route: not the device and not the host. Classified separately so it is
+    // never mistaken for a residency failure.
+    if (weight.type != 0 && !cpuKernel)
+        NoteDispatchReject(RejectReason::KernelMissing, 0);
 
     const uint32_t chunkRows = 64; // coarse chunks (autotune later)
+    // RAWRXD_GPU_GROUPED_RACE_FAIRNESS_001
+    //
+    // MEASURED ASYMMETRY (Q4_K_M, R9700, 8 tokens):
+    //   GPU_ROWS=26880  CPU_ROWS=512000  share=4.99%  tail mean=62.5/64 rows
+    //   GPU_CHUNK_ITERATIONS=420, and 420*64 == 26880 exactly.
+    // The outer loop grants the device exactly ONE chunkRows slice per turn
+    // while the inner CPU loop runs `while (cpuKernel && raceOk)` with no
+    // bound, so the host drains the entire remaining queue every turn and the
+    // outcome is decided by host speed rather than by device capability.
+    //
+    // RAWRXD_GPU_CPU_RACE_BUDGET caps the inner loop to N chunks per outer
+    // turn. N=1 is symmetric. N=0 DISABLES the CPU race entirely, which is the
+    // falsification mode: it answers whether the device can cover every row on
+    // its own, which is the precondition for any fairness target meaning
+    // anything.
+    //
+    // The default is 1, not "unbounded", because unbounded is the defect.
+    // Defaults are read once and cached: getenv on a hot path is a lock.
+    static const int kCpuRaceBudget = []() -> int {
+        if (const char* e = std::getenv("RAWRXD_GPU_CPU_RACE_BUDGET")) {
+            const int v = std::atoi(e);
+            if (v >= 0) return v;
+        }
+        return 1;
+    }();
+    static const bool kCpuRaceEnabled = (kCpuRaceBudget > 0);
     const size_t inBytes =
         static_cast<size_t>(weight.cols)*sizeof(float);
 
@@ -5021,6 +5192,7 @@ bool VulkanCompute::RunWeightColdRowRace(
         !EnsureScratch(171, totalRows)) {
         destroyBuffer(target);
         ++coldRaceCpuOnlyCalls_;
+        NoteDispatchReject(RejectReason::ScratchAllocFailed, totalRows);
         return RunCpuQuantRowsFull(weight, input, output);
     }
     DeviceBuf& inBuf = Scratch(170);
@@ -5037,6 +5209,7 @@ bool VulkanCompute::RunWeightColdRowRace(
             downStage, downMap)) {
         destroyBuffer(target);
         ++coldRaceCpuOnlyCalls_;
+        NoteDispatchReject(RejectReason::StagingAllocFailed, totalRows);
         return RunCpuQuantRowsFull(weight, input, output);
     }
     std::memcpy(upMap, input, inBytes);
@@ -5050,6 +5223,7 @@ bool VulkanCompute::RunWeightColdRowRace(
             !endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
                            inBytes, epoch, nullptr)) {
             destroyBuffer(target);
+            NoteDispatchReject(RejectReason::InputUploadFailed, totalRows);
             return RunCpuQuantRowsFull(weight, input, output);
         }
     }
@@ -5073,15 +5247,31 @@ bool VulkanCompute::RunWeightColdRowRace(
     while (raceOk) {
         const uint32_t lo = gpuLo.load(std::memory_order_acquire);
         const uint32_t hi = cpuHi.load(std::memory_order_acquire);
-        if (lo >= hi) break;
+        if (lo >= hi) {
+            // The frontiers met: no rows left for anyone. If the device did not
+            // own every row, it ran out of turns while rows were still
+            // available -- that is GPU starvation, and it is invisible to every
+            // rejection counter because the device was never refused.
+            if (gpuComputed < totalRows) {
+                ++raceGpuStarvedIterations_;
+                if (raceGpuStarvedRun_ < 0xFFFFFFFFu) ++raceGpuStarvedRun_;
+                if (raceGpuStarvedRun_ > raceMaxConsecutiveGpuStarved_)
+                    raceMaxConsecutiveGpuStarved_ = raceGpuStarvedRun_;
+            }
+            break;
+        }
 
         // ---- GPU claims a head chunk (claim BEFORE compute/upload so
         // the CPU can never duplicate these rows). ----
         const uint32_t gpuCount = std::min(chunkRows, hi - lo);
         uint32_t expectedLo = lo;
         if (!gpuLo.compare_exchange_strong(
-                expectedLo, lo + gpuCount, std::memory_order_acq_rel))
+                expectedLo, lo + gpuCount, std::memory_order_acq_rel)) {
+            ++raceGpuClaimFailures_;
             continue;
+        }
+        // The GPU had rows available and took them: this turn is not starved.
+        raceGpuStarvedRun_ = 0;
 
         // Submit the range upload (PCIe DMA in flight).
         if (!SubmitMaterialRangeAsync(
@@ -5097,19 +5287,39 @@ bool VulkanCompute::RunWeightColdRowRace(
         }
         ++coldRaceRangeSubmits_;
         coldRaceRangeBytes_ += static_cast<uint64_t>(gpuCount)*rowBytes;
+        ++raceOuterIterations_;
 
         // ---- CPU tail chunk WHILE the range upload is in flight. ----
-        while (cpuKernel && raceOk) {
+        //
+        // RAWRXD_GPU_GROUPED_RACE_FAIRNESS_001: the budget is the whole fix.
+        // Before it, this loop had no bound and the host took every remaining
+        // row on every turn. The budget is counted in CHUNKS, matching the
+        // device's unit, so N=1 is an exactly symmetric race.
+        uint32_t cpuChunksThisTurn = 0;
+        while (kCpuRaceEnabled && cpuKernel && raceOk &&
+               cpuChunksThisTurn < static_cast<uint32_t>(kCpuRaceBudget)) {
             const uint32_t hi2 = cpuHi.load(std::memory_order_acquire);
             const uint32_t lo2 = gpuLo.load(std::memory_order_acquire);
             const uint32_t avail = hi2 > lo2 ? hi2 - lo2 : 0;
-            if (avail == 0) break;
+            if (avail == 0) {
+                // The CPU wanted work and there was none: that is CPU
+                // starvation, and it is the signal that the budget is now
+                // small enough that the device is the bottleneck.
+                ++raceCpuStarvedIterations_;
+                if (raceCpuStarvedRun_ < 0xFFFFFFFFu) ++raceCpuStarvedRun_;
+                if (raceCpuStarvedRun_ > raceMaxConsecutiveCpuStarved_)
+                    raceMaxConsecutiveCpuStarved_ = raceCpuStarvedRun_;
+                break;
+            }
             const uint32_t cpuCount = std::min(chunkRows, avail);
             const uint32_t begin = hi2 - cpuCount;
             uint32_t expectedHi = hi2;
             if (!cpuHi.compare_exchange_strong(
-                    expectedHi, begin, std::memory_order_acq_rel))
+                    expectedHi, begin, std::memory_order_acq_rel)) {
+                ++raceCpuClaimFailures_;
                 continue;
+            }
+            ++cpuChunksThisTurn;
 
             // The CPU kernel ACCUMULATES (y[r] += dot); zero the rows
             // first so exactly-once computation yields the true dot.
@@ -5122,6 +5332,13 @@ bool VulkanCompute::RunWeightColdRowRace(
                       cpuCount, weight.cols);
             cpuComputed += cpuCount;
             coldRaceCpuRows_ += cpuCount;
+            // RAWRXD_GPU_RACE_ASYMMETRY_001: this is a RACE WIN, not a
+            // rejection. Counted separately so the fallback total can be
+            // decomposed into "the host took rows it was always allowed to
+            // take" versus "the device path refused", which are different
+            // defects with different fixes.
+            raceCpuTailRows_ += cpuCount;
+            ++raceCpuTailIterations_;
 
             if (begin <= lo + gpuCount) break; // frontiers met
         }
@@ -5170,6 +5387,7 @@ bool VulkanCompute::RunWeightColdRowRace(
         }
         gpuComputed += gpuCount;
         coldRaceGpuRows_ += gpuCount;
+        ++raceGpuChunkIterations_;
     }
 
     // ---- Merge: only the GPU-owned head rows come from the download
@@ -5184,6 +5402,21 @@ bool VulkanCompute::RunWeightColdRowRace(
     }
 
     const uint32_t computedTotal = gpuComputed + cpuComputed;
+    // RAWRXD_GPU_GROUPED_RACE_FAIRNESS_001: double-claim detection.
+    //
+    // gpuComputed owns the contiguous head [0, gpuComputed) and cpuComputed the
+    // contiguous tail [totalRows-cpuComputed, totalRows). If those spans
+    // overlap, computedTotal exceeds totalRows and some row was written twice
+    // -- once by the shader, once by the host kernel. Under a bounded budget
+    // the two claimers interleave far more often, so this is measured rather
+    // than assumed from the CAS discipline.
+    if (computedTotal > totalRows) {
+        raceDoubleClaimRows_ += (uint64_t)(computedTotal - totalRows);
+    }
+    // Record the budget that actually governed this call, so a receipt states
+    // which configuration produced the numbers instead of leaving the reader
+    // to recall the environment variable.
+    raceCpuBudget_ = (uint64_t)kCpuRaceBudget;
     if (computedTotal < totalRows) {
         // Frontiers met with a gap only on CAS failure paths; finish on
         // CPU so COLD_RACE_UNCOMPUTED_ROWS can never ship silently.

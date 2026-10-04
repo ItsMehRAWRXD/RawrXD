@@ -5,6 +5,7 @@
 #include <chrono>
 #include <map>
 #include <mutex>
+#include <atomic>
 #include <algorithm>
 
 namespace rawrxd::diagnostics {
@@ -12,7 +13,19 @@ namespace rawrxd::diagnostics {
 class DiagnosticsEngine::Impl {
 public:
     mutable std::mutex mutex_;
-    bool initialized_ = false;
+    // RAWRXD_GOLD_LINK_BLOCKER_002
+    // Was `bool initialized_`, but every access site uses the atomic interface:
+    // Initialize() and Shutdown() call .store(), IsInitialized() calls .load().
+    // On a plain bool those are not member functions, so every one of the three
+    // failed to compile with
+    //     DiagnosticsEngine.cpp(51,25): error C2228: left of '.store' must have
+    //     class/struct/union
+    // which removed this translation unit from RawrXD_Gold and anything else
+    // that lists it. The declared intent is the atomic, and it is preserved here
+    // rather than downgrading the call sites to plain assignment: the three
+    // sites are also the ones that would silently tear if a future caller ever
+    // reads the flag without taking impl_->mutex_.
+    std::atomic<bool> initialized_{false};
     std::vector<DiagnosticRecord> records_;
     std::vector<DiagnosticRule> rules_;
     std::map<std::string, std::chrono::steady_clock::time_point> timers_;

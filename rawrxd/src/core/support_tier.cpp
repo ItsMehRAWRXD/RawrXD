@@ -50,6 +50,86 @@ static const SLAConfig s_slaConfigs[] = {
 };
 
 // ============================================================================
+// RAWRXD_MISSING_SOURCE_001 -- the four definitions this file calls but never
+// wrote, plus the three callback setters the header declares.
+// ============================================================================
+// support_tier.cpp is 340 lines of finished method bodies that CALL
+// SupportResult::ok / SupportResult::error on eleven paths and construct a
+// SupportTierManager in Instance(), yet defines neither the two factories nor
+// the constructor or destructor. The link failed with four LNK2019s:
+//
+//   SupportResult::error(char const*,int)                    unresolved external
+//   SupportResult::ok(char const*)                           unresolved external
+//   SupportTierManager::SupportTierManager(void)              unresolved external
+//   SupportTierManager::~SupportTierManager(void)             unresolved external
+//
+// The ctor placement matters and is not a default-initialise-everything. A
+// default-constructed SLAConfig leaves `description` a null pointer, and
+// GenerateStatusReport() streams that member directly
+// (`ss << m_slaConfig.description`), so a client that queried the tier before
+// calling Initialize() would have streamed a null char*. Seeding from
+// s_slaConfigs[0] means the Community row is always coherent: real description,
+// no response SLA, no phone support. That is the tier the manager is actually
+// in before Initialize() runs -- Initialize() sets exactly this row itself when
+// the Enterprise gate fails (line 66), so this makes the pre-Initialize state
+// and the unlicensed state identical rather than merely similar.
+//
+// m_nextId starts at 1 so the first ticket is id 1, not 0. nextTicketId() is
+// post-increment, and id 0 reads as "no ticket" in every reporting path.
+//
+// The three callback setters are not among the four LNK2019s, and that is why
+// they are easy to miss: nothing in the tree calls them, so the linker never
+// asks for them. They were declared because the header must describe the
+// members m_onCreated / m_onEscalated / m_onBreach, which are invoked at
+// support_tier.cpp:162, 182 and 236 but assigned nowhere -- so the notification
+// path was unreachable code that could never fire. Declaring a member function
+// without defining it is a latent link error the moment any caller appears, so
+// the definitions are added here rather than left as a trap.
+SupportResult SupportResult::ok(const char* msg) {
+    SupportResult r;
+    r.success = true;
+    r.code    = 0;
+    r.message = msg ? msg : "OK";
+    return r;
+}
+
+SupportResult SupportResult::error(const char* msg, int code) {
+    SupportResult r;
+    r.success = false;
+    r.code    = code;
+    r.message = msg ? msg : "error";
+    return r;
+}
+
+SupportTierManager::SupportTierManager()
+    : m_initialized(false),
+      m_level(SupportLevel::Community),
+      m_slaConfig(s_slaConfigs[0]),
+      m_nextId(1),
+      m_onCreated(nullptr),
+      m_onEscalated(nullptr),
+      m_onBreach(nullptr) {
+    // m_tickets and m_mutex are default-constructed; m_mutex needs no entry.
+}
+
+SupportTierManager::~SupportTierManager() = default;
+
+void SupportTierManager::SetCreatedCallback(TicketCallback cb) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_onCreated = cb;
+}
+
+void SupportTierManager::SetEscalatedCallback(TicketCallback cb) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_onEscalated = cb;
+}
+
+void SupportTierManager::SetBreachCallback(TicketCallback cb) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_onBreach = cb;
+}
+
+// ============================================================================
 // Initialize
 // ============================================================================
 SupportResult SupportTierManager::Initialize(SupportLevel level) {

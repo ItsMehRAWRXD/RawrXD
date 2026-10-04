@@ -14,6 +14,39 @@
 #include <string>
 #include <vector>
 
+// RAWRXD_NONMSVC_PREPROCESSOR_PROVENANCE_001
+// The closing directive at the end of this file has always been
+//     #endif  // !defined(_MSC_VER)
+// with no opening #if anywhere in the file. Measured: #if=0 #endif=1 in HEAD,
+// HEAD~1, HEAD~2, HEAD~3 and HEAD~5 -- every revision in reachable history. The
+// imbalance was committed that way and is not a regression from a later edit.
+//
+// The trailing comment preserves the pairing that was lost: it names the
+// condition the author intended. So the opening conditional is restored here
+// rather than the closing one being deleted, and the choice is settled by
+// evidence rather than by whichever edit makes the error go away:
+//
+//   - Deleting the #endif would make the body unconditional, which would compile
+//     a "non-MSVC fallback" into every MSVC build. The filename says what the
+//     file is for; enabling it unconditionally contradicts it.
+//   - Restoring `#if !defined(_MSC_VER)` matches the comment exactly.
+//
+// CONSEQUENCE THAT MATTERS MORE THAN THE ERROR, AND IT IS THE POINT:
+// this is an MSVC build, so _MSC_VER IS defined and the entire body is excluded.
+// After this repair the translation unit compiles to an object file with NO
+// external symbols. It therefore contributes ZERO symbols to any link on this
+// toolchain, and adding it to a target cannot close a single unresolved
+// external. Verified with dumpbin /symbols, not inferred.
+//
+// A consequence worth stating because it corrects an earlier measurement in this
+// receipt: a grep attributed 11 unresolved symbols to this file. That
+// attribution was wrong. The grep sees the symbol names inside a block that the
+// preprocessor excludes, so it found text, not definitions. The same is true of
+// native_speed_kernels_nonmsvc.cpp and its 8. On this toolchain those 19
+// symbols have no owner here at all, and the correct number to subtract from
+// the unresolved total is ZERO, not 19.
+#if !defined(_MSC_VER)
+
 namespace {
 
 std::mutex g_enterpriseMutex;
