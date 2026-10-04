@@ -234,6 +234,17 @@ struct ModelWeights {
     bool   ropeNeoxStyle  = false;  // true: NeoX rotated-half (llama/qwen); false: GPT-J adjacent
     bool   tieEmbeddings  = false;
     bool   isMoE          = false;
+    // RAWRXD_DEEPSEEK_CPU_E2E_001: number of LEADING layers that are DENSE.
+    //
+    // isMoE above is a WHOLE-MODEL flag and it was used as a per-layer
+    // dispatch predicate in forwardLayer. DeepSeek-V2 exports
+    // deepseek2.leading_dense_block_count=1, so layer 0 carries ffn_gate/up/down
+    // and no ffn_gate_inp at all: it is a dense layer inside a MoE model. Sending
+    // it to computeMoEFFN produced "MoE: router tensor not bound" at prefill
+    // token 0, which reads like a missing tensor and is actually a wrong
+    // dispatch. Zero means "no dense prefix" -- every layer is MoE -- which is
+    // the correct reading for architectures that do not export the key.
+    size_t leadingDenseBlockCount = 0;
     bool   loaded         = false;
 };
 
@@ -930,11 +941,35 @@ public:
         float* const* outputs,
         size_t count,
         const float* input,
-        size_t inputCount);
+        size_t inputCount,
+        // RAWRXD_LAYER0_ATTN_BISECT_001: optional, write-only. On entry *this
+        // is set to null; on a false return it names the guard that rejected the
+        // call, so "tryVulkanHostGEMVGroup was called" can be distinguished from
+        // "it ran and handled the operation". A caller that only records the
+        // boolean cannot tell those apart, which is what left
+        // forward:vulkan=0/0 and computeAttention:try... unreconciled.
+        const char** rejectReason = nullptr);
     bool computeMoEFFNGpu(size_t layer, const float* input, float* output);
 
     bool computeMLAAttentionGpu(size_t layer, const float* input,
                                 float* output, size_t seqLen);
+    // RAWRXD_CPU_MLA_KERNEL_001 -- the CPU MLA attention route. Returns true only
+    // when this layer was actually computed on the CPU and written to output;
+    // false, with the reason on stderr, when the route does not apply. Defined in
+    // src/deep2/deep2_cpu_mla.cpp. It is a member (not a free function) so it
+    // reads the same modelWeights and kvCache the GPU route reads; there is no
+    // second, private copy of the model's geometry.
+    bool computeMLAAttentionCpu(size_t layer, const float* input,
+                                float* output, size_t seqLen);
+    // Counters for the CPU MLA route, so a receipt can distinguish "MLA ran" from
+    // "MLA was reached". A counter is incremented only after the layer's output
+    // has been produced and every element proven finite.
+    struct CpuMlaCounters {
+        uint64_t attentionCalls = 0;
+        uint64_t lastLayer = 0;
+        uint64_t lastPos = 0;
+    };
+    const CpuMlaCounters& cpuMlaCounters() const { return cpuMla_; }
     bool forwardTokenGpuHybrid(float* hidden, size_t seqLen);
     PeerDeviceGroupProbe probeVulkanPeerGroup() const;
 
@@ -1453,6 +1488,10 @@ private:
     uint64_t residencyCacheMisses_ = 0;
     uint64_t residencyCacheEvictions_ = 0;
     GpuForwardCounters gpuFwd_{};
+    // RAWRXD_CPU_MLA_KERNEL_001: CPU MLA attention counters. Distinct from
+    // gpuFwd_ precisely because gpuFwd_ is cleared at the generation boundary --
+    // a receipt that wants to know whether MLA ran must read this, not that.
+    CpuMlaCounters cpuMla_{};
     // RAWRXD_REAL_GPU_FORWARD_002: completed-generation evidence.
     //
     // gpuFwd_ is LIVE telemetry and is cleared at the generation boundary

@@ -80,6 +80,12 @@ static_assert(sizeof(block_q2_K) == 84, "GGUF block_q2_K must be 84 bytes");
 // Field order is load-bearing: it must match the GGUF on-disk layout exactly, or
 // `d` is decoded from quant bytes and every output is garbage.
 struct block_q3_K {
+    // Field order is load-bearing: it must match the GGUF on-disk layout
+    // exactly, or `d` is decoded from quant bytes and every output is garbage.
+    // RAWRXD_Q3K_FIELD_ORDER_001: a reorder to scales@0/hmask@12/qs@44 was
+    // attempted and REVERTED, and a `uint16_t dmin` member added during that
+    // attempt was REVERTED too — it made the struct 112 bytes and broke this
+    // assert. Not shipping an unverified Q3_K layout.
     uint8_t  hmask[32];   // high-bit mask
     uint8_t  qs[64];      // 3-bit weights
     uint8_t  scales[12];  // packed scales

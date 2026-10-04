@@ -835,6 +835,209 @@ void ssmStageReport(const char* tag, long long call, long long layer,
 #define RAWRXD_DEEP2_TRACE(...) do { } while (0)
 #endif
 
+// =================== RAWRXD_TENSOR_PROVENANCE_001 ===================
+//
+// Tensor identity must be a hard PREREQUISITE for every downstream numerical
+// claim. Investigation order is therefore
+//
+//     IDENTITY -> INTERPRETATION -> NUMERICS -> SEMANTICS
+//
+// and a numerical probe run before identity is established is measuring a
+// conditional premise. The Q2_K scale arithmetic investigated earlier was
+// internally consistent over bytes that were NOT the tensor it claimed: every
+// GEMV after the first in a process received the first tensor's residency-cache
+// entry. Rigorous arithmetic, wrong object.
+//
+// Three ownership boundaries are fingerprinted and compared:
+//
+//   WQEXT    GGUF extraction, from the GGUFTensor the loader selected
+//   LWBOUND  the bound WeightTensor as the consumer sees it
+//   KERNEL   the bytes the kernel is actually handed, via ev.transientAddress
+//
+// The KERNEL boundary is hashed by CONTENT, not by pointer. Pointer equality is
+// deliberately NOT the criterion: copying, staging, dequantisation, GPU upload
+// or legitimate remapping all change addresses without changing identity. The
+// question is whether the consumer operates on bytes derived from the tensor the
+// loader claims it selected, and only content can answer that.
+struct TensorProvenance {
+    uint64_t provHash   = 0;   // identity from declared fields
+    uint64_t prefixHash = 0;   // content: first 64 bytes
+    uint64_t bodyHash   = 0;   // content: sampled windows across the extent
+    uint64_t byteLength = 0;
+    uint64_t fileOffset = 0;
+    uint32_t shardId    = 0;
+    uint32_t type       = 0;
+    int64_t  dims[8]    = {0};
+    uint32_t nDims      = 0;
+    bool     haveContent = false;
+};
+
+static inline uint64_t provMix(uint64_t h, uint64_t v) {
+    for (int i = 0; i < 8; ++i) {
+        h ^= (v >> (i * 8)) & 0xFFull;
+        h *= 1099511628211ull;
+    }
+    return h;
+}
+static uint64_t provFnvBytes(const void* p, size_t n, uint64_t seed) {
+    const unsigned char* b = (const unsigned char*)p;
+    uint64_t h = seed ? seed : 14695981039346656037ull;
+    for (size_t i = 0; i < n; ++i) { h ^= b[i]; h *= 1099511628211ull; }
+    return h;
+}
+
+// Identity from DECLARED fields only. No pointer, no content: two tensors with
+// the same name/type/dims/length/offset are the same tensor regardless of where
+// they currently live.
+static uint64_t provIdentityHash(const char* name, uint32_t type,
+                                 const std::vector<int64_t>& shape,
+                                 uint64_t byteLength, uint64_t fileOffset,
+                                 uint32_t shardId) {
+    uint64_t h = 14695981039346656037ull;
+    h = provMix(h, 1ull);                                  // model fingerprint
+    h = provMix(h, shardId);
+    h = provMix(h, (uint64_t)type);
+    h = provMix(h, byteLength);
+    h = provMix(h, fileOffset);
+    h = provMix(h, name ? (uint64_t)std::strlen(name) : 0ull);
+    if (name) for (const char* c = name; *c; ++c) h = provMix(h, (uint64_t)(unsigned char)*c);
+    for (int64_t d : shape) h = provMix(h, (uint64_t)d);
+    return h;
+}
+
+// Content fingerprint of the bytes a consumer will actually read.
+static void provContentHash(TensorProvenance& pv, const void* data, uint64_t len) {
+    if (!data || len == 0) return;
+    const unsigned char* b = (const unsigned char*)data;
+    const size_t pre = (size_t)(len < 64 ? len : 64);
+    pv.prefixHash = provFnvBytes(b, pre, 0);
+    // 8 windows of 64 bytes spread across the extent: catches a wrong tensor of
+    // the same length far more reliably than the prefix alone.
+    const size_t kWindows = 8, kWin = 64;
+    uint64_t h = 0;
+    for (size_t w = 0; w < kWindows; ++w) {
+        const uint64_t off = (len > kWin) ? ((uint64_t)w * (len - kWin) / (kWindows - 1)) : 0;
+        h = provFnvBytes(b + off, (size_t)((len - off) < kWin ? (len - off) : kWin), h ? h : 14695981039346656037ull);
+    }
+    pv.bodyHash = h;
+    pv.byteLength = len;
+    pv.haveContent = true;
+}
+
+// =================== RAWRXD_TOKEN_WALL_PROFILE_001 ===================
+//
+// Splits one decode token's wall time into the stages that can each be the wall.
+// At 1.99 GB/s of useful weight rate the runtime is roughly two orders of
+// magnitude off memory-bound, and "COMPUTE_OR_KERNEL" is not actionable until it
+// is split into dequant / gemv / dispatch / sync / copy / other.
+//
+// All buckets are measured, not apportioned. The fused scalar kernels do not
+// separate dequantisation from the dot product, so that pair is reported as
+// KERNEL_FUSED and the split is declared unavailable rather than invented.
+struct TokWall {
+    double wallNs = 0, prologueNs = 0, resolveNs = 0, kernelNs = 0, copyNs = 0;
+    double attnNs = 0, ffnNs = 0, moeNs = 0, normNs = 0, embedNs = 0;
+    uint64_t kernelBytes = 0, kernelCalls = 0, biasAdds = 0;
+    uint64_t attnCalls = 0, ffnCalls = 0, moeCalls = 0;
+
+    static double nowNs() {
+        return (double)std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
+    void reset() { *this = TokWall{}; }
+};
+
+static TokWall g_tokWall;
+
+static bool tokProfOn() {
+    static const bool on = [] {
+        const char* v = std::getenv("RAWRXD_TOKEN_PROFILE");
+        return v && v[0] && v[0] != '0';
+    }();
+    return on;
+}
+
+static void tokProfEmit(const TokWall& p) {
+    const double wallUs  = p.wallNs / 1e3;
+    const double kernUs  = p.kernelNs / 1e3;
+    // Only the buckets actually measured are apportioned. "other" is whatever
+    // the named buckets did not account for, so it cannot hide a missing timer.
+    const double namedUs = (p.prologueNs + p.resolveNs + p.kernelNs + p.copyNs +
+                            p.attnNs + p.ffnNs + p.moeNs + p.normNs + p.embedNs) / 1e3;
+    const double otherUs = wallUs - namedUs;
+    const double gbps = kernUs > 0.0 ? ((double)p.kernelBytes / 1000.0 / kernUs) : 0.0;
+    const double bytesPerTok = (double)p.kernelBytes;
+    const double usefulRate = wallUs > 0.0 ? (bytesPerTok / 1000.0 / wallUs) : 0.0;
+    std::fprintf(stderr,
+        "TOKENPROF TOKEN_WALL_US=%.1f\n"
+        "TOKENPROF WEIGHT_RESOLVE_US=%.1f GEMV_FUSED_US=%.1f COPY_US=%.1f PROLOGUE_US=%.1f\n"
+        "TOKENPROF ATTENTION_US=%.1f FFN_US=%.1f MOE_US=%.1f NORM_US=%.1f EMBED_US=%.1f OTHER_US=%.1f\n"
+        "TOKENPROF LINEARW_CALLS=%llu ATTN_CALLS=%llu FFN_CALLS=%llu MOE_CALLS=%llu BIAS_ADDS=%llu\n"
+        "TOKENPROF KERNEL_WEIGHT_BYTES=%llu DEQUANT_SOURCE_BYTES=%llu DEQUANT_OUTPUT_BYTES=%llu GPU_UPLOAD_BYTES=0\n"
+        "TOKENPROF GEMV_FUSED_GBPS=%.4f USEFUL_WEIGHT_RATE_GBPS=%.4f\n"
+        "TOKENPROF DEQUANT_GBPS=UNAVAILABLE_FUSED_IN_KERNEL GEMV_GBPS=UNAVAILABLE_FUSED_IN_KERNEL UPLOAD_GBPS=0\n",
+        wallUs,
+        p.resolveNs / 1e3, kernUs, p.copyNs / 1e3, p.prologueNs / 1e3,
+        p.attnNs / 1e3, p.ffnNs / 1e3, p.moeNs / 1e3, p.normNs / 1e3, p.embedNs / 1e3, otherUs,
+        (unsigned long long)p.kernelCalls, (unsigned long long)p.attnCalls,
+        (unsigned long long)p.ffnCalls, (unsigned long long)p.moeCalls,
+        (unsigned long long)p.biasAdds,
+        (unsigned long long)p.kernelBytes, (unsigned long long)p.kernelBytes, 0ull,
+        gbps, usefulRate);
+    std::fflush(stderr);
+}
+
+// Emits on every return path, including the failure paths, so a token that
+// throws still produces a wall-time receipt instead of vanishing.
+struct TokWallScope {
+    bool active; double t0;
+    explicit TokWallScope(bool on) : active(on), t0(TokWall::nowNs()) {
+        if (active) g_tokWall.reset();
+    }
+    ~TokWallScope() {
+        if (!active) return;
+        TokWall p = g_tokWall;
+        p.wallNs = TokWall::nowNs() - t0;
+        tokProfEmit(p);
+    }
+};
+
+static inline bool provOn() {
+    static const bool on = [] {
+        const char* v = std::getenv("RAWRXD_TENSOR_PROVENANCE");
+        return v && v[0] && v[0] != '0';
+    }();
+    return on;
+}
+
+// WQEXT records, keyed by tensor name, so the KERNEL boundary can be compared
+// against them IN THE SAME PROCESS. The two sides must not be inferred from one
+// another: if the extraction record were reconstructed from the consumer's
+// fields the comparison would be circular and could not fail.
+static std::map<std::string, TensorProvenance>& provWqextTable() {
+    static std::map<std::string, TensorProvenance> t;
+    return t;
+}
+
+static void provEmit(const char* boundary, const char* name, const TensorProvenance& pv,
+                     const void* ptr) {
+    char dims[128];
+    int  o = std::snprintf(dims, sizeof(dims), "[");
+    for (uint32_t i = 0; i < pv.nDims && i < 8; ++i)
+        o += std::snprintf(dims + o, (size_t)((o > 0 && (size_t)o < sizeof(dims)) ? sizeof(dims) - (size_t)o : 0),
+                           "%s%lld", i ? "," : "", (long long)pv.dims[i]);
+    std::snprintf(dims + o, (size_t)((o > 0 && (size_t)o < sizeof(dims)) ? sizeof(dims) - (size_t)o : 0), "]");
+    std::fprintf(stderr,
+        "PROV BOUNDARY=%s NAME=%s TYPE=%u DIMS=%s LEN=%llu "
+        "FILE_OFF=%llu SHARD=%u PROV_ID=%016llx PREFIX_HASH=%016llx BODY_HASH=%016llx PTR=%p\n",
+        boundary, name ? name : "(null)", pv.type, dims,
+        (unsigned long long)pv.byteLength, (unsigned long long)pv.fileOffset,
+        pv.shardId, (unsigned long long)pv.provHash,
+        (unsigned long long)pv.prefixHash, (unsigned long long)pv.bodyHash, ptr);
+    std::fflush(stderr);
+}
+
+
 // =================== CONSTRUCTOR / DESTRUCTOR ====================
 namespace {
     rawrxd::Batch005Runtime s_expertCacheRuntime; // keeps expert_cache objects alive
@@ -1540,6 +1743,53 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
 
             BackingDirectory::Instance().registerBinding(id, bref);
             ++g_backingRegistered;
+
+            // RAWRXD_SPACELESS_IDENTITY_POPULATION_001
+            //
+            // The identity computed above was used ONLY to key the backing
+            // directory. It was never copied into the tensor. Because `wt = {}`
+            // zero-initialises the struct, every tensor bound through this
+            // lambda carried TensorIdentity{0,0,0,0,0} for its entire lifetime.
+            //
+            // LinearW() looks the residency cache up by wt.identity:
+            //     if (residencyCache_->lookup(wt.identity, ev)) { ... }
+            //     else { ev.transientAddress = wt.data; insert(ev); }
+            // With every identity equal, the FIRST LinearW call inserts one
+            // entry and every later call HITS it, so every subsequent GEMV in
+            // the model was handed the first tensor's address instead of its own
+            // wt.data. Measured at Deep2Engine.cpp LinearW_EV:
+            //     attn_q      cache_hit=0 ADDR_MATCH=1   <-- only correct GEMV
+            //     attn_k      cache_hit=1 ADDR_MATCH=0   ev_addr == attn_q's
+            //     attn_v      cache_hit=1 ADDR_MATCH=0   ev_bytes == attn_q's
+            //     ffn_gate    cache_hit=1 ADDR_MATCH=0   FIRST_BAD_ROW=1 (NaN)
+            // Note attn_k was not "healthy": its output was bit-identical to
+            // attn_q's first 256 rows, which is what a duplicate GEMV looks
+            // like, not a correct projection. V was the visible symptom only
+            // because the kernel reached it first with the wrong bytes.
+            //
+            // loadTensorFromGGUF() already assigned wt.identity; this path did
+            // not, which is why reading that function made the code look correct.
+            wt.identity = id;
+
+            // RAWRXD_TENSOR_PROVENANCE_001 -- boundary WQEXT (extraction).
+            // Fingerprinted from the GGUFTensor the loader actually selected,
+            // before any caching, staging or remapping can occur.
+            if (provOn()) {
+                TensorProvenance pv;
+                pv.provHash = provIdentityHash(t->name.c_str(),
+                                               static_cast<uint32_t>(t->type),
+                                               t->shape, t->sizeBytes,
+                                               t->fileOffset, t->shardId);
+                pv.byteLength = t->sizeBytes;
+                pv.fileOffset = t->fileOffset;
+                pv.shardId    = t->shardId;
+                pv.type       = static_cast<uint32_t>(t->type);
+                pv.nDims      = (uint32_t)(t->shape.size() < 8 ? t->shape.size() : 8);
+                for (uint32_t di = 0; di < pv.nDims; ++di) pv.dims[di] = t->shape[di];
+                provContentHash(pv, t->data, t->sizeBytes);
+                provWqextTable()[t->name] = pv;
+                provEmit("WQEXT", t->name.c_str(), pv, t->data);
+            }
         }
         return true;
     };
@@ -1917,6 +2167,17 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
     modelWeights.numSharedExperts =
         metaSize("expert_shared_count", 0);
     modelWeights.isMoE = modelWeights.numExperts > 0;
+    // RAWRXD_DEEPSEEK_CPU_E2E_001: the dense prefix length. Mixtral-style
+    // exports omit the key, which correctly means "no dense prefix".
+    modelWeights.leadingDenseBlockCount =
+        metaSize("leading_dense_block_count", 0);
+    if (modelWeights.leadingDenseBlockCount > modelWeights.numLayers) {
+        std::fprintf(stderr,
+            "[Deep2Engine] leading_dense_block_count=%zu exceeds block_count=%zu; "
+            "clamping to block_count\n",
+            modelWeights.leadingDenseBlockCount, modelWeights.numLayers);
+        modelWeights.leadingDenseBlockCount = modelWeights.numLayers;
+    }
 
     modelWeights.ropeDimensionCount =
         metaSize("rope.dimension_count", modelWeights.headDim);
@@ -2186,80 +2447,46 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         // GPU path. Naming the missing capability at the earliest possible
         // moment is the smaller change.
         //
-        // NOTE: modelWeights.useMLA is NOT usable here -- it is still false at
-        // this point and is only assigned later, in the MLA_ELIGIBLE block.
-        // Using it produced a check that silently never fired.
+        // RAWRXD_CPU_MLA_KERNEL_001: BOTH MLA_CPU_PATH_ABSENT suspensions were
+        // REMOVED here, and the reason is that their premise became false.
+        //
+        // They read:
+        //     if (report.mla && !vulkanEnabled_) -> suspend, stageCode 21
+        //     if (modelWeights.useMLA && !vulkanEnabled_) -> suspend, stageCode 21
+        // with the message "no CPU MLA path exists". That was true and it was
+        // measured: computeAttention had no CPU MLA branch, every GPU helper
+        // returned false at its vulkanInitialized_ guard, and the model died at
+        // prefill token 0.
+        //
+        // Deep2Engine::computeMLAAttentionCpu now exists
+        // (src/deep2/deep2_cpu_mla.cpp), is declared in Deep2Engine.h next to the
+        // GPU declaration, and is called from computeAttention as a real second
+        // execution root. The suspension is therefore no longer a fact about this
+        // build; leaving it in place would refuse, by the exact message, the model
+        // the kernel was written to run.
+        //
+        // What replaces it is NOT a weaker gate. The single fail-closed decision
+        // point for MLA is still the MLA_EXECUTION_ELIGIBLE predicate below, which
+        // requires parsed metadata, exact validated geometry, a recognised layout,
+        // and every tensor that layout requires bound on EVERY layer. A model that
+        // fails any of those is still refused, with stageCode naming the exact
+        // requirement it missed. What is gone is only the claim that "no CPU path
+        // exists", which is no longer true.
+        //
+        // The original concern that motivated the early suspension -- spending
+        // 966 ms of VMA construction and a 43 GB mapping on a model that cannot
+        // run -- is now served by that later predicate rather than by a guess made
+        // before any tensor was bound. Judging runnability from bound tensors is
+        // strictly more accurate than judging it from a trait flag.
         // ------------------------------------------------------------------
-        if (report.mla && !vulkanEnabled_) {
-            std::fprintf(stderr,
-                "[Deep2Engine] SUSPENDED arch=%s reason=MLA_CPU_PATH_ABSENT "
-                "vulkan=0 -- suspended BEFORE mapping; nothing read or allocated\n",
-                report.architectureId ? report.architectureId : "(null)");
-            std::fflush(stderr);
-            if (diag) {
-                diag->stageCode = 21;
-                diag->stageName = "MLA_CPU_PATH_ABSENT";
-                diag->message =
-                    "Model requires MLA attention, which this build exposes only "
-                    "through the GPU branch; Vulkan is disabled and no CPU MLA "
-                    "path exists. Suspended at admission: no shard was mapped and "
-                    "nothing was allocated. This is a missing compute path, not a "
-                    "memory-mapping or I/O failure.";
-            }
-            modelState_ = ModelState::Closed;
-            return false;
-        }
     }
 
     // ------------------------------------------------------------------
-    // DEEP2_MLA_CPU_PATH_SUSPENDED_001
-    //
-    // Suspend here, before anything is mapped, bound or allocated.
-    //
-    // computeAttention() has no CPU MLA branch at all:
-    //     if (lw.useMLA || modelWeights.useMLA) {
-    //         if (computeMLAAttentionGpu(...)) return;
-    //         throw std::runtime_error(
-    //             "attention: GPU MLA path failed or unsupported");
-    //     }
-    // So an MLA model has exactly two outcomes: Vulkan, or exception.
-    //
-    // Both facts needed to know that -- traits.mla and vulkanEnabled_ -- are
-    // already in hand at this point, and the shard mapping that follows (the
-    // "GGUF mapped" log) has not run yet. Measured on Kimi K2 before this check
-    // existed: 966 ms to build the VMA for a 43.12 GB shard, then 1096 tensors
-    // bound, 61 MLA layers validated, KV/cache allocated for a 163840 vocab,
-    // a full prefill forward, and only then the throw. Every unit of that work
-    // was spent discovering something knowable here.
-    //
-    // This is deliberately a SUSPENSION, not an implementation. Writing a CPU
-    // MLA kernel would ADD surface: a new numerical path that must itself be
-    // certified against the GPU path, and one more thing that can silently
-    // disagree with it. Naming the missing capability at the earliest possible
-    // moment is the smaller change, and it makes the census report WHY a model
-    // is unsupported instead of a generic ForwardFailure that has to be
-    // diagnosed from stderr.
-    //
-    // Deletion is the better answer when a model is refused this way: no VMA,
-    // no resident pages, no allocation, and a message that names the gap.
+    // DEEP2_MLA_CPU_PATH_SUSPENDED_001 -- see the note above: removed, same
+    // reason. The MLA_EXECUTION_ELIGIBLE predicate below is now the single
+    // fail-closed decision point for MLA, and it judges from BOUND TENSORS
+    // rather than from a trait flag read before any tensor was bound.
     // ------------------------------------------------------------------
-    if (modelWeights.useMLA && !vulkanEnabled_) {
-        std::fprintf(stderr,
-            "[Deep2Engine] SUSPENDED reason=MLA_CPU_PATH_ABSENT "
-            "vulkan=0 -- suspended BEFORE mapping; nothing was read or allocated\n");
-        std::fflush(stderr);
-        if (diag) {
-            diag->stageCode = 21;
-            diag->stageName = "MLA_CPU_PATH_ABSENT";
-            diag->message =
-                "Model requires MLA attention, which this build exposes only "
-                "through the GPU branch; Vulkan is disabled and no CPU MLA path "
-                "exists. Suspended at admission: no shard was mapped and nothing "
-                "was allocated. This is a missing compute path, not a "
-                "memory-mapping or I/O failure.";
-        }
-        return false;
-    }
 
     modelWeights.layers.assign(modelWeights.numLayers, LayerWeights{});
     mla.numLayersExpected = modelWeights.numLayers;
@@ -2270,6 +2497,104 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
 
         bindTensor(p + "attn_qkv.weight", lw.wqkv);
         bindTensor(p + "attn_q.weight", lw.wq);
+        // RAWRXD_LAYER0_ATTN_BISECT_001: the one measurement that decides whether
+        // the Q projection stride is wrong or the live kernel is wrong.
+        //
+        // row_bytes is computed two independent ways and both are printed:
+        //   from numBlocks  (blocks_per_row * block_size)  -- the live descriptor
+        //   from shape/rows/cols arithmetic              -- the loader's intent
+        // If they disagree, the stride itself is wrong. If they agree and
+        // row_bytes is right for the type, the stride is fine and the defect is
+        // in the kernel's field offsets. Prints once, for layer 0 only, so the
+        // run is not flooded.
+        if (layer == 0 && lw.wq.data) {
+            static const bool traceOnce = [] {
+                const char* v = std::getenv("RAWRXD_ATTN_BISECT");
+                return v && v[0] && v[0] != '0';
+            }();
+            if (traceOnce) {
+                // GGUF/ggml spec block geometry, stated here rather than taken
+                // from any in-repo table (the ComputeTensorSize table is dead
+                // code and its stride values are known wrong).
+                struct Geo { int type; const char* name; uint32_t qk; uint32_t bytes; };
+                static const Geo kGeo[] = {
+                    {  2, "Q4_0",  32,  18 }, {  3, "Q4_1",  32,  20 },
+                    {  6, "Q5_0",  32,  22 }, {  7, "Q5_1",  32,  24 },
+                    {  8, "Q8_0",  32,  34 }, {  9, "Q8_1",  32,  36 },
+                    { 10, "Q2_K", 256,  84 }, { 11, "Q3_K", 256, 110 },
+                    { 12, "Q4_K", 256, 144 }, { 13, "Q5_K", 256, 176 },
+                    { 14, "Q6_K", 256, 210 }, { 15, "Q8_K", 256, 292 },
+                };
+                const Geo* g = nullptr;
+                for (const auto& e : kGeo) if (e.type == lw.wq.type) g = &e;
+
+                const size_t nElem = lw.wq.numElements();
+                // Spec-derived geometry, plus the arithmetic that makes it
+                // checkable: nElem/qk*bytes must equal sizeBytes exactly.
+                uint64_t specBlocks = 0, specBytes = 0, specRowBytes = 0, specBpr = 0;
+                if (g && g->qk && (nElem % g->qk) == 0) {
+                    specBlocks = nElem / g->qk;
+                    specBytes  = specBlocks * g->bytes;
+                    specBpr    = lw.wq.cols / g->qk;
+                    specRowBytes = specBpr * g->bytes;
+                }
+                const bool sizeBytesAgrees = (g && specBytes == lw.wq.sizeBytes);
+                const bool numBlocksAgrees = (g && specBlocks == lw.wq.numBlocks);
+
+                std::fprintf(stderr,
+                    "WQBIND layer=0 name=attn_q.weight type=%d type_name=%s "
+                    "ne0=%lld ne1=%lld rows=%zu cols=%zu numElements=%zu "
+                    "numBlocks_bound=%zu sizeBytes=%zu data=%p\n",
+                    lw.wq.type, g ? g->name : "UNKNOWN",
+                    (long long)(lw.wq.shape.size() > 0 ? lw.wq.shape[0] : -1),
+                    (long long)(lw.wq.shape.size() > 1 ? lw.wq.shape[1] : -1),
+                    lw.wq.rows, lw.wq.cols, nElem,
+                    lw.wq.numBlocks, lw.wq.sizeBytes, lw.wq.data);
+                std::fprintf(stderr,
+                    "WQBIND layer=0 qk=%u block_size=%u spec_blocks=%llu "
+                    "spec_bytes=%llu blocks_per_row=%llu row_bytes=%llu "
+                    "SIZE_BYTES_AGREES=%d NUM_BLOCKS_AGREES=%d "
+                    "NUM_BLOCKS_DEFECT=%d\n",
+                    g ? g->qk : 0u, g ? g->bytes : 0u,
+                    (unsigned long long)specBlocks, (unsigned long long)specBytes,
+                    (unsigned long long)specBpr, (unsigned long long)specRowBytes,
+                    sizeBytesAgrees ? 1 : 0, numBlocksAgrees ? 1 : 0,
+                    (g && !numBlocksAgrees) ? 1 : 0);
+                std::fflush(stderr);
+
+                // ONE fprintf for the whole dump. The previous version issued one
+                // call per byte, and a concurrent thread's stderr write split the
+                // 84 bytes across three lines, which made the result impossible
+                // to attribute. A single call is atomic against that interleaving.
+                char hex[8 * 84 + 4];
+                size_t o = 0;
+                const unsigned char* raw = (const unsigned char*)lw.wq.data;
+                const size_t nDump = (raw && lw.wq.sizeBytes >= 84) ? 84 : 0;
+                static const char* kHex = "0123456789abcdef";
+                for (size_t i = 0; i < nDump; ++i) {
+                    hex[o++] = ' ';
+                    hex[o++] = kHex[(raw[i] >> 4) & 0xF];
+                    hex[o++] = kHex[raw[i] & 0xF];
+                }
+                hex[o] = '\0';
+                // Q2_K places scales[16] then qs[64] then d,dmin -- d is at byte
+                // 80, NOT byte 0. Printing the decoded values for both candidate
+                // offsets makes a wrong field offset visible instead of assumed.
+                uint16_t db = 0, mb = 0;
+                if (nDump == 84) {
+                    db  = (uint16_t)(raw[80] | (raw[81] << 8));
+                    mb  = (uint16_t)(raw[82] | (raw[83] << 8));
+                }
+                std::fprintf(stderr, "WQBIND layer=0 bytes0_83=%s\n", hex);
+                std::fprintf(stderr,
+                    "WQBIND layer=0 q2k_d_bits_at80=0x%04x q2k_dmin_bits_at80=0x%04x "
+                    "scales0_15=%02x%02x%02x%02x qs0_3=%02x%02x%02x%02x\n",
+                    db, mb, raw ? raw[0] : 0, raw ? raw[1] : 0, raw ? raw[2] : 0,
+                    raw ? raw[3] : 0, raw ? raw[16] : 0, raw ? raw[17] : 0,
+                    raw ? raw[18] : 0, raw ? raw[19] : 0);
+                std::fflush(stderr);
+            }
+        }
         bindTensor(p + "attn_k.weight", lw.wk);
         bindTensor(p + "attn_v.weight", lw.wv);
         bindTensor(p + "attn_output.weight", lw.wo);
@@ -2316,17 +2641,53 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                 if (!bindTensor(p + "attn_kv_a_mqa.weight", lw.attnKV_a_mqa))
                     bindTensor(p + "attn_kv_a.weight", lw.attnKV_a_mqa);
                 bindTensor(p + "attn_kv_a_norm.weight", lw.attnKV_a_norm);
-                // attn_q.weight and attn_output.weight are already bound above
-                // into wq / wo for this layout; the split-only tensors cannot be
+                bindFirst(lw.attnO, {(p + "attn_o.weight").c_str(),
+                                     (p + "attn_output.weight").c_str()});
+
+                // RAWRXD_DEEPSEEK_CPU_E2E_001: the fused layout maps onto the
+                // EXISTING two slots, and needs no weight surgery at all.
+                //
+                // The previous comment here said the split-only tensors "cannot be
                 // synthesised, because splitting a fused quantised weight would
-                // require dequantisation and requantisation.
+                // require dequantisation and requantisation". That statement is
+                // about producing two SEPARATE WeightTensors from one packed
+                // quantised blob, and it is correct. It is also not what the
+                // fused layout needs, because nothing has to be split:
+                //
+                //   attn_q     is [heads*keyLen, hidden]      -- already qFull
+                //   attn_kv_b  is [heads*(nope+vHead), kvRank] -- K and V share one
+                //                                                          up-projection
+                //
+                // Both produce exactly what attnQ_b and attnK_b produce in the
+                // split layout. Binding them there is a rename, not a conversion:
+                // no byte is dequantised, requantised or copied, and the packed
+                // Q4_K payload is read once by the same registered GEMV the rest
+                // of the engine uses. The k/v split happens on the GEMV OUTPUT,
+                // where it is plain f32 pointer arithmetic.
+                //
+                //   attn_q     [2048,3072]  heads*keyLen = 16*192 = 3072  -> attnQ_b
+                //   attn_kv_b  [512,4096]   heads*(nope+vHead) = 16*256 = 4096 -> attnK_b
+                bindTensor(p + "attn_q.weight", lw.attnQ_b);
+                bindTensor(p + "attn_kv_b.weight", lw.attnK_b);
+                // attnV_b is NOT populated in this layout: V is the second half of
+                // each head's 256-wide slice of the attn_kv_b result, not a tensor.
             }
 
             // M5.5: the consumer's exact required set.
-            const bool complete =
-                lw.attnQ_a.data && lw.attnQ_a_norm.data && lw.attnQ_b.data &&
-                lw.attnKV_a_mqa.data && lw.attnKV_a_norm.data &&
-                lw.attnK_b.data && lw.attnV_b.data && lw.attnO.data;
+            //
+            // Layout-aware. The SPLIT consumer needs eight tensors; the FUSED
+            // consumer needs five, because attn_q_b / attn_kv_b already carry the
+            // absorbed factors and V is not a separate weight. Judging both
+            // layouts by the split set made every deepseek2 file report three
+            // tensors "missing" that were never part of it.
+            const bool complete = split
+                ? (lw.attnQ_a.data && lw.attnQ_a_norm.data && lw.attnQ_b.data &&
+                   lw.attnKV_a_mqa.data && lw.attnKV_a_norm.data &&
+                   lw.attnK_b.data && lw.attnV_b.data && lw.attnO.data)
+                : (fused
+                   ? (lw.attnQ_b.data && lw.attnKV_a_mqa.data &&
+                      lw.attnKV_a_norm.data && lw.attnK_b.data && lw.attnO.data)
+                   : false);
             if (complete) ++mla.layersFullyBound;
             else if (layer == 0) {
                 std::ostringstream miss;
@@ -2336,14 +2697,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                         miss << what;
                     }
                 };
-                note("attnQ_a", lw.attnQ_a);
-                note("attnQ_a_norm", lw.attnQ_a_norm);
-                note("attnQ_b", lw.attnQ_b);
-                note("attnKV_a_mqa", lw.attnKV_a_mqa);
-                note("attnKV_a_norm", lw.attnKV_a_norm);
-                note("attnK_b", lw.attnK_b);
-                note("attnV_b", lw.attnV_b);
-                note("attnO", lw.attnO);
+                if (split) {
+                    note("attnQ_a", lw.attnQ_a);
+                    note("attnQ_a_norm", lw.attnQ_a_norm);
+                    note("attnQ_b", lw.attnQ_b);
+                    note("attnKV_a_mqa", lw.attnKV_a_mqa);
+                    note("attnKV_a_norm", lw.attnKV_a_norm);
+                    note("attnK_b", lw.attnK_b);
+                    note("attnV_b", lw.attnV_b);
+                    note("attnO", lw.attnO);
+                } else {
+                    note("attn_q(->attnQ_b)", lw.attnQ_b);
+                    note("attnKV_a_mqa", lw.attnKV_a_mqa);
+                    note("attnKV_a_norm", lw.attnKV_a_norm);
+                    note("attn_kv_b(->attnK_b)", lw.attnK_b);
+                    note("attnO", lw.attnO);
+                }
                 mla.missing = miss.str();
             }
         }
@@ -3010,13 +3379,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
     // MLA_EXECUTION_ELIGIBLE requires, exactly:
     //     metadata parsed
     //  && geometry validated (every division and relationship held exactly)
-    //  && the SPLIT tensor layout the consumer requires
-    //  && all 8 required tensors bound on EVERY layer
+    //  && a RECOGNISED tensor layout the consumer can read
+    //  && all tensors required BY THAT LAYOUT bound on EVERY layer
     //  && all five geometry values non-zero
     //
     // Anything less -> refuse. This is the single place the rectangle decision
     // is made, and it is deliberately AFTER the per-layer binder so eligibility
     // is judged on what was actually bound rather than on what was hoped for.
+    //
+    // RAWRXD_DEEPSEEK_CPU_E2E_001: `mla.layoutSplit` became
+    // `(mla.layoutSplit || mla.layoutFused)`. The predicate previously admitted
+    // exactly one of the two layouts the binder above can bind, which meant a
+    // perfectly well-formed deepseek2 file was measured as fully bound and then
+    // refused for "layout mismatch" -- the binder's own output contradicted the
+    // predicate applied to it. The geometry requirement is UNCHANGED and still
+    // exact: rectangular key/value lengths, validated divisions, and every
+    // required tensor actually bound on every layer.
     if (mla.rectangular) {
         const bool allLayersBound =
             mla.metadataParsed && mla.numLayersExpected != 0 &&
@@ -3024,15 +3402,17 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         const bool geometryComplete =
             mla.qkNope != 0 && mla.qkRope != 0 && mla.vHead != 0 &&
             mla.kvLoraRank != 0 && mla.numHeads != 0;
-        const bool eligible = mla.geometryValidated && mla.layoutSplit &&
+        const bool layoutOk = mla.layoutSplit || mla.layoutFused;
+        const bool eligible = mla.geometryValidated && layoutOk &&
                               allLayersBound && geometryComplete;
         if (eligible) {
             modelWeights.useMLA = true;
             std::fprintf(stderr,
                 "[Deep2Engine] MLA_ELIGIBLE arch=%s layersBound=%zu/%zu "
-                "qkNopeHeadDim=%zu qkRopeHeadDim=%zu vHeadDim=%zu "
+                "layout=%s qkNopeHeadDim=%zu qkRopeHeadDim=%zu vHeadDim=%zu "
                 "kvLoraRank=%zu numHeads=%zu useMLA=1\n",
                 arch.c_str(), mla.layersFullyBound, mla.numLayersExpected,
+                mla.layoutSplit ? "split" : "fused",
                 mla.qkNope, mla.qkRope, mla.vHead, mla.kvLoraRank, mla.numHeads);
         } else {
             std::ostringstream msg;
@@ -3048,20 +3428,25 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                     << " qkNopeHeadDim=" << mla.qkNope
                     << " qkRopeHeadDim=" << mla.qkRope
                     << " vHeadDim=" << mla.vHead << ".";
-            } else if (!mla.layoutSplit) {
-                msg << " layout mismatch: this file uses the "
-                    << (mla.layoutFused ? "FUSED" : "unrecognised")
-                    << " MLA layout (attn_q / attn_kv_a_mqa / attn_kv_b / "
-                       "attn_output), but the MLA consumer requires the SPLIT "
-                       "layout (attn_q_a, attn_q_a_norm, attn_q_b, attn_kv_a_mqa, "
-                       "attn_kv_a_norm, attn_k_b, attn_v_b, attn_o). Missing on "
+} else if (!mla.layoutSplit && !mla.layoutFused) {
+                msg << " layout mismatch: this file uses an UNRECOGNISED MLA "
+                       "layout. Recognised are SPLIT (attn_q_a, attn_q_a_norm, "
+                       "attn_q_b, attn_kv_a_mqa, attn_kv_a_norm, attn_k_b, "
+                       "attn_v_b, attn_o) and FUSED (attn_q, attn_kv_a_mqa, "
+                       "attn_kv_a_norm, attn_kv_b, attn_output). Missing on "
                        "layer 0: "
                     << (mla.missing.empty() ? "(none)" : mla.missing)
-                    << ". Splitting a fused quantised projection would require "
-                       "dequantise+requantise, which this loader does not do.";
-            } else {
+                    << ".";
+            } else if (!allLayersBound) {
                 msg << " tensors incomplete: bound on " << mla.layersFullyBound
-                    << " of " << mla.numLayersExpected << " layers.";
+                    << " of " << mla.numLayersExpected << " layers ("
+                    << (mla.layoutSplit ? "split" : "fused")
+                    << " layout requires all of them on EVERY layer). Missing on "
+                       "layer 0: "
+                    << (mla.missing.empty() ? "(none)" : mla.missing)
+                    << ".";
+            } else {
+                msg << " geometry incomplete despite validation.";
             }
             msg << " RAWRXD_MLA_LOAD_AUTHORITY_001: M0-M3 closed, M5d closed "
                    "(geometry derived from tensor shapes), M5e closed for the "
@@ -3329,6 +3714,28 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         kc.numHeads = modelWeights.numKVHeads;
         kc.headDim = modelWeights.headDim;
         kc.maxSeqLen = config.maxSeqLen;
+        // RAWRXD_CPU_MLA_KERNEL_001: MLA stores one key and one value PER HEAD,
+        // even though every head's slice is expanded from the same shared latent.
+        // The sharing is in the WEIGHTS (attn_kv_b produces heads*(nope+vHead)
+        // columns from one kvRank-wide input), not in the cache: at decode time
+        // each head's kNope is a distinct 128-float vector and each is read
+        // independently by that head's attention.
+        //
+        // So an MLA model must not take the numKVHeads value. DeepSeek-V2 GGUF
+        // exports attention.head_count=16 and no separate KV head count, so
+        // numKVHeads arrives as 1 (or 0) and a cache built from it is 16x too
+        // small: every head past the first would write out of range, and
+        // computeMLAAttentionCpu refuses on a geometry check rather than
+        // corrupting memory. Sizing it correctly here is what makes the route
+        // reachable at all.
+        if (modelWeights.useMLA && modelWeights.numHeads != 0 &&
+            kc.numHeads < modelWeights.numHeads) {
+            std::fprintf(stderr,
+                "[Deep2Engine] MLA_KV_HEADS_OVERRIDE numKVHeads=%zu -> numHeads=%zu "
+                "(MLA keys/values are per-head; the latent sharing is in the weights)\n",
+                (std::size_t)kc.numHeads, (std::size_t)modelWeights.numHeads);
+            kc.numHeads = modelWeights.numHeads;
+        }
         if (!kvCache->allocate(kc)) {
             std::fprintf(stderr, "[Deep2Engine] KV cache allocation failed\n");
             if (diag) {
@@ -3995,6 +4402,87 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
     RAWRXD_DEEP2_TRACE("LINEARW name=%s rows=%zu cols=%zu type=%d\n",
                  wtn, wt.rows, wt.cols, wt.type);
+
+    // RAWRXD_LINEARW_BOUNDARY_IDENTITY_001 — observe only. Captures the exact
+    // operands at the LinearW boundary, because the spine samples upstream and
+    // an ~835x amplification remains unexplained by any Q2_K scale width (both
+    // 4-bit and 6-bit arms poison). Pointer identity alone is insufficient, so
+    // each operand is content-fingerprinted with FNV-1a and the first weight
+    // row is hashed separately using the measured row_bytes=1008, which
+    // distinguishes a correct base pointer with a wrong row stride from a
+    // genuinely wrong address.
+    if (const char* lwEnv = std::getenv("RAWRXD_LWBOUND")) {
+        if (lwEnv[0] && lwEnv[0] != '0') {
+            auto fnv1a64 = [](const void* p, size_t n) -> uint64_t {
+                const unsigned char* b = static_cast<const unsigned char*>(p);
+                uint64_t h = 1469598103934665603ull;
+                if (!b) return 0;
+                for (size_t i = 0; i < n; ++i) { h ^= b[i]; h *= 1099511628211ull; }
+                return h;
+            };
+            std::fprintf(stderr,
+                "[LWBOUND] tensor=%s x=%p wdata=%p rows=%zu cols=%zu type=%d bias=%p out=%p\n",
+                wtn, (const void*)input, (const void*)wt.data,
+                wt.rows, wt.cols, wt.type, (const void*)bias, (const void*)output);
+
+            // RAWRXD_TENSOR_PROVENANCE_001 — identity before interpretation.
+            // Pointer equality is NOT the criterion: copying, staging, dequant
+            // or GPU upload may legitimately move bytes. The criterion is whether
+            // the consumer operates on bytes DERIVED FROM the tensor the loader
+            // claims to have selected. This ID hashes provenance fields only, so
+            // it survives rebasing and can be compared across two observation
+            // sites in the SAME process without any shared mutable state.
+            {
+                uint64_t h = 1469598103934665603ull;
+                auto mix = [&](uint64_t v) { h ^= v; h *= 1099511628211ull; };
+                auto mixStr = [&](const std::string& s) {
+                    mix(s.size());
+                    for (char c : s) mix((uint64_t)(unsigned char)c);
+                };
+                mixStr(wt.name);
+                mix((uint64_t)wt.type);
+                mix((uint64_t)wt.rows);
+                mix((uint64_t)wt.cols);
+                mix((uint64_t)wt.sizeBytes);
+                mix((uint64_t)wt.shardId);
+                mix(wt.hasFileBacking ? wt.fileOffset : 0xFFFFFFFFFFFFFFFFull);
+                mix((uint64_t)(wt.hasFileBacking ? 1 : 0));
+                mix((uint64_t)wt.shape.size());
+                for (auto d : wt.shape) mix((uint64_t)d);
+                std::fprintf(stderr,
+                    "[PROV] site=LWBOUND tensor=%s id=%016llx shard=%u file_off=%lld "
+                    "backing=%d bytes=%zu dims=%zux%zu\n",
+                    wtn, (unsigned long long)h, wt.shardId,
+                    (long long)(wt.hasFileBacking ? (long long)wt.fileOffset : -1LL),
+                    wt.hasFileBacking ? 1 : 0, wt.sizeBytes, wt.rows, wt.cols);
+            }
+
+            std::fprintf(stderr,
+                "[LW_X] ptr=%p bytes=%zu hash=%016llx x0=%.9g x1=%.9g xlast=%.9g\n",
+                (const void*)input, sizeof(float) * wt.cols,
+                (unsigned long long)fnv1a64(input, sizeof(float) * wt.cols),
+                wt.cols > 0 ? input[0] : 0.0f,
+                wt.cols > 1 ? input[1] : 0.0f,
+                wt.cols > 0 ? input[wt.cols - 1] : 0.0f);
+            std::fprintf(stderr,
+                "[LW_W] ptr=%p bytes=%zu hash=%016llx\n",
+                (const void*)wt.data, (size_t)4096,
+                (unsigned long long)fnv1a64(wt.data, 4096));
+            const size_t rowBytes = (wt.cols / 256ull) * 84ull;
+            if (rowBytes) {
+                const unsigned char* base = static_cast<const unsigned char*>(wt.data);
+                const size_t rows = wt.rows;
+                std::fprintf(stderr,
+                    "[LW_WROW] row_bytes=%zu rows=%zu r0=%016llx r1=%016llx rlast=%016llx\n",
+                    rowBytes, rows,
+                    (unsigned long long)fnv1a64(base, rowBytes),
+                    (unsigned long long)fnv1a64(base + rowBytes, rowBytes),
+                    (unsigned long long)fnv1a64(base + rowBytes * (rows - 1), rowBytes));
+            }
+            std::fflush(stderr);
+        }
+    }
+
     if (!wt.data || !input || !output || outDim == 0) {
         throw std::runtime_error("LinearW: null tensor/input/output");
     }
@@ -4172,6 +4660,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             // On miss, construct from WeightTensor and insert for future lookups.
             // Step 10: use wt.identity (stable, not address-dependent) for cache keys.
             bool cacheHit = false;
+            const double _tResolve = tokProfOn() ? TokWall::nowNs() : 0.0;
             if (residencyCache_ && residencyCache_->lookup(wt.identity, ev)) {
                 cacheHit = true;
                 ++residencyCacheHits_;
@@ -4188,11 +4677,161 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                     residencyCache_->insert(ev);
                 }
             }
+            if (tokProfOn()) g_tokWall.resolveNs += TokWall::nowNs() - _tResolve;
+            const double _tCopy0 = tokProfOn() ? TokWall::nowNs() : 0.0;
             std::memset(output, 0, outDim * sizeof(float));
+            if (tokProfOn()) g_tokWall.copyNs += TokWall::nowNs() - _tCopy0;
+            const double _tKernel0 = tokProfOn() ? TokWall::nowNs() : 0.0;
+            // RAWRXD_TENSOR_PROVENANCE_001 -- boundary KERNEL.
+            // Hashed from ev.transientAddress, i.e. the bytes the kernel will
+            // actually read, NOT from wt.data. On a residency-cache hit those can
+            // differ, and that difference is the defect this gate exists to
+            // make impossible to miss. Compared by CONTENT because addresses are
+            // legitimately allowed to change.
+            TensorProvenance provKernel;
+            if (provOn()) {
+                provKernel.provHash = provIdentityHash(
+                    wt.name.c_str(), (uint32_t)wt.type, wt.shape,
+                    wt.sizeBytes, wt.fileOffset, wt.shardId);
+                provKernel.byteLength = wt.sizeBytes;
+                provKernel.fileOffset = wt.fileOffset;
+                provKernel.shardId    = wt.shardId;
+                provKernel.type       = (uint32_t)wt.type;
+                provKernel.nDims      = (uint32_t)(wt.shape.size() < 8 ? wt.shape.size() : 8);
+                for (uint32_t di = 0; di < provKernel.nDims; ++di) provKernel.dims[di] = wt.shape[di];
+                provContentHash(provKernel, ev.transientAddress, wt.sizeBytes);
+                // expected content = the bytes this tensor is supposed to be
+                TensorProvenance provExpect;
+                provExpect.provHash = provKernel.provHash;
+                provExpect.byteLength = wt.sizeBytes;
+                provExpect.fileOffset = wt.fileOffset;
+                provExpect.shardId    = wt.shardId;
+                provExpect.type       = (uint32_t)wt.type;
+                provContentHash(provExpect, wt.data, wt.sizeBytes);
+                const bool contentOk =
+                    provKernel.haveContent && provExpect.haveContent &&
+                    provKernel.prefixHash == provExpect.prefixHash &&
+                    provKernel.bodyHash == provExpect.bodyHash;
+                const size_t badRow = SIZE_MAX;
+                std::fprintf(stderr,
+                    "PROV BOUNDARY=KERNEL NAME=%s TYPE=%d LEN=%zu CACHE_HIT=%d "
+                    "PROV_ID=%016llx EXPECT_PREFIX=%016llx ACTUAL_PREFIX=%016llx "
+                    "EXPECT_BODY=%016llx ACTUAL_BODY=%016llx CONTENT_MATCH=%d "
+                    "ID_MATCH=%d LEN_MATCH=%d KERNEL_CONSUMES_TENSOR=%d\n",
+                    wtn, wt.type, wt.sizeBytes, cacheHit ? 1 : 0,
+                    (unsigned long long)provKernel.provHash,
+                    (unsigned long long)provExpect.prefixHash,
+                    (unsigned long long)provKernel.prefixHash,
+                    (unsigned long long)provExpect.bodyHash,
+                    (unsigned long long)provKernel.bodyHash,
+                    contentOk ? 1 : 0,
+                    provKernel.provHash == provExpect.provHash ? 1 : 0,
+                    provKernel.byteLength == provExpect.byteLength ? 1 : 0,
+                    contentOk ? 1 : 0);
+                // RAWRXD_TENSOR_PROVENANCE_001 -- the paired comparison.
+                // The WQEXT record was captured at extraction and is compared
+                // here, in the SAME PROCESS, against the provenance the consumer
+                // actually resolved. It is deliberately NOT reconstructed from
+                // the consumer's fields: a comparison whose expected side is
+                // derived from the actual side is circular and cannot fail.
+                {
+                    auto& tbl = provWqextTable();
+                    auto it = tbl.find(wt.name);
+                    if (it == tbl.end()) {
+                        std::fprintf(stderr,
+                            "PROV_COMPARE TENSOR=%s EXPECT=ABSENT ACTUAL=%016llx "
+                            "MATCH=0 NOTE=no_wqext_record\n",
+                            wtn, (unsigned long long)provKernel.provHash);
+                    } else {
+                        const TensorProvenance& W = it->second;
+                        const bool idm  = (W.provHash  == provKernel.provHash);
+                        const bool shm  = (W.shardId   == provKernel.shardId);
+                        const bool offm = (W.fileOffset== provKernel.fileOffset);
+                        const bool lenm = (W.byteLength== provKernel.byteLength);
+                        const bool pm   = (W.prefixHash== provKernel.prefixHash);
+                        const bool bm   = (W.bodyHash  == provKernel.bodyHash);
+                        const bool all  = idm && shm && offm && lenm && pm && bm;
+                        std::fprintf(stderr,
+                            "PROV_COMPARE TENSOR=%s EXPECT=%016llx ACTUAL=%016llx "
+                            "MATCH=%d ID_MATCH=%d SHARD_MATCH=%d OFFSET_MATCH=%d "
+                            "LEN_MATCH=%d PREFIX_MATCH=%d BODY_MATCH=%d "
+                            "SHARD=%u FILE_OFF=%llu BYTES=%llu\n",
+                            wtn, (unsigned long long)W.provHash,
+                            (unsigned long long)provKernel.provHash, all ? 1 : 0,
+                            idm?1:0, shm?1:0, offm?1:0, lenm?1:0, pm?1:0, bm?1:0,
+                            provKernel.shardId,
+                            (unsigned long long)provKernel.fileOffset,
+                            (unsigned long long)provKernel.byteLength);
+                    }
+                    std::fflush(stderr);
+                }
+                std::fflush(stderr);
+                (void)badRow;
+            }
             kernelEv(ev, input, output, rows, cols);
+            if (tokProfOn()) {
+                g_tokWall.kernelNs += TokWall::nowNs() - _tKernel0;
+                g_tokWall.kernelBytes += wt.sizeBytes;
+                ++g_tokWall.kernelCalls;
+            }
+            // RAWRXD_LAYER0_ATTN_BISECT_001: the receipt that separates a
+            // quant-decoder defect from a tensor-geometry defect from a
+            // V-specific dispatch defect, without guessing between them.
+            //
+            // The decisive field is ADDR_MATCH. On a residency-cache HIT the
+            // kernel reads ev.transientAddress, NOT wt.data. If the cache
+            // returns an address for a different tensor, the decode is fed the
+            // wrong bytes and every downstream number is confidently wrong while
+            // every size check still passes -- which is exactly the observed
+            // signature (finite garbage, no throw, V only).
+            {
+                static const bool recOnce = [] {
+                    const char* v = std::getenv("RAWRXD_ATTN_BISECT");
+                    return v && v[0] && v[0] != '0';
+                }();
+                if (recOnce) {
+                    const bool addrMatch =
+                        (const void*)ev.transientAddress == (const void*)wt.data;
+                    const size_t blkBytes = packedBytesRequired(wt.type, 1, 1);
+                    const size_t blocks = blkBytes ? (wt.sizeBytes / blkBytes) : 0;
+                    size_t firstBad = SIZE_MAX;
+                    for (size_t i = 0; i < outDim; ++i)
+                        if (!std::isfinite(output[i])) { firstBad = i; break; }
+                    std::fprintf(stderr,
+                        "LINEARW_EV name=%s type=%d rows=%zu cols=%zu outDim=%zu "
+                        "row_stride=%zu block_bytes=%zu block_count=%zu "
+                        "src_bytes=%zu dst_bytes=%zu "
+                        "cache_hit=%d wt_data=%p ev_addr=%p ADDR_MATCH=%d "
+                        "id_model=%llu id_tensor=%llu id_layer=%u id_role=%u id_variant=%u "
+                        "ev_bytes=%zu FIRST_BAD_ROW=%lld FIRST_BAD_COL=%lld "
+                        "OUT_ABSMIN=%.6g OUT_ABSMAX=%.6g\n",
+                        wtn, wt.type, rows, cols, outDim,
+                        blkBytes ? (cols / (rows ? 1 : 1)) : 0, blkBytes, blocks,
+                        wt.sizeBytes, outDim * sizeof(float),
+                        cacheHit ? 1 : 0, wt.data, ev.transientAddress,
+                        addrMatch ? 1 : 0,
+                        (unsigned long long)wt.identity.model,
+                        (unsigned long long)wt.identity.tensor,
+                        wt.identity.layer, wt.identity.role, wt.identity.variant,
+                        ev.bytes,
+                        (firstBad == SIZE_MAX) ? -1LL : (long long)(firstBad / (cols ? cols : 1)),
+                        (firstBad == SIZE_MAX) ? -1LL : (long long)(firstBad % (cols ? cols : 1)),
+                        [&]{ double mn=0,mx=0; bool f=true;
+                             for (size_t i=0;i<outDim;++i){ const double a=std::fabs((double)output[i]);
+                               if(f){mn=a;mx=a;f=false;} else {if(a<mn)mn=a; if(a>mx)mx=a;} }
+                             return 0.0; }() , [&]{ double mx=0; bool f=true;
+                             for (size_t i=0;i<outDim;++i){ const double a=std::fabs((double)output[i]);
+                               if(f){mx=a;f=false;} else if(a>mx)mx=a; }
+                             return mx; }()
+                    );
+                    std::fflush(stderr);
+                }
+            }
+            const double _tBias0 = tokProfOn() ? TokWall::nowNs() : 0.0;
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
             }
+            if (tokProfOn()) { g_tokWall.copyNs += TokWall::nowNs() - _tBias0; ++g_tokWall.biasAdds; }
             size_t outBad = SIZE_MAX;
             for (size_t i = 0; i < outDim; ++i) {
                 if (!std::isfinite(output[i])) { outBad = i; break; }
@@ -4690,7 +5329,24 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
         ldiag("FFN_NORM_IN", layerTemp, H);
 
         RAWRXD_DEEP2_TRACE("FWD_LAYER layer=%zu FFN_ENTER\n",layer);
-        if (modelWeights.numExperts > 0) {
+        // RAWRXD_DEEPSEEK_CPU_E2E_001: the FFN topology is PER LAYER.
+        //
+        // The predicate used to be the whole-model flag numExperts > 0, which
+        // sends every layer of a MoE model to computeMoEFFN. DeepSeek-V2 has
+        // leading_dense_block_count=1 and its layer 0 is a plain gated MLP
+        // (ffn_gate/ffn_up/ffn_down, no ffn_gate_inp), so layer 0 was sent to
+        // the MoE path and threw "MoE: router tensor not bound" at prefill
+        // token 0. The tensor was not missing; the dispatch was wrong.
+        //
+        // The predicate is now layer index against the declared dense prefix.
+        // It is deliberately NOT "is this layer's router bound": that would
+        // make a genuine missing-router defect silently degrade into a dense
+        // FFN on that layer instead of failing loudly, which is the opposite of
+        // what a fail-closed route should do.
+        const bool layerIsMoe = modelWeights.numExperts > 0 &&
+            (modelWeights.leadingDenseBlockCount == 0 ||
+             layer >= modelWeights.leadingDenseBlockCount);
+        if (layerIsMoe) {
             computeMoEFFN(layer, layerTemp, ffnOutput);
         } else {
             computeFFN(layer, layerTemp, ffnOutput);
@@ -4743,8 +5399,141 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
 }
 
 // =================== ATTENTION (REAL MHA/GQA) ====================
+// =================== RAWRXD_LAYER0_ATTN_BISECT_001 ===================
+// Ordered numerical spine for layer-0 attention.
+//
+// OBSERVE ONLY. Every function below reads a buffer and prints. None of them
+// writes to a buffer it observes, clamps, substitutes a value, replaces a
+// non-finite with a finite, changes accumulation order, changes precision, or
+// changes routing. Any of those would move the defect this probe exists to
+// localise, and a probe that perturbs its subject cannot localise it.
+//
+// The spine probes BOTH SIDES of every operation that can amplify a small
+// defect, so the first transition is discovered mechanically rather than
+// inferred:
+//
+//   ATTN_L0_IN
+//     Q_PROJ / K_PROJ / V_PROJ          projection
+//     Q_PRE_ROPE / K_PRE_ROPE          post-QK-norm, pre-RoPE  (projection control)
+//     Q_POST_ROPE / K_POST_ROPE        post-RoPE               (rotation/index control)
+//     SCORES_PRE_SCALE                 raw dot products        (dot/layout control)
+//     SCORES_POST_SCALE                after 1/sqrt(headDim)
+//     SCORES_POST_MASK                 causal mask is fused into the loop bound
+//     SCORES_POST_SOFTMAX              after softmax           (normalisation control)
+//     CONTEXT                          V accumulation          (V addressing control)
+//     O_PROJ / ATTN_OUT                output projection
+//
+// Enabled by RAWRXD_ATTN_BISECT=1 (layer 0 only). RAWRXD_ATTN_BISECT_ALL=1
+// widens to every layer. Deliberately NOT compiled out: a diagnostic build and
+// a certified build must execute identical arithmetic, and the gate values are
+// printed so the poison decision can be re-derived by hand.
+namespace {
+
+// Threshold above which a finite vector is reported as POISON. Activations in
+// this model are O(1) entering a layer (measured MIN/MAX ~ +/-5), so 1e4 is
+// four orders of magnitude clear of any legitimate value while remaining far
+// below the measured poison at ATTN_OUT (~3.9e14). It is printed with every
+// verdict so a disagreement about the threshold is visible, not implicit.
+constexpr double kAttnPoisonAbsMax = 1.0e4;
+
+struct AttnSpineSample {
+    size_t count   = 0;
+    size_t finite  = 0;
+    size_t nan     = 0;
+    size_t inf     = 0;
+    size_t nonzero = 0;
+    double mn = 0.0, mx = 0.0, amax = 0.0, l2 = 0.0;
+    long long firstBad = -1;
+    bool null = false;
+};
+
+// Accumulates one vector. Reads p[i] exactly once per index.
+void attnSpineAccum(const float* p, size_t n, AttnSpineSample& s) {
+    if (!p) { s.null = true; s.count += n; return; }
+    bool first = true;
+    for (size_t i = 0; i < n; ++i) {
+        const float f = p[i];
+        if (std::isnan(f)) { ++s.nan; if (s.firstBad < 0) s.firstBad = (long long)i; first = true; continue; }
+        if (std::isinf(f)) { ++s.inf; if (s.firstBad < 0) s.firstBad = (long long)i; first = true; continue; }
+        ++s.finite;
+        const double v = (double)f;
+        const double a = v < 0.0 ? -v : v;
+        if (a > 0.0) ++s.nonzero;
+        s.l2 += a * a;
+        if (a > s.amax) s.amax = a;
+        if (first) { s.mn = v; s.mx = v; first = false; }
+        else { if (v < s.mn) s.mn = v; if (v > s.mx) s.mx = v; }
+    }
+    s.count += n;
+}
+
+const char* attnSpineVerdict(const AttnSpineSample& s) {
+    if (s.null || s.count == 0) return "NOT_REACHED";
+    if (s.nan || s.inf) return "NONFINITE";
+    if (s.amax > kAttnPoisonAbsMax) return "POISON";
+    if (s.finite != s.count) return "PARTIAL";
+    return "SANE";
+}
+
+// One ordered record per stage. `extra` carries stage-specific facts (head
+// index, mask implementation) so the shape stays identical across stages and a
+// mechanical diff of two runs lines up stage for stage.
+void attnSpineEmit(size_t layer, size_t pos, const char* stage,
+                   const AttnSpineSample& s, const char* extra) {
+    std::fprintf(stderr,
+        "[ATTNBISECT] L=%zu POS=%lld STAGE=%s N=%zu FINITE=%zu NAN=%zu INF=%zu "
+        "NONZERO=%zu MIN=%.6g MAX=%.6g ABSMAX=%.6g L2=%.6g FIRST_BAD=%lld "
+        "VERDICT=%s POISON_ABSMAX=%.0g %s\n",
+        layer, (long long)pos, stage, s.count, s.finite, s.nan, s.inf, s.nonzero,
+        s.mn, s.mx, s.amax, std::sqrt(s.l2), s.firstBad,
+        attnSpineVerdict(s), kAttnPoisonAbsMax, extra ? extra : "");
+    std::fflush(stderr);
+}
+
+// Ordered record log for one computeAttention call, so the function itself can
+// name the first transition instead of a human re-reading 14 lines.
+struct AttnSpineLog {
+    std::vector<const char*> stages;
+    std::vector<const char*> verdicts;
+    void add(const char* stage, const char* verdict) {
+        stages.push_back(stage); verdicts.push_back(verdict);
+    }
+    void firstBad(long long& idx, const char*& bad, const char*& prevGood) const {
+        idx = -1; bad = "NONE"; prevGood = "NONE";
+        for (size_t i = 0; i < verdicts.size(); ++i) {
+            const char* v = verdicts[i];
+            const bool bad_ = (std::strcmp(v, "POISON") == 0) || (std::strcmp(v, "NONFINITE") == 0);
+            if (bad_) {
+                idx = (long long)i;
+                bad = stages[i];
+                if (i > 0) prevGood = stages[i - 1];
+                return;
+            }
+        }
+    }
+};
+
+void attnSpineSummary(size_t layer, size_t pos, const AttnSpineLog& log) {
+    long long idx = -1; const char* bad = "NONE"; const char* prevGood = "NONE";
+    log.firstBad(idx, bad, prevGood);
+    std::fprintf(stderr,
+        "[ATTNBISECT] L=%zu POS=%lld STAGE=SUMMARY STAGES_RECORDED=%zu "
+        "FIRST_BAD_STAGE=%s PREVIOUS_GOOD_STAGE=%s FIRST_BAD_INDEX=%lld "
+        "POISON_ABSMAX=%.0g\n",
+        layer, (long long)pos, log.stages.size(), bad, prevGood, idx,
+        kAttnPoisonAbsMax);
+    std::fflush(stderr);
+}
+
+} // namespace
+
 void Deep2Engine::computeAttention(size_t layer, const float* input,
                                    float* output, size_t seqLen) {
+    const double _tAttn0 = tokProfOn() ? TokWall::nowNs() : 0.0;
+    struct _AttnTimer {
+        double t0; bool on;
+        ~_AttnTimer() { if (on) { g_tokWall.attnNs += TokWall::nowNs() - t0; ++g_tokWall.attnCalls; } }
+    } _attnTimer{ _tAttn0, tokProfOn() };
     if (!input || !output || seqLen == 0) {
         throw std::runtime_error("attention: invalid buffers/sequence");
     }
@@ -4754,10 +5543,26 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
 
     const LayerWeights& lw = modelWeights.layers[layer];
     if (lw.useMLA || modelWeights.useMLA) {
+        // RAWRXD_CPU_MLA_KERNEL_001: MLA now has a CPU route.
+        //
+        // The GPU branch is tried first because on a device-backed route it is
+        // the faster and already-validated path; the CPU branch is a real
+        // alternative execution root, not a silent fallback for a GPU failure.
+        // Each branch returns true ONLY when it completed the layer, so a failure
+        // inside one is a refusal rather than a partial result handed on.
+        //
+        // Ordering matters for correctness of the error message: computeMLAAttentionGpu
+        // refuses immediately on the FUSED layout (it requires attnQ_a, which a
+        // fused model does not have), so on this machine the GPU branch returns
+        // false at its first shape guard and the CPU branch does the work.
         if (computeMLAAttentionGpu(layer, input, output, seqLen))
             return;
+        if (computeMLAAttentionCpu(layer, input, output, seqLen))
+            return;
         throw std::runtime_error(
-            "attention: GPU MLA path failed or unsupported");
+            "attention: neither the GPU nor the CPU MLA path could execute "
+            "this layer (see [CPU_MLA] / GEMV_SINGLE lines above for the "
+            "specific refusal)");
     }
 
     const size_t H = modelWeights.hiddenDim
@@ -4786,6 +5591,31 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
     std::memset(kProj, 0, kvDim * sizeof(float));
     std::memset(vProj, 0, kvDim * sizeof(float));
 
+    // RAWRXD_LAYER0_ATTN_BISECT_001 gate. Declared before the projection branch
+    // so the spine is armed on every route -- separate Q/K/V, fused QKV -- and
+    // not only on the branch that happened to be instrumented last time.
+    static const bool attnBisectOn = [] {
+        const char* v = std::getenv("RAWRXD_ATTN_BISECT");
+        return v && v[0] && v[0] != '0';
+    }();
+    static const bool attnBisectAll = [] {
+        const char* v = std::getenv("RAWRXD_ATTN_BISECT_ALL");
+        return v && v[0] && v[0] != '0';
+    }();
+    const bool spine = attnBisectOn && (attnBisectAll || layer == 0);
+    // Read-only position peek. kvCache is null-checked at its real use below;
+    // this only avoids a crash and reports -1 when there is nothing to read.
+    // It does not move the existing length check, so the error path is unchanged.
+    const size_t spinePos = spine ? (kvCache ? kvCache->currentLength() : (size_t)-1)
+                                  : (size_t)0;
+    AttnSpineLog spineLog;
+    if (spine) {
+        AttnSpineSample s;
+        attnSpineAccum(input, H, s);
+        attnSpineEmit(layer, spinePos, "ATTN_L0_IN", s, "HIDDEN");
+        spineLog.add("ATTN_L0_IN", attnSpineVerdict(s));
+    }
+
     if (lw.wq.data) {
         if (!lw.wk.data || !lw.wv.data) {
             throw std::runtime_error("attention: incomplete Q/K/V tensor set");
@@ -4798,8 +5628,112 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             ? reinterpret_cast<const float*>(lw.bv.data) : nullptr;
         const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
         float* qkvY[3]={qProj,kProj,vProj};
-        const bool grouped=tryVulkanHostGEMVGroup(
-            qkvW,qkvY,3,input,H);
+        // RAWRXD_LAYER0_ATTN_BISECT_002: discriminator only. Setting
+        // RAWRXD_ATTN_NOGROUP=1 skips the grouped host-GEMV dispatch so the
+        // LinearW fallback runs instead. This changes WHICH route executes, and
+        // that is the entire purpose: it separates a grouped-dispatch defect
+        // from a shared weight-decode defect. It is not a fix and must not be
+        // left enabled in any certified configuration.
+        static const bool attnNoGroup = [](){
+            const char* v = std::getenv("RAWRXD_ATTN_NOGROUP");
+            return v && v[0] && v[0] != '0';
+        }();
+        const char* gemvReject = "NONE";
+        const bool grouped = attnNoGroup ? false
+                                         : tryVulkanHostGEMVGroup(
+                                               qkvW, qkvY, 3, input, H, &gemvReject);
+        if (attnNoGroup) gemvReject = "SKIPPED_BY_RAWRXD_ATTN_NOGROUP";
+        // RAWRXD_LAYER0_ATTN_BISECT_001: route telemetry, not a presumed cause.
+        // Records whether the grouped dual-GPU path was attempted, whether it
+        // HANDLED the operation, and which guard rejected it when it did not.
+        // This is what reconciles "forward: vulkan=0/0" with
+        // "computeAttention: tryVulkanHostGEMVGroup(...)" without assuming which.
+        if (spine) {
+            std::fprintf(stderr,
+                "[ATTNBISECT] L=%zu STAGE=ATTN_GEMV_ROUTE OP=QKV "
+                "TRY_VULKAN_HOST_GEMV_GROUP=%d RETURNED_HANDLED=%d FALLBACK_EXECUTED=%d "
+                "VULKAN_INITIALIZED=%d VULKAN_DEVICES=%zu REJECT_REASON=%s "
+                "WEIGHT_ROUTE=%s\n",
+                layer, attnNoGroup ? 0 : 1, grouped ? 1 : 0, grouped ? 0 : 1,
+                vulkanInitialized_ ? 1 : 0, vulkanDevices_.size(), gemvReject,
+                grouped ? "GROUPED_DUAL_GPU" : "LINEARW_HOST");
+            std::fflush(stderr);
+            const char* route = grouped ? "GROUPED_DUAL_GPU" : "LINEARW_HOST";
+            for (int op = 0; op < 3; ++op) {
+                static const char* const kOps[3] = { "Q", "K", "V" };
+                std::fprintf(stderr,
+                    "[ATTNBISECT] L=%zu STAGE=GEMV_ROUTE_%s ROUTE=%s RETURNED_HANDLED=%d\n",
+                    layer, kOps[op], route, grouped ? 1 : 0);
+                std::fflush(stderr);
+            }
+        }
+        if (layer == 0) {
+            std::fprintf(stderr, "[ATTNBISECT_ROUTE] L=0 NOGROUP_REQUESTED=%d GROUPED_RETURNED=%d\n",
+                attnNoGroup ? 1 : 0, grouped ? 1 : 0);
+            std::fflush(stderr);
+            // RAWRXD_WQEXT_REACHABILITY_001: unconditional site-reached proof.
+            // Emitted before any lambda or gate so that "no [PROV] WQEXT line"
+            // is distinguishable from "this code did not run".
+            std::fprintf(stderr, "[WQEXT_SITE_REACHED=1 layer=%zu]\n", layer);
+            std::fflush(stderr);
+
+            // Byte-extent discriminator (observe only). Compares the bound view
+            // production actually uses against the canonical Q2_K geometry that
+            // an independent GGUF read measured (row stride 1008 = 12 x 84).
+            {
+                auto dumpExt = [&](const char* tag, const WeightTensor* t) {
+                    if (!t || !t->data) {
+                        std::fprintf(stderr,
+                            "[WQEXT] %s NULL data=(null)\n", tag);
+                        return;
+                    }
+                    const size_t bpr = t->cols ? (t->cols / 256ull) : 0;
+                    const size_t rowBytes = t->rows ? (t->sizeBytes / t->rows) : 0;
+                    // RAWRXD_TENSOR_PROVENANCE_001 — second observation site.
+                    // Identical derivation to [PROV] at LWBOUND so both can be
+                    // compared IN THE SAME PROCESS. The LWBOUND half alone is
+                    // not evidence about this site; only the comparison is.
+                    {
+                        uint64_t h = 1469598103934665603ull;
+                        auto mix = [&](uint64_t v) { h ^= v; h *= 1099511628211ull; };
+                        auto mixStr = [&](const std::string& s) {
+                            mix(s.size());
+                            for (char c : s) mix((uint64_t)(unsigned char)c);
+                        };
+                        mixStr(t->name);
+                        mix((uint64_t)t->type);
+                        mix((uint64_t)t->rows);
+                        mix((uint64_t)t->cols);
+                        mix((uint64_t)t->sizeBytes);
+                        mix((uint64_t)t->shardId);
+                        mix(t->hasFileBacking ? t->fileOffset : 0xFFFFFFFFFFFFFFFFull);
+                        mix((uint64_t)(t->hasFileBacking ? 1 : 0));
+                        mix((uint64_t)t->shape.size());
+                        for (auto d : t->shape) mix((uint64_t)d);
+                        std::fprintf(stderr,
+                            "[PROV] site=WQEXT tensor=%s id=%016llx shard=%u file_off=%lld "
+                            "backing=%d bytes=%zu dims=%zux%zu\n",
+                            tag, (unsigned long long)h, t->shardId,
+                            (long long)(t->hasFileBacking ? (long long)t->fileOffset : -1LL),
+                            t->hasFileBacking ? 1 : 0, t->sizeBytes, t->rows, t->cols);
+                    }
+                    std::fprintf(stderr,
+                        "[WQEXT] %s type=%d ne0=%zu ne1=%zu nb0=%zu nb1=%zu data=%p "
+                        "row_bytes=%zu blocks_per_row=%zu block_size=%.4f\n",
+                        tag, t->type, t->cols, t->rows, t->cols, t->sizeBytes,
+                        t->data, rowBytes, bpr,
+                        bpr ? ((double)rowBytes / (double)bpr) : 0.0);
+                    const uint8_t* p = (const uint8_t*)t->data;
+                    std::fprintf(stderr, "[WQEXT] %s first84=", tag);
+                    for (int i = 0; i < 84; i++) std::fprintf(stderr, "%02x", p[i]);
+                    std::fprintf(stderr, "\n");
+                };
+                dumpExt("WQ", &lw.wq);
+                dumpExt("WK", &lw.wk);
+                dumpExt("WV", &lw.wv);
+                std::fflush(stderr);
+            }
+        }
         if(grouped){
             if(bq) for(size_t i=0;i<qDim;++i) qProj[i]+=bq[i];
             if(bk) for(size_t i=0;i<kvDim;++i) kProj[i]+=bk[i];
@@ -4831,6 +5765,13 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         parityEmitLayer(static_cast<int>(layer), "Q", qProj, qDim);
         parityEmitLayer(static_cast<int>(layer), "K", kProj, kvDim);
         parityEmitLayer(static_cast<int>(layer), "V", vProj, kvDim);
+
+// RAWRXD_LAYER0_ATTN_BISECT_001: the four stages this block used to
+        // emit here (ATTN_L0_IN / Q_PROJ / K_PROJ / V_PROJ) are now emitted by
+        // the ordered spine at their true positions -- ATTN_L0_IN before the
+        // projection branch so it also covers the fused-QKV route, and the three
+        // projections after the branch converges. This block was the reason a
+        // bisect could silently not run on the fused route at all.
     } else if (lw.wqkv.data) {
         const size_t fusedDim = qDim + 2 * kvDim;
         std::vector<float> fused(fusedDim);
@@ -4840,6 +5781,22 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         std::memcpy(vProj, fused.data() + qDim + kvDim, kvDim * sizeof(float));
     } else {
         throw std::runtime_error("attention: no Q or fused-QKV weight");
+    }
+
+    // Projection boundary, after the route converges: these are the first
+    // ordered stages of the spine and the first place a weight/address/dequant
+    // or GEMV defect can appear. Emitted here rather than inside the separate
+    // Q/K/V branch so the fused-QKV route is covered identically.
+    if (spine) {
+        struct { const char* stage; const float* p; size_t n; } proj[3] = {
+            { "Q_PROJ", qProj, qDim }, { "K_PROJ", kProj, kvDim }, { "V_PROJ", vProj, kvDim }
+        };
+        for (const auto& e : proj) {
+            AttnSpineSample s;
+            attnSpineAccum(e.p, e.n, s);
+            attnSpineEmit(layer, spinePos, e.stage, s, "POST_PROJECTION");
+            spineLog.add(e.stage, attnSpineVerdict(s));
+        }
     }
 
     if (lw.attnQNorm.data) {
@@ -4859,6 +5816,20 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
                      headDim,
                      modelWeights.normEps);
         }
+    }
+
+    // RAWRXD_LAYER0_ATTN_BISECT_001: pre-RoPE boundary, after QK-norm. Together
+    // with Q_PROJ/K_PROJ this isolates the QK-norm from the rotation: if a
+    // projection is already bad the norm is not implicated, and if these are
+    // sane while Q_POST_ROPE is not, the defect is the rotation or its indexing.
+    if (spine) {
+        AttnSpineSample qs, ks;
+        attnSpineAccum(qProj, qDim, qs);
+        attnSpineAccum(kProj, kvDim, ks);
+        attnSpineEmit(layer, spinePos, "Q_PRE_ROPE", qs, "POST_QKNORM");
+        attnSpineEmit(layer, spinePos, "K_PRE_ROPE", ks, "POST_QKNORM");
+        spineLog.add("Q_PRE_ROPE", attnSpineVerdict(qs));
+        spineLog.add("K_PRE_ROPE", attnSpineVerdict(ks));
     }
 
     if (!config.useKVCache || !kvCache) {
@@ -4925,6 +5896,22 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         }
         applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads,
                   pos, theta, scaling);
+        // RAWRXD_LAYER0_ATTN_BISECT_001: post-RoPE boundary. At pos=0 RoPE is
+        // ~identity, so Q_POST_ROPE ~= Q_PRE_ROPE is the expected control; a
+        // divergence between them at pos=0 is a rotation or indexing defect, not
+        // a weight defect.
+        if (spine) {
+            AttnSpineSample qs, ks;
+            attnSpineAccum(qProj, qDim, qs);
+            attnSpineAccum(kProj, kvDim, ks);
+            char extra[96];
+            std::snprintf(extra, sizeof(extra), "POST_ROPE pos=%zu theta=%.4g scaling=%.6g",
+                          pos, (double)theta, (double)scaling);
+            attnSpineEmit(layer, spinePos, "Q_POST_ROPE", qs, extra);
+            attnSpineEmit(layer, spinePos, "K_POST_ROPE", ks, extra);
+            spineLog.add("Q_POST_ROPE", attnSpineVerdict(qs));
+            spineLog.add("K_POST_ROPE", attnSpineVerdict(ks));
+        }
         if (kvParityDumpEnabled && layer == 0 && (pos == 0 || pos == 1) &&
             kPreDump.size() == kvDim) {
             std::fprintf(stderr,
@@ -4977,6 +5964,21 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         std::memcpy(kd, kProj + h * headDim, headDim * sizeof(float));
         std::memcpy(vd, vProj + h * headDim, headDim * sizeof(float));
     }
+    // RAWRXD_LAYER0_ATTN_BISECT_001: read the slot back out of the cache rather
+    // than probing the projection buffer. The value the next decode step will
+    // consume is the one in the cache, so the cache is the correct thing to
+    // measure; probing the source buffer would not detect a short write.
+    if (spine) {
+        const float* k0 = kvCache->keyPtr(layer, 0, pos);
+        const float* v0 = kvCache->valuePtr(layer, 0, pos);
+        AttnSpineSample ks, vs;
+        attnSpineAccum(k0, headDim, ks);
+        attnSpineAccum(v0, headDim, vs);
+        attnSpineEmit(layer, spinePos, "K_CACHE_SLOT0", ks, "READ_BACK_AFTER_WRITE");
+        attnSpineEmit(layer, spinePos, "V_CACHE_SLOT0", vs, "READ_BACK_AFTER_WRITE");
+        spineLog.add("K_CACHE_SLOT0", attnSpineVerdict(ks));
+        spineLog.add("V_CACHE_SLOT0", attnSpineVerdict(vs));
+    }
     // One parity record per layer over the full kvDim span (post-RoPE K,
     // raw V) matching the reference cache layout [kvHead][headDim].
     parityEmitKvWrite(static_cast<int>(layer), kProj, vProj, kvDim);
@@ -5004,6 +6006,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
     const size_t attend = pos + 1;
     const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
     std::vector<float> scores(attend);
+    // RAWRXD_LAYER0_ATTN_BISECT_001: a probe-only copy of the raw dot products.
+    // The production path folds the scale into `scores` in place and does not
+    // otherwise retain the pre-scale value, so without this copy
+    // SCORES_PRE_SCALE would have to be reconstructed rather than observed.
+    // Allocated and written only while the probe is armed; nothing reads it on
+    // the production path, so arithmetic and allocation behaviour are unchanged.
+    std::vector<float> spinePreScale;
+    if (spine) spinePreScale.assign(attend, 0.0f);
+    // Worst-case accumulators across all heads, so a defect that only appears in
+    // a head other than 0 cannot be reported as SANE by a head-0 probe.
+    struct SpineAgg { size_t nan = 0, inf = 0, samples = 0; double amax = 0.0; } ;
+    SpineAgg aggPre, aggPost, aggSoft, aggCtx;
 
     // RAWRXD_ATTN_CTX2_PROBE_001: layer 0 only, positions 0 and 1 only. Layer 0
     // is where the divergence first appears, and restricting to it keeps the
@@ -5026,14 +6040,80 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
                 dot += static_cast<double>(q[d]) *
                        static_cast<double>(k[d]);
             }
-            scores[t] = static_cast<float>(dot) * scale;
+            // Bit-identical to the previous single expression: the cast to
+            // float happens at the same point, then the same multiply.
+            const float rawDot = static_cast<float>(dot);
+            if (spine) spinePreScale[t] = rawDot;
+            scores[t] = rawDot * scale;
             if (ctx2Wanted) rawScores[t] = static_cast<float>(dot);
+        }
+        // RAWRXD_LAYER0_ATTN_BISECT_001: both sides of the scale, head 0 exact
+        // plus a worst-case fold across every head.
+        if (spine) {
+            AttnSpineSample pre, post;
+            attnSpineAccum(spinePreScale.data(), attend, pre);
+            attnSpineAccum(scores.data(), attend, post);
+            aggPre.nan += pre.nan; aggPre.inf += pre.inf;
+            aggPre.samples += pre.count;
+            aggPre.amax = pre.amax > aggPre.amax ? pre.amax : aggPre.amax;
+            aggPost.nan += post.nan; aggPost.inf += post.inf;
+            aggPost.samples += post.count;
+            aggPost.amax = post.amax > aggPost.amax ? post.amax : aggPost.amax;
+            if (h == 0) {
+                char extra[128];
+                std::snprintf(extra, sizeof(extra),
+                              "HEAD=0 KVHEAD=%zu ATTEND=%zu SCALE=%.9g",
+                              kvHead, attend, (double)scale);
+                attnSpineEmit(layer, spinePos, "SCORES_PRE_SCALE", pre, extra);
+                attnSpineEmit(layer, spinePos, "SCORES_POST_SCALE", post, extra);
+                spineLog.add("SCORES_PRE_SCALE", attnSpineVerdict(pre));
+                spineLog.add("SCORES_POST_SCALE", attnSpineVerdict(post));
+            }
         }
         parityEmit(ParityCheckpoint::AttnScores, scores.data(), attend);
         parityEmitLayer(static_cast<int>(layer), "ATTN_SCORES",
                         scores.data(), attend);
 
+        // RAWRXD_LAYER0_ATTN_BISECT_001: mask boundary, taken BEFORE softmax. There
+        // is no mask array on this route -- the causal mask is fused into the
+        // loop bound `t < attend`, exactly as Deep2::AttnVis already records
+        // with "fused_full_causal" and mask count 0. So the measured post-mask
+        // vector is numerically the post-scale vector, and emitting it proves
+        // that: if SCORES_POST_MASK ever differs from SCORES_POST_SCALE, a mask
+        // step ran that the route does not document. Emitting a mask value after
+        // softmax would instead describe a mask that was never applied.
+        if (spine && h == 0) {
+            AttnSpineSample msk;
+            attnSpineAccum(scores.data(), attend, msk);
+            char extra[160];
+            std::snprintf(extra, sizeof(extra),
+                          "MASK_IMPL=FUSED_CAUSAL_BOUND MASK_ARRAY_APPLIED=0 "
+                          "HEAD=0 ATTEND=%zu HEAD_DIM=%zu SCALE=%.9g",
+                          attend, headDim, (double)scale);
+            attnSpineEmit(layer, spinePos, "SCORES_POST_MASK", msk, extra);
+            spineLog.add("SCORES_POST_MASK", attnSpineVerdict(msk));
+        }
         softmax(scores.data(), scores.size());
+        // RAWRXD_LAYER0_ATTN_BISECT_001: softmax boundary. A finite-but-wrong
+        // normalisation and a non-finite one are distinguished here: with the
+        // causal mask fused into the bound, the probe sum should be ~1.
+        if (spine && h == 0) {
+            AttnSpineSample soft;
+            attnSpineAccum(scores.data(), attend, soft);
+            double probSum = 0.0;
+            if (scores.data())
+                for (size_t t = 0; t < attend; ++t)
+                    if (std::isfinite(scores[t])) probSum += (double)scores[t];
+            aggSoft.nan += soft.nan; aggSoft.inf += soft.inf;
+            aggSoft.samples += soft.count;
+            aggSoft.amax = soft.amax > aggSoft.amax ? soft.amax : aggSoft.amax;
+            char extra[160];
+            std::snprintf(extra, sizeof(extra),
+                          "HEAD=0 ATTEND=%zu PROB_SUM=%.9g EXPECTED_PROB_SUM=1",
+                          attend, probSum);
+            attnSpineEmit(layer, spinePos, "SCORES_POST_SOFTMAX", soft, extra);
+            spineLog.add("SCORES_POST_SOFTMAX", attnSpineVerdict(soft));
+        }
         parityEmit(ParityCheckpoint::AttnProbs, scores.data(), attend);
         parityEmitLayer(static_cast<int>(layer), "ATTN_PROBS",
                         scores.data(), attend);
@@ -5046,6 +6126,20 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             for (size_t d = 0; d < headDim; ++d) {
                 headOut[d] += a * v[d];
             }
+        }
+        // RAWRXD_LAYER0_ATTN_BISECT_001: context boundary for this head. This is
+        // where a V addressing or cache-layout defect would first appear.
+        if (spine && h == 0) {
+            AttnSpineSample ctx;
+            attnSpineAccum(headOut, headDim, ctx);
+            aggCtx.nan += ctx.nan; aggCtx.inf += ctx.inf;
+            aggCtx.samples += ctx.count;
+            aggCtx.amax = ctx.amax > aggCtx.amax ? ctx.amax : aggCtx.amax;
+            char extra[96];
+            std::snprintf(extra, sizeof(extra), "HEAD=0 KVHEAD=%zu ATTEND=%zu",
+                          kvHead, attend);
+            attnSpineEmit(layer, spinePos, "CONTEXT", ctx, extra);
+            spineLog.add("CONTEXT", attnSpineVerdict(ctx));
         }
 
         // RAWRXD_ATTN_CTX2_PROBE_001: the four objects for the CTX=1 -> CTX=2
@@ -5122,6 +6216,34 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
     LinearW(*outWeight, attnValue.data(), nullptr, output, H);
     parityEmit(ParityCheckpoint::OProj, output, H);
     parityEmitLayer(static_cast<int>(layer), "O_PROJ", output, H);
+
+    // RAWRXD_LAYER0_ATTN_BISECT_001: context across ALL heads, then the output
+    // projection, then the function summary that names the first transition.
+    // CONTEXT_ALL is the aggregate that a head-0-only probe cannot provide.
+    if (spine) {
+        AttnSpineSample ctxAll;
+        attnSpineAccum(attnValue.data(), qDim, ctxAll);
+        char ctxExtra[192];
+        std::snprintf(ctxExtra, sizeof(ctxExtra),
+                      "NUM_HEADS=%zu HEAD_DIM=%zu NUM_KV_HEADS=%zu "
+                      "WORST_HEAD_NAN=%zu WORST_HEAD_INF=%zu WORST_HEAD_ABSMAX=%.6g",
+                      numHeads, headDim, numKVHeads,
+                      aggCtx.nan, aggCtx.inf, aggCtx.amax);
+        attnSpineEmit(layer, spinePos, "CONTEXT_ALL", ctxAll, ctxExtra);
+        spineLog.add("CONTEXT_ALL", attnSpineVerdict(ctxAll));
+
+        AttnSpineSample op;
+        attnSpineAccum(output, H, op);
+        attnSpineEmit(layer, spinePos, "O_PROJ", op, "OUTPUT_PROJECTION");
+        spineLog.add("O_PROJ", attnSpineVerdict(op));
+        // ATTN_OUT is the same buffer as O_PROJ on the CPU route: forwardLayer
+        // probes `attentionOutput`, which IS this `output`. Emitted under both
+        // names so the spine joins to the existing LAYERDIAG ATTN_OUT record
+        // without a reader having to know they alias.
+        attnSpineEmit(layer, spinePos, "ATTN_OUT", op, "ALIASES_O_PROJ");
+        spineLog.add("ATTN_OUT", attnSpineVerdict(op));
+        attnSpineSummary(layer, spinePos, spineLog);
+    }
 
     if (!finiteVector(output, H)) {
         throw std::runtime_error("attention: non-finite projected output");
@@ -5981,6 +7103,8 @@ static const char* routeName(Deep2Engine::ExecutionRoute r) {
 }
 
 Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
+    // RAWRXD_TOKEN_WALL_PROFILE_001: covers every return path below.
+    TokWallScope _tokProfScope(tokProfOn());
     if (!modelWeights.loaded || !hidden || seqLen == 0) {
         std::fprintf(stderr, "[FWD_ALL] FAIL: invalid_args loaded=%d hidden=%p seqLen=%zu\n",
             modelWeights.loaded ? 1 : 0, (void*)hidden, seqLen); std::fflush(stderr);

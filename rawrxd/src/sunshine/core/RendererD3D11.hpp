@@ -43,7 +43,20 @@ public:
     void draw(uint32_t count);
     void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
     void setDepthStencilState(ID3D11DepthStencilState* state);
+
+    // RAWRXD_SUNSHINE_SKY_001
+    // A fullscreen background pass must not depth-test: the sky is drawn first,
+    // at the far plane, and with DepthFunc LESS a fragment at exactly z=1.0
+    // fails against a depth buffer cleared to 1.0. This creates and caches a
+    // depth-disabled state so callers do not each hand-roll one.
+    void setDepthDisabled();
+    void setDepthEnabled();
     void setRasterizerState(ID3D11RasterizerState* state);
+    // RAWRXD_SUNSHINE_SKY_001: the fullscreen sky quad is authored CCW, while
+    // the scene rasterizer is FrontCounterClockwise=FALSE (CW is front). The sky
+    // quad is therefore back-face culled and invisible unless culling is off.
+    void setCullNone();
+    void setCullBack();
 
     ID3D11Buffer* createConstantBuffer(uint32_t size);
 
@@ -58,7 +71,10 @@ private:
     ID3D11DepthStencilView* m_dsv = nullptr;
     ID3D11Texture2D* m_depthStencil = nullptr;
     ID3D11RasterizerState* m_rasterizer = nullptr;
+    ID3D11RasterizerState* m_rasterizerNoCull = nullptr;
     ID3D11DepthStencilState* m_depthStencilState = nullptr;
+    // RAWRXD_SUNSHINE_SKY_001: cached depth-disabled state for the sky pass.
+    ID3D11DepthStencilState* m_depthDisabled = nullptr;
 };
 
 } // namespace Sunshine

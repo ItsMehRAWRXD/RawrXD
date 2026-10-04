@@ -1616,6 +1616,60 @@ static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
 }
 
 
+// RAWRXD_Q2K_SCALE_WIDTH_001 — BOTH ARMS RETAINED, DELIBERATELY.
+//
+// Measured on llama3.2-3b-Q2_K, layer 0, blk.0.attn_q.weight:
+//   4-bit arm (sc & 0x0F, sc >> 4)      -> Q_PROJ MIN=-6.9385e+06 MAX= 7.17912e+06
+//   6-bit arm (canonical get_scale_min_k2) -> Q_PROJ MIN=-3.14367e+07 MAX= 2.85224e+07
+//
+// Neither is correct: both are orders of magnitude above the worst case that
+// correct d/dmin permit (|acc| <= ~8.6e3). The 6-bit arm is WORSE numerically
+// and is kept active anyway, because it is the spec-conformant decode and the
+// worse value is the more informative diagnostic: it proves the divergence is
+// NOT located in the scale unpack, since changing the unpack width moves the
+// answer without ever reaching a sane one. Deleting the falsifying arm would
+// destroy that evidence, so the 4-bit arm is retained behind an env switch
+// rather than reverted away.
+//
+// DEFAULT ARM = 4-bit (last-known-better baseline). The 6-bit arm is retained
+// as an EXPERIMENTAL control, selected with RAWRXD_Q2K_SCALE6=1.
+// Rationale: measured 6-bit Q_PROJ MAX = 2.85e7 vs 4-bit 7.18e6 — the 6-bit arm
+// is ~4x worse with no correctness advantage established, so leaving it default
+// contaminates every subsequent performance measurement. Both arms poison, so
+// neither is correct; the default must be the one that is not a regression.
+static inline bool q2k_use_6bit() {
+    static const bool v = [] {
+        const char* e = std::getenv("RAWRXD_Q2K_SCALE6");
+        return e && e[0] && e[0] != '0';
+    }();
+    return v;
+}
+
+// ggml get_scale_min_k2 — canonical SIX-bit scale/min unpack for block_q2_K.
+// scales[16] yields sixteen (sc,m) pairs with values 0..63 via a permuted
+// byte/shift schedule; reading it as two 4-bit halves per byte is a different
+// decode of the same bytes.
+static inline void get_scale_min_k2(int j, const uint8_t* RESTRICT q,
+                                    uint8_t* RESTRICT d, uint8_t* RESTRICT m) {
+    if (j < 4) {
+        *d = (uint8_t)(q[j] & 63);
+        *m = (uint8_t)(q[j + 4] & 63);
+    } else {
+        *d = (uint8_t)((q[j + 4] & 0xF) | ((q[j - 4] >> 6) << 4));
+        *m = (uint8_t)((q[j + 4] >> 4)   | ((q[j - 0] >> 6) << 4));
+    }
+}
+
+static inline void q2k_scale_min(int idx, const uint8_t* RESTRICT scales,
+                                 uint8_t* RESTRICT sc, uint8_t* RESTRICT mn) {
+    if (q2k_use_6bit()) {
+        get_scale_min_k2(idx, scales, sc, mn);
+    } else {
+        *sc  = (uint8_t)(scales[idx] & 0x0F);
+        *mn  = (uint8_t)(scales[idx] >> 4);
+    }
+}
+
 static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
     const block_q2_K* blocks = reinterpret_cast<const block_q2_K*>(src);
     size_t numBlocks = (n + 255) / 256;
@@ -1629,9 +1683,10 @@ static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
             for (int subBlock = 0; subBlock < 4; ++subBlock) {
                 for (int group = 0; group < 2; ++group) {
                     int scaleIdx = chunk * 8 + subBlock * 2 + group;
-                    uint8_t sc = blocks[b].scales[scaleIdx];
-                    float dl = d * (float)(sc & 0x0F);
-                    float ml = dmin * (float)(sc >> 4);
+                    uint8_t sc = 0, mn = 0;
+                    q2k_scale_min(scaleIdx, blocks[b].scales, &sc, &mn);
+                    float dl = d * (float)sc;
+                    float ml = dmin * (float)mn;
                     for (int pos = 0; pos < 16; ++pos) {
                         int i = chunk * 128 + subBlock * 32 + group * 16 + pos;
                         size_t globalIdx = b * 256 + i;
@@ -1849,9 +1904,10 @@ static void gemv_q2_k_scalar(
                 for (int subBlock = 0; subBlock < 4; ++subBlock) {
                     for (int group = 0; group < 2; ++group) {
                         int scaleIdx = chunk * 8 + subBlock * 2 + group;
-                        uint8_t sc = blk.scales[scaleIdx];
-                        float dl = d * (float)(sc & 0x0F);
-                        float ml = dmin * (float)(sc >> 4);
+uint8_t sc = 0, mn = 0;
+            q2k_scale_min(scaleIdx, blk.scales, &sc, &mn);
+            float dl = d * (float)sc;
+            float ml = dmin * (float)mn;
                         for (int pos = 0; pos < 16; ++pos) {
                             int idx = chunk * 128 + subBlock * 32 + group * 16 + pos;
                             if ((size_t)idx >= elemsInBlock) break;

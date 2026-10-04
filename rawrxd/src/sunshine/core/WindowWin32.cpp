@@ -43,7 +43,12 @@ bool Window::initialize(const WindowConfig& config) {
     wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
     wc.lpfnWndProc = WndProc;
     wc.hInstance = m_hinst;
-    wc.hCursor = LoadCursorA(nullptr, IDC_ARROW);
+    // The window class below is registered with RegisterClassExA, so this must
+    // stay on the ANSI path. Under UNICODE, IDC_ARROW expands to
+    // MAKEINTRESOURCEW (an LPWSTR), which cannot convert to the LPCSTR that
+    // LoadCursorA takes -- that was the single compile blocker in this module.
+    // MAKEINTRESOURCEA pins the ANSI resource id explicitly.
+    wc.hCursor = LoadCursorA(nullptr, MAKEINTRESOURCEA(IDC_ARROW));
     wc.lpszClassName = "SunshineWindowClass";
     if (!RegisterClassExA(&wc)) return false;
 

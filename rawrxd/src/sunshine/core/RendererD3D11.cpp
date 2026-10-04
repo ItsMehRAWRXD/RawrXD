@@ -87,7 +87,9 @@ bool Renderer::initialize(Window* window) {
 
 void Renderer::shutdown() {
     if (m_depthStencilState) { m_depthStencilState->Release(); m_depthStencilState = nullptr; }
+    if (m_depthDisabled) { m_depthDisabled->Release(); m_depthDisabled = nullptr; }
     if (m_rasterizer) { m_rasterizer->Release(); m_rasterizer = nullptr; }
+    if (m_rasterizerNoCull) { m_rasterizerNoCull->Release(); m_rasterizerNoCull = nullptr; }
     if (m_dsv) { m_dsv->Release(); m_dsv = nullptr; }
     if (m_depthStencil) { m_depthStencil->Release(); m_depthStencil = nullptr; }
     if (m_rtv) { m_rtv->Release(); m_rtv = nullptr; }
@@ -249,6 +251,33 @@ void Renderer::setDepthStencilState(ID3D11DepthStencilState* state) {
     m_context->OMSetDepthStencilState(state, 0);
 }
 
+// RAWRXD_SUNSHINE_SKY_001
+// Depth-disabled and depth-enabled states are created once and cached on the
+// renderer. The sky pass needs the former: it is drawn first at the far plane,
+// and under DepthFunc LESS a fragment at z=1.0 fails against a depth buffer
+// cleared to 1.0, so the sky would be depth-rejected and never appear.
+void Renderer::setDepthDisabled() {
+    if (!m_depthDisabled) {
+        D3D11_DEPTH_STENCIL_DESC d = {};
+        d.DepthEnable = FALSE;
+        d.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+        d.DepthFunc = D3D11_COMPARISON_ALWAYS;
+        m_device->CreateDepthStencilState(&d, &m_depthDisabled);
+    }
+    if (m_depthDisabled) m_context->OMSetDepthStencilState(m_depthDisabled, 0);
+}
+
+void Renderer::setDepthEnabled() {
+    if (!m_depthStencilState) {
+        D3D11_DEPTH_STENCIL_DESC d = {};
+        d.DepthEnable = TRUE;
+        d.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+        d.DepthFunc = D3D11_COMPARISON_LESS;
+        m_device->CreateDepthStencilState(&d, &m_depthStencilState);
+    }
+    if (m_depthStencilState) m_context->OMSetDepthStencilState(m_depthStencilState, 0);
+}
+
 static bool writeMappedTextureBMP(const wchar_t* path, const void* data, uint32_t rowPitch, uint32_t width, uint32_t height) {
     FILE* f = nullptr;
     _wfopen_s(&f, path, L"wb");
@@ -280,9 +309,9 @@ static bool writeMappedTextureBMP(const wchar_t* path, const void* data, uint32_
         const uint8_t* srcRow = src + y * rowPitch;
         uint8_t* dst = row.data();
         for (uint32_t x = 0; x < width; ++x) {
-            dst[x * 3 + 0] = srcRow[x * 4 + 0]; // B
+            dst[x * 3 + 0] = srcRow[x * 4 + 2]; // B  <- source byte 2
             dst[x * 3 + 1] = srcRow[x * 4 + 1]; // G
-            dst[x * 3 + 2] = srcRow[x * 4 + 2]; // R
+            dst[x * 3 + 2] = srcRow[x * 4 + 0]; // R  <- source byte 0
         }
         fwrite(row.data(), 1, dstRowSize, f);
     }
@@ -320,6 +349,22 @@ bool Renderer::captureFrame(const wchar_t* path) {
     staging->Release();
     backBuffer->Release();
     return ok;
+}
+
+void Renderer::setCullNone() {
+    if (!m_rasterizerNoCull) {
+        D3D11_RASTERIZER_DESC rd = {};
+        rd.FillMode = D3D11_FILL_SOLID;
+        rd.CullMode = D3D11_CULL_NONE;
+        rd.FrontCounterClockwise = FALSE;
+        rd.DepthClipEnable = TRUE;
+        m_device->CreateRasterizerState(&rd, &m_rasterizerNoCull);
+    }
+    if (m_rasterizerNoCull) m_context->RSSetState(m_rasterizerNoCull);
+}
+
+void Renderer::setCullBack() {
+    if (m_rasterizer) m_context->RSSetState(m_rasterizer);
 }
 
 void Renderer::setRasterizerState(ID3D11RasterizerState* state) {

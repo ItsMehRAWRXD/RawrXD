@@ -8,6 +8,7 @@ Command resolveCommand(const std::string& cmd) {
     if (cmd == "config") return Command::ConfigGet; if (cmd == "doctor") return Command::Doctor;
     if (cmd == "cert") return Command::Cert; if (cmd == "install") return Command::Install;
     if (cmd == "service") return Command::Service; if (cmd == "server") return Command::Server;
+    if (cmd == "reverse") return Command::ReverseAssembly;
     return Command::Unknown;
 }
 // RAWRXD_COMMAND_AUTHORITY_002 — dispatch was a hardcoded success:
@@ -40,6 +41,7 @@ const char* commandName(Command c) {
         case Command::ConfigGet: return "config"; case Command::Doctor: return "doctor";
         case Command::Cert: return "cert"; case Command::Install: return "install";
         case Command::Service: return "service"; case Command::Server: return "server";
+        case Command::ReverseAssembly: return "reverse";
         default: return "unknown"; }
 }
 void writeCommandReceipt(const std::string& path, Command cmd, bool modelResolved, bool modelLoaded, bool genAttempted, int exitCode) {

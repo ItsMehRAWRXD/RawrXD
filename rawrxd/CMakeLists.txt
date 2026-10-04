@@ -5346,6 +5346,20 @@ set(INFERENCE_ENGINE_SOURCES
         # REFERENCE was missing, so a fresh configure could not link the product.
         src/deep2/ReverseLayer.cpp
     src/deep2/Deep2Engine_GpuMoEMLA.cpp
+    # RAWRXD_CPU_MLA_KERNEL_001: the CPU MLA attention route.
+    #
+    # This file existed since RAWRXD_CPU_MLA_KERNEL_001 but was in NO target, so
+    # it was never compiled. That is not a neutral omission: it also means every
+    # claim of the form "a CPU MLA kernel is present" was describing unlinked
+    # source. It was additionally non-compiling as written (it referenced
+    # Deep2::MakeExecutionView, which no header declares in that namespace) and
+    # required F32-backed weights, so it would have refused the Q4_K_M DeepSeek
+    # file even once linked.
+    #
+    # It is listed immediately after the GPU MLA route because it is the other
+    # half of the same decision: computeAttention tries the GPU route, then this
+    # one, and refuses only if neither completes the layer.
+    src/deep2/deep2_cpu_mla.cpp
     # RAWRXD_MLA_LOAD_AUTHORITY_001 (M5d): the MLA metadata binder
     # (q_lora_rank / kv_lora_rank / useMLA derivation) existed only as
     # uncompiled source while the engine's own MLA fields were never populated
@@ -11246,6 +11260,8 @@ if((BUILD_RAWRXD_RUN_MODELNAME_001 OR RAWRXD_BUILD_CLI) AND TARGET InferenceEngi
         src/deep2/rawr_run.cpp
         src/deep2/rawrxd_run_modelname_001.cpp
         src/deep2/ReceiptAuthority.cpp
+        src/cli/RawrCommandAuthority.cpp
+        src/cli/ReverseAssemblyEngine.cpp
         src/cli/RawrDumpAuthority.cpp
         src/cli/RawrDumpInitConfig.cpp
         src/cli/RawrDumpRebuild.cpp
@@ -19515,4 +19531,24 @@ if(RAWRXD_RECORD_EMPTY_SOURCES)
             "[declared_unimplemented] wrote ${_final_rec_n} declared-unimplemented source(s) "
             "to cmake/known_empty_sources.txt")
     endif()
+endif()
+
+# ============================================================================
+# RAWRXD_REVERSE_ASSEMBLY_ENGINE_001 — build reachability gate
+#
+# ReverseAssemblyEngine.cpp/h live in src/cli/ but were in NO CMake target,
+# so they compiled never and every defect survived. This cert target makes
+# them reachable, compiles the engine + cert together, and runs measured
+# checks before/after the fix. EXCLUDE_FROM_ALL because it is a cert driver.
+# ============================================================================
+if(TARGET InferenceEngine)
+    add_executable(reverse_assembly_cert
+        tools/reverse_assembly_cert.cpp
+        src/cli/ReverseAssemblyEngine.cpp)
+    set_target_properties(reverse_assembly_cert PROPERTIES
+        EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    target_include_directories(reverse_assembly_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+    target_compile_options(reverse_assembly_cert PRIVATE /EHsc /W4 /std:c++20)
 endif()

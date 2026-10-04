@@ -8,6 +8,10 @@ void Camera::setPerspective(float fovDeg, float aspect, float nearPlane, float f
     m_aspect = aspect;
     m_near = nearPlane;
     m_far = farPlane;
+    // Every caller configures perspective before the first render, so this is the
+    // one point at which the orientation basis can be guaranteed valid. Doing it
+    // here means a camera cannot be left with a stale or absent basis.
+    updateVectors();
 }
 
 void Camera::setPosition(const Vec3& pos) {

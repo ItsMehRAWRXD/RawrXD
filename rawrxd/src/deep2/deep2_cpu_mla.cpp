@@ -3,317 +3,429 @@
 //
 // WHY THIS EXISTS
 // ---------------
-// Deep2's ONLY MLA attention implementation is computeMLAAttentionGpu
-// (Deep2Engine_GpuMoEMLA.cpp:324). Deep2Engine.cpp:4123-4128 dispatches:
+// Deep2's ONLY MLA attention implementation was computeMLAAttentionGpu
+// (Deep2Engine_GpuMoEMLA.cpp:384), and every call it makes -- tryVulkanHostGEMV,
+// RunMLAAttentionHost -- returns false at its first guard when
+// vulkanInitialized_ is false. computeAttention had no CPU branch at all:
 //
 //     if (lw.useMLA || modelWeights.useMLA) {
 //         if (computeMLAAttentionGpu(layer, input, output, seqLen)) return;
-//         throw std::runtime_error("attention: GPU MLA path failed or unsupported");
+//         throw std::runtime_error(
+//             "attention: GPU MLA path failed or unsupported");
 //     }
 //
-// There is no CPU branch. When Vulkan is absent (vulkan=0/0), computeMLAAttentionGpu
-// returns false at its first guard (Deep2Engine_GpuMoEMLA.cpp:327) and every MLA
-// model dies at prefill token 0. Measured on DeepSeek-V2-Lite:
-//     [FWD_ALL] seqLen=1 numLayers=61 isMoE=1 useMLA=1 vulkan=0/0
-//     forward failed: attention: GPU MLA path failed or unsupported
+// So an MLA architecture on a CPU-only machine had exactly two outcomes: Vulkan,
+// or an exception at prefill token 0. That is not a fallback optimisation. It
+// means no MLA architecture -- DeepSeek-V2, DeepSeek-V3, Kimi K2 -- can run on
+// the CPU route at all.
 //
-// So this is not a fallback optimisation. Without it, no MLA architecture --
-// Kimi K2, DeepSeek-V2/V3 -- can be certified on the CPU route at all.
+// THE PRIOR FILE WAS NEVER COMPILED
+// --------------------------------
+// The previous revision of this file was in no CMake target and did not compile:
+// it called Deep2::MakeExecutionView, which is not declared in namespace Deep2 by
+// ExecutionView.hpp or by Deep2Engine.h, and it required F32-backed weights
+// (w.type != 0 -> refuse), so it would have rejected the Q4_K_M DeepSeek file
+// even once it built. Treat any receipt describing it as an executed CPU MLA path
+// as describing code that was never linked.
 //
 // THE MATH IS DEEP2'S, NOT THE PAPER'S
 // ------------------------------------
-// Every step below is transcribed from computeMLAAttentionGpu lines 364-427.
-// Where the reference implementation makes a choice, this file makes the same
-// one, so a CPU/GPU divergence cannot be blamed on interpretation.
+// Every step is transcribed from computeMLAAttentionGpu. Where the reference
+// makes a choice, this makes the same choice, so a CPU/GPU divergence cannot be
+// blamed on interpretation. One correction is deliberate and is called out at
+// applyMlaRope below.
 //
-//   1  qa      = attnQ_a      @ x                  [qRank]
-//   2  qaNorm  = RMSNorm(qa, attnQ_a_norm, eps)    [qRank]
-//   3  qFull   = attnQ_b      @ qaNorm             [heads * keyLen]
+//   1  qa      = attnQ_a      @ x                  [qRank]      (split only)
+//   2  qaNorm  = RMSNorm(qa, attnQ_a_norm, eps)    [qRank]      (split only)
+//   3  qFull   = attnQ_b      @ qaNorm             [heads*keyLen]
+//                                                          (fused: @ x directly)
 //   4  kva     = attnKV_a_mqa @ x                   [kvRank + rope]
 //   5  cNorm   = RMSNorm(kva[0:kvRank], attnKV_a_norm, eps)
 //   6  kNope   = attnK_b      @ cNorm               [heads * nope]
 //   7  values  = attnV_b      @ cNorm               [heads * valueLen]
+//                                                          (fused: one attnK_b
+//                                                           GEMV producing
+//                                                           heads*(nope+valueLen))
 //   8  kPe     = kva[kvRank : kvRank+rope]
 //   9  applyMlaRope(qFull, kPe, heads, nope, rope, pos, theta, scaling)
 //  10  kFull[h] = concat(kNope[h*nope : (h+1)*nope], kPe)
 //  11  attn[h]  = softmax_t( dot(qFull[h], kFull_t[h]) * 1/sqrt(keyLen) ) values_t[h]
-//  12  out      = attnO @ attn                      [H]
+//  12  out      = attnO @ attn                      [hidden]
 //
-// VALIDATION
-// ----------
-// A kernel with no oracle is exactly the failure class this project has been
-// dismantling. So this file carries TWO independent implementations of the same
-// specification -- a tiled one and a deliberately naive triple-loop one -- and a
-// self-test that requires them to agree. They share no arithmetic: the naive
-// path recomputes every dot product element-by-element with no blocking, no
-// reuse and a separate softmax accumulation. Agreement between two
-// implementations of one spec catches transcription errors, tiling bugs and
-// index errors. It does NOT prove Deep2's GPU path agrees; only that this file
-// is internally coherent.
-//
-// STATUS: projections + RoPE + attention are implemented and self-tested.
-// KV-cache integration is NOT done -- see kvCacheLayoutIsKnown() below.
+// The fused layout needs no weight surgery. attn_q is already [heads*keyLen,
+// hidden] and attn_kv_b is already [heads*(nope+valueLen), kvRank]; both land in
+// the attnQ_b / attnK_b slots at bind time. The K/V split is performed on the
+// GEMV OUTPUT, which is plain f32, so no packed Q4_K byte is ever dequantised and
+// requantised and no additional resident copy is created.
 
 #include "Deep2Engine.h"
-#include "ExecutionView.hpp"
 
 #include <cmath>
+#include <cstdarg>
+#include <cstdio>
 #include <cstring>
+#include <sstream>
 #include <string>
 #include <vector>
 
-// ============================================================================
-// RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_001
-// ExecutionView factory from existing WeightTensor (baseline bridge)
+namespace {
+
+// RAWRXD_MLA_CPU_TRACE: off unless the environment asks. Every value printed is
+// an observation of this run; nothing here is a prediction.
+bool mlaTraceOn() {
+    static const bool on = [] {
+        const char* v = std::getenv("RAWRXD_MLA_CPU_TRACE");
+        return v && v[0] && v[0] != '0';
+    }();
+    return on;
+}
+
+void mlaTrace(const char* fmt, ...) {
+    if (!mlaTraceOn()) return;
+    va_list ap;
+    va_start(ap, fmt);
+    std::vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    std::fprintf(stderr, "\n");
+    std::fflush(stderr);
+}
+
+// Transcribed verbatim from Deep2Engine_GpuMoEMLA.cpp:38 applyMlaRope.
 //
-// This is the A/B reference bridge: it populates an ExecutionView from the
-// existing monolithic ModelWeights allocation WITHOUT changing residency.
-// The address is the same; the only difference is that the kernel receives
-// an ExecutionView instead of a raw pointer.
-// ============================================================================
-static Deep2::ExecutionView MakeExecutionView(const Deep2::WeightTensor& wt,
-                                               uint32_t layer, uint16_t role)
+// Note this is INTERLEAVED-pair rotation at adjacent indices (d, d+1), not the
+// rotate-half form used by Deep2's non-MLA attention path. The earlier draft of
+// this file implemented rotate-half, which would have silently disagreed with
+// the GPU reference on every rotary dimension. Interleaved is what the reference
+// does and what DeepSeek2 GGUF weights were trained for.
+void applyMlaRopeCpu(float* qFull, float* kPe,
+                     std::size_t heads, std::size_t nope, std::size_t rope,
+                     std::size_t pos, float theta, float scaling)
 {
-    Deep2::ExecutionView ev;
-    ev.identity.model   = 1;      // TODO: derive from actual model fingerprint
-    ev.identity.tensor  = wt.sizeBytes; // TODO: derive from tensor hash or GGUF name
-    ev.identity.layer   = layer;
-    ev.identity.role    = role;
-    ev.identity.variant = 0;
-
-    ev.transientAddress = wt.data;
-    ev.bytes            = wt.sizeBytes;
-    ev.lease.generation = 1;      // baseline: monolithic allocation is gen 1
-    ev.lease.owner      = 1;      // baseline: owned by ModelWeights block
-    ev.lease.epoch      = 0;
-    return ev;
+    if (!qFull || !kPe || !heads || !rope || (rope & 1u)) return;
+    const float position = static_cast<float>(pos) / scaling;
+    for (std::size_t pair = 0; pair < rope / 2; ++pair) {
+        const std::size_t d = pair * 2;
+        const float freq = std::pow(theta,
+            -static_cast<float>(d) / static_cast<float>(rope));
+        const float angle = position * freq;
+        const float cs = std::cos(angle);
+        const float sn = std::sin(angle);
+        for (std::size_t h = 0; h < heads; ++h) {
+            float* qr = qFull + h * (nope + rope) + nope;
+            const float a = qr[d], b = qr[d + 1];
+            qr[d]     = a * cs - b * sn;
+            qr[d + 1] = a * sn + b * cs;
+        }
+        const float a = kPe[d], b = kPe[d + 1];
+        kPe[d]     = a * cs - b * sn;
+        kPe[d + 1] = a * sn + b * cs;
+    }
 }
 
-namespace rawrxd::mla {
+} // namespace
 
-using Deep2::WeightTensor;
-static inline const float* fdata(const WeightTensor& w) { return static_cast<const float*>(w.data); }
+namespace Deep2 {
 
-struct Geometry {
-    std::size_t hidden   = 0;
-    std::size_t heads    = 0;
-    std::size_t qRank    = 0;
-    std::size_t kvRank   = 0;
-    std::size_t nope     = 0;
-    std::size_t rope     = 0;
-    std::size_t valueLen = 0;
-    std::size_t keyLen()  const { return nope + rope; }
-};
-
-// Mirrors the shape guard at Deep2Engine_GpuMoEMLA.cpp:344-359 exactly. If this
-// returns false for a real model, the kernel is not the problem -- the binding
-// is, and admitting the model would be wrong.
-bool geometryAndBindingValid(const Geometry& g, const Deep2::LayerWeights& lw)
+// RAWRXD_CPU_MLA_KERNEL_001
+//
+// Returns true only when this layer's attention was actually computed on the CPU
+// and written to output. Returns false, with the specific reason on stderr, when
+// the route is not available for this model. It never returns true on a partial
+// computation: any non-finite result or unbound tensor is a refusal, because a
+// silent wrong answer here is indistinguishable from a correct one downstream.
+bool Deep2Engine::computeMLAAttentionCpu(size_t layer, const float* input,
+                                        float* output, size_t seqLen)
 {
-    if (!g.hidden || !g.heads || !g.qRank || !g.kvRank || !g.nope ||
-        !g.rope || !g.valueLen || (g.rope & 1u))
+    if (!input || !output || seqLen == 0) {
+        std::fprintf(stderr, "[CPU_MLA] reject: null buffers or seqLen=0\n");
         return false;
-    if (g.hidden > UINT32_MAX || g.heads > UINT32_MAX ||
-        g.keyLen() > UINT32_MAX || g.valueLen > UINT32_MAX)
+    }
+    if (layer >= modelWeights.layers.size()) {
+        std::fprintf(stderr, "[CPU_MLA] reject: layer %zu >= %zu layers bound\n",
+                     layer, modelWeights.layers.size());
         return false;
-    if (!fdata(lw.attnQ_a) || !fdata(lw.attnQ_a_norm) || !fdata(lw.attnQ_b) ||
-        !fdata(lw.attnKV_a_mqa) || !fdata(lw.attnKV_a_norm) ||
-        !fdata(lw.attnK_b) || !fdata(lw.attnV_b) || !fdata(lw.attnO))
-        return false;
-    if (lw.attnQ_a.rows    != g.qRank   || lw.attnQ_a.cols    != g.hidden)  return false;
-    if (lw.attnQ_b.rows    != g.heads * g.keyLen() ||
-        lw.attnQ_b.cols    != g.qRank)                                        return false;
-    if (lw.attnKV_a_mqa.rows != g.kvRank + g.rope ||
-        lw.attnKV_a_mqa.cols != g.hidden)                                    return false;
-    if (lw.attnK_b.rows    != g.heads * g.nope   || lw.attnK_b.cols    != g.kvRank)   return false;
-    if (lw.attnV_b.rows    != g.heads * g.valueLen ||
-        lw.attnV_b.cols    != g.kvRank)                                       return false;
-    if (lw.attnO.rows      != g.hidden || lw.attnO.cols != g.heads * g.valueLen)   return false;
-    return true;
-}
+    }
 
-// ---------------------------------------------------------------------------
-// RMSNorm with learned weights -- same form as mlaRmsNormW at the GPU call sites.
-// ---------------------------------------------------------------------------
-void mlaRmsNormW(const float* x, const float* w, float* out,
-              std::size_t n, float eps)
-{
-    double ss = 0.0;
-    for (std::size_t i = 0; i < n; ++i) ss += double(x[i]) * double(x[i]);
-    const float inv = 1.0f / std::sqrt(float(ss / double(n)) + eps);
-    for (std::size_t i = 0; i < n; ++i) out[i] = x[i] * inv * w[i];
-}
+    const LayerWeights& lw = modelWeights.layers[layer];
 
-// ---------------------------------------------------------------------------
-// RoPE over the rotary slice. Deep2 applies it to qFull at offset `nope`
-// (the rotary dims follow the non-rotary dims) and to the key's own first
-// `rope` dims. Rotate-half, NeoX layout.
-// ---------------------------------------------------------------------------
-void applyRope(float* v, std::size_t heads, std::size_t dimStart,
-               std::size_t rot, std::size_t pos, float theta, float scaling)
-{
-    const std::size_t half = rot / 2;
-    if (!rot || !half) return;
-    for (std::size_t h = 0; h < heads; ++h) {
-        float* p = v + h * (dimStart + rot) + dimStart;
-        for (std::size_t i = 0; i < half; ++i) {
-            const double freq =
-                1.0 / std::pow(double(theta), double(2 * i) / double(rot));
-            const float ang = float(double(pos) * freq * double(scaling));
-            const float c = std::cos(ang), s = std::sin(ang);
-            const float a = p[i], b = p[i + half];
-            p[i]        = a * c - b * s;
-            p[i + half] = a * s + b * c;
+    const std::size_t H      = modelWeights.hiddenDim;
+    const std::size_t heads  = modelWeights.numHeads;
+    const std::size_t qRank  = modelWeights.qLoraRank;
+    const std::size_t kvRank = modelWeights.kvLoraRank;
+    const std::size_t nope   = modelWeights.qkNopeHeadDim;
+    const std::size_t rope   = modelWeights.qkRopeHeadDim;
+    const std::size_t vlen   = modelWeights.vHeadDim;
+    if (!H || !heads || !kvRank || !nope || !rope || !vlen || (rope & 1u)) {
+        std::fprintf(stderr,
+            "[CPU_MLA] reject: incomplete geometry H=%zu heads=%zu kvRank=%zu "
+            "nope=%zu rope=%zu vlen=%zu\n",
+            H, heads, kvRank, nope, rope, vlen);
+        return false;
+    }
+    const std::size_t klen = nope + rope;
+
+    // Which layout is bound. qLoraRank==0 with a populated attnQ_b is the fused
+    // signature; a populated attnQ_a is the split signature. Decided from the
+    // BOUND tensors, not from a remembered flag, so it cannot disagree with what
+    // the binder actually did.
+    const bool splitLayout = lw.attnQ_a.data != nullptr;
+    const bool fusedLayout = !splitLayout && lw.attnQ_b.data != nullptr;
+
+    // ---- binding + geometry guard, mirrored from the GPU path ---------------
+    std::ostringstream why;
+    if (splitLayout) {
+        if (!lw.attnQ_a.data || !lw.attnQ_a_norm.data || !lw.attnQ_b.data ||
+            !lw.attnKV_a_mqa.data || !lw.attnKV_a_norm.data ||
+            !lw.attnK_b.data || !lw.attnV_b.data || !lw.attnO.data) {
+            why << "split layout incompletely bound";
+        } else if (qRank == 0) {
+            why << "split layout bound but qLoraRank=0";
+        } else if (lw.attnQ_a.rows != qRank || lw.attnQ_a.cols != H) {
+            why << "attnQ_a " << lw.attnQ_a.rows << "x" << lw.attnQ_a.cols
+                << " != " << qRank << "x" << H;
+        } else if (lw.attnQ_b.rows != heads * klen || lw.attnQ_b.cols != qRank) {
+            why << "attnQ_b " << lw.attnQ_b.rows << "x" << lw.attnQ_b.cols
+                << " != " << (heads * klen) << "x" << qRank;
+        } else if (lw.attnK_b.rows != heads * nope ||
+                   lw.attnK_b.cols != kvRank ||
+                   lw.attnV_b.rows != heads * vlen ||
+                   lw.attnV_b.cols != kvRank) {
+            why << "attnK_b/attnV_b do not match heads*nope x kvRank";
+        }
+    } else if (fusedLayout) {
+        if (!lw.attnKV_a_mqa.data || !lw.attnKV_a_norm.data ||
+            !lw.attnK_b.data || !lw.attnO.data) {
+            why << "fused layout incompletely bound";
+        } else if (lw.attnQ_b.rows != heads * klen || lw.attnQ_b.cols != H) {
+            // attn_q: [heads*keyLen, hidden]
+            why << "attn_q(->attnQ_b) " << lw.attnQ_b.rows << "x" << lw.attnQ_b.cols
+                << " != " << (heads * klen) << "x" << H;
+        } else if (lw.attnK_b.rows != heads * (nope + vlen) ||
+                   lw.attnK_b.cols != kvRank) {
+            // attn_kv_b: [heads*(nope+vHead), kvLoraRank]
+            why << "attn_kv_b(->attnK_b) " << lw.attnK_b.rows << "x" << lw.attnK_b.cols
+                << " != " << (heads * (nope + vlen)) << "x" << kvRank;
+        }
+    } else {
+        why << "neither split (attnQ_a) nor fused (attnQ_b) query binding present";
+    }
+    if (why.str().empty() &&
+        (lw.attnKV_a_mqa.rows != kvRank + rope || lw.attnKV_a_mqa.cols != H)) {
+        why << "attnKV_a_mqa " << lw.attnKV_a_mqa.rows << "x" << lw.attnKV_a_mqa.cols
+            << " != " << (kvRank + rope) << "x" << H;
+    }
+    if (why.str().empty() &&
+        (lw.attnO.rows != H || lw.attnO.cols != heads * vlen)) {
+        why << "attnO " << lw.attnO.rows << "x" << lw.attnO.cols
+            << " != " << H << "x" << (heads * vlen);
+    }
+    if (!why.str().empty()) {
+        std::fprintf(stderr, "[CPU_MLA] reject layer %zu: %s\n",
+                     layer, why.str().c_str());
+        return false;
+    }
+
+    // ---- KV cache geometry --------------------------------------------------
+    // The engine allocates one KVCacheConfig for the whole model. MLA stores a
+    // per-head key of keyLen and a per-head value of valueLen, both inside rows
+    // of headDim. If the shared cache is narrower than this layer needs, the
+    // route is refused by name rather than reading past the end of a row.
+    if (!kvCache || !kvCache->allocated()) {
+        std::fprintf(stderr, "[CPU_MLA] reject layer %zu: KV cache not allocated\n",
+                     layer);
+        return false;
+    }
+    {
+        const KVCacheConfig& kc = kvCache->config();
+        const std::size_t need = klen > vlen ? klen : vlen;
+        if (layer >= kc.numLayers || kc.numHeads < heads || kc.headDim < need) {
+            std::fprintf(stderr,
+                "[CPU_MLA] reject layer %zu: KV cache geometry "
+                "layers=%zu heads=%zu headDim=%zu does not satisfy "
+                "layers>%zu heads>=%zu headDim>=%zu\n",
+                layer, kc.numLayers, kc.numHeads, kc.headDim,
+                layer, heads, need);
+            return false;
         }
     }
-}
 
-// ---------------------------------------------------------------------------
-// y = W @ x, W is [rows, cols] row-major, x is [cols], y is [rows].
-// Uses Deep2::WeightTensor.data in whatever quant layout it carries; this kernel
-// requires F32-backed tensors and refuses anything else rather than guessing.
-// ---------------------------------------------------------------------------
-// ============================================================================
-// RAWRXD_SPACELESS_EXECUTION_VIEW_GEMV_001
-//
-// gemvF32 is the FIRST kernel piloted with ExecutionView.
-// The ExecutionView overload is the NEW path; the WeightTensor overload is
-// the A/B reference and delegates to it.
-//
-// Invariant: the WeightTensor path produces IDENTICAL output to before this
-// change, because the ExecutionView is populated from the same pointer.
-// ============================================================================
-
-bool gemvF32(const Deep2::ExecutionView& ev, const float* x, float* y, std::size_t rows,
-             std::size_t cols, const char* what)
-{
-    if (!ev.hasBytes() || ev.identity.role != 0 /* F32 path: role 0 means F32 */) {
-        std::fprintf(stderr, "[CPU_MLA] %s ExecutionView has no bytes or wrong role\n", what);
+    const std::size_t pos = kvCache->currentLength();
+    if (seqLen != pos + 1 || pos >= config.maxSeqLen) {
+        std::fprintf(stderr,
+            "[CPU_MLA] reject layer %zu: seqLen=%zu but kvPos+1=%zu "
+            "(maxSeqLen=%zu)\n",
+            layer, seqLen, pos + 1, config.maxSeqLen);
         return false;
     }
-    const float* p = ev.as<float>();
-    for (std::size_t r = 0; r < rows; ++r) {
-        double acc = 0.0;
-        for (std::size_t c = 0; c < cols; ++c) acc += double(p[r * cols + c]) * double(x[c]);
-        y[r] = float(acc);
-    }
-    return true;
-}
 
-bool gemvF32(const WeightTensor& w, const float* x, float* y, std::size_t rows,
-             std::size_t cols, const char* what)
-{
-    if (!w.data || w.type != 0 /* F32 */) {
-        std::fprintf(stderr, "[CPU_MLA] %s is not F32-backed (type=%d); "
-                        "a CPU MLA kernel cannot guess this quant layout\n",
-                     what, w.type);
+    // ---- 1..3  query path ---------------------------------------------------
+    // Every projection goes through LinearW, which is the engine's own audited
+    // CPU route: it validates geometry, resolves the registered quant kernel for
+    // this WeightTensor type, records the consumption census, and refuses a
+    // non-finite result. Using it rather than a private GEMV is what makes this
+    // path consume Q4_K/Q4_0/Q5_0/... correctly instead of assuming f32.
+    std::vector<float> qa, qaNorm, qFull;
+    try {
+        if (splitLayout) {
+            qa.assign(qRank, 0.0f);
+            LinearW(lw.attnQ_a, input, nullptr, qa.data(), qRank);
+            qaNorm.assign(qRank, 0.0f);
+            RMSNormW(lw.attnQ_a_norm, qa.data(), qaNorm.data(), qRank,
+                     modelWeights.normEps);
+            qFull.assign(heads * klen, 0.0f);
+            LinearW(lw.attnQ_b, qaNorm.data(), nullptr, qFull.data(), heads * klen);
+        } else {
+            // attn_q consumes x directly: there is no low-rank query bottleneck
+            // in this architecture (qLoraRank is 0 and the GGUF proves it, since
+            // attn_q.cols == hiddenDim).
+            qFull.assign(heads * klen, 0.0f);
+            LinearW(lw.attnQ_b, input, nullptr, qFull.data(), heads * klen);
+        }
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[CPU_MLA] reject layer %zu at query projection: %s\n",
+                     layer, e.what());
         return false;
     }
-    if (w.rows != rows || w.cols != cols) {
-        std::fprintf(stderr, "[CPU_MLA] %s geometry %zux%zu != expected %zux%zu\n",
-                     what, (std::size_t)w.rows, (std::size_t)w.cols, rows, cols);
+
+    // ---- 4..8  latent / key / value path ------------------------------------
+    std::vector<float> kva(kvRank + rope, 0.0f), cNorm(kvRank, 0.0f);
+    std::vector<float> kNope(heads * nope, 0.0f), values(heads * vlen, 0.0f);
+    try {
+        LinearW(lw.attnKV_a_mqa, input, nullptr, kva.data(), kvRank + rope);
+        RMSNormW(lw.attnKV_a_norm, kva.data(), cNorm.data(), kvRank,
+                 modelWeights.normEps);
+        if (splitLayout) {
+            LinearW(lw.attnK_b, cNorm.data(), nullptr, kNope.data(), heads * nope);
+            LinearW(lw.attnV_b, cNorm.data(), nullptr, values.data(), heads * vlen);
+        } else {
+            // One GEMV produces heads*(nope+valueLen). Per head, the nope slice
+            // precedes the value slice, which is the same per-head ordering the
+            // split layout's two separate tensors produce.
+            std::vector<float> kv(heads * (nope + vlen), 0.0f);
+            LinearW(lw.attnK_b, cNorm.data(), nullptr, kv.data(),
+                    heads * (nope + vlen));
+            const std::size_t perHead = nope + vlen;
+            for (std::size_t h = 0; h < heads; ++h) {
+                std::memcpy(kNope.data() + h * nope,
+                            kv.data() + h * perHead,
+                            nope * sizeof(float));
+                std::memcpy(values.data() + h * vlen,
+                            kv.data() + h * perHead + nope,
+                            vlen * sizeof(float));
+            }
+        }
+    } catch (const std::exception& e) {
+        std::fprintf(stderr,
+            "[CPU_MLA] reject layer %zu at latent projection: %s\n",
+            layer, e.what());
         return false;
     }
-    // A/B reference: delegate to ExecutionView path with the same pointer
-    Deep2::ExecutionView ev = Deep2::MakeExecutionView(w, /*layer*/0, /*role*/0);
-    return gemvF32(ev, x, y, rows, cols, what);
-}
-
-// ---------------------------------------------------------------------------
-// Tiled implementation: projections + RoPE + attention, tiled over heads.
-// ---------------------------------------------------------------------------
-struct KvEntry {
-    std::vector<float> k;      // heads * keyLen
-    std::vector<float> v;      // heads * valueLen
-};
-
-bool mlaForwardCpu(const Deep2::LayerWeights& lw, const Geometry& g,
-                   const float* input, std::size_t seqPos,
-                   float theta, float scaling, float normEps,
-                   std::vector<KvEntry>& cache, const KvEntry* cursor,
-                   float* output, const char* what)
-{
-    if (!geometryAndBindingValid(g, lw)) {
-        std::fprintf(stderr, "[CPU_MLA] %s failed geometry/binding guard\n", what);
-        return false;
-    }
-    const std::size_t H = g.hidden, heads = g.heads;
-    const std::size_t qRank = g.qRank, kvRank = g.kvRank;
-    const std::size_t nope = g.nope, rope = g.rope, vlen = g.valueLen;
-    const std::size_t klen = g.keyLen();
-
-    // 1..3  query path
-    std::vector<float> qa(qRank), qaNorm(qRank), qFull(heads * klen);
-    if (!gemvF32(lw.attnQ_a, input, qa.data(), qRank, H, "attnQ_a")) return false;
-    mlaRmsNormW(qa.data(), fdata(lw.attnQ_a_norm), qaNorm.data(), qRank, normEps);
-    if (!gemvF32(lw.attnQ_b, qaNorm.data(), qFull.data(), heads * klen, qRank,
-                 "attnQ_b")) return false;
-
-    // 4..8  latent / key / value path
-    std::vector<float> kva(kvRank + rope), cNorm(kvRank);
-    if (!gemvF32(lw.attnKV_a_mqa, input, kva.data(), kvRank + rope, H,
-                 "attnKV_a_mqa")) return false;
-    mlaRmsNormW(kva.data(), fdata(lw.attnKV_a_norm), cNorm.data(), kvRank, normEps);
-
-    std::vector<float> kNope(heads * nope), values(heads * vlen);
-    if (!gemvF32(lw.attnK_b, cNorm.data(), kNope.data(), heads * nope, kvRank,
-                 "attnK_b")) return false;
-    if (!gemvF32(lw.attnV_b, cNorm.data(), values.data(), heads * vlen, kvRank,
-                 "attnV_b")) return false;
 
     std::vector<float> kPe(kva.begin() + kvRank, kva.end());
 
-    // 9  RoPE on query rotary slice and on the key's own rotary slice
-    applyRope(qFull.data(), heads, nope, rope, seqPos, theta, scaling);
-    {
-        std::vector<float> kRot(kPe);
-        applyRope(kRot.data(), 1, 0, rope, seqPos, theta, scaling);
-        kPe.swap(kRot);
+    // ---- 9  RoPE ------------------------------------------------------------
+    const float theta = modelWeights.ropeTheta > 1.0f
+        ? modelWeights.ropeTheta : config.ropeTheta;
+    const float scaling = modelWeights.ropeScaling > 0.0f
+        ? modelWeights.ropeScaling : config.ropeScaling;
+    if (theta > 1.0f && scaling > 0.0f) {
+        applyMlaRopeCpu(qFull.data(), kPe.data(), heads, nope, rope, pos,
+                        theta, scaling);
+    } else {
+        std::fprintf(stderr,
+            "[CPU_MLA] reject layer %zu: invalid rope theta=%g scaling=%g\n",
+            layer, (double)theta, (double)scaling);
+        return false;
     }
 
-    // 10  assemble the key for this position
-    std::vector<float> kFull(heads * klen);
+    // ---- 10  publish this position into the KV cache ------------------------
+    const std::size_t cacheHeadDim = kvCache->config().headDim;
     for (std::size_t h = 0; h < heads; ++h) {
-        std::memcpy(kFull.data() + h * klen, kNope.data() + h * nope,
-                    nope * sizeof(float));
-        std::memcpy(kFull.data() + h * klen + nope, kPe.data(),
-                    rope * sizeof(float));
+        float* kDst = kvCache->keyPtr(layer, h, pos);
+        float* vDst = kvCache->valuePtr(layer, h, pos);
+        if (!kDst || !vDst) {
+            std::fprintf(stderr,
+                "[CPU_MLA] reject layer %zu: no KV slot head=%zu pos=%zu\n",
+                layer, h, pos);
+            return false;
+        }
+        std::memcpy(kDst, kNope.data() + h * nope, nope * sizeof(float));
+        std::memcpy(kDst + nope, kPe.data(), rope * sizeof(float));
+        std::memcpy(vDst, values.data() + h * vlen, vlen * sizeof(float));
     }
 
-    // publish this position so the next layer/token sees it
-    cache[seqPos].k = kFull;
-    cache[seqPos].v = values;
-
-    // 11  attention over positions [0, seqPos]
-    const float scale = 1.0f / std::sqrt(float(klen));
+    // ---- 11  causal attention over [0, pos] ---------------------------------
+    const float scale = 1.0f / std::sqrt(static_cast<float>(klen));
     std::vector<float> attn(heads * vlen, 0.0f);
-    std::vector<double> logits(seqPos + 1);
+    std::vector<double> logits(pos + 1);
     for (std::size_t h = 0; h < heads; ++h) {
+        const float* qh = qFull.data() + h * klen;
         double mx = -1e300;
-        for (std::size_t t = 0; t <= seqPos; ++t) {
-            const float* qh = qFull.data() + h * klen;
-            const float* kt = cache[t].k.data() + h * klen;
+        for (std::size_t t = 0; t <= pos; ++t) {
+            const float* kt = kvCache->keyPtr(layer, h, t);
+            if (!kt) {
+                std::fprintf(stderr,
+                    "[CPU_MLA] reject layer %zu: no key slot head=%zu pos=%zu\n",
+                    layer, h, t);
+                return false;
+            }
             double s = 0.0;
-            for (std::size_t d = 0; d < klen; ++d) s += double(qh[d]) * double(kt[d]);
-            s *= double(scale);
+            for (std::size_t d = 0; d < klen; ++d)
+                s += static_cast<double>(qh[d]) * static_cast<double>(kt[d]);
+            s *= static_cast<double>(scale);
             logits[t] = s;
             if (s > mx) mx = s;
         }
         double den = 0.0;
-        for (std::size_t t = 0; t <= seqPos; ++t) { logits[t] = std::exp(logits[t] - mx); den += logits[t]; }
-        for (std::size_t t = 0; t <= seqPos; ++t) {
+        for (std::size_t t = 0; t <= pos; ++t) {
+            logits[t] = std::exp(logits[t] - mx);
+            den += logits[t];
+        }
+        if (!(den > 0.0) || !std::isfinite(den)) {
+            std::fprintf(stderr,
+                "[CPU_MLA] reject layer %zu head %zu: softmax denominator %g\n",
+                layer, h, den);
+            return false;
+        }
+        for (std::size_t t = 0; t <= pos; ++t) {
+            const float* vt = kvCache->valuePtr(layer, h, t);
+            if (!vt) {
+                std::fprintf(stderr,
+                    "[CPU_MLA] reject layer %zu: no value slot head=%zu pos=%zu\n",
+                    layer, h, t);
+                return false;
+            }
             const double p = logits[t] / den;
-            const float* vt = cache[t].v.data() + h * vlen;
-            for (std::size_t d = 0; d < vlen; ++d) attn[h * vlen + d] += float(p * double(vt[d]));
+            for (std::size_t d = 0; d < vlen; ++d)
+                attn[h * vlen + d] += static_cast<float>(p * static_cast<double>(vt[d]));
         }
     }
 
-    // 12  output projection
-    if (!gemvF32(lw.attnO, attn.data(), output, H, heads * vlen, "attnO")) return false;
-    for (std::size_t i = 0; i < H; ++i)
-        if (!std::isfinite(output[i])) { std::fprintf(stderr, "[CPU_MLA] %s non-finite out\n", what); return false; }
+    // ---- 12  output projection ----------------------------------------------
+    try {
+        LinearW(lw.attnO, attn.data(), nullptr, output, H);
+    } catch (const std::exception& e) {
+        std::fprintf(stderr,
+            "[CPU_MLA] reject layer %zu at output projection: %s\n",
+            layer, e.what());
+        return false;
+    }
+    for (std::size_t i = 0; i < H; ++i) {
+        if (!std::isfinite(output[i])) {
+            std::fprintf(stderr,
+                "[CPU_MLA] reject layer %zu: non-finite output at index %zu\n",
+                layer, i);
+            return false;
+        }
+    }
+
+    ++cpuMla_.attentionCalls;
+    cpuMla_.lastLayer = layer;
+    cpuMla_.lastPos = pos;
+    mlaTrace("[CPU_MLA] layer=%zu pos=%zu layout=%s heads=%zu keyLen=%zu "
+             "valueLen=%zu ropeTheta=%g ropeScaling=%g OK",
+             layer, pos, splitLayout ? "split" : "fused", heads, klen, vlen,
+             (double)theta, (double)scaling);
     return true;
 }
-
-} // namespace rawrxd::mla
-
+} // namespace Deep2

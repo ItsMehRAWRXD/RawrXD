@@ -519,6 +519,7 @@ src/deep2/vulkan_compute.cpp	src/deep2	1	IMPLEMENT
 src/deep2/Deep2Engine_VulkanRuntime.cpp	src/deep2	1	IMPLEMENT
 src/deep2/Deep2DualGpuRowSplit.cpp	src/deep2	1	IMPLEMENT
 src/deep2/Deep2Engine_GpuMoEMLA.cpp	src/deep2	1	IMPLEMENT
+src/deep2/deep2_cpu_mla.cpp	src/deep2	1	IMPLEMENT
 src/deep2/Deep2B66RuntimeMeta.cpp	src/deep2	1	IMPLEMENT
 src/deep2/Deep2Engine_GpuForward.cpp	src/deep2	1	IMPLEMENT
 src/deep2/Deep2Engine_SsVkDecodeBind.cpp	src/deep2	1	IMPLEMENT
@@ -1161,6 +1162,8 @@ src/deep2/deep2_k2_trygpu_logits_split_cert.cpp	src/deep2	1	IMPLEMENT
 src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp	src/deep2	1	IMPLEMENT
 src/deep2/rawrxd_run_modelname_001.cpp	src/deep2	1	IMPLEMENT
 src/deep2/rawr_run.cpp	src/deep2	1	IMPLEMENT
+src/cli/RawrCommandAuthority.cpp	src/cli	1	IMPLEMENT
+src/cli/ReverseAssemblyEngine.cpp	src/cli	1	IMPLEMENT
 src/cli/RawrDumpAuthority.cpp	src/cli	1	IMPLEMENT
 src/cli/RawrDumpInitConfig.cpp	src/cli	1	IMPLEMENT
 src/cli/RawrDumpRebuild.cpp	src/cli	1	IMPLEMENT
@@ -1409,3 +1412,4 @@ src/deep2/Layer0Guard.cpp	src/deep2	1	IMPLEMENT
 tools/deep2_streamer_parity.cpp	tools/deep2_streamer_parity.cpp	1	IMPLEMENT
 certs/direct_io_probe_001.cpp	certs/direct_io_probe_001.cpp	1	IMPLEMENT
 certs/rawr_dog_harness.cpp	certs/rawr_dog_harness.cpp	1	IMPLEMENT
+tools/reverse_assembly_cert.cpp	tools/reverse_assembly_cert.cpp	1	IMPLEMENT

@@ -9,6 +9,7 @@
 #include "rawr_run.h"
 #include "rawrxd_run_modelname_001.h"
 #include "cli/RawrDumpAuthority.h"
+#include "cli/ReverseAssemblyEngine.h"
 #include "agent/AgentCore.h"
 #include "agent/ResponseCodedAgent.h"
 #include "agentmodes/RawrModesCli.h"
@@ -271,6 +272,34 @@ int main(int argc, char** argv) {
         std::strcmp(argv[1], "gate") == 0 ||
         std::strcmp(argv[1], "cert") == 0) {
         return rawrxd::modes::runRawrModes(argc - 1, argv + 1);
+    }
+    // Reverse assembly engine: pattern-matching byte predictor
+    if (std::strcmp(argv[1], "reverse") == 0) {
+        if (argc < 3) {
+            std::printf("usage: rawr reverse <model.json> <input text>\n");
+            return 64;
+        }
+        const std::string modelPath = argv[2];
+        std::string input;
+        for (int i = 3; i < argc; ++i) {
+            if (!input.empty()) input += " ";
+            input += argv[i];
+        }
+        rawrxd::reverse::ReverseAssemblyEngine engine;
+        std::string diag;
+        if (!engine.loadFromFile(modelPath, &diag)) {
+            std::fprintf(stderr, "reverse: load failed: %s\n", diag.c_str());
+            return 9;
+        }
+        double conf = 0.0;
+        auto pred = engine.predictByte(input, &conf);
+        if (pred.has_value()) {
+            std::printf("PREDICTED_BYTE=0x%02X CONFIDENCE=%.4f\n",
+                        pred.value(), conf);
+            return 0;
+        }
+        std::printf("PREDICTED_BYTE=NONE CONFIDENCE=0.0000\n");
+        return 1;
     }
     // If first arg is literally "run", consume it (for compatibility)
     int offset = 0;

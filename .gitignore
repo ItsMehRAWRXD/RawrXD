@@ -182,3 +182,13 @@ rawrxd/audit/RAWRXD_GIT_TRANSACTION_AUTHORITY_001/run_*/ws/repo/
 # Captured browser profile data (NOT project source; contains browsing history DB)
 agent_profile/
 shell_profile/
+
+# Scratch diagnostic output from interactive sessions (2026-10-03/04).
+# Regenerable by re-running the harness; never source. Kept out of history.
+_*.err
+_*.out
+_*.out.txt
+_*.err.txt
+_sunshine_evidence/
+_ev_*.err
+_ev_*.out

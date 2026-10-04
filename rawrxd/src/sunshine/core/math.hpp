@@ -58,8 +58,29 @@ struct Mat4 {
         return r;
     }
     static Mat4 lookAt(const Vec3& eye, const Vec3& target, const Vec3& up) {
-        Vec3 z = (eye - target).normalize();
-        Vec3 x = up.cross(z).normalize();
+        // RAWRXD_SUNSHINE_LOOKAT_DEGENERATE_001
+        // A lookAt built on a degenerate basis silently produced the ZERO MATRIX,
+        // which presents as "nothing renders, but the HUD does". The two ways to
+        // get there are eye == target (zero view direction) and a zero up vector.
+        // Both are rejected here with a sane fallback rather than being allowed
+        // to propagate NaN/zero transforms into every vertex.
+        // z must point BACKWARD, from target toward the eye -- that is the
+        // right-handed view convention the original (eye - target) encoded, and
+        // flipping it mirrors the whole scene.
+        Vec3 back = eye - target;
+        if (back.length() < 1e-6f) back = Vec3(0.0f, 0.0f, 1.0f);   // eye sits on target
+        Vec3 upv = (up.length() < 1e-6f) ? Vec3(0.0f, 1.0f, 0.0f) : up;
+
+        Vec3 z = back.normalize();
+        Vec3 x = upv.cross(z);
+        // up parallel to the view direction leaves x degenerate; pick any axis
+        // that is not parallel to z.
+        if (x.length() < 1e-6f) {
+            const Vec3 fallback = (std::fabs(z.y) < 0.9f) ? Vec3(0.0f, 1.0f, 0.0f)
+                                                          : Vec3(1.0f, 0.0f, 0.0f);
+            x = fallback.cross(z);
+        }
+        x = x.normalize();
         Vec3 y = z.cross(x);
         Mat4 r;
         r.m[0][0] = x.x; r.m[1][0] = x.y; r.m[2][0] = x.z; r.m[3][0] = -x.dot(eye);

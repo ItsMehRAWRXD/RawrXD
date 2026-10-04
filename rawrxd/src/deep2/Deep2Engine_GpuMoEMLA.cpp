@@ -168,19 +168,26 @@ bool Deep2Engine::tryVulkanHostGEMVBatch4(
 
 bool Deep2Engine::tryVulkanHostGEMVGroup(
     const WeightTensor* const* weights,float* const* outputs,size_t count,
-    const float* input,size_t inputCount)
+    const float* input,size_t inputCount,const char** rejectReason)
 {
-    if(!vulkanInitialized_||vulkanDevices_.size()<2||
-       !weights||!outputs||!input||count<2||count>3||
-       inputCount==0||inputCount>UINT32_MAX)
-        return false;
+    // RAWRXD_LAYER0_ATTN_BISECT_001: every false return names its guard, so a
+    // false result is attributable instead of indistinguishable from
+    // "handled the operation but returned false later".
+    if(rejectReason)*rejectReason="NONE";
+    if(!vulkanInitialized_) { if(rejectReason)*rejectReason="VULKAN_NOT_INITIALIZED"; return false; }
+    if(vulkanDevices_.size()<2){ if(rejectReason)*rejectReason="DEVICE_COUNT_LT_2"; return false; }
+    if(!weights||!outputs||!input){ if(rejectReason)*rejectReason="NULL_ARGUMENT"; return false; }
+    if(count<2||count>3){ if(rejectReason)*rejectReason="COUNT_OUT_OF_RANGE"; return false; }
+    if(inputCount==0||inputCount>UINT32_MAX){ if(rejectReason)*rejectReason="INPUT_COUNT_INVALID"; return false; }
 
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
     RowSplitReceipt r{};
     if(!Deep2RunDualGpuRowSplitGroup(
             *vulkanDevices_[0],*vulkanDevices_[1],
-            weights,outputs,count,input,(uint32_t)inputCount,epoch,&r))
+            weights,outputs,count,input,(uint32_t)inputCount,epoch,&r)){
+        if(rejectReason)*rejectReason="DUAL_ROW_SPLIT_GROUP_FAILED";
         return false;
+    }
 
     ++gpuFwd_.dualRowSplitOps;
     ++gpuFwd_.dualRowSlot[0];

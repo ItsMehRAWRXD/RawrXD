@@ -657,6 +657,49 @@ constexpr RoleRule kMlaKvRoles[] = {
     {"attn_v_b", "attn_v_b", true},
 };
 
+// RAWRXD_DEEPSEEK_CPU_E2E_001 -- the FUSED MLA layout.
+//
+// Measured on DeepSeek-V2-Lite-Chat.Q4_K_M (read from the GGUF, not inferred):
+//     blk.0.attn_q        shape=[2048,3072]  type=12
+//     blk.0.attn_kv_b     shape=[512,4096]   type=12
+//     blk.0.attn_kv_a_mqa shape=[2048,576]   type=12
+//     blk.0.attn_kv_a_norm shape=[512]       type=0
+//     blk.0.attn_output   shape=[2048,2048]  type=12
+//     MLA_METADATA arch=deepseek2 layout=fused geometryValidated=1
+//                             numHeads=16 kvLoraRank=512 qLoraRank=0
+//                             qkNope=128 qkRope=64 vHead=128 keyLen=192 valueLen=128
+//
+// Two facts in that table are decisive and neither is about quantization:
+//
+//   attn_q is [2048, 3072] and heads*keyLen = 16*192 = 3072 exactly. There is
+//   no low-rank query bottleneck at all -- qLoraRank=0. The query projection
+//   goes hidden -> heads*keyLen directly, so attn_q_a/attn_q_b are not merely
+//   spelled differently, they DO NOT EXIST in this architecture.
+//
+//   attn_kv_b is [512, 4096] and heads*(nope+vHead) = 16*(128+128) = 4096
+//   exactly. K and V share one up-projection from the 512-wide latent, so
+//   attn_k_b/attn_v_b also do not exist separately.
+//
+// Therefore kMlaQueryRoles and kMlaKvRoles cannot be evaluated conjunctively for
+// this architecture: doing so makes every deepseek2 model report four absent
+// tensors that were never part of it. That is a false REJECT, and it is the same
+// class of defect the fused-QKV table above documents for phi3 -- a gate that
+// turns a supported architecture into an unsupported one because it only knows
+// one legal spelling.
+//
+// This is NOT a loosening without a bound. Each alternative below still requires
+// a complete, self-consistent set, and Deep2Engine's MLA binder independently
+// validates rows/cols against heads*keyLen, heads*(nope+vHead) and
+// kvLoraRank+rope before a single byte is computed. A model that satisfies this
+// table but not that geometry is rejected at bind time, not mis-executed.
+constexpr RoleRule kMlaFusedQueryRole[] = {
+    {"attn_q", "attn_q", true},
+};
+
+constexpr RoleRule kMlaFusedKvUpRole[] = {
+    {"attn_kv_b", "attn_kv_b", true},
+};
+
 // Alternatives for ONE requirement: multi-query-absorbed (DeepSeek2 and later)
 // versus the plain latent spelling used by earlier MLA exports.
 constexpr RoleRule kMlaKvDownMqaRole[]   = { {"attn_kv_a_mqa", "attn_kv_a_mqa", true} };
@@ -671,6 +714,8 @@ RAWRXD_ASSERT_GGUF_STEMS(kMlaKvRoles);
 RAWRXD_ASSERT_GGUF_STEMS(kMlaKvDownMqaRole);
 RAWRXD_ASSERT_GGUF_STEMS(kMlaKvDownPlainRole);
 RAWRXD_ASSERT_GGUF_STEMS(kMlaOutRoles);
+RAWRXD_ASSERT_GGUF_STEMS(kMlaFusedQueryRole);
+RAWRXD_ASSERT_GGUF_STEMS(kMlaFusedKvUpRole);
 
 // Recurrent / SSM roles.
 constexpr RoleRule kRecurrentRoles[] = {
@@ -766,30 +811,50 @@ std::size_t ModelRegistry::countMissingRequiredTensors(const ModelMetadata& md,
         countRoles(md, kAttnNormRole, std::size(kAttnNormRole), required, missing, firstMissing);
         // MLA carries latent projections instead of dense q/k/v.
         if (traits.mla) {
-            // Three functional requirements, four conjunctive stems:
-            //   query low-rank  : attn_q_a AND attn_q_b   (two distinct factors)
-            //   key/value latent: attn_k_b AND attn_v_b   (two distinct factors)
-            //   output          : attn_output
-            // plus ONE requirement with two alternative spellings:
-            //   latent down     : attn_kv_a_mqa OR attn_kv_a
+            // FOUR functional requirements, and every one of the first three has
+            // TWO alternative layouts. Each therefore counts as ONE required role,
+            // for the same reason the dense QKV triple below counts as one: the
+            // spellings are alternatives for the same projection, not independent
+            // tensors, so counting both spellings makes a valid model appear to be
+            // missing tensors it never had.
             //
-            // The down-projection is an OR because DeepSeek2 and later absorb the
-            // queries into the latent and export attn_kv_a_mqa, while earlier MLA
-            // exports use attn_kv_a. Both are real and both are correct for their
-            // model; requiring the specific one turns a supported architecture
-            // into an unsupported one -- the same mistake the fused-QKV table
-            // above documents for phi3.
-            countRoles(md, kMlaQueryRoles, std::size(kMlaQueryRoles), required, missing, firstMissing);
-            countRoles(md, kMlaKvRoles,    std::size(kMlaKvRoles),    required, missing, firstMissing);
-            countRoles(md, kMlaOutRoles,   std::size(kMlaOutRoles),   required, missing, firstMissing);
+            //   query projection : (attn_q_a AND attn_q_b)  OR  attn_q
+            //   key/value up-proj: (attn_k_b AND attn_v_b)  OR  attn_kv_b
+            //   latent down-proj : attn_kv_a_mqa             OR  attn_kv_a
+            //   output           : attn_output
+            //
+            // The split arms still require BOTH of their factors. Only a complete
+            // alternative set satisfies a requirement, so this cannot admit a
+            // model that is merely half-present.
+            //
+            // Each requirement is reported under the SPLIT stem when it is
+            // unsatisfied, because that is the layout the loader prefers and the
+            // one a reader of the message will look for.
+            ++required;
+            const bool qSplitOk = layersWithRole(md, kMlaQueryRoles[0]) > 0 &&
+                                  layersWithRole(md, kMlaQueryRoles[1]) > 0;
+            const bool qFusedOk = roleSatisfied(md, kMlaFusedQueryRole[0]);
+            if (!qSplitOk && !qFusedOk) {
+                ++missing;
+                if (firstMissing.empty()) firstMissing = kMlaQueryRoles[0].role;
+            }
+
+            ++required;
+            const bool kvSplitOk = layersWithRole(md, kMlaKvRoles[0]) > 0 &&
+                                   layersWithRole(md, kMlaKvRoles[1]) > 0;
+            const bool kvFusedOk = roleSatisfied(md, kMlaFusedKvUpRole[0]);
+            if (!kvSplitOk && !kvFusedOk) {
+                ++missing;
+                if (firstMissing.empty()) firstMissing = kMlaKvRoles[0].role;
+            }
+
+            countRoles(md, kMlaOutRoles, std::size(kMlaOutRoles), required, missing, firstMissing);
 
             ++required;
             const bool kvMqa   = roleSatisfied(md, kMlaKvDownMqaRole[0]);
             const bool kvPlain = roleSatisfied(md, kMlaKvDownPlainRole[0]);
             if (!kvMqa && !kvPlain) {
                 ++missing;
-                // Name the stem the loader prefers, matching the convention used
-                // by the fused-QKV disjunct above.
                 if (firstMissing.empty()) firstMissing = kMlaKvDownMqaRole[0].role;
             }
         } else {
