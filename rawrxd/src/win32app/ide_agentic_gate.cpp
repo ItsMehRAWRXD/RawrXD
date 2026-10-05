@@ -13,6 +13,14 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+// RAWRXD_HEADER_SELF_SUFFICIENCY_001
+//
+// This file uses std::mutex but never included <mutex>. It compiled only
+// because some transitive header happened to pull it in, so the build depended
+// on include ORDER rather than on what the file actually needs. Reordering an
+// unrelated include, or building this TU standalone, would have turned that
+// into a compile error far from the cause. A file must include what it uses.
+#include <mutex>
 #include <fstream>
 #include <sstream>
 #include <cstdio>

@@ -1,0 +1,55 @@
+# RAWRXD_HOLLOW_SOURCE_CLASSIFICATION_001
+#
+# Classification of the five undeclared hollow translation units.
+#
+# These were provisionally guessed to be CLASS_A_REQUIRED_PRODUCT_SURFACE on the
+# strength of their names (a dialog, a parser, a diff viewer, an IDE bridge).
+# Direct reference inspection contradicts that: nothing declares or calls them.
+#
+# Method: repo-wide scan for each symbol name outside the unit itself.
+#
+#   AnsiColorParser    0 external references
+#   FindReplaceDialog  0 external references
+#   GitCommitDialog    0 external references
+#   GitDiffViewer      0 external references
+#   Deep2Bridge        3 references, ALL of which resolve to a DIFFERENT unit:
+#                        include/rawrxd/swarm48/Deep2BridgeContract.hpp
+#                        src/deep2/Deep2Bridge.cpp      <- the real one
+#                        src/core/unlinked_symbols_batch_022.cpp
+#                      src/ide/deep2bridge.cpp is a duplicate path for a unit
+#                      that already exists, and is hollow.
+#
+# All five files are byte-identical 459-byte RAWRXD_GRAPH_RESTORED_001
+# placeholders whose own text says: "It contains NO implementation and exports
+# NO symbol... If something links against a symbol from this translation unit,
+# that link error is the implementation queue for this file."
+#
+# No such link error exists, because no target references them.
+#
+# CONCLUSION: all five are CLASS_D_DUPLICATE_OR_OBSOLETE.
+#
+# Implementing them would have converted UNDECLARED_HOLLOW 5 -> 0 by manufacturing
+# green: five new IDE features written against APIs never inspected, satisfying a
+# counter rather than a requirement. That is the failure mode the A/B/C/D/E split
+# exists to prevent, and the naming-based first guess is exactly how it gets
+# reintroduced.
+#
+# Correct action is RETIRE_FROM_GRAPH, not IMPLEMENT.
+#   - src/ide/deep2bridge.cpp    -> successor src/deep2/Deep2Bridge.cpp
+#   - the other four             -> no successor; pure fossils
+#
+# Pending action: remove the five entries from the WIN32IDE source list in
+# CMakeLists.txt. NOT applied here -- that file was being concurrently edited
+# during this analysis (21374 -> 21391 lines mid-session), and a graph edit to a
+# 21k-line build script made under concurrent writes risks corrupting the build.
+#
+# EXPECTED AFTER RETIREMENT
+#   UNDECLARED_HOLLOW   5 -> 0
+#   HOLLOW_TOTAL       312 -> 307
+#   REGISTER_TOTAL      307     (unchanged; no register additions -- see below)
+#   IMPLEMENTATION_RATE 38.90% -> ~38.05%
+#   VERDICT            FAIL_UNDECLARED_EMPTY_SOURCE -> PASS
+#
+# REGISTER_ADDITIONS_FOR_IDE = 0. These are removed from the graph, not declared
+# acceptable. Adding them to cmake/known_empty_sources.txt would make the gate
+# green by declaring the defect tolerated, which is the other trap.

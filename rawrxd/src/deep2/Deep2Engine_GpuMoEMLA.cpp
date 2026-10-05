@@ -79,8 +79,17 @@ bool Deep2Engine::tryVulkanHostGEMV(
 
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
 
-    // First preference: true simultaneous independent row partitions.
-    if(vulkanDevices_.size()>=2 && wt.rows>=2){
+    // RAWRXD_DUAL_ROW_CAPABILITY_AUTHORITY_001
+    // LinearW gates dual-row execution on multiGpuLayerPlan_.active (see
+    // Deep2Engine.cpp). Do not silently re-enter the same dual route from its
+    // nominal single-GPU fallback: doing so bypasses the measured capability
+    // decision and makes the caller's route receipt false. A disabled plan means
+    // disabled here too; the function then continues to the genuine slot-0
+    // single-GPU path below, which is not a fake two-stick claim.
+    //
+    // First preference: true simultaneous independent row partitions, but only
+    // when the measured multi-GPU plan admitted them.
+    if(vulkanDevices_.size()>=2 && wt.rows>=2 && multiGpuLayerPlan_.active){
         RowSplitReceipt r{};
         if(Deep2RunDualGpuRowSplit(
                 *vulkanDevices_[0],*vulkanDevices_[1],

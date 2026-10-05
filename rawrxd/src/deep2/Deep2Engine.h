@@ -700,6 +700,75 @@ public:
         return slidingWindow_ ? slidingWindow_->windowSize() : 0;
     }
     SlidingWindowEngine* slidingWindow() const { return slidingWindow_.get(); }
+    // RAWRXD_NQB_KV_SESSION_CAP_001
+    //
+    // config.maxSeqLen is the ARCHITECTURAL ceiling advertised by the model
+    // (131072 for the NanoQuant braid). It must keep that value: it is the
+    // model's real capability and lowering it would delete the capability rather
+    // than fix the cost.
+    //
+    // What was wrong is that the KV cache was sized from the CEILING at load
+    // time. KVCache::allocate() value-initialises
+    //     std::vector<float> newKeys(total, 0.0f);
+    // so it does not merely reserve address space -- it WRITES every byte. With
+    // 28 layers x 8 KV heads x 128 headDim x 131072 positions x 2 x 4 bytes that
+    // is a 28 GiB eager commit during model load, for a session that may only
+    // ever use a few hundred tokens.
+    //
+    // These separate the two concepts:
+    //     modelMaxContext  = config.maxSeqLen          (ceiling, unchanged)
+    //     sessionContext   = kvSessionContextLen_      (what we allocate for)
+    // Growing beyond the session bound requires a KVCache growth path, which
+    // does not exist yet; until it does, the ceiling is preserved as a CAPABILITY
+    // and the allocation is bounded. That is strictly better than the previous
+    // behaviour, which spent 28 GiB to obtain the same capability.
+    static constexpr size_t kDefaultSessionContext = 2048;
+
+    // RAWRXD_NQB_KV_SESSION_CAP_001 / RAWRXD_ARCH_CONTEXT_CONTRACT_001
+    //
+    // The model's architectural context (131072 for this braid) is RETAINED here.
+    // It previously existed only as a local in the loader that was printed and
+    // discarded, which meant the only queryable value on the engine was
+    // config.maxSeqLen -- the *effective* 2048. Reading that as the ceiling is
+    // wrong twice over: it makes the capability look capped, and it clamps the
+    // session cap to 2048 instead of to what the model actually supports.
+    //
+    // Three distinct names, one meaning each:
+    //     modelContextCeiling_ = 131072  what the model can do
+    //     kvSessionContextLen_  =  2048  what we allocate for now
+    //     config.maxSeqLen      =  2048  effective runtime context (other lane)
+    size_t modelContextCeiling_ = 0;
+    size_t kvSessionContextLen_ = kDefaultSessionContext;
+
+    // The model's architectural ceiling, falling back to the effective context
+    // only when metadata never supplied one.
+    size_t modelMaxContext() const {
+        return modelContextCeiling_ ? modelContextCeiling_
+                                    : (config.maxSeqLen ? config.maxSeqLen
+                                                        : kDefaultSessionContext);
+    }
+    // Returns the context the KV cache should be sized for: the session request,
+    // clamped so it can never exceed the model's true architectural ceiling.
+    size_t effectiveKVContext() const {
+        const size_t ceiling = modelMaxContext();
+        size_t want = kvSessionContextLen_ ? kvSessionContextLen_ : kDefaultSessionContext;
+        if (want > ceiling) want = ceiling;   // never exceed model capability
+        return want;
+    }
+    // Refuses (rather than silently clamps) a request above the true ceiling, so
+    // a caller asking for more than the model supports is told so.
+    bool setKVSessionContext(size_t len) {
+        if (len != 0 && len > modelMaxContext()) return false;
+        kvSessionContextLen_ = len ? len : kDefaultSessionContext;
+        return true;
+    }
+    size_t kvSessionContext() const { return kvSessionContextLen_; }
+
+    // RAWRXD_NQB_KV_SESSION_CAP_001: the two MUST remain independently
+    // observable, so a receipt can prove the capability was preserved while the
+    // cost was bounded.
+    size_t effectiveKVContextForTest() const { return effectiveKVContext(); }
+
     ResidencyManager* residencyManager() const { return residencyManager_.get(); }
     // Public entry to the private initialiser, so the sovereign components can
     // be brought up deliberately rather than only as a side effect of load.

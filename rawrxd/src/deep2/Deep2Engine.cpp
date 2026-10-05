@@ -591,6 +591,28 @@ void Deep2Engine::enableParityProbe(const char* filePath, int maxSteps) {
     disableParityProbe();
     parityProbe_ = new ParityProbe();
     parityProbe_->f = std::fopen(filePath, "w");
+    // RAWRXD_NQB_PARITY_OPEN_DIAGNOSED_001
+    //
+    // The fopen result was never checked. Every emit path begins with
+    //     if (!parityProbe_ || !parityProbe_->f) return;
+    // so a failed open silently produced zero records and left no file at all.
+    // That is the worst possible failure shape for a parity instrument: "no
+    // output" is exactly what a correct run with nothing to report also looks
+    // like, so the failure was indistinguishable from a clean negative.
+    //
+    // It cost a full debugging cycle: the NQB route produced a 1.7 MB file and
+    // the GGUF route produced nothing, from the same call site, and the only
+    // observable difference was the absence of the thing being searched for.
+    if (!parityProbe_->f) {
+        std::fprintf(stderr,
+            "[PARITY] OPEN_FAILED path=%s errno=%d (%s) -- this probe will emit "
+            "NO records; absence of output is NOT evidence of agreement\n",
+            filePath ? filePath : "(null)", errno, std::strerror(errno));
+        std::fflush(stderr);
+    } else {
+        std::fprintf(stderr, "[PARITY] OPEN_OK path=%s\n", filePath ? filePath : "(null)");
+        std::fflush(stderr);
+    }
     (void)maxSteps;  // per-checkpoint once-semantics; maxSteps reserved
     parityProbe_->stepMode = false;
     parityProbe_->step = 0;
@@ -683,11 +705,35 @@ void Deep2Engine::parityEmitLayer(int layer, const char* cpName,
                                    const float* v, size_t n) {
     if (!parityProbe_ || !parityProbe_->f) return;
     if (!parityProbe_->stepMode) return;
+    // RAWRXD_PARITY_LAYER_MINUS_ONE_PRODUCER_FIX_001
+    //
+    // The record name was built unconditionally as "LAYER_<layer>_<stage>", so
+    // the legitimate non-layer call parityEmitLayer(-1, "FINAL_NORM", ...) at
+    // L4262 emitted
+    //     CP=LAYER_-1_FINAL_NORM
+    // That is a malformed name that no consumer can interpret correctly: it
+    // parses as a per-layer record for a layer numbered minus one. It showed up
+    // as a phantom extra record that existed on one side only and so read as a
+    // one-sided record rather than as a producer bug.
+    //
+    // Fixed on the PRODUCER side deliberately. Teaching the parser that
+    // "LAYER_-1" is a valid layer would cement a malformed wire format and make
+    // every future consumer responsible for knowing that -1 means "not a layer".
+    // A negative layer is not a layer, so it is emitted in the canonical
+    // non-layer form that the same file already uses for EMBED / LOGITS /
+    // HIDDEN_FINAL.
+    char cpNameOut[128];
+    if (layer < 0) {
+        std::snprintf(cpNameOut, sizeof cpNameOut, "%s", cpName ? cpName : "UNNAMED");
+    } else {
+        std::snprintf(cpNameOut, sizeof cpNameOut, "LAYER_%d_%s",
+                      layer, cpName ? cpName : "UNNAMED");
+    }
     if (!v || n == 0) {
         std::fprintf(parityProbe_->f,
-            "STEP=%d CP=LAYER_%d_%s COUNT=0 MIN=0 MAX=0 MEAN=0 L2=0 "
+            "STEP=%d CP=%s COUNT=0 MIN=0 MAX=0 MEAN=0 L2=0 "
             "FIRST8=0,0,0,0,0,0,0,0 HASH=0000000000000000\n",
-            parityProbe_->step, layer, cpName);
+            parityProbe_->step, cpNameOut);
         std::fflush(parityProbe_->f);
         return;
     }
@@ -709,15 +755,25 @@ void Deep2Engine::parityEmitLayer(int layer, const char* cpName,
     const size_t copy = std::min<size_t>(n, 8);
     for (size_t i = 0; i < copy; ++i) first[i] = v[i];
     std::fprintf(parityProbe_->f,
-        "STEP=%d CP=LAYER_%d_%s COUNT=%zu MIN=%.9g MAX=%.9g MEAN=%.9g L2=%.9g "
+        "STEP=%d CP=%s COUNT=%zu MIN=%.9g MAX=%.9g MEAN=%.9g L2=%.9g "
         "FIRST8=%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g HASH=%016llx\n",
-        parityProbe_->step, layer, cpName, n, mn, mx, mean, std::sqrt(l2),
+        parityProbe_->step, cpNameOut, n, mn, mx, mean, std::sqrt(l2),
         first[0], first[1], first[2], first[3],
         first[4], first[5], first[6], first[7],
         static_cast<unsigned long long>(hash));
     // DEEP2_QWEN2_CPU_CORRECTNESS_001: full-vector dump for the target layer.
     // LOGITS also dumped as VEC when fullVecLayer == -2.
-    if (parityProbe_->fullVecLayer >= 0 && layer == parityProbe_->fullVecLayer) {
+    //
+    // RAWRXD_PARITY_FINAL_NORM_VEC_001: -3 selects the non-layer FINAL_NORM
+    // site (emitted with layer = -1). Without this the full-vector dump is
+    // unreachable for that site, because -1 is both "no target" and the layer
+    // value used to mark a non-layer stage -- so the LM head's actual input
+    // could be hashed but never inspected, and a reference dot product over it
+    // was impossible.
+    const bool dumpFullHere =
+        (parityProbe_->fullVecLayer >= 0 && layer == parityProbe_->fullVecLayer) ||
+        (parityProbe_->fullVecLayer == -3 && layer == -1);
+    if (dumpFullHere) {
         std::fprintf(parityProbe_->f,
             "STEP=%d VEC=LAYER_%d_%s N=%zu\n",
             parityProbe_->step, layer, cpName, n);
@@ -1607,6 +1663,63 @@ float Deep2::Deep2Engine::ropeThetaForLayer(size_t layer) const noexcept {
 }
 
 // =================== LOAD MODEL (REAL GGUF BIND) ====================
+// RAWRXD_TENSOR_IDENTITY_SINGLE_SOURCE_001
+//
+// roleFromName and layerFromName used to be function-local lambdas inside
+// loadModel(), which made them unreachable from loadModelFromNanof32Braid().
+// The braid loader therefore had no way to assign a role and hardcoded
+// `wt.identity.role = 0` at two sites, while this path derived it from the
+// tensor name. Measured consequence, same logical tensor on two routes in one
+// process (RAWRXD_LWBOUND / LINEARW_EV capture):
+//
+//   GGUF  token_embd.weight  id_layer=0 id_role=1   (derived from name)
+//   NQB   token_embd.weight  id_layer=0 id_role=0   (hardcoded)
+//
+// TensorIdentity is the key for LinearW's residency cache. Two engines that
+// disagree about the identity of the same tensor will collide in that cache the
+// moment it starts hitting -- which is exactly the regime the planned
+// ACTIVE/CANDIDATE/LAST_KNOWN_GOOD engine reuse depends on. cache_hit=0 in this
+// run, so it has not bitten yet; that is luck, not correctness.
+//
+// Hoisted to file scope so there is ONE definition and both routes cannot
+// diverge by construction. Behaviour of the existing GGUF path is unchanged.
+static uint16_t rawrxd_roleFromName(const std::string& n) {
+    if (n.find("token_embd") != std::string::npos)      return 1;
+    if (n.find("output_norm") != std::string::npos)     return 2;
+    if (n == "output.weight" || n.find("lm_head") != std::string::npos) return 3;
+    if (n.find("attn_norm") != std::string::npos)       return 4;
+    if (n.find("ffn_norm") != std::string::npos)        return 5;
+    if (n.find("attn_q") != std::string::npos)          return 6;
+    if (n.find("attn_k") != std::string::npos)          return 7;
+    if (n.find("attn_v") != std::string::npos)          return 8;
+    if (n.find("attn_kv_a") != std::string::npos)       return 9;
+    if (n.find("attn_output") != std::string::npos)     return 10;
+    if (n.find("ffn_gate_exps") != std::string::npos)   return 11;
+    if (n.find("ffn_up_exps") != std::string::npos)     return 12;
+    if (n.find("ffn_down_exps") != std::string::npos)   return 13;
+    if (n.find("ffn_gate") != std::string::npos)        return 14;
+    if (n.find("ffn_up") != std::string::npos)          return 15;
+    if (n.find("ffn_down") != std::string::npos)        return 16;
+    if (n.find("attn_qkv") != std::string::npos)        return 17;
+    if (n.find("ssm_in") != std::string::npos)          return 18;
+    if (n.find("ssm_out") != std::string::npos)         return 19;
+    if (n.find("ssm_conv1d") != std::string::npos)      return 20;
+    if (n.find("ssm") != std::string::npos)             return 21;
+    return 0;   // unclassified is a real, recorded answer, not a guess
+}
+
+// Real extraction of the block index from names like "blk.17.attn_q.weight".
+static uint32_t rawrxd_layerFromName(const std::string& n) {
+    if (n.size() < 4 || n.compare(0, 4, "blk.") != 0) return 0;
+    uint32_t v = 0, i = 4, digits = 0;
+    while (i < n.size() && n[i] >= '0' && n[i] <= '9') {
+        v = v * 10 + static_cast<uint32_t>(n[i] - '0');
+        ++i; ++digits;
+        if (digits > 6) return 0;   // implausible block index; treat as none
+    }
+    return v;
+}
+
 bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
     if (ggufPath.empty()) {
         if (diag) {
@@ -1698,41 +1811,17 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
 
     // Real classification from the real tensor name. Roles are semantic and
     // survive a change of representation; they are not addresses.
+    // RAWRXD_TENSOR_IDENTITY_SINGLE_SOURCE_001 -- roleFromName/layerFromName
+    // are now file-scope (rawrxd_roleFromName / rawrxd_layerFromName, above
+    // loadModel) so the braid loader can reach them. The local copies that used
+    // to live here shadowed the file-scope names and made them unreachable,
+    // which is why this path reported id_role=1 for token_embd while the braid
+    // path hardcoded 0. They are gone; behaviour on this path is unchanged.
     auto roleFromName = [](const std::string& n) -> uint16_t {
-        if (n.find("token_embd") != std::string::npos)      return 1;
-        if (n.find("output_norm") != std::string::npos)     return 2;
-        if (n == "output.weight" || n.find("lm_head") != std::string::npos) return 3;
-        if (n.find("attn_norm") != std::string::npos)       return 4;
-        if (n.find("ffn_norm") != std::string::npos)        return 5;
-        if (n.find("attn_q") != std::string::npos)          return 6;   // covers attn_q_a/b
-        if (n.find("attn_k") != std::string::npos)          return 7;   // attn_k_b
-        if (n.find("attn_v") != std::string::npos)          return 8;   // attn_v_b
-        if (n.find("attn_kv_a") != std::string::npos)       return 9;
-        if (n.find("attn_output") != std::string::npos)     return 10;
-        if (n.find("ffn_gate_exps") != std::string::npos)   return 11;
-        if (n.find("ffn_up_exps") != std::string::npos)     return 12;
-        if (n.find("ffn_down_exps") != std::string::npos)   return 13;
-        if (n.find("ffn_gate") != std::string::npos)        return 14;
-        if (n.find("ffn_up") != std::string::npos)          return 15;
-        if (n.find("ffn_down") != std::string::npos)        return 16;
-        if (n.find("attn_qkv") != std::string::npos)        return 17;
-        if (n.find("ssm_in") != std::string::npos)          return 18;
-        if (n.find("ssm_out") != std::string::npos)         return 19;
-        if (n.find("ssm_conv1d") != std::string::npos)      return 20;
-        if (n.find("ssm") != std::string::npos)             return 21;
-        return 0;   // unclassified is a real, recorded answer, not a guess
+        return rawrxd_roleFromName(n);
     };
-
-    // Real extraction of the block index from names like "blk.17.attn_q.weight".
     auto layerFromName = [](const std::string& n) -> uint32_t {
-        if (n.size() < 4 || n.compare(0, 4, "blk.") != 0) return 0;
-        uint32_t v = 0, i = 4, digits = 0;
-        while (i < n.size() && n[i] >= '0' && n[i] <= '9') {
-            v = v * 10 + static_cast<uint32_t>(n[i] - '0');
-            ++i; ++digits;
-            if (digits > 6) return 0;   // implausible block index; treat as none
-        }
-        return v;
+        return rawrxd_layerFromName(n);
     };
 
     // Counters so a receipt can report what the registration path actually did
@@ -2280,18 +2369,66 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         return false;
     }
 
-    // RoPE pairing convention is architecture-defined (not in GGUF metadata):
-    //   NeoX rotated-half: llama/qwen/mistral/gemma
-    //   GPT-J adjacent:    gpt-neox/phi (legacy GGUF conversions)
+    // RAWRXD_ROPE_LAYOUT_SELECTION_001
+    //
+    // RoPE pairing convention is architecture-defined and is NOT carried in GGUF
+    // metadata; llama.cpp derives it from the architecture id in
+    // src/llama-model.cpp:
+    //
+    //     LLAMA_ROPE_TYPE_NORM  = adjacent/consecutive pairs  (LLaMA, Qwen2/3,
+    //                            Mistral, Baichuan, Yi, StarCoder2, ...)
+    //     LLAMA_ROPE_TYPE_NEOX  = rotated half (i, i+rot/2)      (GPT-NeoX,
+    //                            StableLM, OLMo, Phi, ...)
+    //
+    // This block previously asserted the OPPOSITE -- "NeoX rotated-half:
+    // llama/qwen/mistral/gemma" -- and set ropeNeoxStyle=true for arch=llama.
+    // That was wrong, and it was measurable rather than theoretical:
+    //
+    //     FIRST_BAD_STATE_001 localised the divergence to RoPE, with Q, K, V and
+    //     ATTN_NORM BIT-IDENTICAL across the two routes and only Q_ROPE/K_ROPE
+    //     differing. At position 1 the NQB route reproduced the adjacent-pair
+    //     rotation exactly:
+    //         x' = x*cos(1) - y*sin(1)   = 0.983253*0.540302 + 0.190411*0.841471
+    //                                    = 0.691480   (observed 0.691480)
+    //         y' = x*sin(1) + y*cos(1)   = 0.983253*0.841471 - 0.190411*0.540302
+    //                                    = 0.724499   (observed 0.724499)
+    //     while this route produced something else, because it was rotating
+    //     (i, i+rot/2) instead of (i, i+1).
+    //
+    // So the GGUF LLaMA route was the incorrect side, not the braid route. The
+    // table below is explicit rather than a silent default, and it is printed
+    // so a reader can audit the classification instead of trusting it.
+    //
+    // Architectures not listed default to NORM, which is the llama.cpp
+    // majority, and say so in the receipt rather than pretending to certainty.
     const bool archIsNeoxRoPE =
-        arch == "llama" || arch == "qwen" || arch == "qwen2" ||
-        arch == "mistral" || arch == "baichuan" || arch == "yi" ||
-        arch == "olmo" || arch == "starchat" || arch == "replit" ||
-        arch == "refact" || arch == "stablelm" || arch == "deepseek2";
+        arch == "gptneox"  || arch == "gpt-neox" ||
+        arch == "stablelm" || arch == "olmo"     ||
+        arch == "phi2"     || arch == "phi3"     || arch == "phimoe";
+
     modelWeights.ropeNeoxStyle = archIsNeoxRoPE;
-    if (const char* overrideStyle = std::getenv("DEEP2_ROPE_GPTJ")) {
-        if (overrideStyle[0] == '1') modelWeights.ropeNeoxStyle = false;
+
+    // Two-way override so the classification is falsifiable from outside. The
+    // previous override could only ever turn NeoX OFF, which meant the
+    // incorrect default could never be observed as a deliberate choice.
+    if (const char* sel = std::getenv("DEEP2_ROPE_LAYOUT")) {
+        if (sel[0] == 'n' || sel[0] == 'N')      modelWeights.ropeNeoxStyle = false;
+        else if (sel[0] == 'x' || sel[0] == 'X') modelWeights.ropeNeoxStyle = true;
     }
+    if (const char* legacy = std::getenv("DEEP2_ROPE_GPTJ")) {
+        if (legacy[0] == '1') modelWeights.ropeNeoxStyle = false;
+    }
+
+    std::fprintf(stderr,
+        "[ROPE_LAYOUT_SELECTION] arch=%s resolved=%s expected_for_arch=%s "
+        "neox=%d theta=%.6g override=%s\n",
+        arch.c_str(),
+        modelWeights.ropeNeoxStyle ? "NEOX_ROTATED_HALF" : "NORMAL_ADJACENT_PAIR",
+        archIsNeoxRoPE ? "NEOX_ROTATED_HALF" : "NORMAL_ADJACENT_PAIR",
+        modelWeights.ropeNeoxStyle ? 1 : 0,
+        static_cast<double>(modelWeights.ropeTheta),
+        std::getenv("DEEP2_ROPE_LAYOUT") ? std::getenv("DEEP2_ROPE_LAYOUT") : "(none)");
+
     // Diagnostic: log chosen RoPE style for first-run verification    // Nemotron-H / Mamba2 SSM metadata (read from GGUF keys used by llama.cpp converters)
     if (arch == "nemotron_h" || arch == "nemotron_h_moe") {
         ssmInner_      = metaSize("ssm.inner_size",      0);
@@ -2315,10 +2452,46 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
 
     const size_t modelContext = metaSize("context_length", 0);
     if (modelContext > 0) {
-        // Respect caller-configured maxSeqLen (e.g., inference gate), but
-        // also clamp to the model's declared context length.
-        if (config.maxSeqLen == 0 || modelContext < config.maxSeqLen)
+        // RAWRXD_ARCH_CONTEXT_CONTRACT_001
+        //
+        // The previous condition was
+        //     if (config.maxSeqLen == 0 || modelContext < config.maxSeqLen)
+        //         config.maxSeqLen = modelContext;
+        // which can only ever SHRINK the operational context to the model's
+        // declared value. With the EngineConfig default of 2048 and a model
+        // declaring 131072, neither branch fires: the engine silently runs at
+        // 2048 while the model says 131072, and nothing reports the gap.
+        //
+        // That is the same failure class as the headDim default that cost
+        // roughly a factor of three in logit cosine -- a default quietly
+        // promoted to an architectural fact -- so it is now stated rather than
+        // implied. An operational cap smaller than the model's ceiling is a
+        // legitimate choice (memory, KV budget), but it must be a DECISION with
+        // a receipt, not an accident of default ordering.
+        //
+        // The model's declared ceiling is never exceeded: if the caller asked
+        // for more than the model supports, the model's value wins.
+        const size_t requested = config.maxSeqLen;
+        if (requested == 0 || modelContext < requested)
             config.maxSeqLen = modelContext;
+        const size_t effective = config.maxSeqLen;
+
+        std::fprintf(stderr,
+            "[CONTEXT_CONTRACT] MODEL_MAX_CONTEXT=%zu REQUESTED_RUNTIME_CONTEXT=%zu "
+            "EFFECTIVE_RUNTIME_CONTEXT=%zu SOURCE=%s\n",
+            modelContext, requested, effective,
+            (requested == 0)                  ? "model_declared_default"
+            : (modelContext < requested)      ? "model_ceiling_clamped_request"
+            : (effective < modelContext)      ? "caller_cap_below_model_ceiling"
+                                               : "exact_match");
+        if (effective < modelContext) {
+            std::fprintf(stderr,
+                "[CONTEXT_CONTRACT] OPERATIONAL_CAP_BELOW_MODEL_CEILING "
+                "effective=%zu model=%zu ratio=%.4f\n",
+                effective, modelContext,
+                modelContext ? static_cast<double>(effective) /
+                                   static_cast<double>(modelContext) : 0.0);
+        }
     }
 
     // Global output tensors.
@@ -4087,6 +4260,31 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
         }
     }
     parityEmit(ParityCheckpoint::FinalNorm, layerTemp, H);
+
+    // RAWRXD_PARITY_FINAL_NORM_PER_STEP_001
+    //
+    // The line above goes through parityEmit(), which returns early on
+    //     if (parityProbe_->emitted[idx]) return;
+    // so FINAL_NORM was recorded ONCE for the whole process and never again.
+    // That is why FIRST_BAD_STATE could localise the divergence to
+    // NARROW_TO=FINAL_NORM_OR_LM_HEAD_OR_LOGIT_POSTPROCESS and no further: with
+    // every one of the 28 layer outputs bit-exact at every step, the only
+    // unverified boundary left is the tensor immediately before the LM head --
+    // and it was being emitted once, so a step-by-step comparison could not
+    // exist even in principle.
+    //
+    // parityEmitLayer has no such dedup and keys on STEP, so the same tensor is
+    // emitted per step. Layer -1 marks it as a non-layer stage, which is what
+    // it is: it belongs to no layer.
+    //
+    // The measurement this enables is the whole point. The residual is broad
+    // rather than concentrated -- 123,537 of 128,256 logits differ by more than
+    // 1e-3, P50 = 0.0147, worst = 0.1032 -- which rules out damaged rows and
+    // points at arithmetic or a postprocess. Whether FINAL_NORM is bit-exact
+    // separates those: if it is, the divergence is the LM-head matmul or the
+    // logit postprocess; if it is not, it is the residual add or the final norm.
+    parityEmitLayer(-1, "FINAL_NORM", layerTemp, H);
+
     LinearW(modelWeights.lmHead, layerTemp, nullptr, logitsOut, V);
     // RAWRXD_DEBUG_EXPOSE_LOGITS_001
     // Capture the logits for the divergence harness, gated so it can never
@@ -4438,6 +4636,39 @@ static bool lmHeadGeometryProbeEnabled() {
     return enabled;
 }
 
+// RAWRXD_LMHEAD_Q6K_RELEASE_PARITY_001
+//
+// The tied output projection is a release-authority boundary: a one-token argmax
+// can stay stable while the full logit vector is numerically wrong.
+//
+// Scope is deliberately narrow and RUNTIME-CONDITIONAL, not a claim about a
+// model file: the guard tests `wt.type` on the tensor actually being projected.
+// For qwen2.5-coder-1.5b-base.gguf the head is tied (no output.weight) and
+// aliases token_embd.weight, which is Q6_K -- while the model histogram is
+// 168xQ4_K + 29xQ6_K + 141xF32. If the head is ever not Q6_K the guard is
+// inert and behaviour is unchanged, so this cannot silently mis-route anything.
+//
+// The production GPU Q6_K route (deep2_qgemv.comp) and the ExecutionView wrapper
+// have not been numerically compared against an F64 oracle for this projection,
+// so the tied Q6_K head stays on the directly registered GEMV.
+//
+// DEEP2_LMHEAD_Q6K_AB_ROUTE=1 restores the previous GPU/EV route for A/B work.
+//
+// The switch is named for what it DOES, not for what it believes. An earlier
+// revision called it DEEP2_LMHEAD_Q6K_UNCERTIFIED, which encodes a conclusion
+// that has not been measured: "the GPU route is uncertified" is not the same
+// claim as "the GPU route has not been compared to an oracle yet", and only the
+// second one is currently true. If RAWRXD_Q6K_LMHEAD_ROUTE_PARITY_001 later
+// shows the GPU route matches, the certification state changes -- the switch
+// name should not have to.
+static bool forcePreviousLmHeadRoute() {
+    static const bool enabled = [] {
+        const char* v = std::getenv("DEEP2_LMHEAD_Q6K_AB_ROUTE");
+        return v && v[0] == '1';
+    }();
+    return enabled;
+}
+
 // =================== QUANT-AWARE LINEAR ====================
 void Deep2Engine::LinearW(const WeightTensor& wt,
                           const float* input,
@@ -4546,7 +4777,17 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     }
 
     // BATCH10_ROW_SPLIT_LINEAR Ã¢â‚¬â€ real GPU arithmetic, host result contract.
-    if (vulkanInitialized_ && !vulkanDevices_.empty()) {
+    // A tied Q6_K LM head is kept on the measured authority (see
+    // forcePreviousLmHeadRoute above), so neither the Vulkan lane nor the
+    // ExecutionView wrapper may claim it.
+    const bool isLmHeadForAuthority = (&wt == &modelWeights.lmHead);
+    const bool forceVerifiedLmHeadKernel =
+        isLmHeadForAuthority &&
+        wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K) &&
+        !forcePreviousLmHeadRoute();
+
+    if (!forceVerifiedLmHeadKernel &&
+        vulkanInitialized_ && !vulkanDevices_.empty()) {
         std::memset(output, 0, outDim * sizeof(float));
         RAWRXD_DEEP2_TRACE("LINEARW_TRY_GPU name=%s\n",wtn);
 
@@ -4696,7 +4937,11 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     // Production adoption: try ExecutionView-aware kernel first.
     // All 14 quant types now have EV kernels registered; legacy path is
     // fallback only if a future type is not yet adopted.
-    {
+    //
+    // RAWRXD_LMHEAD_Q6K_RELEASE_PARITY_001: the EV wrapper is explicitly NOT
+    // certified for the tied Q6_K LM head, so that projection stays on the
+    // directly registered GEMV below.
+    if (!forceVerifiedLmHeadKernel) {
         auto kernelEv = QuantKernelRegistry::Instance().GetGEMVEV(wt.type);
         if (kernelEv) {
             Deep2::ExecutionView ev;
@@ -4838,6 +5083,17 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                     const bool addrMatch =
                         (const void*)ev.transientAddress == (const void*)wt.data;
                     const size_t blkBytes = packedBytesRequired(wt.type, 1, 1);
+        // RAWRXD_LINEARW_ROW_STRIDE_001 -- this used to print `cols` as the row
+        // stride, i.e. 3072 BYTES for token_embd. The true stride in quantised
+        // storage is the packed size of ONE ROW, which for Q6_K (256 elements
+        // per 210-byte block) is 3072/256 * 210 = 2520 bytes. The diagnostic was
+        // off by 552 bytes per row, so it could not have detected a
+        // row-addressing error in the very place it claimed to measure.
+        // packedBytesRequired() already takes (rows, cols); asking it for one
+        // row of `cols` elements is the correct query, and it self-checks:
+        //   GGUF 128256 * 2520  =  323205120  == src_bytes (exact)
+        //   NQB  128256 * 12288 = 1576009728  == src_bytes (exact)
+        const size_t rowStrideBytes = packedBytesRequired(wt.type, 1, cols);
                     const size_t blocks = blkBytes ? (wt.sizeBytes / blkBytes) : 0;
                     size_t firstBad = SIZE_MAX;
                     for (size_t i = 0; i < outDim; ++i)
@@ -4851,7 +5107,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                         "ev_bytes=%zu FIRST_BAD_ROW=%lld FIRST_BAD_COL=%lld "
                         "OUT_ABSMIN=%.6g OUT_ABSMAX=%.6g\n",
                         wtn, wt.type, rows, cols, outDim,
-                        blkBytes ? (cols / (rows ? 1 : 1)) : 0, blkBytes, blocks,
+                        blkBytes ? rowStrideBytes : 0, blkBytes, blocks,
                         wt.sizeBytes, outDim * sizeof(float),
                         cacheHit ? 1 : 0, wt.data, ev.transientAddress,
                         addrMatch ? 1 : 0,
@@ -4966,6 +5222,10 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         }
     }
 
+    // RAWRXD_LMHEAD_Q6K_RELEASE_PARITY_001: for a tied Q6_K LM head this is
+    // intentionally the release-authority path -- the same registered GEMV
+    // entry point the F64 parity probe used. Do not insert an alternate wrapper
+    // ahead of it without first certifying LOGITS parity.
     auto kernel = QuantKernelRegistry::Instance().GetGEMV(wt.type);
     if (!kernel) {
         throw std::runtime_error("LinearW: no registered GEMV kernel");
@@ -5112,9 +5372,13 @@ void Deep2Engine::applyRoPE(float* q, float* k,
     }
 
     const float effectivePos = static_cast<float>(pos) / scaling;
-    // NeoX (llama/qwen/mistral): rotate pair (i, i + rotaryDim/2) inside the
-    // first rotaryDim dims. GPT-J (phi/gpt-neox-legacy): rotate adjacent pair
-    // (i, i+1) across the full headDim.
+    // NORM (llama/qwen2/qwen3/mistral): rotate ADJACENT pair (i, i+1) across the
+    // rotary dims -- this is what llama.cpp's LLAMA_ROPE_TYPE_NORM does and it
+    // is the correct convention for LLM_ARCH_LLAMA.
+    // NEOX (gpt-neox/stablelm/olmo/phi): rotate (i, i + rotaryDim/2), the
+    // rotated-half convention.
+    // The two were transposed until RAWRXD_ROPE_LAYOUT_SELECTION_001; see the
+    // arch table above for the measurement that caught it.
     if (modelWeights.ropeNeoxStyle) {
         const size_t half = rotaryDim / 2;
         auto rotateHeadNeox = [&](float* h) {
@@ -8434,9 +8698,9 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
                 try { wt.identity.layer = static_cast<uint32_t>(std::stoul(t->name.substr(4, dot - 4))); } catch (...) {}
             }
         }
-        wt.identity.role    = 0;
-        wt.identity.variant = 0;
-    }
+wt.identity.role    = rawrxd_roleFromName(t->name);
+wt.identity.variant = 0;
+}
 
     if (t->shape.size() == 1) {
         wt.rows = static_cast<size_t>(t->shape[0]);
@@ -8770,8 +9034,70 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path) {
 }
 
 // =================== NANOF32BRAID STREAMER ====================
+// RAWRXD_NQB_LOAD_REFUSAL_REASON_001
+//
+// loadModelFromNanof32Braid() returned a bare `false` from seven distinct sites.
+// Every refusal therefore looked identical from outside: the probe could only
+// report "nqb load failed" and could not distinguish a bad header from a short
+// read from an allocation failure. Since the loader ALSO commits ~30 GB before
+// reading a single tensor, an intermittent refusal is consistent with
+// address-space or allocation exhaustion -- but that could not be told apart
+// from a validation rejection, because neither site identified itself.
+//
+// Each refusal now reports its own line and a short reason, so a repeat run
+// names the cause instead of requiring another bisect.
+// RAWRXD_NQB_LOAD_MEMORY_CENSUS_001
+//
+// Brackets the loader phases. The census established that ~30 GB is already
+// committed by the time the first tensor is read, and open() itself commits
+// nothing (it only reads a header), so the commit must occur inside
+// loadModelFromNanof32Braid between open() and readAllTensors(). These marks
+// localise it to a phase rather than leaving it attributed to "the load".
+static void nqbMemMark(const char* where) {
+#if defined(_WIN32)
+    PROCESS_MEMORY_COUNTERS_EX pmc{};
+    pmc.cb = sizeof pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(),
+                             (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof pmc)) {
+        std::fprintf(stderr,
+            "[NQBRAID] MEM phase=%s private=%llu working_set=%llu peak=%llu\n",
+            where,
+            (unsigned long long)pmc.PrivateUsage,
+            (unsigned long long)pmc.WorkingSetSize,
+            (unsigned long long)pmc.PeakWorkingSetSize);
+    }
+#else
+    std::fprintf(stderr, "[NQBRAID] MEM phase=%s (no counters)\n", where);
+#endif
+    std::fflush(stderr);
+}
+
+static bool nqbLoadFail(int line, const char* reason = nullptr) {
+    std::fprintf(stderr, "[NQBRAID] LOAD_FAIL line=%d reason=%s\n",
+                 line, reason ? reason : "unspecified");
+    std::fflush(stderr);
+    // RAWRXD_NQB_LOADFAIL_RECUSION_001
+    //
+    // This used to read `return nqbLoadFail(__LINE__);` -- the helper calling
+    // ITSELF, unconditionally. Every failure site in loadModelFromNanof32Braid
+    // is written `return nqbLoadFail(__LINE__);`, expecting false back, so any
+    // failed braid load recursed until the process died.
+    //
+    // It is invisible unless something actually FAILS to load, which is why it
+    // survived every green run: the happy path never calls this. The moment a
+    // test EXPECTED a rejection, it hung instead:
+    //
+    //     nqb_tokenizer_negative   Timeout 180.01 sec
+    //     [NQBRAID] LOAD_FAIL line=9079 reason=unspecified   (repeated until killed)
+    //
+    // Twelve of the fourteen corruption cases are SUPPOSED to fail to load, so
+    // that gate could never complete. A helper whose failure branch recurses is
+    // the narrowest possible form of "reporting success/failure by accident".
+    return false;
+}
+
 bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
-    if (braidPath.empty()) return false;
+    if (braidPath.empty()) return nqbLoadFail(__LINE__);
     if (!braidStreamer_) {
         braidStreamer_ = std::make_unique<Deep2::Nanof32BraidStreamer>();
     }
@@ -8779,16 +9105,18 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
         if (!braidStreamer_->open(braidPath)) {
             braidStreamer_.reset();
             braidEnabled_ = false;
-            return false;
+            return nqbLoadFail(__LINE__);
         }
     }
+    nqbMemMark("AFTER_OPEN");
 
     // Read architecture metadata
     Deep2::Nanof32BraidArchMeta archMeta{};
     if (!braidStreamer_->readArchMeta(archMeta)) {
         std::fprintf(stderr, "[NQBRAID] ERROR: failed to read arch meta\n");
-        return false;
+        return nqbLoadFail(__LINE__);
     }
+    nqbMemMark("AFTER_ARCH_META");
 
     // Configure model weights from arch meta
     modelWeights = {};
@@ -8837,8 +9165,60 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
     // 2048 with no diagnostic -- the cache allocated successfully, it was just
     // the wrong size. It must be set HERE, before the kvCache->allocate() call
     // further down, because that call reads config.maxSeqLen.
-    if (archMeta.contextLength != 0) {
-        config.maxSeqLen = archMeta.contextLength;
+    // RAWRXD_NQBRAID_KV_RUNTIME_CAP_001 -- this was the defect I introduced.
+    //
+    // The original fix here was correct about the bug it targeted and wrong
+    // about the fix. The bug: the KV cache was sized from the EngineConfig
+    // default of 2048 while the model declares 131072, so any model whose
+    // trained context differed was silently truncated. Binding the model's
+    // value was right.
+    //
+    // What I missed: `config.maxSeqLen` is BOTH the operational context AND
+    // what the KV allocator sizes itself from. Assigning the model's
+    // ARCHITECTURAL CEILING into it therefore turned a correctness fix into a
+    // 28 GiB allocation:
+    //
+    //     [NQBRAID] MEM phase=BEFORE_READ_ALL_TENSORS private=30124781568
+    //
+    // 30.1 GB resident before a single tensor is materialized, for a model
+    // whose entire payload is 12.86 GB. The KV cache for 131072 positions is
+    // 28 layers * 8 kv-heads * 128 dims * 2 (K and V) * 4 bytes * 131072
+    // positions = 30.06 GB. It matched to 99.8%, which is how it was identified.
+    // The consequence was not a slow load: the subsequent materializer died
+    // abnormally (exit -1) after tensor index 7, inside a process already
+    // carrying 28 GiB it did not need.
+    //
+    // RAWRXD_ARCH_CONTEXT_CONTRACT_001 (line ~2455) already states the correct
+    // semantics, but it lives in the GGUF loader and never ran on this path.
+    // Applying it here keeps the two concepts separate, which is what the
+    // contract is for:
+    //
+    //     MODEL_MAX_CONTEXT     = 131072   (archMeta.contextLength; geometry)
+    //     RUNTIME_CONTEXT_EFFECTIVE = 2048  (what the KV cache is sized for)
+    //
+    // A caller may legitimately cap context for memory reasons; that is a
+    // DECISION with a receipt, and it must not be overwritten by the ceiling.
+    const size_t nqbModelCeiling = archMeta.contextLength;
+    modelContextCeiling_ = nqbModelCeiling;   // RAWRXD_NQB_KV_SESSION_CAP_001: retain it
+    std::fprintf(stderr,
+        "[NQBRAID] CEILING model_arch_context=%zu model_runtime_ceiling=%zu session_kv_context=%zu effective_kv=%zu"
+        " ceiling_preserved=%d kv_session_capped=%d\n",
+        nqbModelCeiling, modelMaxContext(), kvSessionContext(), effectiveKVContext(),
+        (modelMaxContext() == nqbModelCeiling && nqbModelCeiling != 0) ? 1 : 0,
+        (effectiveKVContext() < modelMaxContext()) ? 1 : 0);
+    std::fflush(stderr);
+    const size_t nqbRequested    = config.maxSeqLen;   // 0 => unset
+    size_t       nqbEffective     = nqbRequested;
+    if (nqbModelCeiling != 0 && (nqbRequested == 0 || nqbModelCeiling < nqbRequested))
+        nqbEffective = nqbModelCeiling;
+    if (nqbModelCeiling != 0) {
+        config.maxSeqLen = nqbEffective;
+        std::fprintf(stderr,
+            "[NQBRAID] CONTEXT_CONTRACT model_max=%zu requested=%zu effective=%zu "
+            "(KV is sized to effective, never to the model ceiling)%s\n",
+            nqbModelCeiling, nqbRequested, nqbEffective,
+            (nqbModelCeiling != 0 && nqbEffective < nqbModelCeiling)
+                ? " OPERATIONAL_CAP_BELOW_MODEL_CEILING" : "");
     }
     // RAWRXD_NANOF32_BRAID_WRITER_001 -- bind RoPE theta from the braid arch
     // meta. Without this the forward pass refused at the first layer:
@@ -8848,6 +9228,52 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
     // carried only ropeType, so nothing ever set it. A zero here means the
     // writer did not supply one, which is reported rather than guessed.
     config.ropeTheta = archMeta.ropeTheta;
+    // RAWRXD_NQBRAID_ROPE_PAIRING_001 -- MEASURED, FIX WITHHELD ON PURPOSE.
+    //
+    // The divergence this describes is real and still open:
+    //   STEP_CENSUS step=0 records=494 hash_match=494 BIT_EXACT
+    //   STEP_CENSUS step=1 records=494 hash_match=80  DIVERGED
+    //   FIRST_BAD_LAYER=0 FIRST_BAD_STEP=1 FIRST_BAD_TRANSFORM=ROPE
+    // Layer 0 comparison: ATTN_NORM, Q, K, V all BIT-EXACT (cosine=1, max_abs=0).
+    // At applyRoPE(q,k,headDim,numHeads,numKVHeads,pos,theta,scaling) both
+    // routes report pos=1 headDim=128 nHeads=24 nKV=8 theta=500000 scaling=1
+    // and bit-identical Q_PRE/K_PRE -- but different Q_POST/K_POST.
+    //
+    // The first hypothesis was that this loader never sets ropeNeoxStyle (it
+    // assigns it only at line 2291, in the GGUF path) and therefore kept the
+    // header default false. Mapping ropeType==1 onto it was tried and REVERTED:
+    // the divergence counts were byte-identical before and after
+    // (step=1 hash_match=80 hash_mismatch=414 both runs), so the flag is not the
+    // discriminator here.
+    //
+    // It is also the wrong mapping. RAWRXD_ROPE_LAYOUT_SELECTION_001 (see the
+    // applyRoPE comment) established that LLM_ARCH_LLAMA uses the NORM adjacent
+    // convention (i, i+1), not NeoX rotated-half (i, i+rotaryDim/2) -- the two
+    // were transposed until that measurement. So ropeType==1 must NOT imply
+    // ropeNeoxStyle=true for a Llama model. archMeta.ropeType is a format enum
+    // (0=none 1=NeoX 2=GPT-J 3=MLA) and the converter labels Llama as
+    // "NeoX for Llama-style models", which is not the same predicate as the
+    // engine's ropeNeoxStyle. Binding one to the other by raw equality is
+    // therefore wrong regardless of the open divergence.
+    //
+    // The correct binding needs the same arch->style table the GGUF path uses
+    // via archIsNeoxRoPE, applied to whatever the braid format carries. That is
+    // deliberately NOT done here: it would collide with the in-flight
+    // RAWRXD_ROPE_LAYOUT_SELECTION_001 work in this same function.
+    //
+    // Remaining candidate inputs to applyRoPE, all read from member state rather
+    // than passed as parameters:
+    //   modelWeights.ropeNeoxStyle      (line 5206) - excluded above, measured
+    //   modelWeights.ropeDimensionCount (line 5190) - set only here, 0 => full width
+    // Anything else must be state this function does not name.
+    std::fprintf(stderr,
+        "[NQBRAID] rope: theta=%g type=%u neoxStyle=%d rotaryDim=%zu\n",
+        (double)archMeta.ropeTheta, archMeta.ropeType,
+        modelWeights.ropeNeoxStyle ? 1 : 0,
+        modelWeights.ropeDimensionCount
+            ? (modelWeights.ropeDimensionCount < modelWeights.headDim
+                   ? modelWeights.ropeDimensionCount : modelWeights.headDim)
+            : modelWeights.headDim);
     // RAWRXD_NANOF32_BRAID_WRITER_001 -- MLA geometry.
     //
     // The braid format carried ropeType but none of the MLA dimensions, so the
@@ -8877,14 +9303,14 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
                 archMeta.qLoraRank, archMeta.kvLoraRank,
                 archMeta.qkNopeHeadDim, archMeta.qkRopeHeadDim, archMeta.vHeadDim);
             std::fflush(stderr);
-            return false;
+            return nqbLoadFail(__LINE__);
         }
         if (archMeta.qkRopeHeadDim & 1u) {
             std::fprintf(stderr,
                 "[NQBRAID] ERROR: qkRopeHeadDim=%u must be even (CPU MLA "
                 "interleaves the rotary pair)\n", archMeta.qkRopeHeadDim);
             std::fflush(stderr);
-            return false;
+            return nqbLoadFail(__LINE__);
         }
     }
     // applyRoPE's guard is `if (!(theta > 1.0f))`, and the forward path gets
@@ -8914,7 +9340,10 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
         kc.numLayers  = modelWeights.numLayers;
         kc.numHeads   = modelWeights.numKVHeads;
         kc.headDim    = modelWeights.headDim;
-        kc.maxSeqLen  = config.maxSeqLen;
+        // RAWRXD_NQB_KV_SESSION_CAP_001: size the KV cache from the SESSION
+        // context, not the model ceiling. config.maxSeqLen keeps the full
+        // advertised capability; only the physical allocation is bounded.
+        kc.maxSeqLen  = effectiveKVContext();
         if (modelWeights.useMLA && modelWeights.numHeads != 0 &&
             kc.numHeads < modelWeights.numHeads) {
             std::fprintf(stderr,
@@ -8922,6 +9351,23 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
                 (std::size_t)kc.numHeads, (std::size_t)modelWeights.numHeads);
             kc.numHeads = modelWeights.numHeads;
         }
+    // RAWRXD_NQB_KV_VARIANCE_PROBE_001
+    {
+        const std::size_t elemBytes = sizeof(float);
+        const std::size_t elems = (std::size_t)kc.numLayers * kc.numHeads *
+                                   kc.headDim * kc.maxSeqLen;
+        std::fprintf(stderr,
+            "[NQBRAID] KV_BEFORE config_max_seq_len=%zu effective_kv=%zu arch_context=%u "
+            "kc_layers=%zu kc_heads=%zu kc_head_dim=%zu kc_max_seq_len=%zu "
+            "kv_dtype=F32 bytes_per_elem=%zu elems=%zu expected_bytes=%zu",
+            (std::size_t)config.maxSeqLen, (std::size_t)effectiveKVContext(),
+            (unsigned)archMeta.contextLength,
+            (std::size_t)kc.numLayers, (std::size_t)kc.numHeads,
+            (std::size_t)kc.headDim, (std::size_t)kc.maxSeqLen,
+            elemBytes, elems, elems * elemBytes * 2u);
+        std::fflush(stderr);
+    }
+    nqbMemMark("PRIVATE_BEFORE_KV");
         if (!kvCache->allocate(kc)) {
             std::fprintf(stderr,
                 "[NQBRAID] ERROR: KV cache allocation failed "
@@ -8931,8 +9377,9 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
             std::fflush(stderr);
             modelWeights.loaded = false;
             braidEnabled_ = false;
-            return false;
+            return nqbLoadFail(__LINE__);
         }
+    nqbMemMark("PRIVATE_AFTER_KV");
     }
     if (archMeta.ropeType != 0 &&
         !(archMeta.ropeTheta > 0.0f) ) {
@@ -8940,16 +9387,18 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
             "[NQBRAID] ERROR: ropeType=%u requires a positive ropeTheta, got %g\n",
             archMeta.ropeType, (double)archMeta.ropeTheta);
         std::fflush(stderr);
-        return false;
+        return nqbLoadFail(__LINE__);
     }
 
     // Read all tensors from the braid file
     std::vector<std::pair<std::string, Deep2::NQBraidBlock>> tensors;
+    nqbMemMark("BEFORE_READ_ALL_TENSORS");
     if (!braidStreamer_->readAllTensors(tensors)) {
         std::fprintf(stderr, "[NQBRAID] ERROR: failed to read all tensors\n");
-        return false;
+        return nqbLoadFail(__LINE__);
     }
 
+    nqbMemMark("AFTER_READ_ALL_TENSORS");
     // Build name → tensor map
     std::unordered_map<std::string, Deep2::NQBraidBlock*> tensorMap;
     for (auto& kv : tensors) {
@@ -9038,7 +9487,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
         // A dense-F32 block now carries f32Data and binds as F32. Quantised
         // blocks still carry bf16Data and still bind as BF16 -- for them that
         // is the representation they genuinely decompress to.
-        if (!blk.ready || blk.elements() == 0) return false;
+        if (!blk.ready || blk.elements() == 0) return nqbLoadFail(__LINE__);
         if (!blk.f32Data.empty()) {
             wt.data = blk.f32Data.data();
             wt.type = static_cast<int>(Deep2::GGMLType::GGML_TYPE_F32);
@@ -9094,9 +9543,9 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
                                        for (unsigned char c : blk.name) { t ^= c; t *= 1099511628211ull; }
                                        return t; }();
             wt.identity.layer   = 0;
-            wt.identity.role    = 0;
-            wt.identity.variant = 0;
-        }
+wt.identity.role    = rawrxd_roleFromName(blk.name);
+wt.identity.variant = 0;
+}
         return true;
     };
 
@@ -9139,7 +9588,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
                 "elements but %zux%zu=%zu are required\n",
                 what, have, needRows, needCols, needRows * needCols);
             std::fflush(stderr);
-            return false;
+            return nqbLoadFail(__LINE__);
         }
         return true;
     };
@@ -9351,9 +9800,87 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
         std::lock_guard<std::mutex> lk(braidStreamer_->cacheMutex());
         auto& cache = braidStreamer_->cache();
         uint32_t idx = 0;
+
+        // RAWRXD_ZERO_EXPANSION_RESIDENCY_001
+        //
+        // Measurement, before any refactor. This cache exists because the
+        // loader binds WeightTensor::data straight into a decoded block and
+        // then returns, so the decoded bytes must outlive it. That is a
+        // legitimate lifetime problem solved by keeping the WRONG
+        // representation alive.
+        //
+        // For an uncompressed payload there is no reason to decode at all --
+        // the bytes in the file ARE the weights, and materialising them is a
+        // pure copy. So the avoidable class is exactly the tensors whose
+        // stored byte count equals their natural size (elements*4 for F32,
+        // elements*2 for BF16). Compressed codecs (braid 1.15 bpw, codebook)
+        // genuinely require decode and are counted separately.
+        //
+        // This is emitted as a receipt so the residency cost stops being an
+        // argument about what the code "probably" does.
+        uint64_t totalBytes = 0, avoidableBytes = 0, compressedBytes = 0;
+        uint32_t totalTensors = 0, avoidableTensors = 0, compressedTensors = 0;
+        uint64_t largestBlock = 0; std::string largestName;
+
+        // RAWRXD_RESIDENCY_MANIFEST_001
+        //
+        // The aggregates above say how much; this says WHICH. A residency budget
+        // cannot be reasoned about from a total, because the answer differs
+        // completely depending on whether one tensor is pathological or all 255
+        // are uniformly expanded. So every tensor is named, with the class that
+        // decides whether it could be bound instead of decoded.
+        //
+        // Emitted before the move below, while the blocks still hold their data.
+        std::fprintf(stderr, "\n=== RAWRXD_RESIDENCY_MANIFEST_001 ===\n");
+        std::fprintf(stderr,
+            "# %-34s %12s %14s %14s %10s %s\n",
+            "TENSOR", "ELEMENTS", "STORED_BYTES", "RESIDENT_BYTES", "CLASS", "BOUND");
+
         for (auto& kv : tensors) {
-            cache[idx++] = std::move(kv.second);
+            const auto& blk = kv.second;
+            const uint64_t elems = blk.elements();
+            const uint64_t bytes = blk.byteCount;
+            const bool uncompressed =
+                (bytes == elems * sizeof(float)) ||
+                (bytes == elems * sizeof(Deep2::bfloat16_t));
+            const bool isF32 = (bytes == elems * sizeof(float));
+
+            std::fprintf(stderr, "%-34s %12llu %14llu %14llu %10s %s\n",
+                         kv.first.c_str(),
+                         (unsigned long long)elems,
+                         (unsigned long long)bytes,
+                         (unsigned long long)bytes,
+                         uncompressed ? (isF32 ? "F32_COPY" : "BF16_COPY") : "CODEC",
+                         "YES");
+
+            totalBytes += bytes;
+            ++totalTensors;
+            if (bytes > largestBlock) { largestBlock = bytes; largestName = kv.first; }
+            if (uncompressed) { avoidableBytes += bytes; ++avoidableTensors; }
+            else              { compressedBytes += bytes; ++compressedTensors; }
         }
+        std::fflush(stderr);
+
+        for (auto& kv : tensors) cache[idx++] = std::move(kv.second);
+
+        std::fprintf(stderr,
+            "\n=== RAWRXD_ZERO_EXPANSION_RESIDENCY_001 (load-time) ===\n"
+            "RESIDENT_DECODED_BYTES=%llu\n"
+            "RESIDENT_TENSORS=%u\n"
+            "UNCOMPRESSED_MATERIALISED_BYTES=%llu   <- avoidable by binding the file\n"
+            "UNCOMPRESSED_TENSORS=%u\n"
+            "COMPRESSED_DECODED_BYTES=%llu\n"
+            "COMPRESSED_TENSORS=%u\n"
+            "LARGEST_SINGLE_BLOCK_BYTES=%llu  name=%s\n"
+            "PERSISTENT_F32_WEIGHT_BYTES=%llu\n"
+            "INVARIANT_PERSISTENT_EXPANSION_ZERO=%d\n",
+            (unsigned long long)totalBytes, totalTensors,
+            (unsigned long long)avoidableBytes, avoidableTensors,
+            (unsigned long long)compressedBytes, compressedTensors,
+            (unsigned long long)largestBlock, largestName.c_str(),
+            (unsigned long long)totalBytes,
+            (totalBytes == 0) ? 1 : 0);
+        std::fflush(stderr);
     }
 
     // RAWRXD_NANOF32_BRAID_WRITER_001 -- construct the per-layer MoE routers.
@@ -9379,7 +9906,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
             std::fflush(stderr);
             modelWeights.loaded = false;
             braidEnabled_ = false;
-            return false;
+            return nqbLoadFail(__LINE__);
         }
 
         moeConfig_ = {};
@@ -9418,7 +9945,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
                 std::fflush(stderr);
                 modelWeights.loaded = false;
                 braidEnabled_ = false;
-                return false;
+                return nqbLoadFail(__LINE__);
             }
             moeRouters_[layer] = std::move(router);
 
@@ -9472,7 +9999,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
             std::fflush(stderr);
             modelWeights.loaded = false;
             braidEnabled_ = false;
-            return false;
+            return nqbLoadFail(__LINE__);
         }
         if (vocabPresent) {
             Nanof32VocabHeader vh{};
@@ -9495,7 +10022,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
                 std::fflush(stderr);
                 modelWeights.loaded = false;
                 braidEnabled_ = false;
-                return false;
+                return nqbLoadFail(__LINE__);
             }
             if (!tokenizer) tokenizer = std::make_unique<BPETokenizer>();
             if (auto* bpe = dynamic_cast<BPETokenizer*>(tokenizer.get())) {
@@ -9519,7 +10046,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
                 std::fflush(stderr);
                 modelWeights.loaded = false;
                 braidEnabled_ = false;
-                return false;
+                return nqbLoadFail(__LINE__);
             }
         } else {
             std::fprintf(stderr,
@@ -9552,7 +10079,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
         std::fflush(stderr);
         modelWeights.loaded = false;
         braidEnabled_ = false;
-        return false;
+        return nqbLoadFail(__LINE__);
     }
 
     modelWeights.loaded = true;

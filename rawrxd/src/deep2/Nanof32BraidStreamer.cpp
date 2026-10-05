@@ -9,6 +9,14 @@
 #include <cstring>
 #include <algorithm>
 
+// RAWRXD_NQB_LOAD_MEMORY_CENSUS_001: OS memory counters for the load census.
+// Guarded so a non-Windows build of this file is unaffected.
+#if defined(_WIN32)
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+#  include <psapi.h>
+#endif
+
 namespace Deep2 {
 
 // ----------------------------------------------------------------------------
@@ -374,6 +382,29 @@ bool Nanof32BraidStreamer::readArchMeta(Nanof32BraidArchMeta& outMeta) {
     return file_.gcount() == sizeof(Nanof32BraidArchMeta);
 }
 
+// RAWRXD_NQB_LOAD_MEMORY_CENSUS_001
+//
+// PrivateUsage is the primary metric for the load-inflation census: working set
+// can fall without ownership changing, and freed heap can stay committed inside
+// the allocator, so neither answers "how much is live right now".
+//
+// Self-contained and dependency-free by design. It deliberately does NOT call
+// into the probe: the loader must stay free of harness coupling, and a
+// diagnostics helper that only reads OS counters is safe to leave in place.
+static uint64_t nqbPrivateBytes() {
+#if defined(_WIN32)
+    PROCESS_MEMORY_COUNTERS_EX pmc{};
+    pmc.cb = sizeof pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(),
+                             (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof pmc)) {
+        return static_cast<uint64_t>(pmc.PrivateUsage);
+    }
+    return 0;
+#else
+    return 0;
+#endif
+}
+
 bool Nanof32BraidStreamer::readAllTensors(
     std::vector<std::pair<std::string, NQBraidBlock>>& outTensors) {
     outTensors.clear();
@@ -411,9 +442,81 @@ bool Nanof32BraidStreamer::readAllTensors(
             (unsigned long long)actualSize);
     }
 
+    // RAWRXD_NQB_MATERIALIZE_BOUNDARY_001
+    //
+    // The loader process dies intermittently inside this function, between
+    // [NQBRAID] OPEN and [NQBRAID] LOADED, with 47 of 63 GB free and no Windows
+    // faulting event. Until now the only evidence was the two bracketing lines,
+    // which localises the death to "somewhere in here".
+    //
+    // This makes the death observable to the tensor. Every tensor prints its
+    // index, name and byte count BEFORE it is materialised, and the cumulative
+    // committed payload is printed at the boundaries. If the process dies, the
+    // last line printed is the tensor that killed it -- which distinguishes
+    // "one specific oversized tensor" from "the accumulation" from "the last
+    const uint64_t privBefore = nqbPrivateBytes();
+    // tensor", three hypotheses that are otherwise indistinguishable.
+    // RAWRXD_NQB_VERIFY_PATH_DIAG_001
+    //
+    // (1) payload_bytes was `(header_->numTensors ? 0ull : 0ull)` -- both arms
+    //     zero. The boundary instrumentation reported a CONSTANT while looking
+    //     like a measurement.
+    //
+    // (2) THE DEFECT. The loop built every block and then DISCARDED it:
+    //
+    //         NQBraidBlock blk;
+    //         blk.fileOffset = readHead_;
+    //         blk.byteCount  = ...;
+    //         blk.bf16Data   = std::move(data);
+    //         blk.f32Data    = std::move(f32);
+    //         blk.name       = std::string(footer.name);
+    //         blk.expertIndex = footer.expertIndex;
+    //         blk.ready      = true;
+    //         ... print NQB_MATERIALIZE_OK ...
+    //         // <-- outTensors.emplace_back(...) WAS MISSING HERE
+    //
+    //     `rg 'outTensors\.(emplace_back|push_back)'` over the whole file
+    //     returned NOTHING: the out-parameter was only ever cleared, never
+    //     filled. So readAllTensors materialised all 21 tensors, printed
+    //     MATERIALIZE_OK 21 times, and returned TRUE with an empty collection:
+    //
+    //         VERIFY_READ_ALL_OK=1
+    //         VERIFY_TENSORS_READ=0
+    //         VERIFY_FIRST_MISMATCH=absent:token_embd.weight
+    //
+    //     `absent:token_embd.weight` is a THIRD-ORDER symptom. The first bad
+    //     boundary is the missing append, one statement earlier, and it has
+    //     nothing to do with token_embd.
+    //
+    //     This is the fourth instance in this tree of an API reporting SUCCESS
+    //     while delivering nothing -- after the readAllTensors EOF re-arm, the
+    //     refactor_chain_cert empty symbol table, and the ENABLE_VULKAN
+    //     iterator skip. A caller cannot distinguish "the file has no tensors"
+    //     from "I dropped them".
+    std::fprintf(stderr,
+        "[NQBRAID] NQB_MATERIALIZE_BEGIN tensors=%u header_fileSize=%llu actual=%llu readHead=%llu\n",
+        header_->numTensors,
+        (unsigned long long)header_->fileSize, (unsigned long long)actualSize,
+        (unsigned long long)readHead_);
+    std::fflush(stderr);
+    uint64_t committedBytes = 0;
+    uint32_t materialisedCount = 0;
+
     for (uint32_t i = 0; i < header_->numTensors; ++i) {
-        Nanof32BraidTensorFooter footer{};
+Nanof32BraidTensorFooter footer{};
         std::vector<bfloat16_t> data;
+        // Per-tensor pre-materialisation marker: flushed, so a crash cannot
+        // swallow it.
+        //
+        // RAWRXD_NQB_MATERIALIZE_NAME_001
+        // `footer` is default-constructed on the line above and is only filled
+        // by readNextTensor() below. Printing footer.name HERE therefore always
+        // printed an EMPTY string -- on the one line whose entire purpose is to
+        // name the tensor that kills the process. The name is printed by
+        // NQB_MATERIALIZE_OK after the read, where it is known.
+        std::fprintf(stderr, "[NQBRAID] NQB_MATERIALIZE_TENSOR index=%u/%u private_before=%llu\n",
+                     i, header_->numTensors, (unsigned long long)privBefore);
+        std::fflush(stderr);
         // RAWRXD_NQB_DENSE_F32_PRESERVE_F32_001 -- ask for F32 so a dense-F32
         // payload is not narrowed on its way to the engine. Quantised payloads
         // still land in `data`.
@@ -438,8 +541,46 @@ bool Nanof32BraidStreamer::readAllTensors(
         blk.name = std::string(footer.name);
         blk.expertIndex = footer.expertIndex;
         blk.ready = true;
+        committedBytes += blk.byteCount;
+        ++materialisedCount;
+        const uint64_t privAfter = nqbPrivateBytes();
+        std::fprintf(stderr,
+            "[NQBRAID] NQB_MATERIALIZE_OK index=%u name=%s bytes=%llu "
+            "private_after=%llu tensor_delta=%lld tensor_payload_total=%llu tensors_done=%u\n",
+            i, blk.name.c_str(), (unsigned long long)blk.byteCount,
+            (unsigned long long)privAfter, (long long)(privAfter - privBefore),
+            (unsigned long long)committedBytes, materialisedCount);
+
+        // RAWRXD_NQB_VERIFY_PATH_DIAG_001 -- PUBLISH THE BLOCK.
+        //
+        // This statement was missing. Without it the block above is built,
+        // counted, printed and then discarded at the end of the iteration, so
+        // readAllTensors returned true having delivered an empty collection:
+        //
+        //     VERIFY_READ_ALL_OK=1  VERIFY_TENSORS_READ=0
+        //     VERIFY_FIRST_MISMATCH=absent:token_embd.weight
+        //
+        // The append goes AFTER the MATERIALIZE_OK print because that print
+        // reads blk.name, and the block is moved into the vector here.
         outTensors.emplace_back(blk.name, std::move(blk));
     }
+
+    // The materialisation boundary instrumentation must not be able to report
+    // success while delivering nothing, which is what made this defect
+    // invisible: the function returned true, the caller trusted it, and the
+    // absence surfaced three steps downstream as "token_embd is missing".
+    if (header_->numTensors > 0 && outTensors.size() != header_->numTensors) {
+        std::fprintf(stderr,
+            "[NQBRAID] ERROR: readAllTensors materialised %u of %u tensors\n",
+            (unsigned int)outTensors.size(), (unsigned int)header_->numTensors);
+        std::fflush(stderr);
+        outTensors.clear();
+        return false;
+    }
+    std::fprintf(stderr,
+        "[NQBRAID] NQB_MATERIALIZE_END tensors_done=%u payload_total_bytes=%llu\n",
+        materialisedCount, (unsigned long long)committedBytes);
+    std::fflush(stderr);
     return true;
 }
 

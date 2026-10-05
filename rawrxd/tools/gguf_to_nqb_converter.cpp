@@ -141,10 +141,48 @@ int main(int argc, char** argv) {
     std::snprintf(archMeta.archName, sizeof archMeta.archName, "%s",
                   loader.getMetaString("general.architecture", "llama").c_str());
 
-    archMeta.numLayers       = static_cast<uint32_t>(loader.getMetaInt("llama.block_count", 0));
-    archMeta.hiddenDim       = static_cast<uint32_t>(loader.getMetaInt("llama.embedding_length", 0));
-    archMeta.numHeads        = static_cast<uint32_t>(loader.getMetaInt("llama.attention.head_count", 0));
-    archMeta.numKVHeads      = static_cast<uint32_t>(loader.getMetaInt("llama.attention.head_count_kv", 0));
+    // RAWRXD_GGUF_ARCH_PREFIXED_KEYS_001
+    //
+    // Every geometry read below used to be hardcoded "llama.*". That works only
+    // for llama-family models and silently produces ZEROS for everything else,
+    // because GGUF namespaces its metadata under the architecture name. This file
+    // already knew the architecture -- it had just read it into archName at the
+    // line above -- and then ignored it.
+    //
+    // Measured consequence on a real non-llama model:
+    //     gguf_to_nqb_converter qwen2.5-coder-1.5b-base.gguf out.nqb
+    //     GEOMETRY_FATAL hidden=0 heads=0 headDim=0 hidden%heads=0    exit 3
+    // The refusal was CORRECT (a header of zeros is not a model) but the reason
+    // was a missing key prefix, not an unsupported architecture. The tool was
+    // llama-only and did not say so.
+    //
+    // AKEY() resolves "<arch>.<suffix>" and falls back to "llama.<suffix>" for
+    // models whose keys genuinely live under llama.* regardless of the declared
+    // architecture, so nothing that worked before stops working.
+    const std::string archPrefix(archMeta.archName);
+    auto AKEY = [&](const char* suffix) -> std::string {
+        const std::string k = archPrefix + "." + suffix;
+        if (loader.hasMeta(k)) return k;
+        const std::string fallback = std::string("llama.") + suffix;
+        return loader.hasMeta(fallback) ? fallback : k;
+    };
+    auto AINT = [&](const char* suffix, long long dflt) -> long long {
+        return loader.getMetaInt(AKEY(suffix).c_str(), dflt);
+    };
+    auto AFLOAT = [&](const char* suffix, float dflt) -> float {
+        return loader.getMetaFloat(AKEY(suffix).c_str(), dflt);
+    };
+    std::fprintf(stderr, "ARCH_METADATA_PREFIX=%s\n", archPrefix.c_str());
+
+    archMeta.numLayers       = static_cast<uint32_t>(AINT("block_count", 0));
+    archMeta.hiddenDim       = static_cast<uint32_t>(AINT("embedding_length", 0));
+    archMeta.numHeads        = static_cast<uint32_t>(AINT("attention.head_count", 0));
+    archMeta.numKVHeads      = static_cast<uint32_t>(AINT("attention.head_count_kv", 0));
+    // GGUF omits head_count_kv entirely when it equals head_count (multi-head
+    // attention with no GQA reduction). Reading the absent key as 0 produced a
+    // numKVHeads of 0, which then fails every downstream head-count invariant for
+    // a reason that has nothing to do with the model.
+    if (archMeta.numKVHeads == 0) archMeta.numKVHeads = archMeta.numHeads;
     // RAWRXD_NQBRAID_HEAD_DIM_DERIVED_001
     //
     // This read:
@@ -163,7 +201,7 @@ int main(int argc, char** argv) {
     // head_dim is by definition embedding_length / head_count, so derive it when
     // the key is absent rather than assuming a constant that is wrong for every
     // model whose hidden size is not 64*heads.
-    archMeta.headDim         = static_cast<uint32_t>(loader.getMetaInt("llama.attention.head_dim", 0));
+    archMeta.headDim         = static_cast<uint32_t>(AINT("attention.head_dim", 0));
     if (archMeta.headDim == 0 && archMeta.hiddenDim != 0 && archMeta.numHeads != 0) {
         // RAWRXD_ARCH_HEAD_DERIVE_OR_FAIL_001
         //
@@ -203,11 +241,11 @@ int main(int argc, char** argv) {
                          archMeta.headDim);
         }
     }
-    archMeta.intermediateDim = static_cast<uint32_t>(loader.getMetaInt("llama.feed_forward_length", 0));
-    archMeta.vocabSize       = static_cast<uint32_t>(loader.getMetaInt("llama.vocab_size", 0));
-    archMeta.contextLength   = static_cast<uint32_t>(loader.getMetaInt("llama.context_length", 2048));
-    archMeta.normEps         = static_cast<float>(loader.getMetaFloat("llama.attention.layer_norm_rms_epsilon", 1e-5));
-    archMeta.ropeTheta       = static_cast<float>(loader.getMetaFloat("llama.rope.freq_base", 10000.0));
+    archMeta.intermediateDim = static_cast<uint32_t>(AINT("feed_forward_length", 0));
+    archMeta.vocabSize       = static_cast<uint32_t>(AINT("vocab_size", 0));
+    archMeta.contextLength   = static_cast<uint32_t>(AINT("context_length", 2048));
+    archMeta.normEps         = static_cast<float>(AFLOAT("attention.layer_norm_rms_epsilon", 1e-5f));
+    archMeta.ropeTheta       = static_cast<float>(AFLOAT("rope.freq_base", 10000.0f));
 
     // RAWRXD_ARCH_CONTEXT_INVARIANT_001
     //
@@ -219,7 +257,37 @@ int main(int argc, char** argv) {
     std::fprintf(stderr,
         "CONTEXT_GEOMETRY arch_context=%u engine_context_default=%u kv_cache_context=arch\n",
         archMeta.contextLength, 2048u);
-    archMeta.ropeType        = 1; // NeoX for Llama-style models
+    // RAWRXD_NQB_ROPE_TYPE_DERIVE_001
+    //
+    // This read:
+    //     archMeta.ropeType = 1; // NeoX for Llama-style models
+    //
+    // which is the SAME transposed belief that
+    // RAWRXD_ROPE_LAYOUT_SELECTION_001 corrected in the engine. llama.cpp maps
+    // LLM_ARCH_LLAMA to LLAMA_ROPE_TYPE_NORM -- adjacent/consecutive pairs --
+    // not to the rotated-half convention. The field enum is:
+    //
+    //     0 = none   1 = NeoX (rotated half)   2 = GPT-J (adjacent pairs)   3 = MLA
+    //
+    // so a llama-family model must write 2, not 1. Writing 1 made the braid
+    // loader resolve ropeNeoxStyle=true while the corrected GGUF path resolved
+    // it false -- the same divergence with the two sides swapped, which is what
+    // a one-sided fix looks like when the other side was carrying the error in
+    // metadata rather than in code.
+    //
+    // The classification is derived from the architecture and printed, so it can
+    // be audited against llama.cpp rather than trusted.
+    {
+        const std::string& a = archMeta.archName;
+        const bool neox = (a == "gptneox" || a == "gpt-neox" || a == "stablelm" ||
+                          a == "olmo"     || a == "phi2"    || a == "phi3" ||
+                          a == "phimoe");
+        archMeta.ropeType = neox ? 1u : 2u;   // 2 == GPT-J adjacent == NORM
+        std::fprintf(stderr,
+            "ROPE_TYPE_DERIVED arch=%s ropeType=%u resolved=%s\n",
+            a.c_str(), archMeta.ropeType,
+            neox ? "NEOX_ROTATED_HALF" : "NORMAL_ADJACENT_PAIR");
+    }
 
     // MLA / MoE: not yet supported for conversion; leave defaults
     archMeta.numExperts      = 0;
@@ -318,7 +386,59 @@ int main(int argc, char** argv) {
     // converter killed halfway through therefore leaves no artifact that a
     // reader could mistake for a model.
     // ----------------------------------------------------------------
-const std::string buildingPath = std::string(nqbPath) + ".building";
+// ----------------------------------------------------------------
+    // RAWRXD_NQB_VOCAB_DOMAIN_DERIVED_001
+    //
+    // vocabSize was taken from the GGUF token array whenever the metadata key was
+    // absent. On a real llama model tokens.size() == vocab size, so that is fine.
+    // On a source whose token array is a STUB it is not. Measured on
+    // src/core/test_tiny_with_vocab.gguf:
+    //
+    //     ARCH_META vocabSize_from_metadata=0 vocabSize_from_token_array=2
+    //     TENSOR=token_embd.weight elements=4096 hidden=8  -> 512 embedding rows
+    //     FAIL=EMBED_ROWS_VOCAB_SIZE_DISAGREE
+    //
+    // The converter believed the 2-entry stub, wrote vocabSize=2, then failed its
+    // own consistency check and refused to promote. Correct outcome, wrong
+    // reasoning: it shrank the domain to match the LESS authoritative input
+    // instead of taking the domain from the thing that actually bounds ids.
+    //
+    // NQB_INVARIANT_TOKEN_DOMAIN_001 runs in one direction only -- a token id must
+    // have an embedding row -- so the embedding is the authority for the domain
+    // size and the token array is a possibly-incomplete label set over it. A
+    // shorter array is a source-data gap to REPORT; a longer one is the violation.
+    //
+    // The embedding shape comes from the loader's index, BEFORE anything is
+    // written. archMeta is emitted inside open() and was previously finalised
+    // before the tensors that constrain it had been read -- the same ordering
+    // defect that let paramCount ship as 0.
+    // ----------------------------------------------------------------
+    uint64_t embedRowsFromIndex = 0;
+    if (const Deep2::GGUFTensor* emb = loader.getTensor("token_embd.weight")) {
+        if (emb->numElements() && archMeta.hiddenDim)
+            embedRowsFromIndex = emb->numElements() / archMeta.hiddenDim;
+    }
+    std::fprintf(stderr, "VOCAB_DOMAIN embed_rows_from_index=%llu token_array=%zu "
+                         "metadata_vocab=%u\n",
+                 (unsigned long long)embedRowsFromIndex,
+                 vocabSpec.tokens.size(), archMeta.vocabSize);
+    if (embedRowsFromIndex != 0 &&
+        archMeta.vocabSize != (uint32_t)embedRowsFromIndex) {
+        std::fprintf(stderr, "VOCAB_DOMAIN_CORRECTED from=%u to=%llu source=embedding_rows\n",
+                     archMeta.vocabSize, (unsigned long long)embedRowsFromIndex);
+        archMeta.vocabSize = static_cast<uint32_t>(embedRowsFromIndex);
+    } else if (archMeta.vocabSize == 0 && !vocabSpec.tokens.empty()) {
+        archMeta.vocabSize = static_cast<uint32_t>(vocabSpec.tokens.size());
+    }
+    if (archMeta.vocabSize != 0 &&
+        vocabSpec.tokens.size() < (size_t)archMeta.vocabSize) {
+        std::fprintf(stderr, "VOCAB_ARRAY_SHORTER_THAN_DOMAIN array=%zu domain=%u "
+                             "(ids above the array have embeddings but no label; "
+                             "reported, not repaired)\n",
+                     vocabSpec.tokens.size(), archMeta.vocabSize);
+    }
+
+    const std::string buildingPath = std::string(nqbPath) + ".building";
     std::remove(nqbPath);            // never leave a previous artifact in place
     std::remove(buildingPath.c_str());
     std::wstring nqbPathW(nqbPath, nqbPath + std::strlen(nqbPath));

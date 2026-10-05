@@ -91,6 +91,10 @@ LOC_POISON   EQU 64
 LOC_XMMSAVE  EQU 112
 
 PUBLIC HexMag_AbiProbe_Check
+PUBLIC HexMag_AbiProbe_Sequence
+PUBLIC HexMag_AbiTrace_Call
+PUBLIC HexMag_AbiProbe_CorruptNonvolatiles
+PUBLIC hxab_observed
 
 ; ---------------------------------------------------------------------------
 ; NEGATIVE CONTROL -- a deliberately ABI-violating export.
@@ -399,9 +403,489 @@ hxabi_xmm_15:
     ret
 HexMag_AbiProbe_Check ENDP
 
+; ---------------------------------------------------------------------------
+; uint64_t HexMag_AbiProbe_Sequence(void (*sequence)(void))
+;   rcx = entry point for a WHOLE sequence of swarm/tuner calls
+;
+; COMPOSITION TEST. HexMag_AbiProbe_Check proves each export honours the ABI in
+; isolation. It cannot prove the chain does: a defect that only appears when
+; exports are composed (one clobbering a register that a later export then
+; relies on, or state carried between calls) passes every isolated probe.
+;
+; So the canaries are loaded ONCE and held across the entire sequence. The
+; sequence itself is written in C++ -- it is a chain of ordinary API calls --
+; and this wrapper only supplies the register discipline the C++ compiler
+; cannot be asked for.
+;
+; Returns the same ABI_BAD_* mask, with the same bit meanings.
+; Frame: 8 pushed registers leave RSP at 16n+8, so the allocation is 0xC8
+; then 0xC8 for locals: [rsp+0]=target, [rsp+8]=pre-call RSP, [rsp+0x10..0xB0]=saved
+; ---------------------------------------------------------------------------
+HexMag_AbiProbe_Sequence PROC
+    push    rbx
+    push    rbp
+    push    rsi
+    push    rdi
+    push    r12
+    push    r13
+    push    r14
+    push    r15
+    sub     rsp, 0C8h
+
+    mov     [rsp], rcx                    ; target
+    mov     [rsp+08h], rsp                ; pre-call RSP, compared after
+
+    lea     r10, [canary_xmm]
+
+    movaps  [rsp+10h], xmm6
+    movaps  [rsp+20h], xmm7
+    movaps  [rsp+30h], xmm8
+    movaps  [rsp+40h], xmm9
+    movaps  [rsp+50h], xmm10
+    movaps  [rsp+60h], xmm11
+    movaps  [rsp+70h], xmm12
+    movaps  [rsp+80h], xmm13
+    movaps  [rsp+90h], xmm14
+    movaps  [rsp+0A0h], xmm15
+
+    mov     rbx, CAN_BX
+    mov     rbp, CAN_BP
+    mov     rsi, CAN_SI
+    mov     rdi, CAN_DI
+    mov     r12, CAN_R12
+    mov     r13, CAN_R13
+    mov     r14, CAN_R14
+    mov     r15, CAN_R15
+
+    movaps  xmm6,  xmmword ptr [r10 +   0]
+    movaps  xmm7,  xmmword ptr [r10 +  16]
+    movaps  xmm8,  xmmword ptr [r10 +  32]
+    movaps  xmm9,  xmmword ptr [r10 +  48]
+    movaps  xmm10, xmmword ptr [r10 +  64]
+    movaps  xmm11, xmmword ptr [r10 +  80]
+    movaps  xmm12, xmmword ptr [r10 +  96]
+    movaps  xmm13, xmmword ptr [r10 + 112]
+    movaps  xmm14, xmmword ptr [r10 + 128]
+    movaps  xmm15, xmmword ptr [r10 + 144]
+
+    call    rcx
+
+    ; Record what the chain actually left behind, so a failure can be diagnosed
+    ; rather than merely reported. Index order matches kObserved below.
+    lea     r10, [hxab_observed]
+    mov     [r10+00h], rbx
+    mov     [r10+08h], rbp
+    mov     [r10+10h], rsi
+    mov     [r10+18h], rdi
+    mov     [r10+20h], r12
+    mov     [r10+28h], r13
+    mov     [r10+30h], r14
+    mov     [r10+38h], r15
+
+    xor     r11d, r11d                    ; violation mask
+
+    mov     rax, [rsp+08h]                 ; the sequence must restore RSP
+    cmp     rax, rsp
+    je      hxabs_rsp_ok
+    or      r11d, ABI_BAD_RSP
+hxabs_rsp_ok:
+
+    pushfq
+    pop     rax
+    test    ah, 4                          ; DF must still be clear
+    setnz   al
+    movzx   eax, al
+    shl     eax, 21
+    or      r11d, eax
+
+    cmp     rbx, CAN_BX
+    je      hxabs_gpr_01
+    or      r11d, ABI_BAD_RBX
+hxabs_gpr_01:
+    cmp     rbp, CAN_BP
+    je      hxabs_gpr_02
+    or      r11d, ABI_BAD_RBP
+hxabs_gpr_02:
+    cmp     rsi, CAN_SI
+    je      hxabs_gpr_03
+    or      r11d, ABI_BAD_RSI
+hxabs_gpr_03:
+    cmp     rdi, CAN_DI
+    je      hxabs_gpr_04
+    or      r11d, ABI_BAD_RDI
+hxabs_gpr_04:
+    cmp     r12, CAN_R12
+    je      hxabs_gpr_05
+    or      r11d, ABI_BAD_R12
+hxabs_gpr_05:
+    cmp     r13, CAN_R13
+    je      hxabs_gpr_06
+    or      r11d, ABI_BAD_R13
+hxabs_gpr_06:
+    cmp     r14, CAN_R14
+    je      hxabs_gpr_07
+    or      r11d, ABI_BAD_R14
+hxabs_gpr_07:
+    cmp     r15, CAN_R15
+    je      hxabs_gpr_08
+    or      r11d, ABI_BAD_R15
+hxabs_gpr_08:
+
+    lea     r10, [canary_xmm]
+    movaps  xmm0, xmmword ptr [r10 +   0]
+    pcmpeqd xmm0, xmm6
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_6
+    or      r11d, ABI_BAD_XMM6
+hxabs_xmm_6:
+    movaps  xmm0, xmmword ptr [r10 +  16]
+    pcmpeqd xmm0, xmm7
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_7
+    or      r11d, ABI_BAD_XMM7
+hxabs_xmm_7:
+    movaps  xmm0, xmmword ptr [r10 +  32]
+    pcmpeqd xmm0, xmm8
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_8
+    or      r11d, ABI_BAD_XMM8
+hxabs_xmm_8:
+    movaps  xmm0, xmmword ptr [r10 +  48]
+    pcmpeqd xmm0, xmm9
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_9
+    or      r11d, ABI_BAD_XMM9
+hxabs_xmm_9:
+    movaps  xmm0, xmmword ptr [r10 +  64]
+    pcmpeqd xmm0, xmm10
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_10
+    or      r11d, ABI_BAD_XMM10
+hxabs_xmm_10:
+    movaps  xmm0, xmmword ptr [r10 +  80]
+    pcmpeqd xmm0, xmm11
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_11
+    or      r11d, ABI_BAD_XMM11
+hxabs_xmm_11:
+    movaps  xmm0, xmmword ptr [r10 +  96]
+    pcmpeqd xmm0, xmm12
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_12
+    or      r11d, ABI_BAD_XMM12
+hxabs_xmm_12:
+    movaps  xmm0, xmmword ptr [r10 + 112]
+    pcmpeqd xmm0, xmm13
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_13
+    or      r11d, ABI_BAD_XMM13
+hxabs_xmm_13:
+    movaps  xmm0, xmmword ptr [r10 + 128]
+    pcmpeqd xmm0, xmm14
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_14
+    or      r11d, ABI_BAD_XMM14
+hxabs_xmm_14:
+    movaps  xmm0, xmmword ptr [r10 + 144]
+    pcmpeqd xmm0, xmm15
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxabs_xmm_15
+    or      r11d, ABI_BAD_XMM15
+hxabs_xmm_15:
+
+    movaps  xmm6,  xmmword ptr [rsp+10h]
+    movaps  xmm7,  xmmword ptr [rsp+20h]
+    movaps  xmm8,  xmmword ptr [rsp+30h]
+    movaps  xmm9,  xmmword ptr [rsp+40h]
+    movaps  xmm10, xmmword ptr [rsp+50h]
+    movaps  xmm11, xmmword ptr [rsp+60h]
+    movaps  xmm12, xmmword ptr [rsp+70h]
+    movaps  xmm13, xmmword ptr [rsp+80h]
+    movaps  xmm14, xmmword ptr [rsp+90h]
+    movaps  xmm15, xmmword ptr [rsp+0A0h]
+
+    mov     eax, r11d
+    add     rsp, 0C8h
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rdi
+    pop     rsi
+    pop     rbp
+    pop     rbx
+    ret
+HexMag_AbiProbe_Sequence ENDP
+
+; ---------------------------------------------------------------------------
+; uint64_t HexMag_AbiTrace_Call(void* fn, uint64_t a1, uint64_t a2,
+;                              unsigned long long* out)
+;   rcx = target export
+;   rdx = value to pass as the export's first argument  (RCX)
+;   r8  = value to pass as the export's second argument (RDX)
+;   r9  = out[18]
+;   out[0..7]  = OBSERVED RBX RBP RSI RDI R12 R13 R14 R15 after the call
+;   out[8..17] = OBSERVED low dword of XMM6..XMM15 after the call
+;   returns the ABI_BAD_* mask.
+;
+; PER-CALL TRACER. HexMag_AbiProbe_Sequence says WHICH CHAIN damaged a canary;
+; this says WHICH CALL inside it, by running the chain one call at a time with a
+; full snapshot either side of every single call. That is the difference between
+; "something in this chain is wrong" and "this specific call is wrong".
+;
+; It also records what the register BECAME, not merely that it differs, so a value
+; can be resolved against a map file or compared with a previous step.
+; ---------------------------------------------------------------------------
+HexMag_AbiTrace_Call PROC
+    push    rbx
+    push    rbp
+    push    rsi
+    push    rdi
+    push    r12
+    push    r13
+    push    r14
+    push    r15
+    sub     rsp, 0D8h
+    ; out goes in OUR frame: r10 is volatile and the swarm uses it internally,
+    ; so holding the output pointer in r10 across the call loses it.
+    mov     [rsp+28h], r9
+    ; Save the caller's nonvolatile XMMs. This routine clobbers them exactly as
+    ; a real callee would, so it must put them back; an earlier revision did not,
+    ; and then reported all ten XMM canaries damaged on every single call.
+    movaps  [rsp+30h], xmm6
+    movaps  [rsp+40h], xmm7
+    movaps  [rsp+50h], xmm8
+    movaps  [rsp+60h], xmm9
+    movaps  [rsp+70h], xmm10
+    movaps  [rsp+80h], xmm11
+    movaps  [rsp+90h], xmm12
+    movaps  [rsp+0A0h], xmm13
+    movaps  [rsp+0B0h], xmm14
+    movaps  [rsp+0C0h], xmm15
+
+    mov     r11, rcx                  ; target
+    mov     rbx, CAN_BX
+    mov     rbp, CAN_BP
+    mov     rsi, CAN_SI
+    mov     rdi, CAN_DI
+    mov     r12, CAN_R12
+    mov     r13, CAN_R13
+    mov     r14, CAN_R14
+    mov     r15, CAN_R15
+
+    lea     r10, [canary_xmm]
+    movaps  xmm6,  xmmword ptr [r10 +   0]
+    movaps  xmm7,  xmmword ptr [r10 +  16]
+    movaps  xmm8,  xmmword ptr [r10 +  32]
+    movaps  xmm9,  xmmword ptr [r10 +  48]
+    movaps  xmm10, xmmword ptr [r10 +  64]
+    movaps  xmm11, xmmword ptr [r10 +  80]
+    movaps  xmm12, xmmword ptr [r10 +  96]
+    movaps  xmm13, xmmword ptr [r10 + 112]
+    movaps  xmm14, xmmword ptr [r10 + 128]
+    movaps  xmm15, xmmword ptr [r10 + 144]
+
+    mov     rcx, rdx                  ; arg1
+    mov     rdx, r8                   ; arg2
+    call    r11
+
+    ; ---- record what the call left behind ------------------------------
+    mov     r10, [rsp+28h]              ; reload out: the call destroyed r10
+    mov     [r10+00h], rbx
+    mov     [r10+08h], rbp
+    mov     [r10+10h], rsi
+    mov     [r10+18h], rdi
+    mov     [r10+20h], r12
+    mov     [r10+28h], r13
+    mov     [r10+30h], r14
+    mov     [r10+38h], r15
+    movd    eax, xmm6
+    mov     [r10+40h], rax
+    movd    eax, xmm7
+    mov     [r10+44h], rax
+    movd    eax, xmm8
+    mov     [r10+48h], rax
+    movd    eax, xmm9
+    mov     [r10+4Ch], rax
+    movd    eax, xmm10
+    mov     [r10+50h], rax
+    movd    eax, xmm11
+    mov     [r10+54h], rax
+    movd    eax, xmm12
+    mov     [r10+58h], rax
+    movd    eax, xmm13
+    mov     [r10+5Ch], rax
+    movd    eax, xmm14
+    mov     [r10+60h], rax
+    movd    eax, xmm15
+    mov     [r10+64h], rax
+
+    xor     r11d, r11d                ; violation mask
+    cmp     rbx, CAN_BX
+    je      hxat_01
+    or      r11d, ABI_BAD_RBX
+hxat_01:
+    cmp     rbp, CAN_BP
+    je      hxat_02
+    or      r11d, ABI_BAD_RBP
+hxat_02:
+    cmp     rsi, CAN_SI
+    je      hxat_03
+    or      r11d, ABI_BAD_RSI
+hxat_03:
+    cmp     rdi, CAN_DI
+    je      hxat_04
+    or      r11d, ABI_BAD_RDI
+hxat_04:
+    cmp     r12, CAN_R12
+    je      hxat_05
+    or      r11d, ABI_BAD_R12
+hxat_05:
+    cmp     r13, CAN_R13
+    je      hxat_06
+    or      r11d, ABI_BAD_R13
+hxat_06:
+    cmp     r14, CAN_R14
+    je      hxat_07
+    or      r11d, ABI_BAD_R14
+hxat_07:
+    cmp     r15, CAN_R15
+    je      hxat_08
+    or      r11d, ABI_BAD_R15
+hxat_08:
+    lea     r10, [canary_xmm]
+    movaps  xmm0, xmmword ptr [r10 +   0]
+    pcmpeqd xmm0, xmm6
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_6
+    or      r11d, ABI_BAD_XMM6
+hxat_6:
+    movaps  xmm0, xmmword ptr [r10 +  16]
+    pcmpeqd xmm0, xmm7
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_7
+    or      r11d, ABI_BAD_XMM7
+hxat_7:
+    movaps  xmm0, xmmword ptr [r10 +  32]
+    pcmpeqd xmm0, xmm8
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_8
+    or      r11d, ABI_BAD_XMM8
+hxat_8:
+    movaps  xmm0, xmmword ptr [r10 +  48]
+    pcmpeqd xmm0, xmm9
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_9
+    or      r11d, ABI_BAD_XMM9
+hxat_9:
+    movaps  xmm0, xmmword ptr [r10 +  64]
+    pcmpeqd xmm0, xmm10
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_10
+    or      r11d, ABI_BAD_XMM10
+hxat_10:
+    movaps  xmm0, xmmword ptr [r10 +  80]
+    pcmpeqd xmm0, xmm11
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_11
+    or      r11d, ABI_BAD_XMM11
+hxat_11:
+    movaps  xmm0, xmmword ptr [r10 +  96]
+    pcmpeqd xmm0, xmm12
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_12
+    or      r11d, ABI_BAD_XMM12
+hxat_12:
+    movaps  xmm0, xmmword ptr [r10 + 112]
+    pcmpeqd xmm0, xmm13
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_13
+    or      r11d, ABI_BAD_XMM13
+hxat_13:
+    movaps  xmm0, xmmword ptr [r10 + 128]
+    pcmpeqd xmm0, xmm14
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_14
+    or      r11d, ABI_BAD_XMM14
+hxat_14:
+    movaps  xmm0, xmmword ptr [r10 + 144]
+    pcmpeqd xmm0, xmm15
+    pmovmskb eax, xmm0
+    test    eax, 0Fh
+    jnz     hxat_15
+    or      r11d, ABI_BAD_XMM15
+hxat_15:
+
+    movaps  [rsp+30h], xmm6
+    movaps  [rsp+40h], xmm7
+    movaps  [rsp+50h], xmm8
+    movaps  [rsp+60h], xmm9
+    movaps  [rsp+70h], xmm10
+    movaps  [rsp+80h], xmm11
+    movaps  [rsp+90h], xmm12
+    movaps  [rsp+0A0h], xmm13
+    movaps  [rsp+0B0h], xmm14
+    movaps  [rsp+0C0h], xmm15
+    mov     eax, r11d
+    add     rsp, 0D8h
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rdi
+    pop     rsi
+    pop     rbp
+    pop     rbx
+    ret
+HexMag_AbiTrace_Call ENDP
+
+; ---------------------------------------------------------------------------
+; void HexMag_AbiProbe_CorruptNonvolatiles(void)
+;
+; NEGATIVE CONTROL for the composition probe. Deliberately clobbers four
+; nonvolatiles with no prologue and no epilogue, so a caller that holds
+; canaries across a chain containing this call MUST see them broken.
+;
+; It lives here because MSVC x64 has no inline assembler: a C++ control could
+; not express this at all, and a control that cannot express the violation
+; cannot prove the gate can detect it.
+; ---------------------------------------------------------------------------
+HexMag_AbiProbe_CorruptNonvolatiles PROC
+    mov     rsi, 1111111111111111h
+    mov     rdi, 2222222222222222h
+    mov     r12, 3333333333333333h
+    pxor    xmm14, xmm14
+    ret
+HexMag_AbiProbe_CorruptNonvolatiles ENDP
+
 _TEXT ENDS
 
 _DATA SEGMENT
+; Observed GPR values from the last HexMag_AbiProbe_Sequence call, so a
+; failure can be diagnosed rather than merely reported.
+; Order: RBX RBP RSI RDI R12 R13 R14 R15
+PUBLIC hxab_observed
+hxab_observed DQ 8 DUP(0)
+
 PUBLIC canary_xmm
 ; Ten distinct 16-byte canaries.
 canary_xmm DQ 0CCCCCCCCCCCCCCCCh, 0CCCCCCCCCCCCCCCCh

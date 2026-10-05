@@ -70,15 +70,50 @@ install(TARGETS rawrxd_ceo rawrxd_ceo_cli
 )
 
 # Tests (if testing is enabled)
-if(RAWRXD_BUILD_TESTS)
+#
+# RAWRXD_CEO_PHANTOM_TEST_SOURCE_RETIRED_001
+#
+# This block declared a test target whose only source has never existed:
+#
+#     add_executable(test_ceo_agent tests/test_ceo_agent.cpp)
+#     add_test(NAME CEOAgentTests COMMAND test_ceo_agent)
+#
+# `tests/test_ceo_agent.cpp` does not exist anywhere in the tree -- verified by a
+# repo-wide search, not by a path guess. The consequence was that ANY configure
+# with -DRAWRXD_BUILD_TESTS=ON aborted:
+#
+#     CMake Error at src/ceo/CMakeLists.txt:74 (add_executable):
+#       Cannot find source file: tests/test_ceo_agent.cpp
+#
+# which made the entire test suite unreachable, not just this one target. A
+# declared-but-absent test is worse than no test: `CEOAgentTests` appears in the
+# ctest list of every build system that configures successfully, so it reads as
+# coverage that does not exist.
+#
+# RETIRED rather than written. Writing the file would mean inventing assertions
+# for an API whose intended contract I have no specification for, which
+# manufactures a green test rather than a real one -- the exact substitution the
+# empty-source guard above exists to prevent. The honest state is: this component
+# has NO automated test, and the graph now says so.
+#
+# If the coverage is wanted, implement the test first and re-add these three
+# lines. Do not re-add them without the source.
+if(RAWRXD_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_ceo_agent.cpp")
     add_executable(test_ceo_agent
         tests/test_ceo_agent.cpp
     )
-    
+
     target_link_libraries(test_ceo_agent PRIVATE
         rawrxd_ceo
         GTest::gtest_main
     )
-    
+
     add_test(NAME CEOAgentTests COMMAND test_ceo_agent)
+elseif(RAWRXD_BUILD_TESTS)
+    # Reported, not silent: a retired test is a coverage gap and should be
+    # visible in the configure log rather than quietly absent.
+    message(STATUS
+        "[RAWRXD_CEO_PHANTOM_TEST_SOURCE_RETIRED_001] test_ceo_agent NOT declared: "
+        "tests/test_ceo_agent.cpp does not exist. CEOAgentTests is therefore NOT "
+        "in the ctest list. rawrxd_ceo has no automated coverage.")
 endif()

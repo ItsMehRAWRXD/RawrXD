@@ -15,11 +15,11 @@ CHAIN[7]=editor.formatDocument id=50605 cli=!editor format tableHandler=handleEd
 CHAIN[8]=editor.extractFunction id=50606 cli=!editor extract tableHandler=handleEditorExtractFunction expectedHandler=handleEditorExtractFunction matches=1
 PRODUCT_BINDING_PROOF=table_row_identifier + symbol_linked_in_certified_binary + same_TU_in_WIN32IDE_SOURCES
 PRODUCT_BINDING_NOT_PROVEN_BY_THIS_GATE=address_comparison_of_g_commandRegistry_against_stub_provider;requires_linking_all_535_handlers
-STUB_PROVIDER_HANDLER_DEFS_TOTAL=371
-STUB_PROVIDER_UNCONDITIONAL_SUCCESS=371
+STUB_PROVIDER_HANDLER_DEFS_TOTAL=352
+STUB_PROVIDER_UNCONDITIONAL_SUCCESS=352
 STUB_PROVIDER_REAL_BODIES=0
 CHAIN_NAMES_STILL_IN_STUB_PROVIDER=0
-OPEN_GAP_UNRELATED_STUB_HANDLERS=371
+OPEN_GAP_UNRELATED_STUB_HANDLERS=352
 FORMAT_SCOPE=WHITESPACE_ONLY_R1_R5
 DIAGNOSTIC_RULES=missing_semicolon,undeclared_identifier
 DIAGNOSTIC_BLIND_SPOT=names_qualified_by_double_colon_are_never_reported
@@ -27,21 +27,21 @@ SEMANTIC_ORACLE=program_output_byte_identical_pre_post
 FALSIFICATION_PROBES=5
 
 # every check, with the measurement it was made from
-  PASS  FIXTURE_COPIED_TO_SCRATCH  |  source of truth is never mutated; scratch=C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356
-  PASS  WORKSPACE_ROOT_VISIBLE_TO_THE_HANDLERS  |  RAWRXD_REFACTOR_ROOT=C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\fixture.code-workspace
+  PASS  FIXTURE_COPIED_TO_SCRATCH  |  source of truth is never mutated; scratch=C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_25264
+  PASS  WORKSPACE_ROOT_VISIBLE_TO_THE_HANDLERS  |  RAWRXD_REFACTOR_ROOT=C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_25264\fixture.code-workspace
   PASS  COMMAND_TABLE_PARSED  |  rows parsed from src/core/command_registry.hpp = 539
   PASS  CHAIN_COMMANDS_IN_COMMAND_TABLE  |  9/9 present; missing: none
   PASS  CHAIN_HANDLERS_NAME_THE_REAL_IMPLEMENTATION  |  every chain row names its implementation
   PASS  CHAIN_CLI_ALIASES_EXPOSED  |  every chain command is reachable from the CLI
   PASS  CHAIN_HANDLER_SYMBOLS_LINKED_IN_THIS_BINARY  |  9/9 table-named handler symbols resolved and were executed
-  PASS  SURFACE_TRANSLATION_UNIT_IS_IN_THE_IDE_SOURCE_LIST  |  RefactorChainIdeSurface.cpp at 351863, WIN32IDE_SOURCES at 323074, add_executable(RawrXD-Win32IDE) at 469855 -> the IDE compiles the same unit the driver executed
-  PASS  NO_CHAIN_HANDLER_LEFT_IN_STUB_PROVIDER  |  stub provider defines 371 handlers, 371 of them unconditional successes; chain names still stubbed: none
-  PASS  WORKSPACE_OPENED  |  C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\alpha
+  PASS  SURFACE_TRANSLATION_UNIT_IS_IN_THE_IDE_SOURCE_LIST  |  RefactorChainIdeSurface.cpp at 542486, WIN32IDE_SOURCES at 512917, add_executable(RawrXD-Win32IDE) at 777220 -> the IDE compiles the same unit the driver executed
+  PASS  NO_CHAIN_HANDLER_LEFT_IN_STUB_PROVIDER  |  stub provider defines 352 handlers, 352 of them unconditional successes; chain names still stubbed: none
+  PASS  WORKSPACE_OPENED  |  C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_25264\alpha
   PASS  WORKSPACE_MULTI_ROOT  |  roots=2 filesIndexed=9 symbolsIndexed=71 rootList=[alpha|beta] indexedFiles=[alpha/include/calc_engine.h | alpha/src/calc_engine.cpp | alpha/src/decoy_fs.cpp | alpha/src/extract_target.cpp | alpha/src/series_stats.cpp | beta/include/report_sink.h | beta/src/malformed.cpp | beta/src/report_sink.cpp | beta/src/unformatted.cpp]
   PASS  WORKSPACE_INDEX_COUNTS_MATCH_FIXTURE  |  9 source files authored in the fixture (5 under alpha, 4 under beta), indexed 9
   PASS  FIXTURE_COMPILES_BEFORE_REFACTOR  |  cl.exe /std:c++17 accepted every source
   PASS  FIXTURE_RUNS_BEFORE_REFACTOR  |  fixture program produced output
-  PASS  DEFINITION_RESOLVES_EXACT_LOCATION  |  [refactor] workspace open: root=C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\alpha files=9 symbols=71 occurrences=276 roots=2;[lsp] definition: computeWeightedMean -> alpha/src/calc_engine.cpp:13:8 (qualified=alpha::computeWeightedMean, candidates=2, symbolsIndexed=71);
+  PASS  DEFINITION_RESOLVES_EXACT_LOCATION  |  [refactor] workspace open: root=C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_25264\alpha files=9 symbols=71 occurrences=276 roots=2;[lsp] definition: computeWeightedMean -> alpha/src/calc_engine.cpp:13:8 (qualified=alpha::computeWeightedMean, candidates=2, symbolsIndexed=71);
   PASS  F1_UNRESOLVABLE_DEFINITION_RETURNS_FAILURE  |  the old body printed "Symbol not found" and returned ok; detail=definition not resolved
   FAIL  REFERENCES_EXACT_SET_MATCHES_FIXTURE  |  sites=3 defs=1 uses=2 commentSkipped=2 stringSkipped=1
   PASS  REFERENCES_VIA_COMMAND_TABLE_POINTER  |  [lsp] references: WidgetCacheSlot total=3 definitions=1 declarations=0 uses=2 calls=0 commentOccurrencesSkipped=2 stringOccurrencesSkipped=1;  alpha/include/calc_engine.h:21:8;  alpha/src/calc_engine.cpp:11:1;  beta/src/report_sink.cpp:31:56;
@@ -71,10 +71,10 @@ FALSIFICATION_PROBES=5
   PASS  EXTRACT_INSERTED_ABOVE_ITS_CALLER  |  the new function lands at line 13 so the call site can see it; a below-insertion would not compile
   FAIL  EXTRACT_REPLACED_THE_BLOCK_WITH_ONE_CALL  |  the call sits at line 22 after the 7 inserted lines
   PASS  EXTRACT_VIA_COMMAND_TABLE_POINTER  |  [editor] extract FAILED: the selected block is not inside a function body;
-  FAIL  FIXTURE_COMPILES_AFTER_REFACTOR  |  fixture_driver.cpp;calc_engine.cpp;series_stats.cpp;decoy_fs.cpp;extract_target.cpp;report_sink.cpp;unformatted.cpp;Generating Code...;C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\alpha\src\extract_target.cpp(17) : error C4716: 'alpha::weightedAccumulate': must return a value;;[process_exit=2]
+  FAIL  FIXTURE_COMPILES_AFTER_REFACTOR  |  fixture_driver.cpp;calc_engine.cpp;series_stats.cpp;decoy_fs.cpp;extract_target.cpp;report_sink.cpp;unformatted.cpp;Generating Code...;C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_25264\alpha\src\extract_target.cpp(17) : error C4716: 'alpha::weightedAccumulate': must return a value;;[process_exit=2]
   FAIL  FIXTURE_OUTPUT_IDENTICAL_BEFORE_AND_AFTER  |  PRE=[mean=3.666667;norm=0.600000;med=3.000000;scored=27.500000;fast=1.000000;backup=5.000000;ends=3.000000;sum=119.000000;pair=3.500000;pass=2.500000;second=7.500000;] POST=[]
   PASS  F4_SINGLE_ROOT_OPEN_IS_STILL_SERVING  |  reopening the primary root directly resolves the symbol; this proves the gate did not depend on the document form alone
-  PASS  F4_UNOPENABLE_WORKSPACE_RETURNS_FAILURE  |  reason=workspace root does not exist: C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_16356\no_such_directory_here
+  PASS  F4_UNOPENABLE_WORKSPACE_RETURNS_FAILURE  |  reason=workspace root does not exist: C:\Users\Garrett\AppData\Local\Temp\RAWRXD_P1_CHAIN_25264\no_such_directory_here
   PASS  F4_NO_INDEX_MEANS_NO_RESOLUTION  |  reason=no workspace open
 
 # fixture program output, before and after, byte for byte

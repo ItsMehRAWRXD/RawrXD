@@ -219,3 +219,70 @@ _*.err.txt
 _sunshine_evidence/
 _ev_*.err
 _ev_*.out
+
+# --- Repository hygiene: oracle dumps, configure trees, scratch, weights ---
+#
+# Everything below is regenerable by re-running the harness that produced it,
+# or is local-only build state. None of it is source, and none of it is
+# evidence that cannot be reproduced on demand.
+#
+# Anchored with a leading `/` on purpose. The rules above are unanchored and
+# match at any depth; these are root-only, so a source directory or test
+# fixture whose name happens to contain "build", "oracle" or "cases" is never
+# swept up by them. The nqb_cases/ fixtures below are the concrete case: the
+# `/*.nqb` rule is anchored to the root so those tracked fixtures survive.
+
+# Generated parity/oracle dumps from QORACLE_001 and successor sweeps.
+/_qoracle/
+
+# CMake configure trees (CMakeCache.txt, build.ninja, CMakeFiles/, .ninja_*).
+# Distinguished from /build/ and /rawrxd/build*/ above by the _cfg_ prefix.
+# These are build output, not source: they regenerate on every configure.
+/_cfg_*/
+
+# Root-level CMakeCache.txt, produced by an in-source `cmake .` run at the
+# repository root. Configure output. Anchored to root because rawrxd/ and the
+# B0xx source directories legitimately hold sources of that name elsewhere.
+# NOTE: a copy is already TRACKED, so this rule does not untrack it; see the
+# audit_tombstone_001 note above for why an ignore rule cannot govern a
+# tracked path. Untracking it is a separate `git rm --cached` decision.
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+/DartConfiguration.tcl
+/Testing/
+
+# Tombstone/staging scratch for the stub census. Superseded by
+# rawrxd/audit/RAWRXD_SOURCE_INTEGRITY_AUTHORITY_001/, which is tracked.
+#
+# NOTE: 66 files under this directory are ALREADY TRACKED and remain so. An
+# ignore rule cannot govern a tracked path, so this entry does NOT untrack or
+# unstage them; it only stops NEW scratch files here from being added. The
+# tracked set includes a 1.64 MiB fbst_nqb.txt / fbst_gguf.txt duplicated
+# across nqb_cmp/, nqb_life/, nqb_kv/ and nqb_fbst/ (~12.7 MiB of regenerable
+# dumps). They are already in history, so untracking them would not shrink it;
+# if that evidence should stop being updated, it needs an explicit
+# `git rm --cached` decision rather than an ignore rule.
+/audit_tombstone_001/
+
+# Root-level scratch from interactive gate sessions: logs, captured stdout,
+# token/logit dumps, symbol tables, helper scripts and ad-hoc cmake snippets.
+# Only the root is matched, so nothing under src/, rawrxd/ or audit/ is
+# affected by these.
+_*.txt
+_*.log
+_*.csv
+_*.tokens
+_*.logits
+_*.sha256
+_*.ps1
+_*.cmake
+
+# Locally converted NQB model weights and vocab sidecars at the repository
+# root. These are multi-hundred-MiB to multi-GiB build products of the
+# converter, not distributable source; the reproducible path is the converter
+# plus its inputs, which ARE tracked. Anchored to root so nqb_cases/*.nqb
+# regression fixtures remain tracked.
+/*.nqb
+/*.nqb.vocab.txt
+/_*.nqb

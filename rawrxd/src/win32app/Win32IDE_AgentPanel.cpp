@@ -1,6 +1,8 @@
 // Win32IDE_AgentPanel.cpp — agentic loop UI: plan steps, tool calls, sub-agent status
 #include <windows.h>
 #include <atomic>
+#include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -57,10 +59,25 @@ static std::atomic<HWND> g_agentPanelHwnd{nullptr};
 // producer never waits on the UI thread, the wait is bounded and cannot deadlock:
 // every in-flight producer completes on its own.
 //
-// Ordering matters in both directions. Increment-before-load is what makes the
-// store->load in WM_DESTROY sufficient: any producer that observes the old handle
-// is already counted.
-static std::atomic<int> g_marshalInFlight{0};
+// RAWRXD_IDE_AGENT_PANEL_MARSHAL_GATE_001
+//
+// The counter this replaces existed to make "unpublish, then drain" safe: a
+// worker that loaded the handle just before the store had to be accounted for,
+// or the drain would miss its payload. It was implemented as a busy-wait on the
+// UI thread -- Sleep(0) until the count reached zero -- which turns a shutdown
+// into a spin that can stall the UI for as long as any producer is mid-post.
+//
+// A mutex expresses the same invariant without a wait at all. The only thing
+// that must not interleave with teardown is the handle-load plus PostMessage
+// pair, because a producer holding the old handle could post into a window that
+// is being destroyed. Serialising exactly that pair is sufficient:
+//
+//   producer wins the lock  -> its message is queued, and the drain finds it
+//   teardown wins the lock   -> the handle is already null, so the producer
+//                              takes the no-window path and frees its payload
+//
+// There is no third case, so there is nothing to wait for.
+static std::mutex g_marshalGate;
 
 static COLORREF stepColor(StepState s) {
     switch (s) {
@@ -160,9 +177,28 @@ static LRESULT CALLBACK AgentPanelWndProc(HWND hwnd, UINT msg, WPARAM wParam, LP
     case WM_SIZE: InvalidateRect(hwnd, nullptr, FALSE); return 0;
     // RAWRXD_IDE_AGENT_PANEL_MARSHAL_001: worker-thread posts land here, on the
     // owner thread, which is the only place g_agentPanel is mutated.
-    case AGENT_PANEL_WM_APPLY:
-        AgentPanel_ApplyOnOwnerThread((AgentPanelPayload*)lParam);
+    case AGENT_PANEL_WM_APPLY: {
+        // RAWRXD_IDE_AGENT_PANEL_MARSHAL_001
+        //
+        // Ownership is taken HERE, at the top of the handler, and expressed as a
+        // unique_ptr rather than a raw pointer plus a delete at the bottom of a
+        // function. A delete placed at the end of ApplyOnOwnerThread is correct
+        // only for as long as nobody adds an early return above it; unique_ptr
+        // makes the release unconditional on every exit path, including an
+        // exception or a future bail-out.
+        //
+        // There are then exactly two legal ownership endpoints and no third:
+        //
+        //   PostMessage refused / no HWND  -> AgentPanel_Marshal deletes
+        //   PostMessage succeeded          -> WM_APPLY owns it (here)
+        //                               or  -> WM_DESTROY drain owns it
+        std::unique_ptr<AgentPanelPayload> payload(
+            reinterpret_cast<AgentPanelPayload*>(lParam));
+        if (!payload) return 0;
+
+        AgentPanel_ApplyOnOwnerThread(payload.get());
         return 0;
+    }
 
     // RAWRXD_IDE_AGENT_PANEL_MARSHAL_001: payload lifetime on destruction.
     //
@@ -177,23 +213,20 @@ static LRESULT CALLBACK AgentPanelWndProc(HWND hwnd, UINT msg, WPARAM wParam, LP
     // drain, so the remaining payloads are reclaimed here rather than left to
     // a handler that can no longer be reached.
     case WM_DESTROY: {
-        // RAWRXD_IDE_AGENT_PANEL_SHUTDOWN_RACE_001
+        // RAWRXD_IDE_AGENT_PANEL_MARSHAL_GATE_001
         //
-        // Unpublish FIRST, then quiesce, then drain. The quiesce is what turns
-        // "narrowed" into "closed": a worker that loaded H just before the store
-        // is already counted in g_marshalInFlight, and its PostMessage either
-        // succeeded (so the drain below finds it) or failed (so it freed the
-        // payload itself). Draining without waiting would miss both.
+        // Unpublish under the same lock the producer uses, so "the handle is
+        // null" and "no producer is between load and post" become true at the
+        // same instant. That is what makes the following drain complete: any
+        // payload that will ever be posted is already in the queue by the time
+        // the lock is released, and any producer arriving later takes the
+        // no-window path and frees itself.
         //
-        // This cannot deadlock. PostMessageA does not block and the producer
-        // never waits on the UI thread, so every counted producer terminates on
-        // its own. Sleep(0) yields rather than spinning hot; the wait is bounded
-        // by the length of a single PostMessageA call.
-        g_agentPanelHwnd.store(nullptr, std::memory_order_release);
-        g_agentPanel.hwnd = nullptr;          // owner-thread view
-
-        while (g_marshalInFlight.load(std::memory_order_acquire) > 0) {
-            Sleep(0);
+        // No wait, no spin, no counter.
+        {
+            std::lock_guard<std::mutex> lock(g_marshalGate);
+            g_agentPanelHwnd.store(nullptr, std::memory_order_release);
+            g_agentPanel.hwnd = nullptr;          // owner-thread view
         }
 
         MSG m{};
@@ -220,13 +253,39 @@ void AgentPanel_Register(HINSTANCE hInst)
 
 HWND AgentPanel_Create(HWND parent, int x, int y, int w, int h, HINSTANCE hInst)
 {
-    g_agentPanel.hwnd = CreateWindowExA(0, "RawrXDAgentPanel", nullptr,
+    HWND hwnd = CreateWindowExA(0, "RawrXDAgentPanel", nullptr,
         WS_CHILD | WS_VISIBLE, x, y, w, h, parent, nullptr, hInst, nullptr);
-    // Publish only after CreateWindowExA returns, so a worker that observes the
+    if (!hwnd) return nullptr;
+// Publish only after CreateWindowExA returns, so a worker that observes the
     // handle also observes a window that can accept the post.
-    g_agentPanelHwnd.store(g_agentPanel.hwnd, std::memory_order_release);
-    return g_agentPanel.hwnd;
+    //
+    // RAWRXD_IDE_AGENT_PANEL_MARSHAL_GATE_001
+    //
+    // The publish takes g_marshalGate for the same reason the unpublish does. The
+    // gate's invariant is that "the handle is published" and "a producer is between
+    // load and post" are mutually exclusive with teardown -- and publication is one
+    // of those transitions. Publishing outside the gate left a real hole:
+    //
+    //     teardown:  lock -> store(nullptr) -> unlock
+    //     create:                      store(hwnd)          <-- not locked
+    //     teardown:  drain (queue is empty)
+    //
+    // After that interleaving the published handle refers to a window teardown has
+    // already finished with, and every subsequent AgentPanel_Marshal posts into it
+    // successfully and hands ownership to a drain that will never run again. Those
+    // payloads leak, one per update, for the remaining life of the process.
+    //
+    // With all three transitions -- publish, post, unpublish -- under one lock, the
+    // gate is authoritative for the whole lifecycle rather than for two thirds of
+    // it, and there is no ordering in which a live handle exists without a window
+    // that can receive its messages.
+    {
+        std::lock_guard<std::mutex> lock(g_marshalGate);
+        g_agentPanel.hwnd = hwnd;
+        g_agentPanelHwnd.store(hwnd, std::memory_order_release);
     }
+    return hwnd;
+}
 
 // ---------------------------------------------------------------------------
 // RAWRXD_IDE_AGENT_PANEL_MARSHAL_001
@@ -285,7 +344,15 @@ static void AgentPanel_ApplyOnOwnerThread(AgentPanelPayload* p)
             }
             break;
     }
-    delete p;
+    // RAWRXD_IDE_AGENT_PANEL_MARSHAL_001
+    //
+    // NO `delete p` HERE ANY MORE. The handler takes ownership with a unique_ptr
+    // before calling this function, so deleting here as well would be a double
+    // free on every single applied payload.
+    //
+    // This function now only MUTATES. Lifetime belongs to whoever called it:
+    // either the WM_APPLY handler's unique_ptr, or -- if the window died with the
+    // message still queued -- the WM_DESTROY drain.
     if (g_agentPanel.hwnd) InvalidateRect(g_agentPanel.hwnd, nullptr, FALSE);
 }
 
@@ -295,26 +362,21 @@ static void AgentPanel_ApplyOnOwnerThread(AgentPanelPayload* p)
 static void AgentPanel_Marshal(AgentPanelPayload* p)
 {
     if (!p) return;
-    // Counted in BEFORE the handle load, and out AFTER the post returns. See the
-    // g_marshalInFlight comment for why that pairing is what lets WM_DESTROY
-    // safely quiesce before draining.
-    g_marshalInFlight.fetch_add(1, std::memory_order_acq_rel);
+
+    // The handle load and the post are one critical section. Holding it across
+    // PostMessageA is safe because PostMessageA does not block on the UI thread
+    // and the owner never calls back into a producer, so this cannot deadlock.
+    std::lock_guard<std::mutex> lock(g_marshalGate);
 
     const HWND hwnd = g_agentPanelHwnd.load(std::memory_order_acquire);
-    if (!hwnd) {
-        g_marshalInFlight.fetch_sub(1, std::memory_order_acq_rel);
+    if (!hwnd ||
+        !PostMessageA(hwnd, AGENT_PANEL_WM_APPLY, 0, reinterpret_cast<LPARAM>(p))) {
+        // No window, or the post was refused: the payload is ours to free.
+        // A successful post transfers ownership to the owner thread, which
+        // deletes in AgentPanel_ApplyOnOwnerThread -- or, if the window died
+        // first, in the WM_DESTROY drain. Exactly one delete on every path.
         delete p;
-        return;
     }
-
-    const BOOL posted = PostMessageA(hwnd, AGENT_PANEL_WM_APPLY, 0, (LPARAM)p);
-
-    g_marshalInFlight.fetch_sub(1, std::memory_order_acq_rel);
-
-    // Failed post frees here. Successful post transfers ownership to the owner
-    // thread, which deletes in AgentPanel_ApplyOnOwnerThread -- or, if the window
-    // died first, in the WM_DESTROY drain. Exactly one delete on every path.
-    if (!posted) delete p;
 }
 
 void AgentPanel_SetTask(const std::string& task)

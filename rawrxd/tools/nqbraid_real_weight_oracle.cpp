@@ -37,6 +37,13 @@ namespace {
 struct LogitMetrics {
     double cosineSim = 0.0;
     double rmsDiff   = 0.0;
+    // RAWRXD_NQB_LOGIT_RESIDUAL_LOCALISATION_001 -- shape of the residual,
+    // so the cause can be attributed to data or to arithmetic rather than
+    // guessed at from a single scalar.
+    size_t residualExact   = 0;
+    size_t residualOver1e3 = 0;
+    double residualP50     = 0.0;
+    double residualP99     = 0.0;
     double maxAbsDiff= 0.0;
     size_t refArgmax = 0;
     size_t nqbArgmax = 0;
@@ -126,6 +133,10 @@ static void printReceipt(const Receipt& r) {
     std::printf("LOGIT_COSINE=%.9g\n", r.metrics.cosineSim);
     std::printf("LOGIT_RMSE=%.9g\n", r.metrics.rmsDiff);
     std::printf("LOGIT_MAX_ABS=%.9g\n", r.metrics.maxAbsDiff);
+    std::printf("LOGIT_RESIDUAL_EXACT=%zu\n", r.metrics.residualExact);
+    std::printf("LOGIT_RESIDUAL_OVER_1E3=%zu\n", r.metrics.residualOver1e3);
+    std::printf("LOGIT_RESIDUAL_P50=%.9g\n", r.metrics.residualP50);
+    std::printf("LOGIT_RESIDUAL_P99=%.9g\n", r.metrics.residualP99);
     std::printf("REF_ARGMAX=%zu\n", r.metrics.refArgmax);
     std::printf("NQB_ARGMAX=%zu\n", r.metrics.nqbArgmax);
     std::printf("ARGMAX_MATCH=%d\n", r.metrics.argmaxMatch);
@@ -185,6 +196,62 @@ static LogitMetrics compareLogits(const float* a, const float* b, size_t n) {
         for (int j = 0; j < 5 && j < (int)n; ++j)
             if (ra[i].idx == rb[j].idx) ++overlap;
     m.top5Overlap = overlap;
+
+    // RAWRXD_NQB_LOGIT_RESIDUAL_LOCALISATION_001
+    //
+    // Cosine/RMSE/max-abs say how far apart two vectors are. They do not say
+    // WHETHER the gap is a handful of outlier rows or a broad bias, and those
+    // have different causes: a few outliers point at specific lm_head rows
+    // (a bad row, a bad tie-break, a saturated value), while a broad, small,
+    // uniform difference points at accumulation order or a postprocess applied
+    // to every element. Guessing between "bad data" and "arithmetic" without
+    // this distinction is how a 0.02 RMSE gets attributed to the wrong subsystem.
+    //
+    // So: distribution of the per-element error, and the worst rows by name.
+    {
+        std::vector<double> d(n);
+        for (size_t i = 0; i < n; ++i) d[i] = std::fabs(static_cast<double>(a[i]) - static_cast<double>(b[i]));
+        std::vector<double> sorted(d);
+        std::sort(sorted.begin(), sorted.end());
+        auto pct = [&](double p) {
+            if (sorted.empty()) return 0.0;
+            size_t k = static_cast<size_t>(p * static_cast<double>(sorted.size() - 1) + 0.5);
+            return sorted[std::min(k, sorted.size() - 1)];
+        };
+        size_t over1e3 = 0, over1e2 = 0, over1e1 = 0, exact = 0;
+        double sum = 0.0;
+        for (double x : d) {
+            sum += x;
+            if (x == 0.0) ++exact;
+            if (x > 1e-3) ++over1e3;
+            if (x > 1e-2) ++over1e2;
+            if (x > 1e-1) ++over1e1;
+        }
+        std::fprintf(stderr,
+            "LOGIT_RESIDUAL elements=%zu exact=%zu mean_abs=%.6g "
+            "p50=%.6g p90=%.6g p99=%.6g p999=%.6g\n"
+            "LOGIT_RESIDUAL_COUNT over_1e-1=%zu over_1e-2=%zu over_1e-3=%zu\n",
+            n, exact, sum / static_cast<double>(n),
+            pct(0.50), pct(0.90), pct(0.99), pct(0.999),
+            over1e1, over1e2, over1e3);
+
+        // The five worst rows, with both values, so a specific token can be
+        // inspected rather than a distribution guessed at.
+        std::vector<size_t> ord(n);
+        for (size_t i = 0; i < n; ++i) ord[i] = i;
+        std::partial_sort(ord.begin(), ord.begin() + std::min<size_t>(5, n), ord.end(),
+                          [&](size_t x, size_t y) { return d[x] > d[y]; });
+        for (size_t k = 0; k < std::min<size_t>(5, n); ++k) {
+            const size_t i = ord[k];
+            std::fprintf(stderr,
+                "LOGIT_WORST_ROW rank=%zu idx=%zu ref=%.9g nqb=%.9g absdiff=%.6g\n",
+                k, i, static_cast<double>(a[i]), static_cast<double>(b[i]), d[i]);
+        }
+        m.residualExact   = exact;
+        m.residualOver1e3 = over1e3;
+        m.residualP50     = pct(0.50);
+        m.residualP99     = pct(0.99);
+    }
     return m;
 }
 
@@ -262,8 +329,27 @@ static bool measureWriterReaderParity(const char* nqbPath, const char* ggufPath)
     for (int attempt = 0; attempt < 8; ++attempt) {
         Deep2::Nanof32BraidTensorFooter footer{};
         std::vector<Deep2::bfloat16_t> data;
-        if (!nqb.readNextTensor(footer, data)) break;
-        if (data.empty()) continue;
+        // RAWRXD_NQBRAID_REAL_WEIGHT_ORACLE_F32_AUTHORITY_001
+        //
+        // This called the two-argument overload, so outF32 defaulted to null and
+        // the reader took its legacy narrowing branch. Every "weight parity"
+        // number this tool has produced was therefore a comparison of BF16 against
+        // BF16 under kBf16RelTol, not a comparison of F32 against F32. For a tool
+        // whose entire purpose is to be an authority on real weights, that made its
+        // F32 fidelity authority INVALID while its name claimed otherwise.
+        //
+        // Both are now measured from ONE read:
+        //   F32_PATH   exact elementwise equality against the dequantised source.
+        //              This is the authoritative result, tolerance zero.
+        //   BF16_DERIV truncation error of bfloat16_t(ref[i]) versus ref[i].
+        //              This is DERIVED, not read back from the reader, and is
+        //              provably what the fallback emits because the fallback is
+        //              exactly this elementwise truncation. It is labelled as a
+        //              derived figure so it can never be mistaken for reader-path
+        //              evidence.
+        std::vector<float> f32v;
+        if (!nqb.readNextTensor(footer, data, &f32v)) break;
+        if (f32v.empty() && data.empty()) continue;
 
         const std::string name(footer.name,
             strnlen(footer.name, sizeof footer.name));
@@ -274,7 +360,7 @@ static bool measureWriterReaderParity(const char* nqbPath, const char* ggufPath)
             continue;
         }
 
-        const size_t n = std::min(src->numElements(), data.size());
+        const size_t n = std::min(src->numElements(), f32v.size());
         std::vector<float> ref;
         if (src->type == Deep2::GGMLType::GGML_TYPE_F32) {
             ref.assign(src->data, src->data + n);
@@ -290,32 +376,44 @@ static bool measureWriterReaderParity(const char* nqbPath, const char* ggufPath)
             deq(src->data, ref.data(), n);
         }
 
-        size_t compared = 0, mismatch = 0;
-        double worstRel = 0.0;
+        size_t compared = 0, mismatch = 0, bf16WorseThanTol = 0;
+        double worstRel = 0.0, worstAbs = 0.0, worstBf16Rel = 0.0;
         const size_t rearStart = (n > kRear) ? (n - kRear) : 0;
         const size_t frontEnd  = std::min(n, kFront);
         auto checkRange = [&](size_t lo, size_t hi) {
             for (size_t i = lo; i < hi; ++i) {
-                const double expect = static_cast<double>(
-                    Deep2::bfloat16_t(ref[i]).toFloat());
-                const double actual = static_cast<double>(data[i].toFloat());
-                const double denom  = std::fabs(expect) > 1e-30
-                                        ? std::fabs(expect) : 1.0;
-                const double rel    = std::fabs(actual - expect) / denom;
-                if (rel > worstRel) worstRel = rel;
-                if (!(rel <= kBf16RelTol)) ++mismatch;
+                // AUTHORITATIVE: exact F32 vs F32. `!(a == b)` rather than a
+                // difference threshold, so a one-ULP disagreement is a mismatch
+                // and a NaN is a mismatch instead of silently passing.
+                const double actualF = static_cast<double>(f32v[i]);
+                const double expectF = static_cast<double>(ref[i]);
+                if (!(actualF == expectF)) ++mismatch;
+                const double absErr = std::fabs(actualF - expectF);
+                if (absErr > worstAbs) worstAbs = absErr;
                 ++compared;
+
+                // DERIVED characterisation of the legacy narrowing, not a readback.
+                const double derivedBf16 =
+                    static_cast<double>(Deep2::bfloat16_t(ref[i]).toFloat());
+                const double denomF = std::fabs(expectF) > 1e-30 ? std::fabs(expectF) : 1.0;
+                const double relBf16 = std::fabs(derivedBf16 - expectF) / denomF;
+                if (relBf16 > worstBf16Rel) worstBf16Rel = relBf16;
+                if (!(relBf16 <= kBf16RelTol)) ++bf16WorseThanTol;
             }
         };
         checkRange(0, frontEnd);
         if (rearStart > frontEnd) checkRange(rearStart, n);
 
         std::fprintf(stderr,
-            "WR_PARITY name=%s elements_in_container=%zu compared=%zu "
-            "coverage=%.3f%% mismatch=%zu worst_rel=%.3g tol=%.3g\n",
-            name.c_str(), data.size(), compared,
+            "WR_PARITY name=%s path=F32_LOSSLESS elements_in_container=%zu "
+            "compared=%zu coverage=%.3f%% exact_mismatch=%zu worst_abs=%.6g\n",
+            name.c_str(), f32v.size(), compared,
             100.0 * static_cast<double>(compared) / static_cast<double>(n),
-            mismatch, worstRel, kBf16RelTol);
+            mismatch, worstAbs);
+        std::fprintf(stderr,
+            "WR_PARITY_DERIVED name=%s source=bf16_truncation_of_F32 "
+            "worst_rel=%.6g tol=%.6g outside_tol=%zu\n",
+            name.c_str(), worstBf16Rel, kBf16RelTol, bf16WorseThanTol);
 
         if (compared == 0) return false;
         return mismatch == 0;

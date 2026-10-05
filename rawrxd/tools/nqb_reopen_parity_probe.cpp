@@ -9,6 +9,46 @@
 //   - Byte coverage exact (file size agrees with header)
 //   - Per-tensor descriptive statistics for sampled tensors
 
+
+// ============================================================================
+// RAWRXD_NQB_SUPERSEDED_001
+//
+// THIS TOOL CANNOT RUN AGAINST THE REAL ARTIFACT. IT IS KEPT FOR HISTORY ONLY.
+//
+// Both probes in this family call Nanof32BraidStreamer::readAllTensors(), which
+// materialises every tensor at once. For llama3.2-3b-real-f32.nqb that is:
+//     12,857,017,048 bytes of payload
+//  +  6,428,499,776 bytes of bfloat16 output
+//  +  a transient compressed buffer per tensor (1,576,009,728 B for token_embd)
+// all live simultaneously. It cannot complete on a normal machine, and it never
+// has against the only real model in the tree.
+//
+// Classification, stated precisely:
+//     NUMERICAL_PATH=VALID
+//     READER_MODE=F32_LOSSLESS        (readAllTensors passes &f32)
+//     MEMORY_ARCHITECTURE=NONSCALABLE
+//     LARGE_ARTIFACT_EXECUTABILITY=FAIL_RESOURCE_GEOMETRY
+//
+// The mathematics are not wrong. The ownership strategy is.
+//
+// REPLACED BY, both of which do run against the real artifact:
+//     tools/nqb_production_reopen.cpp     RAWRXD_NQB_PRODUCTION_REOPEN_001
+//         structural streaming walk, bounded 8 MiB, full reverse footer chain,
+//         per-tensor digests, whole-file SHA-256, 4 attributed negative controls
+//     tools/nqb_source_f32_manifest.cpp + tools/nqb_manifest_compare.cpp
+//         RAWRXD_NQB_SOURCE_F32_PARITY_001
+//         255/255 source->payload weight parity, byte exact, three separate
+//         authorities, comparator opens neither model
+//
+// The capability that made a streaming rewrite possible is
+// Nanof32BraidStreamer::seekTensor(), which was declared in the public header
+// and defined nowhere until RAWRXD_NQB_SEEK_TENSOR_001 implemented and verified
+// it. Before that, "read one tensor without materialising the model" was not
+// actually available from this reader, which is why these probes reached for
+// readAllTensors in the first place.
+// ============================================================================
+
+
 #include "deep2/Nanof32BraidStreamer.hpp"
 #include "rawr_build_identity_nqb_reopen_parity_probe.hpp"
 #include <cstdio>

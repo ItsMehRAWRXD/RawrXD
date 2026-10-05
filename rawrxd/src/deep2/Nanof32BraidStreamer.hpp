@@ -81,7 +81,22 @@ public:
                         std::vector<bfloat16_t>& outData,
                         std::vector<float>* outF32 = nullptr);
 
-    // Seek to a specific tensor by index (0 = first tensor in file)
+    // Seek so that the next readNextTensor() call returns the tensor at
+    // `index`, where index 0 is the FIRST tensor written (lowest offset) and
+    // index header()->numTensors-1 is the LAST.
+    //
+    // RAWRXD_NQBRAID_READER_API_INTEGRITY_001
+    //
+    // This was DECLARED and never DEFINED anywhere in the tree. A caller
+    // compiled clean and then failed at LINK with LNK2019, which is the worst
+    // failure mode for a public interface: the type system said the function
+    // existed. Rather than delete the declaration -- random access without
+    // materialising the model is exactly what the 12.85 GB artifact needs, and
+    // the two full-model probes below exist only because it was missing -- it is
+    // implemented here against the same reverse footer chain readNextTensor uses.
+    //
+    // Cost is index+1 footer reads of 128 bytes each: bounded, and independent of
+    // payload size.
     bool seekTensor(uint32_t index);
 
     // RAWRXD_NQBRAID_TOKENIZER_E2E_001: read the vocabulary section.
@@ -96,10 +111,23 @@ public:
     // True when the header declares a vocabulary section.
     bool hasVocab() const { return header_ && header_->vocabSectionBytes != 0; }
 
-    // Direct load: given a tensor name pattern, decompress and return BF16
-    // For Deep2Engine integration
-    const bfloat16_t* loadTensor(const std::string& namePattern,
-                                 size_t& outElements);
+    // RAWRXD_NQBRAID_READER_API_INTEGRITY_001
+    //
+    // loadTensor() was ALSO declared and never defined, and its return type
+    // `const bfloat16_t*` hardcodes the narrowed representation -- so it could
+    // never have been a lossless accessor for a DENSE_F32 payload even once
+    // written. It is REMOVED rather than implemented, because implementing it
+    // would reintroduce exactly the silent precision narrowing that
+    // RAWRXD_NQBRAID_DENSE_F32_PRESERVE_F32_001 removed from the production
+    // path. Callers that need a whole tensor use:
+    //
+    //     seekTensor(i); readNextTensor(footer, bf16, &f32);
+    //
+    // which yields the lossless F32 image for DENSE_F32 and the codec-decoded
+    // values for quantised payloads.
+    //
+    // A public interface should be executable authority. A declaration with no
+    // definition is neither.
 
     // Release cached tensor
     bool releaseTensor(uint32_t tensorIndex);

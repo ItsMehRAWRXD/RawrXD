@@ -320,6 +320,8 @@ uint64_t payloadHash = FNV_BASIS;   // FNV-1a over canonical F32 bytes
     // phase 2 (reader)
     uint64_t readerElements = 0;
     uint64_t readerBf16Hash = 0;
+    uint64_t readerF32Hash = 0;
+    bool     readerF32Matches = false;
     bool     readerFooterMatches = false;
     bool     readerBf16Matches   = false;
     double   bf16MaxAbsErr = 0.0;
@@ -891,14 +893,31 @@ const size_t nf = got / 4;
         chk("READER_OPEN", true, "Nanof32BraidStreamer::open succeeded");
 
         uint64_t read = 0, metadataMatch = 0, bf16Match = 0, bf16Fail = 0, skipped = 0;
+        uint64_t f32Match = 0, f32Fail = 0, f32PathTaken = 0, bf16PathTaken = 0;
         uint64_t firstFailIdx = 0;
         std::string firstFailName;
         constexpr size_t ERRC = 4u * 1024 * 1024;
         std::vector<uint8_t> ebuf(ERRC);
 
-        Deep2::Nanof32BraidTensorFooter ftr{};
+Deep2::Nanof32BraidTensorFooter ftr{};
         std::vector<Deep2::bfloat16_t> dat;
-        while (reader.readNextTensor(ftr, dat)) {
+        std::vector<float> f32out;
+
+        // RAWRXD_NQB_READER_PATH_001 -- this gate was measuring the WRONG path.
+        //
+        // readNextTensor has two DENSE_F32 behaviours:
+        //     if (outF32) { *outF32 = the payload exactly;  return; }   // lossless
+        //     else        { outData[i] = bfloat16_t(fp32[i]); }         // legacy narrowing
+        // Nanof32BraidStreamer.cpp:411 -- readAllTensors, the path
+        // Deep2Engine.cpp:9000 uses -- passes &f32, so PRODUCTION gets lossless
+        // F32 and the narrowing is only a fallback.
+        //
+        // This gate called the two-argument overload, so outF32 defaulted to
+        // nullptr and every Phase 2 number described the fallback rather than
+        // what the engine actually executes. Both are now measured and reported
+        // separately, because "the reader narrows" and "production narrows" are
+        // different claims and only the first one is true.
+        while (reader.readNextTensor(ftr, dat, &f32out)) {
             const uint64_t idx = read;
             if (idx >= vo.tensors.size()) break;
             TRec& t = vo.tensors[idx];
@@ -911,12 +930,27 @@ const size_t nf = got / 4;
             t.readerFooterMatches = (ftr.rows == t.rows && ftr.cols == t.cols &&
                                      ftr.dataBytes == t.dataBytes &&
                                      ftr.quantType == t.quant && nm == t.name);
-            t.readerElements = dat.size();
+t.readerElements = f32out.empty() ? dat.size() : f32out.size();
             if (t.readerFooterMatches) ++metadataMatch;
+            if (!f32out.empty()) ++f32PathTaken; else ++bf16PathTaken;
 
             if (ftr.dataBytes > opt.readerCapBytes) {
                 ++skipped;
             } else {
+                if (!f32out.empty()) {
+                    // PRODUCTION PATH: lossless. The streamed payload hash is
+                    // FNV-1a over the canonical F32 bytes, so an exact reader
+                    // result must reproduce it bit for bit.
+                    const uint64_t h = fnv1a(fnvBegin(), f32out.data(),
+                                             f32out.size() * sizeof(float));
+                    t.readerF32Hash    = h;
+                    t.readerF32Matches = (h == t.payloadHash);
+                    if (t.readerF32Matches) ++f32Match;
+                    else {
+                        ++f32Fail;
+                        if (f32Fail == 1) { firstFailIdx = idx; firstFailName = t.name; }
+                    }
+                }
                 t.readerBf16Hash = fnv1a(fnvBegin(), dat.data(),
                                          dat.size() * sizeof(Deep2::bfloat16_t));
                 t.readerBf16Matches = (t.readerBf16Hash == t.bf16Hash);
@@ -966,11 +1000,32 @@ const size_t nf = got / 4;
             " skippedOverCap=" + u64s(skipped));
         chk("READER_METADATA_MATCH", metadataMatch == vo.tensors.size(),
             "matched=" + u64s(metadataMatch) + " expected=" + u64s(vo.tensors.size()));
-        chk("READER_BF16_SELF_CONSISTENCY", bf16Fail == 0,
-            "READER_BF16_HASH_MATCH=" + u64s(bf16Match) +
+        chk("READER_F32_LOSSLESS_PATH_MATCHES_PAYLOAD", f32Fail == 0,
+            "READER_F32_MATCH=" + u64s(f32Match) +
+            " READER_F32_FAIL=" + u64s(f32Fail) +
+            " pathTakenF32=" + u64s(f32PathTaken) +
+" pathTakenLegacyBf16=" + u64s(bf16PathTaken) +
+            (f32Fail ? (" firstFailReverseIndex=" + u64s(firstFailIdx) +
+                         " name=" + firstFailName) : std::string("")));
+// The BF16 check is only meaningful when the caller actually asked for BF16.
+        // On the production path readNextTensor CLEARS outData and fills outF32,
+        // so dat is empty, its hash is the untouched FNV basis, and comparing that
+        // against a real digest can never pass. Asserting it unconditionally made
+        // this gate report FAIL on a reader that is behaving correctly.
+        //
+        // The narrowing still exists as a fallback for callers that omit outF32.
+        // Whether it is CONSISTENT when requested is a real question, so the check
+        // is armed only when the fallback was exercised -- and it currently is not,
+        // because Deep2Engine's loader passes &f32.
+        chk("READER_BF16_FALLBACK_CONSISTENT_WHEN_REQUESTED",
+            bf16PathTaken == 0 || bf16Fail == 0,
+            "READER_BF16_FALLBACK_EXERCISED=" + u64s(bf16PathTaken) +
+            " READER_BF16_HASH_MATCH=" + u64s(bf16Match) +
             " READER_BF16_HASH_FAIL=" + u64s(bf16Fail) +
             (bf16Fail ? (" firstFailReverseIndex=" + u64s(firstFailIdx) +
-                         " name=" + firstFailName) : ""));
+                         " name=" + firstFailName) : std::string("")) +
+            " NOTE=bf16 consistency is only defined when a caller omits outF32;"
+            " production passes it (Nanof32BraidStreamer.cpp:411)");
     }
 
     snapshotRun(mark);

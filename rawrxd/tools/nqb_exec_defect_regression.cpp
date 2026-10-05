@@ -34,6 +34,7 @@
 
 #include "Deep2Engine.h"
 #include "QuantKernelRegistry.hpp"
+#include "Nanof32BraidStreamer.hpp"
 
 #include <cstdio>
 #include <cstring>
@@ -80,6 +81,113 @@ int main(int argc, char** argv) {
     }
 
     Deep2::QuantKernelRegistry::Instance().Initialize();
+
+    // ----------------------------------------------------------------
+    // RAWRXD_NQBRAID_MATERIALIZER_BINDER_001 -- publication conservation
+    //
+    // Measured from OUTSIDE the engine, deliberately. readAllTensors is public,
+    // so calling it here observes exactly what the engine's binder will observe,
+    // without editing the file that is being concurrently rewritten and without
+    // racing its author.
+    //
+    // The failure being explained: 255/255 tensors materialize (each printing
+    // NQB_MATERIALIZE_OK and a final payload_total_bytes=12850999552), yet the
+    // engine reports
+    //     no output.weight/lm_head.weight and no token_embd to tie to
+    // so modelWeights.tokenEmbed.data is null. Materialization succeeded and
+    // publication did not.
+    //
+    // Count conservation alone is NOT sufficient: 255 entries can be published
+    // while one required tensor was lost to a duplicate name, a renamed key, or
+    // a wrong metadata association. Hence five independent invariants, so the
+    // first bad boundary is identified rather than merely detected.
+    // ----------------------------------------------------------------
+    {
+        Deep2::Nanof32BraidStreamer st;
+        const bool opened = st.open(nqbPath);
+        std::printf("\n=== RAWRXD_NQBRAID_MATERIALIZER_BINDER_001 ===\n");
+        std::printf("STREAMER_OPEN=%d\n", opened ? 1 : 0);
+        if (opened) {
+            const uint32_t declared = st.header() ? st.header()->numTensors : 0u;
+            std::vector<std::pair<std::string, Deep2::NQBraidBlock>> pub;
+            const bool readOk = st.readAllTensors(pub);
+
+            // ---- counts ----
+            std::map<std::string, int> nameCount;
+            for (const auto& kv : pub) nameCount[kv.first]++;
+            size_t dupNames = 0, emptyNames = 0;
+            for (const auto& kv : nameCount) {
+                if (kv.second > 1) dupNames += (size_t)(kv.second - 1);
+                if (kv.first.empty()) ++emptyNames;
+            }
+            const size_t uniq = nameCount.size();
+
+            std::printf("MATERIALIZED_COUNT=%u\n", declared);
+            std::printf("READ_ALL_TENSORS=%d\n", readOk ? 1 : 0);
+            std::printf("OUT_TENSORS_SIZE=%zu\n", pub.size());
+            std::printf("UNIQUE_NAMES=%zu\n", uniq);
+            std::printf("DUPLICATE_NAMES=%zu\n", dupNames);
+            std::printf("EMPTY_KEY_NAMES=%zu\n", emptyNames);
+
+            // ---- token_embd conservation ----
+            bool embPublished = false;
+            size_t embBytes = 0, embElems = 0;
+            const char* embRep = "none";
+            for (const auto& kv : pub) {
+                if (kv.first.find("token_embd") == std::string::npos) continue;
+                embPublished = true;
+                embElems = kv.second.elements();
+                embBytes = kv.second.f32Data.empty()
+                         ? kv.second.bf16Data.size() * sizeof(Deep2::bfloat16_t)
+                         : kv.second.f32Data.size() * sizeof(float);
+                embRep = kv.second.f32Data.empty() ? "BF16" : "F32";
+                break;
+            }
+            std::printf("TOKEN_EMBD_MATERIALIZED=%d\n", declared ? 1 : 0);
+            std::printf("TOKEN_EMBD_PUBLISHED=%d\n", embPublished ? 1 : 0);
+            std::printf("TOKEN_EMBD_PUBLISHED_ELEMENTS=%zu\n", embElems);
+            std::printf("TOKEN_EMBD_PUBLISHED_BYTES=%zu\n", embBytes);
+            std::printf("TOKEN_EMBD_REPRESENTATION=%s\n", embRep);
+
+            // A published-but-empty block is the specific shape that produces
+            // "cannot form an LM head": the key exists, so a name lookup succeeds,
+            // and then the block carries no bytes.
+            if (embPublished && embBytes == 0) {
+                std::printf("TOKEN_EMBD_SHAPE=PUBLISHED_BUT_EMPTY  "
+                            "<-- key present, payload absent\n");
+            }
+
+            // ---- invariants ----
+            const bool countConserved = (pub.size() == (size_t)declared);
+            const bool nameConserved  = (uniq == pub.size()) && emptyNames == 0;
+            const bool embConserved   = embPublished && embBytes > 0;
+            std::printf("COUNT_CONSERVATION=%s\n", countConserved ? "PASS" : "FAIL");
+            std::printf("NAME_CONSERVATION=%s\n",  nameConserved  ? "PASS" : "FAIL");
+            std::printf("TOKEN_EMBD_CONSERVATION=%s\n", embConserved ? "PASS" : "FAIL");
+
+            // First bad boundary, named rather than bucketed.
+            const char* boundary = "NONE";
+            if (!readOk)                        boundary = "MATERIALIZE_READ_FAILED";
+            else if (!countConserved)            boundary = "PUBLICATION_COUNT";
+            else if (!nameConserved)             boundary = "PUBLICATION_IDENTITY";
+            else if (!embPublished)              boundary = "TOKEN_EMBD_PUBLICATION";
+            else if (embBytes == 0)              boundary = "TOKEN_EMBD_BACKING";
+            std::printf("FIRST_BAD_BOUNDARY=%s\n", boundary);
+            std::printf("BINDER_GATE_VERDICT=%s\n",
+                        boundary == std::string("NONE") ? "PASS" : "FAIL");
+
+            // A short sample of what actually got published, so a name/key
+            // mangling is visible rather than inferred.
+            std::printf("PUBLISHED_SAMPLE_FIRST10:");
+            int printed = 0;
+            for (const auto& kv : nameCount) {
+                if (printed++ >= 10) break;
+                std::printf(" [%s]", kv.first.c_str());
+            }
+            std::printf("\n");
+        }
+        st.close();
+    }
 
     Deep2::Deep2Engine engine;
     if (!engine.loadModelFromNanof32Braid(nqbPath)) {

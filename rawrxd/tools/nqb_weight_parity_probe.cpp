@@ -1,3 +1,31 @@
+// ============================================================================
+// RAWRXD_NQB_SUPERSEDED_001
+//
+// THIS TOOL CANNOT RUN AGAINST THE REAL ARTIFACT. KEPT FOR HISTORY ONLY.
+//
+// It reaches the container through Nanof32BraidStreamer::readAllTensors(), which
+// materialises every tensor at once: 12.86 GB of payload plus 6.43 GB of
+// bfloat16 simultaneously, so it cannot complete on the only real model in
+// the tree. It also compared 'streamer materialisation -> bfloat16' against the
+// source, so even had it run it measured the NARROWED image rather than the F32
+// one production now reads.
+//
+//     NUMERICAL_PATH=VALID
+//     MEMORY_ARCHITECTURE=NONSCALABLE
+//     LARGE_ARTIFACT_EXECUTABILITY=FAIL_RESOURCE_GEOMETRY
+//
+// REPLACED BY RAWRXD_NQB_SOURCE_F32_PARITY_001, which answers the same
+// question ('are the weights the same?') decisively and does run:
+//     tools/nqb_source_f32_manifest.cpp   GGUF only,  255/255
+//     tools/nqb_production_reopen.cpp     NQB only,   255/255
+//     tools/nqb_manifest_compare.cpp      opens NEITHER model
+// and reports byte-exact agreement instead of a BF16 tolerance.
+//
+// The capability that made the streaming rewrite possible is
+// Nanof32BraidStreamer::seekTensor(), declared in the public header and defined
+// nowhere until RAWRXD_NQB_SEEK_TENSOR_001 implemented and verified it.
+// ============================================================================
+
 // nqb_weight_parity_probe.cpp
 // RAWRXD_NQB_WEIGHT_PARITY_001
 //

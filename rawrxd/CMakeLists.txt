@@ -6,6 +6,119 @@ cmake_minimum_required(VERSION 3.20)
 # visible even when the configure later fails on a missing source or stub gate.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/source_graph_census.cmake")
 
+# RAWRXD_SOURCE_INTEGRITY_AUTHORITY_001: classification of the hollow-source
+# deficit, and the audit of which targets bypass rawrxd_filter_missing_sources().
+# Runs immediately after the census because it consumes the census TSV. Also
+# instrumentation only -- it creates no target and cannot fail a configure
+# unless -DRAWRXD_STRICT_SOURCE_INTEGRITY=ON.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/source_integrity_authority.cmake")
+
+# ============================================================================
+# RAWRXD_EMPTY_TU_TARGET_GUARD_001 -- canonical implementation predicate
+# ============================================================================
+# One definition of "this translation unit actually implements something", used by
+# every target that would otherwise build from a graph-restoration stub.
+#
+# WHY A FUNCTION AND NOT FOUR INLINE CHECKS. The same defect was found at four
+# live sites (RawrXD-Crypto, address_resolver_native, pmc_profiler,
+# flame_graph_profiler) after being found at two more (RawrXDScriptDAPAdapter,
+# rawrxd-serve). Six instances of one mistake is a missing abstraction, not six
+# coincidences. Each site had tested `EXISTS`, which cannot distinguish a restored
+# stub from a restored implementation.
+#
+# WHY THIS FAILS THE CONFIGURE BY DEFAULT. Each of these four targets currently
+# produces a library or binary whose entire C++ content is a comment --
+# src/security/uac_bypass_impl_stub.cpp is a 459-byte comment named "stub" inside
+# a SHARED library called RawrXD-Crypto. A green link for that is a false green,
+# and the false green is the defect.
+#
+# The obvious way to make the number go down is to append these paths to
+# cmake/known_empty_sources.txt. That is refused here, and refused loudly: it
+# would convert UNKNOWN into a tolerated absence without anyone deciding to
+# tolerate it. The register records gaps someone has accepted; nothing here has
+# been accepted.
+#
+# Three remedies, one of which must be chosen deliberately per site:
+#   implement it          write the code
+#   retire it             remove the path from the target (obsolete subsystem)
+#   accept it explicitly  add to known_empty_sources.txt AND record the reason
+#
+# Set -DRAWRXD_ALLOW_EMPTY_TU_TARGETS=ON to downgrade to a warning while working.
+# That is an acknowledgement, not a decision, and it is reported as such.
+# ============================================================================
+# Severity is per call site, not global. RawrXD-Crypto is STRICT because an empty
+# C++ unit inside a shipped SHARED library is a silent correctness hazard: callers
+# link it and get no crypto. The three profilers and the address resolver are
+# REPORT because a stub profiler has no blast radius, and failing an entire
+# configure over a profiler would be a blunt instrument that only teaches people
+# to pass -DRAWRXD_ALLOW_EMPTY_TU_TARGETS=ON.
+#
+#   rawrxd_require_implemented_sources(<target> [STRICT|REPORT] <src>...)
+function(rawrxd_require_implemented_sources target_name)
+    set(_mode REPORT)
+    set(_srcs "")
+    foreach(_a IN LISTS ARGN)
+        if(_a STREQUAL "STRICT" OR _a STREQUAL "REPORT")
+            set(_mode "${_a}")
+        else()
+            list(APPEND _srcs "${_a}")
+        endif()
+    endforeach()
+
+    set(_hollow "")
+    foreach(_src IN LISTS _srcs)
+        if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+            list(APPEND _hollow "${_src} (absent)")
+        else()
+            file(READ "${CMAKE_CURRENT_SOURCE_DIR}/${_src}" _body)
+            if(_body MATCHES "RAWRXD_GRAPH_RESTORED_001")
+                list(APPEND _hollow "${_src} (graph-restoration stub)")
+            endif()
+        endif()
+    endforeach()
+
+    if(NOT _hollow)
+        return()
+    endif()
+
+    string(REPLACE ";" "\n  " _hollow_text "${_hollow}")
+    list(LENGTH _hollow _n_hollow)
+
+    # RAWRXD_GUARDED_EMPTY_TU_TARGETS_001
+    # Record what this guard ACTUALLY caught, at configure time, for the
+    # guard-aware census to read later. Text-scanning for the guard call would be a
+    # second guess about what ran; this is the guard reporting on itself.
+    #
+    # The census runs at the end of configure, after every target is declared, so
+    # it can also ask the TARGETS global property which targets really exist. That
+    # is what separates a live false green from a dead declaration.
+    set_property(GLOBAL APPEND PROPERTY RAWRXD_GUARDED_EMPTY_TU
+                 "${target_name}|${_mode}|${_n_hollow}|${_hollow_text}")
+    set(_msg
+        "[source_integrity] target '${target_name}' would be built from translation\n"
+        "  unit(s) that contain no implementation:\n"
+        "  ${_hollow_text}\n"
+        "A target built this way links, and then certifies nothing. EXISTENCE is not\n"
+        "implementation; a restored stub satisfies every existence test.\n"
+        "Resolve deliberately -- do NOT silence this by appending to\n"
+        "cmake/known_empty_sources.txt, which would record the gap as accepted by\n"
+        "nobody. Choose one: implement it, retire it from the graph, or accept it\n"
+        "with a written reason.\n")
+
+    if(RAWRXD_ALLOW_EMPTY_TU_TARGETS)
+        message(WARNING "${_msg}RAWRXD_ALLOW_EMPTY_TU_TARGETS=ON -- ACKNOWLEDGED, NOT DECIDED\n")
+        math(EXPR RAWRXD_EMPTY_TU_ACKNOWLEDGED "${RAWRXD_EMPTY_TU_ACKNOWLEDGED} + 1")
+        set(RAWRXD_EMPTY_TU_ACKNOWLEDGED "${RAWRXD_EMPTY_TU_ACKNOWLEDGED}" CACHE INTERNAL "")
+    elseif(_mode STREQUAL "STRICT")
+        message(FATAL_ERROR "${_msg}")
+    else()
+        message(STATUS "${_msg}SEVERITY=REPORT -- reported, target still declared. "
+                       "It links and certifies nothing.")
+        math(EXPR RAWRXD_EMPTY_TU_REPORTED "${RAWRXD_EMPTY_TU_REPORTED} + 1")
+        set(RAWRXD_EMPTY_TU_REPORTED "${RAWRXD_EMPTY_TU_REPORTED}" CACHE INTERNAL "")
+    endif()
+endfunction()
+
 # =============================================================================
 # RAWRXD_BUILD_GRAPH_CENSUS_001 â€” unconditional configure receipt (DISABLED)
 # The active implementation is in cmake/source_graph_census.cmake above.
@@ -456,6 +569,69 @@ if(NOT DEFINED RAWRXD_KNOWN_EMPTY_SOURCES)
             "source is therefore UNDECLARED and fatal. Generate it with:\n"
             "  cmake -DRAWRXD_RECORD_EMPTY_SOURCES=ON ...")
     endif()
+
+    # RAWRXD_RETIRE_KNOWN_EMPTY_SOURCE_001
+    #
+    # The reconciliation produced STALE_DECLARATION=1: a path the register
+    # declares empty that now contains real implementation
+    # (src/agent/hexmag_client.cpp, 5,881 bytes).
+    #
+    # The obvious fix -- deleting the line -- is wrong, because it destroys the
+    # only record that the file was ever declared empty and therefore makes the
+    # register non-auditable. This adds a SEPARATE, append-only retirement
+    # ledger instead:
+    #
+    #     cmake/retired_empty_sources.txt   one "path|REASON" per line
+    #
+    # Effective K = register MINUS retirements. The register file itself is never
+    # rewritten, so the history stays monotonic: a declaration can only leave the
+    # effective set by an explicit, reasoned, recorded act. "The file stopped
+    # being empty and nobody wrote anything down" is exactly the transition that
+    # must not be able to happen silently.
+    set(RAWRXD_RETIRED_EMPTY_SOURCES "")
+    set(_rawrxd_retire_file "${CMAKE_CURRENT_SOURCE_DIR}/cmake/retired_empty_sources.txt")
+    if(EXISTS "${_rawrxd_retire_file}")
+        file(STRINGS "${_rawrxd_retire_file}" _rawrxd_retire_lines)
+        foreach(_line IN LISTS _rawrxd_retire_lines)
+            string(STRIP "${_line}" _line)
+            if(_line STREQUAL "" OR _line MATCHES "^#")
+                continue()
+            endif()
+            string(REPLACE "|" ";" _parts "${_line}")
+            list(LENGTH _parts _nparts)
+            if(_nparts LESS 2)
+                message(FATAL_ERROR
+                    "[retirement] malformed line (expected path|REASON): ${_line}")
+            endif()
+            list(GET _parts 0 _rpath)
+            string(STRIP "${_rpath}" _rpath)
+            list(GET _parts 1 _rreason)
+            string(STRIP "${_rreason}" _rreason)
+            list(APPEND RAWRXD_RETIRED_EMPTY_SOURCES "${_rpath}|${_rreason}")
+        endforeach()
+    endif()
+
+    if(RAWRXD_RETIRED_EMPTY_SOURCES)
+        set(_effective_known "")
+        foreach(_k IN LISTS RAWRXD_KNOWN_EMPTY_SOURCES)
+            set(_retired_match FALSE)
+            foreach(_r IN LISTS RAWRXD_RETIRED_EMPTY_SOURCES)
+                string(REPLACE "|" ";" _rp "${_r}")
+                list(GET _rp 0 _rpath_only)
+                if(_k STREQUAL _rpath_only)
+                    set(_retired_match TRUE)
+                endif()
+            endforeach()
+            if(NOT _retired_match)
+                list(APPEND _effective_known "${_k}")
+            endif()
+        endforeach()
+        list(LENGTH _effective_known _effective_n)
+        list(LENGTH RAWRXD_RETIRED_EMPTY_SOURCES _retired_n)
+        message(STATUS
+            "[retirement] register=${_effective_n} after retiring ${_retired_n} declaration(s)")
+        set(RAWRXD_KNOWN_EMPTY_SOURCES ${_effective_known})
+    endif()
     list(LENGTH RAWRXD_KNOWN_EMPTY_SOURCES _rawrxd_known_n)
     message(STATUS
         "[declared_unimplemented] loaded ${_rawrxd_known_n} declared-unimplemented source(s)")
@@ -504,6 +680,26 @@ function(rawrxd_filter_missing_sources list_var)
             set(_path "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
         endif()
         if(EXISTS "${_path}")
+            # RAWRXD_SOURCE_IMPLEMENTATION_UNIVERSE_001
+            #
+            # Accumulate the REFERENCED set R here -- at the one point where a
+            # path is known to exist and to belong to a source list. Every other
+            # candidate location is wrong: the graph census counts strings in the
+            # CMakeLists text (including commented-out and fragment references),
+            # and the drop count counts the inverse. Only this loop sees exactly
+            # the files a target will actually compile.
+            #
+            # R is needed to make |H| / |R| a certified metric rather than a
+            # division of two numbers that may describe different universes.
+            # Normalised identically to H: forward slashes, no leading ./, and
+            # lower-cased, because CMake paths are case-insensitive on Windows and
+            # a case difference would make H subset-of-R fail for no real reason.
+            set(_ref_norm "${_src}")
+            string(REPLACE "\\" "/" _ref_norm "${_ref_norm}")
+            string(REGEX REPLACE "^\\./" "" _ref_norm "${_ref_norm}")
+            string(TOLOWER "${_ref_norm}" _ref_norm)
+            set_property(GLOBAL APPEND PROPERTY RAWRXD_REFERENCED_ALL "${_ref_norm}")
+
             # RAWRXD_STUB_CERTIFICATION_SURFACE_001
             # Existence is not sufficiency. A translation unit whose body is empty
             # after comment stripping -- including a literal
@@ -680,6 +876,43 @@ function(rawrxd_filter_missing_sources list_var)
             endif()
         endforeach()
         list(LENGTH _unlisted _unlisted_n)
+
+        # RAWRXD_UNDECLARED_EMPTY_AUTHORITY_001
+        #
+        # Accumulate across every filtered list, for the same reason
+        # RAWRXD_DECLARED_UNIMPLEMENTED_001 accumulates: the filter runs three
+        # times, and a per-call count or warning described only the last list.
+        #
+        # This exists because the hard-fail above is gated on
+        # RAWRXD_STRICT_EMPTY_SOURCES or RAWRXD_RELEASE_CERT_BUILD. In a DEFAULT
+        # configure both are off, so an empty-bodied source that is on nobody's
+        # declared list produced no error and configure went on to print
+        #     VERDICT=PASS
+        #     RAWRXD_SOURCE_CLOSURE=COMPLETE
+        # while five such files existed. A green configure therefore said
+        # nothing about source integrity -- the same class as a gate that
+        # cannot fail.
+        #
+        # The accumulated count now feeds RAWRXD_SOURCE_CLOSURE_VERDICT below, so
+        # VERDICT=PASS is unreachable while an undeclared empty-bodied source
+        # exists. That will fail configure today, which is the intent: the five
+        # must be implemented, declared with a reason, or retired deliberately.
+        foreach(_u IN LISTS _unlisted)
+            set_property(GLOBAL APPEND PROPERTY RAWRXD_UNDECLARED_EMPTY "${_u}")
+        endforeach()
+        get_property(_undeclared_all GLOBAL PROPERTY RAWRXD_UNDECLARED_EMPTY)
+        list(REMOVE_DUPLICATES _undeclared_all)
+
+        # The hollow set must also be accumulated UNCONDITIONALLY. It was only
+        # recorded under RAWRXD_RECORD_EMPTY_SOURCES=ON, so the reconciliation
+        # below had no content set to compare against the register in a default
+        # configure -- the very configuration that was reporting PASS.
+        foreach(_h IN LISTS _emptybodied_names)
+            string(REGEX REPLACE "\\(trivial main\\)$" "" _h "${_h}")
+            set_property(GLOBAL APPEND PROPERTY RAWRXD_HOLLOW_ALL "${_h}")
+        endforeach()
+        get_property(_hollow_all GLOBAL PROPERTY RAWRXD_HOLLOW_ALL)
+        list(REMOVE_DUPLICATES _hollow_all)
 
         if(RAWRXD_RECORD_EMPTY_SOURCES)
             # Accumulate across every filtered list and write ONCE at the end of
@@ -1134,7 +1367,49 @@ if(RAWRXD_BUILD_CLI)
     # exists, and its absence is reported at STATUS level rather than passed over.
     # A configure that prints "NOT CONFIGURED: sources absent" cannot be mistaken
     # for one that built a server.
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/serve/rawrxd_serve.cpp")
+    # RAWRXD_EMPTY_TU_TARGET_GUARD_001 (serve variant)
+    #
+    # The guard above this block was `if(EXISTS src/serve/rawrxd_serve.cpp)`, and
+    # its own comment states the intent: declare the target only when its primary
+    # implementation exists.
+    #
+    # That intent was defeated by the graph-restoration machinery. The six
+    # src/serve sources this target names were materialised as 459-byte
+    # comment-only units, so `EXISTS` became true and the guard that existed
+    # SPECIFICALLY to suppress this target began admitting it.
+    #
+    # This is the same defect as the DAP adapter (RAWRXD_EMPTY_TU_TARGET_GUARD_001)
+    # running in the opposite direction. There, `EXISTS` let a hollow unit into a
+    # target. Here, `EXISTS` let a hollow unit DISABLE a suppression. A guard
+    # written against existence cannot tell a restored stub from a restored
+    # implementation, so restoration silently re-armed the thing restoration was
+    # meant to keep switched off.
+    #
+    # The predicate is therefore the census predicate, as with the DAP adapter:
+    # RAWRXD_GRAPH_RESTORED_001 marks a unit that declares it has no
+    # implementation. Note the actual main is `int main(){ return 0; }` -- 25
+    # bytes that exit immediately -- so even with the stub files present there
+    # was never a server here.
+    set(_serve_primary "${CMAKE_CURRENT_SOURCE_DIR}/src/serve/rawrxd_serve.cpp")
+    set(_serve_usable 0)
+    if(EXISTS "${_serve_primary}")
+        file(READ "${_serve_primary}" _serve_body)
+        if(_serve_body MATCHES "RAWRXD_GRAPH_RESTORED_001")
+            set_property(GLOBAL APPEND PROPERTY RAWRXD_GUARDED_EMPTY_TU
+                         "rawrxd-serve|STRICT|1|${_serve_primary} (graph-restoration stub)")
+            message(STATUS "[SERVE] RAWRXD_SERVE_TARGET=WITHHELD")
+            message(STATUS "[SERVE] RAWRXD_SERVE_REASON=primary implementation is a graph-restoration stub")
+            message(STATUS "[SERVE] RAWRXD_SERVE_SOURCE=${_serve_primary}")
+            message(STATUS "[SERVE] RAWRXD_SERVE_SURFACE=NONE  (the shipped server is target rawr-server, port 11435)")
+            message(STATUS "[SERVE] TO_IMPLEMENT=write a real server, or remove this declaration")
+        else()
+            set(_serve_usable 1)
+        endif()
+    else()
+        message(STATUS "[SERVE] RAWRXD_SERVE_TARGET=NOT CONFIGURED: sources absent")
+    endif()
+
+    if(_serve_usable)
     add_executable(rawrxd-serve
         src/serve/rawrxd_serve_main.cpp
         src/serve/rawrxd_serve.cpp
@@ -9075,7 +9350,44 @@ endif()
 #   CMake cannot generate an ASM_MASM-only SHARED library for some generators
 #   (missing CMAKE_ASM_MASM_CREATE_SHARED_LIBRARY). Ensure C++ is the linker
 #   language by adding a tiny C++ TU and setting LINKER_LANGUAGE.
-if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypass_impl_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+# RAWRXD_RAW_CRYPTO_TARGET_001
+#
+# This target is NOT built by default, and that is a decision rather than an
+# omission.
+#
+# WHAT IT IS. A SHARED library whose only C++ translation unit is
+# src/security/uac_bypass_impl_stub.cpp -- a 459-byte comment that states it
+# "contains NO implementation and exports NO symbol". Its other source,
+# src/crypto_masm.asm, exports exactly one symbol (PUBLIC crypto_masm_stub).
+#
+# WHY IT WAS A FALSE GREEN. The target linked, produced RawrXD-Crypto.dll, and
+# thereby appeared to prove that the Encrypt / Decrypt / UACBypass export
+# contract exists. It does not. Nothing in the tree links RawrXD-Crypto (see the
+# analysis above at the .def block), so the DLL was an artifact that certified
+# nothing while satisfying every existence check. The STRICT source-integrity
+# gate was right to refuse it.
+#
+# WHY IT IS NOT SIMPLY IMPLEMENTED. The documented contract includes "UACBypass".
+# Writing that here would mean authoring a Windows privilege-escalation bypass,
+# which is not a build-graph repair and is not something this change should
+# create on its own authority. UACBypassMode() already exists as a mode shim in
+# other translation units (rawrxd_subsys_modes_a.cpp, subsystem_mode_impl.cpp);
+# what is missing is a crypto library export surface, which is a product
+# decision, not a stub to fill.
+#
+# WHAT REMAINS OWED, unchanged: Encrypt / Decrypt / UACBypass exports remain
+# UNIMPLEMENTED. That debt is recorded here rather than hidden, and this target
+# stays available for whoever implements it.
+#
+# To build it deliberately: -DRAWRXD_BUILD_RAW_CRYPTO_TARGET=ON
+option(RAWRXD_BUILD_RAW_CRYPTO_TARGET
+       "Build RawrXD-Crypto (exports nothing today; see RAWRXD_RAW_CRYPTO_TARGET_001)"
+       OFF)
+
+if(RAWRXD_BUILD_RAW_CRYPTO_TARGET AND WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypass_impl_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+    rawrxd_require_implemented_sources(RawrXD-Crypto STRICT
+        src/crypto_masm.asm
+        src/security/uac_bypass_impl_stub.cpp)
     add_library(RawrXD-Crypto SHARED
         src/crypto_masm.asm
         src/security/uac_bypass_impl_stub.cpp
@@ -9139,10 +9451,22 @@ if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypas
         CXX_STANDARD_REQUIRED ON
     )
 else()
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        message(STATUS "RawrXD-Crypto skipped in strict production strip mode (uses uac_bypass_impl_stub.cpp)")
+    if(RAWRXD_BUILD_RAW_CRYPTO_TARGET)
+        if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+            message(STATUS "RawrXD-Crypto skipped in strict production strip mode (uses uac_bypass_impl_stub.cpp)")
+        else()
+            message(STATUS "RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)")
+        endif()
     else()
-        message(STATUS "RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)")
+        # RAWRXD_RAW_CRYPTO_TARGET_001: not an error and not an accident. The
+        # target has no consumer, its only C++ TU exports nothing, and building it
+        # produced a green link that certified no capability. Enable with
+        # -DRAWRXD_BUILD_RAW_CRYPTO_TARGET=ON once the Encrypt/Decrypt/UACBypass
+        # export contract actually has an implementation.
+        message(STATUS
+            "RawrXD-Crypto NOT built (RAWRXD_BUILD_RAW_CRYPTO_TARGET=OFF): "
+            "no consumer, and its only C++ TU exports no symbol. "
+            "See RAWRXD_RAW_CRYPTO_TARGET_001 in CMakeLists.txt.")
     endif()
 endif()
 
@@ -9703,6 +10027,40 @@ rawrxd_add_nqb_instrument(nqb_source_f32_manifest
     src/deep2/GGUFLoader.cpp
     src/deep2/QuantKernelRegistry.cpp
 )
+
+# RAWRXD_GGUF_ZERO_EXPANSION_RESIDENCY_001
+#
+# Measures whether a SHIPPING binary expands quantized weights to F32 for the
+# model lifetime, by sampling the child's private commit. It is deliberately a
+# separate target rather than another mode of the reopen gate: it launches a
+# process, so it must not be linked into anything.
+#
+# The premise it was written to test was FALSE on measurement. On the real
+# llama3.2-3b-Q2_K.gguf:
+#
+#     model on disk              1.270 GB
+#     F32 equivalent            11.968 GB
+#     peak private commit        0.701 GB   (5.85% of F32 equivalent)
+#     Deep2Engine::initialize SUCCESS, GGUF mapped, 255 tensors
+#
+# Private commit lands BELOW the on-disk size, which is only possible if the
+# weights are a mapped file: mapped clean pages are file-backed, not private
+# commit. Deep2Engine's bindTensor points WeightTensor::data straight at the
+# loader's mapped bytes, and the token profile reports
+# DEQUANT_*=UNAVAILABLE_FUSED_IN_KERNEL, so dequant happens inside the GEMV and
+# leaves nothing resident.
+#
+# Refutation is a moment, not a property, so this exists to catch a regression.
+# Two ways it must be able to FAIL, both verified:
+#   - readiness marker absent  -> INVALID_NO_RESULT, exit 2. A child that never
+#     loaded has a tiny, tidy, meaningless private commit; certifying it would be
+#     the exact false PASS this project keeps retracting.
+#   - private commit above EXPANSION_RATIO_LIMIT of the F32 equivalent -> FAIL,
+#     exit 1.
+rawrxd_add_nqb_instrument(nqb_residency_probe)
+if(WIN32)
+    target_link_libraries(nqb_residency_probe PRIVATE psapi)
+endif()
 
 # nqb_reopen_parity_probe — verify real .nqb reopens with correct tensor count and finite values
 # RAWRXD_NQB_REAL_REOPEN_001
@@ -13408,7 +13766,151 @@ src/core/hexmag_oracle_binder.cpp
     message(STATUS "[Agentic] HexMag ABI probe: hexmag_abi_probe")
 
     # ---------------------------------------------------------------------
-    # Register all four gates with ctest.
+    # HEXMAG_ABI_SEQUENCE_001 -- composition probe. TARGET IS BUILT BUT NOT
+    # REGISTERED WITH CTEST, deliberately.
+    #
+    # It is a real gate with real detection power (two negative controls), and
+    # it currently REPORTS FAIL: across 3 of 5 export chains the nonvolatile R12
+    # comes back modified, holding a .rdata address (image offsets 0x2B580 /
+    # 0x2B780 / 0x2BB80 -- a 0x200-stride static table, not code).
+    #
+    # The backend is cleared by audit: every function's push count matches its
+    # per-exit pop count, and R12 appears only in hxS_Emit, which balances it.
+    # So the finding is real and UNATTRIBUTED.
+    #
+    # Registering a red gate would make `ctest -R hexmag` red and would devalue
+    # the four green ones. It is built and runnable so the next pass can pick it
+    # up, and it is NOT add_test'd until it is understood.
+    # ---------------------------------------------------------------------
+    add_executable(hexmag_sequence_probe
+        tools/hexmag_sequence_probe.cpp
+        src/asm/RawrXD_HexMag_Swarm.asm
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
+        $<TARGET_OBJECTS:rawrxd_hexmag_abi_probe>
+        src/agent/hexmag_client.cpp
+    )
+    set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm PROPERTIES LANGUAGE ASM_MASM)
+    target_include_directories(hexmag_sequence_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(hexmag_sequence_probe PRIVATE RAWR_HAS_MASM=1)
+    if(MSVC)
+        target_compile_options(hexmag_sequence_probe PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(hexmag_sequence_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] HexMag sequence probe: hexmag_sequence_probe "
+                   "(built, NOT registered with ctest: currently reports an "
+                   "unattributed R12 composition finding)")
+
+    # ---------------------------------------------------------------------
+    # HEXMAG_CALL_TRACE_001 -- per-call machine-state log. ALSO NOT add_test'd,
+    # for the same reason as the sequence probe above: it reports a real,
+    # deterministic finding, and a red gate would devalue the four green ones.
+    #
+    # It is what localised that finding to ONE call. Logging every export one at
+    # a time, with a full nonvolatile snapshot either side of each, is the
+    # difference between "a chain is wrong" and "this call is wrong".
+    # ---------------------------------------------------------------------
+    add_executable(hexmag_call_trace
+        tools/hexmag_call_trace.cpp
+        src/asm/RawrXD_HexMag_Swarm.asm
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
+        $<TARGET_OBJECTS:rawrxd_hexmag_abi_probe>
+    )
+    set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm PROPERTIES LANGUAGE ASM_MASM)
+    target_include_directories(hexmag_call_trace PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(hexmag_call_trace PRIVATE RAWR_HAS_MASM=1)
+    if(MSVC)
+        target_compile_options(hexmag_call_trace PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(hexmag_call_trace PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] HexMag call trace: hexmag_call_trace "
+                   "(built, NOT registered with ctest: diagnostic tool)")
+
+    # ---------------------------------------------------------------------
+    # RAWRXD_DUAL_ROUTE_AUTHORITY_001 -- regression gate for the
+    # dual-device route-authority leak, plus the GGUF head-type probe that
+    # established the tied-Q6_K-LM-head fact the routing guard depends on.
+    #
+    # The dual-route gate carries its own negative control: three earlier
+    # revisions of it located the guard by paren-balancing and every one of them
+    # reported a verdict inconsistent with the text it printed. It is registered
+    # only because it now demonstrably FAILS when the capability conjunct is
+    # removed from the guard line.
+    # ---------------------------------------------------------------------
+    add_executable(deep2_dual_route_gate tools/deep2_dual_route_gate.cpp)
+    target_include_directories(deep2_dual_route_gate PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(deep2_dual_route_gate PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    add_test(NAME deep2_dual_route_gate
+             COMMAND deep2_dual_route_gate
+                     "${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_GpuMoEMLA.cpp"
+                     "${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp")
+
+    # Header-only reader: bound to the engine's canonical Deep2::GGMLType enum
+    # with static_asserts, so the diagnostic and production code cannot drift
+    # apart again. Takes a model path, so it is built but not auto-registered.
+    add_executable(gguf_head_type tools/gguf_head_type.cpp)
+    target_include_directories(gguf_head_type PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(gguf_head_type PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] Deep2 route-authority gate + GGUF head probe registered")
+
+    # ---------------------------------------------------------------------
+    # RAWRXD_Q6K_LMHEAD_ROUTE_PARITY_001 -- the independent F64 Q6_K oracle for
+    # the tied LM head. Built and runnable, but NOT registered with ctest and
+    # NOT a passing gate: it computes oracle C only, against a synthetic input,
+    # because no captured FINAL_NORM vector exists on disk. It prints
+    # NOT_A_CAPTURE=1 when run in that mode so the output cannot be mistaken
+    # for a parity measurement.
+    # ---------------------------------------------------------------------
+    add_executable(q6k_lmhead_route_parity tools/q6k_lmhead_route_parity.cpp)
+    target_include_directories(q6k_lmhead_route_parity PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(q6k_lmhead_route_parity PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] Q6_K LM-head F64 oracle built (not ctest: "
+                   "oracle-only, no FINAL_NORM capture yet)")
+
+    # Capture side: produces the REAL FINAL_NORM the tied LM head consumes, via
+    # the engine's own RAWRXD_PARITY_FINAL_NORM_VEC_001 path. Not registered:
+    # it needs a model argument, so it is run deliberately, not by ctest.
+    add_executable(q6k_lmhead_capture tools/q6k_lmhead_capture.cpp)
+    target_link_libraries(q6k_lmhead_capture PRIVATE InferenceEngine)
+    target_include_directories(q6k_lmhead_capture PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+    )
+    # Deep2Engine's public headers pull vulkan_compute.h, which needs the SDK.
+    if(WIN32 AND DEFINED ENV{VULKAN_SDK})
+        target_include_directories(q6k_lmhead_capture PRIVATE "$ENV{VULKAN_SDK}/Include")
+    elseif(WIN32 AND EXISTS "C:/VulkanSDK/1.4.357.0/Include")
+        target_include_directories(q6k_lmhead_capture PRIVATE "C:/VulkanSDK/1.4.357.0/Include")
+    endif()
+    set_target_properties(q6k_lmhead_capture PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] Q6_K LM-head capture tool built (not ctest: "
+                   "needs a model path)")
+
+    # ---------------------------------------------------------------------
+    # Register all four HexMag gates with ctest.
     #
     # They were built but never executed: no add_test existed for any of them,
     # so a build could go green while every assertion went unrun. A gate that is
@@ -16518,6 +17020,7 @@ endif()
 # ============================================================================
 option(RAWRXD_BUILD_ADDRESS_RESOLVER_NATIVE "Build native crash address resolver utility" ON)
 if(RAWRXD_BUILD_ADDRESS_RESOLVER_NATIVE AND EXISTS "${CMAKE_SOURCE_DIR}/tools/address_resolver_native.cpp")
+    rawrxd_require_implemented_sources(address_resolver_native REPORT tools/address_resolver_native.cpp)
     add_executable(address_resolver_native EXCLUDE_FROM_ALL
         tools/address_resolver_native.cpp
     )
@@ -16631,7 +17134,46 @@ endif()
 # RawrXD-Script DAP Adapter (VS Code Extension Support)
 # ============================================================================
 option(RAWRXD_BUILD_DAP_ADAPTER "Build RawrXD-Script DAP adapter for VS Code extension" ON)
-if(RAWRXD_BUILD_DAP_ADAPTER AND EXISTS "${CMAKE_SOURCE_DIR}/src/script/debug/minimal_dap_server.cpp")
+
+# RAWRXD_EMPTY_TU_TARGET_GUARD_001
+#
+# `EXISTS` is not an implementation test. A graph-restoration unit is a real file
+# whose entire body is a comment stating that it contains no implementation and
+# exports no symbol. Gating a target on `EXISTS` therefore produced a linked,
+# zero-export `RawrXDScriptDAPAdapter`, and a reader of the build log saw a DAP
+# adapter where no adapter exists. That is the false-green class this file's own
+# census exists to prevent (RAWRXD_SOURCE_GRAPH_001, line 127), applied here to a
+# target site instead of only to the report.
+#
+# The predicate is the census predicate, deliberately: one definition of "this
+# unit is empty", used both where emptiness is counted and where it is acted on.
+#
+# The withheld target is reported, not silently skipped. An adapter that is absent
+# must be visible on every configure, or its absence is indistinguishable from a
+# configure that never considered it.
+set(_dap_src "${CMAKE_SOURCE_DIR}/src/script/debug/minimal_dap_server.cpp")
+set(_dap_usable 0)
+if(EXISTS "${_dap_src}")
+    file(READ "${_dap_src}" _dap_body)
+    if(_dap_body MATCHES "RAWRXD_GRAPH_RESTORED_001")
+        set_property(GLOBAL APPEND PROPERTY RAWRXD_GUARDED_EMPTY_TU
+                     "RawrXDScriptDAPAdapter|STRICT|1|${_dap_src} (graph-restoration stub)")
+        message(STATUS "[DAP] RAWRXD_DAP_REASON=translation unit is a graph-restoration stub")
+        message(STATUS "[DAP] RAWRXD_DAP_REASON_DETAIL=contains RAWRXD_GRAPH_RESTORED_001;")
+        message(STATUS "[DAP]   declares no implementation and exports no symbol")
+        message(STATUS "[DAP] RAWRXD_DAP_SOURCE=${_dap_src}")
+        message(STATUS "[DAP] NO VS Code debug surface is produced by this configure")
+        message(STATUS "[DAP] TO_IMPLEMENT=write a real DAP server, or set")
+        message(STATUS "[DAP]   RAWRXD_BUILD_DAP_ADAPTER=OFF to acknowledge the absence")
+    else()
+        set(_dap_usable 1)
+    endif()
+else()
+    message(STATUS "[DAP] RAWRXD_DAP_ADAPTER=WITHHELD")
+    message(STATUS "[DAP] RAWRXD_DAP_REASON=source absent (${_dap_src})")
+endif()
+
+if(RAWRXD_BUILD_DAP_ADAPTER AND _dap_usable)
     add_executable(RawrXDScriptDAPAdapter
         src/script/debug/minimal_dap_server.cpp
     )
@@ -16650,7 +17192,14 @@ if(RAWRXD_BUILD_DAP_ADAPTER AND EXISTS "${CMAKE_SOURCE_DIR}/src/script/debug/min
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME RawrXDScriptDAPAdapter
     )
+    message(STATUS "[DAP] RAWRXD_DAP_ADAPTER=BUILT")
+    message(STATUS "[DAP] RAWRXD_DAP_TARGET=RawrXDScriptDAPAdapter")
+    message(STATUS "[DAP] RAWRXD_DAP_BACKING_TU=IMPLEMENTS (not a graph-restoration stub)")
     message(STATUS "[DAP] RawrXD-Script Debug Adapter target enabled: RawrXDScriptDAPAdapter")
+elseif(NOT RAWRXD_BUILD_DAP_ADAPTER)
+    message(STATUS "[DAP] RAWRXD_DAP_ADAPTER=DISABLED_BY_OPTION")
+else()
+    message(STATUS "[DAP] RAWRXD_DAP_ADAPTER=WITHHELD (no usable translation unit)")
 endif()
 
 # ============================================================================
@@ -16897,6 +17446,7 @@ endif()
 
 # 6. PMC Profiler Library
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/pmc_profiler.cpp")
+    rawrxd_require_implemented_sources(pmc_profiler REPORT src/profiling/pmc_profiler.cpp)
     add_library(pmc_profiler STATIC
         src/profiling/pmc_profiler.cpp
     )
@@ -16911,6 +17461,7 @@ endif()
 
 # 6b. Flame Graph Profiler Library
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/flame_graph.cpp")
+    rawrxd_require_implemented_sources(flame_graph_profiler REPORT src/profiling/flame_graph.cpp)
     add_library(flame_graph_profiler STATIC
         src/profiling/flame_graph.cpp
     )
@@ -19806,6 +20357,20 @@ else()
     target_compile_options(kquant_parity PRIVATE
         -mavx512f -mavx512bw -mavx512dq -mavx512vl)
 endif()
+
+# ============================================================================
+# RAWRXD_GUARD_AWARE_EMPTY_TU_CENSUS_001
+#
+# Runs LAST, deliberately. It asks the TARGETS global property which targets were
+# really created, and reads RAWRXD_GUARDED_EMPTY_TU, which the guards populate as
+# they fire. Both are only fully populated once every target has been declared, so
+# this cannot run alongside the early text census at the top of the file.
+#
+# Purpose: RAWRXD_SOURCE_INTEGRITY_AUTHORITY_001 counts DECLARATIONS. This counts
+# FALSE GREENS. A false green needs a created target, unguarded, building through a
+# hollow source. Measured split: 24 declarations, 20 create no target, 4 live.
+# ============================================================================
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/guard_aware_empty_tu_census.cmake")
 if(BUILD_TESTING)
     add_test(NAME kquant_parity COMMAND kquant_parity)
 endif()
@@ -20145,10 +20710,179 @@ else()
     set(RAWRXD_DROPPED_SOURCE_MEASUREMENT_VALID 0)
 endif()
 
+# RAWRXD_EMPTY_SOURCE_SET_RECONCILIATION_001
+#
+# Counters alone cannot settle this: "308 loaded", "301 hollow" and "5 unlisted"
+# are three different sets and the relationship between them was undefined, so
+# the deficit rate had an unproven denominator. This computes the intersections
+# explicitly and asserts the conservation identities, so an instrument that is
+# internally inconsistent fails instead of printing a plausible number.
+#
+#   H = hollow sources observed in the graph
+#   K = declarations in cmake/known_empty_sources.txt
+#
+#   |H|      = |H n K| + |H \ K|      (every hollow file is either declared
+#                                        empty or undeclared -- no third case)
+#   |K|      = |K n H| + |K \ H|      (every declaration is either currently
+#                                        hollow or stale)
+#
+# A stale declaration (K \ H) means a file that WAS empty now has code, or was
+# deleted -- the register under-reports reality in the opposite direction from an
+# undeclared hollow file, and neither was visible before.
+get_property(_rawrxd_hollow_all GLOBAL PROPERTY RAWRXD_HOLLOW_ALL)
+list(REMOVE_DUPLICATES _rawrxd_hollow_all)
+
+set(_h_norm "")
+foreach(_p IN LISTS _rawrxd_hollow_all)
+    string(REPLACE "\\" "/" _p "${_p}")
+    string(REGEX REPLACE "^\\./" "" _p "${_p}")
+    string(TOLOWER "${_p}" _p)
+    list(APPEND _h_norm "${_p}")
+endforeach()
+list(REMOVE_DUPLICATES _h_norm)
+
+set(_k_norm "")
+foreach(_p IN LISTS RAWRXD_KNOWN_EMPTY_SOURCES)
+    string(REPLACE "\\" "/" _p "${_p}")
+    string(REGEX REPLACE "^\\./" "" _p "${_p}")
+    string(TOLOWER "${_p}" _p)
+    list(APPEND _k_norm "${_p}")
+endforeach()
+list(REMOVE_DUPLICATES _k_norm)
+
+set(_declared_hollow "")     # H n K
+set(_undeclared_hollow_set "") # H \ K
+foreach(_p IN LISTS _h_norm)
+    if(_k_norm MATCHES "(^|;)${_p}(;|$)")
+        list(APPEND _declared_hollow "${_p}")
+    else()
+        list(APPEND _undeclared_hollow_set "${_p}")
+    endif()
+endforeach()
+
+set(_stale_declaration "")     # K \ H
+foreach(_p IN LISTS _k_norm)
+    if(NOT _h_norm MATCHES "(^|;)${_p}(;|$)")
+        list(APPEND _stale_declaration "${_p}")
+    endif()
+endforeach()
+
+list(LENGTH _h_norm               _rawrxd_hollow_n)
+list(LENGTH _k_norm               _rawrxd_register_n)
+list(LENGTH _declared_hollow      _rawrxd_declared_hollow_n)
+list(LENGTH _undeclared_hollow_set _rawrxd_undeclared_empty_n)
+list(LENGTH _stale_declaration     _rawrxd_stale_declaration_n)
+
+# Conservation: if either identity fails the instrument is wrong, and a gate
+# that cannot detect its own inconsistency must not report a deficit rate.
+set(_hollow_conservation_ok 1)
+math(EXPR _hs "${_rawrxd_declared_hollow_n} + ${_rawrxd_undeclared_empty_n}")
+if(NOT _hs EQUAL _rawrxd_hollow_n)
+    set(_hollow_conservation_ok 0)
+endif()
+
+set(_register_conservation_ok 1)
+math(EXPR _ks "${_rawrxd_declared_hollow_n} + ${_rawrxd_stale_declaration_n}")
+if(NOT _ks EQUAL _rawrxd_register_n)
+    set(_register_conservation_ok 0)
+endif()
+
+string(REPLACE ";" " " _flat_declared_hollow "${_declared_hollow}")
+string(REPLACE ";" " " _flat_undeclared "${_undeclared_hollow_set}")
+string(REPLACE ";" " " _flat_stale "${_stale_declaration}")
+
+message(STATUS "RAWRXD_EMPTY_SOURCE_SET_RECONCILIATION_001")
+message(STATUS "HOLLOW_TOTAL=${_rawrxd_hollow_n}")
+message(STATUS "REGISTER_TOTAL=${_rawrxd_register_n}")
+message(STATUS "DECLARED_HOLLOW=${_rawrxd_declared_hollow_n}")
+message(STATUS "UNDECLARED_HOLLOW=${_rawrxd_undeclared_empty_n}")
+message(STATUS "STALE_DECLARATION=${_rawrxd_stale_declaration_n}")
+message(STATUS "HOLLOW_CONSERVATION_PASS=${_hollow_conservation_ok}")
+message(STATUS "REGISTER_CONSERVATION_PASS=${_register_conservation_ok}")
+message(STATUS "DECLARED_HOLLOW_FILES=${_flat_declared_hollow}")
+message(STATUS "UNDECLARED_HOLLOW_FILES=${_flat_undeclared}")
+message(STATUS "STALE_DECLARATION_FILES=${_flat_stale}")
+
+# RAWRXD_SOURCE_IMPLEMENTATION_UNIVERSE_001
+#
+# Prove H is a subset of R before dividing by |R|. Without this, 312/1304 is
+# arithmetically computable but not certified: the two numbers come from
+# different places -- H from the content census inside this gate, 1304 from a
+# separate source-path census -- and nothing established that they describe the
+# same universe.
+set(_r_norm "")
+# get_property, not a bare variable name: this was written with set_property(GLOBAL
+# APPEND ...) inside rawrxd_filter_missing_sources, so it lives in the global
+# property store. A first revision read `LISTS RAWRXD_REFERENCED_ALL` and got an
+# empty set, which produced REFERENCED_TOTAL=0. The gate then correctly refused
+# to emit a rate rather than dividing by zero -- which is the behaviour the
+# UNRECONCILED branch exists for, so the failure was contained, but the
+# population itself was still wrong.
+get_property(_ref_all GLOBAL PROPERTY RAWRXD_REFERENCED_ALL)
+foreach(_p IN LISTS _ref_all)
+    string(REPLACE "\\" "/" _p "${_p}")
+    string(REGEX REPLACE "^\\./" "" _p "${_p}")
+    string(TOLOWER "${_p}" _p)
+    list(APPEND _r_norm "${_p}")
+endforeach()
+list(REMOVE_DUPLICATES _r_norm)
+list(LENGTH _r_norm _rawrxd_referenced_total)
+
+set(_hollow_outside "")
+foreach(_p IN LISTS _h_norm)
+    if(NOT _r_norm MATCHES "(^|;)${_p}(;|$)")
+        list(APPEND _hollow_outside "${_p}")
+    endif()
+endforeach()
+list(LENGTH _hollow_outside _rawrxd_hollow_outside_n)
+string(REPLACE ";" " " _flat_hollow_outside "${_hollow_outside}")
+
+set(_h_subset_r 0)
+if(_rawrxd_hollow_outside_n EQUAL 0 AND _rawrxd_hollow_n GREATER 0)
+    set(_h_subset_r 1)
+endif()
+
+message(STATUS "RAWRXD_SOURCE_IMPLEMENTATION_UNIVERSE_001")
+# RAWRXD_SOURCE_UNIVERSE_NAMING_001
+#
+# Two different totals were both called "referenced":
+#
+#   1304  a textual census of source paths in the CMake graph, which includes
+#         commented-out entries and fragment references that never reach a target
+#   802   paths that actually reach target construction, observed inside
+#         rawrxd_filter_missing_sources at the point a path is confirmed to exist
+#
+# Dividing 312 by the wrong one produced 23.93% instead of 38.90% while every
+# conservation check still passed, because the subset proof H subset-of-R holds
+# for either superset. So the names are now explicit and neither may be called
+# REFERENCED_SOURCE_TOTAL again.
+message(STATUS "RAWRXD_COMPILED_SOURCE_UNIVERSE_TOTAL=${_rawrxd_referenced_total}")
+message(STATUS "HOLLOW_TOTAL=${_rawrxd_hollow_n}")
+message(STATUS "HOLLOW_IN_REFERENCED=${_rawrxd_hollow_n}")
+message(STATUS "HOLLOW_OUTSIDE_REFERENCED=${_rawrxd_hollow_outside_n}")
+message(STATUS "H_SUBSET_R=${_h_subset_r}")
+message(STATUS "HOLLOW_OUTSIDE_FILES=${_flat_hollow_outside}")
+
+# The rate is emitted only when the universe was actually populated AND proven.
+if(_rawrxd_referenced_total GREATER 0 AND _h_subset_r EQUAL 1)
+    math(EXPR _rate_x100 "(${_rawrxd_hollow_n} * 100000 / ${_rawrxd_referenced_total})")
+    math(EXPR _rate_int "${_rate_x100} / 1000")
+    math(EXPR _rate_frac "(${_rate_x100} - ${_rate_int} * 1000) / 10")
+    message(STATUS "IMPLEMENTATION_RATE_PERCENT=${_rate_int}.${_rate_frac}")
+else()
+    # Say UNRECONCILED rather than emit a number derived from nothing. An absent
+    # measurement is not a zero, and a zero would produce a confident 0.00%.
+    message(STATUS "IMPLEMENTATION_RATE_PERCENT=UNRECONCILED")
+endif()
+
 if(NOT RAWRXD_DROPPED_SOURCE_MEASUREMENT_VALID)
     set(RAWRXD_SOURCE_CLOSURE_VERDICT "FAIL_IDE_NOT_BUILT")
 elseif(_rawrxd_dropped_total GREATER 0)
     set(RAWRXD_SOURCE_CLOSURE_VERDICT "FAIL_DROPPED_SOURCE")
+elseif(NOT _hollow_conservation_ok OR NOT _register_conservation_ok)
+    set(RAWRXD_SOURCE_CLOSURE_VERDICT "FAIL_RECONCILIATION_INCONSISTENT")
+elseif(_rawrxd_undeclared_empty_n GREATER 0)
+    set(RAWRXD_SOURCE_CLOSURE_VERDICT "FAIL_UNDECLARED_EMPTY_SOURCE")
 else()
     set(RAWRXD_SOURCE_CLOSURE_VERDICT "PASS")
 endif()
@@ -20168,6 +20902,16 @@ message(STATUS "RAWRXD_IDE_BUILD_ATTEMPTED=${RAWRXD_IDE_BUILD_ATTEMPTED}")
 message(STATUS "RAWRXD_IDE_BUILD_EXIT=${RAWRXD_IDE_BUILD_EXIT}")
 message(STATUS "RAWRXD_DROPPED_SOURCE_TOTAL=${_rawrxd_dropped_total}")
 message(STATUS "DROPPED_SOURCE_MEASUREMENT_VALID=${RAWRXD_DROPPED_SOURCE_MEASUREMENT_VALID}")
+# RAWRXD_UNDECLARED_EMPTY_AUTHORITY_001 -- reported beside the path census so
+# the two are never conflated. Presence and implementation are different
+# questions and this line answers the second one.
+get_property(_rawrxd_undeclared_empty_names GLOBAL PROPERTY RAWRXD_UNDECLARED_EMPTY)
+list(REMOVE_DUPLICATES _rawrxd_undeclared_empty_names)
+list(LENGTH _rawrxd_undeclared_empty_names _rawrxd_undeclared_empty_n)
+string(REPLACE ";" " " _rawrxd_undeclared_empty_flat "${_rawrxd_undeclared_empty_names}")
+message(STATUS "RAWRXD_DECLARED_EMPTY_REGISTER=${RAWRXD_KNOWN_EMPTY_DECLARED_COUNT}")
+message(STATUS "RAWRXD_UNDECLARED_EMPTY_TOTAL=${_rawrxd_undeclared_empty_n}")
+message(STATUS "RAWRXD_UNDECLARED_EMPTY_FILES=${_rawrxd_undeclared_empty_flat}")
 message(STATUS "VERDICT=${RAWRXD_SOURCE_CLOSURE_VERDICT}")
 
 if(RAWRXD_SOURCE_CLOSURE_VERDICT STREQUAL "PASS")
@@ -20473,14 +21217,42 @@ message(STATUS "[Deep2Streamer] parity target: deep2_streamer_parity")
 # every rawrxd_filter_missing_sources call has contributed to it.
 if(RAWRXD_RECORD_EMPTY_SOURCES)
     get_property(_recorded GLOBAL PROPERTY RAWRXD_RECORDED_EMPTY)
+
+    # RAWRXD_DECLARED_UNIMPLEMENTED_REGISTRY_UNION_001
+    #
+    # The accumulator starts empty on every configure, so it holds only the sources
+    # that passed through rawrxd_filter_missing_sources *in this run*. Writing it
+    # out therefore REPLACED a 308-entry declaration with the 57 this run happened
+    # to observe -- measured, and reverted byte-identical from git:
+    #
+    #   before  308 entries  SHA F0257236FF7DEE055A299E053D2681B41A983E3E9AE30E4A9FAF00CF705866BE
+    #   after    57 entries  SHA 6A361E2EFB9C11C00F3AD2C1E1E7E6D5147451634852F593C825402D51C4EB4A
+    #           git diff --stat: 251 deletions
+    #
+    # That is not a cosmetic loss. The file's own rule is that an empty-bodied
+    # source absent from this list is a HARD configure error (see the FATAL_ERROR
+    # in rawrxd_filter_missing_sources), so truncating it converts 251 declared
+    # gaps back into fatal ones and bricks the next configure that visits them.
+    #
+    # The header says "Regenerate deliberately; never hand-edit", which is an
+    # instruction to run this path. Making that instruction safe is the point:
+    # the declared set is a REGISTER OF KNOWN GAPS, so regenerating it must be
+    # able only to add. It is unioned with the already-loaded declaration below.
+    list(APPEND _recorded ${RAWRXD_KNOWN_EMPTY_SOURCES})
     list(REMOVE_DUPLICATES _recorded)
+
     list(LENGTH _recorded _final_rec_n)
+    list(LENGTH RAWRXD_KNOWN_EMPTY_SOURCES _prior_rec_n)
+    math(EXPR _rec_added "${_final_rec_n} - ${_prior_rec_n}")
+
     if(_final_rec_n GREATER 0)
         list(SORT _recorded)
         string(REPLACE ";" "\n" _recorded_text "${_recorded}")
         file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/known_empty_sources.txt"
              "# RAWRXD_DECLARED_UNIMPLEMENTED_SOURCES\n"
-             "# Generated by -DRAWRXD_RECORD_EMPTY_SOURCES=ON. One declared-but-\n"
+             "# Generated by -DRAWRXD_RECORD_EMPTY_SOURCES=ON, UNIONED with the previous\n"
+             "# declaration: regenerating adds to the register of known gaps and can\n"
+             "# never shrink it. One declared-but-\n"
              "# unimplemented translation unit per line, exactly as CMake classified it.\n"
              "# An empty-bodied source NOT listed here is a HARD configure error, so\n"
              "# stubbing out a file that used to have code can never be silent again.\n"
@@ -20489,6 +21261,15 @@ if(RAWRXD_RECORD_EMPTY_SOURCES)
         message(STATUS
             "[declared_unimplemented] wrote ${_final_rec_n} declared-unimplemented source(s) "
             "to cmake/known_empty_sources.txt")
+        message(STATUS
+            "[declared_unimplemented] REGISTRY_UNION prior=${_prior_rec_n} added=${_rec_added} "
+            "total=${_final_rec_n}")
+        if(_rec_added LESS 0)
+            message(WARNING
+                "[declared_unimplemented] registry SHRANK by ${_rec_added}. A declaration must "
+                "only grow. Inspect for sources that were implemented and correctly removed "
+                "from the register; if that is not the cause, restore the file from git.")
+        endif()
     endif()
 endif()
 
@@ -20665,5 +21446,44 @@ foreach(_tgt
                         ${CMAKE_SOURCE_DIR}/tools/${_tgt}.cpp)
     else()
         message(WARNING "build-identity: target ${_tgt} not defined; no identity embedded")
+    endif()
+endforeach()
+
+# nqb_residual_lm_head_accumulation - RAWRXD_NQBRAID_RESIDUAL_LM_HEAD_ACCUMULATION_001
+# FINAL_NORM and the logical LM-head weights are already proven bit-identical
+# across the two routes, yet the logits differ on 96% of rows. This gate decides
+# whether that is a production-path defect or accumulation ordering, by holding
+# both routes' ACTUAL logits against one canonical F64 accumulation over the same
+# operands. Thresholds are declared before any result is seen.
+add_executable(nqb_residual_lm_head_accumulation
+    tools/nqb_residual_lm_head_accumulation.cpp
+)
+target_link_libraries(nqb_residual_lm_head_accumulation PRIVATE InferenceEngine)
+if(MSVC)
+    target_compile_options(nqb_residual_lm_head_accumulation PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+endif()
+target_include_directories(nqb_residual_lm_head_accumulation PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src/tokenizer
+    ${CMAKE_SOURCE_DIR}/include
+)
+set_target_properties(nqb_residual_lm_head_accumulation PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME nqb_residual_lm_head_accumulation
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+message(STATUS "[Deep2] NQB residual LM-head accumulation oracle: nqb_residual_lm_head_accumulation")
+
+foreach(_tgt nqb_residual_lm_head_accumulation)
+    if(TARGET ${_tgt})
+        rawr_generate_build_identity(${_tgt}
+            "${_tgt}"
+            FEATURE_MARKERS ${RAWRXD_CERT_MARKERS_NQBRAID}
+                RAWRXD_FEATURE_INPUT_AUTHORITY_GATE_V1
+                RAWRXD_FEATURE_F64_REFERENCE_ORACLE_V1
+                RAWRXD_FEATURE_FINAL_NORM_VEC_CAPTURE_V1
+            SOURCES ${RAWRXD_CERT_SOURCES_GLOBAL}
+                        ${CMAKE_SOURCE_DIR}/tools/${_tgt}.cpp
+                        ${CMAKE_SOURCE_DIR}/include/authority/Measured.hpp)
     endif()
 endforeach()

@@ -26,6 +26,9 @@
 //     nqb_manifest_compare <source.manifest> <payload.manifest> [--nc <dir>]
 // ============================================================================
 
+#define NOMINMAX
+#include <windows.h>
+
 #include "deep2/Nanof32BraidManifest.hpp"
 
 #include <algorithm>
@@ -198,6 +201,7 @@ void runNegativeControls(const std::string& dir,
         m[0].sha256[0] = (m[0].sha256[0] == 'a') ? 'b' : 'a';
         ++ncTotal;
         const std::string p = writeManifest("nc1_hash_flip.manifest", m);
+        if (p.empty()) { chk("NC_HASH_FLIP", false, "could not write mutated manifest"); return; }
         const CompareResult r = compare(src, m);
         const bool asExpected = (r.mismatches == 1);
         chk("NC_HASH_FLIP", asExpected,
@@ -214,6 +218,7 @@ void runNegativeControls(const std::string& dir,
         std::swap(m[0].name, m[1].name);
         ++ncTotal;
         const std::string p = writeManifest("nc2_name_swap.manifest", m);
+        if (p.empty()) { chk("NC_NAME_SWAP", false, "could not write mutated manifest"); return; }
         const CompareResult r = compare(src, m);
         const bool asExpected = (r.mismatches >= 2);
         chk("NC_NAME_SWAP", asExpected,
@@ -229,6 +234,7 @@ void runNegativeControls(const std::string& dir,
         m.pop_back();
         ++ncTotal;
         const std::string p = writeManifest("nc3_missing_record.manifest", m);
+        if (p.empty()) { chk("NC_MISSING_RECORD", false, "could not write mutated manifest"); return; }
         const CompareResult r = compare(src, m);
         const bool asExpected = (r.missingPayload == 1) && (r.mismatches == 0);
         chk("NC_MISSING_RECORD", asExpected,
@@ -247,7 +253,10 @@ void runNegativeControls(const std::string& dir,
         // randomness could fail is a control that fails for the wrong reason
         std::rotate(order.begin(), order.begin() + (order.size() / 2), order.end());
         const std::string p = dir + "/nc4_reordered.manifest";
-        writeAll(p, serialiseInOrder(pay, order));
+        if (!writeAll(p, serialiseInOrder(pay, order))) {
+            chk("NC_RECORD_REORDER", false, "could not write reordered manifest");
+            return;
+        }
         ++ncTotal;
         bool readOk = false;
         const std::string reorderedText = readAll(p, readOk);
@@ -291,6 +300,24 @@ int main(int argc, char** argv) {
     std::printf("GATE=RAWRXD_NQB_SOURCE_F32_PARITY_001\n");
     std::printf("COMPARISON_AUTHORITY=MANIFESTS_ONLY\n");
     std::printf("OPENS_SOURCE_MODEL=0\nOPENS_PAYLOAD_MODEL=0\n");
+
+    // RAWRXD_NQB_NC_DIR_VALIDATION_001
+    //
+    // A missing --nc directory used to be discovered only inside NC_RECORD_REORDER,
+    // as readOk=0, and then surfaced as a FIDELITY failure. Both halves of that
+    // were wrong: the control should fail for its own stated reason, and it should
+    // fail before the comparison rather than being discovered midway through it.
+    // The run cannot certify gate power without its controls, so this is INVALID.
+    if (!ncDir.empty()) {
+        const DWORD attr = GetFileAttributesA(ncDir.c_str());
+        if (attr == INVALID_FILE_ATTRIBUTES || !(attr & FILE_ATTRIBUTE_DIRECTORY)) {
+            std::printf("FAIL=negative_control_directory_missing dir=%s\n",
+                        ncDir.c_str());
+            std::printf("VERDICT=INVALID_NO_RESULT\n");
+            return 2;
+        }
+        std::printf("NEGATIVE_CONTROL_DIR=%s\n", ncDir.c_str());
+    }
 
     bool ok1 = false, ok2 = false;
     const std::string srcText = readAll(srcPath, ok1);
@@ -377,6 +404,30 @@ int main(int argc, char** argv) {
 
     if (!ncDir.empty()) runNegativeControls(ncDir, src.records, pay.records);
 
+    // RAWRXD_NQB_COMPARATOR_TALLY_SPLIT_001
+    //
+    // The verdict used to be `fail == 0` over ALL checks, including the four
+    // negative-control checks. That produced a receipt reading
+    //
+    //     [REAL] FNV1A64_MATCH=255  SHA256_MATCH=255  MANIFEST_ROOT_MATCH=1
+    //     GGUF_PRODUCTION_DEQUANT_TO_NQB_PAYLOAD_FIDELITY=FAIL
+    //
+    // on a run whose ONLY failures were the controls -- because --nc pointed at a
+    // directory that did not exist, so NC_RECORD_REORDER could not write or read
+    // its permutation. The payload fidelity was 255/255 exact and the receipt said
+    // it had failed.
+    //
+    // That is a false receipt. It is rarer than a false PASS and just as damaging:
+    // it sends the next session back to re-investigate a chain that is already
+    // proven, and it erodes trust in the 255/255 result that IS real.
+    //
+    // The two phases are now tallied separately. Fidelity is computed from the
+    // comparison checks alone; control results are reported as their own status;
+    // and a control failure can no longer be laundered into a fidelity verdict,
+    // nor a fidelity failure hidden by a passing control.
+    const size_t compareCheckEnd = g_checks.size();
+    (void)compareCheckEnd;
+
     uint64_t pass = 0, fail = 0;
     for (const Check& c : g_checks) (c.pass ? pass : fail)++;
     std::printf("CHECKS_TOTAL=%llu\n", (unsigned long long)g_checks.size());
@@ -386,19 +437,41 @@ int main(int argc, char** argv) {
         std::printf("CHECK %s=%s %s\n", c.id.c_str(),
                     c.pass ? "PASS" : "FAIL", c.detail.c_str());
 
+    // Fidelity is re-derived from the comparison phase only, by re-evaluating the
+    // specific predicates rather than by trusting a phase boundary index.
+    uint64_t fidelityFail = 0;
+    for (const Check& c : g_checks) {
+        const std::string id(c.id);
+        const bool isControl = (id.rfind("NC_", 0) == 0) ||
+                               id == "GATE_HAS_POWER" || id == "BASELINE_VERDICT";
+        if (!isControl && !c.pass) ++fidelityFail;
+    }
+
     bool controlsOk = true;
     for (const Check& c : g_checks) {
         const std::string id(c.id);
-        if (id.rfind("NC_", 0) == 0 || id == "GATE_HAS_POWER" ||
+        if ((id.rfind("NC_", 0) == 0) || id == "GATE_HAS_POWER" ||
             id == "BASELINE_VERDICT")
             if (!c.pass) controlsOk = false;
     }
 
-    const bool fidelity = (fail == 0);
-    const char* verdict = fidelity ? "PASS" : "FAIL";
-    std::printf("GGUF_PRODUCTION_DEQUANT_TO_NQB_PAYLOAD_FIDELITY=%s\n", verdict);
+    const bool fidelity = (fidelityFail == 0);
+    std::printf("FIDELITY_CHECKS_FAIL=%llu\n", (unsigned long long)fidelityFail);
+    std::printf("GGUF_PRODUCTION_DEQUANT_TO_NQB_PAYLOAD_FIDELITY=%s\n",
+                fidelity ? "PASS" : "FAIL");
     std::printf("NOT_CLAIMED=CANONICAL_QUANT_DECODER_NUMERICAL_CORRECTNESS\n");
+    std::printf("NEGATIVE_CONTROL_STATUS=%s\n", controlsOk ? "PASS" : "FAIL");
     std::printf("CONTROLS_HAVE_POWER=%d\n", controlsOk ? 1 : 0);
-    std::printf("VERDICT=%s\n", verdict);
+    // A run that failed only its controls is a VALID run against a PASSING target,
+    // not a fidelity failure. Naming that distinction is the whole point.
+    std::printf("OVERALL_RUN_STATUS=%s\n",
+                (!fidelity && controlsOk) ? "VALID_TARGET_FAILURE" :
+                (fidelity && !controlsOk) ? "INVALID_UNATTRIBUTABLE_CONTROLS" :
+                (fidelity && controlsOk)   ? "VALID_TARGET_PASS" : "INVALID_BOTH_FAILED");
+    std::printf("VERDICT=%s\n", fidelity ? "PASS" : "FAIL");
+    if (!controlsOk) {
+        std::printf("NOTE=a control failed, so this receipt cannot certify the gate "
+                    "has power even though the comparison result stands\n");
+    }
     return fidelity ? 0 : 1;
 }

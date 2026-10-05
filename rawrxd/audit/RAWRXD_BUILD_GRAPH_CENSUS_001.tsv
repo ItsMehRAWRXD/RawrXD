@@ -936,10 +936,12 @@ tests/nanof32_e2e_test.cpp	tests/nanof32_e2e_test.cpp	1	IMPLEMENT
 tools/q2k_dequant_probe.cpp	tools/q2k_dequant_probe.cpp	1	IMPLEMENT
 tools/nanof32_braid_writer.cpp	tools/nanof32_braid_writer.cpp	1	IMPLEMENT
 tools/gguf_to_nqb_converter.cpp	tools/gguf_to_nqb_converter.cpp	1	IMPLEMENT
+src/deep2/GGUFLoader.cpp	src/deep2	1	IMPLEMENT
 tools/nqb_reopen_parity_probe.cpp	tools/nqb_reopen_parity_probe.cpp	1	IMPLEMENT
 tools/nqbraid_real_weight_oracle.cpp	tools/nqbraid_real_weight_oracle.cpp	1	IMPLEMENT
 tools/nqb_exec_defect_regression.cpp	tools/nqb_exec_defect_regression.cpp	1	IMPLEMENT
 tools/nqb_first_bad_state.cpp	tools/nqb_first_bad_state.cpp	1	IMPLEMENT
+tools/q_accum_parity_probe.cpp	tools/q_accum_parity_probe.cpp	1	IMPLEMENT
 tools/nqb_weight_parity_probe.cpp	tools/nqb_weight_parity_probe.cpp	1	IMPLEMENT
 tests/test_embed_parity.cpp	tests/test_embed_parity.cpp	1	IMPLEMENT
 tests/generation_quality_gate.cpp	tests/generation_quality_gate.cpp	1	IMPLEMENT
@@ -1121,6 +1123,14 @@ src/agentic/rawrxd_agentic_runtime_all.cpp	src/agentic	1	IMPLEMENT
 tests/hexmag_repeat_tuner_cert.cpp	tests/hexmag_repeat_tuner_cert.cpp	1	IMPLEMENT
 tests/hexmag_ide_e2e_cert.cpp	tests/hexmag_ide_e2e_cert.cpp	1	IMPLEMENT
 tests/hexmag_runtime_controller_cert.cpp	tests/hexmag_runtime_controller_cert.cpp	1	IMPLEMENT
+src/asm/RawrXD_HexMag_AbiProbe.asm	src/asm	1	IMPLEMENT
+tools/hexmag_abi_probe.cpp	tools/hexmag_abi_probe.cpp	1	IMPLEMENT
+tools/hexmag_sequence_probe.cpp	tools/hexmag_sequence_probe.cpp	1	IMPLEMENT
+tools/hexmag_call_trace.cpp	tools/hexmag_call_trace.cpp	1	IMPLEMENT
+tools/deep2_dual_route_gate.cpp	tools/deep2_dual_route_gate.cpp	1	IMPLEMENT
+tools/gguf_head_type.cpp	tools/gguf_head_type.cpp	1	IMPLEMENT
+tools/q6k_lmhead_route_parity.cpp	tools/q6k_lmhead_route_parity.cpp	1	IMPLEMENT
+tools/q6k_lmhead_capture.cpp	tools/q6k_lmhead_capture.cpp	1	IMPLEMENT
 src/deep2/layer_harness.cpp	src/deep2	1	IMPLEMENT
 src/deep2/test_l10_ffn_inp_same_source.cpp	src/deep2	1	IMPLEMENT
 src/deep2/qwen35_attn_contract.cpp	src/deep2	1	IMPLEMENT
@@ -1294,3 +1304,4 @@ tools/deep2_streamer_parity.cpp	tools/deep2_streamer_parity.cpp	1	IMPLEMENT
 certs/direct_io_probe_001.cpp	certs/direct_io_probe_001.cpp	1	IMPLEMENT
 certs/rawr_dog_harness.cpp	certs/rawr_dog_harness.cpp	1	IMPLEMENT
 tools/reverse_assembly_cert.cpp	tools/reverse_assembly_cert.cpp	1	IMPLEMENT
+tools/nqb_residual_lm_head_accumulation.cpp	tools/nqb_residual_lm_head_accumulation.cpp	1	IMPLEMENT

@@ -1,0 +1,18 @@
+# RAWRXD_RETIRE_KNOWN_EMPTY_SOURCE_001
+#
+# Append-only ledger of DECLARED-EMPTY entries that have left the effective
+# register, each with the reason. Nothing is ever deleted from
+# cmake/known_empty_sources.txt; this file subtracts from it, so the history of
+# what was once declared unimplemented stays auditable.
+#
+# Format:  <repo-relative-path>|<REASON>
+#
+# REASON IMPLEMENTED  = the translation unit now contains real implementation.
+#                        It is no longer a declared gap; it is ordinary code and
+#                        is subject to the ordinary build.
+#
+# Adding a line here is a deliberate, reasoned act. A file becoming non-empty
+# on its own must never silently remove itself from the effective register --
+# that transition is exactly the one that needs a receipt.
+
+src/agent/hexmag_client.cpp|IMPLEMENTED

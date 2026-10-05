@@ -303,11 +303,35 @@ bool Nanof32BraidStreamWriter::open(const std::string& path,
         return false;
     }
 
-    Nanof32BraidArchMeta archMeta = archMetaIn;
+Nanof32BraidArchMeta archMeta = archMetaIn;
     Nanof32BraidHeader header{};
     std::memset(header.reserved, 0, sizeof(header.reserved));
-    std::memset(archMeta.modelName, 0, sizeof(archMeta.modelName));
-    std::memset(archMeta.archName, 0, sizeof(archMeta.archName));
+    // RAWRXD_NQB_ARCHNAME_PERSISTED_001
+    //
+    // These two memsets used to run HERE -- after the copy on the line above --
+    // which wiped the strings the caller had just populated:
+    //
+    //     Nanof32BraidArchMeta archMeta = archMetaIn;   // modelName/archName set
+    //     memset(archMeta.modelName, 0, 32);            // ...then destroyed
+    //     memset(archMeta.archName,  0, 16);            // ...then destroyed
+    //
+    // They clearly intended to zero the fields BEFORE they were filled. As
+    // written, every .nqb this writer produced shipped with an EMPTY modelName and
+    // archName, verified by reading the arch block straight out of two independent
+    // artifacts:
+    //
+    //     REGEN : arch=            layers=28 hidden=3072 heads=24 kvHeads=8
+    //     BASE  : arch=            layers=28 hidden=3072 heads=24 kvHeads=8
+    //
+    // That defeats the point of carrying an arch block at all. A reader cannot
+    // tell a llama container from a qwen2 one without going back to the source
+    // GGUF, and the freshly-added architecture-prefixed metadata resolution has
+    // nowhere to record which prefix was used. The strings arrive from the caller
+    // already NUL-terminated (snprintf), and the struct is otherwise value
+    // initialised, so zeroing them here achieved nothing except the loss.
+    //
+    // Deliberately NOT re-added as "memset before the copy": there is nothing to
+    // zero, archMeta is initialised from archMetaIn a line earlier.
 
     header.magic          = NANO_F32_BRAID_MAGIC;
     header.version        = NANO_F32_BRAID_VERSION;
