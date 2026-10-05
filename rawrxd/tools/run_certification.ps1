@@ -93,19 +93,61 @@ if ($SkipBuild) {
 } else {
     Emit "BUILD_PERFORMED" "1"
     Write-Output "--- building suite-relevant targets ---"
-    $failedTargets = @()
-    foreach ($t in $testNames) {
-        & cmake --build $BuildDir --config $Config --target $t -- /m /nologo /v:minimal 2>&1 |
-            Select-String -Pattern 'error C|error LNK|error MSB' |
-            Select-Object -First 3 | ForEach-Object { Write-Output ("  BUILD_ERROR [" + $t + "]: " + $_) }
-        if ($LASTEXITCODE -ne 0) { $failedTargets += $t }
-    }
-    & cmake --build $BuildDir --config $Config --target InferenceEngine -- /m /nologo /v:minimal 2>&1 |
-        Select-String -Pattern 'error C|error LNK' | Select-Object -First 3 |
-        ForEach-Object { Write-Output ("  BUILD_ERROR [InferenceEngine]: " + $_) }
-    if ($LASTEXITCODE -ne 0) { $failedTargets += "InferenceEngine" }
 
-    Emit "BUILD_TARGETS_ATTEMPTED" "$($testNames.Count + 1)"
+    # Targets are derived from the test COMMANDS, not from the test NAMES.
+    # A ctest name is not a build target: the nqb cells are named
+    # nqb_dense_q0 and friends but are driven by `cmake -P`, and their actual
+    # binaries are nanof32_braid_writer and nanof32_e2e_test. Assuming
+    # name==target made the runner try to build "nqb_dense_q0", which does not
+    # exist -- and the failure set FLIPPED between runs depending on build
+    # order, which is exactly the signature of an instrument measuring the
+    # wrong thing. Basename-minus-.exe is the target name for every target
+    # here (each sets OUTPUT_NAME to match).
+    $buildTargets = @()
+    try {
+        $j2 = $json | ConvertFrom-Json
+        foreach ($tcase in @($j2.tests)) {
+            foreach ($part in @($tcase.command)) {
+                if ($part -match '([A-Za-z0-9_\-\.]+)\.exe$') {
+                    $leaf = $Matches[1]
+                    # The nqb cells are driven by `cmake -P`, so the FIRST
+                    # element of their command is cmake.exe itself. Treating
+                    # that as a build target produced:
+                    #     BUILD_ERROR [cmake]: MSBUILD : error MSB1009:
+                    #     Project file does not exist.
+                    # because there is no project named "cmake".
+                    if ($leaf -ieq 'cmake') { continue }
+                    $buildTargets += $leaf
+                }
+            }
+        }
+    } catch {
+        Fail "could not derive build targets from the ctest manifest" "FAIL_NO_MANIFEST"
+    }
+    $buildTargets = @($buildTargets | Sort-Object -Unique)
+    Emit "BUILD_TARGETS_DERIVED" "$($buildTargets.Count)"
+
+    $failedTargets = @()
+    foreach ($t in $buildTargets) {
+        # The build output is CAPTURED BEFORE being filtered. Piping a native
+        # command into `Select-Object -First N` terminates the pipeline early,
+        # which kills the upstream process and leaves $LASTEXITCODE stale --
+        # so a target that built cleanly was recorded as failed. That is the
+        # same class of error as the one this runner exists to catch: an
+        # instrument reporting a verdict it did not measure.
+        $log = & cmake --build $BuildDir --config $Config --target $t -- /m /nologo /v:minimal 2>&1
+        $rc  = $LASTEXITCODE
+        @($log) | Select-String -Pattern 'error C|error LNK|error MSB' |
+            Select-Object -First 3 | ForEach-Object { Write-Output ("  BUILD_ERROR [" + $t + "]: " + $_) }
+        if ($rc -ne 0) { $failedTargets += $t }
+    }
+    $log = & cmake --build $BuildDir --config $Config --target InferenceEngine -- /m /nologo /v:minimal 2>&1
+    $rc  = $LASTEXITCODE
+    @($log) | Select-String -Pattern 'error C|error LNK' | Select-Object -First 3 |
+        ForEach-Object { Write-Output ("  BUILD_ERROR [InferenceEngine]: " + $_) }
+    if ($rc -ne 0) { $failedTargets += "InferenceEngine" }
+
+    Emit "BUILD_TARGETS_ATTEMPTED" "$($buildTargets.Count + 1)"
     Emit "BUILD_TARGETS_FAILED"    "$($failedTargets.Count)"
     $failedTargets | ForEach-Object { Write-Output ("  FAILED_TARGET: " + $_) }
     Emit "BUILD_FRESH" $(if ($failedTargets.Count -eq 0) { "1" } else { "0_BUILD_FAILED" })

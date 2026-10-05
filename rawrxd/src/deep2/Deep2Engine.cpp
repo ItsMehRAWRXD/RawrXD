@@ -1,4 +1,4 @@
-/* Deep2Engine.cpp Ã¢â‚¬â€ Real Implementation
+/* Deep2Engine.cpp ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Real Implementation
  * Connects: tokenizer, sampler, KV cache, weights, forward pass
  */
 #include "Deep2Engine.h"
@@ -41,7 +41,7 @@
 #include <new>
 
 // ============================================================================
-// RAWRXD_DEEP2_MODEL_REGISTRY_001 — production Architecture registration
+// RAWRXD_DEEP2_MODEL_REGISTRY_001 â€” production Architecture registration
 //
 // The registry refuses to admit an architecture that has no registered
 // implementation. These descriptors are the real Deep2 execution path, bound to
@@ -56,7 +56,7 @@
 // other than the one Deep2 wires, are deliberately NOT registered. That is what
 // makes admit() reject them fail-closed instead of running llama math on them.
 // ============================================================================
-// RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — BowRain compute authority integration
+// RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” BowRain compute authority integration
 // Maps the real compute graph traversal to BowRain evidence discipline.
 #include "../compute/BowRainComputeAuthority.h"
 namespace {
@@ -319,21 +319,21 @@ void Deep2Engine::EmitExpertReuseSummary() {
 
 // ------------------------------------------------------------
 // Token-path telemetry accumulator (C++20, zero-dependency beyond the standard lib).
-// All fields are caller-fed from real execution points â€” no synthetic estimates.
+// All fields are caller-fed from real execution points Ã¢â‚¬â€ no synthetic estimates.
 // ------------------------------------------------------------
 struct TokenTelemetryAccumulator {
-    // Oneâ€‘time initialization / open
+    // OneÃ¢â‚¬â€˜time initialization / open
     bool open(const char* csv_path = nullptr, const char* jsonl_path = nullptr);
 
     // Call once per generated token (ideally right after the token is fully emitted).
     void record_token();
 
     // ------------------------------------------------------------------
-    // Counters filled from the real Deep2 execution points (see the perâ€‘file wiring below).
+    // Counters filled from the real Deep2 execution points (see the perÃ¢â‚¬â€˜file wiring below).
     // ------------------------------------------------------------------
     // Token loop / timing
     uint64_t tokens_generated{};
-    uint64_t token_total_ns{};          // TOKEN_TOTAL_NS wallâ€‘clock per token
+    uint64_t token_total_ns{};          // TOKEN_TOTAL_NS wallÃ¢â‚¬â€˜clock per token
 
     // Model footprint
     uint64_t model_file_bytes{};
@@ -347,7 +347,7 @@ struct TokenTelemetryAccumulator {
     uint64_t kv_write_bytes{};
     uint64_t scratch_bytes{};
 
-    // Expertâ€‘cache
+    // ExpertÃ¢â‚¬â€˜cache
     uint32_t experts_total{};
     uint32_t experts_active{};
     uint64_t expert_cache_hits{};
@@ -359,7 +359,7 @@ struct TokenTelemetryAccumulator {
     uint64_t wait_ns{};
     uint64_t submit_ns{};
 
-    // Hotpatch authority (populated by the addressâ€‘space layer)
+    // Hotpatch authority (populated by the addressÃ¢â‚¬â€˜space layer)
     uint64_t hotpatch_resolves{};
     uint64_t hotpatch_fallbacks{};
     uint64_t hotpatched_steps{};
@@ -373,7 +373,7 @@ struct TokenTelemetryAccumulator {
 };
 
 // ------------------------------------------------------------
-// Global instance â€“ one per engine process lifetime.
+// Global instance Ã¢â‚¬â€œ one per engine process lifetime.
 // ------------------------------------------------------------
 static TokenTelemetryAccumulator telemetry;
 
@@ -434,7 +434,7 @@ void TokenTelemetryAccumulator::record_token() {
 }
 
 // ------------------------------------------------------------
-// Earlyâ€‘exit if telemetry not configured.
+// EarlyÃ¢â‚¬â€˜exit if telemetry not configured.
 // ------------------------------------------------------------
 #define TELEMETRY_GUARD if (!telemetry.csv_fp && !telemetry.jsonl_fp) return;
 
@@ -1615,7 +1615,7 @@ void Deep2Engine::reset() {
     // captured inside the forward, before this runs.
     resetGpuForwardCounters();
 
-    // RAWRXD_BATCH_02_SAMPLER_GATE_001 â€” repetition-penalty history is
+    // RAWRXD_BATCH_02_SAMPLER_GATE_001 Ã¢â‚¬â€ repetition-penalty history is
     // per-generation and must be cleared at the generation boundary.
     generatedTokensHistory_.clear();
 
@@ -2518,7 +2518,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
     }
 
     // ========================================================================
-    // RAWRXD_DEEP2_MODEL_REGISTRY_001 — fail-closed admission.
+    // RAWRXD_DEEP2_MODEL_REGISTRY_001 â€” fail-closed admission.
     //
     // Placed after every geometry field is parsed and after the final-norm /
     // LM-head topology check, but BEFORE any per-layer weight bind. That ordering
@@ -3327,8 +3327,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         // invariant that conventional transformers require.
         const bool isNemotronH = (arch == "nemotron_h" || arch == "nemotron_h_moe");
         if (isNemotronH) {
-            // The block prenorm. Every Nemotron-H block — SSM, attention, MLP
-            // or MoE alike — normalises through exactly one norm before its
+            // The block prenorm. Every Nemotron-H block â€” SSM, attention, MLP
+            // or MoE alike â€” normalises through exactly one norm before its
             // single mixer. GGUF spells it blk.N.attn_norm.weight for all of
             // them, so this is the block norm, not an attention-specific one
             // and not a fallback for a missing FFN norm.
@@ -4340,10 +4340,10 @@ int Deep2Engine::sampleToken(const float* logitsPtr) {
         std::fprintf(stderr, "[SAMPLE] FAIL: null logits\n"); std::fflush(stderr);
         return 0;
     }
-    // RAWRXD_BATCH_02_SAMPLER_GATE_001 â€” apply repetition penalty to a local
+    // RAWRXD_BATCH_02_SAMPLER_GATE_001 Ã¢â‚¬â€ apply repetition penalty to a local
     // mutable copy of logits before sampling, so the configured
     // repeatPenalty actually reaches the sampling path. Skip the copy and
-    // penalty entirely when no penalty is configured â€” sample directly from
+    // penalty entirely when no penalty is configured Ã¢â‚¬â€ sample directly from
     // the caller's buffer to avoid an extra vocab-sized heap allocation on
     // every decode token.
     if (repPenaltyProcessor_ && repPenaltyProcessor_->active()) {
@@ -4486,7 +4486,7 @@ int Deep2Engine::sampleCommittedToken(const float* logitsPtr) {
 
 // =================== CONFIGURE GENERATION ====================
 void Deep2Engine::configureGeneration(const GenerationOptions& options) {
-    // RAWRXD_BATCH_02_SAMPLER_GATE_001 â€” every GenerationOptions field must
+    // RAWRXD_BATCH_02_SAMPLER_GATE_001 Ã¢â‚¬â€ every GenerationOptions field must
     // reach a real consumer or be explicitly unsupported.
     //
     //   maxTokens     -> consumed by generateStream (limit at L4155)
@@ -4557,14 +4557,14 @@ const SpeculativeCounters& Deep2Engine::speculativeCounters() const {
 // =================== TRACE PROFILE POLICY ====================
 // RAWRXD_TRACE_PROFILE_POLICY_001
 // Controls which traces fire. Profiles:
-//   perf    â€” no stderr hotpath spam; structured counters only; TPS valid
-//   ide     â€” structured IDE diagnostics; stage events; summaries; no flood
-//   debug   â€” full unsilent stderr flood; TPS marked DEBUG_CONTAMINATED
-//   receipt â€” machine-readable receipts only
+//   perf    Ã¢â‚¬â€ no stderr hotpath spam; structured counters only; TPS valid
+//   ide     Ã¢â‚¬â€ structured IDE diagnostics; stage events; summaries; no flood
+//   debug   Ã¢â‚¬â€ full unsilent stderr flood; TPS marked DEBUG_CONTAMINATED
+//   receipt Ã¢â‚¬â€ machine-readable receipts only
 //
 // Default: perf for rawr CLI, ide for Win32IDE (detected via --headless flag)
 // Override: RAWRXD_TRACE_PROFILE=<perf|ide|debug|receipt>
-//           RAWRXD_VERBOSE=1 / RAWRXD_TRACE_TOKEN=1 / DEEP2_TRACE_FORWARD=1 â†’ debug
+//           RAWRXD_VERBOSE=1 / RAWRXD_TRACE_TOKEN=1 / DEEP2_TRACE_FORWARD=1 Ã¢â€ â€™ debug
 enum class TraceProfile { Perf, Ide, Debug, Receipt };
 
 static TraceProfile rawrxdTraceProfile() {
@@ -4610,7 +4610,7 @@ static bool rawrxdFailureTraceEnabled() {
 }
 
 // Summary traces = [STREAM] RESULT, [GENERATE] EXIT, TPS.
-// Fire in all modes (including perf) â€” these are the clean TPS receipts.
+// Fire in all modes (including perf) Ã¢â‚¬â€ these are the clean TPS receipts.
 static bool rawrxdSummaryTraceEnabled() {
     return true;
 }
@@ -4679,7 +4679,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     RAWRXD_DEEP2_TRACE("LINEARW name=%s rows=%zu cols=%zu type=%d\n",
                  wtn, wt.rows, wt.cols, wt.type);
 
-    // RAWRXD_LINEARW_BOUNDARY_IDENTITY_001 — observe only. Captures the exact
+    // RAWRXD_LINEARW_BOUNDARY_IDENTITY_001 â€” observe only. Captures the exact
     // operands at the LinearW boundary, because the spine samples upstream and
     // an ~835x amplification remains unexplained by any Q2_K scale width (both
     // 4-bit and 6-bit arms poison). Pointer identity alone is insufficient, so
@@ -4701,7 +4701,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                 wtn, (const void*)input, (const void*)wt.data,
                 wt.rows, wt.cols, wt.type, (const void*)bias, (const void*)output);
 
-            // RAWRXD_TENSOR_PROVENANCE_001 — identity before interpretation.
+            // RAWRXD_TENSOR_PROVENANCE_001 â€” identity before interpretation.
             // Pointer equality is NOT the criterion: copying, staging, dequant
             // or GPU upload may legitimately move bytes. The criterion is whether
             // the consumer operates on bytes DERIVED FROM the tensor the loader
@@ -4776,7 +4776,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         throw std::runtime_error("LinearW: tensor backing smaller than geometry");
     }
 
-    // BATCH10_ROW_SPLIT_LINEAR Ã¢â‚¬â€ real GPU arithmetic, host result contract.
+    // BATCH10_ROW_SPLIT_LINEAR ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â real GPU arithmetic, host result contract.
     // A tied Q6_K LM head is kept on the measured authority (see
     // forcePreviousLmHeadRoute above), so neither the Vulkan lane nor the
     // ExecutionView wrapper may claim it.
@@ -5488,7 +5488,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     //   normed   = RMSNorm(residual, block_norm = blk.N.attn_norm.weight)
     //   branch   = Mixer(normed)        // Mamba | Attention | Mlp | MoE
     //   output   = residual + branch
-    //   No fall-through between mixers; no attn→SSM→FFN sequence.
+    //   No fall-through between mixers; no attnâ†’SSMâ†’FFN sequence.
     // Reference: llm_build_nemotron_h, llama.cpp src/models/nemotron-h.cpp:18-46
     // ============================================================
     if (isNemotronH) {
@@ -5499,7 +5499,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
         if (!blockResidual)
             throw std::runtime_error("forwardLayer: block residual buffer not allocated");
 
-        // Single layer norm per block — blk.N.attn_norm.weight for all mixers.
+        // Single layer norm per block â€” blk.N.attn_norm.weight for all mixers.
         const WeightTensor& blockNorm =
             lw.attnNorm.data ? lw.attnNorm : lw.ffnNorm;
         if (!blockNorm.data)
@@ -5596,7 +5596,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
         }
         RAWRXD_DEEP2_TRACE("FWD_LAYER layer=%zu DONE\n",layer);
 
-        // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — record this layer's execution
+        // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” record this layer's execution
         {
             bool layerPassed = true;
             // Check if output is finite (already verified above, but defensive)
@@ -5707,7 +5707,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     }
     RAWRXD_DEEP2_TRACE("FWD_LAYER layer=%zu DONE\n",layer);
 
-    // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — record this layer's execution
+    // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” record this layer's execution
     {
         bool layerPassed = true;
         for (size_t i = 0; i < H; ++i) {
@@ -6013,7 +6013,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
                     }
                     const size_t bpr = t->cols ? (t->cols / 256ull) : 0;
                     const size_t rowBytes = t->rows ? (t->sizeBytes / t->rows) : 0;
-                    // RAWRXD_TENSOR_PROVENANCE_001 — second observation site.
+                    // RAWRXD_TENSOR_PROVENANCE_001 â€” second observation site.
                     // Identical derivation to [PROV] at LWBOUND so both can be
                     // compared IN THE SAME PROCESS. The LWBOUND half alone is
                     // not evidence about this site; only the comparison is.
@@ -7460,7 +7460,7 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
         std::fflush(stderr);
     }
 
-    // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — map traversal evidence
+    // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” map traversal evidence
     // Bind once per process; record node per layer executed.
     static bool bowrainBound = false;
     if (!bowrainBound) {
@@ -7489,7 +7489,7 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
     if (vulkanEnabled_ && vulkanInitialized_ &&
         (modelWeights.isMoE || modelWeights.useMLA)) {
         if (forwardTokenGpuHybrid(hidden, seqLen)) {
-            // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — record execution evidence for this traversal
+            // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” record execution evidence for this traversal
             {
                 const size_t nodesVisited = rawrxd::compute::mapNodesVisited();
                 const size_t nodesExecuted = rawrxd::compute::mapNodesExecuted();
@@ -7568,7 +7568,7 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
                     hiddenFinite, hiddenNan, hiddenInf, hiddenMin, hiddenMax);
                 std::fflush(stderr);
             }
-            // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — record execution evidence for this traversal
+            // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” record execution evidence for this traversal
             {
                 const size_t nodesVisited = rawrxd::compute::mapNodesVisited();
                 const size_t nodesExecuted = rawrxd::compute::mapNodesExecuted();
@@ -7669,7 +7669,7 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
             }
             ++gpuFwd_.dualRowDenseTokens;
             gpuFwdCommitted_=false; // not FULL_RESIDENT_GPU
-            // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — record execution evidence for this traversal
+            // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” record execution evidence for this traversal
             {
                 const size_t nodesVisited = rawrxd::compute::mapNodesVisited();
                 const size_t nodesExecuted = rawrxd::compute::mapNodesExecuted();
@@ -7728,7 +7728,7 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
             // evidence on one path and silent on the other is not measured.
             recordResidentNodeExecutions(
                 gpuFwd_.forwardLayers - residentLayersBefore);
-            // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — record execution evidence for this traversal
+            // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” record execution evidence for this traversal
             {
                 const size_t nodesVisited = rawrxd::compute::mapNodesVisited();
                 const size_t nodesExecuted = rawrxd::compute::mapNodesExecuted();
@@ -7835,7 +7835,7 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
     }
     gpuFwdCommitted_ = false;
 
-    // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — record execution evidence for this traversal
+    // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” record execution evidence for this traversal
     {
         const size_t nodesVisited = rawrxd::compute::mapNodesVisited();
         const size_t nodesExecuted = rawrxd::compute::mapNodesExecuted();
@@ -8134,7 +8134,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                         bool stop=false;
                         for(int32_t tok:verified) {
                             if(generated>=decodeLimit) break;
-                            // D3 â€” EOS in speculative window: stop at the
+                            // D3 Ã¢â‚¬â€ EOS in speculative window: stop at the
                             // first EOS without emitting it; undo the count
                             // so the bookkeeping reflects only emitted text.
                             if (tokenizer && tokenizer->isEos(tok)) {
@@ -8261,12 +8261,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             break;
         }
         outputTokens[generated] = nextTok;
-        // RAWRXD_BATCH_02_SAMPLER_GATE_001 â€” record committed token in
+        // RAWRXD_BATCH_02_SAMPLER_GATE_001 Ã¢â‚¬â€ record committed token in
         // generated-history so the next decode step's repetition penalty
         // applies to it.
         generatedTokensHistory_.push_back(nextTok);
         if (profiler_) profiler_->endToken(static_cast<uint32_t>(generated));
-        // D3 â€” EOS termination. Stop the decode loop on actual EOS without
+        // D3 Ã¢â‚¬â€ EOS termination. Stop the decode loop on actual EOS without
         // emitting it as text. We resolve the EOS id from the tokenizer
         // metadata at request time (tokenizer->eosTokenId()), NOT from a
         // generic TOK_CONTROL filter: only the model's own EOS token ends
@@ -8430,7 +8430,7 @@ GenerationResult Deep2Engine::generateStream(
     auto toks = tokenize(prompt);
     res.promptTokens = toks.size();
     if (toks.empty() || !initialized || !modelWeights.loaded) {
-        // D1 â€” initialization-failure / empty-input: distinguish empty
+        // D1 Ã¢â‚¬â€ initialization-failure / empty-input: distinguish empty
         // input (InvalidInput) from an uninitialized engine (InternalError).
         // Never report completed=true on either path.
         std::fprintf(stderr, "[STREAM] EARLY_EXIT toks=%zu init=%d loaded=%d\n",
@@ -8457,7 +8457,7 @@ GenerationResult Deep2Engine::generateStream(
         if (config.maxSeqLen > toks.size()) {
             limit = config.maxSeqLen - toks.size();
         } else {
-            // D1 â€” context-exhaustion: the request cannot proceed because the
+            // D1 Ã¢â‚¬â€ context-exhaustion: the request cannot proceed because the
             // prompt alone fills the model context. Surface this as
             // InvalidInput (the request shape is not serviceable) rather than
             // InternalError, and never report completed=true.
@@ -8489,7 +8489,7 @@ GenerationResult Deep2Engine::generateStream(
     res.promptTimeMs = st.prefillMs;
     res.generationTimeMs = st.decodeMs;
     res.cancelled = cancelRequested_.load(std::memory_order_acquire);
-    // D1 â€” result contract: derive `completed` ONLY from the resolved status,
+    // D1 Ã¢â‚¬â€ result contract: derive `completed` ONLY from the resolved status,
     // never from `cancelled` alone. The invariant is:
     //   completed == (status == GenerationStatus::Completed)
     // This makes the previous bug structurally impossible:
@@ -8551,7 +8551,7 @@ GenerationResult Deep2Engine::generateStream(
         res.completed = false;
         res.generatedTokens = 0;
     }
-    // D2 â€” generation lifecycle: at the end of every independent generation,
+    // D2 Ã¢â‚¬â€ generation lifecycle: at the end of every independent generation,
     // clear the KV cache and per-generation state so the NEXT independent
     // request on this engine instance observes kvCacheLength() == 0.
     // `reset()` clears the KV cache (kvCache->clear(false)), the
@@ -8561,7 +8561,7 @@ GenerationResult Deep2Engine::generateStream(
     // prefill token 0 of generation #N when N > 1.
     // RAWRXD_DEEP2_GENERATION_LIFECYCLE_001.
 
-    // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 — write receipt for this generation
+    // RAWRXD_BOWRAIN_COMPUTE_AUTHORITY_001 â€” write receipt for this generation
     {
         const char* bowrainReceiptPath = std::getenv("BOWRAIN_RECEIPT_PATH");
         if (bowrainReceiptPath && bowrainReceiptPath[0]) {
@@ -8720,7 +8720,7 @@ wt.identity.variant = 0;
     return true;
 }
 
-// =================== MARS (REAL PROVIDER â€” OPEN GATE) ====================
+// =================== MARS (REAL PROVIDER Ã¢â‚¬â€ OPEN GATE) ====================
 bool Deep2Engine::enableMARS(size_t gpu0VRAMBytes, size_t gpu1VRAMBytes) {
     marsEnabled_ = false;
     marsWeightsPlaced_ = false;
@@ -8750,7 +8750,7 @@ void Deep2Engine::disableMARS() {
 }
 
 bool Deep2Engine::marsHostResidentAuthorityOk() const {
-    // HOST_RESIDENT_DENSE only; K2_STREAM_AUTHORITY â†’ STANDBY by law.
+    // HOST_RESIDENT_DENSE only; K2_STREAM_AUTHORITY Ã¢â€ â€™ STANDBY by law.
     if (!marsEnabled_ || !marsController_) return false;
     auto parity = marsController_->getDynamicParity();
     // Parity is acceptable if at least one GPU holds some weight bytes.
@@ -9399,7 +9399,7 @@ bool Deep2Engine::loadModelFromNanof32Braid(const std::string& braidPath) {
     }
 
     nqbMemMark("AFTER_READ_ALL_TENSORS");
-    // Build name → tensor map
+    // Build name â†’ tensor map
     std::unordered_map<std::string, Deep2::NQBraidBlock*> tensorMap;
     for (auto& kv : tensors) {
         tensorMap[kv.first] = &kv.second;
@@ -9595,12 +9595,39 @@ wt.identity.variant = 0;
 
     // Token embeddings (vocabSize x hiddenDim)
     auto emb = findTensor("token_embd");
+    // RAWRXD_NQB_TOKEN_EMBD_PUBLICATION_001
+    //
+    // Instrument each link of the publication chain separately, because "the
+    // tensor is missing" and "the tensor was found but never bound" and "the
+    // tensor was bound but the storage was empty" are three different defects
+    // that all previously presented as the same refusal at L9643.
+    std::fprintf(stderr,
+        "[NQBRAID] EMB_PUBLISH step=discover found=%d tensors_published=%zu\n",
+        emb ? 1 : 0, tensors.size());
+    std::fflush(stderr);
     if (emb) {
+        const std::size_t haveElems = emb->elements();
+        const std::size_t needElems =
+            static_cast<std::size_t>(archMeta.vocabSize) * archMeta.hiddenDim;
+        std::fprintf(stderr,
+            "[NQBRAID] EMB_PUBLISH step=inspect name=%s ready=%d elements=%zu "
+            "required=%zu f32_elems=%zu bf16_elems=%zu\n",
+            emb->name.c_str(), emb->ready ? 1 : 0, haveElems, needElems,
+            emb->f32Data.size(), emb->bf16Data.size());
+        std::fflush(stderr);
         if (!requireRows(emb, "token_embd", archMeta.vocabSize, archMeta.hiddenDim)) {
             modelWeights.loaded = false; braidEnabled_ = false; return false;
         }
         bindTensor(*emb, modelWeights.tokenEmbed,
                    archMeta.vocabSize, archMeta.hiddenDim);
+        std::fprintf(stderr,
+            "[NQBRAID] EMB_PUBLISH step=bound data=%p type=%d bytes=%zu rows=%zu "
+            "cols=%zu\n",
+            (const void*)modelWeights.tokenEmbed.data,
+            modelWeights.tokenEmbed.type,
+            modelWeights.tokenEmbed.sizeBytes,
+            modelWeights.tokenEmbed.rows, modelWeights.tokenEmbed.cols);
+        std::fflush(stderr);
     }
 
     // Output norm
@@ -10132,8 +10159,8 @@ bool Deep2Engine::tryReverseWebgpuTokenForward(float* hidden, size_t seqLen) {
         return false;
     }
     // TODO: produce WebGPU-compatible compute packet from the current working set
-    // (identify required tensor/range → locate representation → materialize
-    //  WebGPU input → dispatch → receive result into hidden).
+    // (identify required tensor/range â†’ locate representation â†’ materialize
+    //  WebGPU input â†’ dispatch â†’ receive result into hidden).
     //
     // For now: the route exists, the predicate is wired, the execution is
     // a measured "not yet implemented" so the route does not silently claim
@@ -10525,7 +10552,7 @@ void Deep2Engine::applySlidingWindow(size_t& attentionStart, size_t& attentionEn
 }
 
 // ============================================================================
-// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001 — Batch 2
+// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001 â€” Batch 2
 //
 // Ten more declared-but-undefined methods, closed against real machinery.
 // Each one either drives an existing real component (ElasticResidencyManager,
@@ -10538,7 +10565,7 @@ void Deep2Engine::recordExpertAccessPublic(int layerId, int expertId, float weig
 }
 
 // ============================================================================
-// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001 — Batch 3
+// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001 â€” Batch 3
 //
 // Nine more declared-but-undefined methods: the sampler surface, the thread /
 // KV surface, the tool-call-limit surface, and weight-tensor layer parsing.
@@ -10667,7 +10694,7 @@ void Deep2Engine::prefetchNextExpertsPublic(int layerId) {
 }
 
 // ============================================================================
-// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001 — Batch 4
+// RAWRXD_DEEP2_SOVEREIGN_KERNEL_001 â€” Batch 4
 //
 // The reverse-analysis surface, the Vulkan GEMV probe, and the kernel-patch
 // registry that rollback needs in order to exist at all.

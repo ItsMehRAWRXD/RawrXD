@@ -48,7 +48,7 @@ if(NOT TARGET nanof32_braid_writer)
         ${CMAKE_SOURCE_DIR}/include
     )
     set_target_properties(nanof32_braid_writer PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/Release
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 endif()
@@ -67,7 +67,7 @@ if(NOT TARGET nqb_tokenizer_matrix)
         ${CMAKE_SOURCE_DIR}/include
     )
     set_target_properties(nqb_tokenizer_matrix PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/Release
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 endif()
