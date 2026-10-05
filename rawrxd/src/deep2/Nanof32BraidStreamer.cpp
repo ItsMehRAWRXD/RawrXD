@@ -204,21 +204,30 @@ bool Nanof32BraidStreamer::readNextTensor(Nanof32BraidTensorFooter& outFooter,
             }
             break;
         case NQBRAID_DENSE_F32:
-            if (outF32) {
-                outData.clear();
-                if (compressed.size() >= elements * sizeof(float)) {
-                    const float* fp32 = reinterpret_cast<const float*>(compressed.data());
-                    outF32->assign(fp32, fp32 + elements);
-                    ok = true;
-                }
-                break;
-            }
-            // Convert F32 → BF16 (legacy path, only when F32 was not requested)
+            // An F32 tensor is stored losslessly and must be surfaced through
+            // BOTH outputs whenever both are meaningful, because they serve
+            // different consumers and neither is optional:
+            //
+            //   bf16Data  what bindTensor() binds into WeightTensor::data, and
+            //              what the writer's round-trip verifier compares. An
+            //              F32 tensor that leaves this EMPTY binds as a
+            //              zero-length block, so the model silently loses its
+            //              embedding.
+            //   outF32    lossless access for a caller that asks for it.
+            //
+            // Taking an early `break` on the outF32 path cleared outData and
+            // broke every DENSE_F32 fixture:
+            //     VERIFY_FIRST_MISMATCH=size:token_embd.weight:got0:want32768
+            // That is a LOADER defect wearing a verifier symptom -- the model
+            // could not have been loaded at all. Narrowing to bf16 costs at
+            // most one ulp and only on the copy, so the binding path is
+            // served correctly first.
             if (compressed.size() >= elements * sizeof(float)) {
                 const float* fp32 = reinterpret_cast<const float*>(compressed.data());
                 for (size_t i = 0; i < elements; ++i) {
                     outData[i] = bfloat16_t(fp32[i]);
                 }
+                if (outF32) outF32->assign(fp32, fp32 + elements);
                 ok = true;
             }
             break;
@@ -432,6 +441,63 @@ bool Nanof32BraidStreamer::readAllTensors(
         outTensors.emplace_back(blk.name, std::move(blk));
     }
     return true;
+}
+
+// RAWRXD_NQBRAID_READER_API_INTEGRITY_001
+//
+// Was declared in the public header and defined nowhere: callers compiled and
+// then failed at link. Implemented here because bounded random access is exactly
+// what the real artifact needs -- readAllTensors() materialises all 255 tensors
+// (12.85 GB of payload, 6.43 GB of bfloat16) and therefore cannot run against
+// the only real model in the tree.
+//
+// Semantics match the reverse walk: index 0 is the FIRST tensor written, i.e. the
+// one furthest from EOF, and index numTensors-1 is the LAST. readHead_ is left at
+// that tensor's payload start so the next readNextTensor() returns it.
+bool Nanof32BraidStreamer::seekTensor(uint32_t index) {
+    if (!header_ || !file_.is_open()) return false;
+    if (index >= header_->numTensors) return false;
+
+    const uint64_t vocabBytes = header_->vocabSectionBytes;
+    const uint64_t dataStart =
+        (sizeof(Nanof32BraidHeader) + sizeof(Nanof32BraidArchMeta)) + vocabBytes;
+    if (vocabBytes != 0) {
+        const uint64_t off = header_->vocabSectionOffset;
+        if (off < sizeof(Nanof32BraidHeader) + sizeof(Nanof32BraidArchMeta) ||
+            vocabBytes > header_->fileSize - off) return false;
+    }
+    if (header_->fileSize <= dataStart) return false;
+
+    uint64_t head = header_->fileSize;
+    for (uint64_t seen = 0; head > dataStart; ++seen) {
+        if (head - dataStart < sizeof(Nanof32BraidTensorFooter)) return false;
+        head -= sizeof(Nanof32BraidTensorFooter);
+
+        Nanof32BraidTensorFooter ft{};
+        if (!readAt(head, &ft, sizeof ft)) return false;
+        if (ft.magic != NANO_F32_BRAID_MAGIC) return false;
+        if (ft.dataBytes > head - dataStart) return false;
+
+        const uint64_t payloadBegin = head - ft.dataBytes;
+        // walking backward, the tensor with the LARGEST forward index is
+        // encountered first: Total-1-seen.
+        if (header_->numTensors - 1u - seen == index) {
+            // readNextTensor() maintains the invariant that readHead_ points ONE
+            // PAST the next footer it will read: it does `readHead_ -= FOOTER`
+            // before reading. So to make the next call return THIS tensor, readHead_
+            // must be this footer's END, not its payload begin.
+            //
+            // Setting it to payloadBegin -- the obvious first guess -- makes the
+            // next call read the footer 128 bytes BELOW this one and silently
+            // return the PREVIOUS tensor's weights. Nothing complains: the magic
+            // is valid and the shape usually looks plausible. Caught only by
+            // comparing random access against the sequential walk.
+            readHead_ = head + sizeof(Nanof32BraidTensorFooter);
+            return true;
+        }
+        head = payloadBegin;
+    }
+    return false;
 }
 
 bool Nanof32BraidStreamer::releaseTensor(uint32_t tensorIndex) {

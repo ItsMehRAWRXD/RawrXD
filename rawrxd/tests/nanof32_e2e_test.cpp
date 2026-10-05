@@ -54,28 +54,49 @@ static float bf16ToF32(uint16_t h) {
     return f;
 }
 
+// RAWRXD_NQB_DENSE_F32_PRESERVE_F32_001
+//
+// This gate used to reinterpret WeightTensor::data as uint16 bf16
+// unconditionally. The loader now binds a dense-F32 block as F32
+// (WeightTensor::type == GGML_TYPE_F32, data pointing at floats), so the
+// gate read F32 bit patterns as bf16 pairs and reported nonsense:
+//
+//     FAIL=weight_nonfinite name=token_embd idx=710/32768 raw=0xFFEE
+//
+// 0xFFEE is the bf16 NaN pattern, but the bytes were never bf16 -- they were
+// two halves of neighbouring floats. A gate that misreads its input will
+// condemn a correct model, so the representation is now taken from the
+// tensor's own declared type rather than assumed.
 static bool checkWeightFinite(const char* label, const void* data,
-                              size_t rows, size_t cols) {
+                              size_t rows, size_t cols, int type) {
     if (!data || rows == 0 || cols == 0) {
         std::fprintf(stderr, "FAIL=weight_unbound name=%s data=%p rows=%zu cols=%zu\n",
                      label, (const void*)data, rows, cols);
         return false;
     }
-    const uint16_t* w = reinterpret_cast<const uint16_t*>(data);
     const size_t n = rows * cols;
+    const bool isF32 = (type == static_cast<int>(Deep2::GGMLType::GGML_TYPE_F32));
     double sum = 0.0;
     for (size_t i = 0; i < n; ++i) {
-        const float v = bf16ToF32(w[i]);
+        float v;
+        if (isF32) {
+            v = static_cast<const float*>(data)[i];
+        } else {
+            v = bf16ToF32(reinterpret_cast<const uint16_t*>(data)[i]);
+        }
         if (!std::isfinite(v)) {
             std::fprintf(stderr,
-                "FAIL=weight_nonfinite name=%s idx=%zu/%zu raw=0x%04X\n",
-                label, i, n, w[i]);
+                "FAIL=weight_nonfinite name=%s idx=%zu/%zu type=%d raw=%s\n",
+                label, i, n, type,
+                isF32 ? std::to_string(static_cast<const float*>(data)[i]).c_str()
+                      : "bf16");
             return false;
         }
         sum += std::fabs(static_cast<double>(v));
     }
-    std::fprintf(stderr, "WEIGHT_OK name=%s rows=%zu cols=%zu mean_abs=%.6g\n",
-                 label, rows, cols, sum / static_cast<double>(n));
+    std::fprintf(stderr, "WEIGHT_OK name=%s rows=%zu cols=%zu type=%s mean_abs=%.6g\n",
+                 label, rows, cols, isF32 ? "f32" : "bf16",
+                 sum / static_cast<double>(n));
     return true;
 }
 
@@ -132,14 +153,17 @@ int main(int argc, char** argv) {
     {
         int checked = 0;
         if (!checkWeightFinite("token_embd", mw.tokenEmbed.data,
-                               mw.tokenEmbed.rows, mw.tokenEmbed.cols)) return 1;
+                               mw.tokenEmbed.rows, mw.tokenEmbed.cols,
+                               static_cast<int>(mw.tokenEmbed.type))) return 1;
         ++checked;
         if (mw.finalNorm.data &&
             !checkWeightFinite("output_norm", mw.finalNorm.data,
-                               mw.finalNorm.rows, mw.finalNorm.cols)) return 1;
+                               mw.finalNorm.rows, mw.finalNorm.cols,
+                               static_cast<int>(mw.finalNorm.type))) return 1;
         if (mw.lmHead.data &&
             !checkWeightFinite("output.weight", mw.lmHead.data,
-                               mw.lmHead.rows, mw.lmHead.cols)) return 1;
+                               mw.lmHead.rows, mw.lmHead.cols,
+                               static_cast<int>(mw.lmHead.type))) return 1;
         for (size_t l = 0; l < mw.layers.size(); ++l) {
             const auto& lw = mw.layers[l];
             const std::string p = "blk." + std::to_string(l) + ".";
@@ -189,7 +213,7 @@ int main(int argc, char** argv) {
                     return 1;
                 }
                 if (!checkWeightFinite(e.tag.c_str(), e.wt.data,
-                                       e.wt.rows, e.wt.cols)) return 1;
+                                       e.wt.rows, e.wt.cols, static_cast<int>(e.wt.type))) return 1;
                 ++checked;
             }
         }

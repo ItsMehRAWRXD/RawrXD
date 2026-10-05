@@ -332,15 +332,37 @@ bool Nanof32BraidStreamWriter::open(const std::string& path,
     }
 
 if (vocab && !vocab->tokens.empty()) {
-        // The vocabulary must be at least as wide as the token domain the arch
-        // meta declares, or some declared id has no embedding row. The original
-        // writer checked this against token_embd's row count instead; the arch
-        // meta is the declared authority and is checked here so the invariant
-        // holds even for a file with no embedding tensor.
-        if (vocab->tokens.size() < static_cast<size_t>(archMeta.vocabSize)) {
-            error_ = "vocabulary has " + std::to_string(vocab->tokens.size()) +
-                     " tokens but archMeta.vocabSize is " +
-                     std::to_string(archMeta.vocabSize);
+        // The vocabulary must FIT the embedding, not the other way round.
+        //
+        // archMeta.vocabSize is the number of rows in token_embd (and in the
+        // output projection). encode() can only ever emit ids below
+        // token_embd.rows, so the requirement is:
+        //
+        //     tokenizer_tokens <= embedding_rows
+        //
+        // and a tokenizer SMALLER than the embedding is perfectly legal -- the
+        // surplus rows are simply unreachable. This check was briefly inverted
+        // to `tokens < vocabSize` on the reasoning that "the vocabulary must
+        // cover every declared id", which is a category error: the declared
+        // ids ARE the vocabulary. Inverted, it rejected every fixture whose
+        // embedding is wider than its tokenizer, and took the ctest matrix
+        // from 18/18 to 4/18:
+        //
+        //     WRITE_ERROR=vocabulary has 288 tokens but archMeta.vocabSize is 512
+        //
+        // with 288 <= 512 being perfectly valid. The 18/18 that preceded it
+        // had been measured against a stale build, so the regression was only
+        // visible on a rebuild -- see RAWRXD_STALE_BUILD_FALSE_PASS below.
+        //
+        // The embedding row count is still checked independently, against the
+        // token_embd tensor itself, so nothing is lost by using the declared
+        // authority here.
+        if (vocab->tokens.size() > static_cast<size_t>(archMeta.vocabSize)) {
+            error_ = "NQB_INVARIANT_TOKEN_DOMAIN_001: vocabulary has " +
+                     std::to_string(vocab->tokens.size()) +
+                     " tokens but the embedding has only " +
+                     std::to_string(archMeta.vocabSize) +
+                     " rows; encode() could emit an id with no embedding row";
             abort();
             return false;
         }
@@ -480,6 +502,29 @@ header_.numTensors      = static_cast<uint32_t>(census_.tensorCount);
     // which is a real trap: the census is what a converter uses to decide whether
     // its own output is consistent.
     census_.bpw100          = header_.bitsPerWeight;
+
+    // RAWRXD_NQB_BPW_CENSUS_CHECK_001
+    //
+    // The stored bitsPerWeight is DERIVED, so a wrong payloadBytes or
+    // paramCount produces a confidently wrong number rather than an error. The
+    // real artifact is dense F32 and physically stores 32 bits per weight, yet
+    // it reported 3.20 -- a factor of ten low, which is exactly what you get
+    // when the numerator is the FILE size rather than the PAYLOAD size on a
+    // 10x-decade confusion, or when one of the two census counters is off by a
+    // decade. Rather than reason about which, the writer now measures the
+    // authoritative quantity itself -- payload bytes actually emitted over
+    // parameters actually emitted -- and states both, so the header value and
+    // the derived value can be compared in the same receipt.
+    const uint32_t bpwFromCensus =
+        nanof32DeriveBitsPerWeight100(census_.payloadBytes, census_.paramCount);
+    std::fprintf(stderr,
+        "[NQBRAID] BPW payload_bytes=%llu params=%llu derived_bpw100=%u "
+        "header_bpw100=%u %s\n",
+        (unsigned long long)census_.payloadBytes,
+        (unsigned long long)census_.paramCount,
+        bpwFromCensus, header_.bitsPerWeight,
+        (bpwFromCensus == header_.bitsPerWeight) ? "MATCH" : "MISMATCH");
+
 
     out_.seekp(0, std::ios::beg);
     out_.write(reinterpret_cast<const char*>(&header_), sizeof header_);
