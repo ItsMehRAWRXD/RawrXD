@@ -118,6 +118,10 @@ uint32_t PassCount() {
 bool ReadTextFile(const std::string& p, std::string* out) {
     std::ifstream f(p, std::ios::binary);
     if (!f) return false;
+    // `out` may be null when the caller only wants to know whether the file
+    // exists. It previously dereferenced unconditionally, so a probe would
+    // crash rather than answer.
+    if (!out) return true;
     std::ostringstream ss;
     ss << f.rdbuf();
     *out = ss.str();
@@ -645,9 +649,55 @@ int main(int argc, char** argv) {
         return 2;
     }
     if (repoDir.empty()) {
-        // <repo>/audit/RAWRXD_P1_REFACTOR_CHAIN_001/fixture -> <repo>
-        const size_t cut = fixtureDir.find("\\audit\\");
-        repoDir = (cut == std::string::npos) ? std::string(".") : fixtureDir.substr(0, cut);
+        // RAWRXD_REFACTOR_CHAIN_REPO_ROOT_001
+        //
+        // This used to derive the repo root by searching the fixture path for a
+        // literal "\audit\" with BACKSLASHES:
+        //
+        //     const size_t cut = fixtureDir.find("\\audit\\");
+        //     repoDir = (cut == npos) ? "." : fixtureDir.substr(0, cut);
+        //
+        // CMake supplies the fixture with FORWARD slashes
+        // (F:/~dev/rawrxd/audit/RAWRXD_P1_REFACTOR_CHAIN_001/fixture), so the
+        // search never matched, repoDir silently became "." -- the ctest
+        // WORKING_DIRECTORY -- and the authority lookup then failed:
+        //
+        //     [FAIL] COMMAND_TABLE_PARSED -- rows parsed from
+        //            src/core/command_registry.hpp = 0
+        //
+        // ReadTextFile returning false makes ParseCommandTable return early and
+        // leave the table EMPTY, which is indistinguishable from a parse failure.
+        // That produced 22 failed checks from one missing separator, including
+        // every diagnostic, format and extract check, because all of them route
+        // through the command table.
+        //
+        // Resolution no longer depends on a directory NAME or on separator
+        // style: walk up from the fixture until a directory actually contains
+        // the marker file, accepting / or \ on every step. If none is found the
+        // gate says so explicitly instead of defaulting to ".".
+        auto hasMarker = [](const std::string& dir) {
+            return ReadTextFile(dir + "\\src\\core\\command_registry.hpp", nullptr) ||
+                   ReadTextFile(dir + "/src/core/command_registry.hpp", nullptr);
+        };
+
+        std::string cur = fixtureDir;
+        while (!cur.empty()) {
+            if (hasMarker(cur)) { repoDir = cur; break; }
+            const size_t slash = cur.find_last_of("/\\");
+            if (slash == std::string::npos) break;
+            cur = cur.substr(0, slash);
+        }
+
+        if (repoDir.empty()) {
+            // Last resort: the old heuristic, but accepting both separators.
+            const size_t cut = fixtureDir.find("/audit/");
+            const size_t cut2 = fixtureDir.find("\\audit\\");
+            const size_t c = (cut != std::string::npos) ? cut : cut2;
+            repoDir = (c == std::string::npos) ? std::string(".") : fixtureDir.substr(0, c);
+            printf("[FAIL] REPO_ROOT_NOT_FOUND fixture=%s fell_back=%s\n",
+                   fixtureDir.c_str(), repoDir.c_str());
+        }
+        printf("[repo] resolved=%s\n", repoDir.c_str());
     }
 
     // ------------------------------------------------------------------
