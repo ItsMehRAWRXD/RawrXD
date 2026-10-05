@@ -15,7 +15,107 @@ MODEL_ID=gemma3-1b-Q2_K.gguf
 PURPOSE=GPU_ORACLE_MEASUREMENT
 SOURCE_OF_TRUTH=0
 BUILD_AUTHORITY=0
+
+BYTE_STABLE=1
+LINE_ENDING_NORMALISATION=DISABLED
+REMOTE_VERIFIED_OBJECTS=494
+REMOTE_VERIFIED_MATCH=494
+REMOTE_VERIFIED_MISMATCH=0
+REMOTE_VERIFIED_AT_COMMIT=3ccb13d
+FULL_REMOTE_OBJECT_REHASH=494/494_PASS
 ```
+
+## Verification, measured
+
+Rehashed from a **fresh clone of the remote**, not from the staging copy used
+to publish:
+
+```ini
+FULL_REMOTE_REHASH_OBJECTS=494
+PER_OBJECT_MATCH=494
+PER_OBJECT_MISMATCH=0
+IN_REMOTE_NOT_IN_MANIFEST=0
+IN_MANIFEST_NOT_ON_REMOTE=0
+CONTENT_ROOT_MATCH=True
+```
+
+Earlier the same procedure reported 3/3 on a spot check only. The full pass
+then found a real defect; see below.
+
+## Defect found by that full pass: evidence was not byte-stable
+
+The first full rehash reported **12 of 494 objects mismatched** — every one a
+`.txt` receipt, while all 482 binaries verified exactly.
+
+```text
+_qoracle/receipt_gemma_after_fix.txt
+  local                    1413 bytes
+  remote checkout          1454 bytes
+  delta                      41 bytes  = one CR per line
+  remote with CRLF->LF normalised reproduces the local SHA-256 EXACTLY
+```
+
+Cause: `core.autocrlf=true`. Git stored those files LF and checked them out
+CRLF, so a consumer received bytes that the manifest did not hash. The
+*content* was identical; the *addressing* was unsound.
+
+```ini
+DEFECT=CONTENT_ADDRESS_UNSOUND_FOR_TEXT_OBJECTS
+CLASS=A_CONTENT_DIDES_NOT_DESCRIBE_THE_ARTEFACT
+DETECTABLE_ONLY_BY=FULL_OBJECT_REHASH
+DETECTABLE_BY_SPOT_CHECK=NO   (3/3 spot check passed while 12 were broken)
+FIX=*.gitattributes with '* -text', plus git add --renormalize
+COMMIT=3ccb13d
+STATUS=RESOLVED_AND_REVERIFIED
+```
+
+Two lessons worth keeping:
+
+1. A content-addressed evidence store **must** disable text normalisation,
+   or the digest describes a transformation of the artefact rather than the
+   artefact.
+2. The spot check that previously "passed" was worthless for this failure
+   mode — it sampled 3 objects and none was one of the 12 broken ones.
+   `FULL_REMOTE_OBJECT_REHASH` had to be measured before the field could
+   honestly be called anything but `UNMEASURED`.
+
+## Oversized artefact: identity without storage
+
+`real_tinyllama_f32.nqb` is not uploaded, but it is not unaccounted for
+either. Its whole-file identity is recorded here so a regeneration can be
+proved equal rather than assumed:
+
+```ini
+ARTIFACT_PRESENT_REMOTE=0
+EXPECTED_BYTES=4401390998
+EXPECTED_SHA256=58f213d04e6fb58a079b54dd372065648410308ee69a54df2ba601b790928ab4
+SIZE_MB=4197.5
+GITHUB_PER_FILE_LIMIT_MB=100
+EXCEEDS_LIMIT_BY=42x
+REPRODUCIBLE=1
+
+REPRODUCTION_COMMAND=gguf_to_nqb_converter.exe <model.gguf> out.nqb
+SOURCE_MODEL=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0-Q4_K_M.gguf
+SOURCE_TENSORS=201
+CONVERTED=201
+SKIPPED=0
+SOURCE_NONFINITE_VALUES=0
+SYNTHETIC_WEIGHTS=0
+CONVERTER_VERDICT=PASS
+```
+
+Reproduce and check:
+
+```
+REGENERATED_BYTES=4401390998
+REGENERATED_SHA256=58f213d04e6fb58a079b54dd372065648410308ee69a54df2ba601b790928ab4
+REPRODUCTION_MATCH=PASS
+```
+
+This gives the unpublished object the same identity discipline as the
+uploaded evidence: the digest is pinned here, the bytes are reproducible from
+a command whose own receipt is recorded, and nothing has to be trusted
+because it happens to be present.
 
 ## Why these are not in the source tree
 
