@@ -1,2 +1,0 @@
-rawrxd-value-pack2-core 1 0.0287188
----

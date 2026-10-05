@@ -1,6 +1,0 @@
-B-block 0 d=-0.000204802 dmin=0.00585938
-B-block 1 d=10552 dmin=0.00325394
-B-block 2 d=1.19209e-05 dmin=0.00666046
-B-block 3 d=-0.304688 dmin=1.80602e-05
-B-block 4 d=0.92334 dmin=181
-B-block 5 d=1.61529e-05 dmin=1608

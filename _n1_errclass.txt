@@ -1,7 +1,0 @@
-TOTAL=23
-error LNK1120: 7
-error LNK2001: 7
-error C2059: 5
-error MSB8066: 2
-error MSB3721: 1
-error A1000: 1

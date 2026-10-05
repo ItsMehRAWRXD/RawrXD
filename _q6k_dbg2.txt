@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "<string>", line 14, in <module>
-    W = m.deq_q6k_row(raw[0], ne0, bpr)
-  File "F:\~dev\_quant_adjudicator.py", line 212, in deq_q6k_row
-    out[l + 0] = d * float(sc[si + is_ + 0]) * float(q1)
-                           ~~^^^^^^^^^^^^^^
-IndexError: index 32 is out of bounds for axis 0 with size 16

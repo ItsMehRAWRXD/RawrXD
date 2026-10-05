@@ -1,6 +1,0 @@
-FINAL_DEPTH=18 UNCLOSED=20
-UNCLOSED L13418: if(EXISTS "${CMAKE_SOURCE_DIR}/src/tests/SwarmSmokeTest.cpp")
-UNCLOSED L13442: if(EXISTS "${CMAKE_SOURCE_DIR}/src/tests/backend_orchestrator_shard_smoke.cpp")
-UNCLOSED L13826: if(EXISTS "${CMAKE_SOURCE_DIR}/src/ide/test_sovereign_bridge.cpp")
-UNCLOSED L13849: if(EXISTS "${CMAKE_SOURCE_DIR}/src/debug/test_debugbridge_telemetry.cpp")
-UNCLOSED L13918: if(EXISTS "${CMAKE_SOURCE_DIR}/src/rpc/test_simulator.cpp")

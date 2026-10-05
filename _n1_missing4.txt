@@ -1,8 +1,0 @@
-src/deep2/Deep2ProductionCert.cpp
-src/deep2/InferenceSession.cpp
-src/deep2/IOCPGGUFLoader.cpp
-src/deep2/ModelRegistry.cpp
-src/deep2/MoEWeightProxy.cpp
-src/llm_adapter/ggufrunner_link_kernels.cpp
-src/sovereign/Deep2InferenceWrapper.cpp
-src/ui/debugger_core.cpp

@@ -1,2 +1,0 @@
-L6702: src/sovereign/build/BuildStateGraph.cpp
-L7232: ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/build

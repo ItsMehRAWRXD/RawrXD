@@ -1,1 +1,0 @@
-EXIT=0 LINES=1 DIR=True

@@ -1,5 +1,0 @@
-src/deep2/MASMKernelStubs.cpp
-src/deep2/TrailBrake.cpp
-src/reverse/ReverseEngine.cpp
-src/runtime/governance/HardwareGovernor.cpp
-src/sampling/advanced_sampler.cpp

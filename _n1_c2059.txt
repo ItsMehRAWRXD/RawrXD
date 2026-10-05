@@ -1,5 +1,0 @@
-F:\~dev\rawrxd\src\lsp\RawrXD_LSPServer.cpp
-F:\~dev\rawrxd\src\profiling\flame_graph.cpp
-F:\~dev\rawrxd\src\profiling\pmc_profiler.cpp
-F:\~dev\rawrxd\src\script\debug\minimal_dap_server.cpp
-F:\~dev\rawrxd\src\security\uac_bypass_impl_stub.cpp

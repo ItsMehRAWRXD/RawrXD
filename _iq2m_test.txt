@@ -1,2 +1,0 @@
-OUT=[1.  The user asks: "The capital of France is"
-2.] THINKING_START=[.Substring(0,80)] LOAD_S=0 EVAL_COUNT=16

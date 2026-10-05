@@ -1,8 +1,0 @@
-F:\~dev\rawrxd\src\inference\polymorphic_loader.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]
-F:\~dev\rawrxd\src\inference\ollama_blob_parser.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]
-F:\~dev\rawrxd\src\tools\license_validator_manifest.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]
-F:\~dev\rawrxd\src\engine\bpe_tokenizer.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]
-F:\~dev\rawrxd\src\engine\rawr_engine.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]
-F:\~dev\rawrxd\src\engine\core_generator.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]
-F:\~dev\rawrxd\src\engine\pyre_compute.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]
-F:\~dev\rawrxd\src\engine\sovereign_engines.cpp(1,1): error C2059: syntax error: '?' [F:\~dev\rawrxd\build_clean_n1\InferenceEngine.vcxproj]

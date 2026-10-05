@@ -1,6 +1,0 @@
-TOTAL=149
-error C2059: 127
-error LNK1120: 9
-error LNK2001: 9
-error MSB8066: 2
-error LNK1104: 1

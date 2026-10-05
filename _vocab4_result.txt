@@ -1,6 +1,0 @@
-magic b'GGUF' ver 3 tensors 338 kv 33
-Traceback (most recent call last):
-  File "F:\~dev\_vocab_decode4.py", line 45, in <module>
-    key = f.read(klen).decode("utf-8", "replace")
-          ~~~~~~^^^^^^
-MemoryError

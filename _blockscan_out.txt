@@ -1,8 +1,0 @@
-engine total = 0.517583191
-ref total = 3.493331093400874
-after block 2 of 20 ref_cum = -0.485836
-after block 5 of 20 ref_cum = 0.658297
-after block 10 of 20 ref_cum = 2.124813
-after block 15 of 20 ref_cum = 4.671951
-after block 18 of 20 ref_cum = 4.067336
-after block 20 of 20 ref_cum = 3.493331

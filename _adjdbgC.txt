@@ -1,7 +1,0 @@
-tokenizer.chat_template type 8 endpos 5932163
-general.quantization_version type 4 endpos 5934718
-quantize.imatrix.file type 8 endpos 5934755
-quantize.imatrix.dataset type 8 endpos 5934877
-quantize.imatrix.entries_count type 5 endpos 5934963
-quantize.imatrix.chunks_count type 5 endpos 5935008
-total kv 38 final pos 5935008

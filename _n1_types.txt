@@ -1,5 +1,0 @@
-rawrxd_rng DEFINED_IN_CORE=NO
-rawrxd_string DEFINED_IN_CORE=NO
-rawrxd_strmap DEFINED_IN_CORE=YES
-rawrxd_thread DEFINED_IN_CORE=YES
-rawrxd_mutex DEFINED_IN_CORE=YES

@@ -1,8 +1,0 @@
-﻿
-Name       Length
-----       ------
-exit.txt       11
-stderr.txt  13362
-stdout.txt    518
-
-

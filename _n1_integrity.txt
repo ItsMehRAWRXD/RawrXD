@@ -1,1 +1,0 @@
-LIC_IMPL_SIZE=20750 FIRST=[// ============================================================================ | // enterprise_licensev2_impl.cpp ??? Minimal EnterpriseLicenseV2 Implementation] IGSZ=0

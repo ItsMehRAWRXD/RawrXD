@@ -1,5 +1,0 @@
-CMake Error at CMakeLists.txt:6632 (add_executable):   No SOURCES given to target: Deep2Engine_IntegrationTest
-CMake Error at CMakeLists.txt:6658 (add_executable):   No SOURCES given to target: Deep2Engine_MetadataRegressionTest
-CMake Error at CMakeLists.txt:13802 (add_executable):   No SOURCES given to target: test_simulator
-CMake Error at CMakeLists.txt:14072 (add_library):   No SOURCES given to target: pmc_profiler
-CMake Error at CMakeLists.txt:14086 (add_library):   No SOURCES given to target: flame_graph_profiler

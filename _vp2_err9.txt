@@ -1,3 +1,0 @@
-[BrowserAuthority] /json/list -> 957 bytes
-[BrowserAuthority] WinHttpCrackUrl failed: 12006 (url=ws://127.0.0.1:9222/devtools/page/847D7B27DF358742AD32A0AF7F1C8126)
-[BrowserAuthority] openSocket failed (targets list empty or no webSocketDebuggerUrl)

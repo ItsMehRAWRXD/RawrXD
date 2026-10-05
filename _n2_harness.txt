@@ -1,8 +1,0 @@
-MISSING_IN_HARNESS=7
-src/deep2/K2GlobalTensorIndex.cpp
-src/deep2/GGUFLoader.cpp
-src/deep2/ThreadPool.cpp
-src/deep2/KVCache.cpp
-src/deep2/MoEWeightProxy.cpp
-src/deep2/MoEEliminate.cpp
-src/deep2/MoEWeightsLoader.cpp

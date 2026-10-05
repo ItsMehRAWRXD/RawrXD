@@ -1,2 +1,0 @@
-[server] ERROR: non-loopback bind (--listen 999.999.999.999) requires --auth <token>
-[server] Loopback-only is the default. Use --listen 0.0.0.0 --auth <token> for LAN.

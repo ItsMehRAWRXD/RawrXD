@@ -1,7 +1,0 @@
-MSBuild version 17.14.51+25f168cee for .NET Framework
-
-  quickjs_static.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\quickjs_static.lib
-  InferenceEngine.vcxproj -> F:\~dev\rawrxd\build_clean_n1\Release\InferenceEngine.lib
-  RealGGUFParity.cpp
-  LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
-  rawrxd_real_gguf_parity.vcxproj -> F:\~dev\rawrxd\build_clean_n1\bin\Release\rawrxd_real_gguf_parity.exe

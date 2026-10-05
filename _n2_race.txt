@@ -1,6 +1,0 @@
-
-CMake Error at CMakeLists.txt:15132 (add_executable):
-  No SOURCES given to target: b014_lifetime_probe
-
-
-CMake Generate step failed.  Build files cannot be regenerated correctly.

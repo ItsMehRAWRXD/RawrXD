@@ -1,5 +1,0 @@
-#     add_executable(Fix4_FlashAttention_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/Fix4_FlashAttention_Benchmark.cpp
-#     )
-#     target_include_directories(Fix4_FlashAttention_Benchmark PRIVATE
-#         ${CMAKE_SOURCE_DIR}/src

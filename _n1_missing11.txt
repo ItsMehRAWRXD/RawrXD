@@ -1,3 +1,0 @@
-src/deep2/ModelLoader.cpp
-src/deep2/SlidingWindowEngine.cpp
-src/runtime/governance/UnifiedTriggerOrchestrator.cpp

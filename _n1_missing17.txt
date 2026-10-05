@@ -1,3 +1,0 @@
-src/deep2/GhostCache.cpp
-src/deep2/GoalSystem.cpp
-src/runtime/governance/TLSInstructionGate.cpp

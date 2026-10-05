@@ -1,2 +1,0 @@
----SRC_REPO---
-dec168513 cert: admission policy patch and e2e fixtures

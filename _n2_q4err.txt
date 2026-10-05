@@ -1,8 +1,0 @@
-CMake Error at CMakeLists.txt:1733 (add_executable):
-  No SOURCES given to target: Q4_0_GEMV_Certification
-
-
-CMake Error at CMakeLists.txt:4748 (add_executable):
-  No SOURCES given to target: RawrXD-InferenceEngine
-
-

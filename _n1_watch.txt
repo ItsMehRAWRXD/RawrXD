@@ -1,4 +1,0 @@
-RE_RESTORED=38
-GONE_AFTER_3S=True
-GONE_AFTER_13S=True
-?? src/runtime/GenerationBouncer.cpp

@@ -1,3 +1,0 @@
-T0=True
-T5=True
-T20=True

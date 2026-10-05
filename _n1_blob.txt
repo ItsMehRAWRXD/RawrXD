@@ -1,2 +1,0 @@
-BLOB_FIRST2=[∩][╗]
-BLOB_SIZE=48

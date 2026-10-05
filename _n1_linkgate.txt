@@ -1,6 +1,0 @@
-UNRESOLVED=0
-[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
-[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
-[rawr run] MODEL_LOAD: loading...
-[Deep2Engine] embedding geometry mismatch
-[rawr run] MODEL_LOAD=FAIL  stage=EMBED_GEOMETRY  msg=Embedding geometry mismatch (hiddenDim==0, hiddenDim!=embedCols, or vocabSize==0).

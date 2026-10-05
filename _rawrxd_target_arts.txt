@@ -1,3 +1,0 @@
-ART=F:\~dev\rawrxd\build\bin\Release\rawrxd_run_modelname_001.exe SIZE=159232 MOD=09/28/2026 06:49:11
-ART=F:\~dev\rawrxd\build\bin\Release\rawrxd.exe SIZE=213504 MOD=09/26/2026 16:53:34
-ART=F:\~dev\rawrxd\build\Release\RawrXD-InferenceEngine.lib SIZE=45776960 MOD=09/26/2026 17:24:34

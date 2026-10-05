@@ -1,4 +1,0 @@
-src/deep2/OutOfCoreRuntime.cpp
-src/deep2/PatchCache.cpp
-src/reverse/ReverseModelLoader.cpp
-src/runtime/governance/PressedStateEngine.cpp

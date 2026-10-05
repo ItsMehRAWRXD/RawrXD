@@ -1,1 +1,0 @@
-{"model":"n4-tiny-oracle","created_at":"2026-09-28T19:43:08.0557837Z","response":"ke, and I was amaz","done":true,"done_reason":"length","total_duration":121096800,"load_duration":22320300,"prompt_eval_count":2,"prompt_eval_cached_count":1,"prompt_eval_duration":15671000,"eval_count":6,"eval_duration":77995000}

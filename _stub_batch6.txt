@@ -1,8 +1,0 @@
-STUB=vulkan_fwd_quant.cpp BYTES=24 CONTENT=[// Auto-generated stub]
-STUB=vulkan_fwd_resident.cpp BYTES=24 CONTENT=[// Auto-generated stub]
-STUB=vulkan_fwd_stubs.cpp BYTES=24 CONTENT=[// Auto-generated stub]
-STUB=vulkan_fwd_tune.cpp BYTES=24 CONTENT=[// Auto-generated stub]
-STUB=vulkan_kernel_bridge.cpp BYTES=32 CONTENT=[// vulkan_kernel_bridge — stub]
-STUB=vulkan_weight_policy.cpp BYTES=24 CONTENT=[// Auto-generated stub]
-STUB=vulkan_weight_prefetch.cpp BYTES=24 CONTENT=[// Auto-generated stub]
-STUB=vulkan_weight_window.cpp BYTES=24 CONTENT=[// Auto-generated stub]

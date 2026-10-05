@@ -1,4 +1,0 @@
-=============================================
-  Deep2 OpenAI-Compatible Local Model Server
-=============================================
-[server] Loading model: D:\rawrxd\models\gemma3-1b-Q2_K.gguf

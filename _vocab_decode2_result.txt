@@ -1,9 +1,0 @@
-general.architecture ERR 'memmap' object has no attribute 'tbytes'
-tokenizer.ggml.model ERR 'memmap' object has no attribute 'tbytes'
-tokenizer.ggml.eos_token_id ERR 'memmap' object has no attribute 'tbytes'
-tokenizer.ggml.bos_token_id ERR 'memmap' object has no attribute 'tbytes'
-tokenizer.ggml.add_bos_token ERR 'memmap' object has no attribute 'tbytes'
-VOCAB_SIZE 151936
-HI_TOKENS []
-15 '36'
-6023 '12052'

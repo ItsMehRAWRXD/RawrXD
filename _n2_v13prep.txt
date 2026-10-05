@@ -1,3 +1,0 @@
-RESTORED_COUNT=2
-src/compression/zlib_runtime_loader.cpp
-src/omega1_modules/OmegaPowerShellBridge.cpp

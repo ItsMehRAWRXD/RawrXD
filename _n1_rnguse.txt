@@ -1,2 +1,0 @@
-L242: rawrxd_string* vocab;
-L309: rawrxd_rng rng;

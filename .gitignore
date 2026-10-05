@@ -240,6 +240,18 @@ _ev_*.out
 # These are build output, not source: they regenerate on every configure.
 /_cfg_*/
 
+# _n2_stage/ is a staging tree that overlaps rawrxd/src but is NOT a copy of
+# it: 639 of its 1607 tracked paths either exist only there or differ
+# byte-for-byte from their rawrxd/ counterpart (measured), including the whole
+# src/win32app/ IDE set and src/sovereign/. It holds the only copy of some
+# source in the repository, so it is deliberately still tracked and this
+# rule does not untrack it.
+#
+# Recorded because the *name* looks like scratch. Removing it would delete
+# unique source; that is the same class of defect as the /rawrxd/src/build/
+# incident documented above. Left tracked on purpose.
+/_n2_stage/
+
 # Root-level CMakeCache.txt, produced by an in-source `cmake .` run at the
 # repository root. Configure output. Anchored to root because rawrxd/ and the
 # B0xx source directories legitimately hold sources of that name elsewhere.

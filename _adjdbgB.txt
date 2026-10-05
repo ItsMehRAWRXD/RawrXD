@@ -1,3 +1,0 @@
-ADJ: off = 2478284800  ds = 5935040
-L4 : off = 2478284800  ds = 5979104
-off types <class 'int'>

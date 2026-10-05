@@ -1,2 +1,0 @@
-CMake Error at src/ceo/CMakeLists.txt:33 (add_executable):   Cannot find source file:
-CMake Error at src/ceo/CMakeLists.txt:33 (add_executable):   No SOURCES given to target: rawrxd_ceo_cli

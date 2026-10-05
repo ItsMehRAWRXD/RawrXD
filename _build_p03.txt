@@ -1,3 +1,0 @@
-MSBuild version 17.14.51+25f168cee for .NET Framework
-MSBUILD : error MSB1009: Project file does not exist.
-Switch: rawr-server.vcxproj

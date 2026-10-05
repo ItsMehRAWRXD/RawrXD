@@ -1,3 +1,0 @@
-@echo off
-call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-link /nologo /OUT:F:\~dev\kilo_tmp\deep2_streamer_cert.exe F:\~dev\build_cert\deep2_streamer_cert.dir\Release\deep2_streamer_cert.obj F:\~dev\kilo_tmp\InferenceWire.obj F:\~dev\build_cert\Release\InferenceEngine.lib F:\~dev\build_cert\Release\deep2_streamer_discovery.lib F:\~dev\build_cert\Release\rawrxd_remote64.lib "C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib" dxgi.lib shlwapi.lib psapi.lib dbghelp.lib winhttp.lib bcrypt.lib advapi32.lib crypt32.lib pdh.lib /machine:x64 2>&1

@@ -1,5 +1,0 @@
-rawrxd.exe EXISTS=True SIZE=213504
-rawr.exe EXISTS=True SIZE=1026048
-rawrxd_run_modelname_001.exe EXISTS=True SIZE=159232
-RawrXD-InferenceEngine.exe EXISTS=True SIZE=108544
-rawrxd-ceo.exe EXISTS=True SIZE=629760

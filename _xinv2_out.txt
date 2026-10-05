@@ -1,3 +1,0 @@
-TRANSPOSED solve: corr(x_p, x) = -0.0013939243404213935
-ratio mean=615.8725 std=35110.9776
-corr(Wq@(x/w)+bq, engine) = 0.41587358170523364

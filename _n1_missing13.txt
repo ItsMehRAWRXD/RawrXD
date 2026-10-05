@@ -1,4 +1,0 @@
-src/deep2/HotPatcherSafety.cpp
-src/deep2/mars/DualGPUBackend.cpp
-src/deep2/mars/VRAMManager.cpp
-src/runtime/governance/CapabilityTierMatrix.cpp

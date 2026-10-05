@@ -1,7 +1,0 @@
-src/deep2/K2GlobalTensorIndex.cpp SIZE=44
-src/deep2/GGUFLoader.cpp SIZE=35
-src/deep2/ThreadPool.cpp SIZE=35
-src/deep2/KVCache.cpp SIZE=32
-src/deep2/MoEWeightProxy.cpp SIZE=39
-src/deep2/MoEEliminate.cpp SIZE=37
-src/deep2/MoEWeightsLoader.cpp SIZE=41

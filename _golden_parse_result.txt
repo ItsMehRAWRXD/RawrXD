@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "F:\~dev\_golden_parse3.py", line 7, in <module>
-    mbytes, = struct.unpack_from("<Q", b, off); off += 8
-              ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
-struct.error: unpack_from requires a buffer of at least 72623859706101793 bytes for unpacking 8 bytes at offset 72623859706101785 (actual buffer size is 607907)

@@ -1,5 +1,0 @@
-CMake is re-running because F:/~dev/rawrxd/build_w1/CMakeFiles/generate.stamp is out-of-date.
-  the file 'F:/~dev/rawrxd/CMakeLists.txt'
-  is newer than 'F:/~dev/rawrxd/build_w1/CMakeFiles/generate.stamp.depend'
-  result='-1'
--- Configuring incomplete, errors occurred!

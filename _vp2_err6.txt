@@ -1,1 +1,0 @@
-[BrowserAuthority] openSocket failed (targets list empty or no webSocketDebuggerUrl)
