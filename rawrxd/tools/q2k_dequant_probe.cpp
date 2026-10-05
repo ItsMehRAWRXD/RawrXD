@@ -13,6 +13,7 @@
 // dequantizer is internally consistent before it is trusted by the converter.
 
 #include "gguf_loader.hpp"
+#include "rawr_build_identity_q2k_dequant_probe.hpp"
 #include "llm_adapter/gguf_k_quants.hpp"
 
 #include <cstdio>
@@ -44,6 +45,7 @@ int main(int argc, char** argv) {
     const char* tensorName = (argc > 2) ? argv[2] : "blk.0.attn_q.weight";
 
     std::fprintf(stderr, "=== RAWRXD_Q2K_DEQUANT_001 ===\n");
+    RAWRXD_PRINT_BUILD_IDENTITY();
     std::fprintf(stderr, "MODEL=%s\n", modelPath);
     std::fprintf(stderr, "TENSOR=%s\n", tensorName);
 

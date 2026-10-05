@@ -21,6 +21,7 @@
 // Usage: nqb_weight_parity_probe <model.gguf> <model.nqb> <tensor> [tensor...]
 
 #include "GGUFLoader.hpp"
+#include "rawr_build_identity_nqb_weight_parity_probe.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "Nanof32BraidStreamer.hpp"
 
@@ -44,6 +45,7 @@ int main(int argc, char** argv) {
     const char* nqbPath  = argv[2];
 
     std::fprintf(stderr, "=== RAWRXD_NQB_WEIGHT_PARITY_001 ===\n");
+    RAWRXD_PRINT_BUILD_IDENTITY();
     std::fprintf(stderr, "GGUF=%s\nNQB=%s\n", ggufPath, nqbPath);
 
     Deep2::QuantKernelRegistry::Instance().Initialize();

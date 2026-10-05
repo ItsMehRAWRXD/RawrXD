@@ -254,7 +254,259 @@ std::vector<uint8_t> nanof32EncodeVocabSection(const Nanof32VocabSpec& v) {
 }
 
 // ----------------------------------------------------------------------------
-// File writer
+// RAWRXD_NQB_ONE_FORMAT_AUTHORITY_001 -- streaming container writer
+// ----------------------------------------------------------------------------
+
+uint32_t nanof32DeriveBitsPerWeight100(uint64_t payloadBytes, uint64_t elements) {
+    if (elements == 0) return 0;
+    // bpw100 = round(payloadBytes * 800 / elements)
+    //
+    // 800 = 8 bits * 100 hundredths. This is MEASURED from what was written,
+    // not predicted from a payload type, which is the whole point:
+    //
+    //   * it stays correct for a mixed-codec artifact, where no single type
+    //     describes the file;
+    //   * it cannot be "fixed" by editing a constant in one of two writers,
+    //     because there is now only one derivation and it reads the bytes;
+    //   * a file whose stored bpw disagrees with its payload is detectable,
+    //     which is exactly how the fake q0 artifact would be caught.
+    //
+    // Rounding is half-up via (num + elements/2) / elements in integer
+    // arithmetic: no floating point, so the result is identical on every host.
+    if (payloadBytes > UINT64_MAX / 800ull) return 0;   // >23 PB: refuse to guess
+    const uint64_t num = payloadBytes * 800ull;
+    const uint64_t bpw = (num + elements / 2ull) / elements;
+    return static_cast<uint32_t>(bpw > 0xFFFFFFFFull ? 0xFFFFFFFFull : bpw);
+}
+
+Nanof32BraidStreamWriter::~Nanof32BraidStreamWriter() {
+    if (!finalized_) abort();
+}
+
+bool Nanof32BraidStreamWriter::open(const std::string& path,
+                                    const Nanof32BraidArchMeta& archMetaIn,
+                                    const Nanof32VocabSpec* vocab) {
+    if (open_) {
+        error_ = "open() called twice";
+        return false;
+    }
+    if (archMetaIn.numLayers == 0 || archMetaIn.hiddenDim == 0 ||
+        archMetaIn.vocabSize == 0) {
+        error_ = "arch meta has a zero dimension (numLayers/hiddenDim/vocabSize)";
+        return false;
+    }
+
+    path_ = path;
+    out_.open(path, std::ios::binary | std::ios::trunc);
+    if (!out_.is_open()) {
+        error_ = "cannot open output for writing: " + path;
+        return false;
+    }
+
+    Nanof32BraidArchMeta archMeta = archMetaIn;
+    Nanof32BraidHeader header{};
+    std::memset(header.reserved, 0, sizeof(header.reserved));
+    std::memset(archMeta.modelName, 0, sizeof(archMeta.modelName));
+    std::memset(archMeta.archName, 0, sizeof(archMeta.archName));
+
+    header.magic          = NANO_F32_BRAID_MAGIC;
+    header.version        = NANO_F32_BRAID_VERSION;
+    // Every count below stays ZERO until finalize(). A provisional header that
+    // already claims 255 tensors is how "GGUF says 255, writer skipped 3,
+    // header still says 255" happens. Here the header cannot lie because it has
+    // not been told anything yet.
+    header.numTensors     = 0;
+    header.paramCount     = 0;
+    header.bitsPerWeight  = 0;
+    header.tensorDirOffset = 0;
+    header.fileSize       = 0;
+    header.vocabSectionOffset = 0;
+    header.vocabSectionBytes  = 0;
+
+    out_.write(reinterpret_cast<const char*>(&header), sizeof header);
+    out_.write(reinterpret_cast<const char*>(&archMeta), sizeof archMeta);
+    if (!out_) {
+        error_ = "write failed while emitting header/arch meta";
+        abort();
+        return false;
+    }
+
+if (vocab && !vocab->tokens.empty()) {
+        // The vocabulary must be at least as wide as the token domain the arch
+        // meta declares, or some declared id has no embedding row. The original
+        // writer checked this against token_embd's row count instead; the arch
+        // meta is the declared authority and is checked here so the invariant
+        // holds even for a file with no embedding tensor.
+        if (vocab->tokens.size() < static_cast<size_t>(archMeta.vocabSize)) {
+            error_ = "vocabulary has " + std::to_string(vocab->tokens.size()) +
+                     " tokens but archMeta.vocabSize is " +
+                     std::to_string(archMeta.vocabSize);
+            abort();
+            return false;
+        }
+        if (vocab->scores.size() != vocab->tokens.size() ||
+            vocab->types.size()  != vocab->tokens.size()) {
+            error_ = "vocabulary scores/types counts disagree with token count";
+            abort();
+            return false;
+        }
+        const std::vector<uint8_t> vocabBytes = nanof32EncodeVocabSection(*vocab);
+        if (vocabBytes.empty()) {
+            error_ = "vocabulary section failed to encode (empty result with a "
+                     "non-empty token list)";
+            abort();
+            return false;
+        }
+        header.vocabSectionOffset = static_cast<uint64_t>(out_.tellp());
+        header.vocabSectionBytes  = vocabBytes.size();
+        out_.write(reinterpret_cast<const char*>(vocabBytes.data()),
+                   static_cast<std::streamsize>(vocabBytes.size()));
+        if (!out_) {
+            error_ = "write failed while emitting the vocabulary section";
+            abort();
+            return false;
+        }
+    }
+
+    dataStart_ = static_cast<uint64_t>(out_.tellp());
+    header_    = header;
+    census_    = Nanof32Census{};
+    bytesWritten_ = dataStart_;
+    open_      = true;
+    finalized_ = false;
+    return true;
+}
+
+bool Nanof32BraidStreamWriter::appendTensor(const std::string& name,
+                                            uint64_t rows, uint64_t cols,
+                                            uint32_t quant, const void* values,
+                                            uint64_t elements,
+                                            float scaleMin, float scaleMax,
+                                            uint32_t expertIndex) {
+    if (!open_) { error_ = "appendTensor before open()"; return false; }
+    if (finalized_) { error_ = "appendTensor after finalize()"; return false; }
+    if (name.empty()) { error_ = "tensor has an empty name"; return false; }
+    if (name.size() >= sizeof(Nanof32BraidTensorFooter::name)) {
+        error_ = "tensor name exceeds footer name field: " + name;
+        return false;
+    }
+    if (rows == 0 || cols == 0) { error_ = "tensor " + name + " has a zero dimension"; return false; }
+    if (elements != rows * cols) {
+        error_ = "tensor " + name + ": element count disagrees with rows*cols";
+        return false;
+    }
+    if (!values) { error_ = "tensor " + name + " has a null value pointer"; return false; }
+    if (quant >= NQBRAID_COUNT) {
+        error_ = "tensor " + name + ": unknown quantType " + std::to_string(quant);
+        return false;
+    }
+
+    const float* f = static_cast<const float*>(values);
+    std::vector<uint8_t> encoded;
+    uint64_t wrote = 0;
+    switch (quant) {
+        case NQBRAID_DENSE_F32:  wrote = nanof32EncodeDenseF32(f, elements, encoded);  break;
+        case NQBRAID_DENSE_BF16: wrote = nanof32EncodeDenseBF16(f, elements, encoded); break;
+case NQBRAID_BRAID_115:   wrote = nanof32EncodeBraid115(f, elements,
+                                                                 scaleMin, scaleMax,
+                                                                 encoded); break;
+        default:
+            error_ = "tensor " + name + ": quantType " + std::to_string(quant) +
+                     " has no encoder";
+            return false;
+    }
+
+    const uint64_t expected = nanof32CompressedBytes(quant, elements);
+    if (wrote == 0 || wrote != expected) {
+        error_ = "tensor " + name + ": encoder produced " + std::to_string(wrote) +
+                 " bytes, accounting expected " + std::to_string(expected);
+        return false;
+    }
+
+    out_.write(reinterpret_cast<const char*>(encoded.data()),
+               static_cast<std::streamsize>(encoded.size()));
+    if (!out_) { error_ = "write failed while emitting payload for " + name; abort(); return false; }
+
+    Nanof32BraidTensorFooter footer{};
+    std::memset(footer.name, 0, sizeof footer.name);
+    footer.magic       = NANO_F32_BRAID_MAGIC;
+    footer.quantType   = quant;
+    footer.scaleMin    = scaleMin;
+    footer.scaleMax    = scaleMax;
+    footer.rows        = rows;
+    footer.cols        = cols;
+    footer.dataBytes   = wrote;
+    footer.expertIndex = expertIndex;
+    std::memcpy(footer.name, name.c_str(), name.size());
+
+    out_.write(reinterpret_cast<const char*>(&footer), sizeof footer);
+    if (!out_) { error_ = "write failed while emitting footer for " + name; abort(); return false; }
+
+    // Census accumulates from what was ACTUALLY emitted. A tensor that failed
+    // to encode never reaches these lines, so it cannot be counted.
+    census_.tensorCount  += 1;
+    census_.paramCount   += elements;
+    census_.payloadBytes += wrote;
+    census_.footerBytes  += sizeof(Nanof32BraidTensorFooter);
+    census_.codecCount[quant] += 1;
+    bytesWritten_ = static_cast<uint64_t>(out_.tellp());
+    return true;
+}
+
+bool Nanof32BraidStreamWriter::finalize() {
+    if (!open_)  { error_ = "finalize() before open()"; return false; }
+    if (finalized_) return true;
+
+    if (census_.tensorCount == 0) {
+        error_ = "no tensors were appended";
+        abort();
+        return false;
+    }
+    if (bytesWritten_ <= sizeof(Nanof32BraidHeader) + sizeof(Nanof32BraidArchMeta)) {
+        error_ = "produced file is smaller than header + arch meta";
+        abort();
+        return false;
+    }
+
+header_.numTensors      = static_cast<uint32_t>(census_.tensorCount);
+    header_.paramCount      = census_.paramCount;
+    header_.fileSize        = bytesWritten_;
+    header_.tensorDirOffset = bytesWritten_ - sizeof(Nanof32BraidTensorFooter);
+    header_.bitsPerWeight   = nanof32DeriveBitsPerWeight100(census_.payloadBytes,
+                                                            census_.paramCount);
+    // The census is the writer's own record of what it emitted, so it must carry
+    // the derived value too. A caller cross-checking header.bitsPerWeight against
+    // census.bpw100 found the header written correctly and the census reading 0,
+    // which is a real trap: the census is what a converter uses to decide whether
+    // its own output is consistent.
+    census_.bpw100          = header_.bitsPerWeight;
+
+    out_.seekp(0, std::ios::beg);
+    out_.write(reinterpret_cast<const char*>(&header_), sizeof header_);
+    out_.close();
+    if (!out_) {
+        error_ = "failed to backfill header";
+        std::remove(path_.c_str());
+        open_ = false;
+        return false;
+    }
+
+    finalized_ = true;
+    open_      = false;
+    return true;
+}
+
+void Nanof32BraidStreamWriter::abort() {
+    if (out_.is_open()) out_.close();
+    if (!path_.empty()) std::remove(path_.c_str());
+    open_      = false;
+    finalized_ = true;   // nothing further to clean up
+}
+
+// ----------------------------------------------------------------------------
+// The one-shot writer, now a loop over the streaming writer.
+// Its validation is kept verbatim: those checks are what stopped a half-written
+// file from being produced in the first place.
 // ----------------------------------------------------------------------------
 
 Nanof32WriteResult nanof32WriteBraid(const std::string& path,
@@ -263,272 +515,48 @@ Nanof32WriteResult nanof32WriteBraid(const std::string& path,
                                      const Nanof32VocabSpec* vocab) {
     Nanof32WriteResult r;
 
-    // ---- validate before touching the filesystem ---------------------------
-    // A half-written .nqb is worse than none: the reader will happily consume
-    // a structurally valid prefix and report a model with missing tensors.
-    if (path.empty()) {
-        r.error = "empty output path";
-        return r;
-    }
+    if (path.empty()) { r.error = "empty output path"; return r; }
     if (archMetaIn.numLayers == 0 || archMetaIn.hiddenDim == 0 ||
         archMetaIn.vocabSize == 0) {
         r.error = "arch meta has a zero dimension (numLayers/hiddenDim/vocabSize)";
         return r;
     }
-    if (tensors.empty()) {
-        r.error = "no tensors to write";
-        return r;
-    }
+    if (tensors.empty()) { r.error = "no tensors to write"; return r; }
 
-    uint64_t paramCount = 0;
     for (size_t i = 0; i < tensors.size(); ++i) {
         const Nanof32TensorSpec& t = tensors[i];
-        if (t.name.empty()) {
-            r.error = "tensor " + std::to_string(i) + " has an empty name";
-            return r;
-        }
+        if (t.name.empty()) { r.error = "tensor " + std::to_string(i) + " has an empty name"; return r; }
         if (t.name.size() >= sizeof(Nanof32BraidTensorFooter::name)) {
             r.error = "tensor name exceeds footer name field: " + t.name;
             return r;
         }
-        if (t.rows == 0 || t.cols == 0) {
-            r.error = "tensor " + t.name + " has a zero dimension";
-            return r;
-        }
-        const uint64_t elements = t.rows * t.cols;
-        if (!t.values) {
-            r.error = "tensor " + t.name + " has a null value pointer";
-            return r;
-        }
-        if (nanof32CompressedBytes(t.quant, elements) == 0) {
-            r.error = "tensor " + t.name + " has unsupported quantType " +
-                      std::to_string(t.quant);
-            return r;
-        }
-        paramCount += elements;
-    }
-
-    std::ofstream out(path, std::ios::binary | std::ios::trunc);
-    if (!out.is_open()) {
-        r.error = "cannot open output for writing: " + path;
-        return r;
-    }
-
-    // ---- header + arch meta (sizes from sizeof, never literals) -----------
-    Nanof32BraidHeader header{};
-    Nanof32BraidArchMeta archMeta = archMetaIn;
-    // ArchMeta is fully assigned field-by-field in the tool; there is no
-    // reserved[] padding left to clear (the MLA words consumed it).
-    std::memset(header.reserved, 0, sizeof(header.reserved));
-    std::memset(archMeta.modelName, 0, sizeof(archMeta.modelName));
-    std::memset(archMeta.archName, 0, sizeof(archMeta.archName));
-
-    header.magic      = NANO_F32_BRAID_MAGIC;
-    header.version    = NANO_F32_BRAID_VERSION;
-    header.paramCount = paramCount;
-    header.numTensors = static_cast<uint32_t>(tensors.size());
-    header.bitsPerWeight = 115;   // set below from the dominant quant
-
-    out.write(reinterpret_cast<const char*>(&header), sizeof header);
-    out.write(reinterpret_cast<const char*>(&archMeta), sizeof archMeta);
-    if (!out) {
-        r.error = "write failed while emitting header/arch meta";
-        out.close();
-        std::remove(path.c_str());
-        return r;
-    }
-
-    // ---- vocabulary section (between arch meta and the first tensor) ------
-    //
-    // The reader walks tensors backward from EOF, so a forward section here
-    // shifts dataStart without disturbing tensor traversal at all. Only the
-    // header and arch meta have fixed offsets.
-    std::vector<uint8_t> vocabBytes;
-    if (vocab) {
-        // NQB_INVARIANT_TOKEN_DOMAIN_001, writer half.
-        //   0 <= token_id < tokenizer_vocab_size
-        //   tokenizer_vocab_size <= embedding_rows
-        //   tokenizer_vocab_size <= output_rows
-        //   bos_id/eos_id < tokenizer_vocab_size
-        // Enforced here as well as in the loader so an invalid model is never
-        // produced in the first place; a file that must be rejected on load is
-        // a defect that reached disk.
-        const size_t tv = vocab->tokens.size();
-        const size_t rows = archMetaIn.vocabSize;
-        if (tv > rows) {
-            r.error = "NQB_INVARIANT_TOKEN_DOMAIN_001: tokenizer has " +
-                      std::to_string(tv) + " entries but vocabSize is " +
-                      std::to_string(rows) +
-                      "; encode() could emit an id with no embedding row";
-            return r;
-        }
-        if (vocab->addBos && (vocab->bosId < 0 ||
-                              static_cast<size_t>(vocab->bosId) >= tv)) {
-            r.error = "NQB_INVARIANT_TOKEN_DOMAIN_001: bos_id " +
-                      std::to_string(vocab->bosId) +
-                      " is outside the tokenizer domain [0," + std::to_string(tv) + ")";
-            return r;
-        }
-        if (vocab->addEos && (vocab->eosId < 0 ||
-                              static_cast<size_t>(vocab->eosId) >= tv)) {
-            r.error = "NQB_INVARIANT_TOKEN_DOMAIN_001: eos_id " +
-                      std::to_string(vocab->eosId) +
-                      " is outside the tokenizer domain [0," + std::to_string(tv) + ")";
-            return r;
-        }
-        // The embedding and the output projection are separate tensors here,
-        // so both must independently cover the vocabulary.
-        for (const auto& t : tensors) {
-            const bool isEmbed = (t.name == "token_embd.weight");
-            const bool isHead  = (t.name == "output.weight");
-            if (!isEmbed && !isHead) continue;
-            if (t.rows < rows) {
-                r.error = "NQB_INVARIANT_TOKEN_DOMAIN_001: " + t.name +
-                          " has " + std::to_string(t.rows) +
-                          " rows but vocabSize is " + std::to_string(rows);
-                return r;
-            }
-        }
-        vocabBytes = nanof32EncodeVocabSection(*vocab);
-        if (vocabBytes.empty() && !vocab->tokens.empty()) {
-            r.error = "vocabulary section failed to encode (empty result with "
-                      "a non-empty token list)";
-            out.close();
-            std::remove(path.c_str());
-            return r;
-        }
-        if (!vocabBytes.empty()) {
-            header.vocabSectionOffset = static_cast<uint64_t>(out.tellp());
-            header.vocabSectionBytes  = vocabBytes.size();
-            out.write(reinterpret_cast<const char*>(vocabBytes.data()),
-                      static_cast<std::streamsize>(vocabBytes.size()));
-            if (!out) {
-                r.error = "write failed while emitting the vocabulary section";
-                out.close();
-                std::remove(path.c_str());
-                return r;
-            }
-        }
-    }
-
-    r.dataStart = static_cast<uint64_t>(out.tellp());
-
-    // ---- tensor payloads, each trailed by its own footer ------------------
-    std::vector<uint8_t> encoded;
-    uint32_t dominantBpw = 0;   // in hundredths, e.g. 115 for 1.15 bpw
-
-    for (size_t i = 0; i < tensors.size(); ++i) {
-        const Nanof32TensorSpec& t = tensors[i];
-        const uint64_t elements = t.rows * t.cols;
-
-        uint64_t wrote = 0;
-        switch (t.quant) {
-            case NQBRAID_DENSE_F32:
-                wrote = nanof32EncodeDenseF32(t.values, elements, encoded);
-                // RAWRXD_NQB_BITS_PER_WEIGHT_UNIT_001
-                //
-                // The field is documented and read as HUNDREDTHS of a bit:
-                //     Nanof32BraidFormat.hpp: uint32_t bitsPerWeight;
-                //                                     // fixed-point: 115 = 1.15 bits/weight
-                //     Nanof32BraidStreamer.cpp:61  "%u.%02u", v / 100, v % 100
-                //     this file, line 418:         // in hundredths, e.g. 115
-                //
-                // Three mutually inconsistent values were in circulation for a
-                // dense-F32 file, all measured, none of them the payload's
-                // actual width:
-                //     160  here, identical to the DENSE_BF16 arm  -> 1.60 bpw
-                //     320  tools/gguf_to_nqb_converter.cpp        -> 3.20 bpw
-                //     3200 this value, width * 8 * 100            -> 32.00 bpw
-                // A 1.58 GB file whose header announces 1.60 bits per weight is
-                // wrong by a factor of 20, and no reader flagged it: the reader
-                // only prints the number. Verification caught it as
-                //     EXPECTED_BITS_PER_WEIGHT=32 DECODED_BITS_PER_WEIGHT=3.2
-                // after an intermediate repair set 320 here and failed the same
-                // way -- which is the reason the constant is derived from
-                // sizeof() rather than typed again.
-                dominantBpw = std::max(dominantBpw,
-                                       static_cast<uint32_t>(sizeof(float) * 8 * 100));
-                break;
-            case NQBRAID_DENSE_BF16:
-                wrote = nanof32EncodeDenseBF16(t.values, elements, encoded);
-                dominantBpw = std::max(dominantBpw,
-                                       static_cast<uint32_t>(sizeof(uint16_t) * 8 * 100));
-                break;
-            case NQBRAID_BRAID_115:
-                wrote = nanof32EncodeBraid115(t.values, elements,
-                                              t.scaleMin, t.scaleMax, encoded);
-                dominantBpw = std::max(dominantBpw, 115u);
-                break;
-            default:
-                r.error = "tensor " + t.name + ": quantType " +
-                          std::to_string(t.quant) + " has no encoder";
-                out.close();
-                std::remove(path.c_str());
-                return r;
-        }
-
-        const uint64_t expected = nanof32CompressedBytes(t.quant, elements);
-        if (wrote == 0 || wrote != expected) {
-            r.error = "tensor " + t.name + ": encoder produced " +
-                      std::to_string(wrote) + " bytes, accounting expected " +
-                      std::to_string(expected);
-            out.close();
-            std::remove(path.c_str());
-            return r;
-        }
-
-        out.write(reinterpret_cast<const char*>(encoded.data()),
-                  static_cast<std::streamsize>(encoded.size()));
-
-        Nanof32BraidTensorFooter footer{};
-        std::memset(footer.name, 0, sizeof footer.name);
-        footer.magic      = NANO_F32_BRAID_MAGIC;
-        footer.quantType  = t.quant;
-        footer.scaleMin   = t.scaleMin;
-        footer.scaleMax   = t.scaleMax;
-        footer.rows       = t.rows;
-        footer.cols       = t.cols;
-        footer.dataBytes  = wrote;
-        footer.expertIndex = t.expertIndex;   // 0xFFFFFFFF == dense, per the header
-        std::memcpy(footer.name, t.name.c_str(), t.name.size());
-
-        out.write(reinterpret_cast<const char*>(&footer), sizeof footer);
-        if (!out) {
-            r.error = "write failed while emitting tensor " + t.name;
-            out.close();
-            std::remove(path.c_str());
+        if (t.rows == 0 || t.cols == 0) { r.error = "tensor " + t.name + " has a zero dimension"; return r; }
+        if (!t.values) { r.error = "tensor " + t.name + " has a null value pointer"; return r; }
+        if (nanof32CompressedBytes(t.quant, t.rows * t.cols) == 0) {
+            r.error = "tensor " + t.name + " has unsupported quantType " + std::to_string(t.quant);
             return r;
         }
     }
 
-    // ---- backfill the header fields that depend on the finished file -------
-    r.bytesWritten = static_cast<uint64_t>(out.tellp());
-    if (r.bytesWritten <= static_cast<uint64_t>(sizeof(Nanof32BraidHeader) +
-                                                sizeof(Nanof32BraidArchMeta))) {
-        r.error = "produced file is smaller than header + arch meta";
-        out.close();
-        std::remove(path.c_str());
-        return r;
+    Nanof32BraidStreamWriter w;
+    if (!w.open(path, archMetaIn, vocab)) { r.error = w.error(); return r; }
+
+    for (const Nanof32TensorSpec& t : tensors) {
+        if (!w.appendTensor(t.name, t.rows, t.cols, t.quant, t.values,
+                            t.rows * t.cols, t.scaleMin, t.scaleMax, t.expertIndex)) {
+            r.error = w.error();
+            w.abort();
+            return r;
+        }
     }
-
-    r.finalFooter = r.bytesWritten - sizeof(Nanof32BraidTensorFooter);
-    header.fileSize        = r.bytesWritten;
-    header.bitsPerWeight   = dominantBpw ? dominantBpw : 3200u;
-    header.tensorDirOffset = r.finalFooter;   // where reverse traversal begins
-
-    out.seekp(0, std::ios::beg);
-    out.write(reinterpret_cast<const char*>(&header), sizeof header);
-    out.close();
-
-    if (!out) {
-        r.error = "failed to backfill header";
-        std::remove(path.c_str());
-        return r;
-    }
+    if (!w.finalize()) { r.error = w.error(); return r; }
 
     r.ok          = true;
-    r.paramCount  = paramCount;
-    r.tensorCount = static_cast<uint32_t>(tensors.size());
+    r.paramCount  = w.census().paramCount;
+    r.tensorCount = static_cast<uint32_t>(w.census().tensorCount);
+    r.bytesWritten = w.bytesWritten();
+    r.dataStart   = w.dataStart();
+    r.finalFooter = w.bytesWritten() - sizeof(Nanof32BraidTensorFooter);
     return r;
 }
 

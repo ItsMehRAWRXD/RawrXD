@@ -64,6 +64,7 @@
 #include "deep2/Nanof32BraidFormat.hpp"
 #include "deep2/Nanof32BraidStreamer.hpp"
 #include "deep2/Nanof32BraidWriter.hpp"
+#include "deep2/Nanof32BraidManifest.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -310,7 +311,8 @@ struct TRec {
     uint32_t    quant = 0, expert = 0;
     uint64_t    reverseIndex = 0;
 
-    uint64_t payloadHash = FNV_BASIS;   // FNV-1a over raw payload bytes
+uint64_t payloadHash = FNV_BASIS;   // FNV-1a over canonical F32 bytes
+    Deep2::Sha256 shaAcc;              // SHA-256 over the same canonical bytes
     uint64_t bf16Hash    = FNV_BASIS;   // FNV-1a over host-order uint16 bf16 image
     uint64_t scannedFloats = 0, nanCount = 0, infCount = 0;
     double    minVal = 0.0, maxVal = 0.0;
@@ -726,9 +728,7 @@ chk("FOOTER_SHAPE_FAILURES_ZERO", vo.footerShapeFailures == 0,
                 if (got != want) { ++vo.shortReads; break; }
                 vo.payloadBytesStreamed += got;
 
-                t.payloadHash = fnv1a(t.payloadHash, buf.data(), got);
-
-                const size_t nf = got / 4;
+const size_t nf = got / 4;
                 for (size_t i = 0; i < nf; ++i) {
                     float fv;
                     std::memcpy(&fv, buf.data() + i * 4, 4);
@@ -738,6 +738,15 @@ chk("FOOTER_SHAPE_FAILURES_ZERO", vo.footerShapeFailures == 0,
                     else { if (fv < t.minVal) t.minVal = fv; if (fv > t.maxVal) t.maxVal = fv; }
                 }
                 t.scannedFloats += nf;
+
+                // Canonical F32 identity, hashed through the SHARED primitive the
+                // source side calls, so both digests come from one function.
+                // Hashing the raw stored bytes instead would quietly assume this
+                // host's float layout IS the canonical little-endian image; if
+                // that ever stopped being true the mismatch would arrive wearing a
+                // fidelity-failure label instead of a platform-bug one.
+                nqbHashCanonicalF32Chunk(reinterpret_cast<const float*>(buf.data()), nf,
+                                        t.payloadHash, t.shaAcc);
 
                 // expected reader image, via the SAME primitive the reader uses
                 uint16_t* h16 = reinterpret_cast<uint16_t*>(buf.data());
@@ -978,6 +987,45 @@ void writeManifest(const std::string& path, const VerifyOut& vo) {
           << t.bf16Hash << '\t' << t.rows << '\t' << t.cols << '\t'
           << t.dataBytes << '\t' << t.quant << '\n';
     }
+}
+
+// RAWRXD_NQB_SOURCE_F32_PARITY_001 -- PAYLOAD SIDE.
+//
+// Emits the SAME V1 manifest schema as tools/nqb_source_f32_manifest.cpp, through
+// the same serialiser from Nanof32BraidManifest.hpp. Two hand-written copies of a
+// schema already drifted once here and produced a confident false hash mismatch on
+// a clean file, so the schema now exists once.
+//
+// This process opened the .nqb and nothing else. The comparator that consumes this
+// file opens neither model, so no single process can see both sides.
+void writeF32Manifest(const std::string& path, const VerifyOut& vo) {
+    std::ofstream o(path, std::ios::trunc);
+    if (!o.is_open()) return;
+    o << Deep2::nqbManifestHeader() << "\n";
+    std::vector<Deep2::NqbF32Record> recs;
+    recs.reserve(vo.tensors.size());
+    for (const TRec& t : vo.tensors) {
+        Deep2::NqbF32Record r;
+        r.name        = t.name;
+        r.storedCodec = t.quant;
+        // The footer carries ne[0] and ne[1]. rank is not stored on disk, so it is
+        // reported as 2 when cols>1 and 1 otherwise -- the same reduction the
+        // writer applied when it filled the footer.
+        r.rank        = (t.cols > 1) ? 2u : 1u;
+        r.dim0        = t.rows;
+        r.dim1        = t.cols;
+        r.elements    = t.elements;
+        r.f32Bytes    = t.elements * 4ull;   // canonical F32 image, codec-independent
+        r.fnv1a64     = t.payloadHash;
+        r.sha256      = t.shaAcc.hex();
+        recs.push_back(r);
+    }
+    // Deterministic order so two runs of this tool emit byte-identical manifests.
+    std::sort(recs.begin(), recs.end(),
+              [](const Deep2::NqbF32Record& a, const Deep2::NqbF32Record& b) {
+                  return a.name < b.name;
+              });
+    for (const Deep2::NqbF32Record& r : recs) o << Deep2::nqbSerialiseRecord(r);
 }
 
 void writePhase2(const std::string& path, const VerifyOut& vo) {
@@ -1227,6 +1275,7 @@ int main(int argc, char** argv) {
             "Usage: %s <file.nqb> [options]\n"
             "  --expect-tensors N  --expect-elements N  --expect-file-bytes N\n"
             "  --manifest out.txt  --expect-manifest m.txt  --phase2 out.txt\n"
+            "  --f32-manifest out.txt\n"
             "  --no-reader  --reader-cap-mb N\n"
             "  --negative-controls DIR  --receipt out.txt\n", argv[0]);
         return 2;
@@ -1234,7 +1283,7 @@ int main(int argc, char** argv) {
 
     const std::string path = argv[1];
     VerifyOpts opt;
-    std::string manifestOut, phase2Out, receiptOut, ncDir;
+    std::string manifestOut, phase2Out, receiptOut, ncDir, f32ManifestOut;
     for (int i = 2; i < argc; ++i) {
         const std::string a = argv[i];
         if (a == "--expect-tensors" && i + 1 < argc) {
@@ -1246,6 +1295,7 @@ int main(int argc, char** argv) {
         } else if (a == "--manifest" && i + 1 < argc) manifestOut = argv[++i];
         else if (a == "--expect-manifest" && i + 1 < argc) opt.expectManifest = argv[++i];
         else if (a == "--phase2" && i + 1 < argc) phase2Out = argv[++i];
+        else if (a == "--f32-manifest" && i + 1 < argc) f32ManifestOut = argv[++i];
         else if (a == "--no-reader") opt.useReader = false;
         else if (a == "--no-stream") opt.streamPayload = false;
         else if (a == "--reader-cap-mb" && i + 1 < argc)
@@ -1303,6 +1353,7 @@ int main(int argc, char** argv) {
     }
 
 if (!manifestOut.empty()) writeManifest(manifestOut, vo);
+    if (!f32ManifestOut.empty()) writeF32Manifest(f32ManifestOut, vo);
     if (!phase2Out.empty()) writePhase2(phase2Out, vo);
 
     // The artifact's own checks end here. Everything appended after this point
@@ -1434,6 +1485,15 @@ r << "PAYLOAD_INTEGRITY_AUTHORITY=" << vo.payloadIntegrityAuthority << "\n";
         }
     }
 
-    if (std::string(verdict) == "INVALID") return 2;
-    return fail == 0 ? 0 : 1;
+// The exit code must agree with the printed verdict. They used to disagree: the
+// verdict was computed from the artifact tally plus control results, while the
+// return still used the combined tally, so a run whose artifact PASSED and whose
+// only failures were faults the gate had deliberately injected printed
+//     VERDICT=PASS
+//     EXIT=1
+// An exit code that contradicts the verdict is worse than either, because a
+// caller that checks the code concludes the gate failed.
+if (std::string(verdict) == "INVALID") return 2;
+if (std::string(verdict) == "PASS")    return 0;
+return 1;
 }

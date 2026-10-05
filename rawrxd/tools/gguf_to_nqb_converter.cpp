@@ -26,6 +26,9 @@
 #include "deep2/QuantKernelRegistry.hpp"
 #include "deep2/Nanof32BraidFormat.hpp"
 #include "deep2/Nanof32BraidWriter.hpp"
+#include "rawr_build_identity_gguf_to_nqb_converter.hpp"
+
+#include <windows.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -95,29 +98,6 @@ static TensorFidelity measureFidelity(const std::vector<float>& f) {
     return s;
 }
 
-// Convenience: append a single tensor to an .nqb file stream.
-// Returns the absolute file offset of the tensor's DATA (not the footer).
-static uint64_t appendTensor(std::ofstream& out,
-                             const Deep2::Nanof32TensorSpec& spec,
-                             const std::vector<uint8_t>& payload) {
-    uint64_t dataOffset = static_cast<uint64_t>(out.tellp());
-    out.write(reinterpret_cast<const char*>(payload.data()),
-              static_cast<std::streamsize>(payload.size()));
-
-    Deep2::Nanof32BraidTensorFooter footer{};
-    footer.magic       = Deep2::NANO_F32_BRAID_MAGIC;
-    footer.quantType = spec.quant;
-    footer.scaleMin  = spec.scaleMin;
-    footer.scaleMax  = spec.scaleMax;
-    footer.rows      = spec.rows;
-    footer.cols      = spec.cols;
-    footer.dataBytes = payload.size();
-    footer.expertIndex = spec.expertIndex;
-    std::snprintf(footer.name, sizeof footer.name, "%s", spec.name.c_str());
-
-    out.write(reinterpret_cast<const char*>(&footer), sizeof footer);
-    return dataOffset;
-}
 
 static void usage(const char* prog) {
     std::fprintf(stderr,
@@ -132,6 +112,10 @@ int main(int argc, char** argv) {
     const char* nqbPath   = argv[2];
 
     std::fprintf(stderr, "GATE=GGUF_TO_NQB_CONVERTER\n");
+    // RAWRXD_CERT_BINARY_BUILD_IDENTITY_001 -- state which source produced this
+    // binary before stating anything it measured. A receipt whose provenance is
+    // unknown cannot certify anything downstream.
+    RAWRXD_PRINT_BUILD_IDENTITY();
     std::fprintf(stderr, "SOURCE_GGUF=%s\n", ggufPath);
     std::fprintf(stderr, "TARGET_NQB=%s\n", nqbPath);
 
@@ -315,61 +299,46 @@ int main(int argc, char** argv) {
     }
 
     // ----------------------------------------------------------------
-    // 3. Write .nqb header + arch meta
+    // 3+4. Open the ONE container writer, transactionally.
+    //
+    // RAWRXD_NQB_ONE_FORMAT_AUTHORITY_001
+    //
+    // This tool used to serialize the container itself: its own ofstream, its
+    // own header struct, its own appendTensor(), its own header backfill. The
+    // writer in Nanof32BraidWriter.cpp did the same thing independently. Two
+    // serializers is how the tree ended up with THREE different answers for
+    // bitsPerWeight on a dense-F32 file (160, 320, 0) and a shipped artifact
+    // whose paramCount was 0 while its payload held 3,212,749,888 elements.
+    //
+    // Both now go through Nanof32BraidStreamWriter, so the footer layout, the
+    // census accumulation and the header backfill exist exactly once.
+    //
+    // TRANSACTIONAL: the container is written to "<path>.building" and only
+    // renamed into place after finalize() AND the verdict checks pass. A
+    // converter killed halfway through therefore leaves no artifact that a
+    // reader could mistake for a model.
     // ----------------------------------------------------------------
-    std::ofstream out(nqbPath, std::ios::binary);
-    if (!out) {
-        std::fprintf(stderr, "FAIL=nqb_open_write path=%s\n", nqbPath);
+const std::string buildingPath = std::string(nqbPath) + ".building";
+    std::remove(nqbPath);            // never leave a previous artifact in place
+    std::remove(buildingPath.c_str());
+    std::wstring nqbPathW(nqbPath, nqbPath + std::strlen(nqbPath));
+    std::wstring buildingPathW(buildingPath.begin(), buildingPath.end());
+
+    Deep2::Nanof32BraidStreamWriter writer;
+    if (!writer.open(buildingPath, archMeta, hasVocab ? &vocabSpec : nullptr)) {
+        std::fprintf(stderr, "FAIL=container_open: %s\n", writer.error().c_str());
         return 1;
     }
-
-    Deep2::Nanof32BraidHeader hdr{};
-    hdr.magic    = Deep2::NANO_F32_BRAID_MAGIC;
-    hdr.version  = Deep2::NANO_F32_BRAID_VERSION;
-    hdr.numTensors = 0; // measured at finalisation, never declared
-    hdr.bitsPerWeight = 0; // dense F32 is not "bits per weight"
-    // vocabSectionOffset and vocabSectionBytes filled later if vocab present
-    out.write(reinterpret_cast<const char*>(&hdr), sizeof hdr);
-    out.write(reinterpret_cast<const char*>(&archMeta), sizeof archMeta);
-    // hdr.numTensors is deliberately left 0 here and filled in at finalisation
-    // from the number of tensors ACTUALLY written.  Declaring it from the GGUF
-    // tensor count would let a skipped tensor leave a header that lies.
-
-    // ----------------------------------------------------------------
-    // 4. Vocabulary section (if extracted from GGUF) — placed BEFORE
-    //    the first tensor so reverse tensor traversal from EOF works.
-    // ----------------------------------------------------------------
     std::vector<uint8_t> vocabBytes;
-    if (hasVocab) {
-        vocabBytes = Deep2::nanof32EncodeVocabSection(vocabSpec);
-        if (!vocabBytes.empty()) {
-            uint64_t vocabOffset = static_cast<uint64_t>(out.tellp());
-            out.write(reinterpret_cast<const char*>(vocabBytes.data()),
-                      static_cast<std::streamsize>(vocabBytes.size()));
-            hdr.vocabSectionOffset = vocabOffset;
-            hdr.vocabSectionBytes  = vocabBytes.size();
-            std::fprintf(stderr, "VOCAB_SECTION=written entries=%zu bytes=%zu\n",
-                         vocabSpec.tokens.size(), vocabBytes.size());
-        } else {
-            std::fprintf(stderr, "WARN=vocab_encode_failed\n");
-            hdr.vocabSectionOffset = 0;
-            hdr.vocabSectionBytes  = 0;
-        }
-    } else {
-        hdr.vocabSectionOffset = 0;
-        hdr.vocabSectionBytes  = 0;
-    }
+    if (hasVocab) vocabBytes = Deep2::nanof32EncodeVocabSection(vocabSpec);
 
-    uint64_t firstTensorOffset = static_cast<uint64_t>(out.tellp());
-
-    // ----------------------------------------------------------------
+// ----------------------------------------------------------------
     // 5. Enumerate all GGUF tensors, dequantise, append as dense F32
     // ----------------------------------------------------------------
     size_t convertedCount = 0;
     size_t skippedCount   = 0;
     std::vector<float>     floatBuf;
     std::vector<uint8_t> payload;
-    uint64_t lastDataOffset = 0;
 
     size_t globalNonFiniteTensors = 0;
     size_t globalNonFiniteValues  = 0;
@@ -473,8 +442,19 @@ int main(int argc, char** argv) {
         payload.resize(numElements * sizeof(float));
         std::memcpy(payload.data(), floatBuf.data(), payload.size());
 
-        const uint64_t dataOff = appendTensor(out, spec, payload);
-        lastDataOffset = dataOff;
+        // Append through the ONE container writer. The census inside it is
+        // accumulated from what was actually emitted, so a tensor that failed
+        // to encode is simply not counted -- there is no path by which the
+        // header can claim a tensor the file does not contain.
+        if (!writer.appendTensor(spec.name, spec.rows, spec.cols, spec.quant,
+                                 floatBuf.data(), numElements,
+                                 spec.scaleMin, spec.scaleMax,
+                                 spec.expertIndex)) {
+            std::fprintf(stderr, "FAIL=append_tensor name=%s: %s\n",
+                         spec.name.c_str(), writer.error().c_str());
+            writer.abort();
+            return 1;
+        }
         ++convertedCount;
 
         if (fid.nonFinite) {
@@ -493,45 +473,46 @@ int main(int argc, char** argv) {
     }
 
     // ----------------------------------------------------------------
-    // 6. Finalise header with MEASURED tensor count and byte coverage
-    // ----------------------------------------------------------------
-    uint64_t fileSize = static_cast<uint64_t>(out.tellp());
-    hdr.numTensors   = static_cast<uint32_t>(convertedCount);
-    hdr.fileSize        = fileSize;
-    hdr.tensorDirOffset = fileSize - sizeof(Deep2::Nanof32BraidTensorFooter); // last footer
+    // 6. Finalise: the header is backfilled by the writer from its own census.
+    //
     // RAWRXD_GGUF_TO_NQB_CONVERTER_AUTHORITY_001 -- header completeness.
     //
-    // paramCount and bitsPerWeight were both left at 0. The reader reports
-    // both, so a converted real model announced itself as:
+    // paramCount and bitsPerWeight were both left at 0, so a converted real
+    // model announced itself as:
     //     [NQBRAID] OPEN: params=0 bitsPerWeight=0.00 tensors=201
-    // which is a header that lies about its own contents. paramCount is
-    // measured from the tensors actually written (not from the GGUF metadata,
-    // so a skip cannot inflate it).
+    // which is a header that lies about its own contents. That shipped: the real
+    // artifact carried paramCount=0 and bitsPerWeight=0 while its payload held
+    // 3,212,749,888 elements at 4 bytes each.
     //
-    // RAWRXD_NQB_BITS_PER_WEIGHT_UNIT_001 -- CORRECTION. This previously read:
+    // RAWRXD_NQB_BITS_PER_WEIGHT_UNIT_001 -- an intermediate repair here wrote
     //     "the field is documented as 115 == 1.15 bits/weight, so 32 bits is 320"
-    // That drops a factor of 100. 115 hundredths == 1.15, therefore 32.00 bits
-    // is 3200, not 320. The mistake was made by "fixing" a zero with a number
-    // that had never been checked against the unit, and it was invisible to every
-    // reader because the reader only prints the field. It was caught by
-    // RAWRXD_NQB_PRODUCTION_REOPEN_001, which compares the decoded value
-    // against the payload width it measured in the same pass:
+    // which drops a factor of 100 (115 hundredths == 1.15, so 32.00 is 3200), and
+    // a second repair set the WRITER to 320 and failed identically:
     //     EXPECTED_BITS_PER_WEIGHT=32  DECODED_BITS_PER_WEIGHT=3.2
-    // The value is derived from sizeof() rather than typed, so the next unit
-    // change cannot silently produce another plausible wrong constant.
-    hdr.paramCount    = globalParamCount;
-    hdr.bitsPerWeight = static_cast<uint32_t>(sizeof(float) * 8 * 100);  // 3200 == 32.00
-    (void)lastDataOffset;
+    //
+    // Both are gone. The field is now DERIVED from the bytes actually written:
+    //     bpw100 = round(payloadBytes * 800 / paramCount)
+    // computed once, in nanof32DeriveBitsPerWeight100(). It is measured rather
+    // than predicted, so it stays correct for a mixed-codec artifact and cannot
+    // be edited into a different plausible wrong value at a second site.
+    // ----------------------------------------------------------------
+    if (!writer.finalize()) {
+        std::fprintf(stderr, "FAIL=finalize: %s\n", writer.error().c_str());
+        writer.abort();
+        return 1;
+    }
 
-    out.seekp(0, std::ios::beg);
-    out.write(reinterpret_cast<const char*>(&hdr), sizeof hdr);
-    out.close();
+    const Deep2::Nanof32Census& census = writer.census();
+    const uint64_t fileSize = writer.bytesWritten();
+    const uint32_t headerNumTensors = static_cast<uint32_t>(census.tensorCount);
+    const uint64_t headerParamCount = census.paramCount;
+    const uint32_t headerBpw100 = census.bpw100;
 
     // On-disk size must equal what the header claims, or the reverse reader's
     // backward walk starts at the wrong offset and silently reads garbage.
     uint64_t onDisk = 0;
     {
-        std::ifstream probe(nqbPath, std::ios::binary | std::ios::ate);
+        std::ifstream probe(buildingPath, std::ios::binary | std::ios::ate);
         if (probe) onDisk = static_cast<uint64_t>(probe.tellg());
     }
 
@@ -554,8 +535,80 @@ int main(int argc, char** argv) {
     // let this tool report VERDICT=PASS while emitting a header that
     // understated the model. Every one of these is a field a reader consumes:
     // a zero in any of them is not "unknown", it is a wrong answer.
-    if (hdr.paramCount == 0)             failures.push_back("HEADER_PARAM_COUNT_ZERO");
-    if (hdr.bitsPerWeight == 0)          failures.push_back("HEADER_BITS_PER_WEIGHT_ZERO");
+    if (headerParamCount == 0)    failures.push_back("HEADER_PARAM_COUNT_ZERO");
+    if (headerBpw100 == 0)        failures.push_back("HEADER_BITS_PER_WEIGHT_ZERO");
+
+    // ----------------------------------------------------------------
+    // RAWRXD_NQB_CODEC_IDENTITY_001
+    //
+    // The repository contains a file named
+    //     llama3.2-3b-real-q0.nqb
+    // whose 255 footers are ALL quantType=0 (DENSE_F32), whose length equals the
+    // dense-F32 artifact's to the byte, and whose sampled payload windows are
+    // byte-identical to it. It is not a q0 file. The filename carried the codec
+    // intent and the footer types carried the truth, and nothing compared the
+    // two -- so a codec-fidelity gate run against it would have measured
+    // dense-F32 passthrough twice and reported it as q0.
+    //
+    // A filename is decoration. The census below is what the file IS, taken
+    // from the footers the writer actually emitted, and it is now compared
+    // against what this run was asked to produce.
+    // ----------------------------------------------------------------
+    const char* codecNames[Deep2::NQBRAID_COUNT] = {
+        "DENSE_F32", "DENSE_BF16", "CODEBOOK_1BIT", "CODEBOOK_2BIT",
+        "CODEBOOK_3BIT", "BRAID_115"
+    };
+    for (uint32_t c = 0; c < Deep2::NQBRAID_COUNT; ++c) {
+        std::fprintf(stderr, "CODEC_COUNT_%s=%llu\n", codecNames[c],
+                     (unsigned long long)census.codecCount[c]);
+    }
+    std::fprintf(stderr, "CODEC_ELEMENTS=%llu\n", (unsigned long long)census.paramCount);
+    std::fprintf(stderr, "CODEC_PAYLOAD_BYTES=%llu\n", (unsigned long long)census.payloadBytes);
+    std::fprintf(stderr, "CODEC_FOOTER_BYTES=%llu\n", (unsigned long long)census.footerBytes);
+
+    // This converter emits dense F32 and nothing else. Asserted rather than
+    // assumed: if a codec path is added later and not wired here, the artifact
+    // would silently claim a compression it does not contain.
+    const bool codecRequestApplied =
+        census.tensorCount > 0 &&
+        census.codecCount[Deep2::NQBRAID_DENSE_F32] == census.tensorCount;
+    std::fprintf(stderr, "REQUESTED_CODEC=DENSE_F32\n");
+    std::fprintf(stderr, "RESOLVED_CODEC=%s\n",
+                 codecRequestApplied ? "DENSE_F32" : "MIXED_OR_OTHER");
+    std::fprintf(stderr, "CODEC_REQUEST_APPLIED=%d\n", codecRequestApplied ? 1 : 0);
+    if (!codecRequestApplied) failures.push_back("CODEC_REQUEST_NOT_APPLIED");
+
+    // Compression actually realised. Only meaningful for a LOSSY request: a
+    // dense-F32 file is SUPPOSED to come out at 32.00 bits per weight, so
+    // asserting "compression not realised" against it would fail every correct
+    // dense conversion. The check fires only when the caller asked for a codec
+    // that must compress and the bytes say otherwise -- which is the shape the
+    // fake q0 artifact had.
+    const double physicalBpW =
+        census.paramCount ? (static_cast<double>(census.payloadBytes) * 8.0 /
+                             static_cast<double>(census.paramCount)) : 0.0;
+    const bool lossyRequested = false;   // DENSE_F32 is lossless; nothing to realise
+    std::fprintf(stderr, "PHYSICAL_BITS_PER_WEIGHT=%.4f\n", physicalBpW);
+    std::fprintf(stderr, "COMPRESSION_EXPECTATION=%s\n",
+                 lossyRequested ? "STRICTLY_LESS_THAN_32" : "NONE_LOSSLESS_CODEC");
+    if (lossyRequested && physicalBpW >= 32.0)
+        failures.push_back("COMPRESSION_NOT_REALISED");
+
+    // The census must also agree with the header the writer backfilled. These
+    // are the same numbers written twice on purpose: once inside the writer and
+    // once here from an independent read of its result. Agreement is a real
+    // cross-check; a mismatch means finalize() did not see what was emitted.
+    if (headerNumTensors != convertedCount)
+        failures.push_back("CENSUS_TENSOR_COUNT_DISAGREES_WITH_LOOP");
+    if (headerParamCount != globalParamCount)
+        failures.push_back("CENSUS_PARAM_COUNT_DISAGREES_WITH_LOOP");
+    if (headerBpw100 != Deep2::nanof32DeriveBitsPerWeight100(census.payloadBytes,
+                                                             census.paramCount))
+        failures.push_back("CENSUS_BPW_DISAGREES_WITH_DERIVATION");
+    std::fprintf(stderr, "HEADER_NUM_TENSORS=%u\n", headerNumTensors);
+    std::fprintf(stderr, "HEADER_PARAM_COUNT=%llu\n", (unsigned long long)headerParamCount);
+    std::fprintf(stderr, "HEADER_BITS_FIELD_RAW=%u\n", headerBpw100);
+    std::fprintf(stderr, "DATA_START=%llu\n", (unsigned long long)writer.dataStart());
     if (archMeta.vocabSize == 0)         failures.push_back("ARCH_VOCAB_SIZE_ZERO");
     if (archMeta.numLayers == 0)         failures.push_back("ARCH_NUM_LAYERS_ZERO");
     if (archMeta.hiddenDim == 0)         failures.push_back("ARCH_HIDDEN_DIM_ZERO");
@@ -607,9 +660,23 @@ int main(int argc, char** argv) {
     for (const std::string& f : failures) std::fprintf(stderr, "  FAIL=%s\n", f.c_str());
 
     if (failures.empty()) {
+        // COMMIT. The container becomes visible under its real name only now,
+        // after the census and every verdict check above has passed. A converter
+        // that dies before this point leaves "<path>.building" and no artifact.
+        if (!MoveFileExW(buildingPathW.c_str(), nqbPathW.c_str(),
+                         MOVEFILE_REPLACE_EXISTING)) {
+            std::fprintf(stderr, "FAIL=promote_rename winerr=%lu\n", GetLastError());
+            std::remove(buildingPath.c_str());
+            std::fprintf(stderr, "VERDICT=FAIL\n");
+            return 2;
+        }
+        std::fprintf(stderr, "PROMOTED_TO=%s\n", nqbPath);
+        std::fprintf(stderr, "TRANSACTIONAL_WRITE=1\n");
         std::fprintf(stderr, "VERDICT=PASS\n");
         return 0;
     }
     std::fprintf(stderr, "VERDICT=FAIL\n");
+    std::fprintf(stderr, "ARTIFACT_PROMOTED=0 building_file_retained=%s\n",
+                 buildingPath.c_str());
     return 2;   // 2 = "a gate that ran and failed", distinct from 1 = crash
 }

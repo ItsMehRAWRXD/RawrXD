@@ -14,6 +14,7 @@
 //  * If either path fails to generate, the receipt says FAIL and names why.
 
 #include "Deep2Engine.h"
+#include "rawr_build_identity_nqbraid_real_weight_oracle.hpp"
 #include "GGUFLoader.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "Nanof32BraidStreamer.hpp"
@@ -353,6 +354,7 @@ int main(int argc, char** argv) {
                  (unsigned long long)r.nqbBytes);
 
     std::fprintf(stderr, "GATE=NQBRAID_REAL_WEIGHT_ORACLE\n");
+    RAWRXD_PRINT_BUILD_IDENTITY();
     std::fprintf(stderr, "MODEL_GGUF=%s\n", ggufPath);
     std::fprintf(stderr, "MODEL_NQB=%s\n", nqbPath);
     std::fprintf(stderr, "PROMPT=%s\n", prompt);

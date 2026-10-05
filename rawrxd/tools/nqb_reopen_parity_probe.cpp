@@ -10,6 +10,7 @@
 //   - Per-tensor descriptive statistics for sampled tensors
 
 #include "deep2/Nanof32BraidStreamer.hpp"
+#include "rawr_build_identity_nqb_reopen_parity_probe.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -45,6 +46,7 @@ int main(int argc, char** argv) {
     const uint32_t expectedTensors = (argc > 2) ? static_cast<uint32_t>(std::atoi(argv[2])) : 255;
 
     std::fprintf(stderr, "=== RAWRXD_NQB_REAL_REOPEN_001 ===\n");
+    RAWRXD_PRINT_BUILD_IDENTITY();
     std::fprintf(stderr, "NQB_PATH=%s\n", nqbPath);
     std::fprintf(stderr, "EXPECTED_TENSORS=%u\n", expectedTensors);
 

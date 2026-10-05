@@ -44,6 +44,7 @@
 //     record.
 
 #include "Deep2Engine.h"
+#include "QuantKernelRegistry.hpp"
 
 #include <cstdio>
 #include <cstdlib>

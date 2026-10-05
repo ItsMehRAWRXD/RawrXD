@@ -939,6 +939,7 @@ tools/gguf_to_nqb_converter.cpp	tools/gguf_to_nqb_converter.cpp	1	IMPLEMENT
 tools/nqb_reopen_parity_probe.cpp	tools/nqb_reopen_parity_probe.cpp	1	IMPLEMENT
 tools/nqbraid_real_weight_oracle.cpp	tools/nqbraid_real_weight_oracle.cpp	1	IMPLEMENT
 tools/nqb_exec_defect_regression.cpp	tools/nqb_exec_defect_regression.cpp	1	IMPLEMENT
+tools/nqb_first_bad_state.cpp	tools/nqb_first_bad_state.cpp	1	IMPLEMENT
 tools/nqb_weight_parity_probe.cpp	tools/nqb_weight_parity_probe.cpp	1	IMPLEMENT
 tests/test_embed_parity.cpp	tests/test_embed_parity.cpp	1	IMPLEMENT
 tests/generation_quality_gate.cpp	tests/generation_quality_gate.cpp	1	IMPLEMENT

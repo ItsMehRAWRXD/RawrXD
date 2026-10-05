@@ -39,6 +39,7 @@
 // Usage: q2k_layout_discriminator <model.gguf> <tensor_name> [blocks]
 
 #include "QuantKernelRegistry.hpp"
+#include "rawr_build_identity_q2k_layout_discriminator.hpp"
 #include "GGUFLoader.hpp"
 
 #include <cstdio>
@@ -244,6 +245,7 @@ int main(int argc, char** argv) {
     const size_t wantBlocks = (argc > 3) ? static_cast<size_t>(std::atoll(argv[3])) : 256;
 
     std::fprintf(stderr, "=== RAWRXD_Q2K_LAYOUT_DISCRIMINATOR_001 ===\n");
+    RAWRXD_PRINT_BUILD_IDENTITY();
     std::fprintf(stderr, "MODEL=%s\n",   modelPath);
     std::fprintf(stderr, "TENSOR=%s\n",  tensorName);
 

@@ -59,6 +59,7 @@
 #include "Nanof32BraidFormat.hpp"
 
 #include <cstdint>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -137,5 +138,89 @@ Nanof32WriteResult nanof32WriteBraid(const std::string& path,
 // Exposed so a caller can predict section size, and so the writer's own
 // offset arithmetic can be checked against an independent computation.
 std::vector<uint8_t> nanof32EncodeVocabSection(const Nanof32VocabSpec& v);
+
+// ----------------------------------------------------------------------------
+// RAWRXD_NQB_ONE_FORMAT_AUTHORITY_001
+//
+// The container had TWO serializers. nanof32WriteBraid() wrote the layout, and
+// tools/gguf_to_nqb_converter.cpp wrote it again by hand -- its own appendTensor,
+// its own footer construction, its own header backfill. Two writers means the
+// header fields are computed twice, and the tree already contains the receipts of
+// that going wrong: one writer announced bitsPerWeight=160 for a dense-F32 file,
+// the other announced 320, and the real artifact shipped with 0. All three are
+// wrong for the same reason -- each site decided the field on its own.
+//
+// This class is the ONE place the container is serialized. The one-shot writer
+// is a loop over it, and the streaming converter drives it directly, so the
+// footer layout, the census accumulation and the header backfill exist once.
+//
+// It streams: appendTensor() consumes one tensor and forgets it, so writing a
+// 12.85 GB model never holds more than one tensor's payload.
+//
+// TRANSACTIONAL. Nothing is a valid artifact until finalize() has run AND the
+// caller has verified the result. abort() removes the partial file so a truncated
+// write can never be mistaken for a model.
+// ----------------------------------------------------------------------------
+
+// Everything the header asserts, measured rather than predicted.
+struct Nanof32Census {
+    uint64_t tensorCount  = 0;
+    uint64_t paramCount   = 0;
+    uint64_t payloadBytes = 0;
+    uint64_t footerBytes  = 0;
+    uint64_t codecCount[Deep2::NQBRAID_COUNT] = {0, 0, 0, 0, 0, 0};
+    uint32_t bpw100       = 0;   // hundredths of a bit per weight, derived
+};
+
+// bpw100 = round(payloadBytes * 800 / elements). Declared here because a caller
+// verifying a file needs the SAME derivation the writer used, and two copies of
+// that formula is the defect this whole class exists to remove.
+uint32_t nanof32DeriveBitsPerWeight100(uint64_t payloadBytes, uint64_t elements);
+
+class Nanof32BraidStreamWriter {
+public:
+    Nanof32BraidStreamWriter() = default;
+    ~Nanof32BraidStreamWriter();
+
+    Nanof32BraidStreamWriter(const Nanof32BraidStreamWriter&) = delete;
+    Nanof32BraidStreamWriter& operator=(const Nanof32BraidStreamWriter&) = delete;
+
+    // Writes the provisional header, the arch meta and (optionally) the
+    // vocabulary section. The provisional header is a placeholder: tensorCount,
+    // paramCount, fileSize and bitsPerWeight are all zero until finalize().
+    bool open(const std::string& path,
+              const Nanof32BraidArchMeta& archMeta,
+              const Nanof32VocabSpec* vocab);
+
+    // Encodes one tensor and appends payload + footer. `values` is read for
+    // exactly `elements` floats and is not retained.
+    bool appendTensor(const std::string& name, uint64_t rows, uint64_t cols,
+                      uint32_t quant, const void* values, uint64_t elements,
+                      float scaleMin, float scaleMax, uint32_t expertIndex);
+
+    // Backfills the header from the accumulated census and closes the file.
+    bool finalize();
+
+    // Closes and deletes the partial file. Called by the destructor when
+    // finalize() has not run.
+    void abort();
+
+    const Nanof32Census& census()      const { return census_; }
+    const std::string&   error()       const { return error_; }
+    uint64_t             dataStart()   const { return dataStart_; }
+    uint64_t             bytesWritten()const { return bytesWritten_; }
+    bool                 isOpen()      const { return open_; }
+
+private:
+    std::ofstream        out_;
+    std::string          path_;
+    std::string          error_;
+    Nanof32BraidHeader   header_{};
+    Nanof32Census        census_{};
+    uint64_t             dataStart_    = 0;
+    uint64_t             bytesWritten_ = 0;
+    bool                 open_         = false;
+    bool                 finalized_    = false;
+};
 
 } // namespace Deep2
