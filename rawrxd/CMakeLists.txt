@@ -9552,6 +9552,29 @@ set_target_properties(nanof32_braid_writer PROPERTIES
 )
 message(STATUS "[Deep2] Nanof32 braid writer: nanof32_braid_writer")
 
+# RAWRXD_DEAD_GATE_REVIVAL_001
+#
+# Eighteen registered tests -- test_llama_native, k2_runtime_validation,
+# test_q4k_decoder, the fourteen k2_* semantic-generation gates,
+# git_safety_authority_cert and refactor_chain_cert -- declare
+#   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+# and nothing in this file ever created that directory. ctest could not chdir,
+# so all eighteen reported:
+#   Failed to change working directory to ".../build/tests": No such file or
+#   directory
+#   ***Not Run
+#
+# They have therefore never executed and have never gated anything, while
+# their presence made `ctest -N` report 36 tests when only 18 existed. A gate
+# that cannot run is worse than an absent one, because it inflates apparent
+# coverage.
+#
+# The directory is created unconditionally at configure time so the declared
+# WORKING_DIRECTORY is valid. That converts "Not Run" into a real pass or a
+# real failure, which is the point: a gate whose binary cannot be built must
+# then FAIL loudly instead of being skipped by a missing folder.
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 # RAWRXD_NQBRAID_CTEST_001 -- ctest coverage for the NanoF32Braid tranche.
 # Registers the real 4-architecture x 3-encoding matrix, the 128-token depth
 # axis, and the tokenizer corruption matrix. See cmake/nqb_ctest.cmake.
@@ -9582,6 +9605,104 @@ set_target_properties(gguf_to_nqb_converter PROPERTIES
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
 message(STATUS "[Deep2] GGUF to NQB converter: gguf_to_nqb_converter")
+
+# ----------------------------------------------------------------------------
+# NQB certification instruments — RAWRXD_NQB_STREAMING_INSTRUMENTS_001
+#
+# These exist because the previous instruments could not run. The two probes they
+# supersede (nqb_reopen_parity_probe, nqb_weight_parity_probe) reach the
+# container through readAllTensors(), which materialises the whole model: 12.86 GB
+# of payload plus 6.43 GB of bfloat16 for the real artifact. They therefore never
+# completed against it, and every NQB "reopen" and "weight parity" result in this
+# repository's history came from somewhere else.
+#
+# What follows runs against the real 12.85 GB artifact on a normal machine:
+#
+#   nqb_production_reopen      RAWRXD_NQB_PRODUCTION_REOPEN_001
+#                              bounded 8 MiB streaming walk, full reverse footer
+#                              chain, per-tensor digests, whole-file SHA-256,
+#                              4 attributed negative controls, phase-2 reader pass
+#   nqb_source_f32_manifest    RAWRXD_NQB_SOURCE_F32_PARITY_001, source side
+#                              GGUF ONLY -- never opens the container
+#   nqb_manifest_compare       RAWRXD_NQB_SOURCE_F32_PARITY_001, comparator
+#                              MANIFESTS ONLY -- opens neither model
+#   nqb_hash_chunk_invariance  RAWRXD_NQB_HASH_CHUNK_PARTITION_INVARIANCE_001
+#   nqb_seek_tensor_verify     RAWRXD_NQB_SEEK_TENSOR_001
+#
+# The three-way split is the point. A comparator that could open the container
+# could recompute a hash from the container and agree with itself.
+#
+# RAWRXD_NQB_INSTRUMENTS_SELF_CONTAINED_001
+#
+# These targets deliberately do NOT link InferenceEngine.
+#
+# CORRECTION. The first version of this comment said InferenceEngine "has a build
+# failure: CL.exe exited with code -1". That was WRONG, and it is recorded here
+# because the wrong reason is more dangerous than no reason: it would have been
+# read as a source defect by every future session.
+#
+# What actually happened, measured:
+#     first attempt   -j6   ->  FreePhysGB=0.8   CL.exe exited with code -1
+#     retry           -j1   ->  BUILD_EXIT=0    InferenceEngine.lib produced
+#
+# InferenceEngine builds. The failure was RAM exhaustion: several of its
+# translation units produce 10 MB objects, and six concurrent cl.exe instances
+# drove a 63 GB machine to 800 MB free, at which point the compiler died without
+# emitting a diagnostic. A resource failure with no error line is
+# indistinguishable from a broken source file if you only read the exit code.
+#
+# (This also makes the AGENTS.md ledger entry claiming k_quant_gemv_avx512.h:264
+# blocks InferenceEngine stale: line 264 is
+#     const __m512i m0F = _mm512_set1_epi32(0x0F);
+# which is a correct __m512i-to-__m512i initialisation, and the target links.)
+#
+# The instruments stay self-contained for two reasons that do NOT depend on the
+# engine being unhealthy:
+#
+#   1. VALIDITY. A certification instrument should not inherit behaviour from a
+#      20k-line library it does not control. Each of these compiles the few deep2
+#      translation units that establish its claim and nothing else, so its verdict
+#      cannot be moved by an unrelated engine change.
+#   2. FOOTPRINT. They build in seconds at low memory, so they remain buildable on
+#      a constrained machine -- which is exactly when a gate is most needed.
+#
+# Source sets, chosen so no two targets share a translation unit:
+#     nqb_manifest_compare        header-only
+#     nqb_hash_chunk_invariance   header-only
+#     nqb_seek_tensor_verify      + Nanof32BraidStreamer.cpp
+#     nqb_production_reopen       + Nanof32BraidStreamer.cpp + Nanof32BraidWriter.cpp
+#     nqb_source_f32_manifest     + GGUFLoader.cpp + QuantKernelRegistry.cpp
+# ----------------------------------------------------------------------------
+set(RAWRXD_NQB_STREAMER_SRC src/deep2/Nanof32BraidStreamer.cpp)
+set(RAWRXD_NQB_WRITER_SRC   src/deep2/Nanof32BraidWriter.cpp)
+
+function(rawrxd_add_nqb_instrument _name)
+    add_executable(${_name} tools/${_name}.cpp ${ARGN})
+    if(MSVC)
+        target_compile_options(${_name} PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(${_name} PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(${_name} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME ${_name}
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] NQB certification instrument: ${_name}")
+endfunction()
+
+rawrxd_add_nqb_instrument(nqb_manifest_compare)
+rawrxd_add_nqb_instrument(nqb_hash_chunk_invariance)
+rawrxd_add_nqb_instrument(nqb_seek_tensor_verify       ${RAWRXD_NQB_STREAMER_SRC})
+rawrxd_add_nqb_instrument(nqb_production_reopen        ${RAWRXD_NQB_STREAMER_SRC} ${RAWRXD_NQB_WRITER_SRC})
+rawrxd_add_nqb_instrument(nqb_source_f32_manifest
+    src/deep2/GGUFLoader.cpp
+    src/deep2/QuantKernelRegistry.cpp
+)
 
 # nqb_reopen_parity_probe — verify real .nqb reopens with correct tensor count and finite values
 # RAWRXD_NQB_REAL_REOPEN_001
@@ -9678,6 +9799,33 @@ set_target_properties(nqb_first_bad_state PROPERTIES
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
 message(STATUS "[Deep2] NQB first-bad-state locator: nqb_first_bad_state")
+
+# q_accum_parity_probe - RAWRXD_NQBRAID_RESIDUAL_LM_HEAD_ACCUMULATION_001
+# Calls the quantised GEMV and the F32 GEMV on the SAME weights and the SAME
+# input vector, and compares each against a double-precision reference computed
+# in the probe. No engine run is involved, so routing/KV/binding cannot
+# contaminate the result. Isolates which of the two tied-LM-head arithmetic
+# paths carries the 0.76% residual.
+# Usage: q_accum_parity_probe <model.gguf> <tensor.name> <rows>
+add_executable(q_accum_parity_probe
+    tools/q_accum_parity_probe.cpp
+)
+target_link_libraries(q_accum_parity_probe PRIVATE InferenceEngine)
+if(MSVC)
+    target_compile_options(q_accum_parity_probe PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+endif()
+target_include_directories(q_accum_parity_probe PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src/win32app
+    ${CMAKE_SOURCE_DIR}/src/tokenizer
+    ${CMAKE_SOURCE_DIR}/include
+)
+set_target_properties(q_accum_parity_probe PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME q_accum_parity_probe
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+message(STATUS "[Deep2] Q2_K/F32 GEMV accumulation parity: q_accum_parity_probe")
 # nqb_weight_parity_probe - RAWRXD_NQB_WEIGHT_PARITY_001
 # Compares the SAME tensor as read by the GGUF path (F32, via the production
 # dequant kernel) and by the NQB path (BF16, via the streamer), so a downstream
@@ -13223,6 +13371,58 @@ src/core/hexmag_oracle_binder.cpp
         MSVC_RUNTIME_LIBRARY "MultiThreaded"
     )
     message(STATUS "[Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert")
+
+    # ---------------------------------------------------------------------
+    # HEXMAG_ABI_001 -- the calling-conformance gate for the MASM exports.
+    #
+    # This probe previously existed as source with no target at all, so it could
+    # not be built and could never run. It is the gate that found the RSI/RDI
+    # nonvolatile violation the Release build had been hiding, which makes its
+    # absence from the graph the same class of problem: a certification that
+    # cannot execute.
+    # ---------------------------------------------------------------------
+    add_library(rawrxd_hexmag_abi_probe OBJECT
+        src/asm/RawrXD_HexMag_AbiProbe.asm
+    )
+    set_source_files_properties(src/asm/RawrXD_HexMag_AbiProbe.asm PROPERTIES LANGUAGE ASM_MASM)
+
+    add_executable(hexmag_abi_probe
+        tools/hexmag_abi_probe.cpp
+        src/asm/RawrXD_HexMag_Swarm.asm
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
+        $<TARGET_OBJECTS:rawrxd_hexmag_abi_probe>
+    )
+    set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm PROPERTIES LANGUAGE ASM_MASM)
+    target_include_directories(hexmag_abi_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(hexmag_abi_probe PRIVATE RAWR_HAS_MASM=1)
+    if(MSVC)
+        target_compile_options(hexmag_abi_probe PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(hexmag_abi_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] HexMag ABI probe: hexmag_abi_probe")
+
+    # ---------------------------------------------------------------------
+    # Register all four gates with ctest.
+    #
+    # They were built but never executed: no add_test existed for any of them,
+    # so a build could go green while every assertion went unrun. A gate that is
+    # never invoked certifies nothing.
+    # ---------------------------------------------------------------------
+    add_test(NAME hexmag_abi_probe
+             COMMAND hexmag_abi_probe)
+    add_test(NAME hexmag_repeat_tuner_cert
+             COMMAND hexmag_repeat_tuner_cert)
+    add_test(NAME hexmag_runtime_controller_cert
+             COMMAND hexmag_runtime_controller_cert)
+    add_test(NAME hexmag_ide_e2e_cert
+             COMMAND hexmag_ide_e2e_cert)
+    message(STATUS "[Agentic] HexMag gates registered with ctest: 4")
 endif()
 
 # layer_harness +Ã¯Â¿Â½-Ã¯Â¿Â½+Ã¯Â¿Â½-Ã¯Â¿Â½+Ã¯Â¿Â½-Ã¯Â¿Â½ Single-layer Qwen3.5 correctness harness
