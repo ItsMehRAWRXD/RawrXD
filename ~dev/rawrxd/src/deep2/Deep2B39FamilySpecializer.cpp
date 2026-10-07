@@ -1,4 +1,4 @@
-ï»¿#include "Deep2B39FamilySpecializer.hpp"
+¿#include "Deep2B39FamilySpecializer.hpp"
 
 namespace Deep2 {
 

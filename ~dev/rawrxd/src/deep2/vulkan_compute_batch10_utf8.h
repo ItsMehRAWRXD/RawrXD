@@ -1,4 +1,4 @@
-﻿#pragma once
+�#pragma once
 // ============================================================================
 // vulkan_compute.h ΓÇö Batch 9 real Vulkan device/runtime surface
 // No synthetic success returns. Unsupported operations fail closed.

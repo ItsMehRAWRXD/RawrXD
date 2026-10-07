@@ -1,4 +1,4 @@
-ï»¿#include "settings.h"
+¿#include "settings.h"
 #include "gui.h"
 #include <filesystem>
 #include <fstream>

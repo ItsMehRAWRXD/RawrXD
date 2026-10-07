@@ -146,7 +146,9 @@ void Win32IDE::handleFileCommand(int commandId) {
             
         case IDM_FILE_EXIT:
             if (!m_fileModified || promptSaveChanges()) {
-                PostQuitMessage(0);
+                // Route through normal Win32 teardown so WM_DESTROY/onDestroy
+                // and worker shutdown cannot be bypassed.
+                PostMessage(m_hwndMain, WM_CLOSE, 0, 0);
             }
             break;
             
@@ -199,11 +201,11 @@ void Win32IDE::handleEditCommand(int commandId) {
             break;
             
         case IDM_EDIT_FIND:
-            MessageBoxA(m_hwndMain, "Find dialog - Feature available", "Find", MB_OK);
+            showFindDialog();
             break;
             
         case IDM_EDIT_REPLACE:
-            MessageBoxA(m_hwndMain, "Replace dialog - Feature available", "Replace", MB_OK);
+            showReplaceDialog();
             break;
             
         default:

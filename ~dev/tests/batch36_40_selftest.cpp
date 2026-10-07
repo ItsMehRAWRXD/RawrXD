@@ -1,4 +1,4 @@
-ï»¿#include "rawrxd/src/deep2/Deep2B36WaveDot.hpp"
+¿#include "rawrxd/src/deep2/Deep2B36WaveDot.hpp"
 #include "rawrxd/src/deep2/Deep2B37RegisterTune.hpp"
 #include "rawrxd/src/deep2/Deep2B38CoopGemv.hpp"
 #include "rawrxd/src/deep2/Deep2B39FamilySpecializer.hpp"

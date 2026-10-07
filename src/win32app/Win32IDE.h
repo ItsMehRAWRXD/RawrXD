@@ -735,8 +735,8 @@ private:
     
     // AI Inference State
     InferenceConfig m_inferenceConfig;
-    bool m_inferenceRunning;
-    bool m_inferenceStopRequested;
+    std::atomic<bool> m_inferenceRunning;
+    std::atomic<bool> m_inferenceStopRequested;
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
     std::thread m_inferenceThread;

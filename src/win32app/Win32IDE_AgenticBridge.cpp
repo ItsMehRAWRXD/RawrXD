@@ -169,8 +169,15 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
 }
 
 // Deprecated Stubs
-bool AgenticBridge::SpawnPowerShellProcess(const std::string& scriptPath, const std::string& arguments) { return true; }
-bool AgenticBridge::ReadProcessOutput(std::string& output, DWORD timeoutMs) { return true; }
+bool AgenticBridge::SpawnPowerShellProcess(const std::string& scriptPath, const std::string& arguments) {
+    LOG_WARNING("SpawnPowerShellProcess is unsupported in Native Mode");
+    return false;
+}
+bool AgenticBridge::ReadProcessOutput(std::string& output, DWORD timeoutMs) {
+    output.clear();
+    LOG_WARNING("ReadProcessOutput is unsupported in Native Mode");
+    return false;
+}
 void AgenticBridge::KillPowerShellProcess() {}
 std::string AgenticBridge::ResolveFrameworkPath() { return ""; }
 std::string AgenticBridge::ResolveToolsModulePath() { return ""; }

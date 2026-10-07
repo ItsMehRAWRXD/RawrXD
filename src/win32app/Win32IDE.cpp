@@ -1,11 +1,3 @@
-Win32IDE::~Win32IDE() {
-    if (m_nativeEngine) {
-        delete static_cast<CPUInference::CPUInferenceEngine*>(m_nativeEngine);
-        m_nativeEngine = nullptr;
-    }
-    // Resource cleanup
-    Win32TerminalManager::cleanup();
-}
 #include "Win32IDE.h"
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
@@ -29,6 +21,22 @@ Win32IDE::~Win32IDE() {
 
 #pragma comment(lib, "comdlg32.lib")
 #pragma comment(lib, "comctl32.lib")
+
+Win32IDE::~Win32IDE() {
+    // No worker is allowed to outlive the IDE object or the native engine it uses.
+    shutdownInference();
+    if (m_autonomyManager) {
+        m_autonomyManager->stop();
+    }
+    if (m_agenticBridge) {
+        m_agenticBridge->StopAgentLoop();
+    }
+    if (m_nativeEngine) {
+        delete static_cast<CPUInference::CPUInferenceEngine*>(m_nativeEngine);
+        m_nativeEngine = nullptr;
+    }
+    Win32TerminalManager::cleanup();
+}
 
 #define IDC_EDITOR 1001
 #define IDC_TERMINAL 1002
@@ -5242,20 +5250,23 @@ bool Win32IDE::initializeInference()
 
 void Win32IDE::shutdownInference()
 {
-    std::lock_guard<std::mutex> lock(m_inferenceMutex);
-    
-    if (m_inferenceRunning) {
-        m_inferenceStopRequested = true;
-        if (m_inferenceThread.joinable()) {
-            m_inferenceThread.join();
-        }
+    // Signal first, then join without holding m_inferenceMutex. Holding the
+    // mutex across join can deadlock a worker/callback that needs IDE state.
+    m_inferenceStopRequested.store(true);
+
+    if (m_inferenceThread.joinable() &&
+        m_inferenceThread.get_id() != std::this_thread::get_id()) {
+        m_inferenceThread.join();
     }
-    
-    m_inferenceRunning = false;
-    m_inferenceStopRequested = false;
-    m_currentInferencePrompt.clear();
-    m_currentInferenceResponse.clear();
-    
+
+    {
+        std::lock_guard<std::mutex> lock(m_inferenceMutex);
+        m_inferenceRunning.store(false);
+        m_currentInferencePrompt.clear();
+        m_currentInferenceResponse.clear();
+        m_inferenceCallback = {};
+    }
+
     appendToOutput("Inference shutdown complete", "Output", OutputSeverity::Info);
 }
 
@@ -5362,48 +5373,55 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
 
 void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback)
 {
-    std::lock_guard<std::mutex> lock(m_inferenceMutex);
-
-    if (m_inferenceRunning) {
+    if (m_inferenceRunning.exchange(true)) {
         if (callback) callback("Inference already in progress.", true);
         return;
     }
-    
-    m_inferenceRunning = true;
-    m_inferenceStopRequested = false;
-    m_currentInferencePrompt = prompt;
-    m_inferenceCallback = callback;
-    
+
+    // Reap a completed worker from the previous request. Never detach workers
+    // that capture this.
+    if (m_inferenceThread.joinable()) {
+        m_inferenceThread.join();
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(m_inferenceMutex);
+        m_inferenceStopRequested.store(false);
+        m_currentInferencePrompt = prompt;
+        m_inferenceCallback = callback;
+    }
+
     // Launch dedicated inference thread using Native Agentic Bridge
-    m_inferenceThread = std::thread([this, prompt]() {
+    m_inferenceThread = std::thread([this, prompt, callback]() {
         if (!m_agenticBridge) {
-             if (m_inferenceCallback) m_inferenceCallback("Error: Agentic Bridge not initialized.", true);
-             m_inferenceRunning = false;
+             if (callback && !m_inferenceStopRequested.load()) {
+                 callback("Error: Agentic Bridge not initialized.", true);
+             }
+             m_inferenceRunning.store(false);
              return;
         }
 
         // Set callback to route NativeAgent stream to the UI
-        m_agenticBridge->SetOutputCallback([this](const std::string& type, const std::string& msg) {
-             if (m_inferenceStopRequested) return;
+        m_agenticBridge->SetOutputCallback([this, callback](const std::string& type, const std::string& msg) {
+             if (m_inferenceStopRequested.load()) return;
              // "stream" type is what we send to chat UI
-             if (m_inferenceCallback) m_inferenceCallback(msg, false);
+             if (callback) callback(msg, false);
         });
 
         // Execute via parity bridge (supports /edit, /think, etc.)
         m_agenticBridge->ExecuteAgentCommand(prompt);
 
-        m_inferenceRunning = false;
-        if (m_inferenceCallback) {
-            m_inferenceCallback("", true); // Finalize
+        const bool cancelled = m_inferenceStopRequested.load();
+        m_inferenceRunning.store(false);
+        if (callback && !cancelled) {
+            callback("", true); // Finalize
         }
     });
-    
-    m_inferenceThread.detach();
 }
 
 void Win32IDE::stopInference()
 {
-    m_inferenceStopRequested = true;
+    m_inferenceStopRequested.store(true);
 }
 
 void Win32IDE::setInferenceConfig(const InferenceConfig& config)
