@@ -209,17 +209,58 @@ enum class Primitive : uint16_t {
     LMHeadFwd
 };
 
+// Typed operand schema (eliminates raw-ID ambiguity)
+enum class OperandDomain : uint8_t {
+    None = 0,
+    RomTensor,        // Physical GGUF tensor (weights, embeddings, norms)
+    Activation,       // Intermediate SSA value (one definition, multiple uses)
+    RuntimeScalar     // Runtime-supplied scalar (token ID, sequence length, etc.)
+};
+
+struct OperandRef {
+    OperandDomain domain = OperandDomain::None;
+    uint32_t id = 0;
+};
+
 struct OperationIR {
-    uint32_t opId;
-    OpCode opcode;
-    Primitive requiredPrimitive;
-    std::vector<uint32_t> inputTensorIds;
-    std::vector<uint32_t> weightTensorIds;
-    uint32_t outputTensorId;
-    uint32_t blockIndex;     // UINT32_MAX = global
-    
-    OperationIR() : opId(0), opcode(OpCode::Invalid), requiredPrimitive(Primitive::None),
-                    outputTensorId(0), blockIndex(UINT32_MAX) {}
+    uint32_t opId = 0;
+    OpCode opcode = OpCode::Invalid;
+    Primitive requiredPrimitive = Primitive::None;
+
+    // Flattened arrays for MSVC constexpr aggregate initialization compatibility
+    OperandRef input0{};
+    OperandRef input1{};
+    OperandRef input2{};
+    OperandRef input3{};
+    OperandRef input4{};
+    OperandRef input5{};
+    OperandRef input6{};
+    OperandRef input7{};
+    uint32_t inputCount = 0;
+
+    OperandRef weight0{};
+    OperandRef weight1{};
+    OperandRef weight2{};
+    OperandRef weight3{};
+    OperandRef weight4{};
+    OperandRef weight5{};
+    OperandRef weight6{};
+    OperandRef weight7{};
+    uint32_t weightCount = 0;
+
+    OperandRef output{};
+
+    uint32_t blockIndex = UINT32_MAX;
+
+    // Helper accessors for compatibility
+    constexpr const OperandRef* inputs() const {
+        static const OperandRef* arr[8] = {&input0, &input1, &input2, &input3, &input4, &input5, &input6, &input7};
+        return arr[0];
+    }
+    constexpr const OperandRef* weights() const {
+        static const OperandRef* arr[8] = {&weight0, &weight1, &weight2, &weight3, &weight4, &weight5, &weight6, &weight7};
+        return arr[0];
+    }
 };
 
 //=============================================================================

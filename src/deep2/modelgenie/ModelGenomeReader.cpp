@@ -447,195 +447,268 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
     }
     
     //=========================================================================
-    // Build Execution IR from execution model
+    // Build Execution IR from execution model (TYPED SSA)
     //=========================================================================
-    // Embedding
+    // Helper lambdas for typed operands
+    uint32_t nextActivationId = 0;
+    auto Rom = [](uint32_t id) -> OperandRef {
+        return OperandRef{OperandDomain::RomTensor, id};
+    };
+    auto Act = [](uint32_t id) -> OperandRef {
+        return OperandRef{OperandDomain::Activation, id};
+    };
+    auto Scalar = [](uint32_t id) -> OperandRef {
+        return OperandRef{OperandDomain::RuntimeScalar, id};
+    };
+    auto NewActivation = [&]() -> OperandRef {
+        return Act(nextActivationId++);
+    };
+
+    // Embedding: token_id (RuntimeScalar) -> token_embd.weight (RomTensor) -> activation
     OperationIR embedOp;
     embedOp.opId = 0;
     embedOp.opcode = OpCode::Linear;
     embedOp.requiredPrimitive = Primitive::LinearFwd;
-    embedOp.inputTensorIds.push_back(0); // placeholder for input
-    embedOp.weightTensorIds.push_back(nameToTensorId["token_embd.weight"]);
-    embedOp.outputTensorId = 1000; // virtual
+    embedOp.inputs = { Scalar(0) };  // token ID
+    embedOp.inputCount = 1;
+    embedOp.weights = { Rom(nameToTensorId.at("token_embd.weight")) };
+    embedOp.weightCount = 1;
+    embedOp.output = NewActivation();  // Activation 0 = embedding output
     embedOp.blockIndex = UINT32_MAX;
     genome.executionOps.push_back(embedOp);
-    
-    // Per-block operations
+
+    // Chain through blocks
+    OperandRef blockInput = embedOp.output;
+
     uint32_t opId = 1;
     for (uint32_t b = 0; b < genome.blockCount; ++b) {
         auto& block = genome.blocks[b];
-        
+
+        // Validate required operands for this block (fail-closed)
+        if (!block.attnNorm ||
+            !block.attnQ ||
+            !block.attnKvANorm ||
+            !block.attnKvAMqa ||
+            !block.attnKvB ||
+            !block.attnOutput ||
+            !block.ffnNorm) {
+            std::cerr << "ExecutionIR: incomplete block " << b << " (missing required tensors)\n";
+            return false;
+        }
+
         // RMSNorm (attn_norm)
         OperationIR norm1;
         norm1.opId = opId++;
         norm1.opcode = OpCode::RmsNorm;
         norm1.requiredPrimitive = Primitive::RmsNormFwd;
-        norm1.inputTensorIds.push_back(0); // residual input
-        norm1.weightTensorIds.push_back(block.attnNorm.value_or(0));
-        norm1.outputTensorId = 2000 + b * 100;
+        norm1.inputs = { blockInput };
+        norm1.inputCount = 1;
+        norm1.weights = { Rom(block.attnNorm.value()) };
+        norm1.weightCount = 1;
+        norm1.output = NewActivation();
         norm1.blockIndex = b;
         genome.executionOps.push_back(norm1);
-        
-        // MLA Attention
+
+        // MLA Attention decompress - THREE ROM operands (kVANorm, kVAMqa, kVB)
         OperationIR mla;
         mla.opId = opId++;
         mla.opcode = OpCode::MlaDecompress;
         mla.requiredPrimitive = Primitive::MlaDecompressFwd;
-        mla.inputTensorIds.push_back(norm1.outputTensorId);
-        if (block.attnKvAMqa) mla.weightTensorIds.push_back(block.attnKvAMqa.value());
-        if (block.attnKvB) mla.weightTensorIds.push_back(block.attnKvB.value());
-        mla.outputTensorId = 3000 + b * 100;
+        mla.inputs = { norm1.output };
+        mla.inputCount = 1;
+        mla.weights = {
+            Rom(block.attnKvANorm.value()),
+            Rom(block.attnKvAMqa.value()),
+            Rom(block.attnKvB.value())
+        };
+        mla.weightCount = 3;
+        mla.output = NewActivation();
         mla.blockIndex = b;
         genome.executionOps.push_back(mla);
-        
-        // Attention Q projection
+
+        // Attention Q projection - input from norm1.output (not raw 0)
         OperationIR qProj;
         qProj.opId = opId++;
         qProj.opcode = OpCode::Linear;
         qProj.requiredPrimitive = Primitive::LinearFwd;
-        qProj.inputTensorIds.push_back(0);
-        if (block.attnQ) qProj.weightTensorIds.push_back(block.attnQ.value());
-        qProj.outputTensorId = 4000 + b * 100;
+        qProj.inputs = { norm1.output };
+        qProj.inputCount = 1;
+        qProj.weights = { Rom(block.attnQ.value()) };
+        qProj.weightCount = 1;
+        qProj.output = NewActivation();
         qProj.blockIndex = b;
         genome.executionOps.push_back(qProj);
-        
+
         // Attention
         OperationIR attn;
         attn.opId = opId++;
         attn.opcode = OpCode::Attention;
         attn.requiredPrimitive = Primitive::AttentionFwd;
-        attn.inputTensorIds = {qProj.outputTensorId, mla.outputTensorId};
-        attn.outputTensorId = 5000 + b * 100;
+        attn.inputs = { qProj.output, mla.output };
+        attn.inputCount = 2;
+        attn.output = NewActivation();
         attn.blockIndex = b;
         genome.executionOps.push_back(attn);
-        
+
         // Output projection
         OperationIR outProj;
         outProj.opId = opId++;
         outProj.opcode = OpCode::Linear;
         outProj.requiredPrimitive = Primitive::LinearFwd;
-        outProj.inputTensorIds.push_back(attn.outputTensorId);
-        if (block.attnOutput) outProj.weightTensorIds.push_back(block.attnOutput.value());
-        outProj.outputTensorId = 6000 + b * 100;
+        outProj.inputs = { attn.output };
+        outProj.inputCount = 1;
+        outProj.weights = { Rom(block.attnOutput.value()) };
+        outProj.weightCount = 1;
+        outProj.output = NewActivation();
         outProj.blockIndex = b;
         genome.executionOps.push_back(outProj);
-        
-        // Residual add
+
+        // Residual add 1
         OperationIR res1;
         res1.opId = opId++;
         res1.opcode = OpCode::ResidualAdd;
         res1.requiredPrimitive = Primitive::ResidualAddFwd;
-        res1.inputTensorIds = {0, outProj.outputTensorId};
-        res1.outputTensorId = 7000 + b * 100;
+        res1.inputs = { blockInput, outProj.output };
+        res1.inputCount = 2;
+        res1.output = NewActivation();
         res1.blockIndex = b;
         genome.executionOps.push_back(res1);
-        
+
         // FFN RMSNorm
         OperationIR norm2;
         norm2.opId = opId++;
         norm2.opcode = OpCode::RmsNorm;
         norm2.requiredPrimitive = Primitive::RmsNormFwd;
-        norm2.inputTensorIds.push_back(res1.outputTensorId);
-        norm2.weightTensorIds.push_back(block.ffnNorm.value_or(0));
-        norm2.outputTensorId = 8000 + b * 100;
+        norm2.inputs = { res1.output };
+        norm2.inputCount = 1;
+        norm2.weights = { Rom(block.ffnNorm.value()) };
+        norm2.weightCount = 1;
+        norm2.output = NewActivation();
         norm2.blockIndex = b;
         genome.executionOps.push_back(norm2);
-        
+
         if (b >= genome.leadingDenseBlocks) {
             // MoE block
             OperationIR router;
             router.opId = opId++;
             router.opcode = OpCode::Router;
             router.requiredPrimitive = Primitive::RouterFwd;
-            router.inputTensorIds.push_back(norm2.outputTensorId);
-            router.weightTensorIds.push_back(block.ffnGateInp.value_or(0));
-            router.outputTensorId = 9000 + b * 100;
+            router.inputs = { norm2.output };
+            router.inputCount = 1;
+            router.weights = { Rom(block.ffnGateInp.value()) };
+            router.weightCount = 1;
+            router.output = NewActivation();
             router.blockIndex = b;
             genome.executionOps.push_back(router);
-            
+
             OperationIR topk;
             topk.opId = opId++;
             topk.opcode = OpCode::TopK;
             topk.requiredPrimitive = Primitive::TopKFwd;
-            topk.inputTensorIds.push_back(router.outputTensorId);
-            topk.outputTensorId = 10000 + b * 100;
+            topk.inputs = { router.output };
+            topk.inputCount = 1;
+            topk.output = NewActivation();
             topk.blockIndex = b;
             genome.executionOps.push_back(topk);
-            
+
             OperationIR moe;
             moe.opId = opId++;
             moe.opcode = OpCode::MoEExecute;
             moe.requiredPrimitive = Primitive::MoEExecuteFwd;
-            moe.inputTensorIds = {norm2.outputTensorId, topk.outputTensorId};
-            if (block.ffnGateExps) moe.weightTensorIds.push_back(block.ffnGateExps.value());
-            if (block.ffnDownExps) moe.weightTensorIds.push_back(block.ffnDownExps.value());
-            if (block.ffnUpExps) moe.weightTensorIds.push_back(block.ffnUpExps.value());
-            moe.outputTensorId = 11000 + b * 100;
+            moe.inputs = { norm2.output, topk.output };
+            moe.inputCount = 2;
+            // Routed experts (single batched tensors)
+            moe.weights = {
+                Rom(block.ffnGateExps.value()),
+                Rom(block.ffnDownExps.value()),
+                Rom(block.ffnUpExps.value())
+            };
+            moe.weightCount = 3;
+            moe.output = NewActivation();
             moe.blockIndex = b;
             genome.executionOps.push_back(moe);
         } else {
-            // Dense FFN
+            // Dense block 0: gated FFN (SiLU + Linear)
+            // gate = Linear(norm2)
             OperationIR gate;
             gate.opId = opId++;
             gate.opcode = OpCode::Linear;
             gate.requiredPrimitive = Primitive::LinearFwd;
-            gate.inputTensorIds.push_back(norm2.outputTensorId);
-            if (block.ffnGate) gate.weightTensorIds.push_back(block.ffnGate.value());
-            gate.outputTensorId = 9000 + b * 100;
+            gate.inputs = { norm2.output };
+            gate.inputCount = 1;
+            gate.weights = { Rom(block.ffnGate.value()) };
+            gate.weightCount = 1;
+            gate.output = NewActivation();
             gate.blockIndex = b;
             genome.executionOps.push_back(gate);
-            
+
+            // up = Linear(norm2)
             OperationIR up;
             up.opId = opId++;
             up.opcode = OpCode::Linear;
             up.requiredPrimitive = Primitive::LinearFwd;
-            up.inputTensorIds.push_back(norm2.outputTensorId);
-            if (block.ffnUp) up.weightTensorIds.push_back(block.ffnUp.value());
-            up.outputTensorId = 10000 + b * 100;
+            up.inputs = { norm2.output };
+            up.inputCount = 1;
+            up.weights = { Rom(block.ffnUp.value()) };
+            up.weightCount = 1;
+            up.output = NewActivation();
             up.blockIndex = b;
             genome.executionOps.push_back(up);
-            
+
+            // down = Linear(gate * SiLU(gate), upWeight) - NOTE: this is the fused gated-FFN pattern
+            // For typed IR, we represent as two inputs to Linear (gate activation + up activation)
+            // The executor must recognize this as gated-FFN pattern
             OperationIR down;
             down.opId = opId++;
             down.opcode = OpCode::Linear;
             down.requiredPrimitive = Primitive::LinearFwd;
-            down.inputTensorIds = {gate.outputTensorId, up.outputTensorId};
-            if (block.ffnDown) down.weightTensorIds.push_back(block.ffnDown.value());
-            down.outputTensorId = 11000 + b * 100;
+            down.inputs = { gate.output, up.output };  // Two activations = gated FFN pattern
+            down.inputCount = 2;
+            down.weights = { Rom(block.ffnDown.value()) };
+            down.weightCount = 1;
+            down.output = NewActivation();
             down.blockIndex = b;
             genome.executionOps.push_back(down);
         }
-        
-        // Residual add
+
+        // Residual add 2 - chains to next block
         OperationIR res2;
         res2.opId = opId++;
         res2.opcode = OpCode::ResidualAdd;
         res2.requiredPrimitive = Primitive::ResidualAddFwd;
-        res2.inputTensorIds = {res1.outputTensorId, genome.executionOps.back().outputTensorId};
-        res2.outputTensorId = 12000 + b * 100;
+        res2.inputs = { res1.output, genome.executionOps.back().output };
+        res2.inputCount = 2;
+        res2.output = NewActivation();
         res2.blockIndex = b;
         genome.executionOps.push_back(res2);
+
+        // Chain: this block's output becomes next block's input
+        blockInput = res2.output;
     }
-    
+
     // Final RMSNorm
     OperationIR finalNorm;
     finalNorm.opId = opId++;
     finalNorm.opcode = OpCode::RmsNorm;
     finalNorm.requiredPrimitive = Primitive::RmsNormFwd;
-    finalNorm.inputTensorIds.push_back(genome.executionOps.empty() ? 0 : genome.executionOps.back().outputTensorId);
-    finalNorm.weightTensorIds.push_back(nameToTensorId["output_norm.weight"]);
-    finalNorm.outputTensorId = 13000;
+    finalNorm.inputs = { blockInput };
+    finalNorm.inputCount = 1;
+    finalNorm.weights = { Rom(nameToTensorId.at("output_norm.weight")) };
+    finalNorm.weightCount = 1;
+    finalNorm.output = NewActivation();
     finalNorm.blockIndex = UINT32_MAX;
     genome.executionOps.push_back(finalNorm);
-    
+
     // LM Head
     OperationIR lmHead;
     lmHead.opId = opId++;
     lmHead.opcode = OpCode::LMHead;
     lmHead.requiredPrimitive = Primitive::LMHeadFwd;
-    lmHead.inputTensorIds.push_back(finalNorm.outputTensorId);
-    lmHead.weightTensorIds.push_back(nameToTensorId["output.weight"]);
-    lmHead.outputTensorId = 14000;
+    lmHead.inputs = { finalNorm.output };
+    lmHead.inputCount = 1;
+    lmHead.weights = { Rom(nameToTensorId.at("output.weight")) };
+    lmHead.weightCount = 1;
+    lmHead.output = NewActivation();
     lmHead.blockIndex = UINT32_MAX;
     genome.executionOps.push_back(lmHead);
     

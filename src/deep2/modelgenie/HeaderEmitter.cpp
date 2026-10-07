@@ -6,6 +6,7 @@
 #include "HeaderEmitter.hpp"
 #include <filesystem>
 #include <iomanip>
+#include <iostream>
 
 namespace RawrXD {
 namespace Deep2 {
@@ -79,33 +80,33 @@ std::string HeaderEmitter::FormatTensorRole(TensorRole role) {
 
 std::string HeaderEmitter::FormatOpCode(OpCode opcode) {
     switch (opcode) {
-        case OpCode::RmsNorm: return "OpCode::RmsNorm";
-        case OpCode::Linear: return "OpCode::Linear";
-        case OpCode::MatMul: return "OpCode::MatMul";
-        case OpCode::Attention: return "OpCode::Attention";
-        case OpCode::MlaDecompress: return "OpCode::MlaDecompress";
-        case OpCode::Router: return "OpCode::Router";
-        case OpCode::TopK: return "OpCode::TopK";
-        case OpCode::MoEExecute: return "OpCode::MoEExecute";
-        case OpCode::ResidualAdd: return "OpCode::ResidualAdd";
-        case OpCode::LMHead: return "OpCode::LMHead";
-        default: return "OpCode::Invalid";
+        case OpCode::RmsNorm: return "ModelGenie::OpCode::RmsNorm";
+        case OpCode::Linear: return "ModelGenie::OpCode::Linear";
+        case OpCode::MatMul: return "ModelGenie::OpCode::MatMul";
+        case OpCode::Attention: return "ModelGenie::OpCode::Attention";
+        case OpCode::MlaDecompress: return "ModelGenie::OpCode::MlaDecompress";
+        case OpCode::Router: return "ModelGenie::OpCode::Router";
+        case OpCode::TopK: return "ModelGenie::OpCode::TopK";
+        case OpCode::MoEExecute: return "ModelGenie::OpCode::MoEExecute";
+        case OpCode::ResidualAdd: return "ModelGenie::OpCode::ResidualAdd";
+        case OpCode::LMHead: return "ModelGenie::OpCode::LMHead";
+        default: return "ModelGenie::OpCode::Invalid";
     }
 }
 
 std::string HeaderEmitter::FormatPrimitive(Primitive prim) {
     switch (prim) {
-        case Primitive::RmsNormFwd: return "Primitive::RmsNormFwd";
-        case Primitive::LinearFwd: return "Primitive::LinearFwd";
-        case Primitive::MatMulFwd: return "Primitive::MatMulFwd";
-        case Primitive::AttentionFwd: return "Primitive::AttentionFwd";
-        case Primitive::MlaDecompressFwd: return "Primitive::MlaDecompressFwd";
-        case Primitive::RouterFwd: return "Primitive::RouterFwd";
-        case Primitive::TopKFwd: return "Primitive::TopKFwd";
-        case Primitive::MoEExecuteFwd: return "Primitive::MoEExecuteFwd";
-        case Primitive::ResidualAddFwd: return "Primitive::ResidualAddFwd";
-        case Primitive::LMHeadFwd: return "Primitive::LMHeadFwd";
-        default: return "Primitive::None";
+        case Primitive::RmsNormFwd: return "ModelGenie::Primitive::RmsNormFwd";
+        case Primitive::LinearFwd: return "ModelGenie::Primitive::LinearFwd";
+        case Primitive::MatMulFwd: return "ModelGenie::Primitive::MatMulFwd";
+        case Primitive::AttentionFwd: return "ModelGenie::Primitive::AttentionFwd";
+        case Primitive::MlaDecompressFwd: return "ModelGenie::Primitive::MlaDecompressFwd";
+        case Primitive::RouterFwd: return "ModelGenie::Primitive::RouterFwd";
+        case Primitive::TopKFwd: return "ModelGenie::Primitive::TopKFwd";
+        case Primitive::MoEExecuteFwd: return "ModelGenie::Primitive::MoEExecuteFwd";
+        case Primitive::ResidualAddFwd: return "ModelGenie::Primitive::ResidualAddFwd";
+        case Primitive::LMHeadFwd: return "ModelGenie::Primitive::LMHeadFwd";
+        default: return "ModelGenie::Primitive::None";
     }
 }
 
@@ -449,9 +450,129 @@ bool HeaderEmitter::EmitBlockGenome(const ModelGenome& genome) {
 }
 
 //=============================================================================
+// SSA Validation Gate (pre-emission)
+//=============================================================================
+bool HeaderEmitter::ValidateExecutionIR(const ModelGenome& genome) {
+    // Track activation definitions and uses
+    std::unordered_set<uint32_t> definedActivations;
+    std::unordered_map<uint32_t, uint32_t> activationDefCount;
+    std::unordered_map<uint32_t, std::vector<uint32_t>> activationUses;
+    std::unordered_set<uint32_t> romTensorIds;
+    
+    // Collect all ROM tensor IDs
+    for (const auto& t : genome.tensors) {
+        romTensorIds.insert(t.tensorId);
+    }
+    
+    // RuntimeScalar 0 is the token input
+    const uint32_t kTokenRuntimeScalarId = 0;
+    
+    for (const auto& op : genome.executionOps) {
+        // Check ROM operands
+        for (const auto& w : op.weights) {
+            if (w.domain == OperandDomain::RomTensor) {
+                if (romTensorIds.find(w.id) == romTensorIds.end()) {
+                    std::cerr << "SSA Validation FAIL: Op " << op.opId 
+                              << " references ROM tensor " << w.id << " not in tensor directory\n";
+                    return false;
+                }
+            } else if (w.domain != OperandDomain::None) {
+                std::cerr << "SSA Validation FAIL: Op " << op.opId 
+                          << " weight operand must be RomTensor, got " << (int)w.domain << "\n";
+                return false;
+            }
+        }
+        
+        // Check input operands
+        for (const auto& in : op.inputs) {
+            if (in.domain == OperandDomain::RuntimeScalar) {
+                if (in.id != kTokenRuntimeScalarId) {
+                    std::cerr << "SSA Validation FAIL: Op " << op.opId 
+                              << " uses unknown RuntimeScalar " << in.id << "\n";
+                    return false;
+                }
+            } else if (in.domain == OperandDomain::Activation) {
+                activationUses[in.id].push_back(op.opId);
+                // Activation must have exactly one producer (checked below)
+            } else if (in.domain == OperandDomain::RomTensor) {
+                if (romTensorIds.find(in.id) == romTensorIds.end()) {
+                    std::cerr << "SSA Validation FAIL: Op " << op.opId 
+                              << " input references ROM tensor " << in.id << " not in directory\n";
+                    return false;
+                }
+            } else if (in.domain != OperandDomain::None) {
+                std::cerr << "SSA Validation FAIL: Op " << op.opId 
+                          << " input has invalid domain " << (int)in.domain << "\n";
+                return false;
+            }
+        }
+        
+        // Check output
+        if (op.output.domain != OperandDomain::Activation) {
+            std::cerr << "SSA Validation FAIL: Op " << op.opId 
+                      << " output must be Activation domain\n";
+            return false;
+        }
+        
+        // Unique definition check
+        if (definedActivations.find(op.output.id) != definedActivations.end()) {
+            std::cerr << "SSA Validation FAIL: Activation " << op.output.id 
+                      << " defined multiple times (op " << op.opId << ")\n";
+            return false;
+        }
+        definedActivations.insert(op.output.id);
+        activationDefCount[op.output.id] = op.opId;
+    }
+    
+    // Dominance check: every Activation input must have a producer
+    for (const auto& [actId, users] : activationUses) {
+        if (definedActivations.find(actId) == definedActivations.end()) {
+            std::cerr << "SSA Validation FAIL: Activation " << actId 
+                      << " used by ops " << users[0];
+            for (size_t i = 1; i < users.size(); ++i) {
+                std::cerr << ", " << users[i];
+            }
+            std::cerr << " but never defined\n";
+            return false;
+        }
+    }
+    
+    // Block chain validation: block N+1 must consume block N's final activation
+    // (This is implicitly checked by SSA dominance since blockInput is chained)
+    
+    // Placeholder alias count check: no None-domain operands inside active inputCount/weightCount
+    uint32_t noneAliasCount = 0;
+    for (const auto& op : genome.executionOps) {
+        for (uint32_t i = 0; i < op.inputCount; ++i) {
+            if (op.inputs[i].domain == OperandDomain::None) noneAliasCount++;
+        }
+        for (uint32_t i = 0; i < op.weightCount; ++i) {
+            if (op.weights[i].domain == OperandDomain::None) noneAliasCount++;
+        }
+    }
+    if (noneAliasCount > 0) {
+        std::cerr << "SSA Validation FAIL: " << noneAliasCount 
+                  << " None-domain operands inside active input/weight slots\n";
+        return false;
+    }
+    
+    // Missing required operands check (handled by reader fail-closed)
+    
+    std::cout << "[HeaderEmitter] SSA Validation PASS: " 
+              << genome.executionOps.size() << " ops, " 
+              << definedActivations.size() << " activations\n";
+    return true;
+}
+
+//=============================================================================
 // ExecutionIR.generated.hpp
 //=============================================================================
 bool HeaderEmitter::EmitExecutionIR(const ModelGenome& genome) {
+    if (!ValidateExecutionIR(genome)) {
+        std::cerr << "ExecutionIR validation failed, aborting emission\n";
+        return false;
+    }
+    
     auto out = OpenHeader("ExecutionIR.generated.hpp", "EXECUTION_IR_GENERATED_HPP");
     if (!out.is_open()) return false;
     
@@ -461,40 +582,56 @@ bool HeaderEmitter::EmitExecutionIR(const ModelGenome& genome) {
     out << "namespace Deep2 {\n";
     out << "namespace Generated {\n\n";
     
-    out << "struct OperationIR {\n";
-    Indent(out, 1); out << "uint32_t opId;\n";
-    Indent(out, 1); out << "OpCode opcode;\n";
-    Indent(out, 1); out << "Primitive requiredPrimitive;\n";
-    Indent(out, 1); out << "OperandRef inputs[8];\n";
-    Indent(out, 1); out << "uint32_t inputCount;\n";
-    Indent(out, 1); out << "OperandRef weights[8];\n";
-    Indent(out, 1); out << "uint32_t weightCount;\n";
-    Indent(out, 1); out << "OperandRef output;\n";
-    Indent(out, 1); out << "uint32_t blockIndex;\n";
-    out << "};\n\n";
+    // OperationIR struct is defined in ModelGenome.hpp - do NOT redefine here
+    // Use the types from ModelGenie namespace
     
-    out << "inline constexpr OperationIR kExecutionIRTable[" << genome.executionOps.size() << "] = {\n";
+    out << "inline constexpr ModelGenie::OperationIR kExecutionIRTable[" << genome.executionOps.size() << "] = {\n";
     for (const auto& op : genome.executionOps) {
-        Indent(out, 1); out << "OperationIR(" << op.opId << ", " << FormatOpCode(op.opcode) << ", " << FormatPrimitive(op.requiredPrimitive) << ", ";
+        Indent(out, 1); out << "{\n";
+        // Positional initialization (MSVC doesn't support designated initializers for nested aggregates)
+        Indent(out, 2); out << op.opId << ",\n";  // opId
+        Indent(out, 2); out << FormatOpCode(op.opcode) << ",\n";  // opcode
+        Indent(out, 2); out << FormatPrimitive(op.requiredPrimitive) << ",\n";  // requiredPrimitive
+        
+        // inputs array (positional)
+        Indent(out, 2); out << "{\n";
         for (size_t i = 0; i < 8; ++i) {
-            if (i > 0) out << ", ";
+            Indent(out, 3); 
             if (i < op.inputs.size()) {
                 out << FormatOperandRef(op.inputs[i]);
             } else {
                 out << "{ModelGenie::OperandDomain::None, 0}";
             }
+            if (i < 7) out << ",";
+            out << "\n";
         }
-        out << ", " << (int)op.inputs.size() << ", ";
+        Indent(out, 2); out << "},\n";
+        
+        Indent(out, 2); out << op.inputCount << ",\n";  // inputCount
+        
+        // weights array (positional)
+        Indent(out, 2); out << "{\n";
         for (size_t i = 0; i < 8; ++i) {
-            if (i > 0) out << ", ";
+            Indent(out, 3);
             if (i < op.weights.size()) {
                 out << FormatOperandRef(op.weights[i]);
             } else {
                 out << "{ModelGenie::OperandDomain::None, 0}";
             }
+            if (i < 7) out << ",";
+            out << "\n";
         }
-        out << ", " << (int)op.weights.size() << ", ";
-        out << FormatOperandRef(op.output) << ", " << (int)op.blockIndex << "),\n";
+        Indent(out, 2); out << "},\n";
+        
+        Indent(out, 2); out << op.weightCount << ",\n";  // weightCount
+        
+        // output
+        Indent(out, 2); out << FormatOperandRef(op.output) << ",\n";
+        
+        // blockIndex
+        Indent(out, 2); out << op.blockIndex << "\n";
+        
+        Indent(out, 1); out << "},\n";
     }
     out << "};\n\n";
     
