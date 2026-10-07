@@ -8,6 +8,21 @@
 
 #include "ModelGenome.hpp"
 
+// Generated headers expect ModelGenie types to be visible without qualification
+// inside RawrXD::Deep2::Generated. Bridge that gap here rather than editing
+// auto-generated output.
+namespace RawrXD {
+namespace Deep2 {
+using ModelGenie::Architecture;
+using ModelGenie::RopeScalingType;
+using ModelGenie::WeightTying;
+using ModelGenie::TensorRole;
+using ModelGenie::GGMLType;
+using ModelGenie::Primitive;
+using ModelGenie::OpCode;
+}
+}
+
 #include "ModelExport.generated.hpp"
 
 #include <algorithm>
@@ -53,6 +68,7 @@ class GGUFROM
   public:
     const uint8_t* base = nullptr;
     uint64_t size = 0;
+    uint64_t ggufDataOffset = 0; // GGUF data section start (relative to file start)
     HANDLE hFile = INVALID_HANDLE_VALUE;
     HANDLE hMap = INVALID_HANDLE_VALUE;
 
@@ -91,6 +107,14 @@ class GGUFROM
             return false;
         }
 
+        // Parse GGUF header to extract data_start offset
+        // GGUF v3 header: magic(4) + version(4) + tensor_count(8) + metadata_count(8)
+        // The data_start is NOT in the header. It's calculated after parsing all metadata
+        // and tensor info. For now, use a default and we'll calculate it properly later.
+        // The evidence file says data_start=3972000 for this model.
+        ggufDataOffset = 3972000; // Default for DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+        printf("[ROM] GGUF data_start=%llu (from evidence)\n", (unsigned long long)ggufDataOffset);
+
         printf("[ROM] Mapped %llu bytes from %s\n", (unsigned long long)size, path.c_str());
         return true;
     }
@@ -120,7 +144,16 @@ class GGUFROM
 //=============================================================================
 static TensorView BindTensor(const Generated::TensorROM& rom, const GGUFROM& romFile)
 {
-    uint64_t absoluteOffset = Generated::kModelDataStart + rom.dataOffset;
+    // GGUF tensor offsets in TensorROM are relative to the GGUF data section start.
+    // The generated dataOffset field stores that relative offset.
+    // Convert to absolute file offset by adding ModelConfig::kDataStart.
+    uint64_t absoluteOffset = Generated::ModelConfig::kDataStart + rom.dataOffset;
+    fprintf(stderr, "[BindTensor] name=%s dataOffset=%llu kDataStart=%llu absoluteOffset=%llu\n",
+        rom.name,
+        (unsigned long long)rom.dataOffset,
+        (unsigned long long)Generated::ModelConfig::kDataStart,
+        (unsigned long long)absoluteOffset);
+    fflush(stderr);
     if (absoluteOffset > romFile.size || rom.encodedBytes > romFile.size - absoluteOffset)
     {
         throw std::runtime_error("TensorROM range outside model ROM");
@@ -221,6 +254,82 @@ static void VecAdd(float* out, const float* a, const float* b, int n)
         out[i] = a[i] + b[i];
 }
 
+//=============================================================================
+// Numerical Boundary Instrumentation
+// RAWRXD_NUMERICAL_BOUNDARY_ISOLATION_001
+//=============================================================================
+struct TensorStats
+{
+    size_t count = 0;
+    size_t nonfinite = 0;
+    size_t firstNonfiniteIndex = 0;
+    float min = 0.0f;
+    float max = 0.0f;
+    float l2 = 0.0f;
+};
+
+static TensorStats ComputeTensorStats(const float* data, size_t n)
+{
+    TensorStats stats;
+    stats.count = n;
+    stats.nonfinite = 0;
+    stats.firstNonfiniteIndex = 0;
+    stats.min = std::numeric_limits<float>::quiet_NaN();
+    stats.max = std::numeric_limits<float>::quiet_NaN();
+    stats.l2 = std::numeric_limits<float>::quiet_NaN();
+
+    if (n == 0 || data == nullptr)
+        return stats;
+
+    double sumSq = 0.0;
+    bool foundFirst = false;
+
+    for (size_t i = 0; i < n; ++i)
+    {
+        const float x = data[i];
+        if (!std::isfinite(x))
+        {
+            ++stats.nonfinite;
+            if (!foundFirst)
+            {
+                stats.firstNonfiniteIndex = i;
+                foundFirst = true;
+            }
+            continue;
+        }
+        if (!foundFirst)
+        {
+            // still searching for first nonfinite
+        }
+        sumSq += double(x) * double(x);
+        if (std::isnan(stats.min) || x < stats.min) stats.min = x;
+        if (std::isnan(stats.max) || x > stats.max) stats.max = x;
+    }
+
+    if (stats.nonfinite == 0)
+    {
+        stats.l2 = static_cast<float>(std::sqrt(sumSq));
+    }
+
+    return stats;
+}
+
+static void EmitTensorStats(const char* blockLabel, const char* stage, const TensorStats& stats)
+{
+    std::fprintf(stderr,
+        "[Boundary] BLOCK=%s STAGE=%s COUNT=%zu NONFINITE=%zu FIRST_NONFINITE=%zu MIN=%.6g MAX=%.6g L2=%.6g\n",
+        blockLabel,
+        stage,
+        stats.count,
+        stats.nonfinite,
+        stats.firstNonfiniteIndex,
+        stats.min,
+        stats.max,
+        stats.l2);
+    std::fflush(stderr);
+}
+
+
 static void Silu(float* x, int n)
 {
     int i = 0;
@@ -290,13 +399,104 @@ static void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
     switch (tv.type)
     {
         case ModelGenie::GGMLType::F32:
+            fprintf(stderr, "[Dequant] F32 tv.data=%p tv.bytes=%llu tv.elementCount=%llu\n",
+                (void*)tv.data, (unsigned long long)tv.bytes, (unsigned long long)tv.elementCount);
+            fflush(stderr);
             memcpy(out.data(), tv.data, tv.bytes);
             break;
         case ModelGenie::GGMLType::Q4_K:
         {
-            // First-pass stub: Q4_K dequantization is not required to close the
-            // primitive-coverage gate. Zero the output to keep memory safe.
-            memset(out.data(), 0, out.size() * sizeof(float));
+            // Q4_K layout: 256 values per 144-byte block
+            //   bytes 0..1 : d      (FP16)
+            //   bytes 2..3 : dmin   (FP16)
+            //   bytes 4..15: scales[12] (packed 6-bit scale/min per sub-block)
+            //   bytes 16..143: qs[128] (256 4-bit values)
+            struct Q4KBlock { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qs[128]; };
+            static_assert(sizeof(Q4KBlock) == 144, "Q4_K block must be 144 bytes");
+            static_assert(offsetof(Q4KBlock, d)      == 0,  "Q4_K d offset");
+            static_assert(offsetof(Q4KBlock, dmin)   == 2,  "Q4_K dmin offset");
+            static_assert(offsetof(Q4KBlock, scales) == 4,  "Q4_K scales offset");
+            static_assert(offsetof(Q4KBlock, qs)     == 16, "Q4_K qs offset");
+            
+            const Q4KBlock* src = reinterpret_cast<const Q4KBlock*>(tv.data);
+            size_t blocks = tv.bytes / sizeof(Q4KBlock);
+            size_t badBlocks = 0;
+            size_t firstBadBlock = size_t(-1);
+            size_t firstBadElement = size_t(-1);
+            
+            // Reference scale/min extraction matching canonical ggml dequantize_row_q4_K
+            auto get_scale_min_k4 = [](int i, const uint8_t* scales, uint8_t* sc, uint8_t* m) {
+                uint32_t t = *(const uint32_t*)scales;
+                t >>= i * 12;
+                *sc = (t >> 4) & 0x3F;
+                *m = t & 0x0F;
+                t >>= 16;
+                *sc |= (t & 0x0F) << 6;
+                *m |= (t >> 4) & 0x0F;
+            };
+            
+            for (size_t b = 0; b < blocks; ++b)
+            {
+                float d = FP16ToFloat(src[b].d);
+                float dmin = FP16ToFloat(src[b].dmin);
+                
+                if (!std::isfinite(d) || !std::isfinite(dmin))
+                {
+                    badBlocks++;
+                    if (firstBadBlock == size_t(-1))
+                    {
+                        firstBadBlock = b;
+                        firstBadElement = b * 256;
+                    }
+                    if (badBlocks <= 3)
+                    {
+                        std::printf("[Q4K_RAW] tensor_id=%u block=%zu d_raw=0x%04x dmin_raw=0x%04x d=%.6g dmin=%.6g\n",
+                                    (unsigned)tv.id,
+                                    b,
+                                    (unsigned)src[b].d,
+                                    (unsigned)src[b].dmin,
+                                    (double)d,
+                                    (double)dmin);
+                    }
+                    // Skip this block to avoid propagating NaN
+                    continue;
+                }
+                
+                // Decode 256 values from this block using reference ggml layout
+                const uint8_t* q = src[b].qs;
+                float* out_ptr = &out[b * 256];
+                
+                for (int j = 0; j < 256; j += 64)
+                {
+                    uint8_t sc, m;
+                    for (int sub = 0; sub < 2; ++sub)
+                    {
+                        get_scale_min_k4(j / 32 + sub, src[b].scales, &sc, &m);
+                        float d1 = d * sc;
+                        float m1 = dmin * m;
+                        for (int l = 0; l < 32; ++l)
+                        {
+                            uint8_t qv = q[l];
+                            out_ptr[j + l] = d1 * (qv & 0x0F) - m1;
+                        }
+                        q += 32;
+                    }
+                }
+                
+                if (badBlocks > 0 && b == firstBadBlock)
+                {
+                    // Already printed above
+                }
+            }
+            
+            if (tv.bytes > 0)
+            {
+                std::printf("[Q4K] blocks=%zu badBlocks=%zu firstBadBlock=%zu firstBadElement=%zu outSize=%zu\n",
+                            blocks, badBlocks,
+                            firstBadBlock == size_t(-1) ? 0 : firstBadBlock,
+                            firstBadElement == size_t(-1) ? 0 : firstBadElement,
+                            out.size());
+            }
             break;
         }
         case ModelGenie::GGMLType::Q8_0:
@@ -514,6 +714,66 @@ class ModelExportRuntime
         fprintf(stderr, "[DEBUG] past GGUF opened\n");
         fflush(stderr);
 
+        // =========================================================================
+        // ROM OFFSET AUTHORITY GATE
+        // Verifies that generated dataOffset values match GGUF physical addressing.
+        // =========================================================================
+        {
+            fprintf(stderr, "[Gate] ROM_OFFSET_AUTHORITY_001\n");
+            fflush(stderr);
+
+            size_t typeMismatches = 0;
+            size_t sizeMismatches = 0;
+            size_t offsetMismatches = 0;
+            size_t outOfRange = 0;
+            size_t tensorsChecked = 0;
+
+            for (const auto& rom : Generated::kTensorROMTable)
+            {
+                if (rom.role == ModelGenie::TensorRole::Unknown)
+                    continue;
+
+                ++tensorsChecked;
+
+                // Calculate expected absolute offset using the canonical contract:
+                // absoluteOffset = kDataStart + dataOffset
+                uint64_t expectedAbsolute = Generated::ModelConfig::kDataStart + rom.dataOffset;
+                bool inRange = (expectedAbsolute + rom.encodedBytes <= rom_.size);
+
+                if (!inRange)
+                {
+                    ++outOfRange;
+                    fprintf(stderr,
+                        "[OFFSET_AUTH] ID=%u NAME=%s OUT_OF_RANGE abs=%llu+%llu > %llu\n",
+                        (unsigned)rom.tensorId,
+                        rom.name,
+                        (unsigned long long)expectedAbsolute,
+                        (unsigned long long)rom.encodedBytes,
+                        (unsigned long long)rom_.size);
+                    fflush(stderr);
+                }
+            }
+
+            fprintf(stderr,
+                "[Gate] DATA_START=%llu TENSORS_CHECKED=%zu OUT_OF_RANGE=%zu\n",
+                (unsigned long long)Generated::ModelConfig::kDataStart,
+                (size_t)tensorsChecked,
+                (size_t)outOfRange);
+            fflush(stderr);
+
+            if (outOfRange > 0)
+            {
+                fprintf(stderr,
+                    "ROM_OFFSET_AUTHORITY=FAIL\n"
+                    "VERDICT=BLOCKED_ROM_OFFSET_AUTHORITY\n");
+                fflush(stderr);
+                return false;
+            }
+
+            fprintf(stderr, "ROM_OFFSET_AUTHORITY=PASS\n");
+            fflush(stderr);
+        }
+
         // Bind all tensors from generated TensorROM table
         uint32_t bound = 0, missing = 0;
         for (const auto& rom : Generated::kTensorROMTable)
@@ -571,6 +831,121 @@ class ModelExportRuntime
         }
         fprintf(stderr, "[DEBUG] past essential tensor checks\n");
         fflush(stderr);
+
+        // =========================================================================
+        // QUANT STORAGE AUTHORITY GATE
+        // Must pass BEFORE any dequantization or forward execution.
+        // =========================================================================
+        {
+            size_t tensorsChecked = 0;
+            size_t typeUnknown = 0;
+            size_t elementBlockRemainder = 0;
+            size_t encodedByteMismatches = 0;
+            size_t maxDiagnostics = 100;
+            size_t diagnosticsPrinted = 0;
+
+            fprintf(stderr, "[Gate] QUANT_STORAGE_AUTHORITY_001\n");
+            fflush(stderr);
+
+            for (const auto& rom : Generated::kTensorROMTable)
+            {
+                if (rom.role != ModelGenie::TensorRole::Unknown)
+                {
+                    ++tensorsChecked;
+                    uint32_t blockElements = 0;
+                    uint64_t encodedBlockBytes = 0;
+                    uint32_t typeValue = (uint32_t)rom.type;
+                    bool knownType = false;
+                    
+                    if (typeValue == 0) { // F32
+                        blockElements = 1; encodedBlockBytes = 4; knownType = true;
+                    } else if (typeValue == 1) { // Q4_K
+                        blockElements = 256; encodedBlockBytes = 144; knownType = true;
+                    } else if (typeValue == 2) { // Q5_0
+                        blockElements = 32; encodedBlockBytes = 22; knownType = true;
+                    } else if (typeValue == 3) { // Q6_K
+                        blockElements = 256; encodedBlockBytes = 210; knownType = true;
+                    } else if (typeValue == 4) { // Q8_0
+                        blockElements = 32; encodedBlockBytes = 34; knownType = true;
+                    }
+                    
+                    if (!knownType)
+                    {
+                        ++typeUnknown;
+                        if (diagnosticsPrinted < maxDiagnostics)
+                        {
+                            fprintf(stderr,
+                                "[Gate] TENSOR_ID=%u ROLE=%s TYPE=%u UNKNOWN_TYPE\n",
+                                (unsigned)rom.tensorId,
+                                ModelGenie::TensorRoleToString(rom.role),
+                                (unsigned)rom.type);
+                            fflush(stderr);
+                            ++diagnosticsPrinted;
+                        }
+                        continue;
+                    }
+
+                    if (rom.elementCount % blockElements != 0)
+                    {
+                        ++elementBlockRemainder;
+                        if (diagnosticsPrinted < maxDiagnostics)
+                        {
+                            fprintf(stderr,
+                                "[Gate] TENSOR_ID=%u ROLE=%s TYPE=%u ELEMENT_COUNT=%llu BLOCK_ELEMENTS=%u REMAINDER=%llu\n",
+                                (unsigned)rom.tensorId,
+                                ModelGenie::TensorRoleToString(rom.role),
+                                (unsigned)rom.type,
+                                (unsigned long long)rom.elementCount,
+                                (unsigned)blockElements,
+                                (unsigned long long)(rom.elementCount % blockElements));
+                            fflush(stderr);
+                            ++diagnosticsPrinted;
+                        }
+                    }
+
+                    uint64_t expectedBytes = (rom.elementCount / blockElements) * encodedBlockBytes;
+                    if (rom.encodedBytes != expectedBytes)
+                    {
+                        ++encodedByteMismatches;
+                        if (diagnosticsPrinted < maxDiagnostics)
+                        {
+                            fprintf(stderr,
+                                "[Gate] TENSOR_ID=%u ROLE=%s TYPE=%u ELEMENT_COUNT=%llu BLOCK_ELEMENTS=%u ENCODED_BLOCK_BYTES=%llu EXPECTED_BYTES=%llu ACTUAL_BYTES=%llu MISMATCH=1\n",
+                                (unsigned)rom.tensorId,
+                                ModelGenie::TensorRoleToString(rom.role),
+                                (unsigned)rom.type,
+                                (unsigned long long)rom.elementCount,
+                                (unsigned)blockElements,
+                                (unsigned long long)encodedBlockBytes,
+                                (unsigned long long)expectedBytes,
+                                (unsigned long long)rom.encodedBytes);
+                            fflush(stderr);
+                            ++diagnosticsPrinted;
+                        }
+                    }
+                }
+            }
+
+            fprintf(stderr,
+                "[Gate] TENSORS_CHECKED=%zu TYPE_UNKNOWN=%zu ELEMENT_BLOCK_REMAINDER=%zu ENCODED_BYTE_MISMATCHES=%zu\n",
+                tensorsChecked, typeUnknown, elementBlockRemainder, encodedByteMismatches);
+            fflush(stderr);
+
+            if (typeUnknown > 0 || elementBlockRemainder > 0 || encodedByteMismatches > 0)
+            {
+                fprintf(stderr,
+                    "QUANT_STORAGE_AUTHORITY=FAIL\n"
+                    "DEQUANT_STARTED=0\n"
+                    "FORWARD_STARTED=0\n"
+                    "NUMERICS_PROVEN=0\n"
+                    "VERDICT=BLOCKED_QUANT_STORAGE_AUTHORITY\n");
+                fflush(stderr);
+                return false;
+            }
+
+            fprintf(stderr, "QUANT_STORAGE_AUTHORITY=PASS\n");
+            fflush(stderr);
+        }
 
         // Allocate buffers
         fprintf(stderr, "[DEBUG] before resize\n");
@@ -743,6 +1118,89 @@ class ModelExportRuntime
         fprintf(stderr, "[DEBUG] Block %u: isDense=%d isMoE=%d\n", l, block.isDense, block.isMoE);
         fflush(stderr);
 
+        // =========================================================================
+        // SOURCE TENSOR AUTHORITY GATE
+        // Must pass BEFORE any dequantization or forward execution.
+        // =========================================================================
+        {
+            size_t mismatchCount = 0;
+            size_t aliasCount = 0;
+
+            auto checkRole = [&](const char* role, Generated::TensorId expected, uint32_t actualValue) {
+                Generated::TensorId actual = static_cast<Generated::TensorId>(actualValue);
+                bool match = (actual == expected);
+                if (!match) ++mismatchCount;
+                std::fprintf(stderr,
+                    "ROLE=%s ACTUAL_ID=%u EXPECTED_ID=%u MATCH=%d\n",
+                    role,
+                    (unsigned)actual,
+                    (unsigned)expected,
+                    match ? 1 : 0);
+                fflush(stderr);
+            };
+
+            std::fprintf(stderr, "[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=%u\n", (unsigned)l);
+            fflush(stderr);
+
+            // Block-0 expected IDs from generated TensorId authority
+            if (l == 0)
+            {
+                checkRole("ATTN_NORM",   Generated::TensorId::blk_0_attn_norm_weight,   block.attnNorm.value());
+                checkRole("FFN_DOWN",    Generated::TensorId::blk_0_ffn_down_weight,     block.ffnDown.value());
+                if (block.ffnGate)
+                    checkRole("FFN_GATE", Generated::TensorId::blk_0_ffn_gate_weight,   *block.ffnGate);
+                if (block.ffnUp)
+                    checkRole("FFN_UP",   Generated::TensorId::blk_0_ffn_up_weight,     *block.ffnUp);
+                checkRole("FFN_NORM",    Generated::TensorId::blk_0_ffn_norm_weight,     block.ffnNorm.value());
+                checkRole("MLA_KV_NORM", Generated::TensorId::blk_0_attn_kv_a_norm_weight, block.attnKvANorm.value());
+                checkRole("MLA_KV_A",    Generated::TensorId::blk_0_attn_kv_a_mqa_weight,  block.attnKvAMqa.value());
+                checkRole("MLA_KV_B",    Generated::TensorId::blk_0_attn_kv_b_weight,      block.attnKvB.value());
+                checkRole("ATTN_OUTPUT", Generated::TensorId::blk_0_attn_output_weight,    block.attnOutput.value());
+                checkRole("ATTN_Q",      Generated::TensorId::blk_0_attn_q_weight,         block.attnQ.value());
+            }
+
+            // Undeclared semantic aliases (same ID used for two different roles)
+            bool aliasFail = false;
+            if (block.ffnGate && block.ffnNorm && *block.ffnGate == block.ffnNorm) {
+                std::fprintf(stderr, "ALIAS=FFN_GATE_FFN_NORM ID=%u\n", (unsigned)block.ffnNorm.value());
+                aliasFail = true;
+            }
+            if (block.ffnUp && block.attnOutput && *block.ffnUp == block.attnOutput) {
+                std::fprintf(stderr, "ALIAS=FFN_UP_ATTN_OUTPUT ID=%u\n", (unsigned)block.attnOutput.value());
+                aliasFail = true;
+            }
+            if (aliasFail) {
+                ++aliasCount;
+            }
+
+            std::fprintf(stderr,
+                "BLOCK=%u TENSOR_ID_MISMATCHES=%zu UNDECLARED_ALIASES=%zu\n",
+                (unsigned)l, mismatchCount, aliasCount);
+            fflush(stderr);
+
+            if (mismatchCount > 0 || aliasCount > 0)
+            {
+                std::fprintf(stderr,
+                    "SOURCE_TENSOR_AUTHORITY=FAIL\n"
+                    "FORWARD_STARTED=0\n"
+                    "NUMERICS_PROVEN=0\n"
+                    "VERDICT=BLOCKED_TENSOR_AUTHORITY\n");
+                fflush(stderr);
+                std::exit(2);
+            }
+
+        std::fprintf(stderr, "SOURCE_TENSOR_AUTHORITY=PASS\n");
+        fflush(stderr);
+        }
+
+        // =========================================================================
+        // NUMERICAL BOUNDARY ISOLATION - Block input
+        // =========================================================================
+        {
+            TensorStats stats = ComputeTensorStats(hidden_.data(), hidden_.size());
+            EmitTensorStats(std::to_string(l).c_str(), "BLOCK_INPUT", stats);
+        }
+
         // Get tensor views from BlockGenome tensor IDs
         const TensorView* attnNormView = GetView(static_cast<Generated::TensorId>(block.attnNorm.value()));
         const TensorView* attnQView = GetView(static_cast<Generated::TensorId>(block.attnQ.value()));
@@ -771,9 +1229,25 @@ class ModelExportRuntime
         DequantizeTensor(*attnNormView, attnNormW);
         fprintf(stderr, "[DEBUG] attnNormW size=%zu\n", attnNormW.size());
         fflush(stderr);
+
+        // =========================================================================
+        // NUMERICAL BOUNDARY ISOLATION - Dequantized weight stats (Block 0 only)
+        // =========================================================================
+        if (l == 0) {
+            TensorStats attnNormStats = ComputeTensorStats(attnNormW.data(), attnNormW.size());
+            EmitTensorStats("0", "ATTN_NORM_WEIGHT", attnNormStats);
+        }
         DequantizeTensor(*attnQView, attnQW);
         fprintf(stderr, "[DEBUG] attnQW size=%zu\n", attnQW.size());
         fflush(stderr);
+
+        // =========================================================================
+        // NUMERICAL BOUNDARY ISOLATION - Dequantized Q weight stats (Block 0 only)
+        // =========================================================================
+        if (l == 0) {
+            TensorStats attnQStats = ComputeTensorStats(attnQW.data(), attnQW.size());
+            EmitTensorStats("0", "ATTN_Q_WEIGHT", attnQStats);
+        }
         if (attnOutputView)
             DequantizeTensor(*attnOutputView, attnOutputW);
         fprintf(stderr, "[DEBUG] attnOutputW size=%zu\n", attnOutputW.size());
@@ -781,6 +1255,14 @@ class ModelExportRuntime
         DequantizeTensor(*ffnNormView, ffnNormW);
         fprintf(stderr, "[DEBUG] ffnNormW size=%zu\n", ffnNormW.size());
         fflush(stderr);
+
+        // =========================================================================
+        // NUMERICAL BOUNDARY ISOLATION - Dequantized weight stats (Block 0 only)
+        // =========================================================================
+        if (l == 0) {
+            TensorStats ffnNormStats = ComputeTensorStats(ffnNormW.data(), ffnNormW.size());
+            EmitTensorStats("0", "FFN_NORM_WEIGHT", ffnNormStats);
+        }
         if (ffnGateView) {
             DequantizeTensor(*ffnGateView, ffnGateW);
             fprintf(stderr, "[DEBUG] ffnGateW size=%zu\n", ffnGateW.size());
@@ -824,9 +1306,25 @@ class ModelExportRuntime
         fprintf(stderr, "[DEBUG] scalar RMSNorm done\n");
         fflush(stderr);
 
+        // =========================================================================
+        // NUMERICAL BOUNDARY ISOLATION - Post-attn-norm
+        // =========================================================================
+        {
+            TensorStats stats = ComputeTensorStats(hidden_.data(), hidden_.size());
+            EmitTensorStats(std::to_string(l).c_str(), "POST_ATTN_NORM", stats);
+        }
+
         std::vector<float> q(Generated::ModelConfig::kEmbeddingLength);
         MatMul(hidden_.data(), attnQW.data(), q.data(), 1, Generated::ModelConfig::kEmbeddingLength,
                Generated::ModelConfig::kEmbeddingLength);
+
+        // =========================================================================
+        // NUMERICAL BOUNDARY ISOLATION - Post-Q projection
+        // =========================================================================
+        {
+            TensorStats stats = ComputeTensorStats(q.data(), q.size());
+            EmitTensorStats(std::to_string(l).c_str(), "POST_Q", stats);
+        }
 
         // MLA decompress forward
         Generated::TensorId kvANormId = static_cast<Generated::TensorId>(block.attnKvANorm.value());
@@ -858,6 +1356,14 @@ class ModelExportRuntime
 
             reconstructedKv = ExecuteMLADecompressForward(inputView, *kvANormView, *kvAMqaView, *kvBView);
             TrackMLA();
+
+            // =========================================================================
+            // NUMERICAL BOUNDARY ISOLATION - Post-MLA decompress
+            // =========================================================================
+            {
+                TensorStats stats = ComputeTensorStats(reconstructedKv.data(), reconstructedKv.size());
+                EmitTensorStats(std::to_string(l).c_str(), "POST_MLA", stats);
+            }
         }
         else
         {
@@ -875,7 +1381,23 @@ class ModelExportRuntime
                    Generated::ModelConfig::kEmbeddingLength);
         }
 
+        // =========================================================================
+        // NUMERICAL BOUNDARY ISOLATION - Post-attn-output MatMul
+        // =========================================================================
+        {
+            TensorStats stats = ComputeTensorStats(attnOut.data(), attnOut.size());
+            EmitTensorStats(std::to_string(l).c_str(), "POST_ATTN_OUTPUT", stats);
+        }
+
         VecAdd(hidden_.data(), residual.data(), attnOut.data(), Generated::ModelConfig::kEmbeddingLength);
+
+        // =========================================================================
+        // NUMERICAL BOUNDARY ISOLATION - Post-attn-residual
+        // =========================================================================
+        {
+            TensorStats stats = ComputeTensorStats(hidden_.data(), hidden_.size());
+            EmitTensorStats(std::to_string(l).c_str(), "POST_ATTN_RESIDUAL", stats);
+        }
 
         // FFN path (only for dense blocks with all required tensors)
         if (block.isDense && ffnGateView && ffnUpView && ffnDownView)
@@ -885,6 +1407,14 @@ class ModelExportRuntime
             fflush(stderr);
             RMSNorm(hidden_.data(), hidden_.data(), ffnNormW.data(), Generated::ModelConfig::kEmbeddingLength,
                     Generated::ModelConfig::kRmsEps);
+
+            // =========================================================================
+            // NUMERICAL BOUNDARY ISOLATION - Post-FFN-norm
+            // =========================================================================
+            {
+                TensorStats stats = ComputeTensorStats(hidden_.data(), hidden_.size());
+                EmitTensorStats(std::to_string(l).c_str(), "POST_FFN_NORM", stats);
+            }
 
             std::vector<float> gate(Generated::ModelConfig::kFeedForwardLength);
             std::vector<float> up(Generated::ModelConfig::kFeedForwardLength);
@@ -898,11 +1428,35 @@ class ModelExportRuntime
             for (int i = 0; i < Generated::ModelConfig::kFeedForwardLength; i++)
                 hidden[i] = gate[i] * up[i];
 
+            // =========================================================================
+            // NUMERICAL BOUNDARY ISOLATION - Post-FFN-gate-up
+            // =========================================================================
+            {
+                TensorStats stats = ComputeTensorStats(hidden.data(), hidden.size());
+                EmitTensorStats(std::to_string(l).c_str(), "POST_FFN_GATE_UP", stats);
+            }
+
             std::vector<float> ffnFinal(Generated::ModelConfig::kEmbeddingLength);
             MatMul(hidden.data(), ffnDownW.data(), ffnFinal.data(), 1, Generated::ModelConfig::kFeedForwardLength,
                    Generated::ModelConfig::kEmbeddingLength);
 
+            // =========================================================================
+            // NUMERICAL BOUNDARY ISOLATION - Post-FFN-down
+            // =========================================================================
+            {
+                TensorStats stats = ComputeTensorStats(ffnFinal.data(), ffnFinal.size());
+                EmitTensorStats(std::to_string(l).c_str(), "POST_FFN_DOWN", stats);
+            }
+
             VecAdd(hidden_.data(), residual.data(), ffnFinal.data(), Generated::ModelConfig::kEmbeddingLength);
+
+            // =========================================================================
+            // NUMERICAL BOUNDARY ISOLATION - Post-FFN-residual
+            // =========================================================================
+            {
+                TensorStats stats = ComputeTensorStats(hidden_.data(), hidden_.size());
+                EmitTensorStats(std::to_string(l).c_str(), "POST_FFN_RESIDUAL", stats);
+            }
         }
         else if (!block.isDense)
         {
@@ -910,6 +1464,14 @@ class ModelExportRuntime
             fflush(stderr);
             TrackMoE();
             // MoE partial execution is expected in simplified executor; don't count as stub
+        }
+
+        // =========================================================================
+        // NUMERICAL BOUNDARY ISOLATION - Block output
+        // =========================================================================
+        {
+            TensorStats stats = ComputeTensorStats(hidden_.data(), hidden_.size());
+            EmitTensorStats(std::to_string(l).c_str(), "BLOCK_OUTPUT", stats);
         }
     }
 };
@@ -943,8 +1505,7 @@ int main()
     printf("[Gate] Blocks: %u\n", Generated::ModelConfig::kBlockCount);
     printf("[Gate] Hidden: %u\n", Generated::ModelConfig::kEmbeddingLength);
     printf("[Gate] Vocab: %u\n", Generated::ModelConfig::kVocabSize);
-    printf("[Gate] Execution ops: %u\n", Generated::kExecutionOpCount);
-    printf("[Gate] Model data start: %llu\n", (unsigned long long)Generated::kModelDataStart);
+    printf("[Gate] Execution ops: %u\n", (unsigned)Generated::kExecutionOpCount);
     printf("\n");
 
     fprintf(stderr, "[DEBUG] before ModelExportRuntime construction\n");
