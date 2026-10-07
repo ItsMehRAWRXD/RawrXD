@@ -468,8 +468,9 @@ bool HeaderEmitter::ValidateExecutionIR(const ModelGenome& genome) {
     const uint32_t kTokenRuntimeScalarId = 0;
     
     for (const auto& op : genome.executionOps) {
-        // Check ROM operands
-        for (const auto& w : op.weights) {
+        // Check ROM operands (weights)
+        for (uint32_t i = 0; i < op.weightCount; ++i) {
+            const auto& w = op.weight(i);
             if (w.domain == OperandDomain::RomTensor) {
                 if (romTensorIds.find(w.id) == romTensorIds.end()) {
                     std::cerr << "SSA Validation FAIL: Op " << op.opId 
@@ -484,7 +485,8 @@ bool HeaderEmitter::ValidateExecutionIR(const ModelGenome& genome) {
         }
         
         // Check input operands
-        for (const auto& in : op.inputs) {
+        for (uint32_t i = 0; i < op.inputCount; ++i) {
+            const auto& in = op.input(i);
             if (in.domain == OperandDomain::RuntimeScalar) {
                 if (in.id != kTokenRuntimeScalarId) {
                     std::cerr << "SSA Validation FAIL: Op " << op.opId 
@@ -540,14 +542,14 @@ bool HeaderEmitter::ValidateExecutionIR(const ModelGenome& genome) {
     // Block chain validation: block N+1 must consume block N's final activation
     // (This is implicitly checked by SSA dominance since blockInput is chained)
     
-    // Placeholder alias count check: no None-domain operands inside active inputCount/weightCount
+    // Placeholder alias count check: no None-domain operands inside active input/weight slots
     uint32_t noneAliasCount = 0;
     for (const auto& op : genome.executionOps) {
         for (uint32_t i = 0; i < op.inputCount; ++i) {
-            if (op.inputs[i].domain == OperandDomain::None) noneAliasCount++;
+            if (op.input(i).domain == OperandDomain::None) noneAliasCount++;
         }
         for (uint32_t i = 0; i < op.weightCount; ++i) {
-            if (op.weights[i].domain == OperandDomain::None) noneAliasCount++;
+            if (op.weight(i).domain == OperandDomain::None) noneAliasCount++;
         }
     }
     if (noneAliasCount > 0) {
@@ -582,48 +584,68 @@ bool HeaderEmitter::EmitExecutionIR(const ModelGenome& genome) {
     out << "namespace Deep2 {\n";
     out << "namespace Generated {\n\n";
     
-    // OperationIR struct is defined in ModelGenome.hpp - do NOT redefine here
-    // Use the types from ModelGenie namespace
+    // Flat constexpr POD for MSVC /W4 compatibility
+    // Compiler IR (ModelGenome) uses vectors; runtime IR uses fixed arrays
+    out << "struct OperationIR {\n";
+    Indent(out, 1); out << "uint32_t opId;\n";
+    Indent(out, 1); out << "ModelGenie::OpCode opcode;\n";
+    Indent(out, 1); out << "ModelGenie::Primitive requiredPrimitive;\n\n";
     
-    out << "inline constexpr ModelGenie::OperationIR kExecutionIRTable[" << genome.executionOps.size() << "] = {\n";
+    Indent(out, 1); out << "// Inputs (max 8)\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef input0;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef input1;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef input2;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef input3;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef input4;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef input5;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef input6;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef input7;\n";
+    Indent(out, 1); out << "uint32_t inputCount;\n\n";
+    
+    Indent(out, 1); out << "// Weights (max 8)\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef weight0;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef weight1;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef weight2;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef weight3;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef weight4;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef weight5;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef weight6;\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef weight7;\n";
+    Indent(out, 1); out << "uint32_t weightCount;\n\n";
+    
+    Indent(out, 1); out << "// Output\n";
+    Indent(out, 1); out << "ModelGenie::OperandRef output;\n";
+    Indent(out, 1); out << "uint32_t blockIndex;\n";
+    out << "};\n\n";
+    
+    out << "inline constexpr OperationIR kExecutionIRTable[" << genome.executionOps.size() << "] = {\n";
     for (const auto& op : genome.executionOps) {
         Indent(out, 1); out << "{\n";
-        // Positional initialization (MSVC doesn't support designated initializers for nested aggregates)
-        Indent(out, 2); out << op.opId << ",\n";  // opId
-        Indent(out, 2); out << FormatOpCode(op.opcode) << ",\n";  // opcode
-        Indent(out, 2); out << FormatPrimitive(op.requiredPrimitive) << ",\n";  // requiredPrimitive
+        Indent(out, 2); out << op.opId << ",\n";
+        Indent(out, 2); out << FormatOpCode(op.opcode) << ",\n";
+        Indent(out, 2); out << FormatPrimitive(op.requiredPrimitive) << ",\n";
         
-        // inputs array (positional)
-        Indent(out, 2); out << "{\n";
-        for (size_t i = 0; i < 8; ++i) {
-            Indent(out, 3); 
-            if (i < op.inputs.size()) {
-                out << FormatOperandRef(op.inputs[i]);
-            } else {
-                out << "{ModelGenie::OperandDomain::None, 0}";
-            }
-            if (i < 7) out << ",";
-            out << "\n";
-        }
-        Indent(out, 2); out << "},\n";
+        // inputs
+        Indent(out, 2); out << FormatOperandRef(op.inputCount > 0 ? op.input(0) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.inputCount > 1 ? op.input(1) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.inputCount > 2 ? op.input(2) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.inputCount > 3 ? op.input(3) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.inputCount > 4 ? op.input(4) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.inputCount > 5 ? op.input(5) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.inputCount > 6 ? op.input(6) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.inputCount > 7 ? op.input(7) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << op.inputCount << ",\n";
         
-        Indent(out, 2); out << op.inputCount << ",\n";  // inputCount
-        
-        // weights array (positional)
-        Indent(out, 2); out << "{\n";
-        for (size_t i = 0; i < 8; ++i) {
-            Indent(out, 3);
-            if (i < op.weights.size()) {
-                out << FormatOperandRef(op.weights[i]);
-            } else {
-                out << "{ModelGenie::OperandDomain::None, 0}";
-            }
-            if (i < 7) out << ",";
-            out << "\n";
-        }
-        Indent(out, 2); out << "},\n";
-        
-        Indent(out, 2); out << op.weightCount << ",\n";  // weightCount
+        // weights
+        Indent(out, 2); out << FormatOperandRef(op.weightCount > 0 ? op.weight(0) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.weightCount > 1 ? op.weight(1) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.weightCount > 2 ? op.weight(2) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.weightCount > 3 ? op.weight(3) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.weightCount > 4 ? op.weight(4) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.weightCount > 5 ? op.weight(5) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.weightCount > 6 ? op.weight(6) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << FormatOperandRef(op.weightCount > 7 ? op.weight(7) : OperandRef{}) << ",\n";
+        Indent(out, 2); out << op.weightCount << ",\n";
         
         // output
         Indent(out, 2); out << FormatOperandRef(op.output) << ",\n";

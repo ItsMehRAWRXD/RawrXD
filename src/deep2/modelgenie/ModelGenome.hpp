@@ -227,39 +227,44 @@ struct OperationIR {
     OpCode opcode = OpCode::Invalid;
     Primitive requiredPrimitive = Primitive::None;
 
-    // Flattened arrays for MSVC constexpr aggregate initialization compatibility
-    OperandRef input0{};
-    OperandRef input1{};
-    OperandRef input2{};
-    OperandRef input3{};
-    OperandRef input4{};
-    OperandRef input5{};
-    OperandRef input6{};
-    OperandRef input7{};
+    // Flat constexpr-safe layout (MSVC /W4 compatible, no vectors)
+    OperandRef input0; OperandRef input1; OperandRef input2; OperandRef input3;
+    OperandRef input4; OperandRef input5; OperandRef input6; OperandRef input7;
     uint32_t inputCount = 0;
 
-    OperandRef weight0{};
-    OperandRef weight1{};
-    OperandRef weight2{};
-    OperandRef weight3{};
-    OperandRef weight4{};
-    OperandRef weight5{};
-    OperandRef weight6{};
-    OperandRef weight7{};
+    OperandRef weight0; OperandRef weight1; OperandRef weight2; OperandRef weight3;
+    OperandRef weight4; OperandRef weight5; OperandRef weight6; OperandRef weight7;
     uint32_t weightCount = 0;
 
-    OperandRef output{};
-
+    OperandRef output;
     uint32_t blockIndex = UINT32_MAX;
 
-    // Helper accessors for compatibility
-    constexpr const OperandRef* inputs() const {
-        static const OperandRef* arr[8] = {&input0, &input1, &input2, &input3, &input4, &input5, &input6, &input7};
-        return arr[0];
+    // Convenience accessors (constexpr for generated header compatibility)
+    constexpr OperandRef input(uint32_t i) const noexcept {
+        switch (i) {
+            case 0: return input0;
+            case 1: return input1;
+            case 2: return input2;
+            case 3: return input3;
+            case 4: return input4;
+            case 5: return input5;
+            case 6: return input6;
+            case 7: return input7;
+            default: return {OperandDomain::None, 0};
+        }
     }
-    constexpr const OperandRef* weights() const {
-        static const OperandRef* arr[8] = {&weight0, &weight1, &weight2, &weight3, &weight4, &weight5, &weight6, &weight7};
-        return arr[0];
+    constexpr OperandRef weight(uint32_t i) const noexcept {
+        switch (i) {
+            case 0: return weight0;
+            case 1: return weight1;
+            case 2: return weight2;
+            case 3: return weight3;
+            case 4: return weight4;
+            case 5: return weight5;
+            case 6: return weight6;
+            case 7: return weight7;
+            default: return {OperandDomain::None, 0};
+        }
     }
 };
 

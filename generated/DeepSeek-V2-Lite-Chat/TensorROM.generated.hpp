@@ -34,6 +34,8 @@ struct TensorROM {
     uint64_t elementCount;
 };
 
+inline constexpr uint64_t kModelDataStart = 3972000ULL;
+
 enum class TensorId : uint32_t {
     output_weight = 0,
     token_embd_weight = 1,

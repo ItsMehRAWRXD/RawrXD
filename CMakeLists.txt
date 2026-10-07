@@ -4626,6 +4626,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/gguf_vocab_resolver.cpp
     src/streaming_gguf_loader.cpp
     src/compression_interface.cpp
+    src/inflate_deflate_cpp.cpp
     src/memory_core.cpp
     src/license_enforcement.cpp
     src/feature_flags_runtime.cpp

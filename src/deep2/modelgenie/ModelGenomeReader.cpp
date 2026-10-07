@@ -463,16 +463,50 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
     auto NewActivation = [&]() -> OperandRef {
         return Act(nextActivationId++);
     };
+    auto SetInputs = [](OperationIR& op, std::initializer_list<OperandRef> inputs) {
+        size_t i = 0;
+        for (const auto& in : inputs) {
+            if (i >= 8) break;
+            switch (i) {
+                case 0: op.input0 = in; break;
+                case 1: op.input1 = in; break;
+                case 2: op.input2 = in; break;
+                case 3: op.input3 = in; break;
+                case 4: op.input4 = in; break;
+                case 5: op.input5 = in; break;
+                case 6: op.input6 = in; break;
+                case 7: op.input7 = in; break;
+            }
+            i++;
+        }
+        op.inputCount = static_cast<uint32_t>(i);
+    };
+    auto SetWeights = [](OperationIR& op, std::initializer_list<OperandRef> weights) {
+        size_t i = 0;
+        for (const auto& w : weights) {
+            if (i >= 8) break;
+            switch (i) {
+                case 0: op.weight0 = w; break;
+                case 1: op.weight1 = w; break;
+                case 2: op.weight2 = w; break;
+                case 3: op.weight3 = w; break;
+                case 4: op.weight4 = w; break;
+                case 5: op.weight5 = w; break;
+                case 6: op.weight6 = w; break;
+                case 7: op.weight7 = w; break;
+            }
+            i++;
+        }
+        op.weightCount = static_cast<uint32_t>(i);
+    };
 
     // Embedding: token_id (RuntimeScalar) -> token_embd.weight (RomTensor) -> activation
     OperationIR embedOp;
     embedOp.opId = 0;
     embedOp.opcode = OpCode::Linear;
     embedOp.requiredPrimitive = Primitive::LinearFwd;
-    embedOp.inputs = { Scalar(0) };  // token ID
-    embedOp.inputCount = 1;
-    embedOp.weights = { Rom(nameToTensorId.at("token_embd.weight")) };
-    embedOp.weightCount = 1;
+    SetInputs(embedOp, { Scalar(0) });  // token ID
+    SetWeights(embedOp, { Rom(nameToTensorId.at("token_embd.weight")) });
     embedOp.output = NewActivation();  // Activation 0 = embedding output
     embedOp.blockIndex = UINT32_MAX;
     genome.executionOps.push_back(embedOp);
@@ -501,10 +535,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
         norm1.opId = opId++;
         norm1.opcode = OpCode::RmsNorm;
         norm1.requiredPrimitive = Primitive::RmsNormFwd;
-        norm1.inputs = { blockInput };
-        norm1.inputCount = 1;
-        norm1.weights = { Rom(block.attnNorm.value()) };
-        norm1.weightCount = 1;
+        SetInputs(norm1, { blockInput });
+        SetWeights(norm1, { Rom(block.attnNorm.value()) });
         norm1.output = NewActivation();
         norm1.blockIndex = b;
         genome.executionOps.push_back(norm1);
@@ -514,14 +546,12 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
         mla.opId = opId++;
         mla.opcode = OpCode::MlaDecompress;
         mla.requiredPrimitive = Primitive::MlaDecompressFwd;
-        mla.inputs = { norm1.output };
-        mla.inputCount = 1;
-        mla.weights = {
+        SetInputs(mla, { norm1.output });
+        SetWeights(mla, {
             Rom(block.attnKvANorm.value()),
             Rom(block.attnKvAMqa.value()),
             Rom(block.attnKvB.value())
-        };
-        mla.weightCount = 3;
+        });
         mla.output = NewActivation();
         mla.blockIndex = b;
         genome.executionOps.push_back(mla);
@@ -531,10 +561,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
         qProj.opId = opId++;
         qProj.opcode = OpCode::Linear;
         qProj.requiredPrimitive = Primitive::LinearFwd;
-        qProj.inputs = { norm1.output };
-        qProj.inputCount = 1;
-        qProj.weights = { Rom(block.attnQ.value()) };
-        qProj.weightCount = 1;
+        SetInputs(qProj, { norm1.output });
+        SetWeights(qProj, { Rom(block.attnQ.value()) });
         qProj.output = NewActivation();
         qProj.blockIndex = b;
         genome.executionOps.push_back(qProj);
@@ -544,8 +572,7 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
         attn.opId = opId++;
         attn.opcode = OpCode::Attention;
         attn.requiredPrimitive = Primitive::AttentionFwd;
-        attn.inputs = { qProj.output, mla.output };
-        attn.inputCount = 2;
+        SetInputs(attn, { qProj.output, mla.output });
         attn.output = NewActivation();
         attn.blockIndex = b;
         genome.executionOps.push_back(attn);
@@ -555,10 +582,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
         outProj.opId = opId++;
         outProj.opcode = OpCode::Linear;
         outProj.requiredPrimitive = Primitive::LinearFwd;
-        outProj.inputs = { attn.output };
-        outProj.inputCount = 1;
-        outProj.weights = { Rom(block.attnOutput.value()) };
-        outProj.weightCount = 1;
+        SetInputs(outProj, { attn.output });
+        SetWeights(outProj, { Rom(block.attnOutput.value()) });
         outProj.output = NewActivation();
         outProj.blockIndex = b;
         genome.executionOps.push_back(outProj);
@@ -568,8 +593,7 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
         res1.opId = opId++;
         res1.opcode = OpCode::ResidualAdd;
         res1.requiredPrimitive = Primitive::ResidualAddFwd;
-        res1.inputs = { blockInput, outProj.output };
-        res1.inputCount = 2;
+        SetInputs(res1, { blockInput, outProj.output });
         res1.output = NewActivation();
         res1.blockIndex = b;
         genome.executionOps.push_back(res1);
@@ -579,10 +603,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
         norm2.opId = opId++;
         norm2.opcode = OpCode::RmsNorm;
         norm2.requiredPrimitive = Primitive::RmsNormFwd;
-        norm2.inputs = { res1.output };
-        norm2.inputCount = 1;
-        norm2.weights = { Rom(block.ffnNorm.value()) };
-        norm2.weightCount = 1;
+        SetInputs(norm2, { res1.output });
+        SetWeights(norm2, { Rom(block.ffnNorm.value()) });
         norm2.output = NewActivation();
         norm2.blockIndex = b;
         genome.executionOps.push_back(norm2);
@@ -593,10 +615,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
             router.opId = opId++;
             router.opcode = OpCode::Router;
             router.requiredPrimitive = Primitive::RouterFwd;
-            router.inputs = { norm2.output };
-            router.inputCount = 1;
-            router.weights = { Rom(block.ffnGateInp.value()) };
-            router.weightCount = 1;
+            SetInputs(router, { norm2.output });
+            SetWeights(router, { Rom(block.ffnGateInp.value()) });
             router.output = NewActivation();
             router.blockIndex = b;
             genome.executionOps.push_back(router);
@@ -605,8 +625,7 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
             topk.opId = opId++;
             topk.opcode = OpCode::TopK;
             topk.requiredPrimitive = Primitive::TopKFwd;
-            topk.inputs = { router.output };
-            topk.inputCount = 1;
+            SetInputs(topk, { router.output });
             topk.output = NewActivation();
             topk.blockIndex = b;
             genome.executionOps.push_back(topk);
@@ -615,15 +634,13 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
             moe.opId = opId++;
             moe.opcode = OpCode::MoEExecute;
             moe.requiredPrimitive = Primitive::MoEExecuteFwd;
-            moe.inputs = { norm2.output, topk.output };
-            moe.inputCount = 2;
+            SetInputs(moe, { norm2.output, topk.output });
             // Routed experts (single batched tensors)
-            moe.weights = {
+            SetWeights(moe, {
                 Rom(block.ffnGateExps.value()),
                 Rom(block.ffnDownExps.value()),
                 Rom(block.ffnUpExps.value())
-            };
-            moe.weightCount = 3;
+            });
             moe.output = NewActivation();
             moe.blockIndex = b;
             genome.executionOps.push_back(moe);
@@ -634,10 +651,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
             gate.opId = opId++;
             gate.opcode = OpCode::Linear;
             gate.requiredPrimitive = Primitive::LinearFwd;
-            gate.inputs = { norm2.output };
-            gate.inputCount = 1;
-            gate.weights = { Rom(block.ffnGate.value()) };
-            gate.weightCount = 1;
+            SetInputs(gate, { norm2.output });
+            SetWeights(gate, { Rom(block.ffnGate.value()) });
             gate.output = NewActivation();
             gate.blockIndex = b;
             genome.executionOps.push_back(gate);
@@ -647,10 +662,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
             up.opId = opId++;
             up.opcode = OpCode::Linear;
             up.requiredPrimitive = Primitive::LinearFwd;
-            up.inputs = { norm2.output };
-            up.inputCount = 1;
-            up.weights = { Rom(block.ffnUp.value()) };
-            up.weightCount = 1;
+            SetInputs(up, { norm2.output });
+            SetWeights(up, { Rom(block.ffnUp.value()) });
             up.output = NewActivation();
             up.blockIndex = b;
             genome.executionOps.push_back(up);
@@ -662,10 +675,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
             down.opId = opId++;
             down.opcode = OpCode::Linear;
             down.requiredPrimitive = Primitive::LinearFwd;
-            down.inputs = { gate.output, up.output };  // Two activations = gated FFN pattern
-            down.inputCount = 2;
-            down.weights = { Rom(block.ffnDown.value()) };
-            down.weightCount = 1;
+            SetInputs(down, { gate.output, up.output });  // Two activations = gated FFN pattern
+            SetWeights(down, { Rom(block.ffnDown.value()) });
             down.output = NewActivation();
             down.blockIndex = b;
             genome.executionOps.push_back(down);
@@ -676,8 +687,7 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
         res2.opId = opId++;
         res2.opcode = OpCode::ResidualAdd;
         res2.requiredPrimitive = Primitive::ResidualAddFwd;
-        res2.inputs = { res1.output, genome.executionOps.back().output };
-        res2.inputCount = 2;
+        SetInputs(res2, { res1.output, genome.executionOps.back().output });
         res2.output = NewActivation();
         res2.blockIndex = b;
         genome.executionOps.push_back(res2);
@@ -691,10 +701,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
     finalNorm.opId = opId++;
     finalNorm.opcode = OpCode::RmsNorm;
     finalNorm.requiredPrimitive = Primitive::RmsNormFwd;
-    finalNorm.inputs = { blockInput };
-    finalNorm.inputCount = 1;
-    finalNorm.weights = { Rom(nameToTensorId.at("output_norm.weight")) };
-    finalNorm.weightCount = 1;
+    SetInputs(finalNorm, { blockInput });
+    SetWeights(finalNorm, { Rom(nameToTensorId.at("output_norm.weight")) });
     finalNorm.output = NewActivation();
     finalNorm.blockIndex = UINT32_MAX;
     genome.executionOps.push_back(finalNorm);
@@ -704,10 +712,8 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
     lmHead.opId = opId++;
     lmHead.opcode = OpCode::LMHead;
     lmHead.requiredPrimitive = Primitive::LMHeadFwd;
-    lmHead.inputs = { finalNorm.output };
-    lmHead.inputCount = 1;
-    lmHead.weights = { Rom(nameToTensorId.at("output.weight")) };
-    lmHead.weightCount = 1;
+    SetInputs(lmHead, { finalNorm.output });
+    SetWeights(lmHead, { Rom(nameToTensorId.at("output.weight")) });
     lmHead.output = NewActivation();
     lmHead.blockIndex = UINT32_MAX;
     genome.executionOps.push_back(lmHead);

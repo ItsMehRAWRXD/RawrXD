@@ -53,11 +53,11 @@ struct ModelConfig {
     static constexpr double kEffectiveBpw = 5.27702;
 
     // Physical
-    static constexpr uint64_t kFileBytes = 0ULL;
-    static constexpr uint32_t kGgufVersion = 0;
+    static constexpr uint64_t kFileBytes = 10364416768ULL;
+    static constexpr uint32_t kGgufVersion = 3;
     static constexpr uint32_t kTensorCount = 377;
-    static constexpr uint32_t kAlignment = 0;
-    static constexpr uint64_t kDataStart = 3996416ULL;
+    static constexpr uint32_t kAlignment = 32;
+    static constexpr uint64_t kDataStart = 3972000ULL;
 };
 
 } // namespace Generated

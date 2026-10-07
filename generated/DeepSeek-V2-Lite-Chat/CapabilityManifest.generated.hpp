@@ -33,13 +33,13 @@ struct CapabilityManifest {
 };
 
 inline constexpr CapabilityManifest kCapabilityManifest = {
-    .requiredPrimitives = {Primitive::LinearFwd, Primitive::RmsNormFwd, Primitive::MlaDecompressFwd, Primitive::AttentionFwd, Primitive::ResidualAddFwd, Primitive::RouterFwd, Primitive::TopKFwd, Primitive::MoEExecuteFwd, Primitive::LMHeadFwd},
+    .requiredPrimitives = {ModelGenie::Primitive::LinearFwd, ModelGenie::Primitive::RmsNormFwd, ModelGenie::Primitive::MlaDecompressFwd, ModelGenie::Primitive::AttentionFwd, ModelGenie::Primitive::ResidualAddFwd, ModelGenie::Primitive::RouterFwd, ModelGenie::Primitive::TopKFwd, ModelGenie::Primitive::MoEExecuteFwd, ModelGenie::Primitive::LMHeadFwd},
     .requiredCount = 9,
-    .availablePrimitives = {Primitive::LinearFwd, Primitive::RmsNormFwd, Primitive::MlaDecompressFwd, Primitive::AttentionFwd, Primitive::ResidualAddFwd, Primitive::RouterFwd, Primitive::TopKFwd, Primitive::MoEExecuteFwd, Primitive::LMHeadFwd},
+    .availablePrimitives = {ModelGenie::Primitive::LinearFwd, ModelGenie::Primitive::RmsNormFwd, ModelGenie::Primitive::MlaDecompressFwd, ModelGenie::Primitive::AttentionFwd, ModelGenie::Primitive::ResidualAddFwd, ModelGenie::Primitive::RouterFwd, ModelGenie::Primitive::TopKFwd, ModelGenie::Primitive::MoEExecuteFwd, ModelGenie::Primitive::LMHeadFwd},
     .availableCount = 9,
-    .unimplementedPrimitives = {Primitive::MlaDecompressFwd},
+    .unimplementedPrimitives = {ModelGenie::Primitive::MlaDecompressFwd},
     .unimplementedCount = 1,
-    .firstUnimplementedPrimitive = Primitive::MlaDecompressFwd,
+    .firstUnimplementedPrimitive = ModelGenie::Primitive::MlaDecompressFwd,
     .runtimeExecutable = false
 };
 
