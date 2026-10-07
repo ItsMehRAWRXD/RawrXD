@@ -14,6 +14,9 @@
 #include <vector>
 #include <array>
 #include <optional>
+#include <functional>
+#include <sstream>
+#include <iomanip>
 
 namespace RawrXD {
 namespace Deep2 {

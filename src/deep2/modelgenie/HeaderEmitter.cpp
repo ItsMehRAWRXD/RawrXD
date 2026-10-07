@@ -689,6 +689,7 @@ bool HeaderEmitter::EmitCapabilityManifest(const ModelGenome& genome) {
     Indent(out, 1); out << "uint32_t unimplementedCount;\n";
     Indent(out, 1); out << "Primitive firstUnimplementedPrimitive;\n";
     Indent(out, 1); out << "bool runtimeExecutable;\n";
+    Indent(out, 1); out << "const char* modelGenomeHash;\n";
     out << "};\n\n";
     
     out << "inline constexpr CapabilityManifest kCapabilityManifest = {\n";
@@ -714,7 +715,8 @@ bool HeaderEmitter::EmitCapabilityManifest(const ModelGenome& genome) {
     out << "},\n";
     Indent(out, 1); out << ".unimplementedCount = " << genome.capabilities.unimplementedPrimitives.size() << ",\n";
     Indent(out, 1); out << ".firstUnimplementedPrimitive = " << FormatPrimitive(genome.capabilities.firstUnimplementedPrimitive) << ",\n";
-    Indent(out, 1); out << ".runtimeExecutable = " << (genome.capabilities.runtimeExecutable ? "true" : "false") << "\n";
+    Indent(out, 1); out << ".runtimeExecutable = " << (genome.capabilities.runtimeExecutable ? "true" : "false") << ",\n";
+    Indent(out, 1); out << ".modelGenomeHash = \"" << genome.computeCanonicalHash() << "\"\n";
     out << "};\n\n";
     
     out << "} // namespace Generated\n";

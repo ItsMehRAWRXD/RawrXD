@@ -422,8 +422,236 @@ static bool VerifyExecutionIR(const ModelGenome &original, const std::string &ge
         result.AddError("ExecutionIR still emits old outputTensorId format");
     }
 
+    // =========================================================================
+    // EXACT PER-OPERATION TYPED OPERAND PARITY
+    // =========================================================================
+    struct ParsedOp {
+        uint32_t opId;
+        uint32_t opcode;
+        uint32_t requiredPrimitive;
+        uint32_t inputCount;
+        std::vector<std::pair<uint32_t, uint32_t>> inputs; // domain, id
+        uint32_t weightCount;
+        std::vector<std::pair<uint32_t, uint32_t>> weights; // domain, id
+        uint32_t outputDomain;
+        uint32_t outputId;
+        uint32_t blockIndex;
+    };
+
+    auto parseExecutionIR = [&](const std::string& text, std::vector<ParsedOp>& outOps) -> bool {
+        // Find the table start
+        size_t tableStart = text.find("kExecutionIRTable[");
+        if (tableStart == std::string::npos) return false;
+        size_t braceStart = text.find('{', tableStart);
+        if (braceStart == std::string::npos) return false;
+        
+        // Find matching closing brace for the table
+        int braceCount = 0;
+        size_t tableEnd = std::string::npos;
+        for (size_t i = braceStart; i < text.size(); ++i) {
+            if (text[i] == '{') braceCount++;
+            else if (text[i] == '}') {
+                braceCount--;
+                if (braceCount == 0) {
+                    tableEnd = i;
+                    break;
+                }
+            }
+        }
+        if (tableEnd == std::string::npos) return false;
+
+        std::string tableContent = text.substr(braceStart + 1, tableEnd - braceStart - 1);
+        
+        // Split by "}," to get individual operations
+        size_t pos = 0;
+        while (pos < tableContent.size()) {
+            // Find next operation start
+            while (pos < tableContent.size() && (tableContent[pos] == '\n' || tableContent[pos] == '\r' || tableContent[pos] == ' ' || tableContent[pos] == '\t')) pos++;
+            if (pos >= tableContent.size()) break;
+            
+            size_t opStart = pos;
+            int innerBrace = 0;
+            size_t opEnd = std::string::npos;
+            for (size_t i = pos; i < tableContent.size(); ++i) {
+                if (tableContent[i] == '{') innerBrace++;
+                else if (tableContent[i] == '}') {
+                    innerBrace--;
+                    if (innerBrace == 0) {
+                        opEnd = i;
+                        break;
+                    }
+                }
+            }
+            if (opEnd == std::string::npos) break;
+            
+            std::string opText = tableContent.substr(opStart, opEnd - opStart + 1);
+            pos = opEnd + 1;
+            
+            ParsedOp pop;
+            pop.opId = ExtractUInt32(opText, ".opId =");
+            pop.opcode = ExtractUInt32(opText, ".opcode =");
+            pop.requiredPrimitive = ExtractUInt32(opText, ".requiredPrimitive =");
+            pop.inputCount = ExtractUInt32(opText, ".inputCount =");
+            pop.weightCount = ExtractUInt32(opText, ".weightCount =");
+            pop.outputDomain = ExtractUInt32(opText, ".output.domain =");
+            pop.outputId = ExtractUInt32(opText, ".output.id =");
+            pop.blockIndex = ExtractUInt32(opText, ".blockIndex =");
+            
+            // Parse inputs array
+            size_t inputsPos = opText.find(".inputs =");
+            if (inputsPos != std::string::npos) {
+                size_t arrStart = opText.find('{', inputsPos);
+                size_t arrEnd = opText.find('}', arrStart);
+                if (arrStart != std::string::npos && arrEnd != std::string::npos) {
+                    std::string inputsContent = opText.substr(arrStart + 1, arrEnd - arrStart - 1);
+                    // Parse each input: {OperandDomain::X, id}
+                    size_t inPos = 0;
+                    while (inPos < inputsContent.size() && pop.inputs.size() < 8) {
+                        size_t bracePos = inputsContent.find('{', inPos);
+                        if (bracePos == std::string::npos) break;
+                        size_t braceEnd = inputsContent.find('}', bracePos);
+                        if (braceEnd == std::string::npos) break;
+                        std::string entry = inputsContent.substr(bracePos + 1, braceEnd - bracePos - 1);
+                        // Parse "OperandDomain::X, id"
+                        size_t commaPos = entry.find(',');
+                        if (commaPos != std::string::npos) {
+                            std::string domainStr = entry.substr(0, commaPos);
+                            std::string idStr = entry.substr(commaPos + 1);
+                            domainStr.erase(0, domainStr.find_first_not_of(" \t"));
+                            domainStr.erase(domainStr.find_last_not_of(" \t") + 1);
+                            idStr.erase(0, idStr.find_first_not_of(" \t"));
+                            idStr.erase(idStr.find_last_not_of(" \t") + 1);
+                            
+                            uint32_t domain = 0;
+                            if (domainStr.find("RomTensor") != std::string::npos) domain = 1;
+                            else if (domainStr.find("Activation") != std::string::npos) domain = 2;
+                            else if (domainStr.find("RuntimeScalar") != std::string::npos) domain = 3;
+                            
+                            uint32_t id = 0;
+                            if (!idStr.empty()) id = static_cast<uint32_t>(std::stoul(idStr));
+                            
+                            pop.inputs.emplace_back(domain, id);
+                        }
+                        inPos = braceEnd + 1;
+                    }
+                }
+            }
+            
+            // Parse weights array
+            size_t weightsPos = opText.find(".weights =");
+            if (weightsPos != std::string::npos) {
+                size_t arrStart = opText.find('{', weightsPos);
+                size_t arrEnd = opText.find('}', arrStart);
+                if (arrStart != std::string::npos && arrEnd != std::string::npos) {
+                    std::string weightsContent = opText.substr(arrStart + 1, arrEnd - arrStart - 1);
+                    size_t inPos = 0;
+                    while (inPos < weightsContent.size() && pop.weights.size() < 8) {
+                        size_t bracePos = weightsContent.find('{', inPos);
+                        if (bracePos == std::string::npos) break;
+                        size_t braceEnd = weightsContent.find('}', bracePos);
+                        if (braceEnd == std::string::npos) break;
+                        std::string entry = weightsContent.substr(bracePos + 1, braceEnd - bracePos - 1);
+                        size_t commaPos = entry.find(',');
+                        if (commaPos != std::string::npos) {
+                            std::string domainStr = entry.substr(0, commaPos);
+                            std::string idStr = entry.substr(commaPos + 1);
+                            domainStr.erase(0, domainStr.find_first_not_of(" \t"));
+                            domainStr.erase(domainStr.find_last_not_of(" \t") + 1);
+                            idStr.erase(0, idStr.find_first_not_of(" \t"));
+                            idStr.erase(idStr.find_last_not_of(" \t") + 1);
+                            
+                            uint32_t domain = 0;
+                            if (domainStr.find("RomTensor") != std::string::npos) domain = 1;
+                            else if (domainStr.find("Activation") != std::string::npos) domain = 2;
+                            else if (domainStr.find("RuntimeScalar") != std::string::npos) domain = 3;
+                            
+                            uint32_t id = 0;
+                            if (!idStr.empty()) id = static_cast<uint32_t>(std::stoul(idStr));
+                            
+                            pop.weights.emplace_back(domain, id);
+                        }
+                        inPos = braceEnd + 1;
+                    }
+                }
+            }
+            
+            outOps.push_back(pop);
+        }
+        return true;
+    };
+
+    std::vector<ParsedOp> generatedOps;
+    if (!parseExecutionIR(text, generatedOps)) {
+        result.AddError("Failed to parse ExecutionIR table");
+    } else {
+        // Compare field-for-field
+        uint32_t opsCompared = 0;
+        uint32_t opcodeMismatches = 0;
+        uint32_t primitiveMismatches = 0;
+        uint32_t inputDomainMismatches = 0;
+        uint32_t inputIdMismatches = 0;
+        uint32_t weightDomainMismatches = 0;
+        uint32_t weightIdMismatches = 0;
+        uint32_t outputDomainMismatches = 0;
+        uint32_t outputIdMismatches = 0;
+        uint32_t blockIndexMismatches = 0;
+        bool firstMismatchReported = false;
+        std::string firstMismatchOp;
+
+        for (size_t i = 0; i < original.executionOps.size() && i < generatedOps.size(); ++i) {
+            const auto& src = original.executionOps[i];
+            const auto& gen = generatedOps[i];
+            
+            bool mismatch = false;
+            if (src.opId != gen.opId) mismatch = true;
+            if (static_cast<uint32_t>(src.opcode) != gen.opcode) { opcodeMismatches++; mismatch = true; }
+            if (static_cast<uint32_t>(src.requiredPrimitive) != gen.requiredPrimitive) { primitiveMismatches++; mismatch = true; }
+            if (static_cast<uint32_t>(src.inputs.size()) != gen.inputCount) { inputIdMismatches++; mismatch = true; }
+            if (static_cast<uint32_t>(src.weights.size()) != gen.weightCount) { weightIdMismatches++; mismatch = true; }
+            if (static_cast<uint32_t>(src.output.domain) != gen.outputDomain) { outputDomainMismatches++; mismatch = true; }
+            if (src.output.id != gen.outputId) { outputIdMismatches++; mismatch = true; }
+            if (src.blockIndex != gen.blockIndex) { blockIndexMismatches++; mismatch = true; }
+
+            // Compare inputs
+            for (size_t j = 0; j < src.inputs.size() && j < gen.inputs.size(); ++j) {
+                if (static_cast<uint32_t>(src.inputs[j].domain) != gen.inputs[j].first) { inputDomainMismatches++; mismatch = true; }
+                if (src.inputs[j].id != gen.inputs[j].second) { inputIdMismatches++; mismatch = true; }
+            }
+
+            // Compare weights
+            for (size_t j = 0; j < src.weights.size() && j < gen.weights.size(); ++j) {
+                if (static_cast<uint32_t>(src.weights[j].domain) != gen.weights[j].first) { weightDomainMismatches++; mismatch = true; }
+                if (src.weights[j].id != gen.weights[j].second) { weightIdMismatches++; mismatch = true; }
+            }
+
+            if (mismatch && !firstMismatchReported) {
+                firstMismatchReported = true;
+                firstMismatchOp = "op " + std::to_string(src.opId);
+            }
+            opsCompared++;
+        }
+
+        result.warnings.push_back("EXECUTION_OPS_COMPARED=" + std::to_string(opsCompared));
+        result.warnings.push_back("OPCODE_MISMATCHES=" + std::to_string(opcodeMismatches));
+        result.warnings.push_back("PRIMITIVE_MISMATCHES=" + std::to_string(primitiveMismatches));
+        result.warnings.push_back("INPUT_DOMAIN_MISMATCHES=" + std::to_string(inputDomainMismatches));
+        result.warnings.push_back("INPUT_ID_MISMATCHES=" + std::to_string(inputIdMismatches));
+        result.warnings.push_back("WEIGHT_DOMAIN_MISMATCHES=" + std::to_string(weightDomainMismatches));
+        result.warnings.push_back("WEIGHT_ID_MISMATCHES=" + std::to_string(weightIdMismatches));
+        result.warnings.push_back("OUTPUT_DOMAIN_MISMATCHES=" + std::to_string(outputDomainMismatches));
+        result.warnings.push_back("OUTPUT_ID_MISMATCHES=" + std::to_string(outputIdMismatches));
+        result.warnings.push_back("BLOCK_INDEX_MISMATCHES=" + std::to_string(blockIndexMismatches));
+        
+        if (firstMismatchReported) {
+            result.warnings.push_back("ROUNDTRIP_FIRST_MISMATCH_OP=" + firstMismatchOp);
+            result.AddError("Exact operand parity mismatch at " + firstMismatchOp);
+        } else {
+            result.warnings.push_back("ROUNDTRIP_FIRST_MISMATCH_OP=NONE");
+            result.warnings.push_back("ROUNDTRIP_EXACT_PARITY=1");
+        }
+    }
+
     return result.valid;
-}
 
 static bool VerifyCapabilityManifest(const ModelGenome &original, const std::string &generatedDir, RoundTripResult &result)
 {
@@ -535,8 +763,7 @@ int main(int argc, char *argv[])
         std::cerr << "ERROR: Failed to load original ModelGenome\n";
         return 1;
     }
-    // std::string originalHash = original.computeCanonicalHash();  // Not implemented yet
-    std::string originalHash = "placeholder_hash";
+    std::string originalHash = original.computeCanonicalHash();
     std::cout << "  Original canonical hash: " << originalHash << "\n\n";
     std::cout << "  Model: " << original.modelName << "\n";
     std::cout << "  Architecture: " << ArchitectureToString(original.architecture) << "\n";
@@ -575,11 +802,27 @@ int main(int argc, char *argv[])
 
     bool parity = result.valid;
 
+    // Check canonical hash match
+    std::string generatedHash = "unknown";
+    std::string capText = ReadAllText(generatedDir + "/CapabilityManifest.generated.hpp");
+    size_t hashPos = capText.find("kModelGenomeHash =");
+    if (hashPos != std::string::npos) {
+        size_t quotePos = capText.find('"', hashPos);
+        size_t endQuote = capText.find('"', quotePos + 1);
+        if (quotePos != std::string::npos && endQuote != std::string::npos) {
+            generatedHash = capText.substr(quotePos + 1, endQuote - quotePos - 1);
+        }
+    }
+
+    bool hashMatch = (originalHash == generatedHash);
+
     std::cout << "=============================================================================\n";
     std::cout << "STRUCTURAL_ROUNDTRIP_PARITY=" << (parity ? "1" : "0") << "\n";
-    std::cout << "MODELGENOME_HASH=" << originalHash << "\n\n";
+    std::cout << "CANONICAL_HASH_MATCH=" << (hashMatch ? "1" : "0") << "\n";
+    std::cout << "ORIGINAL_HASH=" << originalHash << "\n";
+    std::cout << "GENERATED_HASH=" << generatedHash << "\n\n";
 
-    if (parity)
+    if (parity && hashMatch)
     {
         std::cout << "TENSOR_COUNT_MATCH=1\n";
         std::cout << "BLOCK_COUNT_MATCH=1\n";
@@ -599,7 +842,7 @@ int main(int argc, char *argv[])
     }
 
     std::cout << "=============================================================================\n";
-    std::cout << "VERDICT=" << (parity ? "PASS" : "FAIL") << "\n";
+    std::cout << "VERDICT=" << (parity && hashMatch ? "PASS" : "FAIL") << "\n";
 
-    return parity ? 0 : 1;
+    return (parity && hashMatch) ? 0 : 1;
 }
