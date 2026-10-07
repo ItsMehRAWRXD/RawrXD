@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(26) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(34) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(41) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(57) : error A2006:undefined symbol : InitializeCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(76) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(89) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(105) : error A2083:invalid scale value
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(120) : error A2083:invalid scale value
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(142) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(159) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(170) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(245) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(258) : error A2083:invalid scale value
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(270) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(287) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(299) : error A2083:invalid scale value
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(315) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(412) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\text\undoredo.asm(424) : error A2006:undefined symbol : LeaveCriticalSection

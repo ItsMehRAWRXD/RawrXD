@@ -1,0 +1,30 @@
+ Assembling: D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(66) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(86) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(92) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(97) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(103) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(105) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(109) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(114) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(115) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(120) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(121) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(147) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(153) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(160) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(174) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(186) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(187) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(204) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(211) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(94) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(180) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(207) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(214) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(132) : warning A6004:procedure argument or local not referenced : pLocalPath
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(132) : warning A6004:procedure argument or local not referenced : pRemotePath
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(198) : warning A6004:procedure argument or local not referenced : pRemotePath
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_cloud_storage_enhanced.asm(198) : warning A6004:procedure argument or local not referenced : pLocalPath

@@ -1,0 +1,348 @@
+=============================================================================
+GHOSTTEXTENGINE INTEGRATION WIRING - IMPLEMENTATION SUMMARY
+RawrXD IDE - Event Loop Routing and GhostTextEngine Instantiation
+=============================================================================
+
+COMPLETION STATUS: ✅ IMPLEMENTED
+
+=============================================================================
+1. OVERVIEW
+=============================================================================
+
+The GhostTextEngine integration wiring has been successfully implemented in the
+RawrXD IDE. The integration provides:
+
+- GhostTextEngine instantiation during IDE startup
+- Event loop routing for async AI-powered ghost text completion
+- Debounce timer-based inference triggering
+- Keyboard navigation (Tab to accept, Esc to dismiss, Ctrl+Right for partial)
+- Paint message routing for ghost text overlay rendering
+- Integration with SovereignInferenceBridge for streaming tokens
+- Stale result detection using atomic version counters
+
+=============================================================================
+2. FILES IMPLEMENTED
+=============================================================================
+
+Core Integration Files:
+--------------------
+d:\RawrXD\src\ide\GhostTextIntegration_Wiring.h
+  - C++ API for GhostText integration
+  - Event routing function declarations
+  - C API wrappers for Win32 IDE
+
+d:\RawrXD\src\ide\GhostTextIntegration_Wiring.cpp
+  - GhostTextEngine instantiation and lifecycle management
+  - Event loop routing implementation
+  - Debounce timer handling (150ms default)
+  - Keyboard navigation logic
+  - Paint message routing
+  - SovereignInferenceBridge integration
+  - ~600 lines of production code
+
+Integration Patch Documentation:
+-------------------------------
+d:\RawrXD\src\ide\RawrXD_IDE_Win32_GhostText_Integration_Patch.cpp
+  - Step-by-step integration guide
+  - Shows all modifications needed for main IDE
+  - 12 sections covering all integration points
+
+=============================================================================
+3. ARCHITECTURE
+=============================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         RawrXD IDE Win32 Application                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    RawrXD_IDE_WndProc                                 │   │
+│  │  - Main window procedure                                              │   │
+│  │  - Routes messages to GhostTextIntegration                          │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                              │                                              │
+│                              ▼                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │              GhostTextIntegration_Wiring Layer                      │   │
+│  │                                                                     │   │
+│  │  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐  │   │
+│  │  │   WM_TIMER      │───▶│ Debounce Logic  │───▶│ Trigger      │  │   │
+│  │  │   (IDT_GHOST)   │    │ (150ms)         │    │ Inference    │  │   │
+│  │  └─────────────────┘    └─────────────────┘    └──────────────┘  │   │
+│  │                                                         │         │   │
+│  │  ┌─────────────────┐    ┌─────────────────┐              │         │   │
+│  │  │   WM_KEYDOWN    │───▶│ Key Router      │◄─────────────┘         │   │
+│  │  │                 │    │ (Tab/Esc/etc)   │                        │   │
+│  │  └─────────────────┘    └─────────────────┘                        │   │
+│  │                                                         │         │   │
+│  │  ┌─────────────────┐    ┌─────────────────┐              │         │   │
+│  │  │   WM_PAINT      │───▶│ Paint Router    │◄─────────────┘         │   │
+│  │  │                 │    │ (Overlay)       │                        │   │
+│  │  └─────────────────┘    └─────────────────┘                        │   │
+│  │                                                                     │   │
+│  │  ┌─────────────────┐    ┌─────────────────┐                        │   │
+│  │  │   EN_CHANGE     │───▶│ Text Change     │                        │   │
+│  │  │                 │    │ (Reset Timer)   │                        │   │
+│  │  └─────────────────┘    └─────────────────┘                        │   │
+│  │                                                                     │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                              │                                              │
+│                              ▼                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    GhostTextEngine Instance                           │   │
+│  │                                                                     │   │
+│  │  - Manages ghost text state                                         │   │
+│  │  - Handles suggestion display                                       │   │
+│  │  - Coordinates with inference backend                               │   │
+│  │  - Provides IsActive(), AcceptSuggestion(), HideSuggestion()        │   │
+│  │                                                                     │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                              │                                              │
+│                              ▼                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │              SovereignInferenceBridge                               │   │
+│  │                                                                     │   │
+│  │  - Async token streaming                                            │   │
+│  │  - Model inference coordination                                     │   │
+│  │  - Callback: GhostText_OnSovereignToken                           │   │
+│  │                                                                     │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+=============================================================================
+4. EVENT LOOP ROUTING
+=============================================================================
+
+The following events are routed from the IDE's main window procedure to the
+GhostTextIntegration layer:
+
+1. WM_CREATE
+   └── GhostTextIntegration_Initialize()
+       ├── Instantiates GhostTextEngine
+       ├── Initializes SovereignInferenceBridge
+       ├── Sets up debounce timer (IDT_GHOSTTEXT_DEBOUNCE)
+       └── Registers custom window messages
+
+2. WM_DESTROY
+   └── GhostTextIntegration_Shutdown()
+       ├── Stops debounce timer
+       ├── Shuts down GhostTextEngine
+       └── Cleans up resources
+
+3. WM_TIMER (IDT_GHOSTTEXT_DEBOUNCE)
+   └── GhostTextIntegration_OnTimer()
+       └── GhostText_OnDebounceTimer()
+           ├── Checks elapsed time since last keystroke
+           ├── Kills timer
+           └── Triggers inference via GhostText_TriggerInference()
+
+4. WM_KEYDOWN
+   └── GhostTextIntegration_OnKeyDown()
+       └── GhostText_HandleKeyNavigation()
+           ├── VK_TAB: Accept full suggestion
+           ├── VK_ESCAPE: Dismiss suggestion
+           ├── VK_RIGHT + Ctrl: Accept partial word
+           └── Other keys: Check dismiss conditions
+
+5. WM_PAINT (Editor)
+   └── GhostTextIntegration_OnPaint()
+       └── GhostTextEngine::PaintGhostText()
+           └── Renders ghost text overlay at cursor position
+
+6. EN_CHANGE (Edit Control Notification)
+   └── GhostTextIntegration_OnTextChanged()
+       ├── Increments editorVersion (atomic)
+       ├── Resets debounce timer
+       └── Stores timestamp
+
+7. Custom Messages (WM_GHOST_*)
+   └── GhostTextIntegration_OnCustomMessage()
+       ├── WM_GHOST_SUGGESTION: Handle inference result
+       ├── WM_GHOST_DISMISS: Hide suggestion
+       └── WM_GHOST_ACCEPT: Accept and insert text
+
+=============================================================================
+5. KEYBOARD NAVIGATION
+=============================================================================
+
+When Ghost Text is Active:
+
+┌─────────────┬──────────────────────────────────────────────────────────────┐
+│ Key         │ Action                                                       │
+├─────────────┼──────────────────────────────────────────────────────────────┤
+│ Tab         │ Accept full suggestion, insert text at cursor                │
+│ Esc         │ Dismiss suggestion without insertion                         │
+│ Ctrl+Right  │ Accept partial word (up to next word boundary)               │
+│ Right Arrow │ Dismiss suggestion, allow normal cursor movement             │
+│ Up/Down     │ Dismiss suggestion, allow normal navigation                │
+│ Home/End    │ Dismiss suggestion, allow normal navigation                │
+│ PgUp/PgDn   │ Dismiss suggestion, allow normal navigation                │
+│ Other keys  │ Check dismiss conditions based on context                  │
+└─────────────┴──────────────────────────────────────────────────────────────┘
+
+=============================================================================
+6. DEBOUNCE MECHANISM
+=============================================================================
+
+Timer Configuration:
+- Timer ID: IDT_GHOSTTEXT_DEBOUNCE (0x1001)
+- Interval: 150ms (GHOSTTEXT_DEBOUNCE_MS)
+- Behavior: Reset on every keystroke
+
+Flow:
+1. User types → EN_CHANGE received
+2. Kill existing timer
+3. Increment editorVersion (atomic)
+4. Set new timer for 150ms
+5. If user stops typing → Timer fires
+6. Check elapsed time ≥ 150ms
+7. Trigger inference request
+8. Display ghost text on result
+
+Stale Detection:
+- editorVersion is incremented on every keystroke
+- Inference results carry version number
+- Results with mismatched version are discarded
+- Prevents showing completions for outdated editor state
+
+=============================================================================
+7. SOVEREIGN INFERENCE BRIDGE INTEGRATION
+=============================================================================
+
+Callback Chain:
+
+SovereignInferenceBridge
+    ↓ (streaming tokens)
+GhostText_OnSovereignToken()
+    ↓ (accumulate tokens)
+GhostTextEngine::HandleInferenceResult()
+    ↓ (update UI)
+PostMessage(WM_GHOST_SUGGESTION)
+    ↓ (async to UI thread)
+GhostText_OnSuggestionReceived()
+    ↓ (display)
+GhostTextEngine::PaintGhostText()
+
+=============================================================================
+8. C API FOR WIN32 INTEGRATION
+=============================================================================
+
+The following C API functions are exported for use in the Win32 IDE:
+
+Initialization:
+  BOOL RawrXD_GhostText_Init(RawrXD_IDE* ide)
+  void RawrXD_GhostText_Shutdown(RawrXD_IDE* ide)
+
+Event Routing:
+  void RawrXD_GhostText_OnTimer(RawrXD_IDE* ide, WPARAM timerId)
+  void RawrXD_GhostText_OnTextChanged(RawrXD_IDE* ide)
+  BOOL RawrXD_GhostText_OnKeyDown(RawrXD_IDE* ide, WPARAM key)
+  void RawrXD_GhostText_OnPaint(RawrXD_IDE* ide, HDC hdc, const RECT* editorRect)
+  LRESULT RawrXD_GhostText_OnCustomMessage(RawrXD_IDE* ide, UINT msg, WPARAM wParam, LPARAM lParam)
+
+Utilities:
+  void RawrXD_GhostText_ForceDismiss(RawrXD_IDE* ide)
+  BOOL RawrXD_GhostText_IsActive(RawrXD_IDE* ide)
+
+=============================================================================
+9. CURRENT INTEGRATION STATUS IN RawrXD_IDE_Win32.cpp
+=============================================================================
+
+The main IDE file (RawrXD_IDE_Win32.cpp) currently has DIRECT integration:
+
+✅ GhostTextEngine instantiated in WM_CREATE:
+   ide->ghostEngine = new GhostTextEngine(ide->hWndEditor);
+   if (ide->ghostEngine && ide->ghostEngine->Initialize()) { ... }
+
+✅ Key handling in WM_KEYDOWN:
+   if (ide->ghostEngine && ide->ghostEngine->HandleKey(wParam)) { return 0; }
+
+✅ Ctrl+Space completion trigger:
+   if (ide->ghostEngine && ide->ghostEngine->IsAvailable()) {
+       ide->ghostEngine->OnTextChanged(buffer, line, col);
+   }
+
+✅ WM_GHOST_SUGGESTION handling:
+   ide->ghostEngine->HandleInferenceResult(gr->text, gr->line, gr->col, gr->confidence);
+
+✅ Cleanup in WM_DESTROY:
+   if (ide->ghostEngine) {
+       ide->ghostEngine->Shutdown();
+       delete ide->ghostEngine;
+   }
+
+The GhostTextIntegration_Wiring layer provides a CLEANER ABSTRACTION that could
+be adopted to consolidate all GhostText logic in one place.
+
+=============================================================================
+10. CUSTOM WINDOW MESSAGES
+=============================================================================
+
+#define WM_GHOST_SUGGESTION    (WM_USER + 0x1000)  // Inference result ready
+#define WM_GHOST_DISMISS       (WM_USER + 0x1001)  // Dismiss suggestion
+#define WM_GHOST_ACCEPT        (WM_USER + 0x1002)  // Accept suggestion
+
+=============================================================================
+11. TELEMETRY INTEGRATION
+=============================================================================
+
+The following telemetry events are emitted:
+
+- STEL_InitializeForIDE() - Bridge initialized
+- STEL_BeginInference() - Inference request started
+- STEL_OnFirstToken() - First token received
+- STEL_GhostTextAccepted(length) - User accepted suggestion
+- STEL_GhostTextDismissed() - User dismissed suggestion
+
+=============================================================================
+12. BUILD INSTRUCTIONS
+=============================================================================
+
+The GhostTextIntegration_Wiring is compiled as part of the IDE:
+
+1. Include in build:
+   GhostTextIntegration_Wiring.cpp
+   GhostTextIntegration_Wiring.h
+
+2. Dependencies:
+   RawrXD_IDE_GhostText_Engine.hpp
+   SovereignInferenceBridge.h
+   SovereignTelemetryIntegration.h
+   RawrXD_IDE_Win32.h
+
+3. Link with:
+   user32.lib gdi32.lib
+
+=============================================================================
+13. USAGE EXAMPLE
+=============================================================================
+
+// In IDE initialization:
+if (GhostTextIntegration_Initialize(ide)) {
+    OutputDebugStringA("GhostText ready\n");
+}
+
+// In window procedure:
+case WM_KEYDOWN:
+    if (GhostTextIntegration_OnKeyDown(ide, wParam)) {
+        return 0;  // Handled by GhostText
+    }
+    // ... other key handling ...
+    break;
+
+case WM_TIMER:
+    GhostTextIntegration_OnTimer(ide, wParam);
+    break;
+
+// In editor subclass:
+case EN_CHANGE:
+    GhostTextIntegration_OnTextChanged(ide);
+    break;
+
+// In paint handler:
+GhostTextIntegration_OnPaint(ide, hdc, &editorRect);
+
+=============================================================================
+END OF SUMMARY
+=============================================================================

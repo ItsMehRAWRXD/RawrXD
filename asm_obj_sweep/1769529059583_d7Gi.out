@@ -1,0 +1,49 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(43) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(60) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(213) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(241) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(247) : error A2000:memory operand not allowed in context
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(425) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(452) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(656) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(120) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(130) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(190) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(203) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(204) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(205) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(210) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(211) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(232) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(285) : error A2006:undefined symbol : printf
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(286) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(287) : error A2006:undefined symbol : ExitProcess
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(307) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(308) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(328) : error A2006:undefined symbol : printf
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(353) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(354) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(356) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(358) : error A2006:undefined symbol : CreateFileW
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(361) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(370) : error A2006:undefined symbol : GetFileSizeEx
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(428) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(434) : error A2006:undefined symbol : GetLastError
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(435) : error A2006:undefined symbol : ERROR_OPERATION_ABORTED
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(437) : error A2006:undefined symbol : ERROR_IO_PENDING
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(439) : error A2006:undefined symbol : ERROR_HANDLE_EOF
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(447) : error A2006:undefined symbol : Sleep
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(454) : error A2006:undefined symbol : GetOverlappedResult
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(461) : error A2006:undefined symbol : TotalRead
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(506) : error A2006:undefined symbol : FILE_CURRENT
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(507) : error A2006:undefined symbol : SetFilePointerEx
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(518) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(523) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(524) : error A2006:undefined symbol : FILE_CURRENT
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(525) : error A2006:undefined symbol : SetFilePointerEx
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(526) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(530) : error A2006:undefined symbol : IO_Context
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(532) : error A2006:undefined symbol : FILE_CURRENT
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(533) : error A2006:undefined symbol : SetFilePointerEx
+D:\rawrxd\history\all_versions\src\masm\robust_tools.asm\1769529059583_d7Gi.asm(658) : error A2006:undefined symbol : WriteFile

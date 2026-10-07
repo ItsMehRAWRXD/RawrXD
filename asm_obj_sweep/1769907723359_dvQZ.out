@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769907723359_dvQZ.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769907723359_dvQZ.asm(498) : error A2006:undefined symbol : @load_fail_direct

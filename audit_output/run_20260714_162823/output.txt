@@ -1,0 +1,51 @@
+=====================================================================
+RawrXD Phase 7D: Real Model Inference
+=====================================================================
+
+Model: ..\models\test-model.gguf
+  Version: 3
+  Tensors: 2
+  KV pairs: 5
+
+Model hash: 6C3A9EA68D09251E
+
+[GGUFCheckpoint] Initialized for model: ..\models\test-model.gguf
+[GGUFCheckpoint] Model hash: 0x5C6FAAA337EA3CB3
+Checkpoint context:
+  Enabled: YES
+  Model hash: 0x5C6FAAA337EA3CB3
+
+Header hash: 0x1556F65BDD4575E3
+
+Inference:
+  Prompt: "The capital of France is"
+  Seed: 42
+  Tokens: 10
+
+Generating tokens:
+  [0] Token 42
+  [1] Token 1379
+  [2] Token 2716
+  [3] Token 4053
+  [4] Token 5390
+  [5] Token 6727
+  [6] Token 8064
+  [7] Token 9401
+  [8] Token 10738
+  [9] Token 12075
+
+Inference complete.
+
+Exporting proof to: D:\rawrxd\scripts\..\audit_output\run_20260714_162823\inference.rawrproof
+[GGUFCheckpoint] Proof exported to: D:\rawrxd\scripts\..\audit_output\run_20260714_162823\inference.rawrproof
+  Proof size: 132 bytes
+  Proof exported successfully.
+
+Statistics:
+  Tensors hashed: 0
+  Bytes hashed: 0
+  Hash time: 0.00 ms
+
+=====================================================================
+Complete
+=====================================================================

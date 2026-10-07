@@ -1,0 +1,81 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(94) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(96) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(106) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(119) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(134) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(140) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(146) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(150) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(160) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(162) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(215) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(224) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(229) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(230) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(233) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(234) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(237) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(238) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(241) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(242) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(253) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(270) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(271) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(272) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(273) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(274) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(275) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(279) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(342) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(351) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(364) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(365) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(366) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(375) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(389) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(391) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(392) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(407) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(420) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(475) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(476) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(493) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(494) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(496) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(512) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(513) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(514) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(517) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(520) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(524) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(525) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(526) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(529) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(532) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(536) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(537) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(538) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(541) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(544) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(548) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(549) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(550) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(553) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(557) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(565) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(567) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(570) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(571) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(572) : error A2008:syntax error : start
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(572) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(109) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(459) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(472) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(98) : warning A6004:procedure argument or local not referenced : pString
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(98) : warning A6004:procedure argument or local not referenced : dwWritten
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(125) : warning A6004:procedure argument or local not referenced : dwRead
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(165) : warning A6004:procedure argument or local not referenced : pFileName
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_professional.asm(165) : warning A6004:procedure argument or local not referenced : dwHighSize

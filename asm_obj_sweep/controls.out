@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\quality\controls.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\quality\controls.asm(3) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\quality\controls.asm(4) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\quality\controls.asm(9) : fatal error A1000:cannot open file : user32.inc

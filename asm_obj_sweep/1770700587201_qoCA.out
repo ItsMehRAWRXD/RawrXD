@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700587201_qoCA.asm
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700587201_qoCA.asm(268) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700587201_qoCA.asm(5010) : error A2006:undefined symbol : szBBCovBlocks

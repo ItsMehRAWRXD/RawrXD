@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\agentic\Clean_Stage3.asm
+D:\rawrxd\src\agentic\Clean_Stage3.asm(448) : error A2005:symbol redefinition : Emitter_Init
+D:\rawrxd\src\agentic\Clean_Stage3.asm(453) : fatal error A1010:unmatched block nesting : Emitter_Init

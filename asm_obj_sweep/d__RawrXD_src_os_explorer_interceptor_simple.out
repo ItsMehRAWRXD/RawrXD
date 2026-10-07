@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(1) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(403) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(37) : error A2006:undefined symbol : g_hInstance
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(40) : error A2006:undefined symbol : DisableThreadLibraryCalls
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(74) : error A2006:undefined symbol : OpenProcess
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(85) : error A2006:undefined symbol : VirtualAllocEx
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(97) : error A2006:undefined symbol : WriteProcessMemory
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(58) : warning A6004:procedure argument or local not referenced : hInstDLL
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(58) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(58) : warning A6004:procedure argument or local not referenced : lpvReserved
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(306) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(315) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(324) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple.asm(371) : warning A6004:procedure argument or local not referenced : lpParam

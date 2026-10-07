@@ -1,0 +1,31 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(172) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(264) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(270) : error A2006:undefined symbol : REG_RBP
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(272) : error A2006:undefined symbol : REG_R13
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(311) : error A2006:undefined symbol : REG_RSP
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(313) : error A2006:undefined symbol : REG_R12
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(354) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(603) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(606) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1129) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1151) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1183) : error A2006:undefined symbol : REG_RAX
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1183) : error A2006:undefined symbol : REG_RCX
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1183) : error A2006:undefined symbol : REG_RDX
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1183) : error A2006:undefined symbol : REG_RBX
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1183) : error A2006:undefined symbol : REG_RSP
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1183) : error A2006:undefined symbol : REG_RBP
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1183) : error A2006:undefined symbol : REG_RSI
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1183) : error A2006:undefined symbol : REG_RDI
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1184) : error A2006:undefined symbol : REG_R8
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1184) : error A2006:undefined symbol : REG_R9
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1184) : error A2006:undefined symbol : REG_R10
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1184) : error A2006:undefined symbol : REG_R11
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1184) : error A2006:undefined symbol : REG_R12
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1184) : error A2006:undefined symbol : REG_R13
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1184) : error A2006:undefined symbol : REG_R14
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1184) : error A2006:undefined symbol : REG_R15
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(185) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_x64_core_v3.asm(1157) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(10) : error A2006:undefined symbol : GPU_ScanPCIBus
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(11) : error A2006:undefined symbol : GPU_ReadPCIConfig
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(12) : error A2006:undefined symbol : GPU_ReadPCIConfigDword
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(13) : error A2006:undefined symbol : GPU_GetDeviceProperties
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(14) : error A2006:undefined symbol : GPU_GetNVIDIAProperties
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(15) : error A2006:undefined symbol : GPU_GetAMDProperties
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(16) : error A2006:undefined symbol : GPU_GetIntelProperties
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(17) : error A2006:undefined symbol : GPU_GetGenericProperties
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(18) : error A2006:undefined symbol : GPU_ReadMemorySize
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(19) : error A2006:undefined symbol : GPU_Initialize
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(20) : error A2006:undefined symbol : GPU_Shutdown
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(62) : error A2006:undefined symbol : VendorID
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(63) : error A2006:undefined symbol : DeviceID
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(64) : error A2006:undefined symbol : ComputeUnits
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(65) : error A2006:undefined symbol : ClockSpeedMHz
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_gpu_masm_gpu_detection.asm(66) : error A2006:undefined symbol : MemorySize

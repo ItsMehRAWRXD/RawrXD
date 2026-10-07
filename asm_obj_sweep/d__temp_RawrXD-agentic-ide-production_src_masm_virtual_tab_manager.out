@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_virtual_tab_manager.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_virtual_tab_manager.asm(12) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_virtual_tab_manager.asm(16) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_virtual_tab_manager.asm(21) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_virtual_tab_manager.asm(25) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_virtual_tab_manager.asm(36) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_virtual_tab_manager.asm(38) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_virtual_tab_manager.asm(51) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_virtual_tab_manager.asm(42) : warning A6004:procedure argument or local not referenced : lpFilePath

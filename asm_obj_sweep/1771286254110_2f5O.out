@@ -1,0 +1,34 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(109) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(186) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(195) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(204) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(212) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(320) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(325) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(337) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(350) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(362) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(364) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(456) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(490) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(101) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(105) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(253) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(273) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(275) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(286) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(287) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(290) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(357) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(412) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(484) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(485) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(583) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(597) : error A2006:undefined symbol : CreateFileMappingA
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(610) : error A2006:undefined symbol : MapViewOfFile
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(635) : error A2006:undefined symbol : UnmapViewOfFile
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(638) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(641) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(674) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1771286254110_2f5O.asm(707) : error A2206:missing operator in expression

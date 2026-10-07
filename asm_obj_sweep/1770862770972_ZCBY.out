@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770862770972_ZCBY.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770862770972_ZCBY.asm(772) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770862770972_ZCBY.asm(779) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770862770972_ZCBY.asm(715) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770862770972_ZCBY.asm(728) : error A2082:cannot mix 16- and 32-bit registers

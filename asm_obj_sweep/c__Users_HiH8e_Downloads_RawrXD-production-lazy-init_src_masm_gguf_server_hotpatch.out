@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(308) : error A2006:undefined symbol : CACHE_SIZE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(315) : error A2006:undefined symbol : g_server_cache
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(317) : error A2006:undefined symbol : CACHE_BUCKET_SIZE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(324) : error A2006:undefined symbol : ENTRIES_PER_BUCKET
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(328) : error A2006:undefined symbol : CACHE_ENTRY_SIZE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(380) : error A2006:undefined symbol : CACHE_SIZE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(387) : error A2006:undefined symbol : g_server_cache
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(389) : error A2006:undefined symbol : CACHE_BUCKET_SIZE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(396) : error A2006:undefined symbol : ENTRIES_PER_BUCKET
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(400) : error A2006:undefined symbol : CACHE_ENTRY_SIZE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(414) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_gguf_server_hotpatch.asm(419) : error A2006:undefined symbol : g_server_cache_entries

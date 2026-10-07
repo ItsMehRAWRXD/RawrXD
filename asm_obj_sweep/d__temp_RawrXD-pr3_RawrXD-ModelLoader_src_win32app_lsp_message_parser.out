@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(66) : error A2008:syntax error : Lock
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(73) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(113) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(195) : error A2008:syntax error : rbx
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(199) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(200) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-pr3_RawrXD-ModelLoader_src_win32app_lsp_message_parser.asm(289) : fatal error A1010:unmatched block nesting : LspMessage_ParseFromJson

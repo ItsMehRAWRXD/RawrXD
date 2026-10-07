@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-1ec43a2c\qoCA.asm
+D:\rawrxd\history\-1ec43a2c\qoCA.asm(268) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1ec43a2c\qoCA.asm(5010) : error A2006:undefined symbol : szBBCovBlocks

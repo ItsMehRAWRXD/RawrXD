@@ -1,0 +1,2 @@
+devices=3 policy=0 mode=1 backend=GPU reason=auto_best_compute primary=AMD Radeon AI PRO R9700
+DEEP2_CPU_GPU_POLICY_001=PASS

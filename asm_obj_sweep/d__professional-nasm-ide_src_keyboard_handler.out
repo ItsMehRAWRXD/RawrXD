@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(6) : error A2008:syntax error : bits
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(7) : error A2008:syntax error : default
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(12) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(13) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(14) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(15) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(16) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(17) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(18) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(19) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(24) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(68) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(69) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(70) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(73) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(74) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(76) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(79) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(81) : error A2008:syntax error : key_pressed
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(82) : error A2008:syntax error : key_previous
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(83) : error A2008:syntax error : key_repeat_time
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(86) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(91) : error A2008:syntax error : input_buffer
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(94) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(99) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(102) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(103) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(109) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(110) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(112) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(113) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(123) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(124) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(135) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(136) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(138) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(144) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(148) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(149) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(155) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(156) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(157) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(160) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(161) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(162) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(163) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(166) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(167) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(168) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(169) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(172) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(174) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(175) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(176) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(177) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(182) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(183) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(184) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(185) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(186) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(187) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(192) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(193) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(194) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(195) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(198) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(199) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(200) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(202) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(204) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(205) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(206) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(207) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_keyboard_handler.asm(210) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(146) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(209) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(218) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(233) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(236) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(302) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(363) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(380) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(205) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1769623080192_mZEP.asm(359) : error A2206:missing operator in expression

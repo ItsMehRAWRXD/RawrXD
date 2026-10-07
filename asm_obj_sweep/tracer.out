@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(74) : error A2008:syntax error : low
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(75) : error A2008:syntax error : high
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(76) : warning A6006:structure contains no members
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(99) : error A2159:structure cannot be instanced
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(107) : error A2159:structure cannot be instanced
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(128) : error A2159:structure cannot be instanced
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(149) : error A2008:syntax error : lock
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(160) : error A2008:syntax error : g_TracerLock
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(235) : error A2008:syntax error : lock
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(241) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(244) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(324) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(359) : error A2008:syntax error : lock
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(410) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(413) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(414) : error A2008:syntax error : lock
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(445) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(478) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(507) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(558) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\distributed\tracer.asm(562) : fatal error A1010:unmatched block nesting : SetBaggageItem

@@ -1,0 +1,70 @@
+ Assembling: D:\rawrxd\history\-2386c2f1\8XRD.asm
+D:\rawrxd\history\-2386c2f1\8XRD.asm(48) : error A2008:syntax error : qword
+D:\rawrxd\history\-2386c2f1\8XRD.asm(49) : error A2008:syntax error : qword
+D:\rawrxd\history\-2386c2f1\8XRD.asm(50) : error A2008:syntax error : qword
+D:\rawrxd\history\-2386c2f1\8XRD.asm(51) : error A2008:syntax error : qword
+D:\rawrxd\history\-2386c2f1\8XRD.asm(52) : error A2008:syntax error : qword
+D:\rawrxd\history\-2386c2f1\8XRD.asm(53) : error A2008:syntax error : qword
+D:\rawrxd\history\-2386c2f1\8XRD.asm(56) : error A2008:syntax error : qword
+D:\rawrxd\history\-2386c2f1\8XRD.asm(57) : error A2008:syntax error : dword
+D:\rawrxd\history\-2386c2f1\8XRD.asm(58) : error A2008:syntax error : byte
+D:\rawrxd\history\-2386c2f1\8XRD.asm(82) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(125) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2386c2f1\8XRD.asm(126) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2386c2f1\8XRD.asm(149) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(178) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(182) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(213) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(214) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(373) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(390) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2386c2f1\8XRD.asm(414) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(486) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2386c2f1\8XRD.asm(504) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(505) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(520) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(521) : error A2001:immediate operand not allowed
+D:\rawrxd\history\-2386c2f1\8XRD.asm(621) : error A2008:syntax error : .
+D:\rawrxd\history\-2386c2f1\8XRD.asm(621) : error A2088:END directive required at end of file
+D:\rawrxd\history\-2386c2f1\8XRD.asm(86) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(87) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\-2386c2f1\8XRD.asm(107) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\-2386c2f1\8XRD.asm(114) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-2386c2f1\8XRD.asm(120) : error A2006:undefined symbol : copy_string
+D:\rawrxd\history\-2386c2f1\8XRD.asm(123) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-2386c2f1\8XRD.asm(153) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(154) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\-2386c2f1\8XRD.asm(161) : error A2006:undefined symbol : free
+D:\rawrxd\history\-2386c2f1\8XRD.asm(205) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-2386c2f1\8XRD.asm(210) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\-2386c2f1\8XRD.asm(218) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(219) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\-2386c2f1\8XRD.asm(323) : error A2006:undefined symbol : copy_string_safe
+D:\rawrxd\history\-2386c2f1\8XRD.asm(372) : error A2006:undefined symbol : TerminateThread
+D:\rawrxd\history\-2386c2f1\8XRD.asm(378) : error A2006:undefined symbol : free
+D:\rawrxd\history\-2386c2f1\8XRD.asm(381) : error A2006:undefined symbol : free
+D:\rawrxd\history\-2386c2f1\8XRD.asm(384) : error A2006:undefined symbol : free
+D:\rawrxd\history\-2386c2f1\8XRD.asm(387) : error A2006:undefined symbol : free
+D:\rawrxd\history\-2386c2f1\8XRD.asm(394) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(395) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\-2386c2f1\8XRD.asm(420) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(424) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(427) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\-2386c2f1\8XRD.asm(458) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2386c2f1\8XRD.asm(459) : error A2006:undefined symbol : get_step_at_index
+D:\rawrxd\history\-2386c2f1\8XRD.asm(483) : error A2006:undefined symbol : analyze_failure
+D:\rawrxd\history\-2386c2f1\8XRD.asm(502) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-2386c2f1\8XRD.asm(509) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(510) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\-2386c2f1\8XRD.asm(518) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-2386c2f1\8XRD.asm(525) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(526) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\-2386c2f1\8XRD.asm(546) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(547) : error A2006:undefined symbol : generate_inference_prompt
+D:\rawrxd\history\-2386c2f1\8XRD.asm(550) : error A2006:undefined symbol : invoke_inference_engine
+D:\rawrxd\history\-2386c2f1\8XRD.asm(554) : error A2006:undefined symbol : parse_json_array
+D:\rawrxd\history\-2386c2f1\8XRD.asm(568) : error A2084:constant value too large
+D:\rawrxd\history\-2386c2f1\8XRD.asm(569) : error A2006:undefined symbol : generate_inference_prompt
+D:\rawrxd\history\-2386c2f1\8XRD.asm(572) : error A2006:undefined symbol : invoke_inference_engine
+D:\rawrxd\history\-2386c2f1\8XRD.asm(611) : error A2006:undefined symbol : EM_REPLACESEL
+D:\rawrxd\history\-2386c2f1\8XRD.asm(613) : error A2006:undefined symbol : SendMessageA

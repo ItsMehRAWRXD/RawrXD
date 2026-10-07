@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab_turbo.asm\1771286969257_ZHcv.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab_turbo.asm\1771286969257_ZHcv.asm(23) : error A2006:undefined symbol : PocketLabRunCycle
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab_turbo.asm\1771286969257_ZHcv.asm(24) : error A2006:undefined symbol : PocketLabGetStats
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab_turbo.asm\1771286969257_ZHcv.asm(25) : error A2006:undefined symbol : PocketLabGetThermal

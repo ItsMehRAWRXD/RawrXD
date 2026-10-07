@@ -1,0 +1,35 @@
+﻿HEXMAG_COPILOT_INTEGRATION_CLOSED
+================================
+frozen_at_utc=2026-08-29T20:08:59Z
+
+AUTHORITY
+---------
+hexmag_functional_milestone = fc409ae9cb224db7cda6ef39303c7c9425863bb6
+  message = feat(ide): live Copilot send through HexMagRuntimeController
+citation_tip_at_freeze_pack = 2f4bd3ec047ae922df4a72b6d3a26a7d9ce888de
+  message = cert(hexmag): publish IDE runtime cert freeze pack to citation HEAD
+canonical_remote = closure-origin
+rawrxd_gh = intentionally_unsynced (not a blocker)
+
+RUNTIME_PATH_UNCHANGED_SINCE_MILESTONE
+--------------------------------------
+src/win32app/Win32IDE_HexMagCopilotRoute.cpp
+src/core/hexmag_ide_send_path.hpp
+src/core/hexmag_runtime_controller.*
+src/core/hexmag_finalize_policy.hpp
+tests/hexmag_ide_e2e_cert.cpp
+diff_vs_fc409ae9cb = empty (cert evidence only after milestone)
+
+CERT
+----
+HEXMAG_IDE_E2E_001 = PASS (scripted live send path; 5 cases)
+evidence pack = evidence/HEXMAG_IDE_RUNTIME_CERT_FREEZE/
+WIN32IDE_LAUNCH_SMOKE_001 = PASS (exe started, alive 4s, stopped)
+AGENT_SCHEMA_RETRY_001 harness = fixed (Start-Process; stderr irrelevant)
+AGENT_SCHEMA_RETRY_001 native = FAIL this session (TinyLlama second call still bare-key; not harness noise)
+
+STATUS
+------
+HexMag/Copilot live integration = CLOSED at fc409ae9cb
+No further HexMag control-plane architecture.
+Next effort = Deep2 parity/performance; schema-retry native remains agent-ladder.

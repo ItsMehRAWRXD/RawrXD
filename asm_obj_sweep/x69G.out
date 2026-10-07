@@ -1,0 +1,48 @@
+ Assembling: D:\rawrxd\history\-2d4bb31d\x69G.asm
+D:\rawrxd\history\-2d4bb31d\x69G.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\-2d4bb31d\x69G.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\-2d4bb31d\x69G.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\-2d4bb31d\x69G.asm(430) : error A2008:syntax error : name
+D:\rawrxd\history\-2d4bb31d\x69G.asm(441) : error A2008:syntax error : name
+D:\rawrxd\history\-2d4bb31d\x69G.asm(452) : error A2008:syntax error : name
+D:\rawrxd\history\-2d4bb31d\x69G.asm(463) : error A2008:syntax error : name
+D:\rawrxd\history\-2d4bb31d\x69G.asm(474) : error A2008:syntax error : name
+D:\rawrxd\history\-2d4bb31d\x69G.asm(506) : error A2008:syntax error : .
+D:\rawrxd\history\-2d4bb31d\x69G.asm(515) : error A2008:syntax error : .
+D:\rawrxd\history\-2d4bb31d\x69G.asm(530) : error A2008:syntax error : .
+D:\rawrxd\history\-2d4bb31d\x69G.asm(542) : error A2008:syntax error : .
+D:\rawrxd\history\-2d4bb31d\x69G.asm(565) : error A2008:syntax error : .
+D:\rawrxd\history\-2d4bb31d\x69G.asm(428) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(432) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(433) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(435) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(439) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(443) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(444) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(446) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(450) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(454) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(455) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(457) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(461) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(465) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(466) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(468) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(472) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(476) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(477) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(479) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(510) : error A2006:undefined symbol : cmd_copied
+D:\rawrxd\history\-2d4bb31d\x69G.asm(513) : error A2006:undefined symbol : copy_cmd
+D:\rawrxd\history\-2d4bb31d\x69G.asm(522) : error A2006:undefined symbol : str_compare
+D:\rawrxd\history\-2d4bb31d\x69G.asm(524) : error A2006:undefined symbol : not_read_file
+D:\rawrxd\history\-2d4bb31d\x69G.asm(527) : error A2006:undefined symbol : tool_handler_read_file_impl
+D:\rawrxd\history\-2d4bb31d\x69G.asm(528) : error A2006:undefined symbol : dispatch_done
+D:\rawrxd\history\-2d4bb31d\x69G.asm(534) : error A2006:undefined symbol : str_compare
+D:\rawrxd\history\-2d4bb31d\x69G.asm(536) : error A2006:undefined symbol : not_list_dir
+D:\rawrxd\history\-2d4bb31d\x69G.asm(539) : error A2006:undefined symbol : tool_handler_list_dir_impl
+D:\rawrxd\history\-2d4bb31d\x69G.asm(540) : error A2006:undefined symbol : dispatch_done
+D:\rawrxd\history\-2d4bb31d\x69G.asm(563) : error A2006:undefined symbol : dispatch_done
+D:\rawrxd\history\-2d4bb31d\x69G.asm(579) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2d4bb31d\x69G.asm(595) : error A2083:invalid scale value
+D:\rawrxd\history\-2d4bb31d\x69G.asm(69) : warning A4014:instructions and initialized data not supported in BSS segments

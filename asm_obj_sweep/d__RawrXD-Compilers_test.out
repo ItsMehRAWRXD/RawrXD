@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test.asm(9) : error A2008:syntax error : in instruction
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test.asm(12) : error A2008:syntax error : endp

@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\ui\RawrXD_Native_UI.asm
+D:\rawrxd\src\ui\RawrXD_Native_UI.asm(9) : fatal error A1000:cannot open file : user32.inc

@@ -1,6 +1,3 @@
-{
-   "description" : "Domain Actions URL List that can work with experiment buckets.",
-   "listFormat" : 2,
-   "name" : "DomainActions",
-   "version" : "3.0.0.16"
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:605fad4274a41aa5139f0339fd3f0ca2483c9507cad75df8269c01c0d75aeb4d
+size 165

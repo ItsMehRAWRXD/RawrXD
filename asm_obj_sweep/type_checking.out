@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\type_checking.asm
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(25) : error A2008:syntax error : type_checking_enabled
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(26) : error A2008:syntax error : strict_type_checking
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(27) : error A2008:syntax error : implicit_conversions
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(28) : error A2008:syntax error : type_inference
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(29) : error A2008:syntax error : type_errors
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(30) : error A2008:syntax error : type_error_count
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(31) : error A2008:syntax error : type_warnings
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(32) : error A2008:syntax error : type_warning_count
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(35) : error A2008:syntax error : expressions_checked
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(36) : error A2008:syntax error : statements_checked
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(37) : error A2008:syntax error : types_inferred
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(38) : error A2008:syntax error : conversions_performed
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(39) : error A2008:syntax error : errors_reported
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(40) : error A2008:syntax error : warnings_reported
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(42) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(43) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(44) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(45) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(46) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(47) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(48) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(49) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(50) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(51) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(52) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(53) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(54) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(55) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(56) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(57) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(58) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(59) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(60) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(61) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(64) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(65) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(66) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(69) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(70) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(71) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(72) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(75) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(76) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(77) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(78) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(79) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(80) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(83) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(84) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(85) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(86) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(87) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(88) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(91) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(92) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(93) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(96) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(97) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(98) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(100) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(101) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(104) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(105) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(106) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(112) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(113) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(114) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(117) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(118) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(121) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(122) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(123) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(124) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(125) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(126) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(127) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(128) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(129) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(130) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(133) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(134) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(136) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(137) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(138) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(140) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(141) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(142) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(144) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(145) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(146) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(148) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(149) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(150) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(152) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(153) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(154) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(156) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\type_checking.asm(157) : fatal error A1012:error count exceeds 100; stopping assembly

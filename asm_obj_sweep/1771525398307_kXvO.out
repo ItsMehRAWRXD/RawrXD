@@ -1,0 +1,41 @@
+ Assembling: D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(224) : error A2008:syntax error : Dr0
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(225) : error A2008:syntax error : Dr1
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(226) : error A2008:syntax error : Dr2
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(227) : error A2008:syntax error : Dr3
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(228) : error A2008:syntax error : Dr6
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(229) : error A2008:syntax error : Dr7
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(230) : error A2008:syntax error : Rax
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(231) : error A2008:syntax error : Rcx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(232) : error A2008:syntax error : Rdx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(233) : error A2008:syntax error : Rbx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(234) : error A2008:syntax error : Rsp
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(235) : error A2008:syntax error : Rbp
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(236) : error A2008:syntax error : Rsi
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(237) : error A2008:syntax error : Rdi
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(238) : error A2008:syntax error : R8
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(239) : error A2008:syntax error : R9
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(240) : error A2008:syntax error : R10
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(241) : error A2008:syntax error : R11
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(242) : error A2008:syntax error : R12
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(243) : error A2008:syntax error : R13
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(244) : error A2008:syntax error : R14
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(245) : error A2008:syntax error : R15
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(313) : error A2006:undefined symbol : CONTEXT_SIZE
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(484) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(398) : error A2006:undefined symbol : @@lvl_warn
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(589) : error A2006:undefined symbol : ContextFlags
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(597) : error A2006:undefined symbol : EFlags
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(652) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(805) : error A2006:undefined symbol : rip
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(337) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(502) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(573) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(619) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(628) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(640) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(657) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(771) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(787) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525398307_kXvO.asm(828) : error A2220:Missing .ENDPROLOG

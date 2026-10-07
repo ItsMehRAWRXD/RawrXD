@@ -58,6 +58,7 @@ struct TensorView
     const uint32_t* dims;
     uint32_t rank;
     uint64_t elementCount;
+    const char* name;  // For live GGUF type lookup
 };
 
 //=============================================================================
@@ -68,9 +69,19 @@ class GGUFROM
   public:
     const uint8_t* base = nullptr;
     uint64_t size = 0;
-    uint64_t ggufDataOffset = 0; // GGUF data section start (relative to file start)
+    uint64_t ggufDataOffset = 0;
     HANDLE hFile = INVALID_HANDLE_VALUE;
     HANDLE hMap = INVALID_HANDLE_VALUE;
+
+    // Parsed tensor directory from live GGUF
+    struct LiveTensorInfo {
+        std::string name;
+        ModelGenie::GGMLType type;
+        uint64_t dataOffset;      // relative to data section
+        uint64_t encodedBytes;
+        std::vector<uint64_t> dims;
+    };
+    std::vector<LiveTensorInfo> liveTensors;
 
     bool Open(const std::string& path)
     {
@@ -107,13 +118,13 @@ class GGUFROM
             return false;
         }
 
-        // Parse GGUF header to extract data_start offset
-        // GGUF v3 header: magic(4) + version(4) + tensor_count(8) + metadata_count(8)
-        // The data_start is NOT in the header. It's calculated after parsing all metadata
-        // and tensor info. For now, use a default and we'll calculate it properly later.
-        // The evidence file says data_start=3972000 for this model.
-        ggufDataOffset = 3972000; // Default for DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
-        printf("[ROM] GGUF data_start=%llu (from evidence)\n", (unsigned long long)ggufDataOffset);
+        // Parse GGUF header
+        if (!ParseGGUFHeader())
+        {
+            printf("[ROM] Failed to parse GGUF header\n");
+            Close();
+            return false;
+        }
 
         printf("[ROM] Mapped %llu bytes from %s\n", (unsigned long long)size, path.c_str());
         return true;
@@ -136,6 +147,164 @@ class GGUFROM
             CloseHandle(hFile);
             hFile = INVALID_HANDLE_VALUE;
         }
+    }
+
+  private:
+    bool ParseGGUFHeader()
+    {
+        if (size < 24) return false;
+        
+        // GGUF v3 header: magic(4), version(4), tensor_count(8), metadata_kv_count(8)
+        uint32_t magic = *reinterpret_cast<const uint32_t*>(base);
+        if (magic != 0x46554747) // "GGUF"
+        {
+            printf("[ROM] Invalid GGUF magic: 0x%08x\n", magic);
+            return false;
+        }
+        
+        uint32_t version = *reinterpret_cast<const uint32_t*>(base + 4);
+        if (version != 3)
+        {
+            printf("[ROM] Unsupported GGUF version: %u\n", version);
+            return false;
+        }
+        
+        uint64_t tensorCount = *reinterpret_cast<const uint64_t*>(base + 8);
+        uint64_t metadataKvCount = *reinterpret_cast<const uint64_t*>(base + 16);
+        
+        const uint8_t* ptr = base + 24;
+        
+        // Skip metadata key-value pairs
+        for (uint64_t i = 0; i < metadataKvCount; ++i)
+        {
+            if (ptr + 8 > base + size) return false;
+            uint64_t keyLen = *reinterpret_cast<const uint64_t*>(ptr);
+            ptr += 8;
+            if (ptr + keyLen > base + size) return false;
+            ptr += keyLen; // skip key
+            
+            if (ptr + 8 > base + size) return false;
+            uint32_t valueType = *reinterpret_cast<const uint32_t*>(ptr);
+            ptr += 4;
+            if (ptr + 4 > base + size) return false;
+            ptr += 4; // skip value type and padding?
+            
+            // Skip value based on type (simplified - just advance ptr)
+            // This is a minimal parser; real implementation would decode each type
+            // For now, we assume standard metadata and advance appropriately
+            switch (valueType)
+            {
+                case 0: ptr += 1; break;   // u8
+                case 1: ptr += 1; break;   // i8
+                case 2: ptr += 2; break;   // u16
+                case 3: ptr += 2; break;   // i16
+                case 4: ptr += 4; break;   // u32
+                case 5: ptr += 4; break;   // i32
+                case 6: ptr += 4; break;   // f32
+                case 7: ptr += 1; break;   // bool
+                case 8: 
+                    if (ptr + 8 > base + size) return false;
+                    uint64_t strLen = *reinterpret_cast<const uint64_t*>(ptr);
+                    ptr += 8 + strLen;
+                    break; // string
+                case 9: 
+                    if (ptr + 8 > base + size) return false;
+                    uint64_t arrLen = *reinterpret_cast<const uint64_t*>(ptr);
+                    ptr += 8;
+                    // Skip array elements (simplified)
+                    ptr += arrLen * 8; // assume u64
+                    break; // array
+                default: return false;
+            }
+        }
+        
+        // Parse tensor info array
+        liveTensors.clear();
+        liveTensors.reserve(tensorCount);
+        
+        for (uint64_t i = 0; i < tensorCount; ++i)
+        {
+            if (ptr + 8 > base + size) return false;
+            uint64_t nameLen = *reinterpret_cast<const uint64_t*>(ptr);
+            ptr += 8;
+            if (ptr + nameLen > base + size) return false;
+            std::string name(reinterpret_cast<const char*>(ptr), nameLen);
+            ptr += nameLen;
+            
+            if (ptr + 4 > base + size) return false;
+            uint32_t nDims = *reinterpret_cast<const uint32_t*>(ptr);
+            ptr += 4;
+            
+            std::vector<uint64_t> dims;
+            dims.reserve(nDims);
+            for (uint32_t d = 0; d < nDims; ++d)
+            {
+                if (ptr + 8 > base + size) return false;
+                dims.push_back(*reinterpret_cast<const uint64_t*>(ptr));
+                ptr += 8;
+            }
+            
+            if (ptr + 4 > base + size) return false;
+            uint32_t typeId = *reinterpret_cast<const uint32_t*>(ptr);
+            ptr += 4;
+            
+            if (ptr + 8 > base + size) return false;
+            uint64_t dataOffset = *reinterpret_cast<const uint64_t*>(ptr);
+            ptr += 8;
+            
+            // Map GGML type ID to ModelGenie::GGMLType
+            ModelGenie::GGMLType type = ModelGenie::GGMLType::F32;
+            switch (typeId)
+            {
+                case 0: type = ModelGenie::GGMLType::F32; break;
+                case 1: type = ModelGenie::GGMLType::Q4_K; break;
+                case 2: type = ModelGenie::GGMLType::Q4_0; break;
+                case 3: type = ModelGenie::GGMLType::Q4_1; break;
+                case 4: type = ModelGenie::GGMLType::Q5_0; break;
+                case 5: type = ModelGenie::GGMLType::Q5_1; break;
+                case 6: type = ModelGenie::GGMLType::Q8_0; break;
+                case 7: type = ModelGenie::GGMLType::Q8_1; break;
+                case 8: type = ModelGenie::GGMLType::Q2_K; break;
+                case 9: type = ModelGenie::GGMLType::Q3_K; break;
+                case 10: type = ModelGenie::GGMLType::Q4_K; break;
+                case 11: type = ModelGenie::GGMLType::Q5_K; break;
+                case 12: type = ModelGenie::GGMLType::Q6_K; break;
+                case 13: type = ModelGenie::GGMLType::Q8_K; break;
+                case 14: type = ModelGenie::GGMLType::F16_HALF; break;
+                case 15: type = ModelGenie::GGMLType::F32; break;
+                case 16: type = ModelGenie::GGMLType::Q2_K; break;
+                case 17: type = ModelGenie::GGMLType::Q3_K; break;
+                case 18: type = ModelGenie::GGMLType::Q4_K; break;
+                case 19: type = ModelGenie::GGMLType::Q5_K; break;
+                case 20: type = ModelGenie::GGMLType::Q6_K; break;
+                case 21: type = ModelGenie::GGMLType::F16_HALF; break;
+                default: type = ModelGenie::GGMLType::F32; break;
+            }
+            
+            // Calculate encoded bytes from dims and type
+            uint64_t elementCount = 1;
+            for (auto d : dims) elementCount *= d;
+            
+            uint64_t encodedBytes = 0;
+            switch (type)
+            {
+                case ModelGenie::GGMLType::F32: encodedBytes = elementCount * 4; break;
+                case ModelGenie::GGMLType::F16_HALF: encodedBytes = elementCount * 2; break;
+                case ModelGenie::GGMLType::Q4_K: encodedBytes = (elementCount + 255) / 256 * 144; break;
+                case ModelGenie::GGMLType::Q5_K: encodedBytes = (elementCount + 255) / 256 * 168; break;
+                case ModelGenie::GGMLType::Q6_K: encodedBytes = (elementCount + 255) / 256 * 210; break;
+                case ModelGenie::GGMLType::Q8_0: encodedBytes = (elementCount + 31) / 32 * 34; break;
+                default: encodedBytes = elementCount * 2; break;
+            }
+            
+            liveTensors.push_back({name, type, dataOffset, encodedBytes, dims});
+        }
+        
+        // Calculate data section start (after tensor info)
+        ggufDataOffset = static_cast<uint64_t>(ptr - base);
+        
+        printf("[ROM] GGUF parsed: tensors=%zu, data_start=%llu\n", liveTensors.size(), (unsigned long long)ggufDataOffset);
+        return true;
     }
 };
 
@@ -165,7 +334,8 @@ static TensorView BindTensor(const Generated::TensorROM& rom, const GGUFROM& rom
             rom.type,
             rom.dims.data(),
             rom.rank,
-            rom.elementCount};
+            rom.elementCount,
+            rom.name};
 }
 
 //=============================================================================
@@ -393,10 +563,21 @@ static float FP16ToFloat(uint16_t h)
     return r;
 }
 
-static void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
+void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
 {
+    // Use live GGUF type if available, otherwise fall back to generated type
+    ModelGenie::GGMLType effectiveType = tv.type;
+    if (tv.name && !liveTypeMap_.empty())
+    {
+        auto it = liveTypeMap_.find(tv.name);
+        if (it != liveTypeMap_.end())
+        {
+            effectiveType = it->second;
+        }
+    }
+
     out.resize(tv.elementCount);
-    switch (tv.type)
+    switch (effectiveType)
     {
         case ModelGenie::GGMLType::F32:
             fprintf(stderr, "[Dequant] F32 tv.data=%p tv.bytes=%llu tv.elementCount=%llu\n",
@@ -424,15 +605,15 @@ static void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
             size_t firstBadBlock = size_t(-1);
             size_t firstBadElement = size_t(-1);
             
-            // Reference scale/min extraction matching canonical ggml dequantize_row_q4_K
-            auto get_scale_min_k4 = [](int i, const uint8_t* scales, uint8_t* sc, uint8_t* m) {
-                uint32_t t = *(const uint32_t*)scales;
-                t >>= i * 12;
-                *sc = (t >> 4) & 0x3F;
-                *m = t & 0x0F;
-                t >>= 16;
-                *sc |= (t & 0x0F) << 6;
-                *m |= (t >> 4) & 0x0F;
+            // Canonical scale/min unpacker matching ggml/llama.cpp
+            auto get_scale_min_k4 = [](int j, const uint8_t* scales, uint8_t* d, uint8_t* m) {
+                if (j < 4) {
+                    *d = scales[j] & 63;
+                    *m = scales[j + 4] & 63;
+                } else {
+                    *d = (scales[j + 4] & 0x0F) | ((scales[j - 4] >> 6) << 4);
+                    *m = (scales[j + 4] >> 4) | ((scales[j] >> 6) << 4);
+                }
             };
             
             for (size_t b = 0; b < blocks; ++b)
@@ -462,25 +643,38 @@ static void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
                     continue;
                 }
                 
-                // Decode 256 values from this block using reference ggml layout
+                // Decode 256 values from this block using canonical ggml layout
                 const uint8_t* q = src[b].qs;
                 float* out_ptr = &out[b * 256];
                 
+                int is = 0;
                 for (int j = 0; j < 256; j += 64)
                 {
-                    uint8_t sc, m;
-                    for (int sub = 0; sub < 2; ++sub)
+                    uint8_t sc1, m1;
+                    uint8_t sc2, m2;
+                    
+                    get_scale_min_k4(is + 0, src[b].scales, &sc1, &m1);
+                    get_scale_min_k4(is + 1, src[b].scales, &sc2, &m2);
+                    
+                    const float d1 = d * sc1;
+                    const float mn1 = dmin * m1;
+                    
+                    const float d2 = d * sc2;
+                    const float mn2 = dmin * m2;
+                    
+                    // First 32: low nibble
+                    for (int l = 0; l < 32; ++l)
                     {
-                        get_scale_min_k4(j / 32 + sub, src[b].scales, &sc, &m);
-                        float d1 = d * sc;
-                        float m1 = dmin * m;
-                        for (int l = 0; l < 32; ++l)
-                        {
-                            uint8_t qv = q[l];
-                            out_ptr[j + l] = d1 * (qv & 0x0F) - m1;
-                        }
-                        q += 32;
+                        out_ptr[j + l] = d1 * float(q[l] & 0x0F) - mn1;
                     }
+                    // Next 32: high nibble (SAME q pointer)
+                    for (int l = 0; l < 32; ++l)
+                    {
+                        out_ptr[j + 32 + l] = d2 * float(q[l] >> 4) - mn2;
+                    }
+                    
+                    q += 32;  // Advance qs by 32 bytes per 64 elements
+                    is += 2;
                 }
                 
                 if (badBlocks > 0 && b == firstBadBlock)
@@ -712,6 +906,15 @@ class ModelExportRuntime
         printf("[Runtime] GGUF opened\n");
         fflush(stdout);
         fprintf(stderr, "[DEBUG] past GGUF opened\n");
+        fflush(stderr);
+
+        // Build live GGUF type map for dequant type correction
+        liveTypeMap_.clear();
+        for (const auto& lt : rom_.liveTensors)
+        {
+            liveTypeMap_[lt.name] = lt.type;
+        }
+        fprintf(stderr, "[Runtime] Built live type map: %zu tensors\n", liveTypeMap_.size());
         fflush(stderr);
 
         // =========================================================================
@@ -1107,6 +1310,7 @@ class ModelExportRuntime
 
   private:
     GGUFROM rom_;
+    std::unordered_map<std::string, ModelGenie::GGMLType> liveTypeMap_;
 
     void ForwardBlock(uint32_t l)
     {

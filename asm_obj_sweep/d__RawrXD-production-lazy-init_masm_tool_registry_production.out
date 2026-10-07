@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_tool_registry_production.asm
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_tool_registry_production.asm(75) : error A2008:syntax error : allocated_time
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_tool_registry_production.asm(517) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_tool_registry_production.asm(682) : fatal error A1010:unmatched block nesting : ToolRegistry_GetToolMetadata

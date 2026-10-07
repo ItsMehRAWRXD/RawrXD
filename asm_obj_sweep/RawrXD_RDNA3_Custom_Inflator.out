@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\asm\gpu\RawrXD_RDNA3_Custom_Inflator.asm
+D:\rawrxd\src\asm\gpu\RawrXD_RDNA3_Custom_Inflator.asm(25) : error A2006:undefined symbol : BitPlane_Inflate_4bit_to_FP16

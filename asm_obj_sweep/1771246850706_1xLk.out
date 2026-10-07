@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(8) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(218) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(996) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1142) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(450) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(513) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(526) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(673) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(974) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(976) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1403) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1478) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1494) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1547) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1609) : error A2006:undefined symbol : syntax_err
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1636) : error A2006:undefined symbol : parse_block
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1650) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1658) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform_complete.asm\1771246850706_1xLk.asm(1666) : error A2022:instruction operands must be the same size

@@ -1,0 +1,31 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(63) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(109) : error A2008:syntax error : hProcess
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(110) : error A2008:syntax error : hStdinWrite
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(111) : error A2008:syntax error : hStdoutRead
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(112) : error A2008:syntax error : hStderrRead
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(135) : error A2008:syntax error : hWindow
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(166) : error A2008:syntax error : execution_lock
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(167) : error A2008:syntax error : hExecutionThread
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(222) : error A2006:undefined symbol : CreateMutexA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(223) : error A2006:undefined symbol : execution_lock
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(242) : error A2006:undefined symbol : execution_lock
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(269) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(271) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(272) : error A2006:undefined symbol : hWindow
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(286) : error A2006:undefined symbol : hWindow
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(306) : error A2006:undefined symbol : execution_lock
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(307) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(314) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(336) : error A2006:undefined symbol : execution_lock
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(337) : error A2006:undefined symbol : ReleaseMutex
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(357) : error A2006:undefined symbol : execution_lock
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(358) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(413) : error A2006:undefined symbol : execution_lock
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(414) : error A2006:undefined symbol : ReleaseMutex
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(436) : error A2006:undefined symbol : execution_lock
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(437) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(474) : error A2006:undefined symbol : GetSystemTimeAsFileTime
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(507) : error A2006:undefined symbol : GetSystemTimeAsFileTime
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(537) : error A2006:undefined symbol : execution_lock
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_ml_notebook_complete.asm(538) : error A2006:undefined symbol : ReleaseMutex

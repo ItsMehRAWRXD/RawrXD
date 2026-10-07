@@ -1,0 +1,417 @@
+# RawrXD Release Automation Workflow
+# Phase F.1 Batch 2/5: Automated CI/CD Pipeline
+# Triggers: Tag push, manual dispatch, or PR merge to main
+
+name: RawrXD Release Automation
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, master]
+    types: [opened, synchronize, closed]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'prerelease'
+        type: choice
+        options:
+          - prerelease
+          - release
+          - hotfix
+      skip_benchmarks:
+        description: 'Skip benchmark execution'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+  RAWRXD_VERSION: ${{ github.ref_name }}
+
+jobs:
+  # ============================================================================
+  # Job 1: Version Validation and Changelog Generation
+  # ============================================================================
+  version-check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      changelog: ${{ steps.changelog.outputs.content }}
+      should_release: ${{ steps.decision.outputs.should_release }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version format
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "✅ Valid version format: $VERSION"
+          else
+            echo "⚠️ Not a version tag, using commit SHA"
+            echo "version=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            echo "## Changes since $LAST_TAG" > CHANGELOG.tmp
+            git log --pretty=format:"- %s (%h)" "$LAST_TAG"..HEAD >> CHANGELOG.tmp
+          else
+            echo "## Initial Release" > CHANGELOG.tmp
+            git log --pretty=format:"- %s (%h)" >> CHANGELOG.tmp
+          fi
+          
+          # Categorize changes
+          echo "### 🚀 Features" >> CHANGELOG.tmp
+          grep -E "^\[feat\]|^\[feature\]|^feat:|^feature:" CHANGELOG.tmp >> CHANGELOG.tmp.features || true
+          
+          echo "### 🐛 Fixes" >> CHANGELOG.tmp
+          grep -E "^\[fix\]|^\[bugfix\]|^fix:|^bugfix:" CHANGELOG.tmp >> CHANGELOG.tmp.fixes || true
+          
+          echo "### ⚡ Performance" >> CHANGELOG.tmp
+          grep -E "^\[perf\]|^\[performance\]|^perf:" CHANGELOG.tmp >> CHANGELOG.tmp.perf || true
+          
+          echo "### 📚 Documentation" >> CHANGELOG.tmp
+          grep -E "^\[docs\]|^\[doc\]|^docs:" CHANGELOG.tmp >> CHANGELOG.tmp.docs || true
+          
+          cat CHANGELOG.tmp
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.tmp >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Determine if should release
+        id: decision
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.release_type }}" != "prerelease" ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================================================
+  # Job 2: Build and Test (Windows)
+  # ============================================================================
+  build-windows:
+    runs-on: windows-latest
+    needs: version-check
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Cache build artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            build-ninja/
+            build-release/
+          key: ${{ runner.os }}-build-${{ hashFiles('**/CMakeLists.txt', '**/*.cpp', '**/*.hpp') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Build RawrXD
+        run: |
+          cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -GNinja
+          cmake --build build-release --config Release --parallel
+
+      - name: Run unit tests
+        run: |
+          ctest --test-dir build-release --output-on-failure -C Release
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawrxd-windows-${{ needs.version-check.outputs.version }}
+          path: |
+            build-release/*.exe
+            build-release/*.dll
+            build-release/*.lib
+          retention-days: 30
+
+  # ============================================================================
+  # Job 3: Build and Test (Linux)
+  # ============================================================================
+  build-linux:
+    runs-on: ubuntu-latest
+    needs: version-check
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential
+
+      - name: Cache build artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            build-release/
+          key: ${{ runner.os }}-build-${{ hashFiles('**/CMakeLists.txt', '**/*.cpp', '**/*.hpp') }}
+
+      - name: Build RawrXD
+        run: |
+          cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -GNinja
+          cmake --build build-release --config Release --parallel
+
+      - name: Run unit tests
+        run: |
+          ctest --test-dir build-release --output-on-failure
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawrxd-linux-${{ needs.version-check.outputs.version }}
+          path: |
+            build-release/rawrxd
+            build-release/*.so
+          retention-days: 30
+
+  # ============================================================================
+  # Job 4: Benchmark Execution
+  # ============================================================================
+  benchmarks:
+    runs-on: [self-hosted, benchmark]
+    needs: [version-check, build-windows]
+    if: ${{ !cancelled() && !inputs.skip_benchmarks }}
+    timeout-minutes: 120
+    outputs:
+      sis_score: ${{ steps.benchmark.outputs.sis_score }}
+      sai_index: ${{ steps.benchmark.outputs.sai_index }}
+      report_url: ${{ steps.upload.outputs.report_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rawrxd-windows-${{ needs.version-check.outputs.version }}
+          path: ./artifacts/
+
+      - name: Run benchmark suite
+        id: benchmark
+        shell: pwsh
+        run: |
+          $env:RAWRXD_VERSION = "${{ needs.version-check.outputs.version }}"
+          $env:RAWRXD_BENCHMARK_OUTPUT = "benchmark-results"
+          
+          # Run comprehensive benchmark
+          & .\packaging\benchmark_execution_pipeline.ps1 `
+            -Categories @("inference", "throughput", "latency", "memory", "hotpatch", "swarm", "sovereign", "streaming", "compression") `
+            -OutputDir "$env:RAWRXD_BENCHMARK_OUTPUT" `
+            -Iterations 10
+          
+          # Extract scores from results
+          $results = Get-Content "$env:RAWRXD_BENCHMARK_OUTPUT\summary.json" | ConvertFrom-Json
+          echo "sis_score=$($results.sis.overall)" >> $env:GITHUB_OUTPUT
+          echo "sai_index=$($results.sai.index)" >> $env:GITHUB_OUTPUT
+          
+          # Grade check
+          if ($results.sis.grade -eq "A") {
+            echo "✅ Grade A achieved: SIS $($results.sis.overall)"
+          } else {
+            echo "⚠️ Grade $($results.sis.grade) - review required"
+          }
+
+      - name: Upload benchmark results
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ needs.version-check.outputs.version }}
+          path: benchmark-results/
+          retention-days: 90
+
+      - name: Generate benchmark badge
+        run: |
+          mkdir -p badges
+          echo "{\"schemaVersion\": 1, \"label\": \"SIS\", \"message\": \"${{ steps.benchmark.outputs.sis_score }}\", \"color\": \"brightgreen\"}" > badges/sis-badge.json
+
+  # ============================================================================
+  # Job 5: Security Scan
+  # ============================================================================
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-linux]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: cpp, python, javascript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: Run dependency check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'RawrXD'
+          path: '.'
+          format: 'ALL'
+
+  # ============================================================================
+  # Job 6: Create Release
+  # ============================================================================
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [version-check, build-windows, build-linux, benchmarks, security-scan]
+    if: ${{ needs.version-check.outputs.should_release == 'true' }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts/
+
+      - name: Package releases
+        run: |
+          VERSION="${{ needs.version-check.outputs.version }}"
+          
+          # Create Windows installer
+          cd artifacts/rawrxd-windows-*
+          zip -r ../../RawrXD-v${VERSION}-win64.zip .
+          cd ../..
+          
+          # Create Linux tarball
+          cd artifacts/rawrxd-linux-*
+          tar czf ../../RawrXD-v${VERSION}-linux.tar.gz .
+          cd ../..
+          
+          # Create benchmark report package
+          cd artifacts/benchmark-results-*
+          zip -r ../../RawrXD-v${VERSION}-benchmarks.zip .
+          cd ../..
+
+      - name: Generate checksums
+        run: |
+          VERSION="${{ needs.version-check.outputs.version }}"
+          sha256sum RawrXD-v${VERSION}-*.zip RawrXD-v${VERSION}-*.tar.gz > checksums.txt
+          cat checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: RawrXD v${{ needs.version-check.outputs.version }}
+          body: |
+            ${{ needs.version-check.outputs.changelog }}
+            
+            ## 📊 Benchmark Results
+            - **SIS Score**: ${{ needs.benchmarks.outputs.sis_score }}
+            - **SAI Index**: ${{ needs.benchmarks.outputs.sai_index }}
+            
+            ## 🔒 Security
+            - CodeQL analysis passed
+            - Dependency scan completed
+            
+            ## 📦 Downloads
+            | Platform | Package | SHA256 |
+            |----------|---------|--------|
+            | Windows | RawrXD-v${{ needs.version-check.outputs.version }}-win64.zip | See checksums.txt |
+            | Linux | RawrXD-v${{ needs.version-check.outputs.version }}-linux.tar.gz | See checksums.txt |
+            
+            ## 🐳 Docker
+            ```bash
+            docker pull ghcr.io/${{ github.repository }}/sovereign-runtime:v${{ needs.version-check.outputs.version }}
+            ```
+          files: |
+            RawrXD-v${{ needs.version-check.outputs.version }}-win64.zip
+            RawrXD-v${{ needs.version-check.outputs.version }}-linux.tar.gz
+            RawrXD-v${{ needs.version-check.outputs.version }}-benchmarks.zip
+            checksums.txt
+          prerelease: ${{ inputs.release_type == 'prerelease' }}
+          generate_release_notes: true
+
+  # ============================================================================
+  # Job 7: Comment on PR
+  # ============================================================================
+  pr-comment:
+    runs-on: ubuntu-latest
+    needs: [benchmarks, security-scan]
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment benchmark results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sisScore = '${{ needs.benchmarks.outputs.sis_score }}';
+            const saiIndex = '${{ needs.benchmarks.outputs.sai_index }}';
+            
+            const body = `## 🏆 RawrXD Benchmark Results
+            
+            | Metric | Value | Status |
+            |--------|-------|--------|
+            | **SIS Score** | ${sisScore} | ${parseFloat(sisScore) >= 85 ? '✅ Grade A' : '⚠️ Review'} |
+            | **SAI Index** | ${saiIndex} | ${parseFloat(saiIndex) >= 1.3 ? '✅ Excellent' : '⚠️ Review'} |
+            
+            <details>
+            <summary>📊 Full Report</summary>
+            
+            Benchmark artifacts available in workflow run.
+            
+            </details>
+            
+            ---
+            *Generated by RawrXD Release Automation*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  # ============================================================================
+  # Job 8: Update Documentation
+  # ============================================================================
+  update-docs:
+    runs-on: ubuntu-latest
+    needs: [create-release]
+    if: ${{ needs.version-check.outputs.should_release == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update version in documentation
+        run: |
+          VERSION="${{ needs.version-check.outputs.version }}"
+          sed -i "s/Current Version: .*/Current Version: v${VERSION}/" README.md
+          sed -i "s/Version: .*/Version: ${VERSION}/" docs/PHASE_F1_PRODUCTION_RELEASE.md
+
+      - name: Commit version update
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add README.md docs/PHASE_F1_PRODUCTION_RELEASE.md
+          git commit -m "docs: Update version to v${{ needs.version-check.outputs.version }}" || echo "No changes to commit"
+          git push origin HEAD:${{ github.ref_name }} || echo "Push skipped"

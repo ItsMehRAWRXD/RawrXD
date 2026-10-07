@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(61) : error A2008:syntax error : Ov
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(63) : error A2008:syntax error : wsabuf
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(72) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(148) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(212) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(214) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(271) : error A2006:undefined symbol : INVALID_SOCKET
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(346) : error A2006:undefined symbol : INFINITE
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(363) : error A2006:undefined symbol : IOCP_PACKET
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(404) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(405) : error A2006:undefined symbol : WAIT_OBJECT_0
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(462) : error A2006:undefined symbol : INVALID_SOCKET
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(77) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(231) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(327) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(416) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(453) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(458) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(464) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(469) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274717183_SzT2.asm(474) : error A2220:Missing .ENDPROLOG

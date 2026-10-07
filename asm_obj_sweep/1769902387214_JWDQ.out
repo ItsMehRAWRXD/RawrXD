@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902387214_JWDQ.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902387214_JWDQ.asm(673) : error A2008:syntax error : e
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902387214_JWDQ.asm(683) : error A2008:syntax error : cess
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902387214_JWDQ.asm(686) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902387214_JWDQ.asm(694) : error A2008:syntax error : dx
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902387214_JWDQ.asm(713) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902387214_JWDQ.asm(715) : error A2150:word register cannot be first operand
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902387214_JWDQ.asm(724) : fatal error A1010:unmatched block nesting : .endprologt

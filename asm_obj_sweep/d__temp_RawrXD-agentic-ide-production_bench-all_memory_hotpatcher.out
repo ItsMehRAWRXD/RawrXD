@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(41) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(167) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(250) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(285) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(307) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(311) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(320) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(323) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(332) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(335) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(386) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(388) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(397) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(400) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(445) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(458) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(461) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(470) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(474) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_memory_hotpatcher.asm(406) : warning A6004:procedure argument or local not referenced : idx

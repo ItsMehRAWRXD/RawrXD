@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\-2b92ceb2\eDV0.asm
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(448) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(538) : error A2006:undefined symbol : WM_DESTROY
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(551) : error A2006:undefined symbol : WM_UNDO
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(560) : error A2006:undefined symbol : WM_REDO
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(569) : error A2006:undefined symbol : WM_CUT
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(578) : error A2006:undefined symbol : WM_COPY
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(587) : error A2006:undefined symbol : WM_PASTE
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(596) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(622) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(633) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(644) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(652) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(876) : error A2006:undefined symbol : szInitialDir
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(880) : error A2006:undefined symbol : szOpenTitle
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(890) : error A2006:undefined symbol : szDefExt
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(960) : error A2006:undefined symbol : szInitialDir
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(963) : error A2006:undefined symbol : szSaveTitle
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(972) : error A2006:undefined symbol : szDefExt
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(1075) : error A2006:undefined symbol : WM_COMMAND
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(1092) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(228) : error A2047:empty (null) string
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(1097) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(1097) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\history\-2b92ceb2\eDV0.asm(1097) : warning A6004:procedure argument or local not referenced : lParam

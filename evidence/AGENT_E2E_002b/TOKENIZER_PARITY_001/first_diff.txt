@@ -1,0 +1,14 @@
+deep2_count=1147
+llama_count=898
+first_diff=0
+deep2_id=29966 piece='<'
+llama_id=529 piece='\\u2581<'
+    0 deep2=  29966 (<)  llama=    529 (\u2581<) <-- FIRST
+    1 deep2=  29989 (|)  llama=  29989 (|)
+    2 deep2=   5205 (system)  llama=   5205 (system)
+    3 deep2=  29989 (|)  llama=  29989 (|)
+    4 deep2=  29958 (>)  llama=  29958 (>)
+    5 deep2=     13 (<0x0A>)  llama=     13 (<0x0A>)
+    6 deep2=   3492 (You)  llama=   3492 (You)
+    7 deep2=     35 (<0x20>)  llama=    526 (\u2581are)
+    8 deep2=    598 (are)  llama=  22038 (\u2581Raw)

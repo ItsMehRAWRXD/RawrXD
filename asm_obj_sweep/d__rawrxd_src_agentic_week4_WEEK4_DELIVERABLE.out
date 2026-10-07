@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(12) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(117) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(161) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(200) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(203) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(231) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(261) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(293) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(316) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(462) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(472) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(548) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(1213) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(1226) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(561) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(1024) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(1080) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(1143) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(1205) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(1218) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(1232) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_week4_WEEK4_DELIVERABLE.asm(1266) : error A2220:Missing .ENDPROLOG

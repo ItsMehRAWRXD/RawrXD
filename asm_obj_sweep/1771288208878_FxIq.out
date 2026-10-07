@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771288208878_FxIq.asm
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771288208878_FxIq.asm(578) : error A2006:undefined symbol : sign_bit_mask
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771288208878_FxIq.asm(608) : error A2006:undefined symbol : f_fifteen

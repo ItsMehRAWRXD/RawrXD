@@ -1,0 +1,8 @@
+
+WindowsProductName WindowsVersion TotalPhysicalMemory CsP
+                                                      roc
+                                                      ess
+                                                      ors
+------------------ -------------- ------------------- ---
+Windows 10 Home    2009                               {A…
+

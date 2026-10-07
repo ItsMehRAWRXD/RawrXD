@@ -1,0 +1,75 @@
+//=============================================================================
+// Q4 Simple Test - Minimal reproduction
+//=============================================================================
+
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
+#include <cmath>
+#include "../src/memory/Q4WeightPreprocess.hpp"
+
+using namespace RawrXD::Memory;
+
+extern "C" {
+    float q4_preprocessed_dot_avx512_asm(
+        const PreprocessedQ4Block* block,
+        const float* activations
+    );
+}
+
+int main() {
+    printf("Q4 Simple Test\n");
+    printf("==============\n\n");
+    
+    // Create a GGUF block with known values
+    alignas(64) uint8_t gguf_block[64];
+    memset(gguf_block, 0, 64);
+    
+    // Scale = 1.0 in fp16 = 0x3C00
+    gguf_block[0] = 0x00;
+    gguf_block[1] = 0x3C;
+    
+    // All weights = 1 (nibble value = 9, packed = 0x99)
+    for (int i = 0; i < 32; i++) {
+        gguf_block[2 + i] = 0x99;
+    }
+    
+    printf("GGUF block created:\n");
+    printf("  Scale bytes: %02x %02x\n", gguf_block[1], gguf_block[0]);
+    printf("  First packed weight: %02x\n", gguf_block[2]);
+    printf("\n");
+    
+    // Preprocess
+    alignas(64) PreprocessedQ4Block preproc;
+    Q4WeightPreprocessor::PreprocessBlock(gguf_block, &preproc, 0, 1, 64);
+    
+    printf("After preprocessing:\n");
+    printf("  scale: %f\n", preproc.scale);
+    printf("  weights[0]: %d\n", preproc.weights[0]);
+    printf("  weights[1]: %d\n", preproc.weights[1]);
+    printf("  weights[63]: %d\n", preproc.weights[63]);
+    printf("\n");
+    
+    // Activations all = 1.0
+    alignas(64) float activations[64];
+    for (int i = 0; i < 64; i++) {
+        activations[i] = 1.0f;
+    }
+    
+    // C++ reference
+    float cpp_result = 0.0f;
+    for (int i = 0; i < 64; i++) {
+        cpp_result += preproc.scale * preproc.weights[i] * activations[i];
+    }
+    
+    // ASM result
+    float asm_result = q4_preprocessed_dot_avx512_asm(&preproc, activations);
+    
+    printf("Results:\n");
+    printf("  Expected: 64.0\n");
+    printf("  C++:      %f\n", cpp_result);
+    printf("  ASM:      %f\n", asm_result);
+    printf("  Match:    %s\n", (cpp_result == asm_result) ? "YES" : "NO");
+    
+    return (cpp_result == asm_result) ? 0 : 1;
+}

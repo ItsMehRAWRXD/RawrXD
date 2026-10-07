@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_ui_settings_panel.asm\1766358272406_ksvt.asm
+D:\rawrxd\history\all_versions\pifabric_ui_settings_panel.asm\1766358272406_ksvt.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_ui_settings_panel.asm\1766358272406_ksvt.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_ui_settings_panel.asm\1766358272406_ksvt.asm(7) : fatal error A1000:cannot open file : user32.inc

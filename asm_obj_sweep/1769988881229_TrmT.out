@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(51) : error A2008:syntax error : width
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(133) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(635) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(636) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(817) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(818) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(819) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(820) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(821) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(822) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(823) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(824) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(825) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(826) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(827) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(828) : error A2008:syntax error : [
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(852) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_GlyphAtlas.asm\1769988881229_TrmT.asm(893) : fatal error A1008:unmatched macro nesting

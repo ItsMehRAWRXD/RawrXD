@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(356) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(359) : error A2008:syntax error : ion
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(361) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(366) : error A2008:syntax error : rward
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(367) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(380) : error A2008:syntax error : mov
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(381) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(382) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(383) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(401) : error A2008:syntax error : ROC
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907450553_ubuc.asm(407) : fatal error A1010:unmatched block nesting : Titan_Initialize

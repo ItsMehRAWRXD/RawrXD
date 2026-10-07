@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(261) : error A2005:symbol redefinition : tool_registry
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(262) : error A2005:symbol redefinition : tool_count
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(263) : error A2005:symbol redefinition : pad1
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(264) : error A2005:symbol redefinition : tool_lock
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(266) : error A2005:symbol redefinition : m_tokens_generated
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(267) : error A2005:symbol redefinition : m_tokens_prefilled
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(268) : error A2005:symbol redefinition : m_prefill_latency_us
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(269) : error A2005:symbol redefinition : m_token_latency_us
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(270) : error A2005:symbol redefinition : m_kv_hits
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(271) : error A2005:symbol redefinition : m_kv_misses
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(272) : error A2005:symbol redefinition : m_tool_calls
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(273) : error A2005:symbol redefinition : m_errors
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(274) : error A2005:symbol redefinition : m_last_reset_time
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(275) : error A2005:symbol redefinition : m_pad1
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(276) : error A2005:symbol redefinition : m_pad2
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(277) : error A2005:symbol redefinition : is_initialized
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(278) : error A2005:symbol redefinition : pad2
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(314) : error A2008:syntax error : overlapped
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(364) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1771284446711_JQof.asm(365) : error A2206:missing operator in expression

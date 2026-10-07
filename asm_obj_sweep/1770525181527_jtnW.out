@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\requantize_q4km_to_q2k_avx512.asm\1770525181527_jtnW.asm
+D:\rawrxd\history\all_versions\src\asm\requantize_q4km_to_q2k_avx512.asm\1770525181527_jtnW.asm(30) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\requantize_q4km_to_q2k_avx512.asm\1770525181527_jtnW.asm(371) : error A2070:invalid instruction operands

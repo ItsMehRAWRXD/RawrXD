@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(103) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(160) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(239) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(279) : error A2006:undefined symbol : SlidingWindow_CreateForModel
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(300) : error A2006:undefined symbol : SlidingWindow_DestroyContext
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(328) : error A2006:undefined symbol : SlidingWindow_CreateForModel
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_sliding_window_integration.asm(343) : error A2006:undefined symbol : SlidingWindow_DestroyContext

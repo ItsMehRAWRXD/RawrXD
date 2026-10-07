@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\-2217020c\xO29.asm
+D:\rawrxd\history\-2217020c\xO29.asm(40) : error A2006:undefined symbol : asm_malloc
+D:\rawrxd\history\-2217020c\xO29.asm(81) : error A2006:undefined symbol : mutex_lock_done
+D:\rawrxd\history\-2217020c\xO29.asm(108) : error A2006:undefined symbol : mutex_unlock_done
+D:\rawrxd\history\-2217020c\xO29.asm(133) : error A2006:undefined symbol : mutex_destroy_done
+D:\rawrxd\history\-2217020c\xO29.asm(140) : error A2006:undefined symbol : asm_free
+D:\rawrxd\history\-2217020c\xO29.asm(176) : error A2006:undefined symbol : asm_malloc
+D:\rawrxd\history\-2217020c\xO29.asm(238) : error A2006:undefined symbol : event_set_done
+D:\rawrxd\history\-2217020c\xO29.asm(270) : error A2006:undefined symbol : event_reset_done
+D:\rawrxd\history\-2217020c\xO29.asm(344) : error A2006:undefined symbol : event_destroy_done
+D:\rawrxd\history\-2217020c\xO29.asm(355) : error A2006:undefined symbol : asm_free

@@ -1,0 +1,45 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(403) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(450) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(456) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(462) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(468) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(474) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(480) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(497) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(535) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(566) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(573) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(656) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(697) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(711) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(291) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(294) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(328) : error A2006:undefined symbol : CreateModelChain
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(387) : error A2006:undefined symbol : execute_no_models
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(407) : error A2006:undefined symbol : MessageBoxA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(430) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(438) : error A2006:undefined symbol : dual_sequential
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(440) : error A2006:undefined symbol : dual_parallel
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(442) : error A2006:undefined symbol : dual_voting
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(444) : error A2006:undefined symbol : dual_cycle
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(446) : error A2006:undefined symbol : dual_fallback
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(448) : error A2006:undefined symbol : dual_error
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(454) : error A2006:undefined symbol : dual_complete
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(460) : error A2006:undefined symbol : dual_complete
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(466) : error A2006:undefined symbol : dual_complete
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(472) : error A2006:undefined symbol : dual_complete
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(478) : error A2006:undefined symbol : dual_complete
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(482) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(525) : error A2006:undefined symbol : triple_no_model
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(563) : error A2006:undefined symbol : skip_tertiary
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(570) : error A2006:undefined symbol : cycle_valid
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(636) : error A2006:undefined symbol : fallback_success
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(642) : error A2006:undefined symbol : fallback_success
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(648) : error A2006:undefined symbol : fallback_success
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(670) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(673) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(676) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(699) : error A2006:undefined symbol : status_done
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(709) : error A2006:undefined symbol : status_loop
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(816) : error A2006:undefined symbol : DestroyModelChain

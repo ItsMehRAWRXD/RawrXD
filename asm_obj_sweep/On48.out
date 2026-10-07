@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-26e6a7a4\On48.ASM
+D:\rawrxd\history\-26e6a7a4\On48.ASM(8) : error A2008:syntax error : .
+D:\rawrxd\history\-26e6a7a4\On48.ASM(9) : error A2008:syntax error : .
+D:\rawrxd\history\-26e6a7a4\On48.ASM(14) : fatal error A1000:cannot open file : \masm32\include\windows.inc

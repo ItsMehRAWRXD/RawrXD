@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908016999_fn5i.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908016999_fn5i.asm(245) : error A2006:undefined symbol : pKVCache
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908016999_fn5i.asm(447) : error A2006:undefined symbol : pKVCache
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908016999_fn5i.asm(491) : error A2006:undefined symbol : pKVCache

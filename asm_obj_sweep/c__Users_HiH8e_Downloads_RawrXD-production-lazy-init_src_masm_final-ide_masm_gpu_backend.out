@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_gpu_backend.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_gpu_backend.asm(54) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_gpu_backend.asm(66) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_gpu_backend.asm(71) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_gpu_backend.asm(47) : error A2006:undefined symbol : try_vulkan
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_gpu_backend.asm(52) : error A2006:undefined symbol : exit
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_gpu_backend.asm(59) : error A2006:undefined symbol : fallback
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_gpu_backend.asm(64) : error A2006:undefined symbol : exit

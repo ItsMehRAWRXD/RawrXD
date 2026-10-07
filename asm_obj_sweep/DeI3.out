@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-1ccdc6ed\DeI3.asm
+D:\rawrxd\history\-1ccdc6ed\DeI3.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\-1ccdc6ed\DeI3.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\-1ccdc6ed\DeI3.asm(9) : fatal error A1000:cannot open file : \masm32\include\windows.inc

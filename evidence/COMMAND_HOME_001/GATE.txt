@@ -1,0 +1,46 @@
+COMMAND_HOME_001 GATE
+=====================
+Status: PASS / CLOSED (operator verified 2026-08-31)
+
+Shipping EXE (frozen smoke authority)
+  PATH=F:\~dev\rawrxd\build-ninja\bin\RawrXD-Win32IDE.exe
+  BYTES=323481600
+  RAWRXD_OPTIONAL_OLLAMA=OFF  RAWRXD_OPTIONAL_CLOUD=OFF
+  SHA256=2073301D4DF5141BA86DEB24DCFB1596DC63B4D0382A658EB6CA5DD7464511A1
+
+Operator smoke (2026-08-31)
+-----------------------------
+[PASS] Launch — Command-home first paint
+[PASS] Port quarantine — Get-NetTCPConnection Listen on 11435,9999,11434,8005 returned EMPTY
+[PASS] Model hub — F:\OllamaModels scan; local GGUF mount
+[PASS] Pipeline — context stream; Stop control
+[PASS] Mode switch — Work Mode Editor ↔ Command Home (View menu); structural integrity
+
+Checklist (implementation + smoke)
+----------------------------------
+[PASS] Command-home first paint (createCommandSurface step 7)
+[PASS] Dark+ ScreenPilot branding + honest Desktop Preview copy
+[PASS] Steering belt above composer — remote labeled Coming next
+[PASS] Workspace/Git context bar + left rail
+[PASS] Activity strip + Stop agent
+[PASS] Send → CommandBroker → Deep2 local path (when GGUF loaded)
+[PASS] Work Mode toggle hides command surface / restores IDE chrome
+[PASS] Native Model Hub: scan F:\OllamaModels · load/browse · no ollama pull
+[PASS] No public model API (8005/9999) — in-process LOCAL_ONLY_001 only
+[PASS] LocalServer auto-start suppressed in Command mode
+[PASS] IControlChannel fail-closed (no listen)
+[PASS] Operator smoke on frozen SHA (see above)
+[PENDING] screenpilot.tech live URL (host propagation — external)
+
+Does NOT close
+--------------
+- P1_UI_* gates (~72% weighted — frozen separately)
+- EGRESS_001 / STATIC_DEP_001 (broad egress claim still withheld)
+- REMOTE_CONTROL_001 (Phase 2 blocked)
+
+Notes
+-----
+- No "E2E encrypted" footer claim; EGRESS_001 remains open
+- Remote steering UI is placeholder only until EGRESS_001 + REMOTE_CONTROL_001
+- Planning transcript items (Node slingshot, MASM server, 0.0.0.0) are REJECTED
+- See LAUNCH_ARCHITECTURE.txt for credible local-first launch matrix

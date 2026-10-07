@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(92) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(105) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(109) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(122) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(261) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(309) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(316) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(77) : error A2009:syntax error in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(93) : error A2009:syntax error in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(94) : error A2006:undefined symbol : load_canceled
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(99) : error A2006:undefined symbol : skip_progress
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(107) : error A2006:undefined symbol : load_loop
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(116) : error A2006:undefined symbol : skip_complete
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(124) : error A2009:syntax error in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(218) : error A2009:syntax error in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(229) : error A2009:syntax error in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(240) : error A2009:syntax error in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(256) : error A2006:undefined symbol : timeout
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(297) : error A2009:syntax error in expression
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(307) : error A2006:undefined symbol : skip_close
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(314) : error A2006:undefined symbol : skip_path
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\cpp\to\masm\model\loader\thread.asm(134) : error A2220:Missing .ENDPROLOG

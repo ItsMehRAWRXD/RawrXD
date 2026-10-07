@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(234) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(238) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(262) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(283) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(312) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(321) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(383) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(404) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(408) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_stub_integration_bridges.asm(425) : error A2006:undefined symbol : OutputDebugStringA

@@ -1,0 +1,31 @@
+ Assembling: D:\rawrxd\Win32IDE_Sidebar_Core.asm
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(7) : error A2008:syntax error : WIN64
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(99) : error A2008:syntax error : LogCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(120) : error A2008:syntax error : TreeCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(195) : error A2070:invalid instruction operands
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(602) : error A2070:invalid instruction operands
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(603) : error A2070:invalid instruction operands
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(604) : error A2070:invalid instruction operands
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(752) : error A2070:invalid instruction operands
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(753) : error A2070:invalid instruction operands
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(174) : error A2006:undefined symbol : LogCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(180) : error A2022:instruction operands must be the same size
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(223) : error A2006:undefined symbol : LogCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(241) : error A2006:undefined symbol : LogCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(282) : error A2006:undefined symbol : LogCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(510) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(513) : error A2006:undefined symbol : WM_LBUTTONDBLCLK
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(532) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(535) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(552) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(555) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(615) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(619) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(654) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(660) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(859) : error A2006:undefined symbol : szGitBuffer
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(868) : error A2006:undefined symbol : szGitBuffer
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(149) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(895) : warning A4025:ENDP found before .ENDPROLOG : DllMain
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(895) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\Win32IDE_Sidebar_Core.asm(895) : error A2220:Missing .ENDPROLOG

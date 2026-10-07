@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\yodU.asm
+D:\rawrxd\history\-29b34fd4\yodU.asm(50) : error A2179:structure improperly initialized
+D:\rawrxd\history\-29b34fd4\yodU.asm(50) : error A2065:expected : )
+D:\rawrxd\history\-29b34fd4\yodU.asm(54) : error A2179:structure improperly initialized
+D:\rawrxd\history\-29b34fd4\yodU.asm(54) : error A2065:expected : )
+D:\rawrxd\history\-29b34fd4\yodU.asm(101) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(102) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(103) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(114) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(164) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(207) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(324) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(357) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(447) : error A2006:undefined symbol : TransferQueue
+D:\rawrxd\history\-29b34fd4\yodU.asm(528) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(581) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(582) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(610) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(632) : error A2006:undefined symbol : TransferQueue
+D:\rawrxd\history\-29b34fd4\yodU.asm(635) : error A2006:undefined symbol : OpType
+D:\rawrxd\history\-29b34fd4\yodU.asm(640) : error A2006:undefined symbol : OpSize
+D:\rawrxd\history\-29b34fd4\yodU.asm(682) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(689) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\yodU.asm(757) : error A2006:undefined symbol : Blocks

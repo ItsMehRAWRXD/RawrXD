@@ -1,0 +1,55 @@
+name: Deploy to DigitalOcean App Platform
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/**'
+      - 'app/**'
+      - 'db/**'
+      - '.do/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy-digitalocean.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy RawrXD Cloud App to DigitalOcean
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+      - name: Deploy via Terraform
+        if: env.TF_VAR_do_token != ''
+        working-directory: deploy/terraform
+        env:
+          TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+          TF_VAR_ssh_fingerprint: ${{ secrets.SSH_FINGERPRINT }}
+          TF_VAR_allowed_ssh_ips: '["${{ secrets.DEPLOY_IP }}/32"]'
+          TF_VAR_api_key: ${{ secrets.API_KEY }}
+        run: |
+          terraform init
+          terraform plan -out=plan.tfplan
+          terraform apply plan.tfplan
+
+      - name: Deployment Status
+        run: |
+          echo "Docker image: ghcr.io/${{ github.repository }}:${{ github.sha }}"
+          echo "Monitor: https://cloud.digitalocean.com/apps"

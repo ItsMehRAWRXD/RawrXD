@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769595423351_TqFo.asm
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769595423351_TqFo.asm(291) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769595423351_TqFo.asm(657) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769595423351_TqFo.asm(665) : error A2098:invalid operand for OFFSET

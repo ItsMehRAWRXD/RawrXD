@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769900433735_EgNT.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769900433735_EgNT.asm(139) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769900433735_EgNT.asm(158) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769900433735_EgNT.asm(174) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769900433735_EgNT.asm(196) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\omega_suite\v7\CodexProfessional.asm
+D:\rawrxd\src\reverse_engineering\omega_suite\v7\CodexProfessional.asm(18) : error A2008:syntax error : WIN64
+D:\rawrxd\src\reverse_engineering\omega_suite\v7\CodexProfessional.asm(21) : fatal error A1000:cannot open file : \masm64\include64\win64.inc

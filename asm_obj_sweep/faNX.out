@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\faNX.asm
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1041) : error A2006:undefined symbol : _append_bool
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1052) : error A2006:undefined symbol : _append_bool
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1063) : error A2006:undefined symbol : _append_bool
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1081) : error A2006:undefined symbol : _write_json_to_file
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1114) : error A2006:undefined symbol : _read_json_from_file
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1130) : error A2006:undefined symbol : _find_json_key
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1146) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1152) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1157) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1162) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1167) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1172) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1177) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1182) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1187) : error A2006:undefined symbol : _parse_json_bool
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1192) : error A2006:undefined symbol : _parse_json_bool
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1197) : error A2006:undefined symbol : _parse_json_bool
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1882) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1883) : error A2006:undefined symbol : D2D1_FACTORY_TYPE_SINGLE_THREADED
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1889) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\faNX.asm(1890) : error A2006:undefined symbol : DWRITE_FACTORY_TYPE_SHARED
+D:\rawrxd\history\-1bd1bafa\faNX.asm(2049) : error A2006:undefined symbol : WS_CHILD

@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(550) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(594) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(630) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(651) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(697) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(706) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(716) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(724) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(733) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(750) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(779) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(788) : error A2008:syntax error : /
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(90) : error A2006:undefined symbol : asm_malloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(110) : error A2006:undefined symbol : asm_free
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(124) : error A2006:undefined symbol : asm_malloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(182) : error A2006:undefined symbol : asm_malloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(199) : error A2006:undefined symbol : asm_free
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(360) : error A2006:undefined symbol : asm_malloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(444) : error A2006:undefined symbol : asm_malloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(461) : error A2006:undefined symbol : asm_malloc
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(471) : error A2006:undefined symbol : asm_free
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(507) : error A2006:undefined symbol : asm_log
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(519) : error A2006:undefined symbol : asm_log
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(531) : error A2006:undefined symbol : asm_log
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(543) : error A2006:undefined symbol : asm_log
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_stubs.asm(769) : error A2006:undefined symbol : asm_log

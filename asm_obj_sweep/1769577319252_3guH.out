@@ -1,0 +1,37 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(118) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(119) : error A2161:non-benign structure redefinition: too few labels : IMAGE_DATA_DIRECTORY
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(119) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_DATA_DIRECTORY
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(158) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(161) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(162) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(163) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(164) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(165) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(166) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(167) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(168) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(169) : error A2161:non-benign structure redefinition: too few labels : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(169) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(239) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(241) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(244) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(249) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(274) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(301) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577319252_3guH.asm(302) : error A2008:syntax error : ,
+D:\rawrxd\history\all_ver

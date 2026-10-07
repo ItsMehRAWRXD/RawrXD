@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287789888_vN4D.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287789888_vN4D.ASM(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287789888_vN4D.ASM(10) : fatal error A1000:cannot open file : ..\..\..\include\rawrxd_master.inc

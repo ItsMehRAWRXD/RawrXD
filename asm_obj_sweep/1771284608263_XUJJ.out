@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\os_interceptor_cli.asm\1771284608263_XUJJ.asm
+D:\rawrxd\history\all_versions\src\os_interceptor_cli.asm\1771284608263_XUJJ.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli.asm\1771284608263_XUJJ.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli.asm\1771284608263_XUJJ.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli.asm\1771284608263_XUJJ.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli.asm\1771284608263_XUJJ.asm(20) : fatal error A1000:cannot open file : \masm32\include\windows.inc

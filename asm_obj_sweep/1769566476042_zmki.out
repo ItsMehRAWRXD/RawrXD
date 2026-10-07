@@ -1,0 +1,36 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(104) : error A2008:syntax error : label
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(165) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(283) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(327) : error A2006:undefined symbol : LSPParseCapabilities
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(331) : error A2006:undefined symbol : LSPSendInitialized
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(721) : error A2006:undefined symbol : LineColToScreen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(727) : error A2006:undefined symbol : FONT_WIDTH
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(736) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(740) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(743) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(903) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(907) : error A2006:undefined symbol : BufferCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(918) : error A2006:undefined symbol : IntelliSenseInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(922) : error A2006:undefined symbol : DiagnosticsInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(926) : error A2006:undefined symbol : DAPInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(931) : error A2006:undefined symbol : GitInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(938) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(344) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(409) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(476) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(484) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(573) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(662) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(685) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(771) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(792) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(809) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(817) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(825) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(834) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(864) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(875) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(884) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1769566476042_zmki.ASM(946) : error A2220:Missing .ENDPROLOG

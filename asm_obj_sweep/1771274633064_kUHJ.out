@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274633064_kUHJ.asm
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274633064_kUHJ.asm(155) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274633064_kUHJ.asm(176) : error A2006:undefined symbol : len
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274633064_kUHJ.asm(209) : error A2006:undefined symbol : len
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274633064_kUHJ.asm(217) : error A2006:undefined symbol : Pointer
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274633064_kUHJ.asm(136) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274633064_kUHJ.asm(197) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274633064_kUHJ.asm(291) : error A2220:Missing .ENDPROLOG

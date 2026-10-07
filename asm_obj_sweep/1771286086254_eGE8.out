@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\memory_reader.asm\1771286086254_eGE8.asm
+D:\rawrxd\history\all_versions\src\memory_reader.asm\1771286086254_eGE8.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\memory_reader.asm\1771286086254_eGE8.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\memory_reader.asm\1771286086254_eGE8.asm(16) : fatal error A1000:cannot open file : user32.inc

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_ui_chain_inspector.asm
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_ui_chain_inspector.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_ui_chain_inspector.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_ui_chain_inspector.asm(7) : fatal error A1000:cannot open file : user32.inc

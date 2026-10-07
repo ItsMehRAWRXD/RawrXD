@@ -1,0 +1,43 @@
+ Assembling: D:\rawrxd\RawrXD_DumpBin_Engine.asm
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(48) : error A2008:syntax error : FileHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(49) : error A2008:syntax error : OptionalHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(92) : error A2008:syntax error : DataDirectory
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(97) : error A2008:syntax error : size
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(305) : error A2005:symbol redefinition : check_bounds_fail
+ CHECK_BOUNDS(9): Macro Called From
+  D:\rawrxd\RawrXD_DumpBin_Engine.asm(305): Main Line Code
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(305) : error A2005:symbol redefinition : check_bounds_done
+ CHECK_BOUNDS(11): Macro Called From
+  D:\rawrxd\RawrXD_DumpBin_Engine.asm(305): Main Line Code
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(341) : error A2005:symbol redefinition : check_bounds_fail
+ CHECK_BOUNDS(9): Macro Called From
+  D:\rawrxd\RawrXD_DumpBin_Engine.asm(341): Main Line Code
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(341) : error A2005:symbol redefinition : check_bounds_done
+ CHECK_BOUNDS(11): Macro Called From
+  D:\rawrxd\RawrXD_DumpBin_Engine.asm(341): Main Line Code
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(360) : error A2005:symbol redefinition : check_bounds_fail
+ CHECK_BOUNDS(9): Macro Called From
+  D:\rawrxd\RawrXD_DumpBin_Engine.asm(360): Main Line Code
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(360) : error A2005:symbol redefinition : check_bounds_done
+ CHECK_BOUNDS(11): Macro Called From
+  D:\rawrxd\RawrXD_DumpBin_Engine.asm(360): Main Line Code
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(443) : error A2008:syntax error : name
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(577) : error A2008:syntax error : name
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(756) : error A2084:constant value too large
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(313) : error A2006:undefined symbol : FileHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(317) : error A2006:undefined symbol : OptionalHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(325) : error A2006:undefined symbol : OptionalHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(327) : error A2006:undefined symbol : OptionalHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(329) : error A2006:undefined symbol : OptionalHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(333) : error A2006:undefined symbol : FileHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(346) : error A2006:undefined symbol : OptionalHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(365) : error A2006:undefined symbol : OptionalHeader
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(442) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(653) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(654) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(655) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(709) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(710) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(711) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(878) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_DumpBin_Engine.asm(879) : error A2022:instruction operands must be the same size

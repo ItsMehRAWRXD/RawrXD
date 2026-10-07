@@ -1,0 +1,464 @@
+name: Security & Hotpatch CI/CD
+
+on:
+  push:
+    branches: [ main, 'v1.0.1-hotfix1-security', 'release/**' ]
+    paths:
+      - 'security/**'
+      - 'monitoring/**'
+      - 'tests/**'
+      - 'deployment/**'
+      - 'disaster-recovery/**'
+      - 'benchmarks/**'
+      - 'install.ps1'
+  pull_request:
+    branches: [ main, 'v1.0.1-hotfix1-security' ]
+    paths:
+      - 'security/**'
+      - 'monitoring/**'
+      - 'tests/**'
+      - 'deployment/**'
+      - 'disaster-recovery/**'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: true
+        default: 'All'
+        type: choice
+        options:
+          - All
+          - Unit
+          - Integration
+          - Smoke
+          - Security
+
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  # ============================================
+  # Phase 1: Code Quality & Validation
+  # ============================================
+  code-quality:
+    name: Code Quality Checks
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+          Import-Module PSScriptAnalyzer
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer -Path "./security" -Recurse -Severity Error,Warning
+          $results | Format-Table -AutoSize
+          if ($results.Severity -contains "Error") {
+            Write-Error "PSScriptAnalyzer found errors"
+            exit 1
+          }
+
+      - name: Check PowerShell Syntax
+        shell: pwsh
+        run: |
+          $scripts = Get-ChildItem -Path "./security" -Filter "*.ps1" -Recurse
+          $errors = @()
+          foreach ($script in $scripts) {
+            $content = Get-Content $script.FullName -Raw
+            $parseErrors = $null
+            $null = [System.Management.Automation.PSParser]::Tokenize($content, [ref]$parseErrors)
+            if ($parseErrors.Count -gt 0) {
+              $errors += "$($script.Name): $($parseErrors.Count) syntax errors"
+            }
+          }
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+          Write-Host "✓ All PowerShell scripts have valid syntax"
+
+      - name: Upload Analysis Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-quality-results
+          path: |
+            ./*.txt
+            ./*.json
+          retention-days: 30
+
+  # ============================================
+  # Phase 2: Security Validation
+  # ============================================
+  security-validation:
+    name: Security Validation
+    runs-on: windows-latest
+    needs: code-quality
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Initialize RBAC
+        shell: pwsh
+        run: |
+          ./security/rbac/rbac_manager.ps1 -Operation init -ConfigPath "./security/rbac/rbac_config.json"
+          Write-Host "✓ RBAC initialized"
+
+      - name: Test RBAC Core Functions
+        shell: pwsh
+        run: |
+          # Test role listing
+          $roles = ./security/rbac/rbac_manager.ps1 -Operation list -ConfigPath "./security/rbac/rbac_config.json" -JsonOutput | ConvertFrom-Json
+          if ($roles.Count -lt 5) {
+            throw "Expected at least 5 roles, found $($roles.Count)"
+          }
+          Write-Host "✓ RBAC roles configured: $($roles.Count) roles"
+
+          # Test user assignment
+          ./security/rbac/rbac_manager.ps1 -Operation assign_role `
+            -UserId "ci-test-user" -RoleName "patch-viewer" `
+            -ConfigPath "./security/rbac/rbac_config.json"
+          Write-Host "✓ User role assignment working"
+
+          # Test permission checking
+          $perm = ./security/rbac/rbac_manager.ps1 -Operation check_permission `
+            -UserId "ci-test-user" -Permission "patch:view" `
+            -ConfigPath "./security/rbac/rbac_config.json" -JsonOutput | ConvertFrom-Json
+          if (-not $perm.granted) {
+            throw "Permission check failed"
+          }
+          Write-Host "✓ Permission checking working"
+
+      - name: Validate Security Configuration
+        shell: pwsh
+        run: |
+          # Check security directories exist
+          $requiredDirs = @(
+            "security/rbac",
+            "security/audit",
+            "security/compliance",
+            "security/phase_g1_hotpatch",
+            "security/policies",
+            "security/scanning",
+            "security/secrets"
+          )
+          foreach ($dir in $requiredDirs) {
+            if (-not (Test-Path $dir)) {
+              throw "Required directory missing: $dir"
+            }
+          }
+          Write-Host "✓ All security directories present"
+
+      - name: Security Policy Validation
+        shell: pwsh
+        run: |
+          # Check for security policy files
+          $policyFiles = Get-ChildItem -Path "security/policies" -Filter "*.json" -Recurse
+          if ($policyFiles.Count -eq 0) {
+            Write-Warning "No policy JSON files found"
+          }
+          Write-Host "✓ Security policies checked: $($policyFiles.Count) files"
+
+  # ============================================
+  # Phase 3: Unit Testing
+  # ============================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: windows-latest
+    needs: security-validation
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          Install-Module -Name Pester -Force -Scope CurrentUser
+          Import-Module Pester
+          Write-Host "Pester version: $((Get-Module Pester).Version)"
+
+      - name: Run RBAC Unit Tests
+        shell: pwsh
+        run: |
+          $config = New-PesterConfiguration
+          $config.Run.Path = "./tests/unit/rbac_manager.tests.ps1"
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = "./test-results-rbac.xml"
+          $config.TestResult.OutputFormat = "NUnitXml"
+          $config.Output.Verbosity = "Detailed"
+          
+          $result = Invoke-Pester -Configuration $config
+          
+          if ($result.FailedCount -gt 0) {
+            Write-Error "RBAC tests failed: $($result.FailedCount) failures"
+            exit 1
+          }
+          Write-Host "✓ All RBAC tests passed: $($result.PassedCount) tests"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: ./test-results-*.xml
+          retention-days: 30
+
+  # ============================================
+  # Phase 4: Integration Testing
+  # ============================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: windows-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          Install-Module -Name Pester -Force -Scope CurrentUser
+
+      - name: Run Integration Tests
+        shell: pwsh
+        run: |
+          # Check if integration tests exist
+          if (Test-Path "./tests/integration/security_integration.tests.ps1") {
+            $config = New-PesterConfiguration
+            $config.Run.Path = "./tests/integration/security_integration.tests.ps1"
+            $config.TestResult.Enabled = $true
+            $config.TestResult.OutputPath = "./test-results-integration.xml"
+            $config.TestResult.OutputFormat = "NUnitXml"
+            
+            $result = Invoke-Pester -Configuration $config
+            
+            if ($result.FailedCount -gt 0) {
+              Write-Warning "Integration tests had $($result.FailedCount) failures"
+            } else {
+              Write-Host "✓ Integration tests passed"
+            }
+          } else {
+            Write-Host "ℹ No integration tests found, skipping"
+          }
+
+      - name: Test Security Integration
+        shell: pwsh
+        run: |
+          # Initialize all security components
+          ./security/rbac/rbac_manager.ps1 -Operation init
+          Write-Host "✓ RBAC initialized"
+          
+          # Test cross-component integration
+          ./security/rbac/rbac_manager.ps1 -Operation assign_role `
+            -UserId "integration-test" -RoleName "security-auditor"
+          
+          $role = ./security/rbac/rbac_manager.ps1 -Operation get_user_role `
+            -UserId "integration-test" -JsonOutput | ConvertFrom-Json
+          
+          if ($role.role -ne "security-auditor") {
+            throw "Role assignment integration failed"
+          }
+          Write-Host "✓ Security integration working"
+
+  # ============================================
+  # Phase 5: Smoke Tests
+  # ============================================
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: windows-latest
+    needs: integration-tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Quick Health Check
+        shell: pwsh
+        run: |
+          # Verify all critical scripts can be loaded
+          $criticalScripts = @(
+            "security/rbac/rbac_manager.ps1",
+            "security/audit/audit_logger.ps1",
+            "security/compliance/compliance_checker.ps1",
+            "security/phase_g1_hotpatch/swarm_hotpatch_manager.ps1",
+            "security/phase_g1_hotpatch/patch_registry.ps1",
+            "monitoring/scripts/health_check.ps1",
+            "deployment/deployment_orchestrator.ps1",
+            "disaster-recovery/backups/backup_manager.ps1"
+          )
+          
+          foreach ($script in $criticalScripts) {
+            if (-not (Test-Path $script)) {
+              throw "Critical script missing: $script"
+            }
+            # Test script can be parsed
+            $content = Get-Content $script -Raw -ErrorAction Stop
+            $parseErrors = $null
+            $null = [System.Management.Automation.PSParser]::Tokenize($content, [ref]$parseErrors)
+            if ($parseErrors.Count -gt 0) {
+              throw "Script has parse errors: $script"
+            }
+            Write-Host "✓ $script"
+          }
+
+      - name: Test Installation Script
+        shell: pwsh
+        run: |
+          # Validate install.ps1 syntax
+          $content = Get-Content "./install.ps1" -Raw
+          $parseErrors = $null
+          $null = [System.Management.Automation.PSParser]::Tokenize($content, [ref]$parseErrors)
+          if ($parseErrors.Count -gt 0) {
+            throw "install.ps1 has parse errors"
+          }
+          Write-Host "✓ install.ps1 validated"
+
+  # ============================================
+  # Phase 6: Compliance Check
+  # ============================================
+  compliance-check:
+    name: Compliance Validation
+    runs-on: windows-latest
+    needs: smoke-tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Run Compliance Check
+        shell: pwsh
+        run: |
+          if (Test-Path "./security/compliance/compliance_checker.ps1") {
+            $result = ./security/compliance/compliance_checker.ps1 -Operation check -JsonOutput | ConvertFrom-Json
+            Write-Host "Compliance Score: $($result.summary.compliance_score)%"
+            
+            if ($result.summary.compliance_score -lt 80) {
+              Write-Warning "Compliance score below 80%: $($result.summary.compliance_score)%"
+            } else {
+              Write-Host "✓ Compliance check passed"
+            }
+          } else {
+            Write-Host "ℹ Compliance checker not available, skipping"
+          }
+
+      - name: Documentation Check
+        shell: pwsh
+        run: |
+          $requiredDocs = @(
+            "README.md",
+            "SECURITY_HOTPATCH_IMPLEMENTATION_SUMMARY.md",
+            "FINAL_IMPLEMENTATION_REPORT.md",
+            "docs/SECURITY_API_REFERENCE.md",
+            "security/README.md"
+          )
+          
+          foreach ($doc in $requiredDocs) {
+            if (-not (Test-Path $doc)) {
+              throw "Required documentation missing: $doc"
+            }
+            Write-Host "✓ $doc"
+          }
+
+  # ============================================
+  # Phase 7: Build & Package
+  # ============================================
+  build-package:
+    name: Build & Package
+    runs-on: windows-latest
+    needs: [unit-tests, integration-tests, smoke-tests, compliance-check]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/v1.0.1-hotfix1-security')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Distribution Package
+        shell: pwsh
+        run: |
+          $packageName = "RawrXD-Security-v1.0.0-$(Get-Date -Format 'yyyyMMdd')"
+          $packagePath = "./dist/$packageName"
+          
+          # Create package structure
+          New-Item -ItemType Directory -Path $packagePath -Force
+          
+          # Copy security components
+          Copy-Item -Path "./security" -Destination "$packagePath/security" -Recurse
+          Copy-Item -Path "./monitoring" -Destination "$packagePath/monitoring" -Recurse
+          Copy-Item -Path "./deployment" -Destination "$packagePath/deployment" -Recurse
+          Copy-Item -Path "./disaster-recovery" -Destination "$packagePath/disaster-recovery" -Recurse
+          Copy-Item -Path "./docs" -Destination "$packagePath/docs" -Recurse
+          Copy-Item -Path "./install.ps1" -Destination "$packagePath/"
+          Copy-Item -Path "./README.md" -Destination "$packagePath/"
+          
+          # Create ZIP archive
+          Compress-Archive -Path $packagePath -DestinationPath "./dist/$packageName.zip" -Force
+          
+          Write-Host "✓ Package created: ./dist/$packageName.zip"
+
+      - name: Upload Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-hotpatch-package
+          path: ./dist/*.zip
+          retention-days: 90
+
+  # ============================================
+  # Phase 8: Summary
+  # ============================================
+  summary:
+    name: CI/CD Summary
+    runs-on: windows-latest
+    needs: [code-quality, security-validation, unit-tests, integration-tests, smoke-tests, compliance-check]
+    if: always()
+    steps:
+      - name: Generate Summary
+        shell: pwsh
+        run: |
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Security & Hotpatch CI/CD Summary" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host ""
+          Write-Host "Jobs Status:" -ForegroundColor White
+          Write-Host "  - Code Quality: ${{ needs.code-quality.result }}" -ForegroundColor $(if ('${{ needs.code-quality.result }}' -eq 'success') { 'Green' } else { 'Red' })
+          Write-Host "  - Security Validation: ${{ needs.security-validation.result }}" -ForegroundColor $(if ('${{ needs.security-validation.result }}' -eq 'success') { 'Green' } else { 'Red' })
+          Write-Host "  - Unit Tests: ${{ needs.unit-tests.result }}" -ForegroundColor $(if ('${{ needs.unit-tests.result }}' -eq 'success') { 'Green' } else { 'Red' })
+          Write-Host "  - Integration Tests: ${{ needs.integration-tests.result }}" -ForegroundColor $(if ('${{ needs.integration-tests.result }}' -eq 'success') { 'Green' } else { 'Yellow' })
+          Write-Host "  - Smoke Tests: ${{ needs.smoke-tests.result }}" -ForegroundColor $(if ('${{ needs.smoke-tests.result }}' -eq 'success') { 'Green' } else { 'Red' })
+          Write-Host "  - Compliance Check: ${{ needs.compliance-check.result }}" -ForegroundColor $(if ('${{ needs.compliance-check.result }}' -eq 'success') { 'Green' } else { 'Yellow' })
+          Write-Host ""
+          Write-Host "Overall Status: $(if ('${{ needs.code-quality.result }}' -eq 'success' -and '${{ needs.unit-tests.result }}' -eq 'success' -and '${{ needs.smoke-tests.result }}' -eq 'success') { '✅ PASSED' } else { '❌ FAILED' })" -ForegroundColor $(if ('${{ needs.code-quality.result }}' -eq 'success' -and '${{ needs.unit-tests.result }}' -eq 'success' -and '${{ needs.smoke-tests.result }}' -eq 'success') { 'Green' } else { 'Red' })

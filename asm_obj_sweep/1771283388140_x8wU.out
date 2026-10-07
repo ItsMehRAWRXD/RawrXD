@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\rawrxd_compiler_masm64.asm\1771283388140_x8wU.asm
+D:\rawrxd\history\all_versions\src\rawrxd_compiler_masm64.asm\1771283388140_x8wU.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\rawrxd_compiler_masm64.asm\1771283388140_x8wU.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\rawrxd_compiler_masm64.asm\1771283388140_x8wU.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\rawrxd_compiler_masm64.asm\1771283388140_x8wU.asm(18) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\rawrxd_compiler_masm64.asm\1771283388140_x8wU.asm(19) : error A2008:syntax error : win64
+D:\rawrxd\history\all_versions\src\rawrxd_compiler_masm64.asm\1771283388140_x8wU.asm(24) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\RawrXD_v23_RingFetcher.asm
+D:\rawrxd\src\RawrXD_v23_RingFetcher.asm(9) : error A2006:undefined symbol : SwarmV23_L3_Fetch_Warmup

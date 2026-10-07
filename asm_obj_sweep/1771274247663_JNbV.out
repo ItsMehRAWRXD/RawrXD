@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\native_inference\native_q4_kernels.asm\1771274247663_JNbV.asm
+D:\rawrxd\history\all_versions\native_inference\native_q4_kernels.asm\1771274247663_JNbV.asm(6) : error A2189:invalid combination with segment alignment : 64

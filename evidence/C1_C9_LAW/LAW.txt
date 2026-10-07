@@ -1,0 +1,16 @@
+C1_C9 LAW
+
+1. RMV remains the only mount/identity authority.
+2. VirtualTensorRange / ResolveQuantBlockRange remains the only block->physical resolver.
+3. VwaLineageRange is observational evidence only; it cannot mount, resolve, own, cache, or evict.
+4. GPU dispatch may consume fulfilled PhysicalTensorRange bytes; it may not recompute GGUF offsets or quant geometry.
+5. Range identity is tensor identity + source/shard + generation (if available) + absolute offset + byte count + block interval.
+6. Byte-count equality alone is insufficient; exact normalized range-set equality is required.
+7. Percent cuts are experiment labels. The execution authority is exact row/block coordinates.
+8. C4 requires an actual asynchronous file read completion. sourceData memcpy / zero-fill cannot satisfy C4.
+9. C5 requires an actual GPU transfer completion to a real device object. host memcpy / gpuData=null cannot satisfy C5.
+10. ExpertId is a slice coordinate within the canonical stacked GGUF tensor, never a synthetic mounted tensor.
+11. Elastic/Residency remains lifecycle authority. C1-C9 helpers carry no residency FSM and perform no eviction.
+12. Prefetch is proven only when measured overlapped wall < serial(read+compute).
+13. C8 requires declared RAM, VRAM and outstanding-I/O budgets to hold under live K2.
+14. C9 requires C1..C8, parity, real GPU dispatch, no second mount, no name relookup, no source shortcut, hot alloc=0 and post-warm shard-I/O invariant.

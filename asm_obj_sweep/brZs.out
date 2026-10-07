@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-1aae455e\brZs.asm
+D:\rawrxd\history\-1aae455e\brZs.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\-1aae455e\brZs.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\-1aae455e\brZs.asm(11) : error A2041:string or text literal too long
+D:\rawrxd\history\-1aae455e\brZs.asm(14) : fatal error A1000:cannot open file : \masm32\include\windows.inc

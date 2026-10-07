@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\-14c30827\tWBX.asm
+D:\rawrxd\history\-14c30827\tWBX.asm(58) : error A2070:invalid instruction operands
+D:\rawrxd\history\-14c30827\tWBX.asm(59) : error A2070:invalid instruction operands
+D:\rawrxd\history\-14c30827\tWBX.asm(23) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\-14c30827\tWBX.asm(24) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\-14c30827\tWBX.asm(25) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\-14c30827\tWBX.asm(28) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\-14c30827\tWBX.asm(29) : warning A4014:instructions and initialized data not supported in BSS segments

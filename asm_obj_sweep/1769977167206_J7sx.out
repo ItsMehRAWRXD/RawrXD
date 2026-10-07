@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769977167206_J7sx.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769977167206_J7sx.asm(824) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769977167206_J7sx.asm(852) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769977167206_J7sx.asm(856) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769977167206_J7sx.asm(600) : error A2022:instruction operands must be the same size

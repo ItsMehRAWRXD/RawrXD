@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\gui\llama_dll.asm
+D:\rawrxd\gui\llama_dll.asm(1) : error A2008:syntax error : .
+D:\rawrxd\gui\llama_dll.asm(2) : error A2008:syntax error : .
+D:\rawrxd\gui\llama_dll.asm(10) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\gui\llama_dll.asm(28) : error A2006:undefined symbol : HINSTANCE
+D:\rawrxd\gui\llama_dll.asm(28) : error A2195:parameter or local cannot have void type
+D:\rawrxd\gui\llama_dll.asm(28) : error A2006:undefined symbol : LPVOID
+D:\rawrxd\gui\llama_dll.asm(34) : error A2008:syntax error : modelPath
+D:\rawrxd\gui\llama_dll.asm(35) : error A2070:invalid instruction operands
+D:\rawrxd\gui\llama_dll.asm(39) : error A2070:invalid instruction operands
+D:\rawrxd\gui\llama_dll.asm(40) : error A2070:invalid instruction operands
+D:\rawrxd\gui\llama_dll.asm(45) : error A2070:invalid instruction operands
+D:\rawrxd\gui\llama_dll.asm(46) : error A2070:invalid instruction operands
+D:\rawrxd\gui\llama_dll.asm(52) : error A2070:invalid instruction operands
+D:\rawrxd\gui\llama_dll.asm(57) : error A2070:invalid instruction operands
+D:\rawrxd\gui\llama_dll.asm(62) : error A2070:invalid instruction operands
+D:\rawrxd\gui\llama_dll.asm(64) : fatal error A1010:unmatched block nesting : InitModel

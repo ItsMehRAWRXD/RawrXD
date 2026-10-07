@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(87) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(101) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(102) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(135) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(142) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(371) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(377) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(378) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(381) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(392) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(393) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(398) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(399) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(841) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(331) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(454) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(455) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(548) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(549) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(750) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(940) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(997) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_gpu_dma_complete_production.asm(437) : warning A6004:procedure argument or local not referenced : local_size

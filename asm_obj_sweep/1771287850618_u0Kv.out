@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287850618_u0Kv.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287850618_u0Kv.ASM(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287850618_u0Kv.ASM(106) : error A2008:syntax error : label
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287850618_u0Kv.ASM(167) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287850618_u0Kv.ASM(2094) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287850618_u0Kv.ASM(2575) : fatal error A1010:unmatched block nesting : StrStrA

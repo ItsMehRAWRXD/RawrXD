@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907700042_STPa.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907700042_STPa.asm(224) : error A2006:undefined symbol : @att_ret
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907700042_STPa.asm(252) : error A2029:multiple base registers not allowed

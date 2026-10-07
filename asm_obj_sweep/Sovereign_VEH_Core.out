@@ -1,0 +1,53 @@
+ Assembling: D:\rawrxd\Sovereign_VEH_Core.asm
+D:\rawrxd\Sovereign_VEH_Core.asm(48) : error A2008:syntax error : Rax
+D:\rawrxd\Sovereign_VEH_Core.asm(49) : error A2008:syntax error : Rcx
+D:\rawrxd\Sovereign_VEH_Core.asm(50) : error A2008:syntax error : Rdx
+D:\rawrxd\Sovereign_VEH_Core.asm(51) : error A2008:syntax error : Rbx
+D:\rawrxd\Sovereign_VEH_Core.asm(52) : error A2008:syntax error : Rsp
+D:\rawrxd\Sovereign_VEH_Core.asm(53) : error A2008:syntax error : Rbp
+D:\rawrxd\Sovereign_VEH_Core.asm(54) : error A2008:syntax error : Rsi
+D:\rawrxd\Sovereign_VEH_Core.asm(55) : error A2008:syntax error : Rdi
+D:\rawrxd\Sovereign_VEH_Core.asm(57) : error A2008:syntax error : Dr0
+D:\rawrxd\Sovereign_VEH_Core.asm(58) : error A2008:syntax error : Dr1
+D:\rawrxd\Sovereign_VEH_Core.asm(59) : error A2008:syntax error : Dr2
+D:\rawrxd\Sovereign_VEH_Core.asm(60) : error A2008:syntax error : Dr3
+D:\rawrxd\Sovereign_VEH_Core.asm(61) : error A2008:syntax error : Dr6
+D:\rawrxd\Sovereign_VEH_Core.asm(62) : error A2008:syntax error : Dr7
+D:\rawrxd\Sovereign_VEH_Core.asm(137) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(140) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(143) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(146) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(150) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(152) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(154) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(156) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(158) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(160) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(305) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(306) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(308) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(309) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(311) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(312) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(314) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(315) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(317) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(318) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(320) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(321) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(323) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(324) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(326) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(327) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(332) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(333) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(335) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(336) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(338) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(339) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(341) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(342) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(344) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(345) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(347) : error A2166:structure field expected
+D:\rawrxd\Sovereign_VEH_Core.asm(348) : error A2166:structure field expected

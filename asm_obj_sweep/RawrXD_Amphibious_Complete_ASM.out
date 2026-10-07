@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\RawrXD_Amphibious_Complete_ASM.asm
+D:\rawrxd\RawrXD_Amphibious_Complete_ASM.asm(317) : warning A6001:no return from procedure
+D:\rawrxd\RawrXD_Amphibious_Complete_ASM.asm(108) : warning A6004:procedure argument or local not referenced : hOut
+D:\rawrxd\RawrXD_Amphibious_Complete_ASM.asm(108) : warning A6004:procedure argument or local not referenced : len
+D:\rawrxd\RawrXD_Amphibious_Complete_ASM.asm(108) : warning A6004:procedure argument or local not referenced : written
+D:\rawrxd\RawrXD_Amphibious_Complete_ASM.asm(159) : warning A6004:procedure argument or local not referenced : count
+D:\rawrxd\RawrXD_Amphibious_Complete_ASM.asm(213) : warning A6004:procedure argument or local not referenced : hFile
+D:\rawrxd\RawrXD_Amphibious_Complete_ASM.asm(213) : warning A6004:procedure argument or local not referenced : buf
+D:\rawrxd\RawrXD_Amphibious_Complete_ASM.asm(317) : warning A6004:procedure argument or local not referenced : idx

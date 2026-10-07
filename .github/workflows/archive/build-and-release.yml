@@ -1,0 +1,77 @@
+# RawrXD GUI CI/CD Pipeline
+# Builds, tests, and releases the GUI on every push to main
+
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ created ]
+
+env:
+  BUILD_TYPE: Release
+  SOLUTION_FILE: RawrXD.sln
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v1.1
+      
+    - name: Setup Ninja
+      uses: seanmiddleditch/gha-setup-ninja@v3
+      
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja `
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
+          -DCMAKE_C_COMPILER=cl `
+          -DCMAKE_CXX_COMPILER=cl
+          
+    - name: Build
+      run: cmake --build build --config ${{ env.BUILD_TYPE }}
+      
+    - name: Run Tests
+      run: |
+        .\build\bin\RawrXD-InferenceRoutingTest.exe
+        if ($LASTEXITCODE -ne 0) { exit 1 }
+        
+    - name: Package
+      run: |
+        cd installer
+        .\create_installer.bat
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: RawrXD-Windows-x64
+        path: installer/output/*.zip
+        
+  release:
+    needs: build-windows
+    runs-on: windows-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Download Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: RawrXD-Windows-x64
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./RawrXD-*-Windows-x64.zip
+        asset_name: RawrXD-${{ github.event.release.tag_name }}-Windows-x64.zip
+        asset_content_type: application/zip

@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_masm_RawrXD_Streaming_Orchestrator.asm
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_masm_RawrXD_Streaming_Orchestrator.asm(114) : error A2006:undefined symbol : SetEvent
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_masm_RawrXD_Streaming_Orchestrator.asm(182) : error A2006:undefined symbol : SetEvent

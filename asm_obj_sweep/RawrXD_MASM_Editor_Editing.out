@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\RawrXD_MASM_Editor_Editing.asm
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(58) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(62) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(108) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(117) : error A2008:syntax error : WHILE
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(121) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(158) : error A2008:syntax error : VirtualFree
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(163) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(167) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(203) : error A2008:syntax error : WHILE
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(225) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(229) : error A2044:invalid character in file
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(237) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(31) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(64) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(128) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(131) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(170) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(173) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_MASM_Editor_Editing.asm(212) : error A2006:undefined symbol : @@

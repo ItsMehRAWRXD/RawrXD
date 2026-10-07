@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902572631_egD9.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902572631_egD9.asm(137) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902572631_egD9.asm(138) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902572631_egD9.asm(139) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902572631_egD9.asm(181) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902572631_egD9.asm(218) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902572631_egD9.asm(232) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902572631_egD9.asm(283) : error A2083:invalid scale value

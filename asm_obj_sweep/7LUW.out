@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\-1ec43a2c\7LUW.asm
+D:\rawrxd\history\-1ec43a2c\7LUW.asm(911) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1ec43a2c\7LUW.asm(915) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1ec43a2c\7LUW.asm(919) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1ec43a2c\7LUW.asm(913) : error A2006:undefined symbol : lstrcatA
+D:\rawrxd\history\-1ec43a2c\7LUW.asm(917) : error A2006:undefined symbol : lstrcatA
+D:\rawrxd\history\-1ec43a2c\7LUW.asm(921) : error A2006:undefined symbol : lstrcatA

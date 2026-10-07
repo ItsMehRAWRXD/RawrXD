@@ -1,0 +1,72 @@
+ Assembling: D:\rawrxd\history\runoff\part_0023\d__terraform.asm
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(154) : error A2008:syntax error : integer
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(193) : error A2008:syntax error : integer
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(219) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(220) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(268) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(268): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(284) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(284): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(292) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(292): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(300) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(300): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(324) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(324): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(337) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(337): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(349) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(349): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(354) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(354): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(367) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(367): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(376) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(392) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(392): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(406) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(406): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(431) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(431): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(455) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(455): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(520) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(520): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(560) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(560): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(816) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(816): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(826) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(826): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(835) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(835): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(844) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(844): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(865) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(865): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(882) : error A2008:syntax error : ENDP
+ M_END(4): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(882): Main Line Code
+D:\rawrxd\history\runoff\part_0023\d__terraform.asm(884) : fatal error A1007:nesting level too deep
+ M_PROC(1): Macro Called From
+  D:\rawrxd\history\runoff\part_0023\d__terraform.asm(884): Main Line Code

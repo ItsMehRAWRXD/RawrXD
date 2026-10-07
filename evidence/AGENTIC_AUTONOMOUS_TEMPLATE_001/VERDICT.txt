@@ -1,0 +1,43 @@
+AGENTIC_AUTONOMOUS_TEMPLATE_001 + MODEL_STREAMER product finish
+================================================================
+Date: 2026-08-31
+Binary: build_p1pra_win32ide/bin/RawrXD-Win32IDE.exe
+Link: PASS (P1PRA_SYMBOL_LINKED=1)
+
+## Model streamer (finished product path)
+- StreamingModelInferenceEngine no longer invents ASCII/avg-embed tokens
+- Tokenize/Detokenize/Generate/Eval/GenerateStreaming delegate to real
+  InferenceEngine when AgenticModelStreamerBridge::SetInferenceEngine is set
+- AgenticEngine::loadLocalModel wires:
+    StreamingGGUFLoader (zones) + shared real InferenceEngine
+- CMake: src/agentic_model_streamer_bridge.cpp linked into RawrXD-Win32IDE
+- VRAM NT aperture MASM remains PASS (STREAMER_VRAM_APERTURE_001)
+
+## Agentic / autonomous template (finished Command-home path)
+SteerMode is behavioral, not a cosmetic prompt prefix:
+
+  Plan  → generateAgentPlan() → checklist in conversation + approval dialog
+          /approve or Allow → executePlan()
+  Build → generateResponseAsync with tools/hotpatch ON (CapEdit/git gated)
+  Agent → StartAgentLoop (multi-turn, tools ON) with streamed output
+  Stop  → StopAgentLoop + inference stop
+
+Also:
+- SteerMode synced to AgenticMode (Plan/Agent/Ask-for-Build)
+- CommandBroker passes (message, mode) without prefix injection
+- plan_mode_handler.cpp added to Win32IDE target
+- onPlanReady emits ScreenPilot checklist + idle lease release
+
+## Acceptance (manual)
+1. Launch RawrXD-Win32IDE.exe with RAWRXD_EVIDENCE_ROOT set
+2. Load local .gguf via Engine control
+3. Plan mode: send a goal → see checklist → /approve
+4. Build mode: request an edit → streamed implementation
+5. Agent mode: request a multi-step task → loop cycles + tools
+6. Stop ends the loop
+
+## Disposition
+MODEL_STREAMER_PRODUCT_PATH     = WIRED (real engine; fail-closed without it)
+AGENTIC_AUTONOMOUS_TEMPLATE     = WIRED (Plan/Build/Agent on Command Send)
+WIN32IDE_LINK                   = PASS
+RC1 / PRODUCT_INFERENCE_AUTHORITY = still HOLD until P1PRA_002 E2E Finalize=0

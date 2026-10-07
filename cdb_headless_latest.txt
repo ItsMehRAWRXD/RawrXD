@@ -1,0 +1,89 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.031 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4188 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: d:\rawrxd-ci-bootstrap\IDE_Integration.exe --headless-soak=20 --model=D:\TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+ModLoad: 00007ff6`b6010000 00007ff6`b6043000   image00007ff6`b6010000
+ModLoad: 00007ffb`3b2a0000 00007ffb`3b506000   ntdll.dll
+ModLoad: 00007ffb`394a0000 00007ffb`39569000   C:\WINDOWS\System32\KERNEL32.DLL
+ModLoad: 00007ffb`385c0000 00007ffb`389ba000   C:\WINDOWS\System32\KERNELBASE.dll
+ModLoad: 00007ffb`3a6f0000 00007ffb`3a8b7000   C:\WINDOWS\System32\USER32.dll
+ModLoad: 00007ffb`38b10000 00007ffb`38b37000   C:\WINDOWS\System32\win32u.dll
+ModLoad: 00007ffb`39440000 00007ffb`3946b000   C:\WINDOWS\System32\GDI32.dll
+ModLoad: 00007ffb`38ee0000 00007ffb`3900b000   C:\WINDOWS\System32\gdi32full.dll
+ModLoad: 00007ffb`38e30000 00007ffb`38ed3000   C:\WINDOWS\System32\msvcp_win.dll
+ModLoad: 00007ffb`389c0000 00007ffb`38b0c000   C:\WINDOWS\System32\ucrtbase.dll
+(4d84.de0): Break instruction exception - code 80000003 (first chance)
+ntdll!LdrpDoDebuggerBreak+0x35:
+00007ffb`3b3bd78d cc              int     3
+0:000> cdb: Reading initial command '.symfix; .reload; g; .ecxr; kb; .exr -1; q'
+Reloading current modules
+..........
+ModLoad: 00007ffb`3b190000 00007ffb`3b1c2000   C:\WINDOWS\System32\IMM32.DLL
+ModLoad: 00007ffa`80080000 00007ffa`809f9000   d:\rawrxd-ci-bootstrap\Sovereign_SDK.dll
+ModLoad: 00007ffb`3b1d0000 00007ffb`3b250000   C:\WINDOWS\System32\WS2_32.dll
+ModLoad: 00007ffb`3b070000 00007ffb`3b188000   C:\WINDOWS\System32\RPCRT4.dll
+(4d84.6634): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+Unable to get exception context, HRESULT 0x8000FFFF
+*** WARNING: Unable to verify checksum for d:\rawrxd-ci-bootstrap\Sovereign_SDK.dll
+RetAddr               : Args to Child                                                           : Call Site
+00000000`00000000     : 00000000`00000000 00000000`00000000 00007ff6`b603b051 00000000`0bdc7000 : Sovereign_SDK!SOVEREIGN_LOAD_MODEL+0x2a0
+ExceptionAddress: 00007ffa80084000 (Sovereign_SDK!SOVEREIGN_LOAD_MODEL+0x00000000000002a0)
+   ExceptionCode: c0000005 (Access violation)
+  ExceptionFlags: 00000000
+NumberParameters: 2
+   Parameter[0]: 0000000000000000
+   Parameter[1]: ffffffffffffffff
+Attempt to read from address ffffffffffffffff
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'

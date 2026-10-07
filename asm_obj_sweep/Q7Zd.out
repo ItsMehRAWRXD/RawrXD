@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-104768b5\Q7Zd.asm
+D:\rawrxd\history\-104768b5\Q7Zd.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-104768b5\Q7Zd.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\-104768b5\Q7Zd.asm(11) : fatal error A1000:cannot open file : ..\include\winapi_min.inc

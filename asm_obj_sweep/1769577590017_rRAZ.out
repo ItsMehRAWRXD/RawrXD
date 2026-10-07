@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(119) : error A2161:non-benign structure redefinition: too few labels : IMAGE_DATA_DIRECTORY
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(158) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(161) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(162) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(163) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(164) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(165) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(166) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(167) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(168) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(169) : error A2161:non-benign structure redefinition: too few labels : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(169) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(253) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(255) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(270) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(270) : error A2008:syntax error : in structure
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(274) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(275) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(291) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(291) : error A2008:syntax error : in structure
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(297) : error A2005:symbol redefinition : PACKER_UPX
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(298) : error A2005:symbol redefinition : PACKER_ASPACK
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(299) : error A2005:symbol redefinition : PACKER_FSG
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(328) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(330) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(333) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(338) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(363) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(390) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(391) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(393) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(398) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(401) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(404) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(405) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(417) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(451) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(452) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(465) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(469) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(480) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(481) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(505) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(512) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(525) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(547) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(555) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(705) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(710) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(747) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(752) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(755) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(763) : error A2008:syntax error : MAX_PATH
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(790) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(799) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(912) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(956) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(966) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(967) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(968) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(969) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1011) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1015) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1018) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1070) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1288) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1290) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1296) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1297) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1306) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1351) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1352) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1355) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1364) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1375) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1392) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1393) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1397) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1400) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1409) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1410) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1412) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1435) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1438) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1452) : error A2008:syntax error
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1453) : error A2008:syntax error : MAX_PATH
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1454) : error A2008:syntax error : MAX_PATH
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1470) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1472) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1481) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1485) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577590017_rRAZ.asm(1494) : fatal error A1012:error count exceeds 100; stopping assembly

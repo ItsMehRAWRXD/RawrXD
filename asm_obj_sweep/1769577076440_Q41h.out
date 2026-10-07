@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577076440_Q41h.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577076440_Q41h.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577076440_Q41h.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577076440_Q41h.asm(20) : fatal error A1000:cannot open file : \masm32\include\windows.inc

@@ -1,0 +1,34 @@
+ Assembling: D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(22) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(72) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(93) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(124) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(125) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(139) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(158) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(167) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(177) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(52) : error A2006:undefined symbol : _fail
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(54) : error A2006:undefined symbol : _fail
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(56) : error A2006:undefined symbol : _fail
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(66) : error A2006:undefined symbol : _fail
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(73) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(76) : error A2006:undefined symbol : zero_hash
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(97) : error A2006:undefined symbol : god_done
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(107) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(117) : error A2006:undefined symbol : god_literal
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(127) : error A2006:undefined symbol : match_done
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(130) : error A2006:undefined symbol : match_done
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(133) : error A2006:undefined symbol : match_done
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(134) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(135) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(136) : error A2006:undefined symbol : match_done
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(138) : error A2006:undefined symbol : match_loop
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(141) : error A2006:undefined symbol : god_literal
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(152) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(156) : error A2006:undefined symbol : god_loop
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(160) : error A2006:undefined symbol : god_done
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(165) : error A2006:undefined symbol : god_loop
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(174) : error A2006:undefined symbol : no_flush
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(225) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_godmode_masm.asm(25) : error A2206:missing operator in expression

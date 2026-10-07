@@ -1,0 +1,137 @@
+#version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int32 : require
+
+// Medusa Candidate Verification Kernel
+// Verifies multiple speculative tokens in parallel
+// Each workgroup processes one candidate sequence
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) readonly buffer LogitsBuffer {
+    float16_t data[];
+} logits;
+
+layout(set = 0, binding = 1) readonly buffer CandidatesBuffer {
+    uint32_t data[];
+} candidates;
+
+layout(set = 0, binding = 2) writeonly buffer AcceptanceBuffer {
+    uint32_t data[];
+} acceptance;
+
+layout(push_constant) uniform PushConstants {
+    uint32_t num_heads;
+    uint32_t tokens_per_head;
+    uint32_t vocab_size;
+    uint32_t batch_size;
+    float temperature;
+} params;
+
+// Shared memory for parallel reduction
+shared float16_t shared_logits[64];
+shared uint32_t shared_indices[64];
+
+// Helper: Sample from logits using temperature
+uint32_t sample_token(uint32_t head_idx, uint32_t token_idx) {
+    uint32_t logits_offset = (head_idx * params.tokens_per_head + token_idx) * params.vocab_size;
+    
+    // Find max logit for numerical stability
+    float16_t max_logit = float16_t(-65504.0);
+    for (uint32_t i = gl_LocalInvocationID.x; i < params.vocab_size; i += gl_WorkGroupSize.x) {
+        max_logit = max(max_logit, logits.data[logits_offset + i]);
+    }
+    
+    shared_logits[gl_LocalInvocationID.x] = max_logit;
+    barrier();
+    
+    // Reduction for max
+    for (uint32_t stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
+        if (gl_LocalInvocationID.x < stride) {
+            shared_logits[gl_LocalInvocationID.x] = max(
+                shared_logits[gl_LocalInvocationID.x],
+                shared_logits[gl_LocalInvocationID.x + stride]
+            );
+        }
+        barrier();
+    }
+    
+    max_logit = shared_logits[0];
+    
+    // Compute softmax probabilities
+    float16_t sum = float16_t(0.0);
+    for (uint32_t i = gl_LocalInvocationID.x; i < params.vocab_size; i += gl_WorkGroupSize.x) {
+        float16_t logit = logits.data[logits_offset + i];
+        float16_t prob = exp((logit - max_logit) / float16_t(params.temperature));
+        sum += prob;
+    }
+    
+    shared_logits[gl_LocalInvocationID.x] = sum;
+    barrier();
+    
+    // Reduction for sum
+    for (uint32_t stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
+        if (gl_LocalInvocationID.x < stride) {
+            shared_logits[gl_LocalInvocationID.x] += shared_logits[gl_LocalInvocationID.x + stride];
+        }
+        barrier();
+    }
+    
+    // For simplicity, return argmax (greedy)
+    // In production, use proper sampling
+    uint32_t best_idx = 0;
+    float16_t best_logit = float16_t(-65504.0);
+    
+    for (uint32_t i = gl_LocalInvocationID.x; i < params.vocab_size; i += gl_WorkGroupSize.x) {
+        float16_t logit = logits.data[logits_offset + i];
+        if (logit > best_logit) {
+            best_logit = logit;
+            best_idx = i;
+        }
+    }
+    
+    shared_indices[gl_LocalInvocationID.x] = best_idx;
+    shared_logits[gl_LocalInvocationID.x] = best_logit;
+    barrier();
+    
+    // Reduction for argmax
+    for (uint32_t stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
+        if (gl_LocalInvocationID.x < stride) {
+            if (shared_logits[gl_LocalInvocationID.x + stride] > shared_logits[gl_LocalInvocationID.x]) {
+                shared_logits[gl_LocalInvocationID.x] = shared_logits[gl_LocalInvocationID.x + stride];
+                shared_indices[gl_LocalInvocationID.x] = shared_indices[gl_LocalInvocationID.x + stride];
+            }
+        }
+        barrier();
+    }
+    
+    return shared_indices[0];
+}
+
+void main() {
+    uint32_t head_idx = gl_GlobalInvocationID.x;
+    
+    if (head_idx >= params.num_heads) return;
+    
+    uint32_t candidate_offset = head_idx * params.tokens_per_head;
+    
+    // Verify each token in the candidate sequence
+    uint32_t accepted_count = 0;
+    bool all_match = true;
+    
+    for (uint32_t t = 0; t < params.tokens_per_head && all_match; t++) {
+        uint32_t predicted = sample_token(head_idx, t);
+        uint32_t expected = candidates.data[candidate_offset + t];
+        
+        if (predicted == expected) {
+            accepted_count++;
+        } else {
+            all_match = false;
+        }
+    }
+    
+    // Write acceptance mask
+    // Bit 0-7: accepted count, Bit 8: all match
+    uint32_t mask = accepted_count | (all_match ? 0x100 : 0);
+    acceptance.data[head_idx] = mask;
+}

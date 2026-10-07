@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(66) : error A2015:segment attributes cannot change : Alignment
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(119) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(169) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(170) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(173) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(357) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(403) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(405) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(474) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(505) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(507) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(555) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(556) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(569) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(610) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(611) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(626) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(749) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(799) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(800) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(811) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(1067) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(1081) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\native_speed_kernels.asm\1770871148172_MjRk.asm(1096) : error A2070:invalid instruction operands

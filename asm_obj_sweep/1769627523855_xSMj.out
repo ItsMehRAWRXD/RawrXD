@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Engine.asm\1769627523855_xSMj.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Engine.asm\1769627523855_xSMj.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Engine.asm\1769627523855_xSMj.asm(13) : fatal error A1000:cannot open file : \masm64\include64\win64.inc

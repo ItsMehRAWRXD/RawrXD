@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(18) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(70) : error A2008:syntax error : vex
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(259) : error A2218:AH, BH, CH, or DH may not be used with R8-R15, BPL, DIL, SIL, or SPL
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(447) : error A2218:AH, BH, CH, or DH may not be used with R8-R15, BPL, DIL, SIL, or SPL
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(721) : error A2218:AH, BH, CH, or DH may not be used with R8-R15, BPL, DIL, SIL, or SPL
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(513) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(802) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(863) : warning A4025:ENDP found before .ENDPROLOG : CalcInstructionLength
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(863) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_x64.asm(863) : error A2220:Missing .ENDPROLOG

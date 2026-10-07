@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(122) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(128) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(134) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(135) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(136) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(137) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(143) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(145) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(151) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(153) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_crypto_masm_crypto_rand.asm(158) : warning A6004:procedure argument or local not referenced : C

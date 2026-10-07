@@ -1,0 +1,46 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(9) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(168) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(249) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(271) : error A2008:syntax error : offset
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(282) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(318) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(373) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(382) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(383) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(384) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(457) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(534) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(645) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(661) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1202) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1212) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1960) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1088) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1875) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(549) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(701) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(790) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(856) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(918) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(975) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1060) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1148) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1186) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1284) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1351) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1407) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1449) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1482) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1522) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1542) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1556) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1577) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1608) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1631) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1645) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1687) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1727) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1901) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1971) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__Phase4_Master_Complete.asm(1992) : error A2220:Missing .ENDPROLOG

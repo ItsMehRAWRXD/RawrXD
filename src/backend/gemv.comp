@@ -1,0 +1,30 @@
+#version 450
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer Weights {
+    float weights[];
+};
+
+layout(binding = 1) readonly buffer Input {
+    float input_vec[];
+};
+
+layout(binding = 2) writeonly buffer Output {
+    float output_vec[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint rows;
+    uint cols;
+} push;
+
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= push.rows) return;
+    
+    float sum = 0.0;
+    for (uint k = 0; k < push.cols; k++) {
+        sum += weights[row * push.cols + k] * input_vec[k];
+    }
+    output_vec[row] = sum;
+}

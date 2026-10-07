@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\-24688c32\gTZd.asm
+D:\rawrxd\history\-24688c32\gTZd.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\-24688c32\gTZd.asm(81) : error A2189:invalid combination with segment alignment : 128
+D:\rawrxd\history\-24688c32\gTZd.asm(167) : error A2008:syntax error : ,
+D:\rawrxd\history\-24688c32\gTZd.asm(275) : error A2008:syntax error : ,
+D:\rawrxd\history\-24688c32\gTZd.asm(336) : error A2023:instruction operand must have size
+D:\rawrxd\history\-24688c32\gTZd.asm(483) : error A2070:invalid instruction operands
+D:\rawrxd\history\-24688c32\gTZd.asm(552) : error A2008:syntax error : ,
+D:\rawrxd\history\-24688c32\gTZd.asm(553) : error A2008:syntax error : ,
+D:\rawrxd\history\-24688c32\gTZd.asm(556) : error A2008:syntax error : ,
+D:\rawrxd\history\-24688c32\gTZd.asm(560) : error A2008:syntax error : ,
+D:\rawrxd\history\-24688c32\gTZd.asm(569) : error A2008:syntax error : ,
+D:\rawrxd\history\-24688c32\gTZd.asm(572) : error A2008:syntax error : ,
+D:\rawrxd\history\-24688c32\gTZd.asm(270) : error A2206:missing operator in expression
+D:\rawrxd\history\-24688c32\gTZd.asm(271) : error A2206:missing operator in expression
+D:\rawrxd\history\-24688c32\gTZd.asm(273) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\-24688c32\gTZd.asm(274) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\-24688c32\gTZd.asm(315) : error A2206:missing operator in expression
+D:\rawrxd\history\-24688c32\gTZd.asm(422) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\-24688c32\gTZd.asm(424) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\-24688c32\gTZd.asm(427) : error A2206:missing operator in expression
+D:\rawrxd\history\-24688c32\gTZd.asm(430) : error A2206:missing operator in expression
+D:\rawrxd\history\-24688c32\gTZd.asm(146) : warning A4025:ENDP found before .ENDPROLOG : HP_Protect
+D:\rawrxd\history\-24688c32\gTZd.asm(146) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-24688c32\gTZd.asm(578) : warning A4025:ENDP found before .ENDPROLOG : Titan_MetaInit
+D:\rawrxd\history\-24688c32\gTZd.asm(578) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\-24688c32\gTZd.asm(578) : error A2220:Missing .ENDPROLOG

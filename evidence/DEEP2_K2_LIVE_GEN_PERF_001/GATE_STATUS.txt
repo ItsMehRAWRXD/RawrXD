@@ -1,0 +1,9 @@
+HISTORICAL_85_4_TPS=K2.5_2.5B_Q8_0_NOT_THIS_MODEL
+PATH=K2NativeStreamPartial
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+SHARDS=13 BYTES=621245224864
+PROMPT=tok_s_improvement_paragraph
+LAYER_DEPTH=4 TOKENS=32 GEN_ID=5936 PEAK=67006464
+WALL_MS=197766.820 DECODE_TPS=0.162 bounded=1 ok=1
+DEEP2_K2_LIVE_GEN_PERF_001=PASS
+GENERATED_TEXT=Ġtapè±¡å½¢å±¯é©¬åĵĪĠcontradictionnÃŃå¤§å¤§lmĠbleedingå¤ĸè¾¹GMæīĵäººĠCrusè¿ĶĠmishæŃ¤é¡¹ĠVAĠlinksåĳ¨åĪĬĠBrenĠcomparsesĠcryCrystalèĻ¹difĠdampĠprofessĠdefsç»©æķĪèĢĥæł¸è¿Ľè¡Įå¤ĦçĲĨici

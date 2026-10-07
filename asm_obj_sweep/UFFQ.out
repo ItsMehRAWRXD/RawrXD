@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\UFFQ.asm
+D:\rawrxd\history\-1bd1bafa\UFFQ.asm(2740) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1bd1bafa\UFFQ.asm(2746) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd1bafa\UFFQ.asm(3223) : error A2005:symbol redefinition : ParseStyleJson
+D:\rawrxd\history\-1bd1bafa\UFFQ.asm(3410) : fatal error A1010:unmatched block nesting : ParseStyleJson

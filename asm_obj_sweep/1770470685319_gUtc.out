@@ -1,0 +1,59 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(149) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(180) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(235) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(241) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(243) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1126) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1236) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1240) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1244) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1248) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1252) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1258) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1260) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1264) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1266) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1270) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1409) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1410) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1449) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1584) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1589) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1742) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1746) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1750) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1751) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1759) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1763) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1767) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1774) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1778) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1782) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1783) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1789) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1793) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(1797) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(2979) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(2989) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3078) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3192) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3193) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3194) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3202) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3204) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3207) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3302) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3314) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3315) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3398) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3408) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3410) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3429) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3438) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(3440) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(4064) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(4144) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(4156) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(4428) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrCodex.asm\1770470685319_gUtc.asm(4448) : error A2081:missing operand after unary operator

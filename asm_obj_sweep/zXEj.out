@@ -1,0 +1,48 @@
+ Assembling: D:\rawrxd\history\-26a5432e\zXEj.asm
+D:\rawrxd\history\-26a5432e\zXEj.asm(86) : error A2008:syntax error : type
+D:\rawrxd\history\-26a5432e\zXEj.asm(91) : error A2008:syntax error : width
+D:\rawrxd\history\-26a5432e\zXEj.asm(323) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\-26a5432e\zXEj.asm(323) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-26a5432e\zXEj.asm(353) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\-26a5432e\zXEj.asm(353) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-26a5432e\zXEj.asm(383) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\-26a5432e\zXEj.asm(383) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-26a5432e\zXEj.asm(327) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\-26a5432e\zXEj.asm(328) : error A2006:undefined symbol : style
+D:\rawrxd\history\-26a5432e\zXEj.asm(330) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\-26a5432e\zXEj.asm(331) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\-26a5432e\zXEj.asm(332) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\-26a5432e\zXEj.asm(333) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\-26a5432e\zXEj.asm(334) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\-26a5432e\zXEj.asm(335) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\-26a5432e\zXEj.asm(336) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\-26a5432e\zXEj.asm(337) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\-26a5432e\zXEj.asm(339) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\-26a5432e\zXEj.asm(340) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\-26a5432e\zXEj.asm(357) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\-26a5432e\zXEj.asm(358) : error A2006:undefined symbol : style
+D:\rawrxd\history\-26a5432e\zXEj.asm(360) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\-26a5432e\zXEj.asm(361) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\-26a5432e\zXEj.asm(362) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\-26a5432e\zXEj.asm(363) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\-26a5432e\zXEj.asm(364) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\-26a5432e\zXEj.asm(365) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\-26a5432e\zXEj.asm(366) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\-26a5432e\zXEj.asm(367) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\-26a5432e\zXEj.asm(369) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\-26a5432e\zXEj.asm(370) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\-26a5432e\zXEj.asm(387) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\-26a5432e\zXEj.asm(388) : error A2006:undefined symbol : style
+D:\rawrxd\history\-26a5432e\zXEj.asm(390) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\-26a5432e\zXEj.asm(391) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\-26a5432e\zXEj.asm(392) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\-26a5432e\zXEj.asm(393) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\-26a5432e\zXEj.asm(394) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\-26a5432e\zXEj.asm(395) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\-26a5432e\zXEj.asm(396) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\-26a5432e\zXEj.asm(397) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\-26a5432e\zXEj.asm(399) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\-26a5432e\zXEj.asm(400) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\-26a5432e\zXEj.asm(604) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-26a5432e\zXEj.asm(607) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-26a5432e\zXEj.asm(662) : error A2094:operand must be relocatable

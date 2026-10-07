@@ -1,0 +1,47 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(7) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(156) : error A2005:symbol redefinition : MAX_TENSORS
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(192) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(239) : error A2005:symbol redefinition : Q2_K_BYTES
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(241) : error A2005:symbol redefinition : Q4_K_BYTES
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(243) : error A2005:symbol redefinition : Q5_K_BYTES
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(245) : error A2005:symbol redefinition : Q6_K_BYTES
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(258) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(467) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(471) : error A2008:syntax error : g_cacheLock
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(472) : error A2008:syntax error : g_initOnce
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(480) : error A2008:syntax error : g_queueLock
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(500) : error A2008:syntax error : IF
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(502) : error A2008:syntax error : ELSEIF
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(504) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(506) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(516) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(581) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(582) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(583) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(520) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(530) : error A2006:undefined symbol : memset
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(535) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(537) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(538) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(543) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(548) : error A2006:undefined symbol : fileSize
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(559) : error A2006:undefined symbol : fileSize
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(571) : error A2006:undefined symbol : fileSize
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(572) : error A2006:undefined symbol : FILE_MAP_READ
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(584) : error A2006:undefined symbol : fileSize
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(591) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(599) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(677) : error A2006:undefined symbol : free
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(705) : error A2006:undefined symbol : free
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(509) : warning A6004:procedure argument or local not referenced : hInst
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(509) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(509) : warning A6004:procedure argument or local not referenced : lpReserved
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(740) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(763) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(763) : warning A6004:procedure argument or local not referenced : pWeight
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(841) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(841) : warning A6004:procedure argument or local not referenced : pInputTokens
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(841) : warning A6004:procedure argument or local not referenced : pRequest
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(841) : warning A6004:procedure argument or local not referenced : pResponse
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627607286_XUP5.asm(896) : warning A6004:procedure argument or local not referenced : lpPrompt

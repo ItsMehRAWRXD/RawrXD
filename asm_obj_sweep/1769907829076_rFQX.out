@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(304) : error A2006:undefined symbol : @copy_v
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(348) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(365) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(377) : error A2006:undefined symbol : MemCpy_AVX512
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(381) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(395) : error A2006:undefined symbol : MemCpy_AVX512
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(405) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(475) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(303) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907829076_rFQX.asm(326) : warning A4025:ENDP found before .ENDPROLOG : Attention_Forward_GQA
+
+MASM : fatal error A1016: Internal error

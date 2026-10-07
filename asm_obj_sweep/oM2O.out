@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\-1b707747\oM2O.asm
+D:\rawrxd\history\-1b707747\oM2O.asm(279) : error A2039:line too long
+D:\rawrxd\history\-1b707747\oM2O.asm(3604) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\oM2O.asm(3651) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\oM2O.asm(3853) : error A2005:symbol redefinition : szBackDir
+D:\rawrxd\history\-1b707747\oM2O.asm(3854) : error A2005:symbol redefinition : szExplorerDir
+D:\rawrxd\history\-1b707747\oM2O.asm(3855) : error A2005:symbol redefinition : szExplorerPattern
+D:\rawrxd\history\-1b707747\oM2O.asm(3857) : error A2005:symbol redefinition : find_data
+D:\rawrxd\history\-1b707747\oM2O.asm(992) : error A2006:undefined symbol : HandleFileDrop
+D:\rawrxd\history\-1b707747\oM2O.asm(1451) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\oM2O.asm(1575) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\oM2O.asm(1648) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\oM2O.asm(1656) : error A2006:undefined symbol : save_theme_to_config
+D:\rawrxd\history\-1b707747\oM2O.asm(1690) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\oM2O.asm(3520) : error A2006:undefined symbol : EM_LINEFROMCHAR
+D:\rawrxd\history\-1b707747\oM2O.asm(352) : warning A4014:instructions and initialized data not supported in BSS segments

@@ -1,0 +1,29 @@
+ Assembling: D:\rawrxd\history\-2cab8cce\QVAP.asm
+D:\rawrxd\history\-2cab8cce\QVAP.asm(67) : error A2008:syntax error : in instruction
+D:\rawrxd\history\-2cab8cce\QVAP.asm(204) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\-2cab8cce\QVAP.asm(214) : error A2006:undefined symbol : asm_log
+D:\rawrxd\history\-2cab8cce\QVAP.asm(242) : error A2032:invalid use of register
+D:\rawrxd\history\-2cab8cce\QVAP.asm(243) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-2cab8cce\QVAP.asm(245) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-2cab8cce\QVAP.asm(246) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-2cab8cce\QVAP.asm(248) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-2cab8cce\QVAP.asm(293) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-2cab8cce\QVAP.asm(298) : error A2006:undefined symbol : MoveFileA
+D:\rawrxd\history\-2cab8cce\QVAP.asm(302) : error A2006:undefined symbol : MoveFileA
+D:\rawrxd\history\-2cab8cce\QVAP.asm(307) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-2cab8cce\QVAP.asm(313) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\-2cab8cce\QVAP.asm(321) : error A2084:constant value too large
+D:\rawrxd\history\-2cab8cce\QVAP.asm(322) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\-2cab8cce\QVAP.asm(328) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-2cab8cce\QVAP.asm(351) : error A2006:undefined symbol : asm_log
+D:\rawrxd\history\-2cab8cce\QVAP.asm(355) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-2cab8cce\QVAP.asm(357) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-2cab8cce\QVAP.asm(358) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-2cab8cce\QVAP.asm(360) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-2cab8cce\QVAP.asm(394) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-2cab8cce\QVAP.asm(396) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-2cab8cce\QVAP.asm(397) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-2cab8cce\QVAP.asm(399) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-2cab8cce\QVAP.asm(403) : error A2006:undefined symbol : asm_log
+D:\rawrxd\history\-2cab8cce\QVAP.asm(413) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-2cab8cce\QVAP.asm(497) : error A2006:undefined symbol : GetTickCount

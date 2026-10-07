@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\src\RawrXD_v25_Entropy.asm
+D:\rawrxd\src\RawrXD_v25_Entropy.asm(20) : error A2006:undefined symbol : SwarmV25_NonLinear_Quant
+D:\rawrxd\src\RawrXD_v25_Entropy.asm(21) : error A2006:undefined symbol : SwarmV25_SubQuantum_Decoupler
+D:\rawrxd\src\RawrXD_v25_Entropy.asm(22) : error A2006:undefined symbol : SwarmV25_Recursive_Bias_Check
+D:\rawrxd\src\RawrXD_v25_Entropy.asm(11) : error A2206:missing operator in expression

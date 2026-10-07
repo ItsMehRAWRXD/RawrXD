@@ -1,0 +1,49 @@
+[VAL038] Warning: Could not detect CPU frequency, assuming 3.0 GHz
+[VAL038] Warning: Could not detect CPU frequency, assuming 3.0 GHz
+[VAL038] Warning: Could not detect CPU frequency, assuming 3.0 GHz
+================================================================
+  VAL-038 Benchmark Harness
+  Fused Attention + LUT Softmax
+================================================================
+
+  Kernel:  TreeAttention_Fused_VAL038
+  Softmax: softmax_lut_avx512
+  Timing:  CPUID + RDTSC (serialized)
+
+
+[1] Fused Attention Numerical Parity
+  Attention parity (tol < 1e-3)            [FAIL] max_err=0.003182 (tol=1e-4)
+
+[2] Fused Attention Latency (RDTSC)
+    CPU base frequency: 3.00 GHz
+  Attention latency < 500ns                [FAIL] 877.3 cycles, inf ns (target <500ns)
+    Avg cycles:  877.3
+    Avg latency:  inf ns
+
+[3] LUT Softmax Numerical Parity
+  Softmax parity (tol < 1e-3)              [PASS] max_err=0.003269 (tol=1e-3)
+
+[4] LUT Softmax Latency (RDTSC)
+  Softmax latency measured                 [PASS] 144.7 cycles, 48.2 ns
+    Avg cycles:  144.7
+    Avg latency:  48.2 ns
+
+[5] ABI Correctness (Windows x64)
+  Stack sentinels intact                   [PASS] 
+  Kernel produces output                   [PASS] 
+  Deterministic output                     [PASS] 
+
+[6] Warmup vs Measured Iteration Separation
+  Warmup separation (hot < cold)           [FAIL] cold=0.0 hot=850.6 cycles
+    Cold avg: 0.0 cycles
+    Hot avg:  850.6 cycles
+    Speedup:  0.00x
+
+================================================================
+  VAL-038 Benchmark Summary
+================================================================
+  Total checks: 8
+  Passed:       5
+  Failed:       3
+  Result:       FAIL
+================================================================

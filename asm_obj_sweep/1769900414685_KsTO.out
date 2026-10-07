@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769900414685_KsTO.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769900414685_KsTO.asm(82) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769900414685_KsTO.asm(108) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769900414685_KsTO.asm(130) : error A2220:Missing .ENDPROLOG

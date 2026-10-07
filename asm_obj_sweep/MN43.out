@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\MN43.asm
+D:\rawrxd\history\-1bd1bafa\MN43.asm(3634) : error A2005:symbol redefinition : StringFind
+D:\rawrxd\history\-1bd1bafa\MN43.asm(3677) : fatal error A1010:unmatched block nesting : StringFind

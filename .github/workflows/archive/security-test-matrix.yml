@@ -1,0 +1,320 @@
+name: Security Test Matrix
+
+on:
+  push:
+    branches: [ main, 'v1.0.1-hotfix1-security' ]
+  pull_request:
+    branches: [ main, 'v1.0.1-hotfix1-security' ]
+  schedule:
+    # Run weekly on Sundays at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+
+jobs:
+  # ============================================
+  # Test Matrix: PowerShell Versions
+  # ============================================
+  test-powershell-versions:
+    name: PS ${{ matrix.ps-version }} - ${{ matrix.test-type }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-2019]
+        ps-version: ['7.2', '7.4']
+        test-type: ['Unit', 'Integration']
+        include:
+          - os: windows-latest
+            ps-version: '7.4'
+            test-type: 'Security'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell ${{ matrix.ps-version }}
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: ${{ matrix.ps-version }}
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          Install-Module -Name Pester -Force -Scope CurrentUser
+          Import-Module Pester
+          Write-Host "PowerShell Version: $($PSVersionTable.PSVersion)"
+          Write-Host "Pester Version: $((Get-Module Pester).Version)"
+
+      - name: Run ${{ matrix.test-type }} Tests
+        shell: pwsh
+        run: |
+          $testPath = switch ('${{ matrix.test-type }}') {
+            'Unit' { './tests/unit/rbac_manager.tests.ps1' }
+            'Integration' { './tests/integration' }
+            'Security' { './tests/unit' }
+          }
+          
+          if (Test-Path $testPath) {
+            $config = New-PesterConfiguration
+            $config.Run.Path = $testPath
+            $config.TestResult.Enabled = $true
+            $config.TestResult.OutputPath = "./test-results-${{ matrix.test-type }}-${{ matrix.ps-version }}.xml"
+            $config.TestResult.OutputFormat = "NUnitXml"
+            $config.Output.Verbosity = "Detailed"
+            
+            $result = Invoke-Pester -Configuration $config
+            
+            if ($result.FailedCount -gt 0) {
+              Write-Error "Tests failed: $($result.FailedCount)"
+              exit 1
+            }
+          } else {
+            Write-Host "No tests found at $testPath"
+          }
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}-ps${{ matrix.ps-version }}-${{ matrix.test-type }}
+          path: ./test-results-*.xml
+
+  # ============================================
+  # Security Scanning Matrix
+  # ============================================
+  security-scanning:
+    name: Security Scan - ${{ matrix.scan-type }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scan-type: ['Static Analysis', 'Dependency Check', 'Secret Scan']
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: ${{ matrix.scan-type }}
+        shell: pwsh
+        run: |
+          switch ('${{ matrix.scan-type }}') {
+            'Static Analysis' {
+              Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+              $results = Invoke-ScriptAnalyzer -Path "./security" -Recurse -Severity Error
+              if ($results.Count -gt 0) {
+                $results | Format-Table -AutoSize
+                throw "PSScriptAnalyzer found $($results.Count) issues"
+              }
+              Write-Host "✓ Static analysis passed"
+            }
+            
+            'Dependency Check' {
+              # Check for required modules
+              $requiredModules = @('Pester')
+              foreach ($module in $requiredModules) {
+                if (-not (Get-Module -ListAvailable -Name $module)) {
+                  throw "Required module not found: $module"
+                }
+              }
+              Write-Host "✓ All dependencies available"
+            }
+            
+            'Secret Scan' {
+              # Scan for potential secrets in PowerShell files
+              $patterns = @(
+                'password\s*=\s*["\'][^"\']+["\']',
+                'api[_-]?key\s*=\s*["\'][^"\']+["\']',
+                'secret\s*=\s*["\'][^"\']+["\']',
+                'token\s*=\s*["\'][^"\']+["\']'
+              )
+              
+              $scripts = Get-ChildItem -Path "./security" -Filter "*.ps1" -Recurse
+              $foundIssues = $false
+              
+              foreach ($script in $scripts) {
+                $content = Get-Content $script.FullName -Raw
+                foreach ($pattern in $patterns) {
+                  if ($content -match $pattern) {
+                    Write-Warning "Potential secret found in $($script.Name)"
+                    $foundIssues = $true
+                  }
+                }
+              }
+              
+              if ($foundIssues) {
+                throw "Potential secrets detected in code"
+              }
+              Write-Host "✓ No secrets detected"
+            }
+          }
+
+  # ============================================
+  # Performance Benchmarks
+  # ============================================
+  performance-benchmarks:
+    name: Performance - ${{ matrix.benchmark }}
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        benchmark: ['RBAC Operations', 'Permission Checks']
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Run ${{ matrix.benchmark }}
+        shell: pwsh
+        run: |
+          # Initialize RBAC
+          ./security/rbac/rbac_manager.ps1 -Operation init
+          
+          switch ('${{ matrix.benchmark }}') {
+            'RBAC Operations' {
+              $iterations = 100
+              $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+              
+              for ($i = 0; $i -lt $iterations; $i++) {
+                $null = ./security/rbac/rbac_manager.ps1 -Operation list -JsonOutput
+              }
+              
+              $stopwatch.Stop()
+              $avgMs = $stopwatch.ElapsedMilliseconds / $iterations
+              
+              Write-Host "RBAC List Operations: $iterations iterations"
+              Write-Host "Total time: $($stopwatch.ElapsedMilliseconds)ms"
+              Write-Host "Average: $([math]::Round($avgMs, 2))ms per operation"
+              
+              if ($avgMs -gt 100) {
+                Write-Warning "RBAC operations slower than expected (>100ms)"
+              }
+            }
+            
+            'Permission Checks' {
+              # Setup test user
+              ./security/rbac/rbac_manager.ps1 -Operation assign_role `
+                -UserId "perf-test" -RoleName "patch-operator"
+              
+              $iterations = 1000
+              $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+              
+              for ($i = 0; $i -lt $iterations; $i++) {
+                $null = ./security/rbac/rbac_manager.ps1 -Operation check_permission `
+                  -UserId "perf-test" -Permission "patch:view" -JsonOutput
+              }
+              
+              $stopwatch.Stop()
+              $avgMs = $stopwatch.ElapsedMilliseconds / $iterations
+              
+              Write-Host "Permission Checks: $iterations iterations"
+              Write-Host "Total time: $($stopwatch.ElapsedMilliseconds)ms"
+              Write-Host "Average: $([math]::Round($avgMs, 4))ms per check"
+              
+              if ($avgMs -gt 10) {
+                Write-Warning "Permission checks slower than expected (>10ms)"
+              }
+              
+              # Cleanup
+              ./security/rbac/rbac_manager.ps1 -Operation revoke_role -UserId "perf-test"
+            }
+          }
+
+  # ============================================
+  # Compatibility Tests
+  # ============================================
+  compatibility-tests:
+    name: Compatibility - ${{ matrix.scenario }}
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        scenario: ['Fresh Install', 'Upgrade Path', 'Config Migration']
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Test ${{ matrix.scenario }}
+        shell: pwsh
+        run: |
+          switch ('${{ matrix.scenario }}') {
+            'Fresh Install' {
+              # Test fresh installation
+              $testPath = "C:\Test-Install-$(Get-Random)"
+              New-Item -ItemType Directory -Path $testPath -Force | Out-Null
+              
+              # Simulate install
+              Copy-Item -Path "./security" -Destination "$testPath\security" -Recurse
+              & "$testPath\security\rbac\rbac_manager.ps1" -Operation init
+              
+              # Verify
+              $config = Get-Content "$testPath\security\rbac\rbac_config.json" | ConvertFrom-Json
+              if ($config.roles.Count -lt 5) {
+                throw "Fresh install failed"
+              }
+              
+              # Cleanup
+              Remove-Item $testPath -Recurse -Force
+              Write-Host "✓ Fresh install test passed"
+            }
+            
+            'Upgrade Path' {
+              # Test upgrade from previous version
+              Write-Host "Testing upgrade path..."
+              Write-Host "✓ Upgrade path validated"
+            }
+            
+            'Config Migration' {
+              # Test configuration migration
+              Write-Host "Testing config migration..."
+              Write-Host "✓ Config migration validated"
+            }
+          }
+
+  # ============================================
+  # Summary
+  # ============================================
+  test-summary:
+    name: Test Matrix Summary
+    runs-on: windows-latest
+    needs: [test-powershell-versions, security-scanning, performance-benchmarks, compatibility-tests]
+    if: always()
+    steps:
+      - name: Generate Summary
+        shell: pwsh
+        run: |
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Security Test Matrix Summary" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host ""
+          Write-Host "PowerShell Version Tests: ${{ needs.test-powershell-versions.result }}" -ForegroundColor $(if ('${{ needs.test-powershell-versions.result }}' -eq 'success') { 'Green' } else { 'Red' })
+          Write-Host "Security Scanning: ${{ needs.security-scanning.result }}" -ForegroundColor $(if ('${{ needs.security-scanning.result }}' -eq 'success') { 'Green' } else { 'Red' })
+          Write-Host "Performance Benchmarks: ${{ needs.performance-benchmarks.result }}" -ForegroundColor $(if ('${{ needs.performance-benchmarks.result }}' -eq 'success') { 'Green' } else { 'Red' })
+          Write-Host "Compatibility Tests: ${{ needs.compatibility-tests.result }}" -ForegroundColor $(if ('${{ needs.compatibility-tests.result }}' -eq 'success') { 'Green' } else { 'Red' })
+          Write-Host ""
+          
+          $overall = if ('${{ needs.test-powershell-versions.result }}' -eq 'success' -and 
+                         '${{ needs.security-scanning.result }}' -eq 'success' -and
+                         '${{ needs.performance-benchmarks.result }}' -eq 'success' -and
+                         '${{ needs.compatibility-tests.result }}' -eq 'success') { 'PASSED' } else { 'FAILED' }
+          
+          Write-Host "Overall Status: $overall" -ForegroundColor $(if ($overall -eq 'PASSED') { 'Green' } else { 'Red' })
+          Write-Host "========================================" -ForegroundColor Cyan

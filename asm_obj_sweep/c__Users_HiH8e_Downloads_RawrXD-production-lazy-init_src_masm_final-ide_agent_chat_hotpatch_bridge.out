@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_hotpatch_bridge.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_hotpatch_bridge.asm(272) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_hotpatch_bridge.asm(285) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_hotpatch_bridge.asm(364) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_hotpatch_bridge.asm(516) : error A2006:undefined symbol : agent_check_token_in_symbols
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_hotpatch_bridge.asm(528) : error A2006:undefined symbol : agent_check_valid_token_syntax

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-2b22d6d1\T6dT.asm
+D:\rawrxd\history\-2b22d6d1\T6dT.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-2b22d6d1\T6dT.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\-2b22d6d1\T6dT.asm(11) : fatal error A1000:cannot open file : winapi_min.inc

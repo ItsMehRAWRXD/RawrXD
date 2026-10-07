@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(360) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(362) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(603) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(604) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(65) : error A2006:undefined symbol : VirtualProtect
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(81) : error A2006:undefined symbol : GetLastError
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(447) : error A2006:undefined symbol : atomic_success_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(541) : error A2006:undefined symbol : xor_success_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(573) : error A2006:undefined symbol : rotate_success_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(625) : error A2006:undefined symbol : compare_equal_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(633) : error A2006:undefined symbol : compare_differ_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(666) : error A2006:undefined symbol : hook_success_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(704) : error A2006:undefined symbol : stream_success_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(754) : error A2006:undefined symbol : reasoning_success_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(787) : error A2006:undefined symbol : correction_success_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(826) : error A2006:undefined symbol : mmap_success_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(859) : error A2006:undefined symbol : transform_success_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(898) : error A2006:undefined symbol : integrity_valid_msg
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127994085_yEPO.asm(906) : error A2006:undefined symbol : integrity_invalid_msg

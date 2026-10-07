@@ -1,0 +1,37 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(183) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(433) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(463) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(465) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(760) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(775) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(780) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(793) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(795) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(856) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(858) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(915) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(1157) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(1158) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(1161) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(1172) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2038) : error A2006:undefined symbol : sz_content_length_hdr
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2114) : error A2006:undefined symbol : sz_lsp_result
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2115) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2121) : error A2006:undefined symbol : sz_lsp_method
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2122) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2129) : error A2006:undefined symbol : sz_lsp_diagnostics
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2130) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2136) : error A2006:undefined symbol : sz_lsp_hover
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2137) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2145) : error A2006:undefined symbol : g_lsp_response_ready
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2146) : error A2006:undefined symbol : g_lsp_last_response
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2152) : error A2006:undefined symbol : LSP_HandleDiagnostics
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2187) : error A2006:undefined symbol : sz_lsp_contents
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2188) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2223) : error A2006:undefined symbol : sz_lsp_value
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2224) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2271) : error A2006:undefined symbol : g_hover_text
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2272) : error A2006:undefined symbol : g_hover_text_len
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2280) : error A2006:undefined symbol : g_hover_text
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Critical_Blockers_P0.asm\1771288404591_9tDh.asm(2281) : error A2006:undefined symbol : g_hover_text_len

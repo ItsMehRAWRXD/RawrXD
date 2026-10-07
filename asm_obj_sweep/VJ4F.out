@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-1b707747\VJ4F.asm
+D:\rawrxd\history\-1b707747\VJ4F.asm(318) : error A2039:line too long
+D:\rawrxd\history\-1b707747\VJ4F.asm(3197) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\VJ4F.asm(3249) : fatal error A1010:unmatched block nesting : do_recursive_file_scan

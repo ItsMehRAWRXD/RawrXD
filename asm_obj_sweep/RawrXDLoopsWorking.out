@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXDLoops\RawrXDLoopsWorking.asm
+D:\rawrxd\reconstructed\RawrXDLoops\RawrXDLoopsWorking.asm(1) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXDLoops\RawrXDLoopsWorking.asm(2) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXDLoops\RawrXDLoopsWorking.asm(7) : fatal error A1000:cannot open file : user32.inc

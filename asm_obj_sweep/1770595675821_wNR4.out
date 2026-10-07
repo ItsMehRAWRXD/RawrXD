@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(146) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(998) : error A2006:undefined symbol : g_canaryHeadOK
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(1002) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(1003) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(1007) : error A2006:undefined symbol : g_telemetry
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(1010) : error A2006:undefined symbol : CoT_SelectCopyEngine
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(1013) : error A2006:undefined symbol : CoT_UpdateTelemetry
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2057) : error A2006:undefined symbol : g_replayMode
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2061) : error A2006:undefined symbol : g_arenaSealed
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2065) : error A2006:undefined symbol : g_gpuQueueDepth
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2066) : error A2006:undefined symbol : g_backpressureThreshold
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2071) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2139) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2147) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2151) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2154) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2156) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2159) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2162) : error A2006:undefined symbol : g_commitGovernor
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2166) : error A2006:undefined symbol : g_telemetry
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595675821_wNR4.asm(2168) : error A2006:undefined symbol : g_telemetry

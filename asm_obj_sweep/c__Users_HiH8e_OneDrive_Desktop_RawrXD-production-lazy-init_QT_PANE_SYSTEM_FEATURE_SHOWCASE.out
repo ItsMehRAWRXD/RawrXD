@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(10) : error A2034:must be in segment block : DEMO_CreatePanes
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(12) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(15) : error A2008:syntax error : PANE_CREATE
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(19) : error A2008:syntax error : PANE_CREATE
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(23) : error A2008:syntax error : PANE_CREATE
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(27) : error A2008:syntax error : PANE_CREATE
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(28) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(31) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(32) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(33) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(34) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(36) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_QT_PANE_SYSTEM_FEATURE_SHOWCASE.asm(37) : fatal error A1010:unmatched block nesting : DEMO_CreatePanes

@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\masm\interconnect\RawrXD\RingBuffer\Consumer.asm
+D:\rawrxd\reconstructed\RawrXD\src\masm\interconnect\RawrXD\RingBuffer\Consumer.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\reconstructed\RawrXD\src\masm\interconnect\RawrXD\RingBuffer\Consumer.asm(10) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

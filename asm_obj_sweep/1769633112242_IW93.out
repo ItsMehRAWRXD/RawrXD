@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(126) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(190) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(205) : error A2008:syntax error : IF
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(218) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(293) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(294) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(295) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(296) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(343) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(415) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(440) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(471) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(474) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(530) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(568) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(571) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(649) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633112242_IW93.asm(675) : fatal error A1010:unmatched block nesting : DequantizeTensor

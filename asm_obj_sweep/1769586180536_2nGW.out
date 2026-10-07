@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586180536_2nGW.asm
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586180536_2nGW.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586180536_2nGW.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586180536_2nGW.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586180536_2nGW.asm(21) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586180536_2nGW.asm(22) : error A2008:syntax error : win64
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586180536_2nGW.asm(23) : error A2008:syntax error : align
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586180536_2nGW.asm(26) : error A2008:syntax error : arch
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586180536_2nGW.asm(31) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

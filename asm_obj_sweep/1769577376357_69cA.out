@@ -1,0 +1,38 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(48) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(82) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(159) : error A2008:syntax error : ptr
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(160) : warning A6006:structure contains no members
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(164) : error A2008:syntax error : ptr
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(165) : warning A6006:structure contains no members
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(169) : error A2008:syntax error : ptr
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(170) : warning A6006:structure contains no members
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(228) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(233) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(285) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(297) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(299) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(328) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(341) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(424) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(463) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(466) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(469) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(472) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(475) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(478) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(481) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(484) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(487) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(490) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(493) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(496) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(519) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(523) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(528) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(532) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(534) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(536) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(538) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(817) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769577376357_69cA.asm(817) : fatal error A1010:unmatched block nesting : Memory_AllocateDMA

@@ -1,0 +1,44 @@
+﻿RawrXD IDE Build Information
+============================
+
+Version: 1.0.0
+Build Date: 2026-07-29T16:54:26Z
+Git Commit: b27dd4cf1ea7ec5fb9e64302e0538b48cd6432ab
+Git Branch: main
+
+Build Environment
+-----------------
+Compiler: unknown
+CMake: 4.2.0
+Platform: Windows x64
+
+Component Versions
+------------------
+Ghost Text: 1.0.0
+AI Bridge: 1.0.0
+AI Settings Dialog: 1.0.0
+Inference Engine: 1.0.0
+Compression: 1.0.0
+Vulkan Loader: 1.0.0
+ZLIB Loader: 1.0.0
+LSP UI: 1.0.0
+ANSI Terminal: 1.0.0
+Git Integration: 1.0.0
+Project Explorer: 1.0.0
+
+Capabilities
+------------
+- Vulkan Runtime Loading: Yes
+- ZLIB Runtime Loading: Yes
+- GPU Acceleration: Yes
+- CPU Fallback: Yes
+- Streaming Inference: Yes
+- Ghost Text: Yes
+- LSP Support: Yes
+
+ABI Versions
+------------
+Runtime ABI: 1.0
+Model Engine ABI: 1.0
+
+Command Registry Hash: e36022f099a9f100b0bbb6ddf454c578baced7a6626aac9a54760080b925d50f

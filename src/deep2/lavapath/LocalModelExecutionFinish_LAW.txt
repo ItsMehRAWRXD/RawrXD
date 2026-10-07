@@ -1,0 +1,90 @@
+RAWRXD LOCAL MODEL EXECUTION FINISH
+==================================
+
+PURPOSE
+-------
+This source is the product-completion layer only. It does not implement a
+second loader, second tokenizer, compatibility generator, synthetic decoder,
+or K2 performance path.
+
+AUTHORITATIVE EXECUTION
+-----------------------
+DISCOVERY
+-> FORMAT / SHARD RESOLUTION
+-> ARCH CONTRACT
+-> QUANT CONTRACT
+-> TOKENIZER / TEMPLATE / EOG CONTRACT
+-> TENSOR SCHEMA
+-> ONE active Deep2 session
+-> REAL PREFILL
+-> Deep2 generateStream
+-> REAL TOKEN CALLBACK
+-> EOS / MAX-TOKEN
+-> ACTIVE CANCEL
+-> CLEAN UNLOAD
+-> RELOAD same canonical authority
+-> PREFILL + generateStream again
+-> LOCAL_MODEL_E2E=PASS
+
+INTEGRATION
+-----------
+1. Construct RawrXD::Finish::Authority from the ALREADY-RESOLVED canonical
+   model authority. Do not re-discover or guess dimensions in this layer.
+
+2. Bind Deep2Binding callbacks directly to the shipping product path:
+
+   create_session:
+     ProductRuntime binds/creates the real Deep2 session from Authority.
+
+   prefill:
+     ProductRuntime invokes real Deep2 prefill for the given prompt.
+
+   generate_stream:
+     Deep2Engine::generateStream only.
+     Convert each real engine token callback to StreamToken{token_id, decoded}.
+
+   request_cancel:
+     ProductRuntime cancellation for that exact session id.
+
+   unload:
+     ProductRuntime real unload/teardown.
+
+3. Call LocalModelExecutor::Run(authority, options).
+
+4. Emit Receipt::ToText() verbatim into the product receipt.
+
+HARD RULES
+----------
+- At most one active Deep2 session at any instant.
+- Reload may replace a destroyed session; it may never coexist with it.
+- Loader/parser/quant/tokenizer PASS is not product completion.
+- No alternate generator is permitted when Deep2 fails.
+- No guessed/default model geometry is permitted here.
+- K2 performance is outside this result and cannot block LOCAL_MODEL_E2E.
+- Copilot/AppSec/smoke remain closed unless an actual regression exists.
+
+PASS OUTPUT
+-----------
+LOCAL_MODEL_E2E=PASS
+ONE_LOCAL_MODEL_AUTHORITY=1
+ONE_ACTIVE_DEEP2_SESSION=1
+REAL_PREFILL=1
+DEEP2_GENERATE_STREAM=1
+REAL_TOKEN_CALLBACK=1
+BASELINE_END=EOS|MAX_TOKENS
+BASELINE_TOKENS=>0
+DECODED_CALLBACK_BYTES=>0
+BOUNDED_COMPLETION=1
+CANCEL_WORKS=1
+CLEAN_UNLOAD=1
+RELOAD_GENERATE_WORKS=1
+
+BLOCKED OUTPUT
+--------------
+LOCAL_MODEL_E2E=BLOCKED
+BLOCKED_AT=<first real failed stage>
+BLOCKED_OWNER=<single owner>
+REASON=<observed failure>
+FIRST_DELTA=<one exact execution/source correction>
+
+NO new compatibility gate should be added to replace a BLOCKED result.

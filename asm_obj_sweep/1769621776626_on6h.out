@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(6) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(65) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(66) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(124) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(303) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(233) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(291) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(329) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(438) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(446) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(266) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(346) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(411) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621776626_on6h.asm(459) : error A2220:Missing .ENDPROLOG

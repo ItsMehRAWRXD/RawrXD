@@ -1,0 +1,33 @@
+RELEASE_GATE_FIRST3 — status on F:\~dev\rawrxd (2026-08-29)
+
+1. Chat stub shadowing
+   - CMake: Win32IDE_private_stubs.cpp already commented out of WIN32IDE_SOURCES
+   - File body now #if 0 quarantined (cannot ODR even if re-added by mistake)
+   - Live path: Win32IDE_ChatPanel_Ollama.cpp::HandleCopilotSend_Ollama
+   - build.ninja: no private_stubs object
+
+2. Agent cmd allowlist
+   - agentic_controller_wiring.cpp terminal_execute prefixes include: cmd, cl, link,
+     msbuild, powershell, pwsh, python, python3 (+ prior git/cmake/...)
+   - AgentToolHandlers already uses cmd.exe /C for execute_command
+   - RawrXD-Agentic allowlist also includes cmd
+
+3. Production IDE build flag
+   - BUILD_IDE_PRODUCTION.ps1: -DRAWRXD_BUILD_WIN32IDE=ON on both configure paths
+   - BUILD_IDE_FAST.ps1: -DRAWRXD_BUILD_WIN32IDE=ON on both cmake configures
+   - build-ninja cache already had RAWRXD_BUILD_WIN32IDE=ON; EXE present
+
+Also landed earlier (agent last-mile P0s):
+   - SetModel path-safe (no sanitizeModelName on GGUF paths)
+   - fingerprint duplicate tool suppression (scripted cert logged suppression)
+   - path-component sandbox IsPathAllowed
+   - deep2 cert requires run + Hello RawrXD stdout
+   - empty Agentic response = fail
+
+NEXT (P1 per audit): debugger F5 consolidation, clangd boot, compiler/problems.
+
+7-test gate progress:
+  Chat E2E     — unblocked in link graph; needs live Windows smoke
+  Agent E2E    — spine PASS scripted; model-driven blocked by Deep2 long-prompt numerics
+  Build E2E    — tools present; Problems click-nav not certified
+  Debug/LSP/Terminal/Clean-build — not closed this pass

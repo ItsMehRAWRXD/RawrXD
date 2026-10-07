@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ui_masm.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ui_masm.asm(318) : error A2039:line too long
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ui_masm.asm(3197) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ui_masm.asm(3249) : fatal error A1010:unmatched block nesting : do_recursive_file_scan

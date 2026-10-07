@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(14) : error A2008:syntax error : width
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(15) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(16) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(17) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(28) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(30) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(31) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(33) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(36) : error A2008:syntax error : CreateCompatibleBitmap
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(39) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(40) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(42) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(44) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(50) : error A2008:syntax error : Renderer initialized: %dx%d
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_renderer.asm(52) : fatal error A1010:unmatched block nesting : Renderer_Init

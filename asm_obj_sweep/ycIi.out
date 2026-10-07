@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-2217020c\ycIi.asm
+D:\rawrxd\history\-2217020c\ycIi.asm(139) : error A2006:undefined symbol : mutex_destroy_done
+D:\rawrxd\history\-2217020c\ycIi.asm(244) : error A2006:undefined symbol : event_set_done
+D:\rawrxd\history\-2217020c\ycIi.asm(276) : error A2006:undefined symbol : event_reset_done
+D:\rawrxd\history\-2217020c\ycIi.asm(350) : error A2006:undefined symbol : event_destroy_done

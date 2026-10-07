@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\asm\RawrXD_MeshDiscovery.asm
+D:\rawrxd\src\asm\RawrXD_MeshDiscovery.asm(10) : fatal error A1000:cannot open file : ws2_32.inc

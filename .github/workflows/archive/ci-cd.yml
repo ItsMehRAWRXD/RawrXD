@@ -1,0 +1,172 @@
+name: RawrXD CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, 'release/*' ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ created ]
+
+env:
+  BUILD_TYPE: Release
+  VS_VERSION: "2022"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Cache build artifacts
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~\AppData\Local\pip\Cache
+          build
+        key: ${{ runner.os }}-build-${{ hashFiles('**/build_complete_release.bat') }}
+        
+    - name: Build Release
+      shell: pwsh
+      run: |
+        Write-Host "========================================"
+        Write-Host "Building RawrXD Release"
+        Write-Host "========================================"
+        
+        # Run build script
+        & .\build_complete_release.bat
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Build failed with exit code $LASTEXITCODE"
+          exit 1
+        }
+        
+    - name: Run Tests
+      shell: pwsh
+      run: |
+        Write-Host "========================================"
+        Write-Host "Running Test Suite"
+        Write-Host "========================================"
+        
+        & .\RUN_ALL_TESTS.bat
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Tests failed with exit code $LASTEXITCODE"
+          exit 1
+        }
+        
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: RawrXD-Build-${{ github.run_number }}
+        path: |
+          dist/bin/*.exe
+          dist/*.zip
+          dist/*.sha256
+        retention-days: 30
+        
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: Test-Results-${{ github.run_number }}
+        path: |
+          *.log
+          test_output/
+        retention-days: 7
+
+  validate-installer:
+    runs-on: windows-latest
+    needs: build-windows
+    
+    steps:
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: RawrXD-Build-${{ github.run_number }}
+        path: dist/
+        
+    - name: Validate Distribution Package
+      shell: pwsh
+      run: |
+        Write-Host "Validating distribution package..."
+        
+        $zipPath = "dist\RawrXD-14.7.3-Windows-x64.zip"
+        $hashPath = "dist\RawrXD-14.7.3-Windows-x64.sha256"
+        
+        if (-not (Test-Path $zipPath)) {
+          Write-Error "Distribution ZIP not found!"
+          exit 1
+        }
+        
+        if (-not (Test-Path $hashPath)) {
+          Write-Error "Checksum file not found!"
+          exit 1
+        }
+        
+        # Verify ZIP integrity
+        try {
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+          $entries = $zip.Entries.Count
+          $zip.Dispose()
+          Write-Host "✓ ZIP archive valid ($entries entries)"
+        }
+        catch {
+          Write-Error "ZIP archive is corrupted!"
+          exit 1
+        }
+        
+        # Verify checksum
+        $computedHash = (Get-FileHash $zipPath -Algorithm SHA256).Hash
+        $expectedHash = (Get-Content $hashPath).Split()[0]
+        
+        if ($computedHash -ne $expectedHash) {
+          Write-Error "Checksum mismatch!"
+          Write-Error "Expected: $expectedHash"
+          Write-Error "Computed: $computedHash"
+          exit 1
+        }
+        
+        Write-Host "✓ Checksum verified"
+
+  release:
+    runs-on: windows-latest
+    needs: [build-windows, validate-installer]
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: RawrXD-Build-${{ github.run_number }}
+        path: dist/
+        
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/*.zip
+          dist/*.sha256
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Notify Deployment
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        text: 'RawrXD v14.7.3 has been released!'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: always()

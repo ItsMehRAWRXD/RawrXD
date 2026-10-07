@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\omega_suite\v5\Omega-Install-Reverser-Protected.asm
+D:\rawrxd\src\reverse_engineering\omega_suite\v5\Omega-Install-Reverser-Protected.asm(16) : error A2008:syntax error : WIN64
+D:\rawrxd\src\reverse_engineering\omega_suite\v5\Omega-Install-Reverser-Protected.asm(19) : fatal error A1000:cannot open file : \masm64\include64\win64.inc

@@ -1,0 +1,95 @@
+RAWRXD_NUMERICAL_BOUNDARY_ISOLATION_001
+ARCHIVE DATE: 2026-10-07
+STATUS: ROOT CAUSE VERIFIED - GGUF FILE CONTAINS NaN F32 WEIGHTS
+
+=============================================================================
+ROM OFFSET AUTHORITY VERIFICATION
+=============================================================================
+
+GGUF_DATA_OFFSET=3972000 (from evidence file model.physical.txt)
+GENERATED_FILE_OFFSET=dataOffset (relative to data blob)
+ABSOLUTE_FILE_OFFSET=GGUF_DATA_OFFSET + dataOffset
+
+MATCH_AS_ABSOLUTE=0
+MATCH_AS_RELATIVE=1
+
+The generated fileOffset values are DATA-RELATIVE, not absolute file offsets.
+The runtime was corrected to add GGUF_DATA_OFFSET before dereferencing.
+
+=============================================================================
+ROOT CAUSE VERIFICATION
+=============================================================================
+
+Direct GGUF byte dump at offset 293968800 (blk.0.attn_norm.weight absolute):
+  - 8192 bytes read
+  - 2048 float32 values
+  - 13 NaN values confirmed
+  - FIRST_NONFINITE=166 (matches runtime report)
+  - MIN=-3.28944e+38 (matches runtime report)
+  - MAX=3.33712e+38 (matches runtime report)
+
+CONCLUSION: The GGUF file ITSELF contains NaN values in the F32 norm weights.
+The offset fix is correct. The nonfinite values are NOT caused by:
+  - wrong offset interpretation
+  - corrupted memory mapping
+  - dequantization errors
+  - quant decode issues
+
+The nonfinite values ARE caused by:
+  - NaN values stored in the GGUF file's F32 norm weight tensors
+
+=============================================================================
+BOUNDARY MAP (UPDATED)
+=============================================================================
+
+LAST_PROVEN_FINITE=BLOCK_0_INPUT
+  COUNT=2048
+  NONFINITE=0
+
+FIRST_PROVEN_NONFINITE=BLOCK_0_ATTN_NORM_WEIGHT (source)
+  COUNT=2048
+  NONFINITE=13
+  FIRST_NONFINITE=166
+  SOURCE=GGUB file contains NaN at absolute offset 293968800
+
+BLOCK_0_POST_ATTN_NORM: NONFINITE (propagated from weights)
+BLOCK_0_POST_Q: ALL NONFINITE (propagated)
+BLOCK_0_POST_MLA: ZEROS (stub fallback)
+BLOCK_0_POST_ATTN_OUTPUT: ZEROS (stub fallback)
+BLOCK_0_POST_ATTN_RESIDUAL: FINITE (attn output is zero)
+BLOCK_0_POST_FFN_NORM: NONFINITE (propagated from weights)
+BLOCK_0_POST_FFN_GATE_UP: ALL NONFINITE (propagated)
+BLOCK_0_POST_FFN_DOWN: ALL NONFINITE (propagated)
+BLOCK_0_POST_FFN_RESIDUAL: ALL NONFINITE (propagated)
+BLOCK_0_BLOCK_OUTPUT: ALL NONFINITE (propagated)
+
+=============================================================================
+NEXT STEPS
+=============================================================================
+
+The GGUF file contains NaN values in F32 norm weights. Options:
+
+1. Use a different GGUF file (if available)
+2. Sanitize NaN values in norm weights (replace with 1.0 or small positive)
+3. Investigate why the GGUF file contains NaN values
+   - Check if this is expected for this model
+   - Check if the model was trained with NaN weights
+   - Check if the GGUF conversion process introduced NaN
+
+For now, the numerical closure path is:
+  HEADER_AUTHORITY=PASS
+  ROM_OFFSET_AUTHORITY=PASS
+  F32_WEIGHT_SOURCE=NaN (in GGUB file)
+  -> Need sanitized weights or different model file
+
+=============================================================================
+EVIDENCE FILES
+=============================================================================
+
+  evidence\HEADER_AUTHORITY_MILESTONE\HEADER_AUTHORITY_001.txt
+  evidence\HEADER_AUTHORITY_MILESTONE\HEADER_AUTHORITY_001.json
+  evidence\HEADER_AUTHORITY_MILESTONE\BOUNDARY_ISOLATION_001.txt
+  evidence\HEADER_AUTHORITY_MILESTONE\BOUNDARY_ISOLATION_001.json
+  evidence\HEADER_AUTHORITY_MILESTONE\token0_offset_fix3.log
+  evidence\HEADER_AUTHORITY_MILESTONE\token0_dequant_debug.log
+  evidence\HEADER_AUTHORITY_MILESTONE\f32_check.log

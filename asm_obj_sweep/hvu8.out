@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(170) : error A2005:symbol redefinition : szFeatureHarnessInit
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(171) : error A2005:symbol redefinition : szFeatureToggleSuccess
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(172) : error A2005:symbol redefinition : szFeaturePresetApplied
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(625) : error A2070:invalid instruction operands
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(638) : error A2070:invalid instruction operands
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(619) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(620) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(623) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(624) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(626) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(628) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(639) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\hvu8.asm(643) : error A2006:undefined symbol : CloseHandle

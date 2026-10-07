@@ -1,0 +1,36 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(143) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(263) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1242) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1244) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(759) : error A2006:undefined symbol : sym_count
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(764) : error A2006:undefined symbol : sym_table
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(785) : error A2006:undefined symbol : sym_count
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(790) : error A2006:undefined symbol : sym_table
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(798) : error A2006:undefined symbol : sym_count
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(929) : error A2006:undefined symbol : cur_val
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(935) : error A2006:undefined symbol : cur_val
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(989) : error A2006:undefined symbol : cur_val
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(999) : error A2006:undefined symbol : stack_offset
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1010) : error A2006:undefined symbol : stack_offset
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1045) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1052) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1056) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1060) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1069) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1073) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1079) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1101) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1109) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1114) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1118) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1166) : error A2006:undefined symbol : syntax_err
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1167) : error A2006:undefined symbol : cur_val
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1200) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1205) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1276) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1284) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1411) : error A2006:undefined symbol : sym_count
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1412) : error A2006:undefined symbol : func_count
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1413) : error A2006:undefined symbol : literal_count
+D:\rawrxd\history\all_versions\terraform.asm\1771247126735_RCdI.asm(1414) : error A2006:undefined symbol : stack_offset

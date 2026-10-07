@@ -1,0 +1,30 @@
+P1_OPERATOR_VALIDATION
+======================
+date=2026-08-29
+authority=evidence/P1_GGUF_LOAD/P1_GGUF_LOAD_PASS.txt + evidence/P1_SCENARIO_2_GGUF_LOAD.txt
+
+FROZEN (archived, KEPT)
+-----------------------
+required_sha256_frozen=0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B
+archive=F:\~dev\rawrxd\evidence\frozen\P1_0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B\
+
+CANDIDATE
+---------
+exe=F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.exe
+candidate_sha256=02107572E098A7A188A25152AF83F86DA140895F8B6DD60A851AE4AFBCE53F46
+
+DISPOSITION
+-----------
+1 Launch / selftest = PASS (P0 closed)
+2 GGUF load         = PASS  (MODEL_READY + PROCESS_SURVIVAL)
+3 Copilot UI        = BLOCKED (next)
+4 FINAL             = BLOCKED
+5 NEED_INPUT        = BLOCKED
+6 deny              = BLOCKED
+7 fallback          = BLOCKED
+8 lifecycle         = PASS
+
+P1_PRODUCT_PATH_SMOKE = PARTIAL (S2 closed; S3–S7 open)
+P1_PROMOTE            = BLOCKED (await operator promote of candidate SHA)
+P1_MERGE              = BLOCKED
+SHA FREEZE RECORD     = KEPT

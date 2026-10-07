@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(14) : error A2008:syntax error : width
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(15) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(16) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(17) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(28) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(30) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(31) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(33) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(36) : error A2008:syntax error : CreateCompatibleBitmap
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(39) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(40) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(42) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(44) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(50) : error A2008:syntax error : Renderer initialized: %dx%d
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\renderer.asm(52) : fatal error A1010:unmatched block nesting : Renderer_Init

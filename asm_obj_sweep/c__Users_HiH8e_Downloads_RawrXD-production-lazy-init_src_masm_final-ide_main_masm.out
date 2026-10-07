@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(234) : error A2008:syntax error : HINSTANCE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(241) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(245) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(340) : error A2006:undefined symbol : h_instance
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(459) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(460) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(691) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(730) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(731) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(733) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(790) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(793) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(835) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(871) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_masm.asm(1034) : error A2006:undefined symbol : h_instance

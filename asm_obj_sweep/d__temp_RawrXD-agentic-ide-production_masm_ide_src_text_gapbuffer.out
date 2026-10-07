@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_gapbuffer.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_gapbuffer.asm(85) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_gapbuffer.asm(169) : fatal error A1010:unmatched block nesting : GapBuffer_Insert

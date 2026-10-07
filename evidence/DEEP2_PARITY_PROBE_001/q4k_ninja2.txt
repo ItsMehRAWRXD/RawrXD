@@ -1,0 +1,23 @@
+[1/13] Building CXX object CMakeFiles\test_q4k_gemv_parity.dir\src\deep2\test_q4k_gemv_parity.cpp.obj
+FAILED: [code=2] CMakeFiles/test_q4k_gemv_parity.dir/src/deep2/test_q4k_gemv_parity.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -IF:\~dev\rawrxd\include -IF:\~dev\rawrxd\src\deep2 -IF:\~dev\rawrxd\src -IF:\~dev\rawrxd\src\inference -IF:\~dev\rawrxd\src\engine -IF:\~dev\rawrxd\src\core -IF:\~dev\rawrxd\src\codec -IF:\~dev\rawrxd\src\masm -IF:\~dev\rawrxd\src\runtime\governance -IC:\VulkanSDK\1.4.357.0\Include -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /arch:AVX2 /EHsc /W4 /std:c++20 /showIncludes /FoCMakeFiles\test_q4k_gemv_parity.dir\src\deep2\test_q4k_gemv_parity.cpp.obj /FdCMakeFiles\test_q4k_gemv_parity.dir\ /FS -c F:\~dev\rawrxd\src\deep2\test_q4k_gemv_parity.cpp
+F:\~dev\rawrxd\src\deep2\GGUFLoader.hpp(111): warning C4189: 'blockSize': local variable is initialized but not referenced
+F:\~dev\rawrxd\src\deep2\test_q4k_gemv_parity.cpp(350): error C3861: 'l2norm': identifier not found
+F:\~dev\rawrxd\src\deep2\test_q4k_gemv_parity.cpp(350): error C3861: 'l2norm': identifier not found
+F:\~dev\rawrxd\src\deep2\test_q4k_gemv_parity.cpp(349): warning C4477: 'printf' : format string '%.9e' requires an argument of type 'double', but variadic argument 5 has type '<error type>'
+F:\~dev\rawrxd\src\deep2\test_q4k_gemv_parity.cpp(349): warning C4477: 'printf' : format string '%.9e' requires an argument of type 'double', but variadic argument 6 has type '<error type>'
+F:\~dev\rawrxd\src\deep2\test_q4k_gemv_parity.cpp(461): error C3861: 'l2norm': identifier not found
+F:\~dev\rawrxd\src\deep2\test_q4k_gemv_parity.cpp(582): error C3861: 'l2norm': identifier not found
+F:\~dev\rawrxd\src\deep2\test_q4k_gemv_parity.cpp(583): error C3861: 'l2norm': identifier not found
+F:\~dev\rawrxd\src\deep2\test_q4k_gemv_parity.cpp(584): error C3861: 'l2norm': identifier not found
+[2/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\Deep2SovereignInferenceGateway.cpp.obj
+[3/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Bridge.cpp.obj
+[4/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\Deep2InferenceWrapper.cpp.obj
+[5/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ModelRuntime.cpp.obj
+[6/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ChatTemplate.cpp.obj
+[7/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ExecutionGraph.cpp.obj
+[8/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DeepSeekMoELoader.cpp.obj
+[9/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2IDEIntegration.cpp.obj
+[10/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignRuntime.cpp.obj
+[11/13] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine.cpp.obj
+ninja: build stopped: subcommand failed.

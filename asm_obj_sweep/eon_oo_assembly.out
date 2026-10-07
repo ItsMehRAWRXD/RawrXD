@@ -1,0 +1,58 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(4) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(27) : error A2008:syntax error : shape_vtable
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(28) : error A2008:syntax error : shape_class_info
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(31) : error A2008:syntax error : circle_vtable
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(32) : error A2008:syntax error : circle_class_info
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(35) : error A2008:syntax error : rectangle_vtable
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(36) : error A2008:syntax error : rectangle_class_info
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(39) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(40) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(41) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(42) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(45) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(46) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(47) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(49) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(50) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(51) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(52) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(53) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(54) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(55) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(56) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(57) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(58) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(59) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(60) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(61) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(64) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(65) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(66) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(69) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(70) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(71) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(72) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(75) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(76) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(77) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(78) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(81) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(82) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(83) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(84) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(87) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(88) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(89) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(90) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(93) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(94) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(95) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(96) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(99) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(100) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(101) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(102) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(104) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(105) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_oo_assembly.asm(107) : fatal error A1009:line too long

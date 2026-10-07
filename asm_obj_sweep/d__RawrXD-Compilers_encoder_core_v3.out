@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_core_v3.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_core_v3.asm(9) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_core_v3.asm(12) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_core_v3.asm(76) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_core_v3.asm(231) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_core_v3.asm(226) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_core_v3.asm(261) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_core_v3.asm(269) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_core_v3.asm(307) : error A2206:missing operator in expression

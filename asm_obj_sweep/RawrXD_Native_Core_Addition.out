@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\ui\RawrXD_Native_Core_Addition.asm
+D:\rawrxd\src\ui\RawrXD_Native_Core_Addition.asm(16) : error A2006:undefined symbol : c8h

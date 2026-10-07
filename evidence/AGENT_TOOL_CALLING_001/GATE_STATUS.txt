@@ -1,0 +1,2 @@
+tools_present=1
+AGENT_TOOL_CALLING_001=PASS

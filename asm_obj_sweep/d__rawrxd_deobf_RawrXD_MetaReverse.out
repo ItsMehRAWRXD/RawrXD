@@ -1,0 +1,28 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(854) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(862) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(112) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(188) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(254) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(297) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(340) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(372) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(409) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(465) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(514) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(543) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(549) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(583) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(643) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(707) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(716) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(757) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(762) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(824) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(833) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(869) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_MetaReverse.asm(917) : error A2220:Missing .ENDPROLOG

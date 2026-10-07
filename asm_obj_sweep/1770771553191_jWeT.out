@@ -1,0 +1,126 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(69) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(116) : error A2008:syntax error : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(136) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(233) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(257) : error A2008:syntax error : DQ
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(509) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(518) : error A2008:syntax error : OPEN_EXISTING
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(649) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(696) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(752) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(787) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(822) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(857) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(967) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(968) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1009) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1054) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1055) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1096) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1141) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1142) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1183) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1228) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1229) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1270) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1300) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1343) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1378) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1449) : error A2008:syntax error : addr
+ invoke(30): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1449): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1454) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1458) : error A2008:syntax error : addr
+ invoke(30): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1458): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1463) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(386) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(394) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(402) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(407) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(414) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(421) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(428) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(435) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(445) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(482) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(488) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(494) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(531) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(543) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(552) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(582) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(582): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(589) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(589): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(596) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(598) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(600) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(617) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(617): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(627) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(627): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(665) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(666) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(672) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(678) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(721) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(722) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(728) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(732) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(737) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(739) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(740) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(741) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(742) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(745) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(759) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(760) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(766) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(770) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(775) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(777) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(780) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(794) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(795) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(801) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(805) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(810) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(812) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(815) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(829) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(830) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(836) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(840) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(845) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(847) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(850) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(891) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(961) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(961): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(980) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(980): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(999) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(999): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1005) : error A2006:undefined symbol : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1006) : error A2006:undefined symbol : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1007) : error A2006:undefined symbol : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1008) : error A2006:undefined symbol : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1048) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1048): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1067) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1067): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1086) : error A2148:invalid symbol type in expression : c_str
+ invoke(4): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1086): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-VulkanKernel.asm\1770771553191_jWeT.asm(1092) : fatal error A1012:error count exceeds 100; stopping assembly

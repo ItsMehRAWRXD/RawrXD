@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\agentic\RawrXD_Monolithic_PE_Emitter_Bootstrap.asm
+D:\rawrxd\src\agentic\RawrXD_Monolithic_PE_Emitter_Bootstrap.asm(2) : error A2006:undefined symbol : DllMain
+D:\rawrxd\src\agentic\RawrXD_Monolithic_PE_Emitter_Bootstrap.asm(3) : error A2006:undefined symbol : PeWriter_CreateMinimalExe

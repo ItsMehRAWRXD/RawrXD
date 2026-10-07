@@ -1,0 +1,103 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(5) : error A2008:syntax error : bits
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(7) : error A2008:syntax error : default
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(9) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(11) : error A2008:syntax error : RegisterClassExA
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(13) : error A2008:syntax error : extern
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(15) : error A2008:syntax error : PostQuitMessage
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(17) : error A2008:syntax error : GetMessageA
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(19) : error A2008:syntax error : TranslateMessage
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(21) : error A2008:syntax error : DispatchMessageA
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(23) : error A2008:syntax error : ExitProcess
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(25) : error A2008:syntax error : GetModuleHandleA
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(27) : error A2008:syntax error : UpdateWindow
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(29) : error A2008:syntax error : ShowWindow
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(31) : error A2008:syntax error : LoadCursorA
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(33) : error A2008:syntax error : BeginPaint
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(35) : error A2008:syntax error : EndPaint
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(37) : error A2008:syntax error : CreateSolidBrush
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(39) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(41) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(45) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(47) : error A2008:syntax error : db
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(49) : error A2008:syntax error : db
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(51) : error A2008:syntax error : title
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(57) : error A2008:syntax error : window_handle
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(59) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(61) : error A2008:syntax error : window_handle
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(63) : error A2008:syntax error : msg
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(65) : error A2008:syntax error : wc
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(67) : error A2008:syntax error : ps
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(69) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(71) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(73) : error A2008:syntax error : mainmain
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(79) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(81) : error A2008:syntax error : sub
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(85) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(91) : error A2008:syntax error : lea
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(93) : error A2008:syntax error : mov
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(95) : error A2008:syntax error : title
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(97) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(99) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(109) : error A2008:syntax error : mov
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(113) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(119) : error A2008:syntax error : mov
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(123) : error A2034:must be in segment block
+is off.
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(131) : error A2008:syntax error : call
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(135) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(141) : error A2008:syntax error : call
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(143) : error A2008:syntax error : add
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(145) : error A2008:syntax error : mov
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(149) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(151) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(153) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(155) : error A2008:syntax error : mov
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(157) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(159) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(161) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(163) : error A2008:syntax error : test
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(165) : error A2008:syntax error : jz
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(167) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(169) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(171) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(175) : error A2008:syntax error : mov
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(177) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(179) : error A2008:syntax error : mov
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(181) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(183) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(185) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(187) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(189) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(191) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(193) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(195) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(197) : error A2008:syntax error : lea
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(199) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(201) : error A2008:syntax error : mov
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(203) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(205) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(207) : error A2008:syntax error : mov
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(209) : error A2008:syntax error : call
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(211) : error A2008:syntax error : add
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(213) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0008\d__professional-nasm-ide_clean_nasm_ide.asm(215) : fatal error A1012:error count exceeds 100; stopping assembly

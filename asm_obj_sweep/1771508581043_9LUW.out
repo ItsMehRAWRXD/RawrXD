@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(119) : error A2008:syntax error : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(194) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(601) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(602) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(603) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(751) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(752) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(179) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(509) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(512) : error A2006:undefined symbol : WM_LBUTTONDBLCLK
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(531) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(534) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(551) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(554) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(614) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(618) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(653) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(659) : error A2006:undefined symbol : TreeCriticalSection
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(858) : error A2006:undefined symbol : szGitBuffer
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(867) : error A2006:undefined symbol : szGitBuffer
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(148) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(894) : warning A4025:ENDP found before .ENDPROLOG : DllMain
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(894) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508581043_9LUW.asm(894) : error A2220:Missing .ENDPROLOG

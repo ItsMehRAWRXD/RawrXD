@@ -1,0 +1,96 @@
+ Assembling: D:\rawrxd\gpu_dma_clean.asm
+D:\rawrxd\gpu_dma_clean.asm(165) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(167) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(169) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(171) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(173) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(175) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(177) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(179) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(181) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(263) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(267) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(303) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(304) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(309) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(310) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(408) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_clean.asm(409) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_clean.asm(410) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_clean.asm(411) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_clean.asm(466) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(468) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(470) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(488) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(489) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(494) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(495) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(528) : error A2008:syntax error : r9
+D:\rawrxd\gpu_dma_clean.asm(534) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(536) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(538) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(540) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(542) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(544) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(546) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(548) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(550) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(555) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(567) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_clean.asm(572) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_clean.asm(577) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(579) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(584) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(589) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(593) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(597) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(601) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(671) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_clean.asm(672) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_clean.asm(673) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_clean.asm(674) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_clean.asm(783) : error A2008:syntax error : r9
+D:\rawrxd\gpu_dma_clean.asm(787) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(789) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(791) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(793) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(795) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(797) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(799) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(801) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(803) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(819) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(910) : error A2008:syntax error : r9
+D:\rawrxd\gpu_dma_clean.asm(915) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(917) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(919) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(921) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(923) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(928) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(983) : error A2008:syntax error : r9
+D:\rawrxd\gpu_dma_clean.asm(989) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(991) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(993) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(995) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(997) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(999) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1004) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(1010) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(1011) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(1062) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1064) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1066) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1122) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1124) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1126) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1128) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(1170) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1172) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1174) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_clean.asm(1176) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_clean.asm(1219) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_clean.asm(569) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_clean.asm(574) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_clean.asm(1134) : error A2206:missing operator in expression
+D:\rawrxd\gpu_dma_clean.asm(455) : warning A6004:procedure argument or local not referenced : operation
+D:\rawrxd\gpu_dma_clean.asm(964) : warning A6004:procedure argument or local not referenced : dsResult

@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(192) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(347) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(368) : error A2218:AH, BH, CH, or DH may not be used with R8-R15, BPL, DIL, SIL, or SPL
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(684) : error A2005:symbol redefinition : @pa
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1523) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1316) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1340) : error A2006:undefined symbol : T_KW
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1411) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1445) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1485) : error A2006:undefined symbol : K_IN
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1525) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1534) : error A2006:undefined symbol : GetCommandLineA
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1580) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1620) : error A2006:undefined symbol : ExitProcess
+D:\rawrxd\history\runoff\part_0014\d__rawrxd_src_terraform.asm(1623) : error A2006:undefined symbol : ExitProcess

@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(551) : error A2006:undefined symbol : WM_DESTROY
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(554) : error A2006:undefined symbol : PostMessageA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(567) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(576) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(585) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(594) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(603) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(609) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(612) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(635) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(636) : error A2006:undefined symbol : ShowWindow
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(639) : error A2006:undefined symbol : InvalidateRect
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(646) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(647) : error A2006:undefined symbol : ShowWindow
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(657) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(658) : error A2006:undefined symbol : ShowWindow
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(665) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(666) : error A2006:undefined symbol : ShowWindow
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1088) : error A2006:undefined symbol : WM_COMMAND
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1105) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1110) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1110) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1110) : warning A6004:procedure argument or local not referenced : lParam

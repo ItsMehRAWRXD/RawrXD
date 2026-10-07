@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-19240594\qHkF.asm
+D:\rawrxd\history\-19240594\qHkF.asm(752) : warning A6004:procedure argument or local not referenced : hWnd
+D:\rawrxd\history\-19240594\qHkF.asm(752) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\history\-19240594\qHkF.asm(752) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\history\-19240594\qHkF.asm(752) : warning A6004:procedure argument or local not referenced : lParam

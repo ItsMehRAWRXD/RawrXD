@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\src\asm\tsconfig_runtime.asm
+D:\rawrxd\src\asm\tsconfig_runtime.asm(27) : error A2008:syntax error : DB
+D:\rawrxd\src\asm\tsconfig_runtime.asm(205) : error A2008:syntax error : alias
+D:\rawrxd\src\asm\tsconfig_runtime.asm(293) : error A2008:syntax error : name
+D:\rawrxd\src\asm\tsconfig_runtime.asm(385) : error A2008:syntax error : alias
+D:\rawrxd\src\asm\tsconfig_runtime.asm(519) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\tsconfig_runtime.asm(745) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\tsconfig_runtime.asm(843) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\tsconfig_runtime.asm(908) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\tsconfig_runtime.asm(554) : error A2006:undefined symbol : cstr
+D:\rawrxd\src\asm\tsconfig_runtime.asm(563) : error A2006:undefined symbol : cstr
+D:\rawrxd\src\asm\tsconfig_runtime.asm(741) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\asm\tsconfig_runtime.asm(909) : error A2006:undefined symbol : INVALID_FILE_ATTRIBUTES

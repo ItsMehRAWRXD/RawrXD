@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771274617520_uGWD.asm
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771274617520_uGWD.asm(491) : error A2006:undefined symbol : GlobalMemoryStatusEx
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771274617520_uGWD.asm(400) : warning A4025:ENDP found before .ENDPROLOG : HotpatchTensorOperation
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771274617520_uGWD.asm(400) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_DynamicTensorEngine.asm\1771274617520_uGWD.asm(400) : error A2220:Missing .ENDPROLOG

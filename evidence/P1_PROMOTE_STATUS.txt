@@ -1,0 +1,17 @@
+﻿P1_PROMOTE_STATUS
+=================
+date=2026-08-29
+promote_branch=promote/hexmag-p1-ide-product
+
+HEXMAG_LOGIC=CLOSED
+IDE_ROUTE_INTEGRATION=CLOSED
+WIN32IDE_CLEAN_BUILD=PASS (build-win32ide-p1, RawrEngine isolated)
+BINARY_SHA=evidence/P1_WIN32IDE_BINARY.txt
+PRODUCT_SMOKE=PENDING_OPERATOR (checklist docs/P1_PRODUCT_PATH_SMOKE.md)
+PRODUCT_GATE=evidence/P1_PRODUCT_GATE.txt
+
+controller_rewrite=0
+classifier_rewrite=0 (post-close freeze)
+copilot_route=FROZEN
+
+NEXT=operator runs interactive product smoke 2-8, then merge/tag

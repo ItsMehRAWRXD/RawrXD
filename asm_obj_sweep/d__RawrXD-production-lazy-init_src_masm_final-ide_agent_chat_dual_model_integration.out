@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(306) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(309) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(343) : error A2006:undefined symbol : CreateModelChain
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(422) : error A2006:undefined symbol : MessageBoxA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(445) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(497) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(685) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(688) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(691) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(831) : error A2006:undefined symbol : DestroyModelChain
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(953) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(959) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(1000) : error A2006:undefined symbol : CURSOR_MODEL_INFO
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(1005) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(1006) : error A2006:undefined symbol : CURSOR_MODEL_INFO
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(1038) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_agent_chat_dual_model_integration.asm(1044) : error A2083:invalid scale value

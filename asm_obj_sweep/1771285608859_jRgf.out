@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(170) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(204) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(229) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(231) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(233) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(286) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(311) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(321) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(322) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(324) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(325) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(339) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(340) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(450) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(460) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(477) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(498) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(510) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(525) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(528) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(530) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(138) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(154) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(166) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(218) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1771285608859_jRgf.asm(650) : error A2022:instruction operands must be the same size

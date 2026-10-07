@@ -1,0 +1,35 @@
+ Assembling: D:\rawrxd\history\-137b8862\Um21.asm
+D:\rawrxd\history\-137b8862\Um21.asm(20) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\Um21.asm(21) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\Um21.asm(22) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\Um21.asm(23) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\Um21.asm(24) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\Um21.asm(25) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\Um21.asm(26) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\Um21.asm(27) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\Um21.asm(193) : error A2070:invalid instruction operands
+D:\rawrxd\history\-137b8862\Um21.asm(262) : error A2070:invalid instruction operands
+D:\rawrxd\history\-137b8862\Um21.asm(140) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\Um21.asm(161) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\Um21.asm(267) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\Um21.asm(323) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\Um21.asm(373) : error A2006:undefined symbol : szCorrectionAttempt
+D:\rawrxd\history\-137b8862\Um21.asm(378) : error A2006:undefined symbol : correction_buffer
+D:\rawrxd\history\-137b8862\Um21.asm(383) : error A2006:undefined symbol : copy_string_safe
+D:\rawrxd\history\-137b8862\Um21.asm(398) : error A2006:undefined symbol : szRefusal1
+D:\rawrxd\history\-137b8862\Um21.asm(399) : error A2006:undefined symbol : szApology1
+D:\rawrxd\history\-137b8862\Um21.asm(400) : error A2006:undefined symbol : replace_string_safe
+D:\rawrxd\history\-137b8862\Um21.asm(405) : error A2006:undefined symbol : szHallucinDisc
+D:\rawrxd\history\-137b8862\Um21.asm(406) : error A2006:undefined symbol : append_string_safe
+D:\rawrxd\history\-137b8862\Um21.asm(411) : error A2006:undefined symbol : szTimeoutRetry
+D:\rawrxd\history\-137b8862\Um21.asm(412) : error A2006:undefined symbol : append_string_safe
+D:\rawrxd\history\-137b8862\Um21.asm(417) : error A2006:undefined symbol : szTokenLimitCont
+D:\rawrxd\history\-137b8862\Um21.asm(418) : error A2006:undefined symbol : append_string_safe
+D:\rawrxd\history\-137b8862\Um21.asm(452) : error A2006:undefined symbol : szRefusal1
+D:\rawrxd\history\-137b8862\Um21.asm(453) : error A2006:undefined symbol : strstr_custom
+D:\rawrxd\history\-137b8862\Um21.asm(459) : error A2006:undefined symbol : szHallucin1
+D:\rawrxd\history\-137b8862\Um21.asm(460) : error A2006:undefined symbol : strstr_custom
+D:\rawrxd\history\-137b8862\Um21.asm(466) : error A2006:undefined symbol : szTimeout1
+D:\rawrxd\history\-137b8862\Um21.asm(467) : error A2006:undefined symbol : strstr_custom
+D:\rawrxd\history\-137b8862\Um21.asm(473) : error A2006:undefined symbol : szTokenLimit1
+D:\rawrxd\history\-137b8862\Um21.asm(474) : error A2006:undefined symbol : strstr_custom

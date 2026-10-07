@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(155) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(189) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(214) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(216) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(218) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(123) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(139) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(151) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(203) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\Titan_InferenceCore.asm\1769622906598_Wr8n.asm(344) : error A2022:instruction operands must be the same size

@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-Compilers\pe\GENERATOR\ultimate.asm
+D:\rawrxd\reconstructed\RawrXD-Compilers\pe\GENERATOR\ultimate.asm(206) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-Compilers\pe\GENERATOR\ultimate.asm(219) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-Compilers\pe\GENERATOR\ultimate.asm(231) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-Compilers\pe\GENERATOR\ultimate.asm(643) : error A2022:instruction operands must be the same size

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\RawrXD_CDB_Harden.asm
+D:\rawrxd\src\RawrXD_CDB_Harden.asm(7) : error A2006:undefined symbol : SwarmV27_Atemporal_Thought_Buffer
+D:\rawrxd\src\RawrXD_CDB_Harden.asm(8) : error A2006:undefined symbol : SwarmV27_Consciousness_Merkle_Root
+D:\rawrxd\src\RawrXD_CDB_Harden.asm(9) : error A2006:undefined symbol : SwarmV27_Absolute_Sovereign_Seal

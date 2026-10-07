@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\output\pane\logger.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\output\pane\logger.asm(50) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\output\pane\logger.asm(51) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\output\pane\logger.asm(102) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\output\pane\logger.asm(103) : error A2070:invalid instruction operands

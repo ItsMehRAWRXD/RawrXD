@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_pe_generator_encoder.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_pe_generator_encoder.asm(805) : warning A6004:procedure argument or local not referenced : i
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_pe_generator_encoder.asm(805) : warning A6004:procedure argument or local not referenced : j
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_pe_generator_encoder.asm(1661) : warning A6004:procedure argument or local not referenced : hFile

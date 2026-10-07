@@ -1,0 +1,166 @@
+// SovereignIDEIntegration.cpp
+// Implementation of RawrXD IDE Integration
+
+#include "SovereignIDEIntegration.hpp"
+#include "../terminal/TerminalOwnership.hpp"
+#include <thread>
+#include <chrono>
+
+namespace Sovereign {
+namespace IDE {
+
+SovereignIDEIntegration::~SovereignIDEIntegration() {
+    Shutdown();
+}
+
+SovereignIDEIntegration& SovereignIDEIntegration::Instance() {
+    static SovereignIDEIntegration instance;
+    return instance;
+}
+
+bool SovereignIDEIntegration::Initialize(const IDEWindowHandles& handles, 
+                                          const IDEIntegrationConfig& config) {
+    if (state_ != IDEIntegrationState::DISCONNECTED) {
+        return false;
+    }
+    
+    state_ = IDEIntegrationState::CONNECTING;
+    handles_ = handles;
+    config_ = config;
+    
+    // Initialize the sovereign capsule
+    if (config.enable_sovereign_capsule) {
+        if (!InitializeCapsule()) {
+            state_ = IDEIntegrationState::ERROR;
+            return false;
+        }
+    }
+    
+    // Setup beacon subscriptions
+    SetupBeaconSubscriptions();
+    
+    // Setup UI threads
+    SetupUIThreads();
+    
+    state_ = IDEIntegrationState::READY;
+    return true;
+}
+
+void SovereignIDEIntegration::Shutdown() {
+    if (state_ == IDEIntegrationState::DISCONNECTED) {
+        return;
+    }
+    
+    state_ = IDEIntegrationState::DISCONNECTED;
+    
+    // Terminate all agents
+    for (const auto& [agent_id, lease_id] : agent_leases_) {
+        if (capsule_) {
+            capsule_->TerminateAgent(lease_id);
+        }
+    }
+    agent_leases_.clear();
+    
+    // Release all terminals
+    for (const auto& [terminal_id, lease_id] : terminal_leases_) {
+        (void)terminal_id;
+        (void)lease_id;
+        // Terminal cleanup handled by TerminalOwnership destructor
+    }
+    terminal_leases_.clear();
+    
+    // Unsubscribe from beacons
+    if (capsule_ && !capsule_subscription_.empty()) {
+        capsule_->Unsubscribe(capsule_subscription_);
+    }
+    
+    // Shutdown capsule
+    if (capsule_) {
+        capsule_->Shutdown();
+        capsule_ = nullptr;
+    }
+}
+
+bool SovereignIDEIntegration::InitializeCapsule() {
+    CapsuleConfig capsule_config;
+    capsule_config.enable_spine = true;
+    capsule_config.enable_terminal_ownership = config_.enable_terminal_ownership;
+    capsule_config.enable_build_graph = true;
+    capsule_config.enable_agent_leases = true;
+    capsule_config.enable_beacon_bus = true;
+    capsule_config.enable_intent_compression = config_.enable_intent_compression;
+    capsule_config.enable_awareness = true;
+    capsule_config.enable_validator = true;
+    capsule_config.enable_recovery = true;
+    capsule_config.enable_control_plane = false;  // IDE has its own UI
+    capsule_config.heartbeat_interval_ms = config_.capsule_heartbeat_ms;
+    
+    capsule_ = &ExecutionCapsule::Instance();
+    return capsule_->Initialize(capsule_config);
+}
+
+void SovereignIDEIntegration::SetupBeaconSubscriptions() {
+    if (!capsule_) return;
+    
+    capsule_subscription_ = capsule_->Subscribe([this](const Beacon& beacon) {
+        ProcessBeacon(beacon);
+    });
+}
+
+void SovereignIDEIntegration::SetupUIThreads() {
+    // Start UI refresh thread
+    std::thread([this]() {
+        while (state_ == IDEIntegrationState::READY) {
+            UpdateBuildPanel();
+            UpdateAgentPanel();
+            UpdateTerminalPanel();
+            std::this_thread::sleep_for(std::chrono::milliseconds(config_.ui_refresh_ms));
+        }
+    }).detach();
+}
+
+// Editor commands
+bool SovereignIDEIntegration::OpenFile(const std::string& path) {
+    // Send beacon
+    if (capsule_) {
+        BeaconBus::Instance().EmitInfo(BeaconType::FILE_CREATED, "ide", "Opened: " + path);
+    }
+    
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    stats_.files_opened++;
+    return true;
+}
+
+bool SovereignIDEIntegration::EditFile(const std::string& path, const std::string& content) {
+    (void)content;
+    
+    if (capsule_) {
+        BeaconBus::Instance().EmitInfo(BeaconType::FILE_MODIFIED, "ide", "Edited: " + path);
+    }
+    
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    stats_.files_edited++;
+    return true;
+}
+
+bool SovereignIDEIntegration::SaveFile(const std::string& path) {
+    if (capsule_) {
+        BeaconBus::Instance().EmitInfo(BeaconType::FILE_MODIFIED, "ide", "Saved: " + path);
+    }
+    return true;
+}
+
+bool SovereignIDEIntegration::CloseFile(const std::string& path) {
+    (void)path;
+    return true;
+}
+
+std::string SovereignIDEIntegration::GetCurrentFile() const {
+    return "";  // Would query IDE
+}
+
+std::string SovereignIDEIntegration::GetSelectedText() const {
+    return "";  // Would query IDE
+}
+
+// Terminal commands

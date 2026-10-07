@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274907471_7F3K.asm
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274907471_7F3K.asm(101) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274907471_7F3K.asm(244) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771274907471_7F3K.asm(106) : warning A4014:instructions and initialized data not supported in BSS segments

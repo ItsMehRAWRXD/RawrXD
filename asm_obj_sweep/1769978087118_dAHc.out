@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769978087118_dAHc.asm
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769978087118_dAHc.asm(50) : error A2006:undefined symbol : accept
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769978087118_dAHc.asm(64) : error A2006:undefined symbol : recv
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769978087118_dAHc.asm(76) : error A2006:undefined symbol : send
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769978087118_dAHc.asm(80) : error A2006:undefined symbol : closesocket

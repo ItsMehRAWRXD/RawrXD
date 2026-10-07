@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-11054394\YBCi.asm
+D:\rawrxd\history\-11054394\YBCi.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\-11054394\YBCi.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\-11054394\YBCi.asm(29) : error A2177:nested structure improperly initialized
+D:\rawrxd\history\-11054394\YBCi.asm(47) : error A2070:invalid instruction operands
+D:\rawrxd\history\-11054394\YBCi.asm(48) : error A2070:invalid instruction operands

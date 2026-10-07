@@ -1,0 +1,64 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(42) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(55) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(68) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(97) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(98) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(112) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(133) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(171) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(625) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(185) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(192) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(195) : error A2006:undefined symbol : QuantumPieceAlloc
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(196) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(198) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(201) : error A2006:undefined symbol : TemporalLogCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(202) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(205) : error A2006:undefined symbol : PredictiveEngineInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(206) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(209) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(229) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(234) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(235) : error A2006:undefined symbol : PredictiveWarmCache
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(240) : error A2006:undefined symbol : SpawnSemanticAnalysis
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(260) : error A2006:undefined symbol : vblank_sync
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(278) : error A2006:undefined symbol : ApplyGlitchEffect
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(283) : error A2006:undefined symbol : RenderParticles
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(287) : error A2006:undefined symbol : RenderScanlines
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(323) : error A2006:undefined symbol : SSE4Blur
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(326) : error A2006:undefined symbol : AVX512Blur
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(346) : error A2006:undefined symbol : LINE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(347) : error A2006:undefined symbol : HashMapLookup
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(353) : error A2006:undefined symbol : FastRegexTokenize
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(358) : error A2006:undefined symbol : SemanticEnhanceTokens
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(363) : error A2006:undefined symbol : NeuralPredictTokens
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(368) : error A2006:undefined symbol : CacheTokensWithConfidence
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(220) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(243) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(307) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(330) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(374) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(387) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(397) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(408) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(415) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(423) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(430) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(437) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(447) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(454) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(463) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(471) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(479) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(487) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(495) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(503) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(511) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(519) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(527) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(535) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(542) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(550) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1769563935120_ztSC.ASM(558) : error A2220:Missing .ENDPROLOG

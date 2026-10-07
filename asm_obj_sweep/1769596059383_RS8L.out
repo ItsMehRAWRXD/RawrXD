@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(87) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(101) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(102) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(135) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(142) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(754) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(331) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(431) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(432) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(503) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(504) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(663) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(853) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(910) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production_FIXED.asm\1769596059383_RS8L.asm(414) : warning A6004:procedure argument or local not referenced : local_size

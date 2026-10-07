@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\memory_cleanup_phase_integration.asm\1769586514595_bGmP.asm
+D:\rawrxd\history\all_versions\src\agentic\memory_cleanup_phase_integration.asm\1769586514595_bGmP.asm(28) : error A2008:syntax error : if
+D:\rawrxd\history\all_versions\src\agentic\memory_cleanup_phase_integration.asm\1769586514595_bGmP.asm(30) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\memory_cleanup_phase_integration.asm\1769586514595_bGmP.asm(33) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\agentic\memory_cleanup_phase_integration.asm\1769586514595_bGmP.asm(33) : fatal error A1010:unmatched block nesting : L3CachePool_Cleanup

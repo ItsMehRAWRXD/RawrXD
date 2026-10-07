@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(48) : error A2008:syntax error : esi
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(54) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(61) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(62) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(63) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(64) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(65) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(66) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(67) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(68) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(69) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(70) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(84) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(85) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(86) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(87) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(88) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(89) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(90) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(91) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(92) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_gguf_loader_integration.asm\1766358083997_ZES7.asm(105) : fatal error A1010:unmatched block nesting : GGUF_LoaderWithResolver

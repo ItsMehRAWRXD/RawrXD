@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_inference_stream.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_inference_stream.asm(119) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_inference_stream.asm(215) : error A2006:undefined symbol : SetEvent
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_inference_stream.asm(226) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_inference_stream.asm(230) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_inference_stream.asm(235) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_inference_stream.asm(338) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_inference_stream.asm(349) : error A2006:undefined symbol : Sleep

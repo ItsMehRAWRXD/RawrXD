@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(10) : error A2034:must be in segment block : DEMO_CreatePanes
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(12) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(15) : error A2008:syntax error : PANE_CREATE
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(16) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(19) : error A2008:syntax error : PANE_CREATE
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(20) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(23) : error A2008:syntax error : PANE_CREATE
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(24) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(27) : error A2008:syntax error : PANE_CREATE
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(28) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(31) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(32) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(33) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(34) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(36) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\QT\PANE\SYSTEM\FEATURE\SHOWCASE.asm(37) : fatal error A1010:unmatched block nesting : DEMO_CreatePanes

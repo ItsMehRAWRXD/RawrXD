@@ -1,0 +1,58 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(184) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(253) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(261) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(264) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(273) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(300) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(341) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(352) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(367) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(393) : error A2005:symbol redefinition : str_avx512
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(404) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(416) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(502) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(514) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(619) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(621) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(623) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(629) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(674) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(682) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(745) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(753) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(791) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(803) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(836) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(848) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(886) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(898) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(907) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(919) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(938) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(946) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(956) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(964) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(996) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(1008) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(1021) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(1033) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(1064) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(1076) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(1089) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(494) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(530) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(537) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(544) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(551) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(793) : warning A4025:ENDP found before .ENDPROLOG : DetectMemoryTopology
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(793) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(793) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(838) : warning A4025:ENDP found before .ENDPROLOG : InitializeMemoryArenas
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(888) : warning A4025:ENDP found before .ENDPROLOG : ArenaAllocate
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(909) : warning A4025:ENDP found before .ENDPROLOG : InitializeSynchronizationPrimitives
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(940) : warning A4025:ENDP found before .ENDPROLOG : CalibratePerformanceCounters
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(998) : warning A4025:ENDP found before .ENDPROLOG : GetElapsedMicroseconds
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(1023) : warning A4025:ENDP found before .ENDPROLOG : InitializeThreadPoolInfrastructure
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_foundation_Phase1_Master.asm(1066) : warning A4025:ENDP found before .ENDPROLOG : Phase1LogMessage

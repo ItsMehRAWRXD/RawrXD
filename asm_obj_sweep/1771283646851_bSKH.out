@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\blocked_features_manifest.asm\1771283646851_bSKH.asm
+D:\rawrxd\history\all_versions\src\blocked_features_manifest.asm\1771283646851_bSKH.asm(166) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\src\blocked_features_manifest.asm\1771283646851_bSKH.asm(167) : error A2088:END directive required at end of file

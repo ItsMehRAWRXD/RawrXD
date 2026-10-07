@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\extension-host\RawrXD_Copilot.asm
+D:\rawrxd\extension-host\RawrXD_Copilot.asm(47) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\extension-host\RawrXD_Copilot.asm(48) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\extension-host\RawrXD_Copilot.asm(222) : warning A6004:procedure argument or local not referenced : hParentWnd
+D:\rawrxd\extension-host\RawrXD_Copilot.asm(239) : warning A6004:procedure argument or local not referenced : pszCommand
+D:\rawrxd\extension-host\RawrXD_Copilot.asm(239) : warning A6004:procedure argument or local not referenced : pvData
+D:\rawrxd\extension-host\RawrXD_Copilot.asm(384) : warning A6004:procedure argument or local not referenced : pszMessage
+D:\rawrxd\extension-host\RawrXD_Copilot.asm(384) : warning A6004:procedure argument or local not referenced : pfnCallback

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(132) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(134) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(144) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(157) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(170) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(176) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(182) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(186) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(195) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(197) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(275) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(337) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(342) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(343) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(346) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(347) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(352) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(353) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(356) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(357) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(360) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(361) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(366) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(367) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(379) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(396) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(397) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(398) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(399) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(400) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(401) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(402) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(403) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(407) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(410) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(411) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(412) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(413) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(417) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(423) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(429) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(437) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(443) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(457) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(460) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(467) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(468) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(471) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(488) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(508) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(521) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(522) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(523) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(532) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(546) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(548) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(549) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(554) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(555) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(566) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(579) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(633) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(634) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(662) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(663) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(665) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(683) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(684) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(685) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(688) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(691) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(692) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(696) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(697) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(698) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(701) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(704) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(705) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(709) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(710) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(711) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(714) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(717) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(718) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(722) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(723) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(724) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(727) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(728) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(732) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(733) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(734) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(737) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(740) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(741) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(745) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(754) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(756) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_omega_final_working.asm(760) : fatal error A1012:error count exceeds 100; stopping assembly

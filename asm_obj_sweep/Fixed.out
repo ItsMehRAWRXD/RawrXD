@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tab\control\fixed.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tab\control\fixed.asm(6) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tab\control\fixed.asm(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tab\control\fixed.asm(10) : fatal error A1000:cannot open file : \masm32\include\windows.inc

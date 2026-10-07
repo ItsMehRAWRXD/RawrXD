@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246486539_DdRG.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246486539_DdRG.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\terraform.asm\1771246486539_DdRG.asm(128) : error A2005:symbol redefinition : AST_UNARY
+D:\rawrxd\history\all_versions\terraform.asm\1771246486539_DdRG.asm(132) : error A2005:symbol redefinition : AST_ASSIGN
+D:\rawrxd\history\all_versions\terraform.asm\1771246486539_DdRG.asm(344) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771246486539_DdRG.asm(476) : fatal error A1010:unmatched block nesting : memcmp

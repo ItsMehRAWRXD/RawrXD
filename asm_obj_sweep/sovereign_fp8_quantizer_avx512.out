@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\src\kernels\sovereign_fp8_quantizer_avx512.asm
+D:\rawrxd\src\kernels\sovereign_fp8_quantizer_avx512.asm(26) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\kernels\sovereign_fp8_quantizer_avx512.asm(106) : error A2024:invalid operand size for instruction
+D:\rawrxd\src\kernels\sovereign_fp8_quantizer_avx512.asm(198) : error A2024:invalid operand size for instruction
+D:\rawrxd\src\kernels\sovereign_fp8_quantizer_avx512.asm(214) : error A2024:invalid operand size for instruction

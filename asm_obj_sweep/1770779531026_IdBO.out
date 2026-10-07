@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_VulkanBridge.asm\1770779531026_IdBO.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_VulkanBridge.asm\1770779531026_IdBO.asm(103) : error A2006:undefined symbol : rip
+D:\rawrxd\history\all_versions\src\asm\RawrXD_VulkanBridge.asm\1770779531026_IdBO.asm(110) : error A2006:undefined symbol : rip

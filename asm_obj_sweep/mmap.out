@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\mmap.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\mmap.asm(57) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\mmap.asm(58) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\mmap.asm(60) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\mmap.asm(61) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\mmap.asm(66) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\mmap.asm(79) : error A2006:undefined symbol : PAGE_READONLY
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\mmap.asm(91) : error A2006:undefined symbol : FILE_MAP_READ

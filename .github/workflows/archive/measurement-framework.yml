@@ -1,0 +1,296 @@
+#=============================================================================
+# GitHub Actions Workflow: Measurement Framework Validation
+# Continuous validation of architectural claims through automated benchmarks
+#=============================================================================
+
+name: Measurement Framework
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/kernels/**'
+      - 'src/nevm/**'
+      - 'src/memory/**'
+      - 'tests/benchmark_*.cpp'
+      - 'tests/validate_*.cpp'
+      - 'tests/nevm_*.cpp'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/kernels/**'
+      - 'src/nevm/**'
+      - 'src/memory/**'
+      - 'tests/**'
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      run_slow_tests:
+        description: 'Run slow tests (stress test)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  #===========================================================================
+  # Job 1: Windows Measurement
+  #===========================================================================
+  windows-measurement:
+    runs-on: windows-latest
+    name: Windows Measurement
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Configure CMake
+      run: cmake -B build -S . -G "Visual Studio 17 2022" -A x64
+      
+    - name: Build Measurement Tests
+      run: |
+        cmake --build build --config ${{ env.BUILD_TYPE }} --target benchmark_dispatch_overhead
+        cmake --build build --config ${{ env.BUILD_TYPE }} --target benchmark_planner_amortization
+        cmake --build build --config ${{ env.BUILD_TYPE }} --target validate_end_to_end
+        cmake --build build --config ${{ env.BUILD_TYPE }} --target nevm_determinism_validation
+        
+    - name: Run Dispatch Benchmark
+      run: |
+        $output = & .\build\bin\${{ env.BUILD_TYPE }}\benchmark_dispatch_overhead.exe
+        $output | Tee-Object -FilePath reports\dispatch_benchmark.log
+        if ($output -match "FAILED") { exit 1 }
+      shell: pwsh
+      
+    - name: Run Planner Benchmark
+      run: |
+        $output = & .\build\bin\${{ env.BUILD_TYPE }}\benchmark_planner_amortization.exe
+        $output | Tee-Object -FilePath reports\planner_benchmark.log
+        if ($output -match "FAILED") { exit 1 }
+      shell: pwsh
+      
+    - name: Run Four Gates Validation
+      run: |
+        $output = & .\build\bin\${{ env.BUILD_TYPE }}\validate_end_to_end.exe
+        $output | Tee-Object -FilePath reports\validation_gates.log
+        if ($LASTEXITCODE -ne 0) { exit 1 }
+      shell: pwsh
+      
+    - name: Run Determinism Test
+      run: |
+        $output = & .\build\bin\${{ env.BUILD_TYPE }}\nevm_determinism_validation.exe
+        $output | Tee-Object -FilePath reports\determinism_test.log
+        if ($output -match "FAILED") { exit 1 }
+      shell: pwsh
+      
+    - name: Upload Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: windows-measurement-reports
+        path: reports/*.log
+        
+  #===========================================================================
+  # Job 2: Linux Measurement
+  #===========================================================================
+  linux-measurement:
+    runs-on: ubuntu-latest
+    name: Linux Measurement
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++ ninja-build
+        
+    - name: Configure CMake
+      run: cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+      
+    - name: Build Measurement Tests
+      run: |
+        cmake --build build --target benchmark_dispatch_overhead
+        cmake --build build --target benchmark_planner_amortization
+        cmake --build build --target validate_end_to_end
+        cmake --build build --target nevm_determinism_validation
+        
+    - name: Run Dispatch Benchmark
+      run: |
+        ./build/bin/benchmark_dispatch_overhead | tee reports/dispatch_benchmark.log
+        if grep -q "FAILED" reports/dispatch_benchmark.log; then exit 1; fi
+        
+    - name: Run Planner Benchmark
+      run: |
+        ./build/bin/benchmark_planner_amortization | tee reports/planner_benchmark.log
+        if grep -q "FAILED" reports/planner_benchmark.log; then exit 1; fi
+        
+    - name: Run Four Gates Validation
+      run: |
+        ./build/bin/validate_end_to_end | tee reports/validation_gates.log
+        
+    - name: Run Determinism Test
+      run: |
+        ./build/bin/nevm_determinism_validation | tee reports/determinism_test.log
+        if grep -q "FAILED" reports/determinism_test.log; then exit 1; fi
+        
+    - name: Upload Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: linux-measurement-reports
+        path: reports/*.log
+        
+  #===========================================================================
+  # Job 3: Stress Test (Optional/Slow)
+  #===========================================================================
+  stress-test:
+    runs-on: windows-latest
+    name: Stress Test (100K tokens)
+    if: github.event.inputs.run_slow_tests == 'true' || github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Configure CMake
+      run: cmake -B build -S . -G "Visual Studio 17 2022" -A x64
+      
+    - name: Build Stress Test
+      run: cmake --build build --config ${{ env.BUILD_TYPE }} --target nevm_stress_test
+      
+    - name: Run Stress Test
+      timeout-minutes: 30
+      run: |
+        $output = & .\build\bin\${{ env.BUILD_TYPE }}\nevm_stress_test.exe
+        $output | Tee-Object -FilePath reports\stress_test.log
+        if ($output -match "FAILED") { exit 1 }
+      shell: pwsh
+      
+    - name: Upload Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: stress-test-reports
+        path: reports/*.log
+        
+  #===========================================================================
+  # Job 4: Results Aggregation
+  #===========================================================================
+  aggregate-results:
+    runs-on: ubuntu-latest
+    name: Aggregate Results
+    needs: [windows-measurement, linux-measurement]
+    if: always()
+    
+    steps:
+    - name: Download Windows Reports
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-measurement-reports
+        path: reports/windows
+        
+    - name: Download Linux Reports
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-measurement-reports
+        path: reports/linux
+        
+    - name: Generate Summary Report
+      run: |
+        cat > reports/SUMMARY.md << 'EOF'
+        # Measurement Framework Results
+        
+        ## Platform Comparison
+        
+        | Test | Windows | Linux | Status |
+        |------|---------|-------|--------|
+        EOF
+        
+        # Parse results and generate comparison table
+        for test in dispatch_benchmark planner_benchmark validation_gates determinism_test; do
+          win_status="N/A"
+          linux_status="N/A"
+          
+          if [ -f "reports/windows/${test}.log" ]; then
+            if grep -q "PASS\|VALIDATED" "reports/windows/${test}.log"; then
+              win_status="PASS"
+            else
+              win_status="FAIL"
+            fi
+          fi
+          
+          if [ -f "reports/linux/${test}.log" ]; then
+            if grep -q "PASS\|VALIDATED" "reports/linux/${test}.log"; then
+              linux_status="PASS"
+            else
+              linux_status="FAIL"
+            fi
+          fi
+          
+          overall="FAIL"
+          if [ "$win_status" = "PASS" ] && [ "$linux_status" = "PASS" ]; then
+            overall="PASS"
+          fi
+          
+          echo "| ${test} | ${win_status} | ${linux_status} | ${overall} |" >> reports/SUMMARY.md
+        done
+        
+        cat >> reports/SUMMARY.md << 'EOF'
+        
+        ## Detailed Results
+        
+        ### Windows
+        EOF
+        
+        for log in reports/windows/*.log; do
+          echo "#### $(basename $log)" >> reports/SUMMARY.md
+          echo '```' >> reports/SUMMARY.md
+          cat "$log" >> reports/SUMMARY.md
+          echo '```' >> reports/SUMMARY.md
+          echo "" >> reports/SUMMARY.md
+        done
+        
+        cat >> reports/SUMMARY.md << 'EOF'
+        
+        ### Linux
+        EOF
+        
+        for log in reports/linux/*.log; do
+          echo "#### $(basename $log)" >> reports/SUMMARY.md
+          echo '```' >> reports/SUMMARY.md
+          cat "$log" >> reports/SUMMARY.md
+          echo '```' >> reports/SUMMARY.md
+          echo "" >> reports/SUMMARY.md
+        done
+        
+    - name: Upload Summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: measurement-summary
+        path: reports/SUMMARY.md
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const summary = fs.readFileSync('reports/SUMMARY.md', 'utf8');
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '## Measurement Framework Results\n\n' + summary
+          });

@@ -1,0 +1,173 @@
+name: RawrXD N-EVM Tests
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+    paths:
+      - 'src/nevm/**'
+      - 'tests/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/nevm/**'
+      - 'tests/**'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  # Windows Build and Test
+  test-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v1.1
+      
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -S src/nevm/tests -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+      
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-windows
+        path: ${{github.workspace}}/build/Testing/
+
+  # Linux Build and Test
+  test-linux:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build
+        
+    - name: Configure CMake
+      run: |
+        export CC=${{ matrix.compiler == 'gcc' && 'gcc' || 'clang' }}
+        export CXX=${{ matrix.compiler == 'gcc' && 'g++' || 'clang++' }}
+        cmake -B ${{github.workspace}}/build -S src/nevm/tests \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -G Ninja
+          
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+      
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-linux-${{ matrix.compiler }}
+        path: ${{github.workspace}}/build/Testing/
+
+  # macOS Build and Test
+  test-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -S src/nevm/tests -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+      
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-macos
+        path: ${{github.workspace}}/build/Testing/
+
+  # Coverage Report (Linux only)
+  coverage:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build lcov
+        
+    - name: Configure CMake with Coverage
+      run: |
+        cmake -B ${{github.workspace}}/build -S src/nevm/tests \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DENABLE_COVERAGE=ON \
+          -G Ninja
+          
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build
+      
+    - name: Run Tests
+      working-directory: ${{github.workspace}}/build
+      run: ctest --output-on-failure
+      
+    - name: Generate Coverage Report
+      working-directory: ${{github.workspace}}/build
+      run: |
+        lcov --capture --directory . --output-file coverage.info
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info
+        lcov --list coverage.info
+        
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v3
+      with:
+        files: ${{github.workspace}}/build/coverage.info
+        fail_ci_if_error: false
+
+  # Sanitizer Checks (Linux only)
+  sanitizers:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build
+        
+    - name: Configure CMake with Sanitizers
+      run: |
+        cmake -B ${{github.workspace}}/build -S src/nevm/tests \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DENABLE_SANITIZERS=ON \
+          -G Ninja
+          
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build
+      
+    - name: Run Tests with Sanitizers
+      working-directory: ${{github.workspace}}/build
+      run: ctest --output-on-failure

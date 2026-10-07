@@ -1,0 +1,4 @@
+   Creating library F:\~dev\rawrxd\tools\parity_ref\bin\llama.lib and object F:\~dev\rawrxd\tools\parity_ref\bin\llama.exp
+llama_ref_parity_probe.cpp
+BUILT F:\~dev\rawrxd\tools\parity_ref\bin\llama_ref_parity_probe.exe
+NOTE: This binary is an EXTERNAL measuring stick only. Deep2 has zero llama/Ollama deps.

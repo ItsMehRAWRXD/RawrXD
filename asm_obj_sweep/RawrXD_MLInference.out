@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\RawrXD_MLInference.asm
+D:\rawrxd\RawrXD_MLInference.asm(152) : error A2008:syntax error : ENDP
+D:\rawrxd\RawrXD_MLInference.asm(332) : error A2008:syntax error : ENDP
+D:\rawrxd\RawrXD_MLInference.asm(341) : error A2008:syntax error : ENDP
+D:\rawrxd\RawrXD_MLInference.asm(350) : error A2008:syntax error : ENDP
+D:\rawrxd\RawrXD_MLInference.asm(372) : error A2008:syntax error : ENDP
+D:\rawrxd\RawrXD_MLInference.asm(374) : fatal error A1010:unmatched block nesting : MLInference_Close

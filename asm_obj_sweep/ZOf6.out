@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\-18c51369\ZOf6.asm
+D:\rawrxd\history\-18c51369\ZOf6.asm(136) : error A2042:statement too complex
+D:\rawrxd\history\-18c51369\ZOf6.asm(136) : error A2039:line too long
+D:\rawrxd\history\-18c51369\ZOf6.asm(152) : error A2042:statement too complex
+D:\rawrxd\history\-18c51369\ZOf6.asm(152) : error A2039:line too long
+D:\rawrxd\history\-18c51369\ZOf6.asm(168) : error A2008:syntax error :     ret
+D:\rawrxd\history\-18c51369\ZOf6.asm(176) : error A2039:line too long
+D:\rawrxd\history\-18c51369\ZOf6.asm(191) : error A2039:line too long
+D:\rawrxd\history\-18c51369\ZOf6.asm(206) : error A2039:line too long
+D:\rawrxd\history\-18c51369\ZOf6.asm(221) : error A2042:statement too complex
+D:\rawrxd\history\-18c51369\ZOf6.asm(221) : error A2039:line too long
+D:\rawrxd\history\-18c51369\ZOf6.asm(238) : error A2008:syntax error :     ret
+D:\rawrxd\history\-18c51369\ZOf6.asm(242) : error A2039:line too long
+D:\rawrxd\history\-18c51369\ZOf6.asm(257) : error A2042:statement too complex
+D:\rawrxd\history\-18c51369\ZOf6.asm(257) : error A2039:line too long
+D:\rawrxd\history\-18c51369\ZOf6.asm(274) : error A2008:syntax error :     ret
+D:\rawrxd\history\-18c51369\ZOf6.asm(1104) : error A2070:invalid instruction operands
+D:\rawrxd\history\-18c51369\ZOf6.asm(1105) : error A2070:invalid instruction operands
+D:\rawrxd\history\-18c51369\ZOf6.asm(1106) : error A2070:invalid instruction operands
+D:\rawrxd\history\-18c51369\ZOf6.asm(1107) : error A2070:invalid instruction operands
+D:\rawrxd\history\-18c51369\ZOf6.asm(341) : error A2006:undefined symbol : g_Pattern_CompletionEngine
+D:\rawrxd\history\-18c51369\ZOf6.asm(342) : error A2006:undefined symbol : g_Pattern_ContextAnalyzer
+D:\rawrxd\history\-18c51369\ZOf6.asm(343) : error A2006:undefined symbol : g_Pattern_RewriteEngine
+D:\rawrxd\history\-18c51369\ZOf6.asm(344) : error A2006:undefined symbol : g_Pattern_ModelRouter
+D:\rawrxd\history\-18c51369\ZOf6.asm(345) : error A2006:undefined symbol : g_Pattern_LSPIntegration
+D:\rawrxd\history\-18c51369\ZOf6.asm(346) : error A2006:undefined symbol : g_Pattern_PerformanceOptimizer
+D:\rawrxd\history\-18c51369\ZOf6.asm(347) : error A2006:undefined symbol : g_Pattern_AdvancedAgent

@@ -1,0 +1,35 @@
+ Assembling: D:\rawrxd\RawrXD_InlineStream_ml64.asm
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(114) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(195) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(205) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(211) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(215) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(222) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(225) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(231) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(287) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(295) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(363) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(363) : error A2088:END directive required at end of file
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(24) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(25) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(49) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(94) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(101) : error A2006:undefined symbol : EM_REPLACESEL
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(108) : error A2006:undefined symbol : stream_continue
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(111) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(147) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(152) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(189) : error A2006:undefined symbol : validate_generic
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(198) : error A2006:undefined symbol : validate_done
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(201) : error A2006:undefined symbol : check_close_brace
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(203) : error A2006:undefined symbol : next_char
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(207) : error A2006:undefined symbol : next_char
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(209) : error A2006:undefined symbol : validate_error
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(213) : error A2006:undefined symbol : validate_loop
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(217) : error A2006:undefined symbol : validate_error
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(220) : error A2006:undefined symbol : validate_exit
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(256) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(263) : error A2006:undefined symbol : EM_REPLACESEL
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(290) : error A2006:undefined symbol : copy_done
+D:\rawrxd\RawrXD_InlineStream_ml64.asm(294) : error A2006:undefined symbol : copy_loop

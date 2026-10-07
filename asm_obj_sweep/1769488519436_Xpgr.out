@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(6) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(83) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(104) : error A2008:syntax error : svcStatus
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(136) : error A2006:undefined symbol : svcStatus
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(284) : error A2006:undefined symbol : svcStatus
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(285) : error A2006:undefined symbol : svcStatus
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(286) : error A2006:undefined symbol : svcStatus
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(287) : error A2006:undefined symbol : svcStatus
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(289) : error A2006:undefined symbol : svcStatus
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(315) : error A2006:undefined symbol : svcStatus
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(317) : error A2006:undefined symbol : svcStatus
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(128) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(138) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(187) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(248) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(274) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(322) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1769488519436_Xpgr.asm(339) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\os_interceptor_cli_universal.asm\1771286105470_ghmT.asm
+D:\rawrxd\history\all_versions\src\os_interceptor_cli_universal.asm\1771286105470_ghmT.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli_universal.asm\1771286105470_ghmT.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli_universal.asm\1771286105470_ghmT.asm(16) : fatal error A1000:cannot open file : user32.inc

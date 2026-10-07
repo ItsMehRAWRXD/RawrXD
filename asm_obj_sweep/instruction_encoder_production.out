@@ -1,0 +1,46 @@
+ Assembling: D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(344) : warning A4025:ENDP found before .ENDPROLOG : Encoder_SetOpcode
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(344) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(344) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(357) : warning A4025:ENDP found before .ENDPROLOG : Encoder_SetOpcode2
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(357) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(357) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(371) : warning A4025:ENDP found before .ENDPROLOG : Encoder_SetREX
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(371) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(371) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(579) : warning A4025:ENDP found before .ENDPROLOG : Encoder_SetModRM_MemReg
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(579) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(579) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(663) : warning A4025:ENDP found before .ENDPROLOG : Encoder_SetDisplacement
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(663) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(663) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(676) : warning A4025:ENDP found before .ENDPROLOG : Encoder_SetImmediate
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(676) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(676) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(686) : warning A4025:ENDP found before .ENDPROLOG : Encoder_SetPrefix66
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(686) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(686) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(696) : warning A4025:ENDP found before .ENDPROLOG : Encoder_SetPrefixF2
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(696) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(696) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(706) : warning A4025:ENDP found before .ENDPROLOG : Encoder_SetPrefixF3
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(706) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(706) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(888) : warning A4025:ENDP found before .ENDPROLOG : Encoder_GetBuffer
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(888) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(888) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(899) : warning A4025:ENDP found before .ENDPROLOG : Encoder_GetSize
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(899) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(899) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(910) : warning A4025:ENDP found before .ENDPROLOG : Encoder_GetLastInstructionSize
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(910) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(910) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(921) : warning A4025:ENDP found before .ENDPROLOG : Encoder_GetError
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(921) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(921) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(1522) : warning A4025:ENDP found before .ENDPROLOG : CalcRelativeOffset
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(1522) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(1522) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(1533) : warning A4025:ENDP found before .ENDPROLOG : GetInstructionLength
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(1533) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\external\rawr_infra\Source\Encoders\instruction_encoder_production.asm(1533) : error A2220:Missing .ENDPROLOG

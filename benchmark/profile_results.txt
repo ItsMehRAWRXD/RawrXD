@@ -1,0 +1,17 @@
+========================================
+RawrXD Quick Profile Tool
+========================================
+
+Model Configuration:
+  Vocab size: 32000
+  Hidden size: 4096
+  Intermediate size: 11008
+  Num heads: 32
+  Num layers: 32
+  Sequence length: 128
+
+Running component benchmarks...
+
+1. Embedding lookup... 1.03186 ms
+2. RMSNorm... 7.67959 ms
+3. MatMul (Q projection)... 4168.93 ms

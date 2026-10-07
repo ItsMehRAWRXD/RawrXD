@@ -1,0 +1,91 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(3) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(4) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(33) : error A2008:syntax error : offset
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(39) : error A2008:syntax error : overlapped
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(65) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(84) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(97) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(98) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(99) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(114) : error A2008:syntax error : CreateFileA
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(135) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(148) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(164) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(172) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(173) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(174) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(178) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(182) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(183) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(184) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(197) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(198) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(199) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(220) : error A2008:syntax error : WriteFile
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(242) : error A2008:syntax error : WriteFile
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(259) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(260) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(261) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(266) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(267) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(268) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(281) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(282) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(283) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(303) : error A2008:syntax error : ReadFile
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(322) : error A2008:syntax error : ReadFile
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(339) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(340) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(341) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(346) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(347) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(348) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(358) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(372) : error A2008:syntax error : CloseHandle
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(377) : error A2008:syntax error : CloseHandle
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(383) : error A2008:syntax error : VirtualFree
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(393) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(398) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(408) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(422) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(427) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(437) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(451) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(456) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(466) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(467) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(487) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(488) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(493) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(494) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(499) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(500) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(45) : error A2036:too many initial values for structure
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(103) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(106) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(109) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(117) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(156) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(157) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(229) : error A2006:undefined symbol : overlapped
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(232) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(233) : error A2006:undefined symbol : OVERLAPPED
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(234) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(235) : error A2006:undefined symbol : OVERLAPPED
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(239) : error A2006:undefined symbol : OVERLAPPED
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(248) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(249) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(312) : error A2006:undefined symbol : overlapped
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(314) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(315) : error A2006:undefined symbol : OVERLAPPED
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(316) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(317) : error A2006:undefined symbol : OVERLAPPED
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(320) : error A2006:undefined symbol : OVERLAPPED
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(328) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(329) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(186) : warning A6004:procedure argument or local not referenced : lpPath
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(270) : warning A6004:procedure argument or local not referenced : pData
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(270) : warning A6004:procedure argument or local not referenced : cbData
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(350) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\piram\streaming\to\disc.asm(350) : warning A6004:procedure argument or local not referenced : cbToRead

@@ -1,0 +1,22 @@
+P1_SCENARIO_2_GGUF_LOAD
+=======================
+date=2026-08-29
+authority=evidence/P1_GGUF_LOAD/P1_GGUF_LOAD_PASS.txt
+
+FROZEN_SHA   = 0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B (ARCHIVED / UNCHANGED)
+candidate_sha=02107572E098A7A188A25152AF83F86DA140895F8B6DD60A851AE4AFBCE53F46
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+product_path=session → defer/skip 201 → message_loop flush → streaming UI → worker LoadModel (CPU)
+cert_file=build-win32ide-fresh/bin/logs/p1_gguf_load_cert.txt
+ckpt_file=build-win32ide-p1/bin/logs/p1_cpu_load_ckpt.txt
+
+STATUS
+------
+P1_GGUF_LOAD = PASS
+PROCESS_SURVIVAL = PASS
+S3–S8        = BLOCKED (Copilot UI chain next)
+
+REJECTED PATHS
+--------------
+AgenticBridge::LoadModel / Deep2-only / fake model / harness-as-S2-PASS
+UI-pump Vulkan LoadModel (dies at INF_vulkan) — worker + FORCE_CPU used instead

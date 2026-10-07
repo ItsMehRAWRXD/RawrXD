@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(175) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(175) : error A2008:syntax error : in structure
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(248) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(613) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(299) : error A2006:undefined symbol
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(307) : error A2006:undefined symbol
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(310) : error A2006:undefined symbol
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(311) : error A2006:undefined symbol
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(740) : error A2006:undefined symbol
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593621540_sjjI.asm(749) : error A2006:undefined symbol

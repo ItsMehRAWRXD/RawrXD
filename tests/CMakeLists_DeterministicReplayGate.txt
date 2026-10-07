@@ -1,0 +1,77 @@
+# ============================================================================
+# CMake Integration for RawrXD IDE Deterministic Replay Gate
+# ============================================================================
+#
+# Add this to the main CMakeLists.txt:
+#
+#   include(tests/CMakeLists_DeterministicReplayGate.txt)
+#
+# Or copy the contents into the main CMakeLists.txt
+# ============================================================================
+
+# Deterministic Replay Gate executable
+if(RAWRXD_BUILD_TESTS)
+    add_executable(deterministic_replay_gate
+        deterministic_replay_gate.cpp
+    )
+    
+    target_compile_features(deterministic_replay_gate PRIVATE cxx_std_17)
+    
+    target_compile_definitions(deterministic_replay_gate PRIVATE
+        _CRT_SECURE_NO_WARNINGS
+        NOMINMAX
+    )
+    
+    target_link_libraries(deterministic_replay_gate PRIVATE
+        kernel32
+        user32
+    )
+    
+    # Set output directory
+    set_target_properties(deterministic_replay_gate PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    )
+    
+    # Add as a test
+    add_test(
+        NAME DeterministicReplayGate
+        COMMAND deterministic_replay_gate
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    )
+    
+    # Set test properties
+    set_tests_properties(DeterministicReplayGate PROPERTIES
+        TIMEOUT 120
+        LABELS "deterministic;ide;ghosttext"
+    )
+endif()
+
+# ============================================================================
+# Custom target for running the gate with different configurations
+# ============================================================================
+
+if(RAWRXD_BUILD_TESTS)
+    # Run all scenarios
+    add_custom_target(run_deterministic_gate
+        COMMAND deterministic_replay_gate
+        DEPENDS deterministic_replay_gate
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        COMMENT "Running RawrXD IDE Deterministic Replay Gate"
+    )
+    
+    # Run specific scenario
+    add_custom_target(run_deterministic_gate_single
+        COMMAND deterministic_replay_gate --scenario SingleKeystroke
+        DEPENDS deterministic_replay_gate
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        COMMENT "Running SingleKeystroke scenario"
+    )
+    
+    # Run with verbose output
+    add_custom_target(run_deterministic_gate_verbose
+        COMMAND deterministic_replay_gate --verbose
+        DEPENDS deterministic_replay_gate
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        COMMENT "Running gate with verbose output"
+    )
+endif()

@@ -1,0 +1,69 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(164) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(165) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(211) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(240) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(243) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(245) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(311) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(340) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(345) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(368) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(371) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(595) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(601) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(619) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(658) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(664) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(677) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(89) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(96) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(147) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(219) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(223) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(231) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(241) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(294) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(312) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(315) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(324) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(341) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(347) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(369) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(415) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(416) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(423) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(424) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(430) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(431) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(435) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(441) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(447) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(453) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(454) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(455) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(460) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(463) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(467) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(468) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(473) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(476) : error A2006:undefined symbol : VirtualFree
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(478) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(481) : error A2006:undefined symbol : VirtualFree
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(483) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(486) : error A2006:undefined symbol : VirtualFree
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(511) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(515) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(592) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(598) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(616) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(655) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(661) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(674) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(57) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(179) : warning A6004:procedure argument or local not referenced : token_idx
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(179) : warning A6004:procedure argument or local not referenced : output_ptr
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(254) : warning A6004:procedure argument or local not referenced : idx
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(388) : warning A6004:procedure argument or local not referenced : idx
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(491) : warning A6004:procedure argument or local not referenced : attn_output
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_transformer_kernel.asm(526) : warning A6004:procedure argument or local not referenced : gated

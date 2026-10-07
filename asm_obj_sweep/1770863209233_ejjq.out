@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770863209233_ejjq.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770863209233_ejjq.asm(784) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770863209233_ejjq.asm(791) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770863209233_ejjq.asm(187) : error A2006:undefined symbol : asm_gguf_loader_configure_gpu
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770863209233_ejjq.asm(188) : error A2006:undefined symbol : asm_gguf_loader_get_residency
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770863209233_ejjq.asm(727) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\RawrXD_GGUF_Vulkan_Loader.asm\1770863209233_ejjq.asm(740) : error A2082:cannot mix 16- and 32-bit registers

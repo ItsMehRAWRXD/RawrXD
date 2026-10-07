@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(80) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(85) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(96) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(105) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(106) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(108) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(111) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(112) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(113) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(115) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(118) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(121) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(122) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(126) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(127) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(128) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(130) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(131) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(133) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(134) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(135) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(138) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(140) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(141) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(144) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(145) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(148) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(150) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(151) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(152) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(153) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(161) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(162) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(164) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(167) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(168) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(169) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(171) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(172) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(175) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(176) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(177) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(178) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(180) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(181) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(183) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(184) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(186) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(187) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(188) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(189) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(196) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(197) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(198) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(199) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(200) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(201) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(202) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(204) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(205) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(206) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(209) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(210) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(221) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(223) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(231) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(232) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(233) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(235) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(238) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(242) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(244) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(245) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(246) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(247) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(248) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(249) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(250) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(251) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(259) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(263) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(264) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(271) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(272) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(273) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(274) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(276) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(278) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(279) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(286) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(287) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(288) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(289) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(291) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(292) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(296) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769838026424_hkEr.asm(298) : fatal error A1012:error count exceeds 100; stopping assembly

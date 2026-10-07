@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditor_CompletionPopup.asm
+D:\rawrxd\RawrXD_TextEditor_CompletionPopup.asm(55) : error A2008:syntax error : rbx
+D:\rawrxd\RawrXD_TextEditor_CompletionPopup.asm(56) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\RawrXD_TextEditor_CompletionPopup.asm(131) : fatal error A1010:unmatched block nesting : CompletionPopup_WndProc

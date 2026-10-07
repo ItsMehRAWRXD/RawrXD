@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(6) : error A2008:syntax error : BITS
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(7) : error A2008:syntax error : DEFAULT
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(12) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(16) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(17) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(18) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(19) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(20) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(21) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(22) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(23) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(26) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(31) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(36) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(37) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(38) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(39) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(40) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(41) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(44) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(46) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(47) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(49) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(50) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(51) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(52) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(55) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(56) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(58) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(59) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(60) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(61) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(63) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(64) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(65) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(70) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(71) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(72) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(73) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(74) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(78) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(81) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(84) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(85) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(86) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(89) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(90) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(91) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(93) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(96) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(97) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(98) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(99) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(102) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(103) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(107) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(109) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(110) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(112) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(113) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(117) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(121) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(123) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(124) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(126) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(131) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(135) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(136) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_ollama_integration.asm(143) : fatal error A1012:error count exceeds 100; stopping assembly

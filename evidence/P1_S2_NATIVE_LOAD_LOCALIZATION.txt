@@ -1,0 +1,80 @@
+P1_S2_NATIVE_LOAD_LOCALIZATION
+==============================
+date=2026-08-29
+authority=operator disposition: P1 stops at Scenario 2; find __fastfail edge in CPUInferenceEngine::LoadModel
+FROZEN_SHA=0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B (UNCHANGED)
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+harness=build-win32ide-p1/bin/p1_cpu_loadmodel_harness.exe
+ckpt=build-win32ide-p1/bin/logs/p1_cpu_load_ckpt.txt
+
+INSTRUMENTATION
+---------------
+Durable FlushFileBuffers checkpoints (p1_load_checkpoint.hpp) at irreversible stages:
+  CIE_* (cpu_inference_engine.cpp LoadModel facade)
+  INF_* (rawrxd_inference.h Initialize)
+  LOADER_* (rawrxd_model_loader.cpp Load)
+  XFMR_* (rawrxd_transformer.cpp Initialize — real linked TU, not deep2/)
+
+HARNESS RESULTS (main thread, no UI)
+------------------------------------
+MODE=native_only
+  EXIT=0
+  last_stage=HARNESS_PASS
+  MODEL_LOADED=true
+  LoadModel completes through INF_Initialize READY
+
+MODE=after_streaming  (Open→ParseHeader→ParseMetadata→BuildTensorIndex→LoadZone keep-open → LoadModel)
+  EXIT=0
+  last_stage=HARNESS_PASS
+  MODEL_LOADED=true
+  Streaming prefix does NOT reproduce 0xC0000409
+
+FULL STAGE TRACE (both modes reach READY)
+-----------------------------------------
+HARNESS → CIE_LoadModel → INF_Initialize → INF_vulkan device_ok
+→ LOADER_Load (metadata + 201 tensors lazy) → INF_model_config
+→ XFMR_Initialize (DetectFusedQKV, vulkan_gemm, KV_ALLOC k/v/pos,
+   moe_setup, residency_pool, gpu_act_buffers, governance started,
+   elastic index_ctor_ex → done_no_elastic)
+→ INF_swarm configure/submit/execute → INF_tokenizer SetVocabulary
+→ INF_Initialize READY → CIE_LoadModel success
+
+FAIL-FAST CLASSES CHECKED
+-------------------------
+CRT invalid-parameter / purecall hooks installed in harness: not fired
+No last incomplete checkpoint before abort (abort did not occur in harness)
+ElasticGGUFIndex open failure is catchable/non-fatal (done_no_elastic)
+
+INTERPRETATION
+--------------
+CPUInferenceEngine::LoadModel(TinyLlama) is NOT intrinsically aborting on this
+binary+model. The previously observed 0xC0000409 on the IDE WM_APP+201 path is
+either (a) IDE-context-specific (UI pump / prior IDE globals / double Vulkan /
+ownership), or (b) fixed/misattributed relative to the current instrumented
+InferenceEngine objects.
+
+Harness PASS is NOT a substitute for S2 product PASS.
+
+PRODUCT PATH GAP FOUND (2026-08-29 S2 launch)
+---------------------------------------------
+pumpMessagesTraced DROPPED WM_APP+201 (PM_REMOVE + continue) during post_create
+pumps without re-queue. Session restore + deferredHeavyInit both PostMessage(201),
+both were skipped, and markStartupPumpsComplete did not re-post → S2 cert stalled
+at PRODUCT_PATH only (no LoadModel, no ckpt).
+
+Fix in main_win32.cpp: track s_skippedApp201; after pumps complete, PostMessage
+WM_APP+201 when skipped or loadedModelPath non-empty.
+
+PRODUCT PATH NEXT (S2 only)
+---------------------------
+1. Rebuild RawrXD-Win32IDE with LoadModel re-enabled + post-pump 201 re-post
+2. Run product session restore → capture p1_cpu_load_ckpt last line if abort returns
+3. If LoadModel completes on UI path: require INFERENCE_ENGINE_CREATED + MODEL_READY
+   + PROCESS_SURVIVAL + FATAL_LINES=0 before claiming S2 PASS
+4. Off-UI route: only certify separately if UI still aborts; do not silently
+   substitute into S2 without UI-responsive + ownership proofs
+5. S3–S8 remain BLOCKED until S2 PASS
+
+REJECTED
+--------
+AgenticBridge::LoadModel / Deep2-only / fake model / harness-as-S2-PASS

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769519741710_8iG2.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769519741710_8iG2.asm(195) : error A2006:undefined symbol : CTX_PFILEBASE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769519741710_8iG2.asm(325) : error A2006:undefined symbol : CTX_PFILEBASE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769519741710_8iG2.asm(497) : error A2006:undefined symbol : CTX_PFILEBASE

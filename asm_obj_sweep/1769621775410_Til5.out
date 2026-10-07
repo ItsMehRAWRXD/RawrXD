@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_CLI_Titan.asm\1769621775410_Til5.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_CLI_Titan.asm\1769621775410_Til5.asm(6) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\Ship\RawrXD_CLI_Titan.asm\1769621775410_Til5.asm(324) : error A2008:syntax error : main
+D:\rawrxd\history\all_versions\Ship\RawrXD_CLI_Titan.asm\1769621775410_Til5.asm(324) : error A2088:END directive required at end of file

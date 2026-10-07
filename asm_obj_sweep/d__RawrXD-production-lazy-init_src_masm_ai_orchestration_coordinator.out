@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(164) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(168) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(452) : error A2006:undefined symbol : SetEvent
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(457) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(461) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(464) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(498) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(509) : error A2006:undefined symbol : Sleep
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(525) : error A2006:undefined symbol : Sleep
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_ai_orchestration_coordinator.asm(576) : error A2006:undefined symbol : SendMessageA

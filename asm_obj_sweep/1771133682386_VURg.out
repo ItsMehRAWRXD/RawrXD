@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\agentic_puppeteer_byte_ops_fixed.asm\1771133682386_VURg.asm
+D:\rawrxd\history\all_versions\src\asm\agentic_puppeteer_byte_ops_fixed.asm\1771133682386_VURg.asm(87) : error A2006:undefined symbol : @@replace_done
+D:\rawrxd\history\all_versions\src\asm\agentic_puppeteer_byte_ops_fixed.asm\1771133682386_VURg.asm(93) : error A2006:undefined symbol : @@replace_done

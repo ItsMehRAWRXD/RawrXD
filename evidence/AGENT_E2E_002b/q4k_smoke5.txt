@@ -1,0 +1,662 @@
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+catalog-model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-path: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-kind: gguf
+[Deep2Engine] Loading model from: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=2048
+[Deep2Engine] Tokenizer loaded: 32000 tokens from GGUF
+[Deep2Engine] vocabSize override: metadata=2048 -> tensor=32000 (hidden=2048)
+[WO_DIAG] GGUF wo.data=0000018929BD0000 rows=2048 cols=2048 type=12(Q4_K) block0 d=0x01BA dmin=0x0B26 qs[0]=0xD8
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000018922DDD830  Registered 'blk.0.attn_q.weight': offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  maxResidentBytes=536870912
+[ResidencyManager] this=0000018922DDD830  Registered 'blk.11.attn_q.weight': offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  maxResidentBytes=536870912
+[ResidencyManager] this=0000018922DDD830  Registered 'output.weight': offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000018922DDD830  registered=201 tensors  bytes=667078656  max=536870912
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6D28D3490 dequant=00007FF6D28D0C10 GetGEMV(12)=00007FF6D28D3490 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[KVCache] Initializing: layers=22 maxSeqLen=2048 numHeads=4 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 2048 * 4 * 64 * 2 * 4
+[KVCache]        = 92274688 bytes (K=46137344 + V=46137344)
+[KVCache] Total cache size: 88.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+RawrXD Sovereign Agentic Runtime
+architecture: llama
+model: tinyllama_tinyllama-1.1b-chat-v1.0
+chat-template: phi3
+deep2-streaming: whole-response
+workspace: F:\~dev\rawrxd\evidence\AGENT_E2E_002b\q4k_smoke_ws
+external inference runtime: none
+cloud API: none
+
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=0000018926330000 sizeBytes=36864000
+[Deep2Engine] Layer 0 weights: wq.data=0000018929E10000 type=12 wk.data=0000018922C70000 wv.data=000001892A050000 wo.data=0000018929BD0000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=0000018922C50000 ffnNorm.data=0000018922C60000
+[Deep2Engine] computeLogits: hiddenState norm=88.590294 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=991 size=32000 min=-8.924732208e+00 max=1.426041698e+01 mean=-5.955132709e-01 l2=4.554635817e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29902 logit=14.260417
+[GREEDY] selected=29902
+[GREEDY] probe comma id=29892 logit=4.127402
+[GREEDY] probe newline id=13 logit=7.179850
+[GREEDY] probe UE id=4462 logit=3.783134
+[GREEDY] probe comma_alt_1919 id=1919 logit=-3.024565
+[GREEDY] top10: 29902:14.260417 10605:14.207776 25271:14.020738 5612:13.674840 29903:13.311455 7058:13.308815 3492:13.290942 29907:13.183985 1762:12.866716 16894:12.818707
+[B3_LOGITS] AFTER sampleToken token=29902
+[B3_LOGITS] Storing token 29902 at index 0
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.415077 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=992 size=32000 min=-1.439452648e+01 max=1.469175625e+01 mean=-2.868793460e+00 l2=7.217615530e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=4966 logit=14.691756
+[GREEDY] selected=4966
+[GREEDY] probe comma id=29892 logit=7.221061
+[GREEDY] probe newline id=13 logit=4.533653
+[GREEDY] probe UE id=4462 logit=-3.339675
+[GREEDY] probe comma_alt_1919 id=1919 logit=0.549578
+[GREEDY] top10: 4966:14.691756 29915:14.494708 27746:13.760636 1016:13.472758 626:13.330862 437:12.762831 11188:12.435962 505:12.277301 508:11.744898 674:11.216529
+[B3_LOGITS] AFTER sampleToken token=4966
+[B3_LOGITS] Storing token 4966 at index 1
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.288925 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=993 size=32000 min=-1.099430370e+01 max=1.734488487e+01 mean=-2.052131562e+00 l2=5.423390782e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=445 logit=17.344885
+[GREEDY] selected=445
+[GREEDY] probe comma id=29892 logit=6.484453
+[GREEDY] probe newline id=13 logit=4.299799
+[GREEDY] probe UE id=4462 logit=-2.811732
+[GREEDY] probe comma_alt_1919 id=1919 logit=0.083848
+[GREEDY] top10: 445:17.344885 366:17.276266 393:16.990547 1438:15.591417 278:15.046357 306:14.486970 1906:14.400075 590:13.510576 596:12.590218 304:12.164145
+[B3_LOGITS] AFTER sampleToken token=445
+[B3_LOGITS] Storing token 445 at index 2
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.170578 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=994 size=32000 min=-1.306314278e+01 max=1.436082458e+01 mean=-2.859795550e+00 l2=6.977189648e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=6911 logit=14.360825
+[GREEDY] selected=6911
+[GREEDY] probe comma id=29892 logit=4.835519
+[GREEDY] probe newline id=13 logit=1.393768
+[GREEDY] probe UE id=4462 logit=-2.100573
+[GREEDY] probe comma_alt_1919 id=1919 logit=0.155944
+[GREEDY] top10: 6911:14.360825 2472:12.159253 8908:11.765977 1634:11.215937 8252:11.073525 8128:10.874808 1234:10.681587 6089:10.601639 2933:10.551934 4531:10.230433
+[B3_LOGITS] AFTER sampleToken token=6911
+[B3_LOGITS] Storing token 6911 at index 3
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.715851 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=995 size=32000 min=-1.381039715e+01 max=1.488048840e+01 mean=-3.591578617e+00 l2=7.927192746e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=366 logit=14.880488
+[GREEDY] selected=366
+[GREEDY] probe comma id=29892 logit=12.954625
+[GREEDY] probe newline id=13 logit=5.995102
+[GREEDY] probe UE id=4462 logit=-4.769046
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.805037
+[GREEDY] top10: 366:14.880488 29991:14.842760 29889:14.205439 15544:13.082689 29892:12.954625 297:12.810612 1234:11.860785 411:11.623307 304:11.364178 3867:11.128611
+[B3_LOGITS] AFTER sampleToken token=366
+[B3_LOGITS] Storing token 366 at index 4
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.771652 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=996 size=32000 min=-1.278286266e+01 max=1.371892262e+01 mean=-3.555509951e+00 l2=8.015260911e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=297 logit=13.718923
+[GREEDY] selected=297
+[GREEDY] probe comma id=29892 logit=10.316788
+[GREEDY] probe newline id=13 logit=5.160312
+[GREEDY] probe UE id=4462 logit=-4.220661
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.449666
+[GREEDY] top10: 297:13.718923 2274:12.977647 2253:12.695503 411:12.682894 29991:12.421223 29889:12.421201 304:11.774637 679:11.275999 4340:11.192080 2436:10.747720
+[B3_LOGITS] AFTER sampleToken token=297
+[B3_LOGITS] Storing token 297 at index 5
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.291412 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=997 size=32000 min=-1.450234032e+01 max=1.448202991e+01 mean=-3.280029961e+00 l2=7.751113555e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=596 logit=14.482030
+[GREEDY] selected=596
+[GREEDY] probe comma id=29892 logit=2.242032
+[GREEDY] probe newline id=13 logit=2.912581
+[GREEDY] probe UE id=4462 logit=-3.889108
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.845577
+[GREEDY] top10: 596:14.482030 8004:14.303950 1614:13.001805 2253:11.651296 4340:11.596097 6509:11.537083 278:11.500534 16049:11.342574 2805:11.190411 773:11.103192
+[B3_LOGITS] AFTER sampleToken token=596
+[B3_LOGITS] Storing token 596 at index 6
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=84.514557 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=998 size=32000 min=-1.364912319e+01 max=1.258249187e+01 mean=-3.345359968e+00 l2=7.905715921e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=2060 logit=12.582492
+[GREEDY] selected=2060
+[GREEDY] probe comma id=29892 logit=1.206323
+[GREEDY] probe newline id=13 logit=2.038079
+[GREEDY] probe UE id=4462 logit=-0.908162
+[GREEDY] probe comma_alt_1919 id=1919 logit=-2.625808
+[GREEDY] top10: 2060:12.582492 5925:11.571792 14137:11.543672 5434:11.468718 8720:11.260019 664:11.047511 21126:10.598204 5849:10.587903 13490:10.415090 26009:10.279402
+[B3_LOGITS] AFTER sampleToken token=2060
+[B3_LOGITS] Storing token 2060 at index 7
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.194260 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=999 size=32000 min=-1.501437759e+01 max=1.468065834e+01 mean=-3.700415341e+00 l2=8.284382130e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29889 logit=14.680658
+[GREEDY] selected=29889
+[GREEDY] probe comma id=29892 logit=11.941402
+[GREEDY] probe newline id=13 logit=5.920895
+[GREEDY] probe UE id=4462 logit=-3.489391
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.034934
+[GREEDY] top10: 29889:14.680658 29991:14.246586 29892:11.941402 29915:11.750076 5849:11.533163 4225:10.256676 11780:10.019918 664:9.652214 322:9.355315 411:9.225651
+[B3_LOGITS] AFTER sampleToken token=29889
+[B3_LOGITS] Storing token 29889 at index 8
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=89.089149 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1000 size=32000 min=-1.171381855e+01 max=1.657674217e+01 mean=-2.290339374e+00 l2=6.115350175e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=960 logit=16.576742
+[GREEDY] selected=960
+[GREEDY] probe comma id=29892 logit=-0.223539
+[GREEDY] probe newline id=13 logit=9.984195
+[GREEDY] probe UE id=4462 logit=-0.879878
+[GREEDY] probe comma_alt_1919 id=1919 logit=2.069809
+[GREEDY] top10: 960:16.576742 3529:15.811456 2803:14.483562 3872:14.005590 5169:13.502424 887:13.188593 1938:12.596297 306:12.549425 22738:12.464849 7197:11.884258
+[B3_LOGITS] AFTER sampleToken token=960
+[B3_LOGITS] Storing token 960 at index 9
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.798088 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1001 size=32000 min=-1.263338470e+01 max=2.095394897e+01 mean=-2.394109410e+00 l2=6.035032733e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=366 logit=20.953949
+[GREEDY] selected=366
+[GREEDY] probe comma id=29892 logit=8.820334
+[GREEDY] probe newline id=13 logit=7.524056
+[GREEDY] probe UE id=4462 logit=0.368141
+[GREEDY] probe comma_alt_1919 id=1919 logit=3.195968
+[GREEDY] top10: 366:20.953949 727:16.818108 738:13.195908 3099:13.076937 451:12.870291 445:12.200134 596:11.958619 4340:11.865373 278:11.807671 306:11.374221
+[B3_LOGITS] AFTER sampleToken token=366
+[B3_LOGITS] Storing token 366 at index 10
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.808151 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1002 size=32000 min=-1.479086018e+01 max=1.874419022e+01 mean=-3.501001059e+00 l2=7.833621922e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=505 logit=18.744190
+[GREEDY] selected=505
+[GREEDY] probe comma id=29892 logit=5.163285
+[GREEDY] probe newline id=13 logit=7.071464
+[GREEDY] probe UE id=4462 logit=-4.015273
+[GREEDY] probe comma_alt_1919 id=1919 logit=0.911377
+[GREEDY] top10: 505:18.744190 817:16.780500 1996:14.722615 1603:14.514020 11735:14.449810 29915:14.209919 3700:13.889040 3926:13.559213 526:12.924065 6773:12.398806
+[B3_LOGITS] AFTER sampleToken token=505
+[B3_LOGITS] Storing token 505 at index 11
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=84.765312 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1003 size=32000 min=-1.371163750e+01 max=2.129354477e+01 mean=-3.325095512e+00 l2=7.644834570e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=738 logit=21.293545
+[GREEDY] selected=738
+[GREEDY] probe comma id=29892 logit=4.981719
+[GREEDY] probe newline id=13 logit=7.099668
+[GREEDY] probe UE id=4462 logit=-4.068572
+[GREEDY] probe comma_alt_1919 id=1919 logit=0.720726
+[GREEDY] top10: 738:21.293545 4340:17.550098 901:16.219378 5684:14.425995 15128:13.832775 5155:13.288744 3099:12.700570 916:12.629549 263:12.240505 777:11.710509
+[B3_LOGITS] AFTER sampleToken token=738
+[B3_LOGITS] Storing token 738 at index 12
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=84.458893 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1004 size=32000 min=-1.497875118e+01 max=1.950682068e+01 mean=-3.511885861e+00 l2=8.064096108e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=4340 logit=19.506821
+[GREEDY] selected=4340
+[GREEDY] probe comma id=29892 logit=3.957268
+[GREEDY] probe newline id=13 logit=7.970702
+[GREEDY] probe UE id=4462 logit=-2.994782
+[GREEDY] probe comma_alt_1919 id=1919 logit=0.695328
+[GREEDY] top10: 4340:19.506821 901:17.185450 916:17.026909 5155:15.973800 5684:15.227593 9365:14.003817 1101:12.749798 5626:12.389330 21838:12.249556 27455:12.215796
+[B3_LOGITS] AFTER sampleToken token=4340
+[B3_LOGITS] Storing token 4340 at index 13
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=83.633408 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1005 size=32000 min=-1.626691055e+01 max=1.907386398e+01 mean=-3.870610752e+00 l2=8.749520429e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=5155 logit=19.073864
+[GREEDY] selected=5155
+[GREEDY] probe comma id=29892 logit=6.965232
+[GREEDY] probe newline id=13 logit=8.152126
+[GREEDY] probe UE id=4462 logit=-2.519929
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.190824
+[GREEDY] top10: 5155:19.073864 9365:16.687868 7274:13.663603 1139:13.614271 21838:13.571296 5626:13.453073 297:12.949731 27455:12.487433 2346:12.321429 11780:12.307424
+[B3_LOGITS] AFTER sampleToken token=5155
+[B3_LOGITS] Storing token 5155 at index 14
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.394600 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1006 size=32000 min=-1.533258247e+01 max=1.930728722e+01 mean=-3.503475085e+00 l2=7.801996679e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29892 logit=19.307287
+[GREEDY] selected=29892
+[GREEDY] probe comma id=29892 logit=19.307287
+[GREEDY] probe newline id=13 logit=6.018253
+[GREEDY] probe UE id=4462 logit=-1.748832
+[GREEDY] probe comma_alt_1919 id=1919 logit=6.986927
+[GREEDY] top10: 29892:19.307287 470:18.853298 11211:15.174561 1048:15.027909 4459:13.905659 3113:13.283031 4475:12.143513 297:11.881927 29914:11.588441 19813:11.473316
+[B3_LOGITS] AFTER sampleToken token=29892
+[B3_LOGITS] Storing token 29892 at index 15
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.628502 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1007 size=32000 min=-1.258505917e+01 max=1.870122910e+01 mean=-2.777906339e+00 l2=6.739541224e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=4459 logit=18.701229
+[GREEDY] selected=4459
+[GREEDY] probe comma id=29892 logit=-2.458504
+[GREEDY] probe newline id=13 logit=7.768056
+[GREEDY] probe UE id=4462 logit=-0.582134
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.253003
+[GREEDY] top10: 4459:18.701229 3113:18.134371 1016:16.850010 437:15.483365 366:15.377978 1235:13.670441 306:13.020483 367:12.432958 925:12.355618 25036:12.293957
+[B3_LOGITS] AFTER sampleToken token=4459
+[B3_LOGITS] Storing token 4459 at index 16
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.402077 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1008 size=32000 min=-1.393784714e+01 max=2.336703491e+01 mean=-3.422609610e+00 l2=7.926652384e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=3889 logit=23.367035
+[GREEDY] selected=3889
+[GREEDY] probe comma id=29892 logit=5.536526
+[GREEDY] probe newline id=13 logit=11.532999
+[GREEDY] probe UE id=4462 logit=-5.561023
+[GREEDY] probe comma_alt_1919 id=1919 logit=1.995549
+[GREEDY] top10: 3889:23.367035 12853:15.039819 9021:13.708764 304:11.833192 12362:11.567762 13:11.532999 4459:11.257260 5476:10.756695 28472:10.316710 518:10.158031
+[B3_LOGITS] AFTER sampleToken token=3889
+[B3_LOGITS] Storing token 3889 at index 17
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=87.023537 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1009 size=32000 min=-1.451305199e+01 max=2.459309387e+01 mean=-3.131217676e+00 l2=7.325170427e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=304 logit=24.593094
+[GREEDY] selected=304
+[GREEDY] probe comma id=29892 logit=7.831534
+[GREEDY] probe newline id=13 logit=9.679373
+[GREEDY] probe UE id=4462 logit=-4.815480
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.529911
+[GREEDY] top10: 304:24.593094 2244:12.214669 6159:11.186764 6958:10.592448 4932:9.831204 13:9.679373 322:9.472549 517:9.217159 29871:9.181299 29889:9.130480
+[B3_LOGITS] AFTER sampleToken token=304
+[B3_LOGITS] Storing token 304 at index 18
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.851112 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1010 size=32000 min=-1.379648685e+01 max=1.858451080e+01 mean=-3.383151018e+00 l2=7.650359373e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=2244 logit=18.584511
+[GREEDY] selected=2244
+[GREEDY] probe comma id=29892 logit=3.156885
+[GREEDY] probe newline id=13 logit=5.893990
+[GREEDY] probe UE id=4462 logit=0.414055
+[GREEDY] probe comma_alt_1919 id=1919 logit=-0.010285
+[GREEDY] top10: 2244:18.584511 6159:15.669921 1235:14.075987 6958:13.911310 2643:12.179467 679:11.752892 8908:11.584796 1400:11.495609 4055:11.492080 2009:11.022462
+[B3_LOGITS] AFTER sampleToken token=2244
+[B3_LOGITS] Storing token 2244 at index 19
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=85.626472 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1011 size=32000 min=-1.518930721e+01 max=1.786749268e+01 mean=-3.652823589e+00 l2=8.012110225e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29889 logit=17.867493
+[GREEDY] selected=29889
+[GREEDY] probe comma id=29892 logit=12.825237
+[GREEDY] probe newline id=13 logit=6.663836
+[GREEDY] probe UE id=4462 logit=0.607008
+[GREEDY] probe comma_alt_1919 id=1919 logit=3.192638
+[GREEDY] top10: 29889:17.867493 29991:16.514341 592:14.893175 322:13.234628 29892:12.825237 363:12.380754 963:12.124130 3448:12.074628 1449:11.984694 738:11.745307
+[B3_LOGITS] AFTER sampleToken token=29889
+[B3_LOGITS] Storing token 29889 at index 20
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=89.041794 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1012 size=32000 min=-1.219820786e+01 max=1.404399586e+01 mean=-2.090491636e+00 l2=5.776856441e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=6407 logit=14.043996
+[GREEDY] selected=6407
+[GREEDY] probe comma id=29892 logit=0.281571
+[GREEDY] probe newline id=13 logit=10.096539
+[GREEDY] probe UE id=4462 logit=-0.733582
+[GREEDY] probe comma_alt_1919 id=1919 logit=3.392888
+[GREEDY] top10: 6407:14.043996 2:13.874081 6975:13.744146 3872:13.497851 7197:13.389810 3529:13.034204 28569:12.708549 960:12.551800 1174:12.396865 3374:11.991469
+[B3_LOGITS] AFTER sampleToken token=6407
+[B3_LOGITS] Storing token 6407 at index 21
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.123161 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1013 size=32000 min=-1.786972809e+01 max=1.838497734e+01 mean=-3.627899545e+00 l2=8.113400031e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=21778 logit=18.384977
+[GREEDY] selected=21778
+[GREEDY] probe comma id=29892 logit=13.914277
+[GREEDY] probe newline id=13 logit=7.912617
+[GREEDY] probe UE id=4462 logit=-3.201486
+[GREEDY] probe comma_alt_1919 id=1919 logit=3.958577
+[GREEDY] top10: 21778:18.384977 28688:14.702876 310:14.172859 29892:13.914277 2169:13.165539 23274:11.204557 1072:9.781493 4880:9.478189 399:9.434583 29991:8.889417
+[B3_LOGITS] AFTER sampleToken token=21778
+[B3_LOGITS] Storing token 21778 at index 22
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[Deep2Engine] computeLogits: hiddenState norm=86.861359 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=0000018922FE0000
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1014 size=32000 min=-1.849886703e+01 max=2.023255157e+01 mean=-3.590099670e+00 l2=8.034860558e+02 finite=32000 nan=0 inf=0
+[B3_LOGITS] AFTER B3_TraceLogits
+[B3_LOGITS] BEFORE sampleToken
+[GREEDY] enabled=1
+[GREEDY] argmax=29892 logit=20.232552
+[GREEDY] selected=29892
+[GREEDY] probe comma id=29892 logit=20.232552
+[GREEDY] probe newline id=13 logit=10.733989
+[GREEDY] probe UE id=4462 logit=-3.976683
+[GREEDY] probe comma_alt_1919 id=1919 logit=6.987147
+[GREEDY] top10: 29892:20.232552 29889:16.692667 29991:16.499914 304:13.133524 2:13.089058 322:12.601957 515:12.040374 448:10.904181 13:10.733989 669:10.078402
+[B3_LOGITS] AFTER sampleToken token=29892
+[B3_LOGITS] Storing token 29892 at index 23
+[B3_LOGITS] Calling onToken callback
+[B3_LOGITS] Checking PlasmaGovernor
+[B3_LOGITS] Checking EOS
+[B3_LOGITS] End of generation loop iteration
+[B3_LOGITS] Generation loop exited, tokensGenerated=24
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[Deep2Engine] Generation complete: 24 tokens in 197196.05 ms (0.12 TPS)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+I▁hope▁this▁helps▁you▁in▁your▁project.▁If▁you▁have▁any▁further▁questions,▁feel▁free▁to▁ask.▁Best▁regards,
+
+[AGENT_DONE]
+status=success
+steps=1
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete

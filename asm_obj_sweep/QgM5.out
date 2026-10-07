@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-2d6daefa\QgM5.asm
+D:\rawrxd\history\-2d6daefa\QgM5.asm(109) : error A2005:symbol redefinition : msgWorkspace
+D:\rawrxd\history\-2d6daefa\QgM5.asm(110) : error A2005:symbol redefinition : msgComplexity
+D:\rawrxd\history\-2d6daefa\QgM5.asm(111) : error A2005:symbol redefinition : msgNewline
+D:\rawrxd\history\-2d6daefa\QgM5.asm(112) : error A2005:symbol redefinition : hexBuf

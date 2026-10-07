@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-10b7ee16\JmJd.asm
+D:\rawrxd\history\-10b7ee16\JmJd.asm(248) : error A2008:syntax error : length
+D:\rawrxd\history\-10b7ee16\JmJd.asm(297) : fatal error A1010:unmatched block nesting : TabBuffer_InsertText

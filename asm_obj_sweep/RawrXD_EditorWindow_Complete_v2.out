@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\RawrXD_EditorWindow_Complete_v2.asm
+D:\rawrxd\RawrXD_EditorWindow_Complete_v2.asm(101) : error A2008:syntax error : rbx
+D:\rawrxd\RawrXD_EditorWindow_Complete_v2.asm(116) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_EditorWindow_Complete_v2.asm(124) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_EditorWindow_Complete_v2.asm(131) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_EditorWindow_Complete_v2.asm(134) : fatal error A1010:unmatched block nesting : TextBuffer_InsertChar

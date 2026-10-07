@@ -1,0 +1,56 @@
+#version 450
+// gemv_q6k.comp — fused Q6_K dequant+dot (ggml dequantize_row_q6_K)
+layout(local_size_x = 64) in;
+layout(binding = 0) readonly buffer W { uint packed[]; };
+layout(binding = 1) readonly buffer In { float x[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC { uint rows; uint cols; } pc;
+
+uint u8(uint off) {
+  uint w = packed[off >> 2];
+  return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+int i8(uint b) { return int(b) - ((b >= 128u) ? 256 : 0); }
+
+void main() {
+  uint row = gl_GlobalInvocationID.x;
+  if (row >= pc.rows) return;
+  uint nblk = (pc.cols + 255u) / 256u;
+  uint rowOff = row * nblk * 210u;
+  float sum = 0.0;
+  for (uint b = 0u; b < nblk; ++b) {
+    uint blk = rowOff + b * 210u;
+    float d = f16(u8(blk + 208u) | (u8(blk + 209u) << 8));
+    uint ql0 = blk;
+    uint qh0 = blk + 128u;
+    uint sc0 = blk + 192u;
+    uint base = b * 256u;
+    for (uint pass = 0u; pass < 2u; ++pass) {
+      uint ql = ql0 + pass * 64u;
+      uint qh = qh0 + pass * 32u;
+      uint sc = sc0 + pass * 8u;
+      uint yb = base + pass * 128u;
+      for (uint l = 0u; l < 32u; ++l) {
+        uint is = l / 16u;
+        uint qlA = u8(ql + l);
+        uint qlB = u8(ql + l + 32u);
+        uint qhv = u8(qh + l);
+        int q1 = int((qlA & 15u) | ((qhv & 3u) << 4)) - 32;
+        int q2 = int((qlB & 15u) | (((qhv >> 2) & 3u) << 4)) - 32;
+        int q3 = int((qlA >> 4) | (((qhv >> 4) & 3u) << 4)) - 32;
+        int q4 = int((qlB >> 4) | (((qhv >> 6) & 3u) << 4)) - 32;
+        int s0 = i8(u8(sc + is));
+        int s2 = i8(u8(sc + is + 2u));
+        int s4 = i8(u8(sc + is + 4u));
+        int s6 = i8(u8(sc + is + 6u));
+        uint i0 = yb + l, i1 = yb + l + 32u, i2 = yb + l + 64u, i3 = yb + l + 96u;
+        if (i0 < pc.cols) sum += d * float(s0) * float(q1) * x[i0];
+        if (i1 < pc.cols) sum += d * float(s2) * float(q2) * x[i1];
+        if (i2 < pc.cols) sum += d * float(s4) * float(q3) * x[i2];
+        if (i3 < pc.cols) sum += d * float(s6) * float(q4) * x[i3];
+      }
+    }
+  }
+  y[row] = sum;
+}

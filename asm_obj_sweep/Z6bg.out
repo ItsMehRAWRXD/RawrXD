@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-1d3e38cc\Z6bg.asm
+D:\rawrxd\history\-1d3e38cc\Z6bg.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\-1d3e38cc\Z6bg.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\-1d3e38cc\Z6bg.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\-1d3e38cc\Z6bg.asm(21) : error A2008:syntax error : frame
+D:\rawrxd\history\-1d3e38cc\Z6bg.asm(28) : fatal error A1000:cannot open file : user32.inc

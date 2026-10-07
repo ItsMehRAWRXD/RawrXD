@@ -1,0 +1,151 @@
+name: Daily Security Monitor
+
+on:
+  schedule:
+    # Run daily at 9:00 AM UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20'
+
+jobs:
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      issues: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    # Python Security Scan
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety pip-audit
+        if [ -f services/requirements.txt ]; then pip install -r services/requirements.txt; fi
+
+    - name: Run Bandit (Python SAST)
+      run: |
+        bandit -r . -f json -o bandit-report.json || true
+        bandit -r . || true
+
+    - name: Run Safety check
+      run: |
+        safety check --json --output safety-report.json || true
+        safety check || true
+
+    - name: Run pip-audit
+      run: |
+        pip-audit --format=json --output=pip-audit-report.json || true
+        pip-audit || true
+
+    # Node.js Security Scan
+    - name: Install Node.js dependencies
+      run: |
+        if [ -f package.json ]; then npm ci; fi
+
+    - name: Run npm audit
+      run: |
+        npm audit --json > npm-audit-report.json || true
+        npm audit || true
+
+    # Container Security Scan
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    # Upload Reports
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+          pip-audit-report.json
+          npm-audit-report.json
+          trivy-results.sarif
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v4
+      with:
+        fail-on-severity: critical
+
+  create-issue:
+    name: Create Alert Issue
+    needs: [security-scan, dependency-review]
+    runs-on: ubuntu-latest
+    if: failure()
+    permissions:
+      issues: write
+
+    steps:
+    - name: Create Issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = `🚨 Security Alert: Daily Scan Failed - ${new Date().toISOString().split('T')[0]}`;
+          const body = `## Daily Security Scan Failed
+          
+          **Date**: ${new Date().toISOString()}
+          **Workflow**: Daily Security Monitor
+          
+          ### Action Required
+          - [ ] Review security scan results
+          - [ ] Check for new critical vulnerabilities
+          - [ ] Update dependencies if needed
+          - [ ] Run manual security audit
+          
+          ### Links
+          - [Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - [Security Tab](https://github.com/${{ github.repository }}/security)
+          - [Dependabot Alerts](https://github.com/${{ github.repository }}/security/dependabot)
+          
+          cc: @security-team`;
+          
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['security', 'alert', 'automated']
+          });

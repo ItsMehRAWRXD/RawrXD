@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_RawrXD_PulseScoreEngine.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_RawrXD_PulseScoreEngine.asm(29) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_RawrXD_PulseScoreEngine.asm(30) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_RawrXD_PulseScoreEngine.asm(31) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_RawrXD_PulseScoreEngine.asm(32) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_RawrXD_PulseScoreEngine.asm(33) : warning A4014:instructions and initialized data not supported in BSS segments

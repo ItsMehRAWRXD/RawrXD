@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-Compilers\masm\solo\compiler\dual.asm
+D:\rawrxd\reconstructed\RawrXD-Compilers\masm\solo\compiler\dual.asm(152) : error A2008:syntax error : win64
+D:\rawrxd\reconstructed\RawrXD-Compilers\masm\solo\compiler\dual.asm(456) : error A2084:constant value too large
+D:\rawrxd\reconstructed\RawrXD-Compilers\masm\solo\compiler\dual.asm(524) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-Compilers\masm\solo\compiler\dual.asm(531) : error A2022:instruction operands must be the same size

@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm(58) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm(750) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm(764) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm(810) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm(864) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm(885) : error A2006:undefined symbol : memzero
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm(913) : error A2006:undefined symbol : memzero
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform_v10.asm(956) : error A2006:undefined symbol : memzero

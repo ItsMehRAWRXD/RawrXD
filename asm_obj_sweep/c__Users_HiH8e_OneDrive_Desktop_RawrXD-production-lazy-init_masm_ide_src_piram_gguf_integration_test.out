@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_piram_gguf_integration_test.asm
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_piram_gguf_integration_test.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_piram_gguf_integration_test.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_piram_gguf_integration_test.asm(10) : fatal error A1000:cannot open file : mini_winconst.inc

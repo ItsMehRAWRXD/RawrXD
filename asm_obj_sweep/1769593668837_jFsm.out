@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(248) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(613) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(299) : error A2006:undefined symbol : input_buffer
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(307) : error A2006:undefined symbol : output_buffer
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(310) : error A2006:undefined symbol : backend_type
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(311) : error A2006:undefined symbol : vocab_size
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(377) : error A2006:undefined symbol : params
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(383) : error A2006:undefined symbol : is_generating
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(384) : error A2006:undefined symbol : generated_tokens
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(388) : error A2006:undefined symbol : start_time
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(398) : error A2006:undefined symbol : generated_tokens
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(399) : error A2006:undefined symbol : tokens_generated
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(401) : error A2006:undefined symbol : is_generating
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(476) : error A2006:undefined symbol : kv_hits
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(533) : error A2006:undefined symbol : kv_misses
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(740) : error A2006:undefined symbol : input_buffer
+D:\rawrxd\history\all_versions\src\agentic\Phase3_Agent_Kernel_Complete.asm\1769593668837_jFsm.asm(749) : error A2006:undefined symbol : output_buffer

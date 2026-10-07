@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\rawrxd\AVX512\PatternEngine.asm
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\AVX512\PatternEngine.asm(196) : error A2006:undefined symbol : try_todo
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\AVX512\PatternEngine.asm(200) : error A2006:undefined symbol : try_todo
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\AVX512\PatternEngine.asm(204) : error A2006:undefined symbol : try_todo
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\AVX512\PatternEngine.asm(208) : error A2006:undefined symbol : try_todo

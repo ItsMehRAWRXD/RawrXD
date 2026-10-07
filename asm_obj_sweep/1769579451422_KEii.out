@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(292) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(294) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(297) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(302) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(327) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(354) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(356) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(358) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(363) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(366) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(369) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(370) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(382) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(416) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(417) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(430) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(434) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(445) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(446) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(470) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(477) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(490) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(512) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(520) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(670) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(675) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(717) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(720) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(755) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(764) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(877) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1035) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1256) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1262) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1263) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1272) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1321) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1330) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1341) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1363) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1366) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1375) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1376) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1378) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1401) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1404) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1436) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1438) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1447) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1451) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1476) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1502) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1510) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1511) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1513) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1514) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1520) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1523) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1528) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1530) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1531) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1541) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1542) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1543) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1544) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1548) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1561) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1562) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1572) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1573) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1582) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1583) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1609) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1610) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1612) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1614) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1616) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1618) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1638) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1657) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1658) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1664) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1665) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1671) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1812) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1820) : error A2008:syntax error : CryptDecodeObjectEx
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1832) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1840) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1844) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1845) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1853) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769579451422_KEii.asm(1857) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\pe_writer_production\structures\symbol_batch_resolver.asm
+D:\rawrxd\src\pe_writer_production\structures\symbol_batch_resolver.asm(227) : error A2006:undefined symbol : PEWriter_AddImport

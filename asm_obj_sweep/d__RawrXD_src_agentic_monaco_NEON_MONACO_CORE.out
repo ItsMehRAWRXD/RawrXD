@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(12) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(46) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(59) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(72) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(101) : error A2008:syntax error : offset
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(102) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(116) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(137) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(175) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(591) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1952) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(189) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(196) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(200) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(202) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(206) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(210) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(213) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(233) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(238) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(264) : error A2006:undefined symbol : vblank_sync
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(282) : error A2006:undefined symbol : ApplyGlitchEffect
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(287) : error A2006:undefined symbol : RenderParticles
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(291) : error A2006:undefined symbol : RenderScanlines
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(327) : error A2006:undefined symbol : SSE4Blur
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(330) : error A2006:undefined symbol : AVX512Blur
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(350) : error A2006:undefined symbol : LINE
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(406) : error A2006:undefined symbol : g_NextBranchId
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(407) : error A2006:undefined symbol : g_NextBranchId
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(411) : error A2006:undefined symbol : g_CurrentBranchId
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(421) : error A2006:undefined symbol : g_CurrentBuffer
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(426) : error A2006:undefined symbol : g_CurrentBranchId
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(456) : error A2006:undefined symbol : g_CurrentBranchId
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(460) : error A2006:undefined symbol : g_BranchListHead
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(472) : error A2006:undefined symbol : g_CurrentBuffer
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(483) : error A2006:undefined symbol : g_MergeViewActive
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(484) : error A2006:undefined symbol : g_MergeSourcePtr
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(485) : error A2006:undefined symbol : g_MergeTargetPtr
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(486) : error A2006:undefined symbol : g_MergeSourceBranch
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(487) : error A2006:undefined symbol : g_MergeTargetBranch
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(516) : error A2006:undefined symbol : g_HexViewActive
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(518) : error A2006:undefined symbol : g_HexViewActive
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(525) : error A2006:undefined symbol : g_HexBytesPerRow
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(526) : error A2006:undefined symbol : g_HexViewWidth
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(529) : error A2006:undefined symbol : g_CursorOffset
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(533) : error A2006:undefined symbol : g_HexTopRow
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(536) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(540) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(543) : error A2006:undefined symbol : g_HexViewActive
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(601) : error A2006:undefined symbol : g_DiffBitmapPtr
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(602) : error A2006:undefined symbol : g_DiffSize
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(603) : error A2006:undefined symbol : g_DiffViewActive
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(604) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(637) : error A2006:undefined symbol : OpenProcess
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(640) : error A2006:undefined symbol : g_AttachedProcess
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(646) : error A2006:undefined symbol : g_MemRegionCount
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(654) : error A2006:undefined symbol : VirtualQueryEx
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(663) : error A2006:undefined symbol : g_MemRegionCount
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(675) : error A2006:undefined symbol : g_MemEditActive
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(676) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(716) : error A2006:undefined symbol : g_DisasmBuffer
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(785) : error A2006:undefined symbol : g_DecompileViewActive
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(786) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(821) : error A2006:undefined symbol : g_GhostCursorCount
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(829) : error A2006:undefined symbol : g_GhostCursors
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(853) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(872) : error A2006:undefined symbol : g_CursorOffset
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(873) : error A2006:undefined symbol : g_CurrentBuffer
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(915) : error A2006:undefined symbol : g_GhostTextOffset
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(916) : error A2006:undefined symbol : g_GhostTextActive
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(917) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(938) : error A2006:undefined symbol : g_SemanticZoomLevel
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(951) : error A2006:undefined symbol : g_SemanticZoomLevel
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(961) : error A2006:undefined symbol : g_FoldLevel
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(962) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(964) : error A2006:undefined symbol : g_SemanticZoomLevel
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(979) : error A2006:undefined symbol : g_HeatMapMode
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(985) : error A2006:undefined symbol : g_HeatMapMode
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(992) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(993) : error A2006:undefined symbol : g_HeatMapMode
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1046) : error A2006:undefined symbol : g_MinimapHeightData
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1081) : error A2006:undefined symbol : g_MinimapLineCount
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1082) : error A2006:undefined symbol : g_Minimap3DActive
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1083) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1116) : error A2006:undefined symbol : sz_cmd_jump_to
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1118) : error A2006:undefined symbol : StrStrIA
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1123) : error A2006:undefined symbol : sz_cmd_rename
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1125) : error A2006:undefined symbol : StrStrIA
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1130) : error A2006:undefined symbol : sz_cmd_extract
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1132) : error A2006:undefined symbol : StrStrIA
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1137) : error A2006:undefined symbol : sz_cmd_undo
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1139) : error A2006:undefined symbol : StrStrIA
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1147) : error A2006:undefined symbol : g_PendingCommand
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1148) : error A2006:undefined symbol : g_PendingCommandArg
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1151) : error A2006:undefined symbol : g_PendingCommand
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1152) : error A2006:undefined symbol : g_PendingCommandArg
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1155) : error A2006:undefined symbol : g_PendingCommand
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1156) : error A2006:undefined symbol : g_PendingCommandArg
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1159) : error A2006:undefined symbol : g_PendingCommand
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_monaco_NEON_MONACO_CORE.ASM(1163) : fatal error A1012:error count exceeds 100; stopping assembly

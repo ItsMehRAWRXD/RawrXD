@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\PE_Writer_Examples.asm
+D:\rawrxd\PE_Writer_Examples.asm(832) : error A2008:syntax error : main
+D:\rawrxd\PE_Writer_Examples.asm(832) : error A2088:END directive required at end of file

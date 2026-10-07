@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\rawrxd_neural_core.asm
+D:\rawrxd\src\rawrxd_neural_core.asm(10) : error A2008:syntax error : WIN64
+D:\rawrxd\src\rawrxd_neural_core.asm(11) : error A2008:syntax error : LITERALS
+D:\rawrxd\src\rawrxd_neural_core.asm(16) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

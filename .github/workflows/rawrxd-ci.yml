@@ -1,0 +1,91 @@
+name: RawrXD Native CI
+
+on:
+  push:
+    branches: [main, "feature/**", "copilot/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Configure headless and service targets
+        shell: pwsh
+        run: >
+          cmake -S . -B build-native -G "Visual Studio 17 2022" -A x64
+          -DRAWRXD_BUILD_CLI=ON -DRAWRXD_BUILD_WIN32IDE=OFF
+          -DRAWRXD_OPTIONAL_OLLAMA=OFF -DRAWRXD_OPTIONAL_CLOUD=OFF
+      - name: Build HeadlessIDE, service, and engine
+        shell: pwsh
+        run: |
+          cmake --build build-native --config Release --target rawrxd --parallel 2
+          cmake --build build-native --config Release --target rawrxd-serve --parallel 2
+          cmake --build build-native --config Release --target RawrEngine --parallel 2
+      - name: Configure Win32IDE
+        shell: pwsh
+        run: >
+          cmake -S . -B build-win32 -G "Visual Studio 17 2022" -A x64
+          -DRAWRXD_BUILD_CLI=OFF -DRAWRXD_BUILD_WIN32IDE=ON
+          -DRAWRXD_BUILD_RAWRENGINE=OFF
+      - name: Build Win32IDE
+        shell: pwsh
+        run: cmake --build build-win32 --config Release --target RawrXD-Win32IDE --parallel 2
+      - name: Verify required artifacts
+        shell: pwsh
+        run: |
+          $required = @(
+            "build-native/bin/Release/rawrxd.exe",
+            "build-native/bin/Release/rawrxd-serve.exe",
+            "build-native/bin/Release/RawrEngine.exe",
+            "build-win32/bin/Release/RawrXD-Win32IDE.exe"
+          )
+          $missing = $required | Where-Object { -not (Test-Path $_) }
+          if ($missing) { throw "Missing artifacts: $($missing -join ', ')" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rawrxd-windows-x64
+          path: |
+            build-native/bin/Release/rawrxd.exe
+            build-native/bin/Release/rawrxd-serve.exe
+            build-native/bin/Release/RawrEngine.exe
+            build-win32/bin/Release/RawrXD-Win32IDE.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  hexmag-certification:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Run HexMag MASM smoke
+        shell: pwsh
+        run: ./scripts/Smoke-HexMagMasm.ps1 -OutDir "$PWD/build/hexmag_masm"
+      - name: Run HexMag runtime-route smoke
+        shell: pwsh
+        run: ./scripts/Smoke-HexMagRuntimeRoute.ps1 -Root "$PWD"
+      - name: Run HexMag client MASM certificate
+        shell: pwsh
+        run: ./scripts/Cert-HexMagClientMasm.ps1 -Root "$PWD"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hexmag-certification-evidence
+          path: |
+            build/hexmag_*/
+            evidence/HEXMAG_RUNTIME_ROUTE_SMOKE/
+            evidence/HEXMAG_CLIENT_MASM_001/
+          if-no-files-found: error
+          retention-days: 14

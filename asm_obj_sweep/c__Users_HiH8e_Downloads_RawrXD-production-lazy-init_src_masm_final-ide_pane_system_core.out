@@ -1,0 +1,37 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(91) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(94) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(126) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(127) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(144) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(145) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(146) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(147) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(149) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(150) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(170) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(171) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(172) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(173) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(176) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(177) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(202) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(214) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(215) : error A2006:undefined symbol : left
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(216) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(217) : error A2006:undefined symbol : top
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(218) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(219) : error A2006:undefined symbol : right
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(220) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(221) : error A2006:undefined symbol : bottom
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(245) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(248) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(249) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(250) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(252) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(255) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(257) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(258) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(259) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(261) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_pane_system_core.asm(305) : error A2229:cannot use labels and 32-bit addressing in the same expression

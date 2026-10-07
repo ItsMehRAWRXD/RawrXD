@@ -1,0 +1,33 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(11) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(19) : error A2008:syntax error : SetLayeredWindowAttributes
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(20) : error A2008:syntax error : SetTimer
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(22) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(32) : error A2008:syntax error : SWITCH
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(33) : error A2008:syntax error : CASE
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(34) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(36) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(39) : error A2008:syntax error : CASE
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(42) : error A2008:syntax error : ENDSW
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(44) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(52) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(59) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(64) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(66) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(75) : error A2006:undefined symbol : PAINTSTRUCT
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(75) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(77) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(80) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(81) : error A2008:syntax error : FillRect
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(82) : error A2008:syntax error : DeleteObject
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(84) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(85) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(87) : error A2008:syntax error : wsprintf
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(88) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(90) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(57) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(46) : warning A6004:procedure argument or local not referenced : hWnd
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(46) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(46) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(46) : warning A6004:procedure argument or local not referenced : lParam
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_performance_overlay.asm(93) : warning A6004:procedure argument or local not referenced : ps

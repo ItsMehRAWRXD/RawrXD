@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(66) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(67) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(68) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(69) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(178) : error A2179:structure improperly initialized
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(178) : error A2008:syntax error : in structure
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(924) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(318) : error A2006:undefined symbol
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(319) : error A2006:undefined symbol
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(328) : error A2006:undefined symbol
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Phase3_Master_Complete.asm(336) : error A2006:undefined symbol

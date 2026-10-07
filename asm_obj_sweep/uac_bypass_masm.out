@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\security\uac_bypass_masm.asm
+D:\rawrxd\src\security\uac_bypass_masm.asm(69) : error A2075:jump destination too far : by 121 byte(s)
+D:\rawrxd\src\security\uac_bypass_masm.asm(92) : error A2075:jump destination too far : by 54 byte(s)
+D:\rawrxd\src\security\uac_bypass_masm.asm(104) : error A2075:jump destination too far : by 5 byte(s)

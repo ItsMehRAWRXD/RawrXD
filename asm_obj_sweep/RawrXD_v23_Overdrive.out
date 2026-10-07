@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\RawrXD_v23_Overdrive.asm
+D:\rawrxd\src\RawrXD_v23_Overdrive.asm(20) : error A2006:undefined symbol : Swarm_IO_Congestion_Check
+D:\rawrxd\src\RawrXD_v23_Overdrive.asm(22) : error A2006:undefined symbol : Swarm_Thermal_Governor
+D:\rawrxd\src\RawrXD_v23_Overdrive.asm(23) : error A2006:undefined symbol : Swarm_Atomic_Layer_Switch

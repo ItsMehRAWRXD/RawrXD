@@ -1,0 +1,162 @@
+# RawrXD Docker Compose Configuration
+# Phase AJ: Deployment Automation
+
+version: '3.8'
+
+services:
+  rawrxd:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        CUDA_VERSION: "${CUDA_VERSION:-12.1}"
+    image: rawrxd:latest
+    container_name: rawrxd
+    restart: unless-stopped
+    
+    ports:
+      - "${RAWRXD_PORT:-8080}:8080"
+      - "${RAWRXD_METRICS_PORT:-9090}:9090"
+    
+    volumes:
+      - ${RAWRXD_MODEL_PATH:-./models}:/data/models:ro
+      - rawrxd_cache:/data/cache
+      - ${RAWRXD_CONFIG_PATH:-./config}:/config:ro
+      - rawrxd_logs:/logs
+    
+    environment:
+      - RAWRXD_LOG_LEVEL=${RAWRXD_LOG_LEVEL:-info}
+      - RAWRXD_THREADS=${RAWRXD_THREADS:-4}
+      - RAWRXD_CONTEXT_SIZE=${RAWRXD_CONTEXT_SIZE:-4096}
+      - RAWRXD_BATCH_SIZE=${RAWRXD_BATCH_SIZE:-512}
+      - RAWRXD_GPU_LAYERS=${RAWRXD_GPU_LAYERS:-0}
+      - RAWRXD_MODEL_PATH=/data/models/${RAWRXD_MODEL:-model.gguf}
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '${RAWRXD_CPU_LIMIT:-4}'
+          memory: ${RAWRXD_MEMORY_LIMIT:-8G}
+        reservations:
+          cpus: '${RAWRXD_CPU_RESERVATION:-2}'
+          memory: ${RAWRXD_MEMORY_RESERVATION:-4G}
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - rawrxd_network
+    
+    # GPU support (optional)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: ${RAWRXD_GPU_COUNT:-all}
+              capabilities: [gpu]
+
+  # Optional: Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rawrxd_prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    
+    ports:
+      - "${PROMETHEUS_PORT:-9091}:9090"
+    
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    
+    networks:
+      - rawrxd_network
+
+  # Optional: Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rawrxd_grafana
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    
+    networks:
+      - rawrxd_network
+
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: rawrxd_redis
+    restart: unless-stopped
+    profiles:
+      - cache
+    
+    volumes:
+      - redis_data:/data
+    
+    networks:
+      - rawrxd_network
+
+  # Optional: Load balancer
+  nginx:
+    image: nginx:alpine
+    container_name: rawrxd_nginx
+    restart: unless-stopped
+    profiles:
+      - lb
+    
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    
+    depends_on:
+      - rawrxd
+    
+    networks:
+      - rawrxd_network
+
+volumes:
+  rawrxd_cache:
+    driver: local
+  rawrxd_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  rawrxd_network:
+    driver: bridge

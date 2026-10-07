@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(97) : error A2005:symbol redefinition : VK_BUFFER_USAGE_TRANSFER_DST_BIT
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(98) : error A2005:symbol redefinition : VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(152) : error A2008:syntax error : DD
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(162) : error A2008:syntax error : ptr
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(163) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(270) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(325) : error A2008:syntax error : stream_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(338) : error A2008:syntax error : in type
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(390) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(401) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(407) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(428) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(434) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(498) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(501) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(530) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(542) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(548) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(551) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(579) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(613) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(617) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(667) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(680) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(690) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(705) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(709) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(714) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(719) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(724) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(728) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(764) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(773) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(777) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(781) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(785) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(801) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(811) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(824) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(842) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(847) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1053) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1057) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1062) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1119) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1125) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1130) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1152) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1161) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1170) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1214) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1218) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1223) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1228) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1264) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1270) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1275) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1297) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1306) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1403) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1407) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1411) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1415) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1421) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1422) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1425) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1458) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1467) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1476) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1485) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1494) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1503) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(1585) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(384) : error A2006:undefined symbol : error_set_invalid
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(386) : error A2006:undefined symbol : error_set_valid
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(388) : error A2006:undefined symbol : error_set_invalid
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(393) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(394) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(398) : error A2006:undefined symbol : error_store_direct
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(408) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(409) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(410) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(414) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(421) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(423) : error A2006:undefined symbol : error_no_callback
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(425) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(445) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(462) : error A2006:undefined symbol : alloc_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(467) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(469) : error A2006:undefined symbol : alloc_track_full
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(472) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(479) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(480) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(481) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(482) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(486) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(489) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(493) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(496) : error A2006:undefined symbol : alloc_track_done
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(504) : error A2006:undefined symbol : alloc_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Production_ReverseEngineered.asm\1771288280971_gI0r.asm(521) : fatal error A1012:error count exceeds 100; stopping assembly

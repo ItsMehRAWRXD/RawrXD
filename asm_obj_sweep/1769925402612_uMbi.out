@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769925402612_uMbi.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769925402612_uMbi.asm(827) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769925402612_uMbi.asm(855) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769925402612_uMbi.asm(859) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769925402612_uMbi.asm(603) : error A2022:instruction operands must be the same size

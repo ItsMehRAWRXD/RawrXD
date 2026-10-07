@@ -1,0 +1,42 @@
+ Assembling: D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(229) : error A2008:syntax error : Dr0
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(230) : error A2008:syntax error : Dr1
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(231) : error A2008:syntax error : Dr2
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(232) : error A2008:syntax error : Dr3
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(233) : error A2008:syntax error : Dr6
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(234) : error A2008:syntax error : Dr7
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(235) : error A2008:syntax error : Rax
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(236) : error A2008:syntax error : Rcx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(237) : error A2008:syntax error : Rdx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(238) : error A2008:syntax error : Rbx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(239) : error A2008:syntax error : Rsp
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(240) : error A2008:syntax error : Rbp
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(241) : error A2008:syntax error : Rsi
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(242) : error A2008:syntax error : Rdi
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(243) : error A2008:syntax error : R8
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(244) : error A2008:syntax error : R9
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(245) : error A2008:syntax error : R10
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(246) : error A2008:syntax error : R11
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(247) : error A2008:syntax error : R12
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(248) : error A2008:syntax error : R13
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(249) : error A2008:syntax error : R14
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(250) : error A2008:syntax error : R15
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(333) : error A2008:syntax error : ngths
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(415) : error A2006:undefined symbol : @@lvl_warn
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(672) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(825) : error A2006:undefined symbol : rip
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(354) : warning A4025:ENDP found before .ENDPROLOG : Sidebar_strlen
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(354) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(520) : warning A4025:ENDP found before .ENDPROLOG : Logger_Write
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(520) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(591) : warning A4025:ENDP found before .ENDPROLOG : DebugEngine_Create
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(639) : warning A4025:ENDP found before .ENDPROLOG : DebugEngine_Step
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(648) : warning A4025:ENDP found before .ENDPROLOG : DebugEngine_Detach
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(660) : warning A4025:ENDP found before .ENDPROLOG : TreeView_PopulateAsync
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(677) : warning A4025:ENDP found before .ENDPROLOG : Theme_SetDarkMode
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(791) : warning A4025:ENDP found before .ENDPROLOG : Sidebar_WndProc
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(807) : warning A4025:ENDP found before .ENDPROLOG : Sidebar_Init
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(851) : warning A4025:ENDP found before .ENDPROLOG : Sidebar_Create
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(851) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771529726496_90GZ.asm(851) : error A2220:Missing .ENDPROLOG

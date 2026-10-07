@@ -1,0 +1,53 @@
+[VAL038] DEBUG latency: cpuGHz=4.200009 avgCycles=1054.7
+[VAL038] DEBUG latency: avgNS=251.1
+[VAL038] DEBUG cold2 i=0 s=2034203496314238 e=2034203496323730 coldCount=1
+[VAL038] DEBUG cold2 i=1 s=2034203496450740 e=2034203496452756 coldCount=2
+[VAL038] DEBUG cold2 i=2 s=2034203496481568 e=2034203496482870 coldCount=3
+[VAL038] DEBUG cold3 coldCount=100 coldCycles=131124
+[VAL038] DEBUG cold3 coldAvg=1311.2
+================================================================
+  VAL-038 Benchmark Harness
+  Fused Attention + LUT Softmax
+================================================================
+
+  Kernel:  TreeAttention_Fused_VAL038
+  Softmax: softmax_lut_avx512
+  Timing:  CPUID + RDTSC (serialized)
+
+
+[1] Fused Attention Numerical Parity
+  Attention parity (tol < 1e-4)            [PASS] max_err=0.000011 (tol=1e-4)
+
+[2] Fused Attention Latency (RDTSC)
+    CPU base frequency: 4.20 GHz
+  Attention latency < 500ns                [PASS] 1054.7 cycles, 251.1 ns (target <500ns)
+    Avg cycles:  1054.7
+    Avg latency:  251.1 ns
+
+[3] LUT Softmax Numerical Parity
+  Softmax parity (tol < 1e-3)              [PASS] max_err=0.003269 (tol=1e-3)
+
+[4] LUT Softmax Latency (RDTSC)
+  Softmax latency measured                 [PASS] 134.0 cycles, 31.9 ns
+    Avg cycles:  134.0
+    Avg latency:  31.9 ns
+
+[5] ABI Correctness (Windows x64)
+  Stack sentinels intact                   [PASS] 
+  Kernel produces output                   [PASS] 
+  Deterministic output                     [PASS] 
+
+[6] Warmup vs Measured Iteration Separation
+  Warmup separation (hot < cold)           [FAIL] cold=0.0 hot=1067.8 cycles
+    Cold avg: 0.0 cycles
+    Hot avg:  1067.8 cycles
+    Speedup:  0.00x
+
+================================================================
+  VAL-038 Benchmark Summary
+================================================================
+  Total checks: 8
+  Passed:       7
+  Failed:       1
+  Result:       FAIL
+================================================================

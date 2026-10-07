@@ -1,0 +1,31 @@
+#version 450
+layout(local_size_x = 256) in;
+
+layout(binding = 0) readonly buffer InputA {
+    float a[];
+};
+
+layout(binding = 1) readonly buffer InputB {
+    float b[];
+};
+
+layout(binding = 2) writeonly buffer Output {
+    float result[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint dim;
+} push;
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    uint row = idx / push.dim;
+    uint col = idx % push.dim;
+    
+    float sum = 0.0;
+    for (uint k = 0; k < push.dim; k++) {
+        sum += a[row * push.dim + k] * b[k * push.dim + col];
+    }
+    
+    result[idx] = sum;
+}

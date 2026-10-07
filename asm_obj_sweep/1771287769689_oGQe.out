@@ -1,0 +1,92 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(12) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(60) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(68) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(147) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(313) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(314) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(475) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(163) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(169) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(228) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(229) : error A2006:undefined symbol : NODE_FUNCTION
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(231) : error A2006:undefined symbol : NODE_CLASS
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(233) : error A2006:undefined symbol : NODE_VARIABLE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(246) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(253) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(258) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(267) : error A2006:undefined symbol : ESPSortEntities
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(296) : error A2006:undefined symbol : ESPGrowEntityArray
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(306) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(308) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(317) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(318) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(320) : error A2006:undefined symbol : NODE_FUNCTION
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(322) : error A2006:undefined symbol : NODE_CLASS
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(324) : error A2006:undefined symbol : NODE_VARIABLE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(329) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(332) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(335) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(338) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(346) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(378) : error A2006:undefined symbol : ClearFramebuffer
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(382) : error A2006:undefined symbol : ESPCullEntities
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(484) : error A2006:undefined symbol : ESPRenderBox
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(493) : error A2006:undefined symbol : ESPRenderSnapLine
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(502) : error A2006:undefined symbol : ESPRenderHealthBar
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(530) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(542) : error A2006:undefined symbol : RenderGlowQuadBlurred
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(597) : error A2006:undefined symbol : AimbotSmoothMove
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(656) : error A2006:undefined symbol : g_CursorScreenX
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(658) : error A2006:undefined symbol : g_CursorScreenY
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(725) : error A2006:undefined symbol : ChamsRenderWireframe
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(731) : error A2006:undefined symbol : ChamsRenderFlat
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(737) : error A2006:undefined symbol : ChamsRenderTextured
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(743) : error A2006:undefined symbol : ChamsRenderHologram
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(768) : error A2006:undefined symbol : g_LastHoverSymbol
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(773) : error A2006:undefined symbol : g_HoverStartTime
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(778) : error A2006:undefined symbol : g_TriggerAction
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(788) : error A2006:undefined symbol : g_PendingCommand
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(791) : error A2006:undefined symbol : g_PendingCommand
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(794) : error A2006:undefined symbol : g_PendingCommand
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(799) : error A2006:undefined symbol : g_LastHoverSymbol
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(800) : error A2006:undefined symbol : g_HoverStartTime
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(826) : error A2006:undefined symbol : g_ScrollVelocity
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(829) : error A2006:undefined symbol : g_ScrollVelocity
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(832) : error A2006:undefined symbol : g_ScrollTop
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(839) : error A2006:undefined symbol : g_ScrollVelocity
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(842) : error A2006:undefined symbol : g_TotalLines
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(844) : error A2006:undefined symbol : g_TotalLines
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(846) : error A2006:undefined symbol : g_ScrollVelocity
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(848) : error A2006:undefined symbol : g_ScrollTop
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(851) : error A2006:undefined symbol : g_ScrollVelocity
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(862) : error A2006:undefined symbol : g_ScrollVelocity
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(864) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(893) : error A2006:undefined symbol : g_TimeScale
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(901) : error A2006:undefined symbol : g_AnimFrameDuration
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(925) : error A2006:undefined symbol : g_GlowFBWidth
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(926) : error A2006:undefined symbol : g_GlowFBHeight
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(937) : error A2006:undefined symbol : g_GlowFramebuffer
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(938) : error A2006:undefined symbol : g_GlowFBSize
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(949) : error A2006:undefined symbol : g_GlowFramebuffer
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1219) : error A2006:undefined symbol : g_ScrollTop
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1220) : error A2006:undefined symbol : g_LineHeight
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1221) : error A2006:undefined symbol : g_TopMargin
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1226) : error A2006:undefined symbol : g_CharWidth
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1227) : error A2006:undefined symbol : g_LeftMargin
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1228) : error A2006:undefined symbol : g_GutterWidth
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1313) : error A2006:undefined symbol : g_GlowFBWidth
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(196) : warning A4025:ENDP found before .ENDPROLOG : ESPInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(196) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(275) : warning A4025:ENDP found before .ENDPROLOG : ESPScanSymbols
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(275) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(359) : warning A4025:ENDP found before .ENDPROLOG : ESPCreateEntity
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(438) : warning A4025:ENDP found before .ENDPROLOG : ESPRenderGlow
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(508) : warning A4025:ENDP found before .ENDPROLOG : ESPRenderEntity
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(547) : warning A4025:ENDP found before .ENDPROLOG : ESPRenderWallhack
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(619) : warning A4025:ENDP found before .ENDPROLOG : AimbotUpdate
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(748) : warning A4025:ENDP found before .ENDPROLOG : ChamsRender
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1428) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1430) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_HACK.ASM\1771287769689_oGQe.ASM(1432) : error A2206:missing operator in expression

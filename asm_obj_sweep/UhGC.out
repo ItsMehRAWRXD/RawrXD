@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-13a9e527\UhGC.asm
+D:\rawrxd\history\-13a9e527\UhGC.asm(24) : error A2008:syntax error : WIN64
+D:\rawrxd\history\-13a9e527\UhGC.asm(27) : fatal error A1000:cannot open file : C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\include\win64.inc

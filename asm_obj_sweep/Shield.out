@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\License\Shield.asm
+D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\License\Shield.asm(499) : warning A6004:procedure argument or local not referenced : oldProtect

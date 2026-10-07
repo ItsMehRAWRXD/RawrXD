@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging_v2.asm\1769494867513_rNdr.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging_v2.asm\1769494867513_rNdr.asm(98) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging_v2.asm\1769494867513_rNdr.asm(220) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging_v2.asm\1769494867513_rNdr.asm(229) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\thermal\masm\ghost_paging_v2.asm\1769494867513_rNdr.asm(341) : error A2022:instruction operands must be the same size

@@ -1,0 +1,20 @@
+# IDE_PRODUCT_PATH_BATCH17 — next 15 after Batch16 sealed+pushed
+# Prerequisite: BATCH15+16 on cert/p1pra-rc1 @ 802cce56f
+
+01 HEXMAG_SEND_PRODUCTRUN         — PASS (HandleCopilotSend HexMag then ProductRun)
+02 COPILOT_NO_OLLAMA_BRANCH       — PASS (HandleCopilotSend_Ollama fail-closed LOCAL_ONLY)
+03 FEATURE_REGISTRY_STUB_SWEEP    — OPEN
+04 AGENTIC_FEATURES_NO_STUB_LABEL — OPEN
+05 LOCAL_SERVER_STREAM_LIVE       — OPEN
+06 GENERATE_RESPONSE_ASYNC_PR     — OPEN (async still agentic; ProductDeep2 sync sealed)
+07 MODEL_LOAD_IDE_OPENSESSION     — OPEN
+08 P1PRA_STAGES_MATCH_PRODUCTRUN  — OPEN
+09 CHAT_PANEL_PRODUCTRUN          — PASS (no Ollama fallthrough)
+10 TOOL_ACTION_STATUS_LIVE        — OPEN
+11 TRANSCENDENCE_NO_FICTION       — OPEN
+12 AUDIT_DASHBOARD_STUB_ZERO      — OPEN
+13 GOLD_IDE_BUILD_LINK            — OPEN
+14 IDE_SMOKE_PRODUCT_RUN_RECEIPT  — OPEN
+15 BATCH17_PUSH                   — OPEN
+
+NOTE=Start after push of 802cce56f. Do not reopen Batch007/KVA.

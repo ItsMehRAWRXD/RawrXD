@@ -1,0 +1,28 @@
+ Assembling: D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(55) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(59) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(63) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(69) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(85) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(90) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(96) : error A2008:syntax error : ALIGN
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(18) : error A2006:undefined symbol : scalar_fallback
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(21) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(22) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(23) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(24) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(44) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(45) : error A2006:undefined symbol : skip_32
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(49) : error A2006:undefined symbol : zero_skip
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(52) : error A2026:constant expected
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(67) : error A2006:undefined symbol : done
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(74) : error A2006:undefined symbol : increment_scalar
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(76) : error A2006:undefined symbol : increment_scalar
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(78) : error A2006:undefined symbol : increment_scalar
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(80) : error A2006:undefined symbol : increment_scalar
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(83) : error A2006:undefined symbol : done
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(88) : error A2006:undefined symbol : scalar_loop
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(97) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(98) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(99) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\kernels\skip_whitespace_avx2_optimized.asm(100) : error A2206:missing operator in expression

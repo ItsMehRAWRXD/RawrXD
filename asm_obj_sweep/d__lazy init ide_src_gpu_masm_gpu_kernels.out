@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_gpu_masm_gpu_kernels.asm
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_gpu_masm_gpu_kernels.asm(109) : error A2006:undefined symbol : zword
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_gpu_masm_gpu_kernels.asm(110) : error A2006:undefined symbol : zword
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_gpu_masm_gpu_kernels.asm(112) : error A2006:undefined symbol : zword
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_gpu_masm_gpu_kernels.asm(169) : error A2006:undefined symbol : zword
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_gpu_masm_gpu_kernels.asm(170) : error A2006:undefined symbol : zword
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_gpu_masm_gpu_kernels.asm(172) : error A2006:undefined symbol : zword

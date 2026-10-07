@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(10) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(140) : error A2008:syntax error : integer
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(168) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(229) : error A2008:syntax error : eq
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(291) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(223) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(649) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(657) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(946) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(958) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(999) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(1081) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(1088) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(1091) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(1094) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(1099) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0023\d__temp_terraform.asm(1102) : error A2206:missing operator in expression

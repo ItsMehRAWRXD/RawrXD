@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(50) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(53) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(56) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(62) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(106) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(119) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(148) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(156) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(191) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(203) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(243) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(252) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(285) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_System_Primitives.asm\1769838100480_BHdH.asm(301) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,83 @@
+#version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+
+// Softmax in FP16
+// output[i] = exp(input[i] - max) / sum(exp(input[i] - max))
+// Optimized for RDNA3 with parallel reduction
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) readonly buffer InputBuffer {
+    float16_t data[];
+} input_buffer;
+
+layout(set = 0, binding = 1) writeonly buffer OutputBuffer {
+    float16_t data[];
+} output_buffer;
+
+layout(push_constant) uniform PushConstants {
+    uint rows;
+    uint cols;
+} params;
+
+shared float16_t shared_max[256];
+shared float16_t shared_sum[256];
+
+void main() {
+    uint row = gl_GlobalInvocationID.y;
+    uint local_id = gl_LocalInvocationID.x;
+    
+    if (row >= params.rows) return;
+    
+    uint row_offset = row * params.cols;
+    
+    // Step 1: Find max value in row
+    float16_t local_max = float16_t(-65504.0);  // Min FP16
+    
+    for (uint i = local_id; i < params.cols; i += gl_WorkGroupSize.x) {
+        float16_t val = input_buffer.data[row_offset + i];
+        local_max = max(local_max, val);
+    }
+    
+    shared_max[local_id] = local_max;
+    barrier();
+    
+    // Parallel reduction for max
+    for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
+        if (local_id < stride) {
+            shared_max[local_id] = max(shared_max[local_id], shared_max[local_id + stride]);
+        }
+        barrier();
+    }
+    
+    float16_t row_max = shared_max[0];
+    
+    // Step 2: Calculate exp(x - max) and sum
+    float16_t local_sum = float16_t(0.0);
+    
+    for (uint i = local_id; i < params.cols; i += gl_WorkGroupSize.x) {
+        float16_t val = input_buffer.data[row_offset + i];
+        float16_t exp_val = exp(val - row_max);
+        local_sum += exp_val;
+    }
+    
+    shared_sum[local_id] = local_sum;
+    barrier();
+    
+    // Parallel reduction for sum
+    for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
+        if (local_id < stride) {
+            shared_sum[local_id] += shared_sum[local_id + stride];
+        }
+        barrier();
+    }
+    
+    float16_t row_sum = shared_sum[0];
+    
+    // Step 3: Normalize and write output
+    for (uint i = local_id; i < params.cols; i += gl_WorkGroupSize.x) {
+        float16_t val = input_buffer.data[row_offset + i];
+        float16_t exp_val = exp(val - row_max);
+        output_buffer.data[row_offset + i] = exp_val / row_sum;
+    }
+}

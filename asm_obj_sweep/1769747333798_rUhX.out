@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747333798_rUhX.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747333798_rUhX.asm(803) : error A2006:undefined symbol : @@free_request

@@ -1,0 +1,46 @@
+[1/4] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelRegistry.cpp.obj
+FAILED: [code=2] CMakeFiles/InferenceEngine.dir/src/deep2/QuantKernelRegistry.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_DEEP2_CERT=1 -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_SOVEREIGN_ENGINES=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_QUICKJS_STUB=0 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DRAWR_STANDALONE_INFERENCE=1 -DRAWR_VULKAN_AVAILABLE=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -ID:\rawrxd\include -ID:\rawrxd\src\deep2 -IC:\VulkanSDK\1.4.357.0\Include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\src\masm -ID:\rawrxd\src\runtime\governance -ID:\rawrxd\3rdparty\quickjs_ng\.. -ID:\rawrxd\3rdparty\quickjs_ng -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /EHsc /W0 /arch:AVX512 /O2 /showIncludes /FoCMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelRegistry.cpp.obj /FdCMakeFiles\InferenceEngine.dir\InferenceEngine.pdb /FS -c D:\rawrxd\src\deep2\QuantKernelRegistry.cpp
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(452): error C2011: 'Deep2::block_q8_K': 'struct' type redefinition
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(457): error C2338: static_assert failed: 'block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(475): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(476): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(477): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(477): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(477): error C2660: 'memset': function does not take 2 arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_string.h(63): note: see declaration of 'memset'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(477): note: while trying to match the argument list '()'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(484): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(488): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(489): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(491): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(513): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(531): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(543): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(543): error C2737: 'd': const object must be initialized
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(545): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(545): error C2737: 'dmin': const object must be initialized
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(951): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(956): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1444): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1448): error C2027: use of undefined type 'Deep2::block_q8_K'
+D:\rawrxd\src\deep2\GGUFLoader.hpp(64): note: see declaration of 'Deep2::block_q8_K'
+[2/4] Building CXX object CMakeFiles\test_q4k_gemv_parity.dir\src\deep2\test_q4k_gemv_parity.cpp.obj
+D:\rawrxd\src\deep2\GGUFLoader.hpp(111): warning C4189: 'blockSize': local variable is initialized but not referenced
+ninja: build stopped: subcommand failed.

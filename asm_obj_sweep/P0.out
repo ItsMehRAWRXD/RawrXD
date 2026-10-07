@@ -1,0 +1,37 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(183) : error A2008:syntax error : length
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(433) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(463) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(465) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(760) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(775) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(780) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(793) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(795) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(856) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(858) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(915) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(1157) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(1158) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(1161) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(1172) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2038) : error A2006:undefined symbol : sz_content_length_hdr
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2114) : error A2006:undefined symbol : sz_lsp_result
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2115) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2121) : error A2006:undefined symbol : sz_lsp_method
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2122) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2129) : error A2006:undefined symbol : sz_lsp_diagnostics
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2130) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2136) : error A2006:undefined symbol : sz_lsp_hover
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2137) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2145) : error A2006:undefined symbol : g_lsp_response_ready
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2146) : error A2006:undefined symbol : g_lsp_last_response
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2152) : error A2006:undefined symbol : LSP_HandleDiagnostics
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2187) : error A2006:undefined symbol : sz_lsp_contents
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2188) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2223) : error A2006:undefined symbol : sz_lsp_value
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2224) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2271) : error A2006:undefined symbol : g_hover_text
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2272) : error A2006:undefined symbol : g_hover_text_len
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2280) : error A2006:undefined symbol : g_hover_text
+D:\rawrxd\reconstructed\RawrXD\src\agentic\RawrXD\Critical\Blockers\P0.asm(2281) : error A2006:undefined symbol : g_hover_text_len

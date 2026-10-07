@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\ui\RawrXD_Agentic_Layout.asm
+D:\rawrxd\src\ui\RawrXD_Agentic_Layout.asm(102) : error A2070:invalid instruction operands
+D:\rawrxd\src\ui\RawrXD_Agentic_Layout.asm(111) : error A2006:undefined symbol : PostQuitMessage

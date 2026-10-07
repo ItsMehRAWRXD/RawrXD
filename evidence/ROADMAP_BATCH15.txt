@@ -1,0 +1,16 @@
+# ROADMAP_BATCH15 — post-NU / live-MLA spine
+
+01-07 residency / wall seals              - PASS
+08 K2_MLA_KV_EXPAND_001                   - PASS (stage attribution)
+09 K2_MLA_KV_EXPAND_OPT_001               - PASS: host fused default (6.3x vs GPU dual)
+10 K2_MLA_QKV_PROJ_001                    - PASS: Q_A→KV_A reuse + GPU-Q∥host-KV_A (~2.4x)
+11 OPTIMIZE_MLA_KV_A_GPU                  - NOW (still sub-owner under serial; refine host parity)
+12 STREAM_BYTES_CORPUS_SPLIT_001
+15 SOVEREIGN_FREEZE_001
+
+SEALS:
+  Host fused KV expand default (DEEP2_MLA_FUSED_KV=0 to opt out)
+  QKV: GPU Q ∥ host KV_A default; =0 → serial with hidden reuse
+  vulkan_fwd_q4k_fused.cpp / q4k_host.cpp tracked (were local-only)
+
+NEXT: tighten host KV_A parity vs GPU; or cut O_PROJ / logits if wall re-attribs.

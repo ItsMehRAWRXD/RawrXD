@@ -1,0 +1,48 @@
+============================================
+RawrXD Validation Framework
+Version: 15.0.0-dev
+============================================
+
+Running tests: all
+
+[CPU Tests]
+  [PASS] test_avx2_rmsnorm
+  [PASS] test_avx2_softmax
+
+[GPU Tests]
+  [SKIP] No tests found
+
+[Tokenizer Tests]
+  [PASS] test_bpe_tokenizer
+
+[GGUF Tests]
+  [PASS] test_gguf_magic
+
+[Kernel Tests]
+  [PASS] test_attention
+  [PASS] test_gelu_activation
+  [PASS] test_layer_norm
+  [PASS] test_matmul
+  [PASS] test_rms_norm
+  [PASS] test_rope
+  [PASS] test_silu_activation
+  [PASS] test_softmax
+
+[Transformer Tests]
+  [SKIP] No tests found
+
+[Sampler Tests]
+  [PASS] test_temperature
+
+[Integration Tests]
+  [PASS] test_inference_pipeline
+
+[Regression Tests]
+  [PASS] test_regression
+
+[Performance Tests]
+  [PASS] test_perf_quick
+
+[Stress Tests]
+  [PASS] test_memory
+  [PASS] test_soak

@@ -1,0 +1,424 @@
+# VAL-077: Continuous Certification Runner - CI/CD Pipeline
+# RawrXD Certification Pipeline - Hard Gating with Exit Code 0 Enforcement
+
+name: RawrXD Certification Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run full certification nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  RAWXD_VERSION: "1.0.0-rc1.3"
+  CERTIFICATION_LEVEL: "PRODUCTION"
+  FAIL_FAST: "true"
+
+jobs:
+  # ============================================================================
+  # STAGE 1: Build Verification (VAL-050, VAL-081)
+  # ============================================================================
+  build:
+    name: Build Verification
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        arch: [x64]
+        include:
+          - os: ubuntu-latest
+            arch: arm64
+    
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for provenance
+    
+    - name: Setup Build Environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build build-essential
+    
+    - name: Install Dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install cmake ninja
+    
+    - name: Install Dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install cmake ninja
+    
+    - name: Configure Build
+      run: |
+        cmake -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DRAWXD_ENABLE_CERTIFICATION=ON \
+          -DRAWXD_VERSION=${{ env.RAWXD_VERSION }}
+    
+    - name: Build RawrXD
+      run: cmake --build build --config Release -j$(nproc)
+    
+    - name: Capture Build Provenance (VAL-075)
+      run: |
+        python scripts/capture_provenance.py \
+          --binary build/bin/rawrxd \
+          --output evidence/build_provenance_${{ matrix.os }}_${{ matrix.arch }}.json
+    
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: rawrxd-${{ matrix.os }}-${{ matrix.arch }}
+        path: |
+          build/bin/
+          evidence/build_provenance_*.json
+    
+    - name: Gate Check - Build Success
+      if: failure()
+      run: |
+        echo "::error::VAL-050 Build Verification FAILED"
+        exit 1
+
+  # ============================================================================
+  # STAGE 2: Unit Tests (VAL-051)
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: rawrxd-${{ matrix.os }}-x64
+        path: build/
+    
+    - name: Run Unit Tests
+      run: |
+        cd build
+        ctest --output-on-failure -j$(nproc)
+    
+    - name: Gate Check - Unit Tests
+      if: failure()
+      run: |
+        echo "::error::VAL-051 Unit Tests FAILED"
+        exit 1
+
+  # ============================================================================
+  # STAGE 3: Determinism Validation (VAL-052, VAL-081)
+  # ============================================================================
+  determinism:
+    name: Determinism Validation
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: rawrxd-ubuntu-latest-x64
+        path: build/
+    
+    - name: Run Determinism Tests
+      run: |
+        python scripts/validate_determinism.py \
+          --binary build/bin/rawrxd \
+          --iterations 100 \
+          --output evidence/determinism_report.json
+    
+    - name: Verify Reproducible Build (VAL-081)
+      run: |
+        python scripts/verify_reproducibility.py \
+          --binary build/bin/rawrxd \
+          --expected-hash ${{ needs.build.outputs.binary_hash }}
+    
+    - name: Gate Check - Determinism
+      if: failure()
+      run: |
+        echo "::error::VAL-052/081 Determinism/Reproducibility FAILED"
+        exit 1
+
+  # ============================================================================
+  # STAGE 4: Performance Benchmarks (VAL-053)
+  # ============================================================================
+  performance:
+    name: Performance Benchmarks
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: rawrxd-ubuntu-latest-x64
+        path: build/
+    
+    - name: Run Performance Benchmarks
+      run: |
+        python scripts/run_benchmarks.py \
+          --binary build/bin/rawrxd \
+          --models models/ \
+          --output evidence/performance_report.json
+    
+    - name: Validate Performance Gates
+      run: |
+        python scripts/validate_performance.py \
+          --report evidence/performance_report.json \
+          --config certification/performance_gates.yaml
+    
+    - name: Gate Check - Performance
+      if: failure()
+      run: |
+        echo "::error::VAL-053 Performance Benchmarks FAILED"
+        exit 1
+
+  # ============================================================================
+  # STAGE 5: Security Validation (VAL-054)
+  # ============================================================================
+  security:
+    name: Security Validation
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    
+    - name: Run Security Scans
+      run: |
+        # Static analysis
+        python scripts/security_scan.py \
+          --source src/ \
+          --output evidence/security_scan.json
+        
+        # Dependency vulnerability check
+        python scripts/check_dependencies.py \
+          --output evidence/dependency_check.json
+    
+    - name: Gate Check - Security
+      if: failure()
+      run: |
+        echo "::error::VAL-054 Security Validation FAILED"
+        exit 1
+
+  # ============================================================================
+  # STAGE 6: Fault Injection (VAL-076)
+  # ============================================================================
+  fault-injection:
+    name: Fault Injection & Resilience
+    needs: [unit-tests, determinism]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: rawrxd-ubuntu-latest-x64
+        path: build/
+    
+    - name: Run Fault Injection Tests
+      run: |
+        python scripts/run_fault_injection.py \
+          --binary build/bin/rawrxd \
+          --config certification/fault_scenarios.yaml \
+          --output evidence/fault_injection_report.json
+    
+    - name: Validate Resilience Score
+      run: |
+        python scripts/validate_resilience.py \
+          --report evidence/fault_injection_report.json \
+          --min-score 0.95
+    
+    - name: Gate Check - Fault Injection
+      if: failure()
+      run: |
+        echo "::error::VAL-076 Fault Injection FAILED"
+        exit 1
+
+  # ============================================================================
+  # STAGE 7: Cross-Platform Verification (VAL-080)
+  # ============================================================================
+  cross-platform:
+    name: Cross-Platform Matrix
+    needs: [build, unit-tests]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            platform: windows-x64
+          - os: ubuntu-latest
+            platform: linux-x64
+          - os: macos-latest
+            platform: macos-x64
+    
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: rawrxd-${{ matrix.os }}-x64
+        path: build/
+    
+    - name: Verify Platform Compatibility
+      run: |
+        python scripts/verify_platform.py \
+          --binary build/bin/rawrxd \
+          --platform ${{ matrix.platform }} \
+          --output evidence/platform_verification_${{ matrix.platform }}.json
+    
+    - name: Gate Check - Cross-Platform
+      if: failure()
+      run: |
+        echo "::error::VAL-080 Cross-Platform Verification FAILED"
+        exit 1
+
+  # ============================================================================
+  # STAGE 8: Manifest Signing (VAL-074)
+  # ============================================================================
+  manifest-signing:
+    name: Manifest Signing
+    needs: [build, cross-platform]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+        pattern: rawrxd-*
+    
+    - name: Generate Distribution Manifest
+      run: |
+        python scripts/generate_manifest.py \
+          --artifacts artifacts/ \
+          --version ${{ env.RAWXD_VERSION }} \
+          --output DISTRIBUTION_MANIFEST.yaml
+    
+    - name: Sign Manifest (Ed25519)
+      run: |
+        python scripts/sign_manifest.py \
+          --manifest DISTRIBUTION_MANIFEST.yaml \
+          --key ${{ secrets.SIGNING_KEY }} \
+          --output DISTRIBUTION_MANIFEST.signed.yaml
+    
+    - name: Upload Signed Manifest
+      uses: actions/upload-artifact@v4
+      with:
+        name: distribution-manifest
+        path: DISTRIBUTION_MANIFEST*.yaml
+    
+    - name: Gate Check - Manifest Signing
+      if: failure()
+      run: |
+        echo "::error::VAL-074 Manifest Signing FAILED"
+        exit 1
+
+  # ============================================================================
+  # STAGE 9: Final Certification Report (VAL-050 to VAL-082)
+  # ============================================================================
+  certification-report:
+    name: Generate Certification Report
+    needs: [unit-tests, determinism, performance, security, fault-injection, cross-platform, manifest-signing]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    
+    - name: Download All Evidence
+      uses: actions/download-artifact@v4
+      with:
+        path: evidence/
+    
+    - name: Aggregate Certification Results
+      run: |
+        python scripts/generate_certification_report.py \
+          --evidence evidence/ \
+          --version ${{ env.RAWXD_VERSION }} \
+          --output evidence/CERTIFICATION_REPORT_v1.0.0-rc1.3.md
+    
+    - name: Validate All Gates Passed
+      run: |
+        python scripts/validate_all_gates.py \
+          --report evidence/CERTIFICATION_REPORT_v1.0.0-rc1.3.md \
+          --required-gates 22
+    
+    - name: Upload Certification Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: certification-report
+        path: evidence/CERTIFICATION_REPORT_*.md
+    
+    - name: Final Gate Check
+      if: failure()
+      run: |
+        echo "::error::CERTIFICATION FAILED - Not all gates passed"
+        exit 1
+    
+    - name: Certification Success
+      run: |
+        echo "::notice::✅ RawrXD v${{ env.RAWXD_VERSION }} CERTIFIED PRODUCTION READY"
+        echo "::notice::All 22 certification gates PASSED"
+
+  # ============================================================================
+  # STAGE 10: Deploy to Production (Optional)
+  # ============================================================================
+  deploy:
+    name: Deploy to Production
+    needs: certification-report
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    
+    steps:
+    - name: Download Certified Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release/
+    
+    - name: Upload to Release
+      run: |
+        gh release upload v1.0.0-rc1.3 release/**/* --clobber
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Notify Deployment
+      run: |
+        echo "::notice::🚀 RawrXD v1.0.0-rc1.3 deployed to production"

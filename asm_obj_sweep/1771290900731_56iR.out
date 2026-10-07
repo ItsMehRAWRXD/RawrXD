@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290900731_56iR.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290900731_56iR.ASM(106) : error A2008:syntax error : label
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290900731_56iR.ASM(138) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290900731_56iR.ASM(167) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290900731_56iR.ASM(212) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290900731_56iR.ASM(278) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290900731_56iR.ASM(374) : fatal error A1010:unmatched block nesting : LSPInitialize

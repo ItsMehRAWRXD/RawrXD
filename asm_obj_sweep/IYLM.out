@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(620) : error A2070:invalid instruction operands
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(633) : error A2070:invalid instruction operands
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(614) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(615) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(618) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(619) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(621) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(623) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(634) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\IYLM.asm(638) : error A2006:undefined symbol : CloseHandle

@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(250) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(258) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(321) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(350) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(479) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(101) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(102) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(103) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(104) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(118) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(119) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(120) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(132) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(135) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(259) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(263) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(400) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(408) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(416) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(426) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(427) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(428) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(429) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(448) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_quantum_autonomous_todo_masm.asm(456) : error A2206:missing operator in expression

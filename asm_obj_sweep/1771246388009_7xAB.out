@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(38) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(75) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(97) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(520) : error A2005:symbol redefinition : dos_header
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(536) : error A2005:symbol redefinition : nt_header
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(605) : error A2005:symbol redefinition : file_name
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(606) : error A2005:symbol redefinition : msg_success
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(607) : error A2005:symbol redefinition : msg_error
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(608) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(609) : error A2005:symbol redefinition : bytesWritten
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(126) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(147) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(155) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(162) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(169) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(392) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(393) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(394) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(395) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(397) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(398) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771246388009_7xAB.asm(483) : error A2006:undefined symbol : WriteConsoleA

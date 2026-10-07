@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\reverser_compiler\bootstrap_reverser.asm
+D:\rawrxd\src\reverse_engineering\reverser_compiler\bootstrap_reverser.asm(5) : fatal error A1000:cannot open file : "reverser_lexer.asm"

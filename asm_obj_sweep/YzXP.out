@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\-21cd9083\YzXP.asm
+D:\rawrxd\history\-21cd9083\YzXP.asm(9) : error A2008:syntax error : WIN64
+D:\rawrxd\history\-21cd9083\YzXP.asm(12) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\-21cd9083\YzXP.asm(37) : error A2008:syntax error : DB
+D:\rawrxd\history\-21cd9083\YzXP.asm(55) : error A2008:syntax error : RAX
+D:\rawrxd\history\-21cd9083\YzXP.asm(56) : error A2008:syntax error : RCX
+D:\rawrxd\history\-21cd9083\YzXP.asm(57) : error A2008:syntax error : RDX
+D:\rawrxd\history\-21cd9083\YzXP.asm(58) : error A2008:syntax error : RBX
+D:\rawrxd\history\-21cd9083\YzXP.asm(59) : error A2008:syntax error : RSP
+D:\rawrxd\history\-21cd9083\YzXP.asm(60) : error A2008:syntax error : RBP
+D:\rawrxd\history\-21cd9083\YzXP.asm(61) : error A2008:syntax error : RSI
+D:\rawrxd\history\-21cd9083\YzXP.asm(62) : error A2008:syntax error : RDI
+D:\rawrxd\history\-21cd9083\YzXP.asm(63) : error A2008:syntax error : R8
+D:\rawrxd\history\-21cd9083\YzXP.asm(64) : error A2008:syntax error : R9
+D:\rawrxd\history\-21cd9083\YzXP.asm(65) : error A2008:syntax error : R10
+D:\rawrxd\history\-21cd9083\YzXP.asm(66) : error A2008:syntax error : R11
+D:\rawrxd\history\-21cd9083\YzXP.asm(67) : error A2008:syntax error : R12
+D:\rawrxd\history\-21cd9083\YzXP.asm(68) : error A2008:syntax error : R13
+D:\rawrxd\history\-21cd9083\YzXP.asm(69) : error A2008:syntax error : R14
+D:\rawrxd\history\-21cd9083\YzXP.asm(70) : error A2008:syntax error : R15
+D:\rawrxd\history\-21cd9083\YzXP.asm(1171) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\-21cd9083\YzXP.asm(154) : error A2006:undefined symbol : OverflowTrap
+D:\rawrxd\history\-21cd9083\YzXP.asm(165) : error A2006:undefined symbol : OverflowTrap

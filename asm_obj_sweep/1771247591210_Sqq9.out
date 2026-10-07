@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771247591210_Sqq9.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771247591210_Sqq9.asm(143) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771247591210_Sqq9.asm(273) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771247591210_Sqq9.asm(1031) : error A2005:symbol redefinition : syntax_err
+D:\rawrxd\history\all_versions\terraform.asm\1771247591210_Sqq9.asm(1182) : error A2006:undefined symbol : syntax_err

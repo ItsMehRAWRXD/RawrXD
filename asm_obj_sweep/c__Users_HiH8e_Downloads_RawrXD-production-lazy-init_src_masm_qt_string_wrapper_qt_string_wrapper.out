@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(70) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(110) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(134) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(143) : error A2006:undefined symbol : ERROR_INVALID_PARAMETER
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(152) : error A2006:undefined symbol : ERROR_BUFFER_TOO_SMALL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(184) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(210) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(219) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(259) : error A2006:undefined symbol : ERROR_BUFFER_TOO_SMALL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(281) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(329) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(364) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(369) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(417) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(437) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(517) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(542) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(566) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(592) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(657) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(684) : error A2006:undefined symbol : ERROR_INVALID_PTR
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_qt_string_wrapper_qt_string_wrapper.asm(778) : error A2006:undefined symbol : ERROR_INVALID_PTR

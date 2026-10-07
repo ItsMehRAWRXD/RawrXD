@@ -1,0 +1,47 @@
+ Assembling: D:\rawrxd\history\-22834053\bOVV.asm
+D:\rawrxd\history\-22834053\bOVV.asm(463) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-22834053\bOVV.asm(203) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(232) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(252) : warning A6004:procedure argument or local not referenced : durationNs
+D:\rawrxd\history\-22834053\bOVV.asm(252) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(287) : warning A6004:procedure argument or local not referenced : syncMode
+D:\rawrxd\history\-22834053\bOVV.asm(304) : warning A6004:procedure argument or local not referenced : isAutoReset
+D:\rawrxd\history\-22834053\bOVV.asm(321) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(344) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(374) : warning A6004:procedure argument or local not referenced : flags
+D:\rawrxd\history\-22834053\bOVV.asm(374) : warning A6004:procedure argument or local not referenced : timeoutMs
+D:\rawrxd\history\-22834053\bOVV.asm(399) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(430) : warning A6004:procedure argument or local not referenced : pKernelDesc
+D:\rawrxd\history\-22834053\bOVV.asm(430) : warning A6004:procedure argument or local not referenced : pDependencies
+D:\rawrxd\history\-22834053\bOVV.asm(430) : warning A6004:procedure argument or local not referenced : depCount
+D:\rawrxd\history\-22834053\bOVV.asm(450) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(504) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(520) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(537) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(548) : warning A6004:procedure argument or local not referenced : pScheduler
+D:\rawrxd\history\-22834053\bOVV.asm(548) : warning A6004:procedure argument or local not referenced : workloadSize
+D:\rawrxd\history\-22834053\bOVV.asm(548) : warning A6004:procedure argument or local not referenced : preferredDevice
+D:\rawrxd\history\-22834053\bOVV.asm(548) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(572) : warning A6004:procedure argument or local not referenced : numaNode
+D:\rawrxd\history\-22834053\bOVV.asm(572) : warning A6004:procedure argument or local not referenced : numaFlags
+D:\rawrxd\history\-22834053\bOVV.asm(572) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(583) : warning A6004:procedure argument or local not referenced : pMemory
+D:\rawrxd\history\-22834053\bOVV.asm(583) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(598) : warning A6004:procedure argument or local not referenced : deviceId
+D:\rawrxd\history\-22834053\bOVV.asm(598) : warning A6004:procedure argument or local not referenced : bufferType
+D:\rawrxd\history\-22834053\bOVV.asm(598) : warning A6004:procedure argument or local not referenced : maxCommands
+D:\rawrxd\history\-22834053\bOVV.asm(598) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(609) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\history\-22834053\bOVV.asm(609) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(620) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\history\-22834053\bOVV.asm(620) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(631) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\history\-22834053\bOVV.asm(631) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(642) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\history\-22834053\bOVV.asm(642) : warning A6004:procedure argument or local not referenced : pWaitPrimitive
+D:\rawrxd\history\-22834053\bOVV.asm(642) : warning A6004:procedure argument or local not referenced : pSignalPrimitive
+D:\rawrxd\history\-22834053\bOVV.asm(642) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(666) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(677) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(693) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-22834053\bOVV.asm(710) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>RawrXD.Omega1Engine</AssemblyName>
+    <RootNamespace>RawrXD.Omega1</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>RawrXD Team</Authors>
+    <Company>RawrXD</Company>
+    <Description>OMEGA-1 Self-Mutating Engine .NET bindings</Description>
+    <PackageTags>rawrxd;omega1;powershell;native</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/ItsMehRAWRXD/rawrxd</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\src\omega1_modules\Omega1Engine.def">
+      <Link>Omega1Engine.def</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

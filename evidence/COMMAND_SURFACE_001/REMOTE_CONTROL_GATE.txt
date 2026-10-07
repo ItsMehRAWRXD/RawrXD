@@ -1,0 +1,15 @@
+REMOTE_CONTROL_001 — STOP GATE (not enabled)
+Date: 2026-08-30
+
+STATUS = BLOCKED / NOT STARTED
+
+Prerequisites before any network listen:
+  EGRESS_001 explicit PASS
+  REMOTE_CONTROL_001 user authorization
+  Device pairing + short-lived session keys + revocation
+  Capability-scoped requests only (no unrestricted FS to phone)
+  Emergency stop-all-agents on every client
+  Zero inference egress (no :11434 / Ollama / cloud)
+
+Implementation stub: src/command/IControlChannel.h
+No socket bind in Phases 0–4.

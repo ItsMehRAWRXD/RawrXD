@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_enterprise_wiring.asm
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_enterprise_wiring.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_enterprise_wiring.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_enterprise_wiring.asm(24) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_enterprise_wiring.asm(25) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_enterprise_wiring.asm(26) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_enterprise_wiring.asm(27) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_pifabric_enterprise_wiring.asm(28) : error A2008:syntax error : invoke

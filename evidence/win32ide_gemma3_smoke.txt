@@ -1,0 +1,10 @@
+[23:41:50.758] PID=19436 CRT_ENTRY_REACHED
+[23:41:50.760] PID=19436 STATIC_INIT_COMPLETE_OK
+[Prometheus] Listening on port 9090 for /metrics...
+[23:41:50.878] PID=19436 INIT_0_WINMAIN_ENTRY_REACHED
+[SMOKE] start model=d:\rawrxd\gemma3-1b-Q2_K.gguf  max_tokens=128 timeout_ms=120000
+[SMOKE] trace_path=C:\Users\Garrett\AppData\Local\Temp\rawrxd_smoke_trace.json
+[SMOKE] post-embedding checkpoint reached (model loaded). load_only=0 cpu_only=0 skip_gpu=0
+Error: unified local pipeline init failed: Model load failed: RawrXD_ServeInference_LoadModel failed (code -3)
+[PIPELINE_END] completed=1 tokens=1
+[chat-smoke-headless] WARN: trace not written: C:\Users\Garrett\AppData\Local\Temp\rawrxd_smoke_trace.json (inference completed; continuing)

@@ -1,0 +1,53 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1239) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1244) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1265) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1268) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1276) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1285) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1294) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1301) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1389) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1394) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1418) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1421) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1429) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1437) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1484) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1489) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1503) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1530) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1546) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1548) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1581) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1585) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1594) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1596) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1608) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1614) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(169) : warning A6004:procedure argument or local not referenced : hModule
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(169) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(169) : warning A6004:procedure argument or local not referenced : lpReserved
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(320) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(320) : warning A6004:procedure argument or local not referenced : pFilePath
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(381) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(381) : warning A6004:procedure argument or local not referenced : token
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(381) : warning A6004:procedure argument or local not referenced : pos
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(381) : warning A6004:procedure argument or local not referenced : pLogits
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(658) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(658) : warning A6004:procedure argument or local not referenced : pEmbeddings
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(738) : warning A6004:procedure argument or local not referenced : pHidden
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(738) : warning A6004:procedure argument or local not referenced : dim
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(820) : warning A6004:procedure argument or local not referenced : pHidden
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(820) : warning A6004:procedure argument or local not referenced : n_embd
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(820) : warning A6004:procedure argument or local not referenced : pQKV
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(903) : warning A6004:procedure argument or local not referenced : pQ
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(903) : warning A6004:procedure argument or local not referenced : pK
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(903) : warning A6004:procedure argument or local not referenced : pV
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(903) : warning A6004:procedure argument or local not referenced : n_head
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(903) : warning A6004:procedure argument or local not referenced : pOut
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(998) : warning A6004:procedure argument or local not referenced : pHidden
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(998) : warning A6004:procedure argument or local not referenced : n_ff
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1088) : warning A6004:procedure argument or local not referenced : pInput
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1088) : warning A6004:procedure argument or local not referenced : pOutput
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716217874_b6Oq.asm(1088) : warning A6004:procedure argument or local not referenced : eps

@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm(5) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm(6) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm(222) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm(358) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm(145) : error A2029:multiple base registers not allowed
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm(146) : error A2029:multiple base registers not allowed
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm(228) : error A2032:invalid use of register
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm(243) : error A2032:invalid use of register
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\deflate\masm.asm(384) : error A2022:instruction operands must be the same size

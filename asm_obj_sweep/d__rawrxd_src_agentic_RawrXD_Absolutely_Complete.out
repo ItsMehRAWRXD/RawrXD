@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(12) : error A2008:syntax error : FRAME
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(190) : error A2008:syntax error : ds
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(196) : error A2008:syntax error : ss
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(204) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(206) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(224) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(225) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(228) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(232) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(245) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(252) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(257) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(258) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(268) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(278) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(285) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(288) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(289) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(290) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(291) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(305) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(308) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(323) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(328) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(344) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(357) : error A2008:syntax error : DB
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(366) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(367) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(370) : error A2008:syntax error : DD
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(384) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(416) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(417) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(461) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(465) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(468) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(472) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(476) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(481) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(487) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(491) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(495) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(499) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(504) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(507) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(511) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(514) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(517) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(522) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(526) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(529) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(532) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(537) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(545) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(549) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(554) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(562) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(566) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(569) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(572) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(575) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(578) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(581) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(584) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(587) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(591) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(598) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(601) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(604) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(608) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(612) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(615) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(618) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(623) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(627) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(630) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(633) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(638) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(642) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(645) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(649) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(652) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(655) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(658) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(661) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(664) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(667) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(671) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(675) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(679) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(683) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(686) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(689) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(693) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(696) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(699) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(702) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(705) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(708) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(711) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(714) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Absolutely_Complete.asm(920) : fatal error A1012:error count exceeds 100; stopping assembly

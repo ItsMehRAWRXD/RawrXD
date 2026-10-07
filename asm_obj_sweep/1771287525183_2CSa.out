@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287525183_2CSa.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287525183_2CSa.asm(591) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287525183_2CSa.asm(600) : error A2006:undefined symbol : GetFileSize
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287525183_2CSa.asm(612) : error A2006:undefined symbol : CreateFileMappingA
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287525183_2CSa.asm(624) : error A2006:undefined symbol : MapViewOfFile
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287525183_2CSa.asm(646) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287525183_2CSa.asm(649) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287525183_2CSa.asm(672) : error A2206:missing operator in expression

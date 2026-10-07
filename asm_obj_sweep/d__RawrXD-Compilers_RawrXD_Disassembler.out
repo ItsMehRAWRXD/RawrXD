@@ -1,0 +1,31 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(88) : error A2008:syntax error : segment
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(777) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(381) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(427) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(443) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(455) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(471) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(535) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(559) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(588) : error A2032:invalid use of register
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(591) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(601) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(648) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(655) : error A2032:invalid use of register
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(658) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(665) : error A2032:invalid use of register
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(668) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(675) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(683) : error A2032:invalid use of register
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(686) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(694) : error A2032:invalid use of register
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(697) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(707) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(722) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(254) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(297) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(336) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(742) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(825) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_Disassembler.asm(976) : error A2220:Missing .ENDPROLOG

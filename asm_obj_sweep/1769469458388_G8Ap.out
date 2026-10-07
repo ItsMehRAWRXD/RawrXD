@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\adaptive_burst_router.asm\1769469458388_G8Ap.asm
+D:\rawrxd\history\all_versions\src\direct_io\adaptive_burst_router.asm\1769469458388_G8Ap.asm(24) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\direct_io\adaptive_burst_router.asm\1769469458388_G8Ap.asm(47) : error A2189:invalid combination with segment alignment : 64

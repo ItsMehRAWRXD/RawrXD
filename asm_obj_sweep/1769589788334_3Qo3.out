@@ -1,0 +1,59 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(103) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(155) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(164) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(172) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(179) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(183) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(289) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(368) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(388) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(389) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(395) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(396) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(402) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(403) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(409) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(410) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(589) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(689) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(690) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(691) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(692) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(833) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(834) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(835) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(836) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(939) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(1013) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(1017) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(1018) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(1021) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(334) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(337) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(342) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(346) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(360) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(362) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(363) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(440) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(469) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(470) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(500) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(501) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(502) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(508) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(673) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(932) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(933) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(934) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(935) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(936) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(937) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(949) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(977) : warning A4025:ENDP found before .ENDPROLOG : Titan_IsDeviceAddress
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(977) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769589788334_3Qo3.asm(977) : error A2220:Missing .ENDPROLOG

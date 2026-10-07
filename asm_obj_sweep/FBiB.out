@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\history\-137b8862\FBiB.asm
+D:\rawrxd\history\-137b8862\FBiB.asm(20) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\FBiB.asm(21) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\FBiB.asm(22) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\FBiB.asm(23) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\FBiB.asm(24) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\FBiB.asm(25) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\FBiB.asm(26) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\FBiB.asm(27) : error A2008:syntax error : :
+D:\rawrxd\history\-137b8862\FBiB.asm(100) : error A2005:symbol redefinition : szHallucin1
+D:\rawrxd\history\-137b8862\FBiB.asm(207) : error A2070:invalid instruction operands
+D:\rawrxd\history\-137b8862\FBiB.asm(276) : error A2070:invalid instruction operands
+D:\rawrxd\history\-137b8862\FBiB.asm(154) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\FBiB.asm(175) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\FBiB.asm(281) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\FBiB.asm(337) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-137b8862\FBiB.asm(392) : error A2006:undefined symbol : correction_buffer
+D:\rawrxd\history\-137b8862\FBiB.asm(397) : error A2006:undefined symbol : copy_string_safe
+D:\rawrxd\history\-137b8862\FBiB.asm(414) : error A2006:undefined symbol : replace_string_safe
+D:\rawrxd\history\-137b8862\FBiB.asm(420) : error A2006:undefined symbol : append_string_safe
+D:\rawrxd\history\-137b8862\FBiB.asm(426) : error A2006:undefined symbol : append_string_safe
+D:\rawrxd\history\-137b8862\FBiB.asm(432) : error A2006:undefined symbol : append_string_safe
+D:\rawrxd\history\-137b8862\FBiB.asm(467) : error A2006:undefined symbol : strstr_custom
+D:\rawrxd\history\-137b8862\FBiB.asm(474) : error A2006:undefined symbol : strstr_custom
+D:\rawrxd\history\-137b8862\FBiB.asm(481) : error A2006:undefined symbol : strstr_custom
+D:\rawrxd\history\-137b8862\FBiB.asm(488) : error A2006:undefined symbol : strstr_custom

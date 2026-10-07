@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\gpu_dma_production_final_target2.asm
+D:\rawrxd\gpu_dma_production_final_target2.asm(164) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(166) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(168) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(170) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(172) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(174) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(176) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(178) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(180) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(268) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final_target2.asm(304) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final_target2.asm(305) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final_target2.asm(310) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final_target2.asm(311) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final_target2.asm(410) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final_target2.asm(411) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final_target2.asm(412) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final_target2.asm(413) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final_target2.asm(469) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(471) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(473) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(491) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final_target2.asm(492) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final_target2.asm(497) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final_target2.asm(498) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final_target2.asm(531) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(533) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(535) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(537) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(539) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(541) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(543) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(545) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(547) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(564) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_final_target2.asm(569) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_final_target2.asm(668) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final_target2.asm(669) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final_target2.asm(670) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final_target2.asm(671) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final_target2.asm(780) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(782) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(784) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(786) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(788) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(790) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(792) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(794) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(796) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(905) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(907) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(909) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(911) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(913) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(973) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(975) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(977) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(979) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(981) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(983) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1044) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1046) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1048) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1103) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1105) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1107) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1150) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1152) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1154) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final_target2.asm(1199) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_final_target2.asm(370) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_final_target2.asm(455) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_final_target2.asm(549) : error A2006:undefined symbol : pSource
+D:\rawrxd\gpu_dma_production_final_target2.asm(550) : error A2006:undefined symbol : pDest
+D:\rawrxd\gpu_dma_production_final_target2.asm(552) : error A2006:undefined symbol : copyType
+D:\rawrxd\gpu_dma_production_final_target2.asm(555) : error A2006:undefined symbol : pSource
+D:\rawrxd\gpu_dma_production_final_target2.asm(557) : error A2006:undefined symbol : pDest
+D:\rawrxd\gpu_dma_production_final_target2.asm(563) : error A2006:undefined symbol : pSource
+D:\rawrxd\gpu_dma_production_final_target2.asm(566) : error A2006:undefined symbol : srcIsDevice
+D:\rawrxd\gpu_dma_production_final_target2.asm(568) : error A2006:undefined symbol : pDest
+D:\rawrxd\gpu_dma_production_final_target2.asm(571) : error A2006:undefined symbol : dstIsDevice
+D:\rawrxd\gpu_dma_production_final_target2.asm(574) : error A2006:undefined symbol : srcIsDevice
+D:\rawrxd\gpu_dma_production_final_target2.asm(576) : error A2006:undefined symbol : dstIsDevice
+D:\rawrxd\gpu_dma_production_final_target2.asm(581) : error A2006:undefined symbol : dstIsDevice
+D:\rawrxd\gpu_dma_production_final_target2.asm(586) : error A2006:undefined symbol : copyType
+D:\rawrxd\gpu_dma_production_final_target2.asm(590) : error A2006:undefined symbol : copyType
+D:\rawrxd\gpu_dma_production_final_target2.asm(594) : error A2006:undefined symbol : copyType
+D:\rawrxd\gpu_dma_production_final_target2.asm(598) : error A2006:undefined symbol : copyType
+D:\rawrxd\gpu_dma_production_final_target2.asm(601) : error A2006:undefined symbol : pSource
+D:\rawrxd\gpu_dma_production_final_target2.asm(602) : error A2006:undefined symbol : pDest
+D:\rawrxd\gpu_dma_production_final_target2.asm(798) : error A2006:undefined symbol : pSource
+D:\rawrxd\gpu_dma_production_final_target2.asm(799) : error A2006:undefined symbol : pDest
+D:\rawrxd\gpu_dma_production_final_target2.asm(804) : error A2006:undefined symbol : pSource
+D:\rawrxd\gpu_dma_production_final_target2.asm(806) : error A2006:undefined symbol : pDest
+D:\rawrxd\gpu_dma_production_final_target2.asm(812) : error A2006:undefined symbol : pOrchestrator
+D:\rawrxd\gpu_dma_production_final_target2.asm(813) : error A2006:undefined symbol : pOrchestrator
+D:\rawrxd\gpu_dma_production_final_target2.asm(816) : error A2006:undefined symbol : pOrchestrator
+D:\rawrxd\gpu_dma_production_final_target2.asm(823) : error A2006:undefined symbol : pSource
+D:\rawrxd\gpu_dma_production_final_target2.asm(824) : error A2006:undefined symbol : pDest
+D:\rawrxd\gpu_dma_production_final_target2.asm(837) : error A2006:undefined symbol : pSource
+D:\rawrxd\gpu_dma_production_final_target2.asm(838) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,48 @@
+ Assembling: D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(65) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(102) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(137) : error A2008:syntax error : width
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(160) : error A2008:syntax error : offset
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(161) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(162) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(163) : warning A6006:structure contains no members
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(194) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(234) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(236) : error A2008:syntax error : address
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(254) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(262) : error A2008:syntax error : preset_cmd
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(263) : error A2008:syntax error : beat_cmd
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(264) : error A2008:syntax error : override_cmd
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(265) : error A2008:syntax error : config_cmd
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(299) : error A2008:syntax error : peer_address
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(306) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(340) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(355) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(370) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(398) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(431) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(976) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(1090) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(463) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(468) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(515) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(606) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(616) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(648) : error A2006:undefined symbol : target_delay_ms
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(763) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(796) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(844) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(866) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(930) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(1017) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(484) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(542) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(588) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(627) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(686) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(749) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(819) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(910) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(952) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0023\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_win32app_NEON_CONSENSUS.ASM(985) : error A2220:Missing .ENDPROLOG

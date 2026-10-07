@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglotPro.asm
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglotPro.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglotPro.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglotPro.asm(11) : fatal error A1000:cannot open file : \masm32\include\windows.inc

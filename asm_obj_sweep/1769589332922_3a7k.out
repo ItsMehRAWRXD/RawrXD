@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(379) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(399) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(430) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(445) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(453) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(461) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(469) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(485) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(512) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(670) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(671) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(1102) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(347) : error A2167:unexpected literal found in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(348) : error A2167:unexpected literal found in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589332922_3a7k.asm(349) : error A2167:unexpected literal found in expression

@@ -1,0 +1,136 @@
+name: CI — Cloud Hosting
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: rawrxd_test
+          POSTGRES_USER: rawrxd
+          POSTGRES_PASSWORD: testpass
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U rawrxd"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: app
+        run: npm ci
+
+      - name: Initialize database
+        env:
+          PGHOST: localhost
+          PGUSER: rawrxd
+          PGPASSWORD: testpass
+          PGDATABASE: rawrxd_test
+        run: psql -f db/init.sql
+
+      - name: Health check smoke test
+        working-directory: app
+        env:
+          DATABASE_URL: postgres://rawrxd:testpass@localhost:5432/rawrxd_test
+          REDIS_URL: redis://localhost:6379
+          PORT: "3000"
+          JWT_SECRET: ci-test-secret-do-not-use-in-prod
+          API_KEY: ci-test-key
+        run: |
+          node server.js &
+          SERVER_PID=$!
+          sleep 3
+          # Health endpoint
+          curl -sf http://localhost:3000/health | jq .
+          # API status
+          curl -sf -H "X-API-Key: ci-test-key" http://localhost:3000/api/status | jq .
+          # POST data
+          curl -sf -X POST http://localhost:3000/api/data \
+            -H "Content-Type: application/json" \
+            -H "X-API-Key: ci-test-key" \
+            -d '{"key":"ci_test","value":"hello"}' | jq .
+          # GET data
+          curl -sf -H "X-API-Key: ci-test-key" "http://localhost:3000/api/data?key=ci_test" | jq .
+          # DELETE data
+          curl -sf -X DELETE -H "X-API-Key: ci-test-key" "http://localhost:3000/api/data?key=ci_test" | jq .
+          # Verify delete
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "X-API-Key: ci-test-key" "http://localhost:3000/api/data?key=ci_test")
+          [ "$STATUS" = "404" ] || (echo "Expected 404 after delete, got $STATUS" && exit 1)
+          kill $SERVER_PID
+
+      - name: Run API integration tests
+        env:
+          DATABASE_URL: postgres://rawrxd:testpass@localhost:5432/rawrxd_test
+          REDIS_URL: redis://localhost:6379
+          PORT: "3001"
+          JWT_SECRET: ci-test-secret-do-not-use-in-prod
+          API_KEY: test-key
+        run: |
+          cd app && node server.js &
+          SERVER_PID=$!
+          sleep 3
+          node tests/api.test.js
+          EXIT=$?
+          kill $SERVER_PID
+          exit $EXIT
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t rawrxd-cloud:ci ./app
+
+      - name: Verify image starts
+        run: |
+          docker run --rm -d --name ci-test \
+            -e DATABASE_URL=postgres://x:x@localhost/x \
+            -e REDIS_URL=redis://localhost \
+            -e JWT_SECRET=test -e API_KEY=test \
+            -p 3001:3000 rawrxd-cloud:ci || true
+          sleep 2
+          docker logs ci-test 2>&1 || true
+          docker stop ci-test 2>/dev/null || true
+
+  terraform-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7"
+
+      - name: Terraform init & validate
+        working-directory: deploy/terraform
+        run: |
+          terraform init -backend=false
+          terraform validate

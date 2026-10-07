@@ -1,0 +1,103 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(60) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(349) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(352) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(355) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(358) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(361) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(364) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(367) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(371) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(617) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(619) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(621) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(623) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1151) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(543) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(573) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(582) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(604) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(667) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(821) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(827) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(835) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(878) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(913) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(923) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(955) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(974) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(983) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(991) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1054) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1129) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1165) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1221) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1233) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1318) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1326) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1389) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1395) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1440) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1481) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1531) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1539) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1622) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1662) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1717) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1770) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1867) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1876) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1895) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1902) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1954) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1960) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1981) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1994) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2093) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2099) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2158) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2165) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2180) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2196) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2203) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2274) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(350) : error A2167:unexpected literal found in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(353) : error A2167:unexpected literal found in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(356) : error A2167:unexpected literal found in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(464) : warning A4025:ENDP found before .ENDPROLOG : Infinity_InitLocks
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(464) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(464) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(471) : warning A4025:ENDP found before .ENDPROLOG : Infinity_LockStatusShared
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(478) : warning A4025:ENDP found before .ENDPROLOG : Infinity_UnlockStatusShared
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(485) : warning A4025:ENDP found before .ENDPROLOG : Infinity_LockStatusExclusive
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(492) : warning A4025:ENDP found before .ENDPROLOG : Infinity_UnlockStatusExclusive
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(525) : warning A4025:ENDP found before .ENDPROLOG : AllocateDMABuffer
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(535) : warning A4025:ENDP found before .ENDPROLOG : FreeDMABuffer
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(575) : warning A4025:ENDP found before .ENDPROLOG : InitCRC32Table
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(606) : warning A4025:ENDP found before .ENDPROLOG : CalculateCRC32
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(645) : warning A4025:ENDP found before .ENDPROLOG : Infinity_ClassifyModel
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(660) : warning A4025:ENDP found before .ENDPROLOG : Infinity_GetSlotCount
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(916) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_IOThreadProc
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(985) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_CheckQuadBuffer
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1131) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_RotateBuffers
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1161) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_HandleYTfnTrap
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1223) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_Shutdown
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1320) : warning A4025:ENDP found before .ENDPROLOG : Scheduler_Initialize
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1391) : warning A4025:ENDP found before .ENDPROLOG : WorkerThreadProc
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1442) : warning A4025:ENDP found before .ENDPROLOG : Worker_GetWork
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1475) : warning A4025:ENDP found before .ENDPROLOG : Worker_PopLocal
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1533) : warning A4025:ENDP found before .ENDPROLOG : Worker_StealFrom
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1624) : warning A4025:ENDP found before .ENDPROLOG : Scheduler_SubmitTask
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1654) : warning A4025:ENDP found before .ENDPROLOG : Scheduler_PopGlobal
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1719) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_Initialize
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1764) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_RegisterResource
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1869) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_LockResource
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1897) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_CheckDeadlock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1956) : warning A4025:ENDP found before .ENDPROLOG : DFS_Deadlock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(1984) : warning A4025:ENDP found before .ENDPROLOG : DeadlockDetectionThread
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2095) : warning A4025:ENDP found before .ENDPROLOG : Heartbeat_Initialize
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2161) : warning A4025:ENDP found before .ENDPROLOG : HeartbeatSendThread
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2199) : warning A4025:ENDP found before .ENDPROLOG : HeartbeatRecvThread
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2277) : warning A4025:ENDP found before .ENDPROLOG : HeartbeatMonitorThread
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2277) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769580148008_G9y6.asm(2277) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_Hotpatch_Kernel.asm\1770885377124_zk7d.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Hotpatch_Kernel.asm\1770885377124_zk7d.asm(66) : error A2006:undefined symbol : asm_hotpatch_install_trampoline

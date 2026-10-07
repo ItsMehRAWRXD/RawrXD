@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(4) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(5) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(278) : error A2008:syntax error : bP
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(289) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(291) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(297) : error A2008:syntax error : ReadConsoleA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(306) : error A2008:syntax error : ReadConsoleA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(308) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(327) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(331) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(335) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(338) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(344) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(346) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(350) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(351) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(526) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(531) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(536) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(541) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(546) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(551) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(556) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(561) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(568) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(569) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(575) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(578) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(581) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(582) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(584) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(585) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(586) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(588) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(590) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(591) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(592) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(594) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(596) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(597) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(598) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(600) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(601) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(603) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(604) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(605) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(607) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(609) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(610) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(611) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(613) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(615) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(616) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(617) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(619) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(621) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(622) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(623) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(625) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(627) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(638) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(652) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(657) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(662) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(667) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(672) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(677) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(682) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(687) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(692) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(697) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(702) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(707) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(712) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(717) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(722) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(725) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(728) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(729) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(730) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(731) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(732) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(733) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(736) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(747) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(753) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(754) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(755) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(758) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(759) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(761) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(763) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(764) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\lazy init ide\src\omega\pro\maximum.asm(765) : fatal error A1012:error count exceeds 100; stopping assembly

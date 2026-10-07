@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\RawrXD_EditorWindow_Stubs.asm
+D:\rawrxd\RawrXD_EditorWindow_Stubs.asm(150) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_EditorWindow_Stubs.asm(161) : error A2008:syntax error : rbx
+D:\rawrxd\RawrXD_EditorWindow_Stubs.asm(163) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_EditorWindow_Stubs.asm(181) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_EditorWindow_Stubs.asm(189) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_EditorWindow_Stubs.asm(200) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_EditorWindow_Stubs.asm(203) : fatal error A1010:unmatched block nesting : TextBuffer_InsertChar

@@ -1,0 +1,49 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(335) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(336) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(338) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(341) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(342) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(343) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(350) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(351) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(359) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(360) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(365) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(382) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(383) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(387) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(395) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(401) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(402) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(408) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(411) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(413) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(423) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(424) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(455) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(456) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(458) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(462) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(469) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(470) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(472) : error A2008:syntax error
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(27) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(35) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(42) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(49) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(64) : error A2006:undefined symbol : InitializeCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(83) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(112) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(132) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(150) : error A2083:invalid scale value
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(184) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(263) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(267) : error A2009:syntax error in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(319) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(459) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(473) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(371) : warning A6004:procedure argument or local not referenced : editor
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(447) : warning A6004:procedure argument or local not referenced : editor
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(447) : warning A6004:procedure argument or local not referenced : snippet
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\completions\popup.asm(478) : warning A6004:procedure argument or local not referenced : popup

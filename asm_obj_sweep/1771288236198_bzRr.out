@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\ghost_handshake.asm\1771288236198_bzRr.asm
+D:\rawrxd\history\all_versions\src\direct_io\ghost_handshake.asm\1771288236198_bzRr.asm(71) : error A2006:undefined symbol : g_c2_pipe_name
+D:\rawrxd\history\all_versions\src\direct_io\ghost_handshake.asm\1771288236198_bzRr.asm(80) : error A2006:undefined symbol : CreateNamedPipeA
+D:\rawrxd\history\all_versions\src\direct_io\ghost_handshake.asm\1771288236198_bzRr.asm(85) : error A2006:undefined symbol : g_c2_pipe_handle
+D:\rawrxd\history\all_versions\src\direct_io\ghost_handshake.asm\1771288236198_bzRr.asm(88) : error A2006:undefined symbol : g_c2_state
+D:\rawrxd\history\all_versions\src\direct_io\ghost_handshake.asm\1771288236198_bzRr.asm(90) : error A2006:undefined symbol : g_c2_session_key

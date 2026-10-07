@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\VCRj.asm
+D:\rawrxd\history\-29b34fd4\VCRj.asm(54) : error A2008:syntax error : type
+D:\rawrxd\history\-29b34fd4\VCRj.asm(57) : error A2008:syntax error : size
+D:\rawrxd\history\-29b34fd4\VCRj.asm(209) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(262) : error A2083:invalid scale value
+D:\rawrxd\history\-29b34fd4\VCRj.asm(263) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(268) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(269) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(283) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(290) : error A2026:constant expected
+D:\rawrxd\history\-29b34fd4\VCRj.asm(295) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(296) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(297) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(302) : error A2026:constant expected
+D:\rawrxd\history\-29b34fd4\VCRj.asm(306) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(307) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(346) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(349) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(362) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-29b34fd4\VCRj.asm(411) : error A2206:missing operator in expression
+D:\rawrxd\history\-29b34fd4\VCRj.asm(316) : warning A4025:ENDP found before .ENDPROLOG : Vram_Free
+D:\rawrxd\history\-29b34fd4\VCRj.asm(316) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\-29b34fd4\VCRj.asm(316) : error A2220:Missing .ENDPROLOG

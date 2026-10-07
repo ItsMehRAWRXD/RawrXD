@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(266) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(268) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(270) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(272) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(274) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(4995) : error A2006:undefined symbol : szBBCovHeader
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(5000) : error A2006:undefined symbol : szBBCovSummary
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(5014) : error A2006:undefined symbol : szBBCovBlocks
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(5044) : error A2006:undefined symbol : szBBCovEntry
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770700507540_oXRm.asm(5057) : error A2006:undefined symbol : szBBCovEntryLast

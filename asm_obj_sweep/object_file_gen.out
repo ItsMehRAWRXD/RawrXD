@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\object_file_gen.asm
+D:\rawrxd\itsmehrawrxd-master\object_file_gen.asm(5) : fatal error A1000:cannot open file : "reverser_platform.asm"

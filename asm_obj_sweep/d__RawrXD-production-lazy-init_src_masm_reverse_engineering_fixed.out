@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(413) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(482) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(170) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(172) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(174) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(182) : error A2148:invalid symbol type in expression : str$
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(189) : error A2148:invalid symbol type in expression : str$
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(196) : error A2148:invalid symbol type in expression : str$
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(285) : error A2006:undefined symbol : GPTR
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(367) : error A2148:invalid symbol type in expression : str$
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(377) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(379) : error A2148:invalid symbol type in expression : str$
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(388) : error A2148:invalid symbol type in expression : str$
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_fixed.asm(397) : error A2029:multiple base registers not allowed

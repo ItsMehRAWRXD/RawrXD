@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(4) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(7) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(10) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(14) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(21) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(25) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(28) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(39) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\gpu\cuda_impl.asm\1769161928185_0Rqh.asm(39) : error A2088:END directive required at end of file

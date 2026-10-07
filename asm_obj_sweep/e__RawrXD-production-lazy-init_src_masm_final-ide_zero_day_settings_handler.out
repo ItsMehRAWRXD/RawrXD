@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_final-ide_zero_day_settings_handler.asm
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_final-ide_zero_day_settings_handler.asm(74) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_final-ide_zero_day_settings_handler.asm(80) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_final-ide_zero_day_settings_handler.asm(115) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_final-ide_zero_day_settings_handler.asm(167) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_final-ide_zero_day_settings_handler.asm(49) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_final-ide_zero_day_settings_handler.asm(50) : error A2206:missing operator in expression

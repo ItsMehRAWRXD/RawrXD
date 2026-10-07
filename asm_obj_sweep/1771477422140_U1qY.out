@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(134) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(407) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(446) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(473) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(566) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(587) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(602) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(641) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(692) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(700) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(817) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(841) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(853) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\kv_cache_mgr.asm\1771477422140_U1qY.asm(869) : error A2022:instruction operands must be the same size

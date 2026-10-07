@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\n0mn0m_final_complete.asm
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_final_complete.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_final_complete.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_final_complete.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_final_complete.asm(9) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_final_complete.asm(12) : fatal error A1000:cannot open file : "n0mn0m_advanced_debugger.asm"

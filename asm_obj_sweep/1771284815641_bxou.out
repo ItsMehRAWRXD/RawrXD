@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(12) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(117) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(161) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(200) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(203) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(231) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(261) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(293) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(316) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(462) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(472) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(548) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(1213) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(1226) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(561) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(1024) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(1080) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(1143) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(1205) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(1218) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(1232) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\week4\WEEK4_DELIVERABLE.asm\1771284815641_bxou.asm(1266) : error A2220:Missing .ENDPROLOG

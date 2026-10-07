@@ -1,0 +1,29 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\ZoxL.asm
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(168) : error A2008:syntax error : width
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1115) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1118) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1119) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1121) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1123) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1133) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1146) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1153) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1200) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1203) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1206) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1208) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1218) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1231) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1238) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1363) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1735) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1960) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(1985) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(2424) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(2431) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(3102) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(3141) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(3227) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(3233) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(3808) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\ZoxL.asm(4051) : error A2081:missing operand after unary operator

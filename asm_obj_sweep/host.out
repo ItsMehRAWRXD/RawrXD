@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(8) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(9) : error A2008:syntax error : .
+d:\rawrxd\include\windows.inc(7) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(13) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(14) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(15) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(16) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(17) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(18) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(19) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(20) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(21) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+d:\rawrxd\include\windows.inc(22) : error A2163:non-benign structure redefinition: incorrect initializers : SYSTEM_INFO
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(56) : error A2008:syntax error : HINSTANCE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(57) : error A2008:syntax error : HWND
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(58) : error A2008:syntax error : HWND
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(59) : error A2008:syntax error : HWND
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(60) : error A2008:syntax error : HWND
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(61) : error A2008:syntax error : HWND
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(62) : error A2008:syntax error : HWND
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(63) : error A2008:syntax error : HMODULE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(98) : error A2006:undefined symbol : HWND
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(98) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(98) : error A2006:undefined symbol : UINT
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(98) : error A2006:undefined symbol : WPARAM
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(98) : error A2006:undefined symbol : LPARAM
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(112) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(119) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(123) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(129) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(135) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(141) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(147) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(153) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(156) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(159) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(189) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(195) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(201) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(207) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(213) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(219) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(228) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(238) : error A2006:undefined symbol : WNDCLASSEX
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(238) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(239) : error A2006:undefined symbol : MSG
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(239) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(240) : error A2006:undefined symbol : HMENU
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(240) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(243) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(247) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(262) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(265) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(268) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(271) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(279) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(283) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(284) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(285) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(286) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(287) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(288) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(290) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(293) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(294) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(297) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(298) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(299) : error A2008:syntax error : BREAK
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(301) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(302) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(303) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(306) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(313) : error A2008:syntax error : main
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(313) : error A2088:END directive required at end of file
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(100) : error A2006:undefined symbol : WM_CREATE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(103) : error A2006:undefined symbol : WM_COMMAND
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(106) : error A2006:undefined symbol : WM_SIZE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(109) : error A2006:undefined symbol : WM_DESTROY
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(116) : error A2006:undefined symbol : hwndMain
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(120) : error A2006:undefined symbol : hRichEdit
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(126) : error A2006:undefined symbol : hwndExplorer
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(132) : error A2006:undefined symbol : hwndEditor
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(138) : error A2006:undefined symbol : hwndChat
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(144) : error A2006:undefined symbol : hwndInput
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(150) : error A2006:undefined symbol : hwndTab
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(244) : error A2006:undefined symbol : hInstance
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(250) : error A2006:undefined symbol : cbSize
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(251) : error A2006:undefined symbol : style
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(253) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(254) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(255) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(256) : error A2006:undefined symbol : hInstance
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(257) : error A2006:undefined symbol : hInstance
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(258) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(259) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(261) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(263) : error A2006:undefined symbol : hIcon
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(264) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(266) : error A2006:undefined symbol : hCursor
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\rawrxd\host.asm(276) : fatal error A1012:error count exceeds 100; stopping assembly

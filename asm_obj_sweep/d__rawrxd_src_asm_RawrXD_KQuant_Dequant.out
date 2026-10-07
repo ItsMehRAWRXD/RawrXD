@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_KQuant_Dequant.asm
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_KQuant_Dequant.asm(414) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_KQuant_Dequant.asm(431) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_KQuant_Dequant.asm(439) : error A2082:cannot mix 16- and 32-bit registers

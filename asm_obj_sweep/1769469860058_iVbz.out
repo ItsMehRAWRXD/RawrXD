@@ -1,0 +1,32 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(149) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(154) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(158) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(162) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(166) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(181) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(184) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(256) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(260) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(264) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(272) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(294) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(306) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(341) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(344) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(363) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(413) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(433) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(473) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(476) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(491) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(504) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(516) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(538) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(541) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(556) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(562) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(617) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(623) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(629) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\gguf_dump.asm\1769469860058_iVbz.asm(640) : fatal error A1010:unmatched block nesting : main

@@ -1,0 +1,31 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(28) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(29) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(30) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(79) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(86) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(131) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(159) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(163) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(167) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(170) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(206) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(210) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(213) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(265) : error A2008:syntax error : main
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(265) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(47) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(60) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(81) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(84) : error A2006:undefined symbol : loop
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(135) : error A2006:undefined symbol : loop
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(155) : error A2006:undefined symbol : greater
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(156) : error A2006:undefined symbol : less
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(157) : error A2006:undefined symbol : equal
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(161) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(165) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(187) : error A2006:undefined symbol : zero
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(189) : error A2006:undefined symbol : one
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(204) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(208) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_comprehensive_test.asm(260) : error A2006:undefined symbol : ExitProcess

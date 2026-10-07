@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(100) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(105) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(93) : error A2006:undefined symbol : g_pLogits
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(94) : error A2006:undefined symbol : g_VocabSize
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(102) : error A2006:undefined symbol : not_higher
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(108) : error A2006:undefined symbol : find_max
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(114) : error A2006:undefined symbol : g_pRingBuffer
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(116) : error A2006:undefined symbol : g_BufferIndex
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(182) : error A2006:undefined symbol : g_pInputBuffer
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771284697370_9oLq.asm(212) : warning A6004:procedure argument or local not referenced : pszPrompt

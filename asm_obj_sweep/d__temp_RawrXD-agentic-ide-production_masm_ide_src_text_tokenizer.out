@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_tokenizer.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_tokenizer.asm(126) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_tokenizer.asm(297) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_tokenizer.asm(365) : fatal error A1010:unmatched block nesting : Tokenizer_IsKeyword

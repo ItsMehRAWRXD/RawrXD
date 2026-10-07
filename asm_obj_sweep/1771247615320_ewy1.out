@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771247615320_ewy1.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771247615320_ewy1.asm(143) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771247615320_ewy1.asm(273) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771247615320_ewy1.asm(1177) : error A2006:undefined symbol : syntax_err

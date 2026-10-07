@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\os_interceptor_cli_final.asm\1771286105376_Mh5U.asm
+D:\rawrxd\history\all_versions\src\os_interceptor_cli_final.asm\1771286105376_Mh5U.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli_final.asm\1771286105376_Mh5U.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_interceptor_cli_final.asm\1771286105376_Mh5U.asm(15) : fatal error A1000:cannot open file : \masm32\include\windows.inc

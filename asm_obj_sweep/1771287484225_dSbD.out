@@ -1,0 +1,68 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(104) : error A2008:syntax error : label
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(165) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(283) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(327) : error A2006:undefined symbol : LSPParseCapabilities
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(331) : error A2006:undefined symbol : LSPSendInitialized
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(496) : error A2006:undefined symbol : sz_jsonrpc_didChange
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(497) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(499) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(504) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(508) : error A2006:undefined symbol : g_LSPPipeHandle
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(517) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(761) : error A2006:undefined symbol : LineColToScreen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(767) : error A2006:undefined symbol : FONT_WIDTH
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(776) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(780) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(783) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(834) : error A2006:undefined symbol : sz_dap_launch_req
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(835) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(848) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(854) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(862) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(895) : error A2006:undefined symbol : sz_dap_setbp_req
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(896) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(903) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(909) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(917) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(922) : error A2006:undefined symbol : sz_verified_true
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(923) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(954) : error A2006:undefined symbol : sz_dap_continue_req
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(959) : error A2006:undefined symbol : sz_dap_continue_req
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(960) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(964) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(970) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(996) : error A2006:undefined symbol : sz_dap_next_req
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(997) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1001) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1007) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1034) : error A2006:undefined symbol : sz_dap_stacktrace_req
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1035) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1039) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1045) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1054) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1059) : error A2006:undefined symbol : sz_stackFrames
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1060) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1155) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1159) : error A2006:undefined symbol : BufferCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1170) : error A2006:undefined symbol : IntelliSenseInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1174) : error A2006:undefined symbol : DiagnosticsInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1178) : error A2006:undefined symbol : DAPInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1183) : error A2006:undefined symbol : GitInit
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1190) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(344) : warning A4025:ENDP found before .ENDPROLOG : LSPInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(344) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(409) : warning A4025:ENDP found before .ENDPROLOG : LSPSendInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(409) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(476) : warning A4025:ENDP found before .ENDPROLOG : LSPTextDocumentDidOpen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(613) : warning A4025:ENDP found before .ENDPROLOG : LSPCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(702) : warning A4025:ENDP found before .ENDPROLOG : IntelliSenseRenderPopup
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(725) : warning A4025:ENDP found before .ENDPROLOG : IntelliSenseApplyCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(811) : warning A4025:ENDP found before .ENDPROLOG : DiagnosticsRenderSquiggles
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1116) : warning A4025:ENDP found before .ENDPROLOG : GitGetStatus
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1127) : warning A4025:ENDP found before .ENDPROLOG : GitDiff
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1136) : warning A4025:ENDP found before .ENDPROLOG : GitBlame
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1198) : warning A4025:ENDP found before .ENDPROLOG : EnterpriseEditorCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1198) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287484225_dSbD.ASM(1198) : error A2220:Missing .ENDPROLOG

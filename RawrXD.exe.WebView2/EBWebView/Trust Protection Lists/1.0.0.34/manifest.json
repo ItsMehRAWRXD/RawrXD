@@ -1,6 +1,3 @@
-{
-   "description" : "Trust Protection Lists",
-   "listFormat" : 1,
-   "name" : "TrustProtectionLists",
-   "version" : "1.0.0.34"
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:68683970ce6d7de9a2043c34129106ae68af21a3b0a3c53cb59695640a7c1cbc
+size 132

@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(448) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(538) : error A2006:undefined symbol : WM_DESTROY
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(551) : error A2006:undefined symbol : WM_UNDO
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(560) : error A2006:undefined symbol : WM_REDO
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(569) : error A2006:undefined symbol : WM_CUT
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(578) : error A2006:undefined symbol : WM_COPY
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(587) : error A2006:undefined symbol : WM_PASTE
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(596) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(622) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(633) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(644) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(652) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(876) : error A2006:undefined symbol : szInitialDir
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(880) : error A2006:undefined symbol : szOpenTitle
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(890) : error A2006:undefined symbol : szDefExt
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(960) : error A2006:undefined symbol : szInitialDir
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(963) : error A2006:undefined symbol : szSaveTitle
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(972) : error A2006:undefined symbol : szDefExt
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1075) : error A2006:undefined symbol : WM_COMMAND
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1092) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(228) : error A2047:empty (null) string
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1097) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1097) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_menu_handlers.asm(1097) : warning A6004:procedure argument or local not referenced : lParam

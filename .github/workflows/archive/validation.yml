@@ -1,0 +1,195 @@
+name: Numerical Validation
+
+on:
+  push:
+    branches: [ main, release/*, feature/* ]
+    paths:
+      - 'src/**'
+      - 'tests/inference_validation/**'
+      - 'scripts/validate_against_llama.py'
+  pull_request:
+    branches: [ main, release/* ]
+    paths:
+      - 'src/**'
+      - 'tests/inference_validation/**'
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Model to validate (URL or path)'
+        required: true
+        default: 'https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf'
+      prompt:
+        description: 'Test prompt'
+        required: true
+        default: 'Hello, my name is'
+      tolerance:
+        description: 'Error tolerance'
+        required: true
+        default: '1e-5'
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    
+    steps:
+    - name: Checkout RawrXD
+      uses: actions/checkout@v3
+      with:
+        path: rawrxd
+        
+    - name: Checkout llama.cpp
+      uses: actions/checkout@v3
+      with:
+        repository: ggml-org/llama.cpp
+        ref: master
+        path: llama.cpp
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v1.1
+      
+    - name: Cache llama.cpp build
+      id: cache-llama
+      uses: actions/cache@v3
+      with:
+        path: llama.cpp/build
+        key: llama-${{ runner.os }}-${{ hashFiles('rawrxd/patches/llama.cpp/*.patch') }}
+    
+    - name: Download test model
+      run: |
+        $model = "${{ github.event.inputs.model }}"
+        if (-not $model) { $model = "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" }
+        
+        Write-Host "Downloading model: $model"
+        New-Item -ItemType Directory -Force -Path models
+        Invoke-WebRequest -Uri $model -OutFile models/test_model.gguf
+        Write-Host "Model downloaded: $(Get-ChildItem models/test_model.gguf | Select-Object -ExpandProperty Length) bytes"
+      shell: pwsh
+    
+    - name: Apply llama.cpp patch
+      if: steps.cache-llama.outputs.cache-hit != 'true'
+      run: |
+        cd llama.cpp
+        git apply ../rawrxd/patches/llama.cpp/rawrxd_validation_instrumentation.patch
+        Write-Host "Patch applied successfully"
+      shell: pwsh
+    
+    - name: Build llama.cpp
+      if: steps.cache-llama.outputs.cache-hit != 'true'
+      run: |
+        cd llama.cpp
+        New-Item -ItemType Directory -Force -Path build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DRAWRXD_VALIDATION_MODE=ON -DLLAMA_AVX512=ON
+        cmake --build . --config Release -j $env:NUMBER_OF_PROCESSORS
+      shell: pwsh
+    
+    - name: Generate reference data
+      run: |
+        $prompt = "${{ github.event.inputs.prompt }}"
+        if (-not $prompt) { $prompt = "Hello, my name is" }
+        
+        cd llama.cpp/build
+        ./bin/Release/main.exe `
+          -m ../../rawrxd/models/test_model.gguf `
+          -p "$prompt" `
+          -n 10 `
+          --seed 42 `
+          --temp 0.0
+        
+        # Move reference file to expected location
+        Move-Item ../../rawrxd/rawrxd_ref_*.bin ../../rawrxd/validation_results/ -ErrorAction SilentlyContinue
+      shell: pwsh
+    
+    - name: Build RawrXD with validation
+      run: |
+        cd rawrxd
+        New-Item -ItemType Directory -Force -Path build_validation
+        cd build_validation
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DRAWRXD_ENABLE_VALIDATION=ON
+        cmake --build . --config Release -j $env:NUMBER_OF_PROCESSORS
+      shell: pwsh
+    
+    - name: Run RawrXD inference
+      run: |
+        $prompt = "${{ github.event.inputs.prompt }}"
+        if (-not $prompt) { $prompt = "Hello, my name is" }
+        
+        cd rawrxd
+        ./build_validation/Release/rawrxd.exe `
+          --model models/test_model.gguf `
+          --prompt "$prompt" `
+          --tokens 10 `
+          --seed 42
+      shell: pwsh
+    
+    - name: Build validation runner
+      run: |
+        cd rawrxd/tests/inference_validation
+        New-Item -ItemType Directory -Force -Path build
+        cd build
+        cmake ..
+        cmake --build . --config Release
+      shell: pwsh
+    
+    - name: Compare outputs
+      run: |
+        $tolerance = "${{ github.event.inputs.tolerance }}"
+        if (-not $tolerance) { $tolerance = "1e-5" }
+        
+        cd rawrxd
+        ./tests/inference_validation/build/Release/validation_runner.exe `
+          --reference validation_results/rawrxd_ref_*.bin `
+          --actual validation_results/rawrxd_output.bin `
+          --tolerance $tolerance
+      shell: pwsh
+    
+    - name: Upload validation results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: validation-results
+        path: |
+          rawrxd/validation_results/*.bin
+          rawrxd/validation_results/*.json
+        retention-days: 7
+    
+    - name: Comment PR
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const path = 'rawrxd/validation_results/validation_report_*.json';
+          
+          let message = '## Validation Results\n\n';
+          
+          if (fs.existsSync(path)) {
+            const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+            if (report.success) {
+              message += '✅ **PASSED**\n\n';
+              message += `- Model: ${report.model}\n`;
+              message += `- Prompt: "${report.prompt}"\n`;
+              message += `- Time: ${report.total_time_seconds.toFixed(2)}s\n`;
+            } else {
+              message += '❌ **FAILED**\n\n';
+              message += 'Failed steps:\n';
+              for (const [step, status] of Object.entries(report.steps)) {
+                message += `- ${step}: ${status}\n`;
+              }
+            }
+          } else {
+            message += '⚠️ Validation report not generated\n';
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: message
+          });

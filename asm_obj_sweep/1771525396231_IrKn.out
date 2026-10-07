@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(277) : error A2008:syntax error : g_ctx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(448) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(362) : error A2006:undefined symbol : @@lvl_warn
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(553) : error A2006:undefined symbol : g_ctx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(555) : error A2006:undefined symbol : g_ctx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(561) : error A2006:undefined symbol : g_ctx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(567) : error A2006:undefined symbol : g_ctx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(616) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(769) : error A2006:undefined symbol : rip
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(301) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(466) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(537) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(583) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(592) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(604) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(621) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(735) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(751) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771525396231_IrKn.asm(792) : error A2220:Missing .ENDPROLOG

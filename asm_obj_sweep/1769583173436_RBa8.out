@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Low_Priority_P3.asm\1769583173436_RBa8.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Low_Priority_P3.asm\1769583173436_RBa8.asm(125) : error A2008:syntax error : width
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Low_Priority_P3.asm\1769583173436_RBa8.asm(178) : error A2006:undefined symbol : swprintf_s
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Low_Priority_P3.asm\1769583173436_RBa8.asm(182) : error A2006:undefined symbol : _wsystem
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Low_Priority_P3.asm\1769583173436_RBa8.asm(218) : error A2006:undefined symbol : swprintf_s
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Low_Priority_P3.asm\1769583173436_RBa8.asm(222) : error A2006:undefined symbol : _wsystem
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Low_Priority_P3.asm\1769583173436_RBa8.asm(931) : error A2081:missing operand after unary operator

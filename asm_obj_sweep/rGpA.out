@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-1098d7df\rGpA.asm
+D:\rawrxd\history\-1098d7df\rGpA.asm(153) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-1098d7df\rGpA.asm(154) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-1098d7df\rGpA.asm(281) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-1098d7df\rGpA.asm(285) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-1098d7df\rGpA.asm(287) : error A2006:undefined symbol : INVALID_HANDLE_VALUE

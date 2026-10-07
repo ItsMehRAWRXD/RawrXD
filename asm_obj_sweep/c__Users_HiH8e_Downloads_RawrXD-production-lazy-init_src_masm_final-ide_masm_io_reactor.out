@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_io_reactor.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_io_reactor.asm(89) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_io_reactor.asm(97) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_io_reactor.asm(103) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_io_reactor.asm(108) : fatal error A1010:unmatched block nesting : masm_io_reactor_init

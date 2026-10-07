@@ -1,0 +1,424 @@
+// =============================================================================
+// RawRamXD.hpp - Software-Defined AI Memory Fabric v2.0
+// =============================================================================
+// A deterministic execution-graph-driven residency scheduler that unifies
+// VRAM, RAM, and storage into one predictive, telemetry-driven resource.
+//
+// Prime Directive:
+//   RawRamXD is NOT a reactive cache. It is a deterministic execution-graph-
+//   driven residency scheduler. Runtime telemetry optimizes timing, queue depth,
+//   and transfer urgency. The execution graph provides the authoritative future-
+//   access schedule.
+//
+// Core Invariants:
+//   1. Zero synchronous faults on the critical path.
+//   2. Compressed edge-to-edge transport (Q4/Q5/Q6 preserved to staging).
+//   3. Intra-layer granularity: residency blocks map to micro-architectural phases.
+// =============================================================================
+
+#ifndef RAWRAMXD_HPP
+#define RAWRAMXD_HPP
+
+#include <cstdint>
+#include <cstddef>
+#include <memory>
+#include <atomic>
+#include <vector>
+#include <queue>
+#include <unordered_map>
+#include <unordered_set>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
+#include <functional>
+#include <chrono>
+#include <span>
+#include <string>
+#include <optional>
+#include <cassert>
+
+// =============================================================================
+// RawRamXD Core Types
+// =============================================================================
+
+namespace rawramxd {
+
+using Handle = uint64_t;
+using BlockId = uint64_t;
+using VirtualAddress = uint64_t;
+using PhysicalAddress = uint64_t;
+using ResidencyGeneration = uint64_t;
+
+// Memory tiers
+enum class Tier : uint8_t {
+    VRAM = 0,       // GPU VRAM - fastest, smallest
+    RAM  = 1,       // System RAM - medium speed
+    NVMe = 2,       // NVMe/SSD - backing store
+    HDD  = 3,       // HDD - cold storage
+    COUNT = 4
+};
+
+// Residency states - atomic state machine
+enum class ResidencyState : uint8_t {
+    UNMAPPED      = 0,   // Not allocated
+    RESIDENT      = 1,   // In current tier, ready
+    MIGRATING_IN  = 2,   // Moving into this tier
+    MIGRATING_OUT = 3,   // Moving out of this tier
+    EVICTED       = 4,   // Demoted to lower tier
+    FAILED        = 5    // Migration failed
+};
+
+// Access patterns
+enum class AccessPattern : uint8_t {
+    WEIGHTS     = 0,    // Read-mostly, large
+    KV_CACHE    = 1,    // Read-write, medium lifetime
+    ACTIVATIONS = 2,    // Short-lived, compute-heavy
+    SCRATCH     = 3,    // Temporary buffers
+    UNIFORM     = 4     // Unknown/generic
+};
+
+// Migration priority - explicit numeric ordering (lower = higher priority)
+enum class MigrationPriority : uint8_t {
+    CRITICAL = 0,       // Block compute until done
+    HIGH     = 1,       // ASAP, may overlap
+    NORMAL   = 2,       // Standard queue
+    LOW      = 3,       // Background, best effort
+    PREFETCH = 4        // Speculative
+};
+
+// =============================================================================
+// ResidencyBlock - Granular residency unit
+// =============================================================================
+
+struct ResidencyBlock {
+    BlockId id;                         // Unique block identifier
+    Handle tensorId;                    // Parent tensor
+    uint64_t sourceOffset;              // Offset within tensor
+    uint32_t size;                      // Block size in bytes
+
+    // Atomic residency state
+    std::atomic<Tier> tier{Tier::NVMe};
+    std::atomic<ResidencyState> state{ResidencyState::UNMAPPED};
+    std::atomic<ResidencyGeneration> generation{0};
+
+    // Physical backing (opaque to users)
+    void* vramPtr{nullptr};
+    void* ramPtr{nullptr};
+    uint64_t nvmeOffset{0};             // File offset for NVMe backing
+
+    // Access telemetry (lock-free hot path)
+    std::atomic<uint64_t> accessCount{0};
+    std::atomic<float> heat{0.0f};
+    std::atomic<uint64_t> lastAccessNs{0};
+
+    // Predictive scheduling
+    uint64_t requiredAt{0};             // When this block is needed (ns)
+    uint64_t prefetchDeadline{0};       // When prefetch must complete (ns)
+
+    // Metadata
+    const char* name{nullptr};
+    AccessPattern pattern{AccessPattern::UNIFORM};
+};
+
+// =============================================================================
+// RawRamXDHandle - Tensor-level descriptor
+// =============================================================================
+
+struct RawRamXDHandle {
+    Handle id;                          // Unique identifier
+    VirtualAddress vaddr;               // Virtual address in fabric
+    size_t size;                        // Total size in bytes
+
+    // Block-granular residency
+    std::vector<std::shared_ptr<ResidencyBlock>> blocks;
+    uint32_t blockSize{64 * 1024};      // Configurable block size
+
+    // Classification
+    AccessPattern pattern{AccessPattern::UNIFORM};
+    MigrationPriority priority{MigrationPriority::NORMAL};
+
+    // Metadata
+    const char* name{nullptr};
+    uint32_t flags{0};
+
+    // Atomic lifecycle
+    std::atomic<bool> active{true};
+    std::atomic<uint64_t> refCount{0};
+};
+
+// =============================================================================
+// TierBackend - Abstract physical allocation interface
+// =============================================================================
+
+class TierBackend {
+public:
+    virtual ~TierBackend() = default;
+
+    // Allocation
+    virtual void* allocate(size_t bytes) = 0;
+    virtual void release(void* ptr, size_t bytes) = 0;
+
+    // Async transfer (placeholder for DMA/GPU copy)
+    virtual bool copyAsync(void* dst, const void* src, size_t bytes) = 0;
+    virtual bool waitForCopy(void* eventHandle) = 0;
+
+    // Backend identification
+    virtual Tier tier() const = 0;
+    virtual const char* name() const = 0;
+};
+
+// =============================================================================
+// ExecutionGraphOracle - Deterministic future-access predictor
+// =============================================================================
+
+struct LayerResidencyPlan {
+    uint32_t layer;
+    uint32_t token;
+
+    // Block IDs that must be VRAM-resident before this layer executes
+    std::vector<BlockId> mustBeVRAM;
+
+    // Block IDs to prefetch to VRAM during this layer
+    std::vector<BlockId> prefetchVRAM;
+
+    // Block IDs to stage in RAM (pinned, ready for DMA)
+    std::vector<BlockId> stageRAM;
+
+    // Block IDs to demote from VRAM after this layer
+    std::vector<BlockId> demoteVRAM;
+
+    // Timing constraints
+    uint64_t computeStartNs{0};
+    uint64_t computeEndNs{0};
+};
+
+class ExecutionGraphOracle {
+public:
+    virtual ~ExecutionGraphOracle() = default;
+
+    // Called by inference engine at layer boundaries
+    virtual void onLayerBegin(uint32_t layer, uint32_t token) = 0;
+    virtual void onLayerComplete(uint32_t layer, uint32_t token) = 0;
+
+    // Get residency plan for upcoming layer
+    virtual std::optional<LayerResidencyPlan> planForLayer(uint32_t layer, uint32_t token) const = 0;
+
+    // Get lookahead blocks (for prefetch scheduling)
+    virtual std::span<BlockId> lookaheadBlocks(uint32_t layer, uint32_t distance) const = 0;
+
+    // Get required blocks for current layer
+    virtual std::span<BlockId> requiredBlocks(uint32_t layer) const = 0;
+};
+
+// =============================================================================
+// Telemetry & Statistics
+// =============================================================================
+
+struct TierStats {
+    std::atomic<uint64_t> totalBytes{0};
+    std::atomic<uint64_t> usedBytes{0};
+    std::atomic<uint64_t> reservedBytes{0};
+    std::atomic<uint64_t> migrationInBytes{0};
+    std::atomic<uint64_t> migrationOutBytes{0};
+    std::atomic<uint64_t> faultCount{0};
+    std::atomic<uint64_t> prefetchHits{0};
+    std::atomic<uint64_t> prefetchMisses{0};
+};
+
+struct RawRamXDStats {
+    TierStats tiers[static_cast<size_t>(Tier::COUNT)];
+
+    // Performance metrics
+    std::atomic<double> avgMigrationTimeMs{0.0};
+    std::atomic<double> avgFaultLatencyMs{0.0};
+    std::atomic<double> currentTPS{0.0};
+    std::atomic<double> targetTPS{0.0};
+
+    // Scheduler metrics
+    std::atomic<uint64_t> migrationsQueued{0};
+    std::atomic<uint64_t> migrationsCompleted{0};
+    std::atomic<uint64_t> migrationsFailed{0};
+    std::atomic<uint64_t> migrationsDeduplicated{0};
+    std::atomic<uint64_t> activePrefetches{0};
+    std::atomic<uint64_t> residencyDecisions{0};
+    std::atomic<uint64_t> exposedStallsUs{0};   // GPU stall time
+
+    // Memory pressure
+    std::atomic<float> vramPressure{0.0f};
+    std::atomic<float> ramPressure{0.0f};
+    std::atomic<float> nvmeBandwidthUsed{0.0f};
+};
+
+// =============================================================================
+// ResidencyEngine - Policy interface
+// =============================================================================
+
+class ResidencyEngine {
+public:
+    virtual ~ResidencyEngine() = default;
+
+    // Core residency decisions
+    virtual Tier decidePlacement(const ResidencyBlock* block) = 0;
+    virtual MigrationPriority decideUrgency(const ResidencyBlock* block) = 0;
+    virtual bool shouldPrefetch(const ResidencyBlock* block) = 0;
+    virtual bool shouldEvict(const ResidencyBlock* block) = 0;
+
+    // Telemetry feedback
+    virtual void onMigrationComplete(BlockId block, Tier from, Tier to, double latencyMs) = 0;
+    virtual void onFault(BlockId block, Tier needed) = 0;
+    virtual void onAccess(BlockId block, size_t bytes) = 0;
+    virtual void updatePressure(Tier tier, float pressure) = 0;
+
+    // Policy control
+    virtual void setTargetTPS(double tps) = 0;
+    virtual void setAggressiveness(float level) = 0;  // 0.0 = conservative, 1.0 = aggressive
+};
+
+// =============================================================================
+// RawRamXD Fabric - Main API
+// =============================================================================
+
+class RawRamXDFabric {
+public:
+    static RawRamXDFabric& instance();
+
+    // Initialization
+    bool initialize(size_t vramSize, size_t ramSize, size_t nvmeSize);
+    void shutdown();
+
+    // Backend registration
+    void registerBackend(std::unique_ptr<TierBackend> backend);
+
+    // Oracle registration
+    void setExecutionOracle(std::shared_ptr<ExecutionGraphOracle> oracle);
+
+    // Allocation API
+    Handle allocate(size_t size, const char* name = nullptr,
+                    AccessPattern pattern = AccessPattern::UNIFORM);
+    void deallocate(Handle handle);
+
+    // Residency API - synchronous with CV wait (no polling)
+    bool ensureInVRAM(Handle handle);
+    bool ensureInRAM(Handle handle);
+    bool ensureBlockInVRAM(BlockId block);
+    bool ensureBlockInRAM(BlockId block);
+
+    // Async residency requests
+    void requestResidency(BlockId block, Tier target, MigrationPriority priority);
+    void submitPrefetch(const std::vector<BlockId>& blocks, Tier target);
+    void submitStage(const std::vector<BlockId>& blocks, Tier target);
+    void submitDemotions(const std::vector<BlockId>& blocks);
+
+    // Telemetry
+    void touch(BlockId block);
+    void touch(Handle handle);
+
+    // Query API
+    std::shared_ptr<RawRamXDHandle> resolve(Handle handle);
+    std::shared_ptr<ResidencyBlock> resolveBlock(BlockId block);
+    Tier currentTier(BlockId block);
+    ResidencyState residency(BlockId block);
+    bool isResident(BlockId block, Tier tier);
+
+    // Execution-graph integration
+    void onLayerBegin(uint32_t layer, uint32_t token);
+    void onLayerComplete(uint32_t layer, uint32_t token);
+
+    // Statistics
+    RawRamXDStats stats();
+    void dumpState();
+
+    // Scheduler control
+    void setResidencyEngine(std::unique_ptr<ResidencyEngine> engine);
+    void setPolicy(const std::string& policy);  // "aggressive", "balanced", "conservative"
+
+    // Pointer access (returns nullptr if not resident in requested tier)
+    void* vramPtr(BlockId block);
+    void* ramPtr(BlockId block);
+
+private:
+    RawRamXDFabric() = default;
+    ~RawRamXDFabric() = default;
+    RawRamXDFabric(const RawRamXDFabric&) = delete;
+    RawRamXDFabric& operator=(const RawRamXDFabric&) = delete;
+
+    class Impl;
+    std::unique_ptr<Impl> impl_;
+};
+
+// =============================================================================
+// C API for Integration
+// =============================================================================
+
+extern "C" {
+
+// Lifecycle
+bool rawramxd_init(uint64_t vram_bytes, uint64_t ram_bytes, uint64_t nvme_bytes);
+void rawramxd_shutdown();
+
+// Allocation
+uint64_t rawramxd_alloc(size_t size, const char* name, uint8_t pattern);
+void rawramxd_free(uint64_t handle);
+
+// Residency
+bool rawramxd_ensure_vram(uint64_t handle);
+bool rawramxd_ensure_ram(uint64_t handle);
+void rawramxd_touch(uint64_t handle);
+void rawramxd_migrate(uint64_t handle, uint8_t tier);
+void rawramxd_prefetch(uint64_t handle);
+
+// Query
+uint8_t rawramxd_current_tier(uint64_t handle);
+uint8_t rawramxd_residency(uint64_t handle);
+void* rawramxd_vram_ptr(uint64_t handle);
+void* rawramxd_ram_ptr(uint64_t handle);
+
+// Telemetry
+void rawramxd_stats(void* stats_out);
+void rawramxd_dump();
+
+} // extern "C"
+
+// =============================================================================
+// Integration Helpers
+// =============================================================================
+
+// RAII tensor wrapper
+class RawRamXDTensor {
+public:
+    RawRamXDTensor(size_t size, const char* name = nullptr,
+                   AccessPattern pattern = AccessPattern::UNIFORM);
+    ~RawRamXDTensor();
+
+    RawRamXDTensor(const RawRamXDTensor&) = delete;
+    RawRamXDTensor& operator=(const RawRamXDTensor&) = delete;
+    RawRamXDTensor(RawRamXDTensor&& other) noexcept;
+    RawRamXDTensor& operator=(RawRamXDTensor&& other) noexcept;
+
+    Handle handle() const { return handle_; }
+    void* vram() { return RawRamXDFabric::instance().vramPtr(handle_); }
+    void* ram()  { return RawRamXDFabric::instance().ramPtr(handle_); }
+
+    bool ensureVRAM() { return RawRamXDFabric::instance().ensureInVRAM(handle_); }
+    void touch() { RawRamXDFabric::instance().touch(handle_); }
+
+private:
+    Handle handle_;
+};
+
+// Scoped VRAM residency guard
+class VRAMResidencyGuard {
+public:
+    explicit VRAMResidencyGuard(Handle handle);
+    ~VRAMResidencyGuard();
+
+    bool acquired() const { return acquired_; }
+
+private:
+    Handle handle_;
+    bool acquired_;
+};
+
+} // namespace rawramxd
+
+#endif // RAWRAMXD_HPP

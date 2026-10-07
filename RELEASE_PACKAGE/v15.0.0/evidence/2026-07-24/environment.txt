@@ -1,0 +1,7 @@
+OS Name:                       Microsoft Windows 11 Home
+OS Version:                    10.0.26200 N/A Build 26200
+OS Manufacturer:               Microsoft Corporation
+OS Configuration:              Standalone Workstation
+OS Build Type:                 Multiprocessor Free
+Processor(s):                  1 Processor(s) Installed.
+Total Physical Memory:         64,729 MB

@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(240) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(242) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(245) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(250) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(275) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(302) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(303) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(305) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(310) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(313) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(316) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(317) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(329) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(363) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(364) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(377) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(381) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(392) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(393) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(417) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(424) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(437) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(459) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(467) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(617) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(622) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(664) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(667) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(702) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(711) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(824) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(982) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1203) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1209) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1210) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1219) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1268) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1277) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1288) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1310) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1313) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1322) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1323) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1325) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1348) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1351) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1383) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1385) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1394) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1398) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1423) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1449) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1457) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1458) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1460) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1461) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1470) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1475) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1477) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1478) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1488) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1489) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1490) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1491) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1495) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1508) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1509) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1519) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1520) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1529) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1530) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1556) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1557) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1559) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1561) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1563) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1565) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1604) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1605) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1611) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1612) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1674) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1675) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1711) : error A2177:nested structure improperly initialized
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1724) : error A2006:undefined symbol : MODULEINFO
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1724) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1730) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1733) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1742) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1748) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1749) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578674321_KlMS.asm(1751) : fatal error A1012:error count exceeds 100; stopping assembly

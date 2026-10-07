@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(403) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(37) : error A2006:undefined symbol : g_hInstance
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(40) : error A2006:undefined symbol : DisableThreadLibraryCalls
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(74) : error A2006:undefined symbol : OpenProcess
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(85) : error A2006:undefined symbol : VirtualAllocEx
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(97) : error A2006:undefined symbol : WriteProcessMemory
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(58) : warning A6004:procedure argument or local not referenced : hInstDLL
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(58) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(58) : warning A6004:procedure argument or local not referenced : lpvReserved
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(306) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(315) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(324) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287998866_fAF0.asm(371) : warning A6004:procedure argument or local not referenced : lpParam

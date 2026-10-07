@@ -69,6 +69,7 @@ ggml-model-f16.bin
 *.gguf
 models/
 models-mnt
+*.safetensors
 
 src/arm_neon.h
 tests/arm_neon.h

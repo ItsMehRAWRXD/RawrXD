@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\native\q4_0_matmul.asm\1771251173039_ZBnn.asm
+D:\rawrxd\history\all_versions\native\q4_0_matmul.asm\1771251173039_ZBnn.asm(145) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\native\q4_0_matmul.asm\1771251173039_ZBnn.asm(146) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\native\q4_0_matmul.asm\1771251173039_ZBnn.asm(147) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\native\q4_0_matmul.asm\1771251173039_ZBnn.asm(148) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\native\q4_0_matmul.asm\1771251173039_ZBnn.asm(171) : warning A4025:ENDP found before .ENDPROLOG : q4_0_matmul_avx2
+D:\rawrxd\history\all_versions\native\q4_0_matmul.asm\1771251173039_ZBnn.asm(171) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\native\q4_0_matmul.asm\1771251173039_ZBnn.asm(171) : error A2220:Missing .ENDPROLOG

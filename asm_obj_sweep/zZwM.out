@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\zZwM.asm
+D:\rawrxd\history\-1bd1bafa\zZwM.asm(1552) : error A2008:syntax error
+D:\rawrxd\history\-1bd1bafa\zZwM.asm(1572) : error A2008:syntax error : [
+D:\rawrxd\history\-1bd1bafa\zZwM.asm(1604) : fatal error A1010:unmatched block nesting : parse_hex_color

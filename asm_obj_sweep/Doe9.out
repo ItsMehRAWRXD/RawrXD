@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-14d56c8\Doe9.asm
+D:\rawrxd\history\-14d56c8\Doe9.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\-14d56c8\Doe9.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\-14d56c8\Doe9.asm(38) : error A2070:invalid instruction operands
+D:\rawrxd\history\-14d56c8\Doe9.asm(40) : error A2008:syntax error : start
+D:\rawrxd\history\-14d56c8\Doe9.asm(40) : error A2088:END directive required at end of file

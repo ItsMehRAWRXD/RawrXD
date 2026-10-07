@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-1434e049\ZnRC.asm
+D:\rawrxd\history\-1434e049\ZnRC.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-1434e049\ZnRC.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\-1434e049\ZnRC.asm(11) : fatal error A1000:cannot open file : \masm32\include\windows.inc

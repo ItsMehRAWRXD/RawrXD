@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(70) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(117) : error A2008:syntax error : stage
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(137) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(234) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(258) : error A2008:syntax error : DQ
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(510) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(518) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(528) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(546) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(555) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(558) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(583) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(590) : error A2008:syntax error : GetProcAddress
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(618) : error A2008:syntax error : GetProcAddress
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(628) : error A2008:syntax error : GetProcAddress
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(650) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(658) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(697) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(753) : error A2008:syntax error : code
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(788) : error A2008:syntax error : code
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(823) : error A2008:syntax error : code
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(858) : error A2008:syntax error : code
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(962) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(968) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(969) : error A2008:syntax error : code
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(981) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1000) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1010) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1049) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1055) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1056) : error A2008:syntax error : code
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1068) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1087) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1097) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1136) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1142) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1143) : error A2008:syntax error : code
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1155) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1174) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1184) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1223) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1229) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1230) : error A2008:syntax error : code
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1242) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1261) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1271) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1301) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1344) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1379) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1449) : error A2008:syntax error : lstrlenA
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1450) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1455) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1458) : error A2008:syntax error : lstrlenA
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1459) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(1464) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(360) : error A2006:undefined symbol : strcpy_s
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(367) : error A2006:undefined symbol : strcpy_s
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(387) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(395) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(403) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(408) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(415) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(422) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(429) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(436) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(446) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(483) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(489) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(495) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(520) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(532) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(544) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(553) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(597) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(599) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(601) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(666) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(667) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(673) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(679) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(722) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(723) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(729) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(733) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(738) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(740) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(741) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(742) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(743) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(746) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(760) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(761) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(767) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(771) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(776) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(778) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(781) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(795) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(796) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(802) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-VulkanKernel-Complete.asm(806) : fatal error A1012:error count exceeds 100; stopping assembly

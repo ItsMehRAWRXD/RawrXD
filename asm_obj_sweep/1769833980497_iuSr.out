@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(132) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(134) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(144) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(157) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(172) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(178) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(184) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(188) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(198) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(200) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(253) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(262) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(267) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(268) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(271) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(272) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(275) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(276) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(279) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(280) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(291) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(308) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(309) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(310) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(311) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(312) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(313) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(317) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(380) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(389) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(402) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(403) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(404) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(413) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(427) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(429) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(430) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(445) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(458) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(513) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(514) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(535) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(544) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(555) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(572) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(573) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(576) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(577) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(578) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(582) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(601) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(610) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(621) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(630) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(631) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(632) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(635) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(651) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(664) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(671) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(672) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(673) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(674) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(675) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(678) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(701) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(705) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(754) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(756) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(758) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(760) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(762) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(764) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(766) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(768) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(772) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(774) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(776) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(778) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(780) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(782) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(784) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(786) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(791) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(793) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(794) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(798) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(815) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(818) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(832) : error A2008:syntax error : if
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(834) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(837) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(840) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(843) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(846) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(848) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(850) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(852) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833980497_iuSr.asm(854) : fatal error A1012:error count exceeds 100; stopping assembly

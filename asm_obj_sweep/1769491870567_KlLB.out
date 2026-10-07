@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm(20) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm(21) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm(27) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm(40) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm(41) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm(24) : error A2006:undefined symbol : fail_wait
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm(35) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm(37) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_evict.asm\1769491870567_KlLB.asm(42) : error A2006:undefined symbol : retry

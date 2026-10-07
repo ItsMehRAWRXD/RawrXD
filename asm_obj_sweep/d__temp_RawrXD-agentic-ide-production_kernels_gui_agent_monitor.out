@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(39) : error A2008:syntax error : mask
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(41) : error A2008:syntax error : cx
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(50) : error A2008:syntax error : mask
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(93) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(102) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(105) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(109) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(111) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(115) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(117) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(128) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(152) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(154) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(161) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(168) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(99) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(101) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(108) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(114) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_agent_monitor.asm(148) : error A2081:missing operand after unary operator

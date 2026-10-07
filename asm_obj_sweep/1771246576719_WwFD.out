@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246576719_WwFD.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246576719_WwFD.asm(127) : error A2005:symbol redefinition : AST_UNARY
+D:\rawrxd\history\all_versions\terraform.asm\1771246576719_WwFD.asm(129) : error A2005:symbol redefinition : AST_IDENT
+D:\rawrxd\history\all_versions\terraform.asm\1771246576719_WwFD.asm(130) : error A2005:symbol redefinition : AST_CALL
+D:\rawrxd\history\all_versions\terraform.asm\1771246576719_WwFD.asm(131) : error A2005:symbol redefinition : AST_ASSIGN
+D:\rawrxd\history\all_versions\terraform.asm\1771246576719_WwFD.asm(342) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771246576719_WwFD.asm(472) : fatal error A1010:unmatched block nesting : memcmp

@@ -1,0 +1,118 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(7) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(156) : error A2005:symbol redefinition : MAX_TENSORS
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(192) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(239) : error A2005:symbol redefinition : Q2_K_BYTES
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(241) : error A2005:symbol redefinition : Q4_K_BYTES
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(243) : error A2005:symbol redefinition : Q5_K_BYTES
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(245) : error A2005:symbol redefinition : Q6_K_BYTES
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(258) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(467) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(471) : error A2008:syntax error : g_cacheLock
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(472) : error A2008:syntax error : g_initOnce
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(480) : error A2008:syntax error : g_queueLock
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(520) : warning A6004:procedure argument or local not referenced : hInst
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(520) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(520) : warning A6004:procedure argument or local not referenced : lpReserved
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(531) : warning A6004:procedure argument or local not referenced : lpPath
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(531) : warning A6004:procedure argument or local not referenced : ppContext
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(537) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(543) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(543) : warning A6004:procedure argument or local not referenced : pInfo
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(556) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(556) : warning A6004:procedure argument or local not referenced : lpText
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(556) : warning A6004:procedure argument or local not referenced : pTokens
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(556) : warning A6004:procedure argument or local not referenced : maxTokens
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(563) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(563) : warning A6004:procedure argument or local not referenced : pInputTokens
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(563) : warning A6004:procedure argument or local not referenced : n_input
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(563) : warning A6004:procedure argument or local not referenced : pRequest
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(563) : warning A6004:procedure argument or local not referenced : pResponse
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(569) : warning A6004:procedure argument or local not referenced : lpEndpoint
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(569) : warning A6004:procedure argument or local not referenced : lpPrompt
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(569) : warning A6004:procedure argument or local not referenced : lpOutBuf
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(569) : warning A6004:procedure argument or local not referenced : dwOutSize
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(576) : warning A6004:procedure argument or local not referenced : pTensor
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(576) : warning A6004:procedure argument or local not referenced : pOut
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(576) : warning A6004:procedure argument or local not referenced : n_elements
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(583) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(583) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(583) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(583) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(583) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(583) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(589) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(589) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(589) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(589) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(589) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(589) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(595) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(595) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(595) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(595) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(595) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(595) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(601) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(601) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(601) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(601) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(601) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(601) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(607) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(607) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(607) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(607) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(607) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(607) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(613) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(613) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(613) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(613) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(613) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(613) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(619) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(619) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(619) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(619) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(619) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(619) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(625) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(625) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(625) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(625) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(625) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(625) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(631) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(631) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(631) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(631) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(631) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(631) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(637) : warning A6004:procedure argument or local not referenced : pA
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(637) : warning A6004:procedure argument or local not referenced : pB
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(637) : warning A6004:procedure argument or local not referenced : pC
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(637) : warning A6004:procedure argument or local not referenced : M
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(637) : warning A6004:procedure argument or local not referenced : K
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(637) : warning A6004:procedure argument or local not referenced : N
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(644) : warning A6004:procedure argument or local not referenced : pX
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(644) : warning A6004:procedure argument or local not referenced : pWeight
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(644) : warning A6004:procedure argument or local not referenced : n
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(644) : warning A6004:procedure argument or local not referenced : epsilon
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(650) : warning A6004:procedure argument or local not referenced : pX
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(650) : warning A6004:procedure argument or local not referenced : n
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(656) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(656) : warning A6004:procedure argument or local not referenced : pos
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(662) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(662) : warning A6004:procedure argument or local not referenced : layer
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(668) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(668) : warning A6004:procedure argument or local not referenced : layer
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(674) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(674) : warning A6004:procedure argument or local not referenced : token
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(674) : warning A6004:procedure argument or local not referenced : pos
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(674) : warning A6004:procedure argument or local not referenced : pLogits
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(680) : warning A6004:procedure argument or local not referenced : pLogits
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(680) : warning A6004:procedure argument or local not referenced : n_vocab
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(680) : warning A6004:procedure argument or local not referenced : temperature
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(680) : warning A6004:procedure argument or local not referenced : top_p
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge.asm\1769627623223_4Q9O.asm(680) : warning A6004:procedure argument or local not referenced : top_k

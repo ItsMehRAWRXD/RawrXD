@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(5) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(149) : error A2008:syntax error : esi
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(150) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(152) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(153) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(169) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(172) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(175) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(176) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro.asm(178) : fatal error A1010:unmatched block nesting : Print

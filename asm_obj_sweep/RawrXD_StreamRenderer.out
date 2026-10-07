@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\RawrXD_StreamRenderer.asm
+D:\rawrxd\src\RawrXD_StreamRenderer.asm(21) : error A2008:syntax error : invoke
+D:\rawrxd\src\RawrXD_StreamRenderer.asm(24) : error A2008:syntax error : SendMessageA
+D:\rawrxd\src\RawrXD_StreamRenderer.asm(27) : error A2008:syntax error : invoke

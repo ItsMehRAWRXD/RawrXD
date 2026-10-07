@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(13) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(66) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(86) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(87) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(88) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(190) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(235) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(236) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AuditSystem_Pure.asm\1771220805962_X4pt.asm(237) : error A2006:undefined symbol : r32d

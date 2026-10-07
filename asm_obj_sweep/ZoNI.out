@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\-1b707747\ZoNI.asm
+D:\rawrxd\history\-1b707747\ZoNI.asm(317) : error A2039:line too long
+D:\rawrxd\history\-1b707747\ZoNI.asm(3642) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\ZoNI.asm(3689) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\ZoNI.asm(3891) : error A2005:symbol redefinition : szBackDir
+D:\rawrxd\history\-1b707747\ZoNI.asm(3892) : error A2005:symbol redefinition : szExplorerDir
+D:\rawrxd\history\-1b707747\ZoNI.asm(3893) : error A2005:symbol redefinition : szExplorerPattern
+D:\rawrxd\history\-1b707747\ZoNI.asm(3895) : error A2005:symbol redefinition : find_data
+D:\rawrxd\history\-1b707747\ZoNI.asm(1030) : error A2006:undefined symbol : HandleFileDrop
+D:\rawrxd\history\-1b707747\ZoNI.asm(1489) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\ZoNI.asm(1613) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\ZoNI.asm(1686) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\ZoNI.asm(1694) : error A2006:undefined symbol : save_theme_to_config
+D:\rawrxd\history\-1b707747\ZoNI.asm(1728) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\ZoNI.asm(3558) : error A2006:undefined symbol : EM_LINEFROMCHAR
+D:\rawrxd\history\-1b707747\ZoNI.asm(390) : warning A4014:instructions and initialized data not supported in BSS segments

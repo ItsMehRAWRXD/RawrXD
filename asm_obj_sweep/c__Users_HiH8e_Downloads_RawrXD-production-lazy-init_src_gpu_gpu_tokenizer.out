@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(56) : error A2008:syntax error : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(94) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(97) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(141) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(147) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(171) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(191) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(216) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(244) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(250) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(275) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(311) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(317) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(354) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(374) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(384) : error A2006:undefined symbol : tokenizerMutex
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_tokenizer.asm(397) : error A2006:undefined symbol : tokenizerMutex

@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_kernels_dimensional_pool.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_kernels_dimensional_pool.asm(8) : error A2008:syntax error : AVX512F
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_kernels_dimensional_pool.asm(74) : error A2008:syntax error : zmm0
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_kernels_dimensional_pool.asm(97) : error A2008:syntax error : zmm4
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_kernels_dimensional_pool.asm(161) : error A2008:syntax error : zmm3
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_kernels_dimensional_pool.asm(203) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_kernels_dimensional_pool.asm(280) : error A2008:syntax error : zmm2

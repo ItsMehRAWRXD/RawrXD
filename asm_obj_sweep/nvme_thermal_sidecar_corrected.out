@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(12) : error A2008:syntax error : .
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(13) : error A2008:syntax error : .
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(14) : error A2008:syntax error : .
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(15) : error A2008:syntax error : .
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(16) : error A2008:syntax error : .
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(17) : error A2008:syntax error : .
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(90) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(375) : error A2005:symbol redefinition : KERNEL_PREFETCH
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(377) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(379) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\direct_io\nvme_thermal_sidecar_corrected.asm(428) : fatal error A1010:unmatched block nesting : KERNEL_PREFETCH

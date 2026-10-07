@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769910160727_Tsk3.asm
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769910160727_Tsk3.asm(186) : error A2005:symbol redefinition : szCmdInfer
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769910160727_Tsk3.asm(187) : error A2005:symbol redefinition : szCmdLoad
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769910160727_Tsk3.asm(664) : error A2006:undefined symbol : Titan_Initialize

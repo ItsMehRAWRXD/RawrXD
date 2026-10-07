@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_file_tree_context_menu.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_file_tree_context_menu.asm(44) : error A2008:syntax error : label
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_file_tree_context_menu.asm(184) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_file_tree_context_menu.asm(196) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_file_tree_context_menu.asm(203) : fatal error A1010:unmatched block nesting : output_show_context_menu

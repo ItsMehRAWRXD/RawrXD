@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\-2b4f82f3\EVWL.asm
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(6) : error A2008:syntax error : BITS
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(7) : error A2008:syntax error : DEFAULT
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(13) : error A2008:syntax error : section
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(15) : error A2008:syntax error : global
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(21) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(22) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(25) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(26) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(27) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(29) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(38) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(39) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(40) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(41) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(42) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(43) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(44) : error A2008:syntax error : in directive
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(52) : error A2008:syntax error : section
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(55) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(56) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(58) : error A2008:syntax error : section
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(65) : error A2008:syntax error : global
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(66) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(68) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(71) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(74) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(80) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(96) : error A2008:syntax error : global
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(97) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(99) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(103) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(109) : error A2008:syntax error : .
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(110) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(123) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(126) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(131) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(135) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(136) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(138) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(144) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(146) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(149) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(150) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(153) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(155) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(156) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(168) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(169) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(170) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(171) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(172) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(173) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(174) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(175) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(177) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(178) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(179) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(182) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(183) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(192) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(193) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(195) : error A2008:syntax error : .
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(196) : error A2034:must be in segment block
+D:\rawrxd\history\-2b4f82f3\EVWL.asm(198) : fatal error A1012:error count exceeds 100; stopping assembly

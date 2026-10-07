@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\asm\SovereignForwardPass.asm
+D:\rawrxd\src\asm\SovereignForwardPass.asm(24) : error A2006:undefined symbol : SovereignForward_Full
+D:\rawrxd\src\asm\SovereignForwardPass.asm(25) : error A2006:undefined symbol : SovereignForward_TokenStep
+D:\rawrxd\src\asm\SovereignForwardPass.asm(322) : error A2030:multiple index registers not allowed

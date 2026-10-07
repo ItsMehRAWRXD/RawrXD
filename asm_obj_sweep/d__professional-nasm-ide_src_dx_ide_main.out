@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(7) : error A2008:syntax error : bits
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(8) : error A2008:syntax error : default
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(13) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(14) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(15) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(16) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(17) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(18) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(19) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(20) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(21) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(22) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(23) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(24) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(25) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(26) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(27) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(30) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(31) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(32) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(33) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(34) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(35) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(36) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(39) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(40) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(41) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(42) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(43) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(44) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(45) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(50) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(51) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(52) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(53) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(54) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(55) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(56) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(57) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(58) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(59) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(60) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(61) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(62) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(63) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(64) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(66) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(67) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(68) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(69) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(70) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(71) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(72) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(73) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(74) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(76) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(77) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(78) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(79) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(80) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(81) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(84) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(85) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(86) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(87) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(88) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(89) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(90) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(91) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(92) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(93) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(95) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(96) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(97) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(98) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(99) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(100) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(101) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(102) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(104) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(105) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(106) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(111) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(113) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(117) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(118) : error A2008:syntax error : times
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(119) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(124) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(126) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(128) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(132) : error A2008:syntax error : times
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(136) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(137) : error A2008:syntax error : times
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_dx_ide_main.asm(140) : fatal error A1012:error count exceeds 100; stopping assembly

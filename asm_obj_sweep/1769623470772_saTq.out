@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1769623470772_saTq.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1769623470772_saTq.asm(137) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1769623470772_saTq.asm(170) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1769623470772_saTq.asm(264) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_MINIMAL.asm\1769623470772_saTq.asm(271) : error A2082:cannot mix 16- and 32-bit registers

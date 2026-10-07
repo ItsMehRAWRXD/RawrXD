@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-1ce0daba\kPMm.asm
+D:\rawrxd\history\-1ce0daba\kPMm.asm(876) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1ce0daba\kPMm.asm(383) : warning A6004:procedure argument or local not referenced : fdwCtrlType
+D:\rawrxd\history\-1ce0daba\kPMm.asm(483) : warning A6004:procedure argument or local not referenced : status

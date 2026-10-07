@@ -1,0 +1,8 @@
+╔════════════════════════════════════════════════════════════╗
+║  K2-001 Runtime Validation Gate                            ║
+╚════════════════════════════════════════════════════════════╝
+
+[INFO] Shard directory: D:\rawrxd
+
+── Gate 1: Shard Discovery ──
+  [FAIL] Gate: At least one K2 shard found

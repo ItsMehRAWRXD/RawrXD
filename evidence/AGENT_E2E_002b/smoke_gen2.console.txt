@@ -1,0 +1,72 @@
+[EMBED_RAW] token=29966 row=00000210ECC3BF00 rowBytes=1152 first32=D3 02 FF 0D EF B9 E8 F1 E3 E9 E9 A4 F7 1F EF BA 05 1A 4A 95 81 B2 5E 28 15 95 F4 63 90 45 C7 69 
+catalog-model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-path: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-kind: gguf
+[Deep2Engine] Loading model from: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=2048
+[Deep2Engine] Tokenizer loaded: 32000 tokens from GGUF
+[Deep2Engine] vocabSize override: metadata=2048 -> tensor=32000 (hidden=2048)
+[WO_DIAG] GGUF wo.data=00000210EE440000 rows=2048 cols=2048 type=12(Q4_K) block0 d=0x01BA dmin=0x0B26 qs[0]=0xD8
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=00000210E75FED20  Registered 'blk.0.attn_q.weight': offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  maxResidentBytes=536870912
+[ResidencyManager] this=00000210E75FED20  Registered 'blk.11.attn_q.weight': offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  maxResidentBytes=536870912
+[ResidencyManager] this=00000210E75FED20  Registered 'output.weight': offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=00000210E75FED20  registered=201 tensors  bytes=667078656  max=536870912
+[Deep2Engine] Model loaded successfully (201 tensors)
+RawrXD Sovereign Agentic Runtime
+architecture: llama
+model: tinyllama_tinyllama-1.1b-chat-v1.0
+chat-template: phi3
+deep2-streaming: whole-response
+workspace: F:\~dev\rawrxd\evidence\AGENT_E2E_002b\smoke_gen2
+external inference runtime: none
+cloud API: none
+
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=00000210EAB50000 sizeBytes=36864000
+[B3_STATE] phase=PROMPT_EMBED pos=0 size=2048 min=-3.719043732e-02 max=6.448411942e-02 mean=4.107651475e-04 l2=4.438004729e-01 finite=2048 nan=0 inf=0
+[Deep2Engine] Layer 0 weights: wq.data=00000210EE680000 type=12 wk.data=00000210EE3F0000 wv.data=00000210EE8C0000 wo.data=00000210EE440000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=00000210E7460000 ffnNorm.data=00000210E7470000
+[B3_STATE] phase=LAYER0_INPUT pos=0 size=2048 min=-3.719043732e-02 max=6.448411942e-02 mean=4.107651475e-04 l2=4.438004729e-01 finite=2048 nan=0 inf=0
+[B3_STATE] phase=ATTN_NORM pos=0 size=2048 min=-1.631229997e+00 max=3.153544664e+00 mean=2.184247005e-03 l2=4.496800441e+00 finite=2048 nan=0 inf=0
+[QUANT_FATAL] unsupported tensor type=12 tensor=blk.0.attn_q.weight rows=2048 cols=2048 (no format-blind FP32 fallback)
+[B3_ABORT] prefill layer=0: QUANT_FATAL unsupported type=12 tensor=blk.0.attn_q.weight
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=2048 cols=2048
+[AGENT_FAIL] model produced an empty response (no tools, no final answer)
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

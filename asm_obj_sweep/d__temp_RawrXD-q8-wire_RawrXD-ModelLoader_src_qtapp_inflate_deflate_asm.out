@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_qtapp_inflate_deflate_asm.asm
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_qtapp_inflate_deflate_asm.asm(4) : error A2034:must be in segment block : AsmInflate
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_qtapp_inflate_deflate_asm.asm(6) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_qtapp_inflate_deflate_asm.asm(7) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_src_qtapp_inflate_deflate_asm.asm(8) : fatal error A1010:unmatched block nesting : AsmInflate

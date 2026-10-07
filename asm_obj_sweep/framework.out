@@ -1,0 +1,40 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(97) : error A2008:syntax error : mask
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(99) : error A2008:syntax error : cx
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(108) : error A2008:syntax error : mask
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(181) : error A2084:constant value too large
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(183) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(186) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(189) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(192) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(198) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(204) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(210) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(216) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(223) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(227) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(231) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(233) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(234) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(237) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(240) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(241) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(260) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(275) : error A2008:syntax error : GetWindowTextA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(278) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(287) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(217) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(218) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(219) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(220) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(221) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(222) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(225) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(226) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(229) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(230) : error A2006:undefined symbol : col
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(269) : error A2022:instruction operands must be the same size
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(289) : warning A6004:procedure argument or local not referenced : hWnd
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(289) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(289) : warning A6004:procedure argument or local not referenced : lParam
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\kernels\gui\gui\framework.asm(289) : warning A6004:procedure argument or local not referenced : lvi

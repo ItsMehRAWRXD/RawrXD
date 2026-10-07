@@ -1,0 +1,359 @@
+name: Hotpatch Automation
+
+on:
+  push:
+    paths:
+      - 'security/phase_g1_hotpatch/patches/**'
+      - 'security/phase_g1_hotpatch/templates/**'
+  pull_request:
+    paths:
+      - 'security/phase_g1_hotpatch/**'
+  workflow_dispatch:
+    inputs:
+      patch_bundle:
+        description: 'Path to patch bundle JSON file'
+        required: true
+        default: 'security/phase_g1_hotpatch/patches/'
+      test_level:
+        description: 'Test level (unit/integration/full)'
+        required: true
+        default: 'integration'
+        type: choice
+        options:
+          - unit
+          - integration
+          - full
+      dry_run:
+        description: 'Run in dry-run mode'
+        required: false
+        default: true
+        type: boolean
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  RAWRXD_HOME: ${{ github.workspace }}
+
+jobs:
+  validate-patch:
+    name: Validate Patch Bundle
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Validate patch bundle schema
+        shell: pwsh
+        run: |
+          $patchBundle = "${{ github.event.inputs.patch_bundle }}"
+          if (-not $patchBundle) {
+            $patchBundle = "security/phase_g1_hotpatch/patches/"
+          }
+          
+          if (Test-Path $patchBundle -PathType Container) {
+            $bundles = Get-ChildItem $patchBundle -Filter "*.json" -Recurse
+            foreach ($bundle in $bundles) {
+              Write-Host "Validating: $($bundle.FullName)"
+              try {
+                $content = Get-Content $bundle.FullName -Raw | ConvertFrom-Json
+                Write-Host "✅ Valid JSON: $($bundle.Name)"
+              }
+              catch {
+                Write-Error "❌ Invalid JSON: $($bundle.Name) - $($_.Exception.Message)"
+                exit 1
+              }
+            }
+          }
+          else {
+            Write-Host "Validating: $patchBundle"
+            try {
+              $content = Get-Content $patchBundle -Raw | ConvertFrom-Json
+              Write-Host "✅ Valid JSON"
+            }
+            catch {
+              Write-Error "❌ Invalid JSON: $($_.Exception.Message)"
+              exit 1
+            }
+          }
+
+  test-patch:
+    name: Test Patch
+    needs: validate-patch
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Run patch tests
+        shell: pwsh
+        run: |
+          $patchBundle = "${{ github.event.inputs.patch_bundle }}"
+          $testLevel = "${{ github.event.inputs.test_level }}"
+          
+          if (-not $patchBundle) {
+            Write-Host "No patch bundle specified, skipping tests"
+            exit 0
+          }
+          
+          if (-not $testLevel) {
+            $testLevel = "integration"
+          }
+          
+          $testFramework = "security/phase_g1_hotpatch/testing/patch_test_framework.ps1"
+          if (Test-Path $testFramework) {
+            & $testFramework -PatchBundle $patchBundle -TestLevel $testLevel -OutputPath "test_results.json"
+          }
+          else {
+            Write-Warning "Test framework not found: $testFramework"
+          }
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-test-results
+          path: test_results.json
+          retention-days: 30
+
+  dry-run-patch:
+    name: Dry Run Patch
+    needs: test-patch
+    runs-on: windows-latest
+    if: ${{ github.event.inputs.dry_run != 'false' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Run dry-run
+        shell: pwsh
+        run: |
+          $patchBundle = "${{ github.event.inputs.patch_bundle }}"
+          if (-not $patchBundle) {
+            Write-Host "No patch bundle specified, skipping dry-run"
+            exit 0
+          }
+          
+          $orchestrator = "security/phase_g1_hotpatch/unified_hotpatch_orchestrator.ps1"
+          if (Test-Path $orchestrator) {
+            & $orchestrator -Action apply -System all -PatchBundle $patchBundle -DryRun
+          }
+          else {
+            Write-Warning "Orchestrator not found: $orchestrator"
+          }
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [validate-patch, test-patch]
+    runs-on: windows-latest
+    if: ${{ github.event.inputs.environment == 'staging' || github.event.inputs.environment == null }}
+    environment:
+      name: staging
+      url: https://staging.rawrxd.ai
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Deploy patch to staging
+        shell: pwsh
+        run: |
+          $patchBundle = "${{ github.event.inputs.patch_bundle }}"
+          if (-not $patchBundle) {
+            Write-Host "No patch bundle specified, skipping deployment"
+            exit 0
+          }
+          
+          Write-Host "Deploying patch to staging: $patchBundle"
+          $orchestrator = "security/phase_g1_hotpatch/unified_hotpatch_orchestrator.ps1"
+          if (Test-Path $orchestrator) {
+            & $orchestrator -Action apply -System all -PatchBundle $patchBundle
+          }
+
+      - name: Verify deployment
+        shell: pwsh
+        run: |
+          $orchestrator = "security/phase_g1_hotpatch/unified_hotpatch_orchestrator.ps1"
+          if (Test-Path $orchestrator) {
+            & $orchestrator -Action health-check
+          }
+
+  deploy-production:
+    name: Deploy to Production
+    needs: deploy-staging
+    runs-on: windows-latest
+    if: ${{ github.event.inputs.environment == 'production' }}
+    environment:
+      name: production
+      url: https://rawrxd.ai
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Deploy patch to production
+        shell: pwsh
+        run: |
+          $patchBundle = "${{ github.event.inputs.patch_bundle }}"
+          Write-Host "Deploying patch to production: $patchBundle"
+          $orchestrator = "security/phase_g1_hotpatch/unified_hotpatch_orchestrator.ps1"
+          if (Test-Path $orchestrator) {
+            & $orchestrator -Action apply -System all -PatchBundle $patchBundle
+          }
+
+      - name: Verify deployment
+        shell: pwsh
+        run: |
+          $orchestrator = "security/phase_g1_hotpatch/unified_hotpatch_orchestrator.ps1"
+          if (Test-Path $orchestrator) {
+            & $orchestrator -Action health-check
+          }
+
+      - name: Notify on success
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "✅ Hotpatch deployed to production successfully",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Hotpatch Deployment Complete"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Patch Bundle:*\n${{ github.event.inputs.patch_bundle }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\nProduction"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "❌ Hotpatch deployment to production failed",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Hotpatch Deployment Failed"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Patch Bundle:*\n${{ github.event.inputs.patch_bundle }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\nProduction"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Action Required:* Check GitHub Actions logs and consider rollback"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  monitor-patch:
+    name: Monitor Patch Health
+    needs: [deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Monitor patch health
+        shell: pwsh
+        run: |
+          $orchestrator = "security/phase_g1_hotpatch/unified_hotpatch_orchestrator.ps1"
+          if (Test-Path $orchestrator) {
+            # Run health check every 5 minutes for 30 minutes
+            for ($i = 0; $i -lt 6; $i++) {
+              Write-Host "Health check iteration $($i + 1)/6"
+              & $orchestrator -Action health-check
+              if ($LASTEXITCODE -ne 0) {
+                Write-Error "Health check failed!"
+                exit 1
+              }
+              if ($i -lt 5) {
+                Start-Sleep -Seconds 300
+              }
+            }
+          }
+
+      - name: Generate health report
+        shell: pwsh
+        run: |
+          $orchestrator = "security/phase_g1_hotpatch/unified_hotpatch_orchestrator.ps1"
+          if (Test-Path $orchestrator) {
+            & $orchestrator -Action status | Out-File "patch_health_report.txt"
+          }
+
+      - name: Upload health report
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-health-report
+          path: patch_health_report.txt
+          retention-days: 30

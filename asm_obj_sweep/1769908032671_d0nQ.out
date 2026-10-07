@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(427) : error A2008:syntax error : cx
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(431) : error A2008:syntax error : ward_SwiGLU
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(457) : error A2008:syntax error : cx
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(458) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(461) : error A2008:syntax error : in structure
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(468) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(469) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(473) : error A2008:syntax error : Titan_RunInferenceStep
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(480) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(487) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(497) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(499) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(508) : error A2008:syntax error : ENDP
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(517) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(518) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(523) : error A2008:syntax error : ssHeap
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(527) : error A2008:syntax error : retee
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769908032671_d0nQ.asm(532) : fatal error A1010:unmatched block nesting : rethutdown

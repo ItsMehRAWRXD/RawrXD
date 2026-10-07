@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_Streaming_Orchestrator.asm\1771284908374_WPnP.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_Streaming_Orchestrator.asm\1771284908374_WPnP.asm(110) : error A2006:undefined symbol : SetEvent
+D:\rawrxd\history\all_versions\src\masm\RawrXD_Streaming_Orchestrator.asm\1771284908374_WPnP.asm(178) : error A2006:undefined symbol : SetEvent

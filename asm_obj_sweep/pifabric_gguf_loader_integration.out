@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\pifabric_gguf_loader_integration.asm
+D:\rawrxd\pifabric_gguf_loader_integration.asm(2) : error A2008:syntax error : .
+D:\rawrxd\pifabric_gguf_loader_integration.asm(3) : error A2008:syntax error : .
+D:\rawrxd\pifabric_gguf_loader_integration.asm(48) : error A2008:syntax error : esi
+D:\rawrxd\pifabric_gguf_loader_integration.asm(54) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(61) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(62) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(63) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(64) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(65) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(66) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(67) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(68) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(69) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(70) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(84) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(85) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(86) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(87) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(88) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(89) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(90) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(91) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(92) : error A2070:invalid instruction operands
+D:\rawrxd\pifabric_gguf_loader_integration.asm(105) : fatal error A1010:unmatched block nesting : GGUF_LoaderWithResolver

@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(483) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(484) : error A2008:syntax error : DllMain
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(485) : error A2008:syntax error : GpuBackend_Init
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(486) : error A2008:syntax error : GpuBackend_Shutdown
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(487) : error A2008:syntax error : GpuBackend_LoadModel
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(488) : error A2008:syntax error : GpuBackend_RunInference
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(489) : error A2008:syntax error : GpuBackend_GetMetrics
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(490) : error A2008:syntax error : GpuBackend_IsHealthy
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(491) : error A2008:syntax error : GpuBackend_GetLastError
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(492) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(231) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(239) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(247) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(255) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(263) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(271) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(359) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_gpu_gpu_main_integration.asm(410) : error A2206:missing operator in expression

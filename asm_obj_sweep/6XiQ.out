@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-1bd1bafa\6XiQ.asm
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-1bd1bafa\6XiQ.asm(2454) : error A2005:symbol redefinition : UpdateComponentPositions
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-1bd1bafa\6XiQ.asm(2515) : fatal error A1010:unmatched block nesting : UpdateComponentPositions

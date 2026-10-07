@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\-2b92ceb2\dARs.asm
+D:\rawrxd\history\-2b92ceb2\dARs.asm(448) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b92ceb2\dARs.asm(538) : error A2006:undefined symbol : WM_DESTROY
+D:\rawrxd\history\-2b92ceb2\dARs.asm(551) : error A2006:undefined symbol : WM_UNDO
+D:\rawrxd\history\-2b92ceb2\dARs.asm(560) : error A2006:undefined symbol : WM_REDO
+D:\rawrxd\history\-2b92ceb2\dARs.asm(569) : error A2006:undefined symbol : WM_CUT
+D:\rawrxd\history\-2b92ceb2\dARs.asm(578) : error A2006:undefined symbol : WM_COPY
+D:\rawrxd\history\-2b92ceb2\dARs.asm(587) : error A2006:undefined symbol : WM_PASTE
+D:\rawrxd\history\-2b92ceb2\dARs.asm(596) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\-2b92ceb2\dARs.asm(622) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-2b92ceb2\dARs.asm(633) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-2b92ceb2\dARs.asm(644) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-2b92ceb2\dARs.asm(652) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-2b92ceb2\dARs.asm(945) : error A2006:undefined symbol : WM_COMMAND
+D:\rawrxd\history\-2b92ceb2\dARs.asm(962) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\history\-2b92ceb2\dARs.asm(228) : error A2047:empty (null) string
+D:\rawrxd\history\-2b92ceb2\dARs.asm(967) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\history\-2b92ceb2\dARs.asm(967) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\history\-2b92ceb2\dARs.asm(967) : warning A6004:procedure argument or local not referenced : lParam

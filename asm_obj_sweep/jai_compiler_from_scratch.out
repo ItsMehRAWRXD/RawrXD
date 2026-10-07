@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\jai_compiler_from_scratch.asm
+D:\rawrxd\itsmehrawrxd-master\jai_compiler_from_scratch.asm(1) : error A2039:line too long
+D:\rawrxd\itsmehrawrxd-master\jai_compiler_from_scratch.asm(1) : error A2088:END directive required at end of file

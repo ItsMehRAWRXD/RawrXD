@@ -1,0 +1,410 @@
+// ============================================================================
+// Deep2Bridge.cpp — Native Deep2 Engine Bridge Implementation
+// ============================================================================
+
+#include "Deep2Bridge.hpp"
+#include "Deep2Engine.h"
+#include "K2NativeStreamGate.hpp"
+#include "Tokenizer.hpp"
+#include "../inference/RawrXD_LlamaNative.h"
+#include "../runtime/RawrRuntime.hpp"
+#include <cstdio>
+#include <chrono>
+#include <thread>
+#include <utility>
+#include <algorithm>
+
+namespace rawr {
+
+Deep2Bridge& Deep2Bridge::Get() {
+    static Deep2Bridge instance;
+    return instance;
+}
+
+Deep2Bridge::~Deep2Bridge() = default;
+
+void Deep2Bridge::SetBackend(InferenceBackend backend) {
+    if (m_status != EngineStatus::Uninitialized) {
+        RawrRuntime::Get().Log(LogLevel::Warn, "Cannot change backend after initialization");
+        return;
+    }
+    m_backend = backend;
+}
+
+bool Deep2Bridge::Initialize(const EngineConfig& config) {
+    m_config = config;
+    m_status = EngineStatus::Initializing;
+
+    RawrRuntime::Get().Log(LogLevel::Info, "Deep2Bridge initializing...");
+
+    if (m_backend == InferenceBackend::LlamaNative) {
+        m_llamaBridge = std::make_unique<LlamaNativeBridge>();
+        if (!m_llamaBridge->Initialize(nullptr)) {
+            RawrRuntime::Get().Log(LogLevel::Error, "LlamaNativeBridge initialization failed");
+            m_llamaBridge.reset();
+            m_status = EngineStatus::Error;
+            return false;
+        }
+        m_status = EngineStatus::Ready;
+        m_sessionId = 1;
+        RawrRuntime::Get().Log(LogLevel::Info, "Deep2Bridge ready (LlamaNative backend)");
+        return true;
+    }
+
+    // Create and initialize the real Deep2Engine
+    m_engine = std::make_unique<Deep2::Deep2Engine>();
+
+    Deep2::EngineConfig deep2Cfg;
+    deep2Cfg.hiddenDim      = config.hiddenDim;
+    deep2Cfg.numLayers      = config.numLayers;
+    deep2Cfg.numHeads       = config.numHeads;
+    deep2Cfg.numKVHeads     = config.numKVHeads;
+    deep2Cfg.headDim        = config.headDim;
+    deep2Cfg.vocabSize      = config.vocabSize;
+    deep2Cfg.intermediateDim= config.intermediateDim;
+    deep2Cfg.maxSeqLen      = static_cast<size_t>(config.contextSize);
+    deep2Cfg.useKVCache     = config.useKVCache;
+    deep2Cfg.normEps        = config.normEps;
+    deep2Cfg.ropeTheta      = config.ropeTheta;
+    deep2Cfg.ropeScaling    = config.ropeScaling;
+
+    if (!m_engine->initialize(deep2Cfg)) {
+        RawrRuntime::Get().Log(LogLevel::Error, "Deep2Engine initialization failed");
+        m_engine.reset();
+        m_status = EngineStatus::Error;
+        return false;
+    }
+
+    m_status = EngineStatus::Ready;
+    m_sessionId = 1;
+    RawrRuntime::Get().Log(LogLevel::Info, "Deep2Bridge ready");
+    return true;
+}
+
+void Deep2Bridge::Shutdown() {
+    if (m_generating) {
+        CancelGeneration();
+    }
+    UnloadModel();
+    m_engine.reset();
+    m_llamaBridge.reset();
+    m_status = EngineStatus::Uninitialized;
+    RawrRuntime::Get().Log(LogLevel::Info, "Deep2Bridge shutdown");
+}
+
+bool Deep2Bridge::LoadModel(const char* path) {
+    if (m_modelLoaded) {
+        UnloadModel();
+    }
+
+    m_config.modelPath = path;
+    RawrRuntime::Get().Log(LogLevel::Info, "Loading model...");
+
+    if (m_backend == InferenceBackend::LlamaNative) {
+        if (!m_llamaBridge) {
+            RawrRuntime::Get().Log(LogLevel::Error, "Cannot load model: LlamaNativeBridge not initialized");
+            return false;
+        }
+        int wlen = MultiByteToWideChar(CP_UTF8, 0, path, -1, nullptr, 0);
+        std::vector<wchar_t> wpath(wlen);
+        MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath.data(), wlen);
+        int32_t gpuLayers = m_config.useGPU ? -1 : 0;
+        if (!m_llamaBridge->LoadModel(wpath.data(), gpuLayers, static_cast<uint32_t>(m_config.contextSize))) {
+            RawrRuntime::Get().Log(LogLevel::Error, "LlamaNative model load failed");
+            return false;
+        }
+        m_modelLoaded = true;
+        RawrRuntime::Get().Log(LogLevel::Info, "Model loaded (LlamaNative)");
+        return true;
+    }
+
+    if (!m_engine) {
+        RawrRuntime::Get().Log(LogLevel::Error, "Cannot load model: engine not initialized");
+        return false;
+    }
+
+    if (!m_engine->loadModel(path)) {
+        RawrRuntime::Get().Log(LogLevel::Error, "Model load failed");
+        return false;
+    }
+
+    m_modelLoaded = true;
+    RawrRuntime::Get().Log(LogLevel::Info, "Model loaded");
+    return true;
+}
+
+void Deep2Bridge::UnloadModel() {
+    if (!m_modelLoaded) return;
+    if (m_backend == InferenceBackend::LlamaNative && m_llamaBridge) {
+        m_llamaBridge->UnloadModel();
+    } else if (m_engine) {
+        m_engine->unloadModel();
+    }
+    m_modelLoaded = false;
+    RawrRuntime::Get().Log(LogLevel::Info, "Model unloaded");
+}
+
+bool Deep2Bridge::Generate(const char* prompt, TokenCallback onToken, ErrorCallback onError) {
+    if (!m_modelLoaded || m_generating) return false;
+
+    m_generating = true;
+    m_status = EngineStatus::Generating;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    if (m_backend == InferenceBackend::LlamaNative) {
+        if (!m_llamaBridge) {
+            if (onError) onError("LlamaNativeBridge not initialized");
+            m_generating = false;
+            m_status = EngineStatus::Ready;
+            return false;
+        }
+
+        auto result = m_llamaBridge->Generate(
+            prompt,
+            256,  // maxTokens
+            m_config.temperature,
+            m_config.topP,
+            static_cast<int32_t>(m_config.topK)
+        );
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+        if (!result.success) {
+            if (onError) onError(result.error.c_str());
+            m_generating = false;
+            m_status = EngineStatus::Ready;
+            return false;
+        }
+
+        if (onToken && !result.text.empty()) {
+            onToken(result.text.c_str(), 0);
+        }
+
+        m_metrics.totalTokens += result.tokens_generated;
+        m_metrics.totalTimeUs += elapsed.count();
+        if (elapsed.count() > 0) {
+            m_metrics.tokensPerSecond = static_cast<double>(result.tokens_generated) / (elapsed.count() / 1000000.0);
+            m_metrics.avgLatencyMs = static_cast<double>(elapsed.count() / 1000.0) / std::max<size_t>(result.tokens_generated, 1);
+        }
+
+        m_generating = false;
+        m_status = EngineStatus::Ready;
+        return result.tokens_generated > 0;
+    }
+
+    if (!m_engine) {
+        m_generating = false;
+        m_status = EngineStatus::Ready;
+        return false;
+    }
+
+    // Tokenize the prompt
+    std::vector<int> promptTokens = m_engine->tokenize(prompt);
+    if (promptTokens.empty()) {
+        if (onError) onError("Failed to tokenize prompt");
+        m_generating = false;
+        m_status = EngineStatus::Ready;
+        return false;
+    }
+
+    // Allocate output buffer
+    const size_t maxOutputLen = 256;
+    std::vector<int> outputTokens(maxOutputLen);
+    Deep2::InferenceStats stats{};
+
+    // Invoke the real Deep2Engine generation
+    size_t generated = m_engine->generate(
+        promptTokens.data(), promptTokens.size(),
+        outputTokens.data(), maxOutputLen,
+        &stats,
+        [&](int tokenId) -> bool {
+            if (!m_generating) return false; // cancelled
+            std::string tokenText = m_engine->detokenize(std::vector<int>{tokenId});
+            if (onToken) onToken(tokenText.c_str(), static_cast<uint32_t>(stats.tokensGenerated));
+            return true;
+        }
+    );
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    m_metrics.totalTokens += generated;
+    m_metrics.totalTimeUs += elapsed.count();
+    if (elapsed.count() > 0) {
+        m_metrics.tokensPerSecond = static_cast<double>(generated) / (elapsed.count() / 1000000.0);
+        m_metrics.avgLatencyMs = static_cast<double>(elapsed.count() / 1000.0) / std::max<size_t>(generated, 1);
+    }
+
+    m_generating = false;
+    m_status = EngineStatus::Ready;
+    return generated > 0;
+}
+
+bool Deep2Bridge::GenerateStream(const char* prompt, TokenCallback onToken, ErrorCallback onError) {
+    return GenerateStream(prompt,
+                          256u,
+                          m_config.temperature,
+                          m_config.topK,
+                          m_config.topP,
+                          std::move(onToken),
+                          std::move(onError));
+}
+
+bool Deep2Bridge::GenerateStream(const char* prompt,
+                                 uint32_t maxTokens,
+                                 float temperature,
+                                 uint32_t topK,
+                                 float topP,
+                                 TokenCallback onToken,
+                                 ErrorCallback onError) {
+    if (!prompt || !prompt[0]) {
+        if (onError) onError("prompt required");
+        return false;
+    }
+    if (!m_modelLoaded) {
+        if (onError) onError("model not loaded");
+        return false;
+    }
+    if (m_generating) {
+        if (onError) onError("generation already active");
+        return false;
+    }
+
+    // Native token streaming requires Deep2Engine — LlamaNative is whole-result.
+    if (m_backend != InferenceBackend::Deep2Engine) {
+        if (onError) onError("native token streaming requires Deep2Engine backend");
+        return false;
+    }
+    if (!m_engine) {
+        if (onError) onError("Deep2Engine not initialized");
+        return false;
+    }
+
+    m_generating = true;
+    m_status = EngineStatus::Generating;
+    m_engine->clearCancel();
+
+    Deep2::GenerationOptions opts{};
+    opts.maxTokens = maxTokens ? maxTokens : 1u;
+    opts.temperature = temperature;
+    opts.topK = topK ? topK : 1u;
+    opts.topP = topP;
+
+    uint32_t streamIndex = 0;
+    const auto start = std::chrono::high_resolution_clock::now();
+    const Deep2::GenerationResult result = m_engine->generateStream(
+        prompt,
+        opts,
+        [&](int32_t, const std::string& piece) -> bool {
+            if (!m_generating) return false;
+            const uint32_t index = streamIndex++;
+            if (onToken && !piece.empty()) {
+                onToken(piece.c_str(), index);
+            }
+            return true;
+        });
+    const auto end = std::chrono::high_resolution_clock::now();
+    const auto elapsed =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    m_metrics.totalTokens += result.generatedTokens;
+    m_metrics.totalTimeUs += static_cast<uint64_t>(elapsed.count());
+    if (elapsed.count() > 0) {
+        const double seconds = static_cast<double>(elapsed.count()) / 1000000.0;
+        m_metrics.tokensPerSecond =
+            static_cast<double>(result.generatedTokens) / seconds;
+        m_metrics.avgLatencyMs =
+            static_cast<double>(elapsed.count()) / 1000.0 /
+            static_cast<double>(std::max<uint64_t>(result.generatedTokens, 1u));
+    }
+
+    m_generating = false;
+    m_status = EngineStatus::Ready;
+
+    if (result.generatedTokens == 0) {
+        if (onError) {
+            onError(result.cancelled
+                        ? "Deep2 generation cancelled before first token"
+                        : "Deep2 generateStream produced zero tokens");
+        }
+        return false;
+    }
+    return true;
+}
+
+void Deep2Bridge::CancelGeneration() {
+    m_generating = false;
+    if (m_engine) m_engine->requestCancel();
+    m_status = EngineStatus::Ready;
+}
+
+Deep2Bridge::Metrics Deep2Bridge::GetMetrics() const {
+    return m_metrics;
+}
+
+void Deep2Bridge::ResetSession() {
+    m_sessionId++;
+    m_metrics = {};
+    RawrRuntime::Get().Log(LogLevel::Info, "Session reset");
+}
+
+bool Deep2Bridge::GenerateK2NativeStreamPartial(const char* shardDir,
+                                                  const char* prompt,
+                                                  uint32_t streamTokens,
+                                                  uint32_t layerDepth,
+                                                  K2NativeStreamBridgeResult* out) {
+    if (!out) return false;
+    *out = {};
+    out->deep2BridgeEntered = true;
+    out->noTestHarnessDirectCall = true;
+
+    if (m_backend != InferenceBackend::Deep2Engine) {
+        out->stream.error = "K2NativeStream requires Deep2Engine backend";
+        return false;
+    }
+
+    if (!m_engine) {
+        EngineConfig ecfg;
+        ecfg.hiddenDim = 7168;
+        ecfg.numLayers = 61;
+        ecfg.numHeads = 64;
+        ecfg.numKVHeads = 1;
+        ecfg.vocabSize = 163840;
+        ecfg.useMLA = true;
+        if (!Initialize(ecfg)) {
+            out->stream.error = "Deep2Bridge Initialize failed";
+            return false;
+        }
+    }
+
+    out->deep2EngineEntered = true;
+    if (!shardDir || !shardDir[0]) {
+        out->stream.error = "shardDir required";
+        return false;
+    }
+    if (!m_engine->openK2ShardDirectory(shardDir)) {
+        out->stream.error = "Deep2Engine::openK2ShardDirectory failed";
+        return false;
+    }
+
+    out->k2NativeStreamSelected = true;
+    K2NativeStreamGate::Config gcfg;
+    gcfg.prompt = prompt ? prompt : "hello";
+    gcfg.streamTokens = streamTokens;
+    gcfg.layerDepth = layerDepth;
+    gcfg.budgetBytes = 256ull * 1024 * 1024;
+
+    out->stream = m_engine->runK2NativeStreamPartial(gcfg);
+    m_modelLoaded = true;
+    m_config.modelPath = shardDir;
+
+    if (out->stream.streamingCallbackFired && !out->stream.generatedText.empty()) {
+        RawrRuntime::Get().Log(LogLevel::Info,
+            ("K2NativeStream token: " + out->stream.generatedText).c_str());
+    }
+    return out->stream.ok;
+}
+
+} // namespace rawr

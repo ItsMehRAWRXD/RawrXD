@@ -1,0 +1,5 @@
+D:\rawrxd\src\obj\Debug\net8.0\Sovereign_PE_Generator.GeneratedMSBuildEditorConfig.editorconfig
+D:\rawrxd\src\obj\Debug\net8.0\Sovereign_PE_Generator.AssemblyInfoInputs.cache
+D:\rawrxd\src\obj\Debug\net8.0\Sovereign_PE_Generator.AssemblyInfo.cs
+D:\rawrxd\src\obj\Debug\net8.0\Sovereign_PE_Generator.csproj.CoreCompileInputs.cache
+D:\rawrxd\src\obj\Debug\net8.0\Sovereign_PE_Generator.sourcelink.json

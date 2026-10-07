@@ -1,0 +1,29 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(50) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(108) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(130) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(212) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(307) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(332) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(338) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(344) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(430) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(435) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(526) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(568) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(605) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(712) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(147) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(194) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(224) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(296) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(353) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(412) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(493) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(531) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(633) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(659) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(671) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(701) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ZERO_DEPENDENCY.ASM\1769566378929_MAvg.ASM(727) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(22) : error A2008:syntax error : define
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(45) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(46) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(49) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(50) : error A2008:syntax error : (
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(53) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(54) : error A2008:syntax error : (
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(57) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(58) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(59) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(60) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(63) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(64) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(65) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(66) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(67) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(68) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(71) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(72) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(73) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(76) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(77) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(80) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(83) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(84) : error A2008:syntax error : (
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(86) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(87) : error A2008:syntax error : (
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(90) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(91) : error A2008:syntax error : global
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(92) : error A2008:syntax error : global
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(95) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(96) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(98) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(99) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(102) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(103) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(104) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(107) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(108) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(109) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(112) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(113) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(114) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(117) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(118) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(119) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(122) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(124) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(125) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(135) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(136) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(146) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(147) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(157) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(158) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(170) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(171) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(172) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(175) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(176) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(177) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(178) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(179) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(180) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(193) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(194) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(195) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(198) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(199) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(200) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(201) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(202) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(203) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(204) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(216) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(217) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(218) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(220) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(221) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(223) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(224) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(226) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(227) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(228) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(231) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(232) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(233) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(253) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(254) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(255) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(258) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(259) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(260) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(280) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(281) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(282) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(286) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(287) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(288) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(289) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXDLoops\omega\unix.asm(291) : fatal error A1012:error count exceeds 100; stopping assembly

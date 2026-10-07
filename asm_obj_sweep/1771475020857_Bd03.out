@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_HeadlessWidgets.asm\1771475020857_Bd03.asm
+D:\rawrxd\history\all_versions\src\RawrXD_HeadlessWidgets.asm\1771475020857_Bd03.asm(549) : error A2218:AH, BH, CH, or DH may not be used with R8-R15, BPL, DIL, SIL, or SPL

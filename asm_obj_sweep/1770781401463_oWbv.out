@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(47) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(51) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(55) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(59) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(63) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(67) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(71) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(75) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(79) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(83) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(98) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Telemetry_Kernel.asm\1770781401463_oWbv.asm(101) : error A2189:invalid combination with segment alignment : 64

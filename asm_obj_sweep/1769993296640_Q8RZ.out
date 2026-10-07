@@ -1,0 +1,70 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(10) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(34) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(36) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(37) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(268) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(610) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(125) : error A2006:undefined symbol : IPC_PeekMessage
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(148) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(149) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(151) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(155) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(162) : error A2006:undefined symbol : IPC_MUTEX_NAME
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(163) : error A2006:undefined symbol : CreateMutexA
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(172) : error A2006:undefined symbol : IPC_EVENT_GUI
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(173) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(179) : error A2006:undefined symbol : IPC_EVENT_CLI
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(180) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(185) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(189) : error A2006:undefined symbol : IPC_SHARED_MEM_NAME
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(192) : error A2006:undefined symbol : CreateFileMappingA
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(206) : error A2006:undefined symbol : MapViewOfFile
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(245) : error A2006:undefined symbol : Sleep
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(260) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(266) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(267) : error A2006:undefined symbol : VirtualFree
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(297) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(301) : error A2006:undefined symbol : INFINITE
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(302) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(310) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(316) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(334) : error A2006:undefined symbol : GetCurrentProcessId
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(337) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(341) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(365) : error A2006:undefined symbol : SetEvent
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(376) : error A2006:undefined symbol : ReleaseMutex
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(397) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(401) : error A2006:undefined symbol : INFINITE
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(402) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(410) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(416) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(453) : error A2006:undefined symbol : ReleaseMutex
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(474) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(494) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(497) : error A2006:undefined symbol : WAIT_TIMEOUT
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(519) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(528) : error A2006:undefined symbol : Sleep
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(545) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(556) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(571) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(589) : error A2006:undefined symbol : UnmapViewOfFile
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(593) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(596) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(599) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(602) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(607) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(608) : error A2006:undefined symbol : VirtualFree
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(278) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(384) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(459) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(511) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(540) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(550) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(564) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(616) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_IPC_Bridge.asm\1769993296640_Q8RZ.asm(635) : error A2220:Missing .ENDPROLOG

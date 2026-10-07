@@ -1,0 +1,49 @@
+# RawrXD ExecutionPolicy — user-owned execution contract
+# Precedence: Session > Model > Global > AutoDetect
+execution:
+  mode: expert
+  version: 1
+  persist_runtime_changes: true
+  model_fingerprint: "sha256:REPLACE_WITH_MODEL_SHA"
+memory:
+  vram: 12GB
+  vram_cap: hard
+  ram: 40GB
+  vram_parts:
+    weights: 6GB
+    kv: 3GB
+    activations: 1GB
+    streaming: 1GB
+    scratch: 512MB
+    reserve: 512MB
+placement:
+  embeddings: ram
+  lm_head: gpu0
+  attention: gpu0
+  ffn: hybrid
+  layers:
+    "0-10": gpu0
+    "11-*": stream
+streaming:
+  enabled: true
+  chunk_size: 64MB
+  prefetch_depth: 3
+  queue_depth: 8
+  buffers: 3
+  direct_io: true
+kv:
+  placement: hybrid
+  gpu_budget: 2GB
+  quant: q8
+  context: 4096
+work_avoidance:
+  enabled: true
+  policy: certified
+  fail_closed: true
+scheduler:
+  objective: throughput
+  auto_tune: true
+  respect_overrides: true
+hotpatch:
+  enabled: true
+  adaptive: true

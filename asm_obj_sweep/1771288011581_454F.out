@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_GPU_Memory.asm\1771288011581_454F.asm
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_GPU_Memory.asm\1771288011581_454F.asm(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_GPU_Memory.asm\1771288011581_454F.asm(12) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\masm\interconnect\RawrXD_GPU_Memory.asm\1771288011581_454F.asm(14) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

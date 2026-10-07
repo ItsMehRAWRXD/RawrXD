@@ -1,0 +1,26 @@
+AGENT_TOOL_EFFECT_001 — tool effect ladder (frozen)
+===================================================
+date=2026-08-29
+authority=AGENT_TOOL_LADDER_001.txt (frozen_from AGENT_E2E_002b/01_compile)
+
+LADDER (first false = authority)
+--------------------------------
+MODEL_OUTPUT           PASS
+TOOL_CALL_DETECTED     PASS
+TOOL_CALL_PARSED       PASS
+SCHEMA_VALID           FAIL  << FIRST_FALSE (model emitted bare-key args)
+TOOL_DISPATCHED        — superseded by SCHEMA_002 fail-closed (dispatched=false on reject)
+TOOL_RESULT_OK         FAIL
+FILE_BYTES_CHANGED     FAIL
+…
+
+STATUS
+------
+Schema pre-dispatch runtime path CLOSED (see AGENT_TOOL_SCHEMA_002/GATE.txt)
+End-to-end model→schema_valid still FAIL (generation dialect)
+agent.schema_retry     OPEN
+agent.edit_e2e         OPEN
+
+NEXT
+----
+Drive model lane with schema_validation observation → strict JSON retry → mutate → build

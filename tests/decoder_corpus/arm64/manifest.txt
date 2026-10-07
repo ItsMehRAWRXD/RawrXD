@@ -1,0 +1,10 @@
+
+# ARM64 instruction test cases
+# Format: name: bytes (hex) : expected_mnemonic : expected_length
+
+nop: DF2003D5: nop: 4
+movz: 000080D2: movz: 4
+movk: 000080F2: movk: 4
+ret: C0035FD6: ret: 4
+brk: 000020D4: brk: 4
+

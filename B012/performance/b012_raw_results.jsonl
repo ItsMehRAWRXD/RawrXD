@@ -1,0 +1,100 @@
+{
+  "experiment": "B012",
+  "decode_length": 1,
+  "mode": "B010",
+  "prompt_tokens": 3,
+  "generated_tokens": 1,
+  "callback_count": 1,
+  "wall_time_ms": 20759,
+  "prefill_time_ms": 20759,
+  "decode_time_ms": 0,
+
+[B010] ===== Weight Access Profile =====
+[B010] Total StreamingMatMul calls:    786
+[B010] Unique tensors acquired:        197
+[B010] Total bytes read (dequantized):  7054.28 MB
+[B010] Map calls (StreamingPin):        786
+[B010] Unmap calls:                     786
+[B010] Incidental map calls:            0
+[B010] Acquisition time (lookup+pin):    0.00 ms (0.0%)
+[B010] Compute time (dequant+dot):       11198.50 ms (100.0%)
+[B010] Total time:                       11198.50 ms
+[B010] Repeated acquisitions:            589 (calls - unique)
+[B010] ===================================
+
+  "status": "PASS"
+}
+{
+  "experiment": "B012",
+  "decode_length": 1,
+  "mode": "B011",
+  "prompt_tokens": 3,
+  "generated_tokens": 1,
+  "callback_count": 1,
+  "wall_time_ms": 23252,
+  "prefill_time_ms": 23252,
+  "decode_time_ms": 0,
+
+=== B011 WEIGHT RESIDENCY ===
+Acquisitions       : 786
+Cache hits         : 589
+Cache misses       : 197
+Hit rate           : 74.94%
+Bytes read         : 2010839040
+Bytes resident     : 2010839040
+Maps               : 197
+Unmaps             : 197
+Acquisition time   : 0.000 ms
+Compute time       : 12332.533 ms
+  "status": "PASS"
+}
+{
+  "experiment": "B012",
+  "decode_length": 2,
+  "mode": "B010",
+  "prompt_tokens": 3,
+  "generated_tokens": 2,
+  "callback_count": 2,
+  "wall_time_ms": 26347,
+  "prefill_time_ms": 20653,
+  "decode_time_ms": 5694,
+
+[B010] ===== Weight Access Profile =====
+[B010] Total StreamingMatMul calls:    983
+[B010] Unique tensors acquired:        197
+[B010] Total bytes read (dequantized):  8971.96 MB
+[B010] Map calls (StreamingPin):        983
+[B010] Unmap calls:                     983
+[B010] Incidental map calls:            0
+[B010] Acquisition time (lookup+pin):    0.00 ms (0.0%)
+[B010] Compute time (dequant+dot):       14343.29 ms (100.0%)
+[B010] Total time:                       14343.29 ms
+[B010] Repeated acquisitions:            786 (calls - unique)
+[B010] ===================================
+
+  "status": "PASS"
+}
+{
+  "experiment": "B012",
+  "decode_length": 2,
+  "mode": "B011",
+  "prompt_tokens": 3,
+  "generated_tokens": 2,
+  "callback_count": 2,
+  "wall_time_ms": 25767,
+  "prefill_time_ms": 20472,
+  "decode_time_ms": 5295,
+
+=== B011 WEIGHT RESIDENCY ===
+Acquisitions       : 983
+Cache hits         : 786
+Cache misses       : 197
+Hit rate           : 79.96%
+Bytes read         : 2010839040
+Bytes resident     : 2010839040
+Maps               : 197
+Unmaps             : 197
+Acquisition time   : 0.000 ms
+Compute time       : 14453.704 ms
+  "status": "PASS"
+}

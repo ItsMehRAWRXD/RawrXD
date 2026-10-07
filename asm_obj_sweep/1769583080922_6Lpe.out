@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(470) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(475) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(482) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(508) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(1071) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(277) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(282) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(320) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(325) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(735) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(1193) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(1227) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Medium_Priority_P2.asm\1769583080922_6Lpe.asm(1228) : error A2082:cannot mix 16- and 32-bit registers

@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246533876_hs77.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246533876_hs77.asm(127) : error A2005:symbol redefinition : AST_UNARY
+D:\rawrxd\history\all_versions\terraform.asm\1771246533876_hs77.asm(131) : error A2005:symbol redefinition : AST_ASSIGN
+D:\rawrxd\history\all_versions\terraform.asm\1771246533876_hs77.asm(343) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771246533876_hs77.asm(475) : fatal error A1010:unmatched block nesting : memcmp

@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\RawrXD_NetworkRelay_New.asm
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(27) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(105) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(106) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(107) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(113) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(117) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(120) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(164) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(165) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(166) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(167) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(168) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(169) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(203) : error A2006:undefined symbol : select
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(219) : error A2006:undefined symbol : recv
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(234) : error A2006:undefined symbol : send
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(252) : error A2006:undefined symbol : send
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(265) : error A2006:undefined symbol : recv
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(276) : error A2006:undefined symbol : send
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(289) : error A2006:undefined symbol : closesocket
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(291) : error A2006:undefined symbol : closesocket
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(294) : error A2166:structure field expected
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(30) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(408) : warning A4025:ENDP found before .ENDPROLOG : RelayEngine_GetStats
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(408) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\RawrXD_NetworkRelay_New.asm(408) : error A2220:Missing .ENDPROLOG

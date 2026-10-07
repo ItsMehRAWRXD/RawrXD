@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\-1b707747\ZisT.asm
+D:\rawrxd\history\-1b707747\ZisT.asm(319) : error A2039:line too long
+D:\rawrxd\history\-1b707747\ZisT.asm(3811) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\ZisT.asm(3858) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\ZisT.asm(4200) : error A2005:symbol redefinition : szBackDir
+D:\rawrxd\history\-1b707747\ZisT.asm(4201) : error A2005:symbol redefinition : szExplorerDir
+D:\rawrxd\history\-1b707747\ZisT.asm(4202) : error A2005:symbol redefinition : szExplorerPattern
+D:\rawrxd\history\-1b707747\ZisT.asm(4204) : error A2005:symbol redefinition : find_data
+D:\rawrxd\history\-1b707747\ZisT.asm(1039) : error A2006:undefined symbol : HandleFileDrop
+D:\rawrxd\history\-1b707747\ZisT.asm(1515) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\ZisT.asm(1639) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\ZisT.asm(1712) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\ZisT.asm(1720) : error A2006:undefined symbol : save_theme_to_config
+D:\rawrxd\history\-1b707747\ZisT.asm(1754) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\ZisT.asm(3727) : error A2006:undefined symbol : EM_LINEFROMCHAR
+D:\rawrxd\history\-1b707747\ZisT.asm(392) : warning A4014:instructions and initialized data not supported in BSS segments

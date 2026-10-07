@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\ai_completion_provider_masm.asm\1771137500685_GXLt.asm
+D:\rawrxd\history\all_versions\src\asm\ai_completion_provider_masm.asm\1771137500685_GXLt.asm(17) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\ai_completion_provider_masm.asm\1771137500685_GXLt.asm(78) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\ai_completion_provider_masm.asm\1771137500685_GXLt.asm(79) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\ai_completion_provider_masm.asm\1771137500685_GXLt.asm(181) : error A2070:invalid instruction operands

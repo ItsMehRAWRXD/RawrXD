@@ -1,0 +1,90 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(181) : error A2008:syntax error : cs
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(300) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(301) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(312) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(355) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(357) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(416) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(417) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1211) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1214) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1225) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1227) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1229) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(277) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(282) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(350) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(376) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(393) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(410) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(499) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(506) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(510) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(513) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(598) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(625) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(627) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(629) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(631) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(633) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(701) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(703) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(705) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(707) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(709) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(832) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(900) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(902) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(904) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(906) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(984) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1054) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1101) : error A2006:undefined symbol : buffer_ptr
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1102) : error A2006:undefined symbol : cursor_offset
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1157) : error A2006:undefined symbol : completion_hash
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1158) : error A2006:undefined symbol : completion_prefix_start
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1159) : error A2006:undefined symbol : completion_prefix_len
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1160) : error A2006:undefined symbol : show_completion
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1258) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1261) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1263) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1268) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1274) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(267) : warning A4025:ENDP found before .ENDPROLOG : WinMain
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(267) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(294) : warning A4025:ENDP found before .ENDPROLOG : IDE_Initialize
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(294) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(321) : warning A4025:ENDP found before .ENDPROLOG : Register_Classes
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(438) : warning A4025:ENDP found before .ENDPROLOG : IDE_CreateWindows
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(480) : warning A4025:ENDP found before .ENDPROLOG : Create_Main_Menu
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(528) : warning A4025:ENDP found before .ENDPROLOG : Editor_Init_Document
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(578) : warning A4025:ENDP found before .ENDPROLOG : Editor_Create_Fonts
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(619) : warning A4025:ENDP found before .ENDPROLOG : IDE_Run
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(698) : warning A4025:ENDP found before .ENDPROLOG : WndProc_Main
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(742) : warning A4025:ENDP found before .ENDPROLOG : WndProc_Editor
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(807) : warning A4025:ENDP found before .ENDPROLOG : Editor_OnPaint
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(849) : warning A4025:ENDP found before .ENDPROLOG : Editor_Draw_Content
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(874) : warning A4025:ENDP found before .ENDPROLOG : Editor_Draw_Cursor
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(897) : warning A4025:ENDP found before .ENDPROLOG : Editor_OnClick
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(927) : warning A4025:ENDP found before .ENDPROLOG : Editor_OnKey
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(949) : warning A4025:ENDP found before .ENDPROLOG : Editor_OnChar
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(958) : warning A4025:ENDP found before .ENDPROLOG : Edit_Insert_Char
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(969) : warning A4025:ENDP found before .ENDPROLOG : File_New
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(998) : warning A4025:ENDP found before .ENDPROLOG : File_Open
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1005) : warning A4025:ENDP found before .ENDPROLOG : File_Save
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1049) : warning A4025:ENDP found before .ENDPROLOG : File_Load
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1082) : warning A4025:ENDP found before .ENDPROLOG : Editor_Parse_Lines
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1185) : warning A4025:ENDP found before .ENDPROLOG : Build_Project
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1192) : warning A4025:ENDP found before .ENDPROLOG : Build_Thread
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1240) : warning A4025:ENDP found before .ENDPROLOG : Main_Resize_Children
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1279) : warning A4025:ENDP found before .ENDPROLOG : IDE_Shutdown
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1279) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1279) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1309) : warning A4025:ENDP found before .ENDPROLOG : PrintString
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1309) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_RawrXD_GUI_IDE.asm(1309) : error A2220:Missing .ENDPROLOG

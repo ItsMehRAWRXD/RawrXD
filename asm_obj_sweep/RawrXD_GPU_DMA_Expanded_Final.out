@@ -1,0 +1,47 @@
+ Assembling: D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(463) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(203) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(232) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(252) : warning A6004:procedure argument or local not referenced : durationNs
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(252) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(287) : warning A6004:procedure argument or local not referenced : syncMode
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(304) : warning A6004:procedure argument or local not referenced : isAutoReset
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(321) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(344) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(374) : warning A6004:procedure argument or local not referenced : flags
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(374) : warning A6004:procedure argument or local not referenced : timeoutMs
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(399) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(430) : warning A6004:procedure argument or local not referenced : pKernelDesc
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(430) : warning A6004:procedure argument or local not referenced : pDependencies
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(430) : warning A6004:procedure argument or local not referenced : depCount
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(450) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(504) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(520) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(537) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(548) : warning A6004:procedure argument or local not referenced : pScheduler
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(548) : warning A6004:procedure argument or local not referenced : workloadSize
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(548) : warning A6004:procedure argument or local not referenced : preferredDevice
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(548) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(572) : warning A6004:procedure argument or local not referenced : numaNode
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(572) : warning A6004:procedure argument or local not referenced : numaFlags
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(572) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(583) : warning A6004:procedure argument or local not referenced : pMemory
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(583) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(598) : warning A6004:procedure argument or local not referenced : deviceId
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(598) : warning A6004:procedure argument or local not referenced : bufferType
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(598) : warning A6004:procedure argument or local not referenced : maxCommands
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(598) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(609) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(609) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(620) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(620) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(631) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(631) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(642) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(642) : warning A6004:procedure argument or local not referenced : pWaitPrimitive
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(642) : warning A6004:procedure argument or local not referenced : pSignalPrimitive
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(642) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(666) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(677) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(693) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_GPU_DMA_Expanded_Final.asm(710) : error A2220:Missing .ENDPROLOG

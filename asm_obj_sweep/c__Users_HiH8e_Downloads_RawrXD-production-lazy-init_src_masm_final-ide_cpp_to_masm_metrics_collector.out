@@ -1,0 +1,45 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(69) : error A2179:structure improperly initialized
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(69) : error A2008:syntax error : in structure
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(187) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(201) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(225) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(240) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(270) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(285) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(288) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(292) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(306) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(372) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(384) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(118) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(123) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(143) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(189) : error A2006:undefined symbol : not_found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(196) : error A2006:undefined symbol : found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(199) : error A2006:undefined symbol : find_loop
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(217) : error A2006:undefined symbol : skip_tokens_per_sec
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(227) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(262) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(263) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(264) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(272) : error A2006:undefined symbol : aggregate_done
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(279) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(280) : error A2006:undefined symbol : not_success
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(282) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(283) : error A2006:undefined symbol : next_aggregate
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(286) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(290) : error A2006:undefined symbol : aggregate_loop
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(293) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(294) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(295) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(299) : error A2006:undefined symbol : skip_avg
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(304) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(309) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(310) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(311) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(341) : error A2006:undefined symbol : aggregates
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(351) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(352) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(353) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_metrics_collector.asm(370) : error A2006:undefined symbol : skip_metrics

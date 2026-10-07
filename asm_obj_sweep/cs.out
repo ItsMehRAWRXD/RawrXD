@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-Compilers\masm\native\cs.asm
+D:\rawrxd\reconstructed\RawrXD-Compilers\masm\native\cs.asm(53) : error A2008:syntax error : win64
+D:\rawrxd\reconstructed\RawrXD-Compilers\masm\native\cs.asm(122) : error A2084:constant value too large
+D:\rawrxd\reconstructed\RawrXD-Compilers\masm\native\cs.asm(70) : warning A6004:procedure argument or local not referenced : src
+D:\rawrxd\reconstructed\RawrXD-Compilers\masm\native\cs.asm(70) : warning A6004:procedure argument or local not referenced : len

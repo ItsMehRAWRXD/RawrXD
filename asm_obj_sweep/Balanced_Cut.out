@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\agentic\Balanced_Cut.asm
+D:\rawrxd\src\agentic\Balanced_Cut.asm(436) : fatal error A1010:unmatched block nesting : PeWriter_WriteSectionHeader

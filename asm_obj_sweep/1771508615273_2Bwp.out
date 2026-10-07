@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(195) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(602) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(603) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(604) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(752) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(753) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(180) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(510) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(615) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(859) : error A2006:undefined symbol : szGitBuffer
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(868) : error A2006:undefined symbol : szGitBuffer
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(149) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(895) : warning A4025:ENDP found before .ENDPROLOG : DllMain
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(895) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508615273_2Bwp.asm(895) : error A2220:Missing .ENDPROLOG

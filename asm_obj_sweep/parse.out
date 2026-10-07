@@ -1,0 +1,35 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(6) : error A2008:syntax error : g_Tensors
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(73) : error A2008:syntax error : ParseTensorTable
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(73) : error A2088:END directive required at end of file
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(18) : error A2006:undefined symbol : MAX_TENSORS
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(43) : error A2006:undefined symbol : TENSOR_NAME_LEN_OFF
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(44) : error A2006:undefined symbol : g_Tensors
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(47) : error A2006:undefined symbol : g_Tensors
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(48) : error A2006:undefined symbol : TENSOR_NAME_OFF
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(49) : error A2006:undefined symbol : MAX_NAME_LEN
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(53) : error A2006:undefined symbol : TENSOR_NDIMS_OFF
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(54) : error A2006:undefined symbol : g_Tensors
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(57) : error A2006:undefined symbol : g_Tensors
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(58) : error A2006:undefined symbol : TENSOR_DIMS_OFF
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(63) : error A2006:undefined symbol : TENSOR_DTYPE_OFF
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(64) : error A2006:undefined symbol : g_Tensors
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(67) : error A2006:undefined symbol : TENSOR_OFFSET_OFF
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\tensor\parse.asm(68) : error A2006:undefined symbol : g_Tensors
+ucted\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(30) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(31) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(32) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(34) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(36) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(37) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(38) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(39) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(40) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(42) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(43) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(45) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(46) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(47) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(49) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(50) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\gguf\parse.asm(51) : fatal error A1010:unmatched block nesting : SkipMetadataKV

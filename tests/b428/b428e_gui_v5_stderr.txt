@@ -1,0 +1,4 @@
+[Prometheus] Listening on port 9090 for /metrics...
+[IDEConfig] Config file not found: rawrxd.config.json — using defaults.
+[IDEConfig] Config file not found: D:\rawrxd\build\bin\rawrxd.config.json — using defaults.
+[Win32IDE] Using config fallback: http://localhost:11434

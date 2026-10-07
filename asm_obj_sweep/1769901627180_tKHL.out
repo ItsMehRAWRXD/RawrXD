@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901627180_tKHL.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901627180_tKHL.asm(45) : error A2008:syntax error : TransferQueue
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901627180_tKHL.asm(329) : error A2006:undefined symbol : TransferQueue
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901627180_tKHL.asm(333) : error A2081:missing operand after unary operator

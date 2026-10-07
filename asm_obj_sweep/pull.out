@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\ollama\pull.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\ollama\pull.asm(8) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\ollama\pull.asm(9) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\ollama\pull.asm(10) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\ollama\pull.asm(14) : fatal error A1000:cannot open file : http_client.inc

@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\-221890d0\56na.asm
+D:\rawrxd\history\-221890d0\56na.asm(11) : error A2008:syntax error : WIN64
+D:\rawrxd\history\-221890d0\56na.asm(12) : error A2008:syntax error : FRAME
+D:\rawrxd\history\-221890d0\56na.asm(91) : error A2008:syntax error : size
+D:\rawrxd\history\-221890d0\56na.asm(105) : error A2008:syntax error : size
+D:\rawrxd\history\-221890d0\56na.asm(106) : error A2008:syntax error : type
+D:\rawrxd\history\-221890d0\56na.asm(121) : error A2008:syntax error : size
+D:\rawrxd\history\-221890d0\56na.asm(147) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\-221890d0\56na.asm(154) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\-221890d0\56na.asm(315) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\56na.asm(431) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\56na.asm(513) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\56na.asm(674) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\56na.asm(842) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\56na.asm(874) : error A2006:undefined symbol : dst_addr
+D:\rawrxd\history\-221890d0\56na.asm(875) : error A2006:undefined symbol : src_addr
+D:\rawrxd\history\-221890d0\56na.asm(876) : error A2006:undefined symbol : size_bytes
+D:\rawrxd\history\-221890d0\56na.asm(878) : error A2006:undefined symbol : DMA_STATUS_SUCCESS
+D:\rawrxd\history\-221890d0\56na.asm(885) : error A2006:undefined symbol : dst_addr
+D:\rawrxd\history\-221890d0\56na.asm(886) : error A2006:undefined symbol : src_addr
+D:\rawrxd\history\-221890d0\56na.asm(887) : error A2006:undefined symbol : size_bytes
+D:\rawrxd\history\-221890d0\56na.asm(889) : error A2006:undefined symbol : DMA_STATUS_SUCCESS

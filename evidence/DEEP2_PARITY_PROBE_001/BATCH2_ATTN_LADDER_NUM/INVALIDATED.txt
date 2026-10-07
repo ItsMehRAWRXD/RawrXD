@@ -1,0 +1,9 @@
+INVALIDATED — 2026-08-29
+========================
+BATCH2_ATTN_LADDER_NUM / prior V_0 / Q_POST / K_POST FAIL results are NOT authority.
+
+Root cause: llama dump path reused one filename per stage/pos; later per-head or
+reshape callbacks overwrote the full-vector oracle (e.g. V_0 n=256 → n=64).
+
+Do not cite those ladder FAILs. Regenerate under BATCH2_ORACLE_V2 with collision-proof
+identity + sidecar manifests before any divergence claim.

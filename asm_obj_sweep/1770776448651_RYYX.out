@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(269) : error A2008:syntax error : DQ
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(670) : error A2008:syntax error : OPEN_EXISTING
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(683) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(748) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(750) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(899) : error A2008:syntax error : addr
+ invoke(20): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(899): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1071) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1106) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1141) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1176) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1286) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1287) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1326) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1327) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1328) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1373) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1374) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1413) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1414) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1415) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1460) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1461) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1500) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1501) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1502) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1547) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1548) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1587) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1588) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1589) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2267) : error A2008:syntax error : addr
+ invoke(30): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2267): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2276) : error A2008:syntax error : addr
+ invoke(30): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2276): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(521) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(527) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(533) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(538) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(545) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(552) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(559) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(566) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(576) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(695) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(704) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(848) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(896) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(939) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(940) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(941) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(942) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(943) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(997) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1210) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1324) : error A2006:undefined symbol : VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1325) : error A2006:undefined symbol : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1411) : error A2006:undefined symbol : VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1412) : error A2006:undefined symbol : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1498) : error A2006:undefined symbol : VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1499) : error A2006:undefined symbol : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1585) : error A2006:undefined symbol : VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1586) : error A2006:undefined symbol : stage
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1632) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1640) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1648) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1713) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1769) : error A2006:undefined symbol : RawrXD_Queue_Decompression_Task
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1772) : error A2006:undefined symbol : RawrXD_Wait_For_Layer_Ready
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1778) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1790) : error A2006:undefined symbol : MEMORY_PRESSURE_CRITICAL
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1840) : error A2006:undefined symbol : layer_id
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1859) : error A2006:undefined symbol : layer_states
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1860) : error A2006:undefined symbol : LayerState
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1879) : error A2006:undefined symbol : layer_id
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1918) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1928) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1931) : error A2006:undefined symbol : layer_states
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1932) : error A2006:undefined symbol : LayerState
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1969) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1972) : error A2006:undefined symbol : layer_states
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1973) : error A2006:undefined symbol : LayerState
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1978) : error A2006:undefined symbol : LayerState
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1994) : error A2006:undefined symbol : layer_states
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1995) : error A2006:undefined symbol : LayerState
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(1996) : error A2006:undefined symbol : LayerState
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2045) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2055) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2056) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2057) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2059) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2086) : error A2006:undefined symbol : layer_states
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2087) : error A2006:undefined symbol : LayerState
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2184) : error A2006:undefined symbol : str_info_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2189) : error A2006:undefined symbol : str_info_operators
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2194) : error A2006:undefined symbol : str_info_memory_mb
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2267) : error A2022:instruction operands must be the same size
+ invoke(18): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2267): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2276) : error A2022:instruction operands must be the same size
+ invoke(18): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2276): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-StreamingOrchestrator.asm\1770776448651_RYYX.asm(2341) : error A2022:instruction operands must be the same size

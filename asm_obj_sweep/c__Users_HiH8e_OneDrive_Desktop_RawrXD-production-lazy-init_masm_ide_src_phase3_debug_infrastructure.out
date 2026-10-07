@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase3_debug_infrastructure.asm
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase3_debug_infrastructure.asm(97) : error A2008:syntax error : context
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase3_debug_infrastructure.asm(154) : error A2008:syntax error : ebx
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-production-lazy-init_masm_ide_src_phase3_debug_infrastructure.asm(177) : fatal error A1010:unmatched block nesting : DAP_Initialize

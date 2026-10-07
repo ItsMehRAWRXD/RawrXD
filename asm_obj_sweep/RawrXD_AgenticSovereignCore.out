@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\RawrXD_AgenticSovereignCore.asm
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(7) : error A2008:syntax error : WIN64
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(40) : error A2008:syntax error : invoke
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(57) : error A2008:syntax error : invoke
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(59) : error A2008:syntax error : invoke
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(63) : error A2008:syntax error : if
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(64) : error A2008:syntax error : invoke
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(65) : error A2008:syntax error : elseif
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(67) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(45) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(71) : warning A6004:procedure argument or local not referenced : pData
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(71) : warning A6004:procedure argument or local not referenced : buffer
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(71) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(93) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_AgenticSovereignCore.asm(102) : error A2220:Missing .ENDPROLOG

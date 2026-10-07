@@ -1,0 +1,81 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(60) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(86) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(234) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(234) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(264) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(264) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(294) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(294) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(626) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(733) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(782) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(838) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(839) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(854) : error A2008:syntax error : si
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(855) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(238) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(239) : error A2006:undefined symbol : style
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(241) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(242) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(243) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(244) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(245) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(246) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(247) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(248) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(250) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(251) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(268) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(269) : error A2006:undefined symbol : style
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(271) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(272) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(273) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(274) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(275) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(276) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(277) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(278) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(280) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(281) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(298) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(299) : error A2006:undefined symbol : style
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(301) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(302) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(303) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(304) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(305) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(306) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(307) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(308) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(310) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(311) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(394) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(424) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(460) : error A2094:operand must be relocatable
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(589) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(623) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(736) : error A2006:undefined symbol : bytesWritten
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(745) : error A2006:undefined symbol : bytesWritten
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(787) : error A2006:undefined symbol : bytesAvailable
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(797) : error A2006:undefined symbol : bytesAvailable
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(803) : error A2006:undefined symbol : bytesAvailable
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(841) : error A2006:undefined symbol : hStdInRead
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(842) : error A2006:undefined symbol : hStdInWrite
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(847) : error A2006:undefined symbol : hStdOutRead
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(848) : error A2006:undefined symbol : hStdOutWrite
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(857) : error A2006:undefined symbol : cb
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(858) : error A2006:undefined symbol : dwFlags
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(859) : error A2006:undefined symbol : hStdInRead
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(860) : error A2006:undefined symbol : hStdInput
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(861) : error A2006:undefined symbol : hStdOutWrite
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(862) : error A2006:undefined symbol : hStdOutput
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(863) : error A2006:undefined symbol : hStdOutWrite
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(864) : error A2006:undefined symbol : hStdError
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(873) : error A2006:undefined symbol : CREATE_NO_WINDOW
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(884) : error A2006:undefined symbol : pi
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(886) : error A2006:undefined symbol : hStdInWrite
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(888) : error A2006:undefined symbol : hStdOutRead
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(954) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(960) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_masm_notebook_interface.asm(966) : error A2006:undefined symbol : DefWindowProcA

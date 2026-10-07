@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm_simple.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm_simple.asm(223) : warning A6004:procedure argument or local not referenced : agentId
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm_simple.asm(237) : warning A6004:procedure argument or local not referenced : pFilePath
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm_simple.asm(237) : warning A6004:procedure argument or local not referenced : langId
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm_simple.asm(251) : warning A6004:procedure argument or local not referenced : pCommand

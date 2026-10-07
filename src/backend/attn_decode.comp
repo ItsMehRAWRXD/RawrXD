@@ -1,0 +1,43 @@
+#version 450
+layout(local_size_x = 64) in;
+layout(binding = 0) readonly buffer Q { float q[]; };
+layout(binding = 1) readonly buffer K { float k[]; };
+layout(binding = 2) readonly buffer V { float v[]; };
+layout(binding = 3) writeonly buffer Out { float o[]; };
+layout(push_constant) uniform PC {
+  uint head_dim; uint n_heads; uint n_kv; uint seq; float scale;
+} pc;
+void main() {
+  uint h = gl_GlobalInvocationID.x;
+  if (h >= pc.n_heads) return;
+  uint group = max(pc.n_heads / max(pc.n_kv, 1u), 1u);
+  uint kvh = h / group;
+  uint qd = h * pc.head_dim;
+  uint kvd = kvh * pc.head_dim;
+  uint T = pc.seq;
+  float mx = -3.4e38;
+  // first pass: max score
+  for (uint t = 0u; t < T; ++t) {
+    float dot = 0.0;
+    uint base = t * (pc.n_kv * pc.head_dim) + kvd;
+    for (uint i = 0u; i < pc.head_dim; ++i)
+      dot += q[qd + i] * k[base + i];
+    mx = max(mx, dot * pc.scale);
+  }
+  float sum = 0.0;
+  for (uint i = 0u; i < pc.head_dim; ++i)
+    o[qd + i] = 0.0;
+  for (uint t = 0u; t < T; ++t) {
+    float dot = 0.0;
+    uint base = t * (pc.n_kv * pc.head_dim) + kvd;
+    for (uint i = 0u; i < pc.head_dim; ++i)
+      dot += q[qd + i] * k[base + i];
+    float w = exp(dot * pc.scale - mx);
+    sum += w;
+    for (uint i = 0u; i < pc.head_dim; ++i)
+      o[qd + i] += w * v[base + i];
+  }
+  float inv = 1.0 / (sum + 1e-12);
+  for (uint i = 0u; i < pc.head_dim; ++i)
+    o[qd + i] *= inv;
+}

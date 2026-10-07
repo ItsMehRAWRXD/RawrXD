@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(6) : error A2008:syntax error : BITS
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(7) : error A2008:syntax error : DEFAULT
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(13) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(20) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(21) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(22) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(23) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(24) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(25) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(26) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(27) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(28) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(29) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(42) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(43) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(44) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(45) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(46) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(47) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(48) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(49) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(50) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(51) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(57) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(58) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(59) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(60) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(61) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(62) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(63) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(64) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(65) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(66) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(67) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(68) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(69) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(71) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(74) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(76) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(78) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(79) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(85) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(86) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(91) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(94) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(97) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(107) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(113) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(124) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(145) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(146) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(147) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(148) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(151) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(153) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(154) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(157) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(158) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(159) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(160) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(163) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(164) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(165) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(166) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(169) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(170) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(171) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_extension_marketplace.asm(172) : fatal error A1012:error count exceeds 100; stopping assembly

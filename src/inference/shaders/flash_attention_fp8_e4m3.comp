@@ -1,0 +1,179 @@
+// ============================================================================
+// flash_attention_fp8_e4m3.comp — E4M3 FP8 flash attention (compute)
+// ============================================================================
+// glslangValidator -V --target-env vulkan1.3 flash_attention_fp8_e4m3.comp
+//     -o flash_attention_fp8_e4m3.spv
+//
+// Push layout MUST match C++ RawrXD::FlashAttentionFP8PushConstants (36 bytes).
+// Explicit layout(offset=…) on every member so MSVC/clang cannot drift.
+//
+// Buffer layout (bytes, E4M3 = 1 byte/element):
+//   binding 0 Q : [head][seqLenM][headDim]
+//   binding 1 K : [kvHead][seqLenN][headDim]
+//   binding 2 V : [kvHead][seqLenN][headDim]
+//   binding 3 O : [head][seqLenM][headDim]  float32
+//
+// Dispatch grid: x = seqLenM (one workgroup per query row),
+//                y = numHeads, z = 1
+// Each workgroup computes one output row of length headDim.
+//
+// Decode policy (flags bit kFlashAttentionFP8FlagDecodeNoRefusal):
+//   strict (0)   : OCP NaN pattern (exp=15, mant=7) → quiet NaN
+//   no-refusal(1): same pattern → 0.0 so softmax never ingests NaN
+// ============================================================================
+
+#version 450
+
+layout(push_constant) uniform Push
+{
+    layout(offset = 0) uint seqLenM;
+    layout(offset = 4) uint seqLenN;
+    layout(offset = 8) uint headDim;
+    layout(offset = 12) uint numHeads;
+    layout(offset = 16) uint numKVHeads;
+    layout(offset = 20) uint flags;
+    layout(offset = 24) float qScale;
+    layout(offset = 28) float kScale;
+    layout(offset = 32) float vScale;
+} pc;
+
+// Buffers are packed uint32 arrays (4 E4M3 bytes per element). A plain uint8
+// SSBO would require GL_EXT_shader_8bit_storage plus shaderInt8 device support;
+// packed uint + bitfieldExtract needs no extension and matches the byte order
+// the host writes (little-endian E4M3 stream).
+layout(set = 0, binding = 0) readonly buffer QBuf { uint q_data[]; };
+layout(set = 0, binding = 1) readonly buffer KBuf { uint k_data[]; };
+layout(set = 0, binding = 2) readonly buffer VBuf { uint v_data[]; };
+layout(set = 0, binding = 3) writeonly buffer OBuf { float o_data[]; };
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+const uint FP8_E4M3_BIAS = 7u;
+const uint FLAG_NO_REFUSAL = 1u;
+
+shared float s_red[64];
+shared float s_acc[128];
+
+float e4m3_u8_to_f32(uint u8, bool no_refusal)
+{
+    const uint u = u8 & 0xFFu;
+    const uint sign = (u >> 7u) & 1u;
+    const uint exp = (u >> 3u) & 0xFu;
+    const uint mant = u & 7u;
+
+    if (exp == 15u && mant == 7u)
+    {
+        if (no_refusal)
+        {
+            return 0.0f;
+        }
+        return uintBitsToFloat(0x7fc00000u);
+    }
+
+    if (exp == 0u)
+    {
+        if (mant == 0u)
+        {
+            return sign != 0u ? -0.0f : 0.0f;
+        }
+        const float v = float(mant) / 8.0f * exp2(-6.0f);
+        return (sign != 0u) ? -v : v;
+    }
+
+    const int exp32 = int(exp) - int(FP8_E4M3_BIAS) + 127;
+    const uint mant32 = mant << 20;
+    const uint bits = (sign << 31) | (uint(exp32) << 23) | mant32;
+    return uintBitsToFloat(bits);
+}
+
+// Read E4M3 element `idx` from a packed uint buffer (4 bytes per uint, LE order).
+// Macro because GLSL requires a size on array parameters.
+#define LOAD_E4M3(data, idx, no_refusal) \
+    e4m3_u8_to_f32(bitfieldExtract((data)[((idx) >> 2u)], int(((idx) & 3u) * 8u), 8), no_refusal)
+
+void main()
+{
+    const uint row   = gl_WorkGroupID.x;
+    const uint head  = gl_WorkGroupID.y;
+    const uint lane  = gl_LocalInvocationIndex;
+
+    if (row >= pc.seqLenM || head >= pc.numHeads)
+    {
+        return;
+    }
+
+    const uint M = pc.seqLenM;
+    const uint N = pc.seqLenN;
+    const uint D = pc.headDim;
+    const uint H = pc.numHeads;
+    const uint KH = max(pc.numKVHeads, 1u);
+
+    // Grouped-query attention: query head maps onto a shared KV head.
+    const uint kvHead = (KH >= H) ? head : (head / (H / KH));
+
+    const bool no_refusal = (pc.flags & FLAG_NO_REFUSAL) != 0u;
+
+    const uint qRowBase = (head * M + row) * D;
+    const uint kvRowStride = D;
+
+    // Per-lane running softmax state. Every lane walks every key row so that
+    // no cross-lane reduction is required for correctness; lanes differ only in
+    // which output dimension they own.
+    float running_max = -3.402823466e+38;
+    float running_sum = 0.0;
+
+    // Output accumulator lives in shared memory (global s_acc): [D] floats.
+    // Sized statically for head_dim up to 128.
+
+    const uint accElems = min(D, 128u);
+    for (uint i = lane; i < accElems; i += 64u)
+    {
+        s_acc[i] = 0.0f;
+    }
+    barrier();
+
+    // Online (flash) softmax over all N keys.
+    for (uint n = 0u; n < N; ++n)
+    {
+        const uint kBase = (kvHead * N + n) * kvRowStride;
+        const uint vBase = kBase;
+
+        float score = 0.0f;
+        for (uint d = 0u; d < D; ++d)
+        {
+            const float q = LOAD_E4M3(q_data, qRowBase + d, no_refusal) * pc.qScale;
+            const float k = LOAD_E4M3(k_data, kBase + d, no_refusal) * pc.kScale;
+            score += q * k;
+        }
+        score *= inversesqrt(float(D));
+
+        const float new_max = max(running_max, score);
+        const float old_scale = (running_max <= -3.402823466e+38)
+                                    ? 0.0
+                                    : exp(running_max - new_max);
+        const float p = exp(score - new_max);
+
+        running_sum = running_sum * old_scale + p;
+        running_max = new_max;
+
+        for (uint i = lane; i < accElems; i += 64u)
+        {
+            const float v = LOAD_E4M3(v_data, vBase + i, no_refusal) * pc.vScale;
+            s_acc[i] = s_acc[i] * old_scale + v * p;
+        }
+        barrier();
+    }
+
+    const float inv_sum = (running_sum > 0.0f) ? (1.0f / running_sum) : 0.0f;
+
+    const uint oBase = (head * M + row) * D;
+    for (uint i = lane; i < accElems; i += 64u)
+    {
+        o_data[oBase + i] = s_acc[i] * inv_sum;
+    }
+
+    // Keep s_red referenced so the shared declaration is not optimized away in
+    // drivers that aggressively prune unused shared blocks.
+    s_red[lane] = running_sum;
+    barrier();
+}

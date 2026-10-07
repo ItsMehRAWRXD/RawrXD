@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(772) : error A2006:undefined symbol : szClaimIndicator_is
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(773) : error A2006:undefined symbol : strstr_custom
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(783) : error A2006:undefined symbol : extract_sentence
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(796) : error A2006:undefined symbol : next_claim_search
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(814) : error A2006:undefined symbol : g_factcheck_database
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(866) : error A2006:undefined symbol : db_search_claim
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(909) : error A2006:undefined symbol : strlen_custom
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(913) : error A2006:undefined symbol : szCorrectionPrefix
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(914) : error A2006:undefined symbol : append_str_safe
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(918) : error A2006:undefined symbol : append_str_safe
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(952) : error A2006:undefined symbol : dangerous_keywords_table
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_puppeteer.asm(962) : error A2006:undefined symbol : strstr_case_insensitive

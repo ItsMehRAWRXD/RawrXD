@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0023\d__temp_sample_data.asm
+D:\rawrxd\history\runoff\part_0023\d__temp_sample_data.asm(1) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0023\d__temp_sample_data.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0023\d__temp_sample_data.asm(8) : error A2008:syntax error : main
+D:\rawrxd\history\runoff\part_0023\d__temp_sample_data.asm(8) : error A2088:END directive required at end of file

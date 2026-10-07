@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(65) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(108) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(161) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(168) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(190) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(198) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(205) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(211) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(59) : error A2006:undefined symbol : ignore
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(112) : error A2006:undefined symbol : zero
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(132) : error A2006:undefined symbol : done
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(139) : error A2006:undefined symbol : report_fail
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(149) : error A2006:undefined symbol : report_fail
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(153) : error A2006:undefined symbol : report_fail
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(164) : error A2006:undefined symbol : stop
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(179) : error A2006:undefined symbol : next
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(188) : error A2006:undefined symbol : loop
+D:\rawrxd\history\all_versions\src\thermal\masm\nvme_service.asm\1769489552840_K3Aq.asm(203) : error A2006:undefined symbol : done

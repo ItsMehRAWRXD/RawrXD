@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(37) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(73) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(195) : warning A4025:ENDP found before .ENDPROLOG : FileIO_SetModified
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(195) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(195) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(200) : warning A4025:ENDP found before .ENDPROLOG : FileIO_ClearModified
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(200) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(200) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(205) : warning A4025:ENDP found before .ENDPROLOG : FileIO_IsModified
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(205) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\RawrXD_TextEditor_FileIO_Clean.asm(205) : error A2220:Missing .ENDPROLOG

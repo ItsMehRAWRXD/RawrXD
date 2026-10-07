@@ -1,0 +1,87 @@
+#version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+
+// Optimized MatMul for RDNA3 - RX 7800 XT
+// Uses 256-thread workgroups and tiled access for better memory coalescing
+// Target: 100+ tok/s at 32K context
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) readonly buffer MatrixA {
+    float16_t data[];
+} matrix_a;
+
+layout(set = 0, binding = 1) readonly buffer MatrixB {
+    float16_t data[];
+} matrix_b;
+
+layout(set = 0, binding = 2) writeonly buffer MatrixC {
+    float16_t data[];
+} matrix_c;
+
+layout(push_constant) uniform PushConstants {
+    uint M;
+    uint N;
+    uint K;
+} params;
+
+// Shared memory for tiled computation - 8KB for A tile, 8KB for B tile
+shared float16_t shared_a[256];  // 256 x 16 elements = 4KB (using FP16)
+shared float16_t shared_b[256];  // 256 x 16 elements = 4KB
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint local_id = gl_LocalInvocationID.x;
+    uint workgroup_id = gl_WorkGroupID.x;
+    
+    // Each thread computes one output element
+    uint row = workgroup_id * 256 + local_id;
+    
+    if (row >= params.M) return;
+    
+    // Initialize accumulator
+    float16_t acc = float16_t(0.0);
+    
+    // Process K dimension in tiles of 16
+    const uint TILE_K = 16;
+    uint num_tiles = (params.K + TILE_K - 1) / TILE_K;
+    
+    for (uint tile = 0; tile < num_tiles; tile++) {
+        uint k_start = tile * TILE_K;
+        
+        // Load tile from A (row-major: A[row, k])
+        // Each thread loads its own row's elements
+        for (uint i = 0; i < TILE_K; i++) {
+            uint k = k_start + i;
+            if (k < params.K) {
+                shared_a[local_id * TILE_K + i] = matrix_a.data[row * params.K + k];
+            } else {
+                shared_a[local_id * TILE_K + i] = float16_t(0.0);
+            }
+        }
+        
+        // Load tile from B (column-major access for coalescing)
+        // Each thread loads a portion of B
+        for (uint i = 0; i < TILE_K; i++) {
+            uint k = k_start + i;
+            // Note: B is accessed as B[k, 0] since N=1 for single token
+            if (k < params.K) {
+                shared_b[local_id * TILE_K + i] = matrix_b.data[k];
+            } else {
+                shared_b[local_id * TILE_K + i] = float16_t(0.0);
+            }
+        }
+        
+        barrier();
+        
+        // Compute partial dot product
+        for (uint i = 0; i < TILE_K; i++) {
+            acc += shared_a[local_id * TILE_K + i] * shared_b[i];
+        }
+        
+        barrier();
+    }
+    
+    // Write output
+    matrix_c.data[row] = acc;
+}

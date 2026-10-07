@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771268000034_Gjnl.asm
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771268000034_Gjnl.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771268000034_Gjnl.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771268000034_Gjnl.asm(33) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771268000034_Gjnl.asm(34) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771268000034_Gjnl.asm(60) : error A2006:undefined symbol : cleanup
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771268000034_Gjnl.asm(70) : error A2006:undefined symbol : GetLastError
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771268000034_Gjnl.asm(61) : error A2247:size of prolog too big, must be < 256 bytes

@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\src\RawrXD_v23_SovereignCore.asm
+D:\rawrxd\src\RawrXD_v23_SovereignCore.asm(20) : error A2006:undefined symbol : SwarmV23_KVCache_Sharder
+D:\rawrxd\src\RawrXD_v23_SovereignCore.asm(21) : error A2006:undefined symbol : SwarmV23_Consensus_v3_Byzantine
+D:\rawrxd\src\RawrXD_v23_SovereignCore.asm(22) : error A2006:undefined symbol : SwarmV23_SelfRepair_Manifest
+D:\rawrxd\src\RawrXD_v23_SovereignCore.asm(11) : error A2206:missing operator in expression

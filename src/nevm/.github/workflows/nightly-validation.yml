@@ -1,0 +1,228 @@
+#============================================================================
+# GitHub Actions Workflow: Nightly Validation
+# RawrXD N-EVM - Comprehensive nightly testing
+#============================================================================
+
+name: Nightly Validation
+
+on:
+  schedule:
+    # Run at 2:00 AM UTC daily
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      model_url:
+        description: 'URL to download test model'
+        required: false
+        default: ''
+
+env:
+  MODEL_PATH: test_model.gguf
+  BASELINE_PATH: baseline.json
+
+jobs:
+  #==========================================================================
+  # Nightly Validation (Windows)
+  #==========================================================================
+  nightly-windows:
+    name: Nightly (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 180
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup MSVC
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Download test model (if URL provided)
+        if: github.event.inputs.model_url != ''
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri '${{ github.event.inputs.model_url }}' -OutFile $env:MODEL_PATH
+
+      - name: Build validation framework
+        shell: cmd
+        run: |
+          cd src\nevm
+          build_nevm.bat
+
+      - name: Download baseline from previous run
+        uses: actions/download-artifact@v4
+        with:
+          name: nightly-baseline-windows
+          path: baseline/
+        continue-on-error: true
+
+      - name: Run NIGHTLY validation
+        shell: cmd
+        run: |
+          cd src\nevm\build
+          if exist ..\..\..\baseline\baseline.json (
+            nevm_validate.exe ..\..\..\%MODEL_PATH% --mode=nightly --baseline=..\..\..\baseline\baseline.json -o nightly_report.json --capture-artifacts
+          ) else (
+            nevm_validate.exe ..\..\..\%MODEL_PATH% --mode=nightly -o nightly_report.json --capture-artifacts
+          )
+
+      - name: Upload nightly report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-report-windows
+          path: |
+            src/nevm/build/nightly_report.json
+            src/nevm/build/baseline.json
+          retention-days: 30
+
+      - name: Upload failure artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failure-artifacts-windows
+          path: failure_artifacts/
+          retention-days: 7
+
+      - name: Update baseline
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: nightly-baseline-windows
+          path: src/nevm/build/nightly_report.json
+          retention-days: 90
+
+  #==========================================================================
+  # Nightly Validation (Linux)
+  #==========================================================================
+  nightly-linux:
+    name: Nightly (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libjsoncpp-dev
+
+      - name: Download test model (if URL provided)
+        if: github.event.inputs.model_url != ''
+        run: |
+          curl -L '${{ github.event.inputs.model_url }}' -o $MODEL_PATH
+
+      - name: Build validation framework
+        run: |
+          cd src/nevm
+          mkdir -p build && cd build
+          cmake ..
+          make -j$(nproc)
+
+      - name: Download baseline from previous run
+        uses: actions/download-artifact@v4
+        with:
+          name: nightly-baseline-linux
+          path: baseline/
+        continue-on-error: true
+
+      - name: Run NIGHTLY validation
+        run: |
+          cd src/nevm/build
+          if [ -f ../../../baseline/baseline.json ]; then
+            ./bin/nevm_validate ../../../$MODEL_PATH --mode=nightly --baseline=../../../baseline/baseline.json -o nightly_report.json --capture-artifacts
+          else
+            ./bin/nevm_validate ../../../$MODEL_PATH --mode=nightly -o nightly_report.json --capture-artifacts
+          fi
+
+      - name: Upload nightly report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-report-linux
+          path: |
+            src/nevm/build/nightly_report.json
+            src/nevm/build/baseline.json
+          retention-days: 30
+
+      - name: Upload failure artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failure-artifacts-linux
+          path: failure_artifacts/
+          retention-days: 7
+
+      - name: Update baseline
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: nightly-baseline-linux
+          path: src/nevm/build/nightly_report.json
+          retention-days: 90
+
+  #==========================================================================
+  # Trend Analysis
+  #==========================================================================
+  trend-analysis:
+    name: Trend Analysis
+    needs: [nightly-windows, nightly-linux]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          path: reports/
+
+      - name: Analyze trends
+        run: |
+          # Combine reports and analyze trends
+          echo "Analyzing performance trends..."
+          # Would run trend analysis script here
+
+      - name: Create issue on regression
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Nightly Validation Regression Detected',
+              body: 'Performance regression detected in nightly validation run.',
+              labels: ['regression', 'nightly']
+            });
+
+      - name: Notify Slack
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🚨 RawrXD N-EVM Nightly Validation Failed",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Nightly Validation Failed"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "The nightly validation run has detected failures. Please investigate."
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\win32app\Win32IDE_Layout_Pure.asm
+D:\rawrxd\src\win32app\Win32IDE_Layout_Pure.asm(193) : error A2044:invalid character in file
+D:\rawrxd\src\win32app\Win32IDE_Layout_Pure.asm(298) : fatal error A1010:unmatched block nesting : Layout_CalculateAndApply

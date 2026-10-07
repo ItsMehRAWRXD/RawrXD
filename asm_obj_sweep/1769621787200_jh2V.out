@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(64) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(65) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(123) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(302) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(232) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(290) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(328) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(437) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(445) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(265) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(345) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(410) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621787200_jh2V.asm(458) : error A2220:Missing .ENDPROLOG

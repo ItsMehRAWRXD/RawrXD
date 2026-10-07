@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_Streaming_Orchestrator.asm\1771286935130_1cBi.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_Streaming_Orchestrator.asm\1771286935130_1cBi.asm(114) : error A2006:undefined symbol : SetEvent
+D:\rawrxd\history\all_versions\src\masm\RawrXD_Streaming_Orchestrator.asm\1771286935130_1cBi.asm(182) : error A2006:undefined symbol : SetEvent

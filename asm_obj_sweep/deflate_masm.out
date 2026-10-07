@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_masm.asm
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_masm.asm(220) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_masm.asm(356) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_masm.asm(143) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_masm.asm(144) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_masm.asm(226) : error A2032:invalid use of register
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_masm.asm(241) : error A2032:invalid use of register
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_masm.asm(382) : error A2022:instruction operands must be the same size

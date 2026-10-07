@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902085066_e1vv.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902085066_e1vv.asm(447) : error A2006:undefined symbol : OperationType
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902085066_e1vv.asm(450) : error A2006:undefined symbol : OperationSize
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902085066_e1vv.asm(463) : error A2006:undefined symbol : OperationSize

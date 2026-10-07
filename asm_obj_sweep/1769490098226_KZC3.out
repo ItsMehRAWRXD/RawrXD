@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769490098226_KZC3.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769490098226_KZC3.asm(18) : warning A6004:procedure argument or local not referenced : hinst
+D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769490098226_KZC3.asm(18) : warning A6004:procedure argument or local not referenced : reason
+D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769490098226_KZC3.asm(18) : warning A6004:procedure argument or local not referenced : reserved

@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(14) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(196) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(230) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(239) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(261) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(264) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(272) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(292) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(300) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(323) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase5_Master_Complete.asm(347) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+
+MASM : fatal error A1016: Internal error

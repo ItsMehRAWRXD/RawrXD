@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(259) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(261) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(264) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(265) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(266) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(267) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(268) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(271) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(278) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(404) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(411) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(416) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(417) : error A2008:syntax error : str_concat
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(419) : error A2008:syntax error : addr
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(428) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(451) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(462) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(463) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(471) : error A2008:syntax error : addr
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(476) : error A2008:syntax error : addr
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(481) : error A2008:syntax error : addr
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(502) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(507) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(512) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(517) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(520) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(526) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(541) : error A2008:syntax error : str_find_char
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(547) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(555) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(558) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(560) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(565) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(568) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(574) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(580) : error A2006:undefined symbol : WIN32_FIND_DATAA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(580) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(589) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(590) : error A2008:syntax error : str_concat
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(592) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(593) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(597) : error A2008:syntax error : addr
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(606) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(610) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(622) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(624) : error A2008:syntax error : str_concat
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(625) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(627) : error A2008:syntax error : FindNextFileA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(631) : error A2008:syntax error : FindClose
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(637) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(643) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(654) : error A2008:syntax error : CreateDirectoryA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(658) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(663) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(668) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(679) : error A2008:syntax error : DeleteFileA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(683) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(688) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(693) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(700) : error A2006:undefined symbol : SECURITY_ATTRIBUTES
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(700) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(701) : error A2008:syntax error : si
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(702) : error A2006:undefined symbol : PROCESS_INFORMATION
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(702) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(712) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(713) : error A2008:syntax error : str_concat
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(718) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(721) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(723) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(733) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(739) : error A2008:syntax error : CreateProcessA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(743) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(748) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(755) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(758) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(759) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(760) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(761) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(766) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(767) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(770) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(774) : error A2005:symbol redefinition : exec_cmd_fail
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(776) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(781) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(787) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(798) : error A2008:syntax error : SetCurrentDirectoryA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(802) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(807) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(812) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(824) : error A2008:syntax error : str_find_char
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(829) : error A2008:syntax error : SetEnvironmentVariableA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(833) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(838) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(843) : error A2008:syntax error : str_copy
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(849) : error A2006:undefined symbol : PROCESSENTRY32
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(849) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(850) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(855) : fatal error A1012:error count exceeds 100; stopping assembly

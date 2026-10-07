@@ -1,0 +1,20 @@
+# ninja log v7
+4	83	8099253810503676	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_core_transform_aes_ni.asm.obj	3e9a1bd2465a4f8d
+22	83	8099253810696551	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_core_profiler.asm.obj	8734054f1b6581bf
+18	84	8099253810650908	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_7800x3d_unmethoded.asm.obj	ed288c5e1735ae8b
+14	84	8099253810605253	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_core_gemv_avx512.asm.obj	6708f6b4882e2936
+9	84	8099253810564411	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_transform_ring_buffer.asm.obj	64cc066ff58d8faf
+59	84	8099253811059632	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/avx512_negative_scale.asm.obj	7f13201ff9992be2
+41	85	8099253810879312	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_nugenperf_hotpatch.asm.obj	850cd7a5364f2a8b
+27	85	8099253810742087	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/engineering_unreverse_core_extension.asm.obj	e72330b0b720248d
+54	85	8099253811003657	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/avx512_tensor_quant.asm.obj	a8bb0ae6409ba789
+37	85	8099253810833754	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_dual_gpu_mirror.asm.obj	f3dfea7808b0d2e
+32	86	8099253810788217	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_host_zero_engineer.asm.obj	3eb55535814ccdac
+49	86	8099253810957832	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_1m_context_core.asm.obj	2d868f16cd5886d7
+45	86	8099253810909868	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_large_content_zero_overhead.asm.obj	cc0c166be7a7f42f
+68	86	8099253811135615	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_smt_prefetch_kernel.asm.obj	28926883ee20680c
+63	86	8099253811090032	CMakeFiles/Deep2EngineOpt.dir/f_/~dev/RawrXD-production-lazy-init/src/masm/final-ide/masm_kv_cache_multiplier.asm.obj	7210c942cf1035fe
+77	916	8099253811237521	CMakeFiles/master_test_suite.dir/main.cpp.obj	77b30ef1c86b6bcd
+73	956	8099253811196757	CMakeFiles/Deep2EngineOpt.dir/Deep2EngineExtensions.cpp.obj	30448430af0f8168
+956	997	8099253820029885	Deep2EngineOpt.lib	60808c3700977212
+997	1230	8099253820441659	master_test_suite.exe	d5d81e693eaeaf9d

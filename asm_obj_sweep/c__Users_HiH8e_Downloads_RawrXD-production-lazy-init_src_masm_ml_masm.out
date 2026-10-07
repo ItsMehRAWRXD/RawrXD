@@ -1,0 +1,44 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(49) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(69) : error A2008:syntax error : h_file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(70) : error A2008:syntax error : h_map
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(124) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(197) : error A2006:undefined symbol : h_file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(198) : error A2006:undefined symbol : h_map
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(207) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(208) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(210) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(211) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(214) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(219) : error A2006:undefined symbol : h_file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(224) : error A2006:undefined symbol : GetFileSize
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(231) : error A2006:undefined symbol : h_file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(233) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(237) : error A2006:undefined symbol : CreateFileMappingA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(242) : error A2006:undefined symbol : h_map
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(246) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(250) : error A2006:undefined symbol : MapViewOfFile
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(259) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(300) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(303) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(310) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(323) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(324) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(410) : error A2006:undefined symbol : UnmapViewOfFile
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(413) : error A2006:undefined symbol : h_map
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(416) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(417) : error A2006:undefined symbol : h_map
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(419) : error A2006:undefined symbol : h_file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(422) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(423) : error A2006:undefined symbol : h_file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(454) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(455) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(466) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(470) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(71) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(72) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(73) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_ml_masm.asm(74) : warning A4014:instructions and initialized data not supported in BSS segments

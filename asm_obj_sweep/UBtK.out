@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\UBtK.asm
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(173) : error A2008:syntax error : width
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(1764) : error A2008:syntax error : ENDPsi
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(1790) : error A2005:symbol redefinition : @show
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(1792) : error A2005:symbol redefinition : @set_visibility
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(1795) : error A2005:symbol redefinition : @no_window
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(1368) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(1740) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(1777) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(2002) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(2027) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(2466) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(2473) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(3144) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(3183) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(3275) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(3850) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\UBtK.asm(4093) : error A2081:missing operand after unary operator

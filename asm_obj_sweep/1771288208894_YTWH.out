@@ -1,0 +1,73 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(10) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(97) : error A2008:syntax error : width
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1169) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(237) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(249) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(329) : error A2006:undefined symbol : ReadConsoleInputA
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(362) : error A2006:undefined symbol : ReadConsoleInputA
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(513) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(547) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(562) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(609) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(613) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(712) : error A2006:undefined symbol : g_build_process
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(719) : error A2006:undefined symbol : TerminateProcess
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(720) : error A2006:undefined symbol : g_build_process
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(722) : error A2006:undefined symbol : g_build_process
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(723) : error A2006:undefined symbol : szCancelled
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(729) : error A2006:undefined symbol : g_run_process
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(735) : error A2006:undefined symbol : TerminateProcess
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(736) : error A2006:undefined symbol : g_run_process
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(738) : error A2006:undefined symbol : g_run_process
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(739) : error A2006:undefined symbol : szCancelled
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(772) : error A2006:undefined symbol : g_build_command
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(783) : error A2006:undefined symbol : CreateProcessA
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(789) : error A2006:undefined symbol : g_build_process
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(791) : error A2006:undefined symbol : szBuildStarted
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(796) : error A2006:undefined symbol : szBuildFailed
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(828) : error A2006:undefined symbol : g_run_command
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(839) : error A2006:undefined symbol : CreateProcessA
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(845) : error A2006:undefined symbol : g_run_process
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(850) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(852) : error A2006:undefined symbol : szRunComplete
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(857) : error A2006:undefined symbol : szRunFailed
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(957) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1245) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1343) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1390) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(217) : warning A4025:ENDP found before .ENDPROLOG : main
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(217) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(283) : warning A4025:ENDP found before .ENDPROLOG : CLI_Initialize
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(283) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(312) : warning A4025:ENDP found before .ENDPROLOG : CLI_Run
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(350) : warning A4025:ENDP found before .ENDPROLOG : Read_Key
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(373) : warning A4025:ENDP found before .ENDPROLOG : Wait_Key
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(497) : warning A4025:ENDP found before .ENDPROLOG : Process_Key
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(531) : warning A4025:ENDP found before .ENDPROLOG : Editor_Init
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(574) : warning A4025:ENDP found before .ENDPROLOG : Edit_Insert_Char
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(591) : warning A4025:ENDP found before .ENDPROLOG : Edit_Insert_Newline
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(618) : warning A4025:ENDP found before .ENDPROLOG : Edit_Backspace
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(633) : warning A4025:ENDP found before .ENDPROLOG : Cmd_New
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(661) : warning A4025:ENDP found before .ENDPROLOG : Cmd_Open
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(696) : warning A4025:ENDP found before .ENDPROLOG : Cmd_Save
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(701) : warning A4025:ENDP found before .ENDPROLOG : Cmd_Quit
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(946) : warning A4025:ENDP found before .ENDPROLOG : File_Load
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1028) : warning A4025:ENDP found before .ENDPROLOG : File_Save
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1038) : warning A4025:ENDP found before .ENDPROLOG : Draw_UI
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1134) : warning A4025:ENDP found before .ENDPROLOG : Draw_Editor
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1193) : warning A4025:ENDP found before .ENDPROLOG : Draw_Status
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1228) : warning A4025:ENDP found before .ENDPROLOG : Clear_Screen
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1263) : warning A4025:ENDP found before .ENDPROLOG : Clear_Line
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1279) : warning A4025:ENDP found before .ENDPROLOG : Set_Cursor_Pos
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1307) : warning A4025:ENDP found before .ENDPROLOG : Print
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1316) : warning A4025:ENDP found before .ENDPROLOG : Set_Status
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1340) : warning A4025:ENDP found before .ENDPROLOG : Strip_Newline
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1345) : warning A4025:ENDP found before .ENDPROLOG : Sprintf
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1370) : warning A4025:ENDP found before .ENDPROLOG : Itoa
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1399) : warning A4025:ENDP found before .ENDPROLOG : CLI_Shutdown
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1399) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\masm\RawrXD_CLI.asm\1771288208894_YTWH.asm(1399) : error A2220:Missing .ENDPROLOG

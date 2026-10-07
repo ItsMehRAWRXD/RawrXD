@@ -1,0 +1,13 @@
+GGUF magic: b'GGUF'
+Version: 3
+Tensors: 98
+Metadata: 63
+Tensor info start: 6911104
+Traceback (most recent call last):
+  File "d:\rawrxd\probe_kimi_k2_shard0.py", line 164, in <module>
+    main()
+  File "d:\rawrxd\probe_kimi_k2_shard0.py", line 56, in main
+    name = f.read(name_len).decode('utf-8', errors='replace')
+           ^^^^^^^^^^^^^^^^
+MemoryError
+^C

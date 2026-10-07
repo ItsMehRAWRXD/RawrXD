@@ -1,0 +1,4 @@
+Bash Compiler v1.0
+[READY] Bash Compiler initialized
+[TEST] PASS - Bash Compiler operational
+[EXIT] Code 0

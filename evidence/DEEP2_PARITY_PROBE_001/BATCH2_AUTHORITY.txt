@@ -1,0 +1,31 @@
+BATCH2_AUTHORITY — 2026-08-29
+
+SOLE_NUMERICAL_AUTHORITY=CPU-only llama
+  stick=ggml-cpu-zen4.dll ONLY (no Vulkan, no RPC)
+  probe=tools/parity_ref/llama_ref_parity_probe.exe (CPU backend load)
+  model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  sha256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+  input_ids=[1, 21521, 9312]
+
+QUARANTINE=all Vulkan-scheduled llama results
+  includes=ref_bos_cpu2 (misnamed; used Vulkan0), load_all backends, n_gpu_layers=0 with Vulkan registered
+  tip_29892=INFORMATIONAL_NON_AUTHORITATIVE
+
+INTERPRETATION=
+  Deep2 CPU argmax      = 13
+  llama pure CPU argmax = 13   # MATCH — not a BOS sampling defect
+  Vulkan llama argmax   = 29892 # quarantine
+
+CERT_DISTINCTION=
+  BOS_behavioral_argmax_parity = PASS (CPU oracle)
+  BOS_numerical_parity         = OPEN (PROMPT_FINAL_NORM / hidden diverge @ pos0)
+  AGENT-E2E-002b               = BLOCKED until numerical-parity classified
+
+DO_NOT_REOPEN=
+  BOS insertion / tokenizer / AttnCert positions 0,1,2 (still PASS)
+  Q4_0 !! / Q4_K_M no-BOS UE cross-compare
+
+BISECT_ORDER=
+  L0: embed → ATTN_NORM → Q/K/V → RoPE → attn_out → post_attn →
+      FFN_NORM → gate/up → act → down → post_FFN
+  then layer-by-layer if L0 post-FFN matches

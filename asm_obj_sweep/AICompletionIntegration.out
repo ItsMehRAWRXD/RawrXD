@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\AICompletionIntegration.asm
+D:\rawrxd\AICompletionIntegration.asm(170) : error A2008:syntax error : .
+D:\rawrxd\AICompletionIntegration.asm(69) : error A2206:missing operator in expression
+D:\rawrxd\AICompletionIntegration.asm(70) : error A2006:undefined symbol : EditorWindow_UpdateStatus
+D:\rawrxd\AICompletionIntegration.asm(75) : error A2006:undefined symbol : AICompletion_GetBufferSnapshot
+D:\rawrxd\AICompletionIntegration.asm(95) : error A2206:missing operator in expression
+D:\rawrxd\AICompletionIntegration.asm(97) : error A2006:undefined symbol : AICompletion_InsertTokens
+D:\rawrxd\AICompletionIntegration.asm(101) : error A2206:missing operator in expression
+D:\rawrxd\AICompletionIntegration.asm(102) : error A2006:undefined symbol : EditorWindow_UpdateStatus
+D:\rawrxd\AICompletionIntegration.asm(146) : error A2022:instruction operands must be the same size
+D:\rawrxd\AICompletionIntegration.asm(162) : error A2006:undefined symbol : CompletionSuccess
+D:\rawrxd\AICompletionIntegration.asm(166) : error A2206:missing operator in expression
+D:\rawrxd\AICompletionIntegration.asm(167) : error A2006:undefined symbol : EditorWindow_UpdateStatus

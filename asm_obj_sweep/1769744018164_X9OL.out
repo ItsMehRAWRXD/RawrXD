@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769744018164_X9OL.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769744018164_X9OL.asm(938) : error A2006:undefined symbol : HttpCreateRequestQueue

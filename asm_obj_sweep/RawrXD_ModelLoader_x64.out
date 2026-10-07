@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(103) : error A2084:constant value too large
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(375) : error A2218:AH, BH, CH, or DH may not be used with R8-R15, BPL, DIL, SIL, or SPL
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(160) : error A2166:structure field expected
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(162) : error A2166:structure field expected
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(399) : warning A4025:ENDP found before .ENDPROLOG : CalculateTensorSize
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(399) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(399) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(490) : warning A4025:ENDP found before .ENDPROLOG : TransformerLayer_Forward_AVX512
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(490) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(490) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(502) : warning A4025:ENDP found before .ENDPROLOG : RingBuffer_WriteToken
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(502) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\.archived_orphans\runoff\code_overflow\part_0001\RawrXD_ModelLoader_x64.asm(502) : error A2220:Missing .ENDPROLOG

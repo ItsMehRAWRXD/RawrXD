@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\src\matrix_mul_avx512.asm
+D:\rawrxd\src\matrix_mul_avx512.asm(16) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\matrix_mul_avx512.asm(75) : error A2023:instruction operand must have size
+D:\rawrxd\src\matrix_mul_avx512.asm(76) : error A2070:invalid instruction operands
+D:\rawrxd\src\matrix_mul_avx512.asm(77) : error A2070:invalid instruction operands
+D:\rawrxd\src\matrix_mul_avx512.asm(85) : error A2024:invalid operand size for instruction
+D:\rawrxd\src\matrix_mul_avx512.asm(308) : error A2070:invalid instruction operands
+D:\rawrxd\src\matrix_mul_avx512.asm(352) : error A2070:invalid instruction operands
+D:\rawrxd\src\matrix_mul_avx512.asm(408) : error A2070:invalid instruction operands
+D:\rawrxd\src\matrix_mul_avx512.asm(428) : error A2070:invalid instruction operands
+D:\rawrxd\src\matrix_mul_avx512.asm(406) : error A2032:invalid use of register

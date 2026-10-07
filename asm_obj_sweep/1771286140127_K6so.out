@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\rawrxd_neural_core.asm\1771286140127_K6so.asm
+D:\rawrxd\history\all_versions\src\rawrxd_neural_core.asm\1771286140127_K6so.asm(10) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\rawrxd_neural_core.asm\1771286140127_K6so.asm(11) : error A2008:syntax error : LITERALS
+D:\rawrxd\history\all_versions\src\rawrxd_neural_core.asm\1771286140127_K6so.asm(16) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

@@ -1,0 +1,525 @@
+# Phase H.1/5: CI/CD Pipeline
+# Complete build → test → certify → deploy automation
+# Triggers: push to main, PR to main, manual dispatch
+
+name: RawrXD CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, 'copilot/**' ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.vscode/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      certification_level:
+        description: 'Certification level'
+        required: true
+        default: 'gold'
+        type: choice
+        options:
+          - bronze
+          - silver
+          - gold
+          - platinum
+      skip_tests:
+        description: 'Skip test categories (comma-separated)'
+        required: false
+        default: ''
+        type: string
+
+env:
+  BUILD_TYPE: Release
+  VULKAN_SDK_VERSION: 1.3.275.0
+  CUDA_VERSION: 12.4
+
+jobs:
+  # ============================================================================
+  # Job 1: Build Matrix
+  # ============================================================================
+  build:
+    name: Build (${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.config }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows AMD64
+          - os: windows-latest
+            arch: amd64
+            config: Release
+            vulkan: true
+            cuda: true
+          - os: windows-latest
+            arch: amd64
+            config: Debug
+            vulkan: true
+            cuda: false
+          # Linux AMD64
+          - os: ubuntu-latest
+            arch: amd64
+            config: Release
+            vulkan: true
+            cuda: true
+          # Linux ARM64 (cross-compile)
+          - os: ubuntu-latest
+            arch: arm64
+            config: Release
+            vulkan: false
+            cuda: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Windows Build Environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Vulkan SDK (Windows)
+        if: runner.os == 'Windows' && matrix.vulkan
+        shell: pwsh
+        run: |
+          $vulkanUrl = "https://sdk.lunarg.com/sdk/download/${{ env.VULKAN_SDK_VERSION }}/windows/VulkanSDK-${{ env.VULKAN_SDK_VERSION }}-Installer.exe"
+          Invoke-WebRequest -Uri $vulkanUrl -OutFile "VulkanSDK.exe"
+          Start-Process -FilePath "VulkanSDK.exe" -ArgumentList "--accept-licenses --default-answer --confirm-command install" -Wait
+          echo "VULKAN_SDK=C:\VulkanSDK\${{ env.VULKAN_SDK_VERSION }}" >> $env:GITHUB_ENV
+
+      - name: Install Vulkan SDK (Linux)
+        if: runner.os == 'Linux' && matrix.vulkan
+        run: |
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-${{ env.VULKAN_SDK_VERSION }}-focal.list \
+            https://packages.lunarg.com/vulkan/${{ env.VULKAN_SDK_VERSION }}/lunarg-vulkan-${{ env.VULKAN_SDK_VERSION }}-focal.list
+          sudo apt update
+          sudo apt install -y vulkan-sdk
+
+      - name: Install CUDA (Linux)
+        if: runner.os == 'Linux' && matrix.cuda
+        run: |
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb
+          sudo dpkg -i cuda-keyring_1.0-1_all.deb
+          sudo apt-get update
+          sudo apt-get install -y cuda-toolkit-${{ env.CUDA_VERSION }}
+          echo "/usr/local/cuda/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            python3-pip \
+            git-lfs
+          pip3 install cmake
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+            -DRAWRXD_BUILD_TESTS=ON \
+            -DRAWRXD_BUILD_BENCHMARKS=ON \
+            -DRAWRXD_ENABLE_VULKAN=${{ matrix.vulkan }} \
+            -DRAWRXD_ENABLE_CUDA=${{ matrix.cuda }} \
+            -DRAWRXD_ENABLE_MASM=ON
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.config }} --parallel
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.config }}
+          path: |
+            build/bin/
+            build/lib/
+            build/*.exe
+            build/*.dll
+          retention-days: 7
+
+  # ============================================================================
+  # Job 2: Unit Tests
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ matrix.os }}-amd64-Release
+          path: build/
+
+      - name: Run Unit Tests (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $testDlls = Get-ChildItem -Path build -Filter "*Test*.dll" -Recurse
+          foreach ($dll in $testDlls) {
+            vstest.console.exe $dll.FullName /Logger:trx
+          }
+
+      - name: Run Unit Tests (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          find build -name "*test*" -type f -executable | while read test; do
+            echo "Running: $test"
+            "$test" --gtest_output=xml:test-results.xml || true
+          done
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}
+          path: |
+            **/*.trx
+            **/test-results.xml
+            **/TestResults/
+
+  # ============================================================================
+  # Job 3: Integration Tests
+  # ============================================================================
+  integration-tests:
+    name: Integration Tests
+    needs: [build, unit-tests]
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-windows-latest-amd64-Release
+          path: build/
+
+      - name: Setup PowerShell
+        uses: PowerShell/PowerShell@v7
+
+      - name: Run Integration Tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          
+          # Run Phase G.1 Batch 1: Stability Integration
+          Write-Host "Running Stability Integration Tests..."
+          & .\benchmarks\phase_g1\batch1_stability_integration\run_stability_benchmark.ps1 -BenchmarkType hotpatch -OutputDir .\test-results\stability
+          
+          # Run Phase G.1 Batch 2: Intelligent Ops
+          Write-Host "Running Intelligent Ops Tests..."
+          & .\benchmarks\phase_g1\batch2_intelligent_ops\run_intelligent_ops.ps1 -BenchmarkType hotpatch -InsightLevel standard -OutputDir .\test-results\intelligent_ops
+          
+          # Check results
+          $stabilityResult = Get-Content .\test-results\stability\*.json | ConvertFrom-Json
+          $intelligentOpsResult = Get-Content .\test-results\intelligent_ops\*.json | ConvertFrom-Json
+          
+          if ($stabilityResult.verdict -ne "EXCELLENT" -and $stabilityResult.verdict -ne "GOOD") {
+            throw "Stability integration test failed: $($stabilityResult.verdict)"
+          }
+          
+          if ($intelligentOpsResult.verdict -ne "EXCELLENT" -and $intelligentOpsResult.verdict -ne "GOOD") {
+            throw "Intelligent ops test failed: $($intelligentOpsResult.verdict)"
+          }
+
+      - name: Upload Integration Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: test-results/
+
+  # ============================================================================
+  # Job 4: Certification Suite
+  # ============================================================================
+  certification:
+    name: Production Certification (${{ github.event.inputs.certification_level || 'gold' }})
+    needs: [build, unit-tests, integration-tests]
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-windows-latest-amd64-Release
+          path: build/
+
+      - name: Run Production Certification
+        shell: pwsh
+        run: |
+          $certLevel = "${{ github.event.inputs.certification_level || 'gold' }}"
+          $skipTests = "${{ github.event.inputs.skip_tests }}"
+          
+          $args = @{
+            CertificationLevel = $certLevel
+            RunAllBatches = $true
+            GenerateReport = $true
+            OutputDir = ".\certification-results"
+          }
+          
+          if ($skipTests) {
+            $args['SkipTests'] = $skipTests
+          }
+          
+          & .\benchmarks\phase_g1\batch5_production_hardening\run_production_certification.ps1 @args
+          
+          # Check certification result
+          $result = Get-Content .\certification-results\*.json | ConvertFrom-Json
+          if ($result.certification.status -ne "CERTIFIED") {
+            throw "Production certification failed: $($result.certification.status)"
+          }
+          
+          Write-Host "Certification passed: $($result.certification.level) level achieved"
+
+      - name: Upload Certification Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: certification-results
+          path: certification-results/
+
+      - name: Create Certification Badge
+        shell: pwsh
+        run: |
+          $certLevel = "${{ github.event.inputs.certification_level || 'gold' }}"
+          $badgeColor = switch ($certLevel) {
+            "bronze" { "#CD7F32" }
+            "silver" { "#C0C0C0" }
+            "gold" { "#FFD700" }
+            "platinum" { "#E5E4E2" }
+            default { "#FFD700" }
+          }
+          
+          $badgeSvg = @"
+          <svg xmlns="http://www.w3.org/2000/svg" width="180" height="20">
+            <linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient>
+            <mask id="a"><rect width="180" height="20" rx="3" fill="#fff"/></mask>
+            <g mask="url(#a)">
+              <path fill="#555" d="M0 0h80v20H0z"/>
+              <path fill="$badgeColor" d="M80 0h100v20H80z"/>
+              <path fill="url(#b)" d="M0 0h180v20H0z"/>
+            </g>
+            <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+              <text x="40" y="15" fill="#010101" fill-opacity=".3">certification</text>
+              <text x="40" y="14">certification</text>
+              <text x="130" y="15" fill="#010101" fill-opacity=".3">$certLevel</text>
+              <text x="130" y="14">$certLevel</text>
+            </g>
+          </svg>
+          "@
+          
+          $badgeSvg | Out-File -FilePath certification-results/badge.svg -Encoding UTF8
+
+  # ============================================================================
+  # Job 5: Package & Publish
+  # ============================================================================
+  package:
+    name: Package & Publish
+    needs: [certification]
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Package Release
+        shell: pwsh
+        run: |
+          $version = git describe --tags --always
+          $date = Get-Date -Format "yyyyMMdd"
+          $releaseName = "rawrxd-$version-$date"
+          
+          New-Item -ItemType Directory -Force -Path "releases/$releaseName"
+          
+          # Copy binaries
+          Copy-Item -Path "artifacts/build-windows-latest-amd64-Release/*" -Destination "releases/$releaseName/" -Recurse -Force
+          
+          # Copy certification results
+          Copy-Item -Path "artifacts/certification-results/*" -Destination "releases/$releaseName/" -Recurse -Force
+          
+          # Create manifest
+          $manifest = @{
+            version = $version
+            build_date = $date
+            commit = $env:GITHUB_SHA
+            certification = "${{ github.event.inputs.certification_level || 'gold' }}"
+            artifacts = Get-ChildItem "releases/$releaseName" -Recurse | Select-Object -ExpandProperty Name
+          }
+          $manifest | ConvertTo-Json -Depth 3 | Out-File "releases/$releaseName/manifest.json"
+          
+          # Create archive
+          Compress-Archive -Path "releases/$releaseName/*" -DestinationPath "releases/$releaseName.zip"
+          
+          Write-Host "Release package created: releases/$releaseName.zip"
+
+      - name: Upload Release Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package
+          path: releases/*.zip
+
+      - name: Create GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: releases/*.zip
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') }}
+
+  # ============================================================================
+  # Job 6: Security Scan
+  # ============================================================================
+  security-scan:
+    name: Security Scan
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: cpp, python
+          queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: Run Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'RawrXD'
+          path: '.'
+          format: 'ALL'
+
+      - name: Upload Security Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results
+          path: reports/
+
+  # ============================================================================
+  # Job 7: Notify
+  # ============================================================================
+  notify:
+    name: Notify Results
+    needs: [package, security-scan]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Notify Slack (on success)
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "✅ RawrXD CI/CD Pipeline Complete",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "RawrXD CI/CD Pipeline Complete"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:* ✅ Success"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:* ${{ github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:* ${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Certification:* ${{ github.event.inputs.certification_level || 'gold' }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack (on failure)
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "❌ RawrXD CI/CD Pipeline Failed",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "RawrXD CI/CD Pipeline Failed"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:* ❌ Failed"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:* ${{ github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:* ${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

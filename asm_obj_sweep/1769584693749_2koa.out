@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769584693749_2koa.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769584693749_2koa.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769584693749_2koa.asm(20) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769584693749_2koa.asm(143) : error A2008:syntax error : DD
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769584693749_2koa.asm(153) : error A2008:syntax error : ptr
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769584693749_2koa.asm(154) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769584693749_2koa.asm(261) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769584693749_2koa.asm(371) : error A2008:syntax error : EDX
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769584693749_2koa.asm(374) : fatal error A1010:unmatched block nesting : SetError

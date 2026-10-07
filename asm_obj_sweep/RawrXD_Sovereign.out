@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\src\RawrXD_Sovereign.asm
+D:\rawrxd\src\RawrXD_Sovereign.asm(104) : error A2008:syntax error : .
+D:\rawrxd\src\RawrXD_Sovereign.asm(110) : error A2008:syntax error : .
+D:\rawrxd\src\RawrXD_Sovereign.asm(98) : error A2006:undefined symbol : msg_destroy
+D:\rawrxd\src\RawrXD_Sovereign.asm(100) : error A2006:undefined symbol : msg_size

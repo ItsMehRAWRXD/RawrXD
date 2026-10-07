@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\reconstructed\backend\rawrxd_backend.asm
+D:\rawrxd\history\reconstructed\backend\rawrxd_backend.asm(383) : warning A6004:procedure argument or local not referenced : fdwCtrlType
+D:\rawrxd\history\reconstructed\backend\rawrxd_backend.asm(483) : warning A6004:procedure argument or local not referenced : status

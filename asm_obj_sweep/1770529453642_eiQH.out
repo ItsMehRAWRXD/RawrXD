@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(849) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(857) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(107) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(183) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(249) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(292) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(335) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(367) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(404) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(460) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(509) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(538) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(544) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(578) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(638) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(702) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(711) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(752) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(757) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(819) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(828) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(864) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_MetaReverse.asm\1770529453642_eiQH.asm(912) : error A2220:Missing .ENDPROLOG

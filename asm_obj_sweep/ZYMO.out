@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\ZYMO.asm
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(2740) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4045) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4047) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4050) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4052) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4054) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4056) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4058) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4060) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4062) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\ZYMO.asm(4098) : fatal error A1010:unmatched block nesting : gui_apply_style

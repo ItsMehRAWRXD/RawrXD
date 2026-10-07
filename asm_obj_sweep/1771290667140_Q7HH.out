@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771290667140_Q7HH.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771290667140_Q7HH.asm(483) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771290667140_Q7HH.asm(500) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771290667140_Q7HH.asm(527) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771290667140_Q7HH.asm(692) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771290667140_Q7HH.asm(882) : error A2006:undefined symbol : GetFileSize
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771290667140_Q7HH.asm(954) : error A2206:missing operator in expression

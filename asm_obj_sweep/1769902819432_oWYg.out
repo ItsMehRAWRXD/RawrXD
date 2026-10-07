@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(294) : error A2008:syntax error : in
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(295) : error A2008:syntax error : Inference_SubmitBatch
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(321) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(322) : error A2008:syntax error : FRAME
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(326) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(329) : error A2008:syntax error : el
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(334) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(342) : error A2008:syntax error : Slot
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(352) : error A2008:syntax error : _OBJECT_0
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(358) : error A2008:syntax error : ultBuffer
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(362) : error A2008:syntax error : rmJob
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(378) : error A2008:syntax error : ]
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(389) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(396) : error A2008:syntax error : armJob
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(400) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(403) : error A2008:syntax error : rbx
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(409) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(414) : error A2008:syntax error : nce
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(415) : error A2008:syntax error : ENDPUBLIC
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(415) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902819432_oWYg.asm(415) : fatal error A1010:unmatched block nesting : InferenceEngine_Submit

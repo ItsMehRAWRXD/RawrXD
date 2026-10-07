@@ -1,0 +1,39 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(6) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(9) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(11) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(12) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(14) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(16) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(17) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(18) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(19) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(20) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(21) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(23) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(25) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(26) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(28) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(30) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(31) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(33) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(35) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(36) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(38) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(40) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(41) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(43) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(45) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(46) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(47) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(48) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(49) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(51) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(52) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(54) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(55) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(57) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(58) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\sdkless_eon_ide.asm(58) : error A2088:END directive required at end of file

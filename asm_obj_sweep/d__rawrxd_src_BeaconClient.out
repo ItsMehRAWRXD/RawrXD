@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(24) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(41) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(38) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(76) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(77) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(103) : error A2006:undefined symbol : WinHttpAddRequestHeaders
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(137) : error A2006:undefined symbol : BeaconTransmit
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(151) : error A2006:undefined symbol : BeaconProcessCommand
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(170) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(171) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_BeaconClient.asm(134) : error A2206:missing operator in expression

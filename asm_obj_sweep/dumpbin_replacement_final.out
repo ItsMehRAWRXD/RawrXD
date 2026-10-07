@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\dumpbin_replacement_final.asm
+D:\rawrxd\src\dumpbin_replacement_final.asm(6) : error A2008:syntax error : .
+D:\rawrxd\src\dumpbin_replacement_final.asm(7) : error A2008:syntax error : .
+D:\rawrxd\src\dumpbin_replacement_final.asm(16) : fatal error A1000:cannot open file : user32.inc

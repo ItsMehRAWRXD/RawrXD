@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(92) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(105) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(109) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(122) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(261) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(309) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(316) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(77) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(93) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(94) : error A2006:undefined symbol : load_canceled
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(99) : error A2006:undefined symbol : skip_progress
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(107) : error A2006:undefined symbol : load_loop
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(116) : error A2006:undefined symbol : skip_complete
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(124) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(218) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(229) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(240) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(256) : error A2006:undefined symbol : timeout
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(297) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(307) : error A2006:undefined symbol : skip_close
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(314) : error A2006:undefined symbol : skip_path
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_model_loader_thread.asm(134) : error A2220:Missing .ENDPROLOG

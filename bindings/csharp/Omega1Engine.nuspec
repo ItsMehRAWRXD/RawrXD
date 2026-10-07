@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>RawrXD.Omega1Engine</id>
+    <version>1.0.0</version>
+    <authors>RawrXD Team</authors>
+    <owners>ItsMehRAWRXD</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/ItsMehRAWRXD/rawrxd</projectUrl>
+    <repository type="git" url="https://github.com/ItsMehRAWRXD/rawrxd.git" />
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>OMEGA-1 Self-Mutating Engine .NET bindings. Provides access to IAT slots 64-75 for PowerShell integration, reflective execution, and module management.</description>
+    <releaseNotes>Initial release with full IAT slot 64-75 support.</releaseNotes>
+    <copyright>Copyright 2026 RawrXD</copyright>
+    <tags>rawrxd omega1 powershell native ffi self-mutating engine</tags>
+    <readme>README.md</readme>
+    <dependencies>
+      <group targetFramework="net8.0" />
+      <group targetFramework="net7.0" />
+      <group targetFramework="net6.0" />
+      <group targetFramework="netstandard2.1" />
+      <group targetFramework="netstandard2.0" />
+      <group targetFramework="net48" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="Omega1Engine.cs" target="contentFiles/any/any/Omega1Engine.cs" />
+    <file src="Omega1Engine.csproj" target="contentFiles/any/any/Omega1Engine.csproj" />
+    <file src="..\..\src\omega1_modules\Omega1Engine.def" target="build\Omega1Engine.def" />
+    <file src="..\..\OMEGA1_CMAKE_INTEGRATION.md" target="docs\README.md" />
+  </files>
+</package>

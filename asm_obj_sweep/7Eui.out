@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\-1b707747\7Eui.asm
+D:\rawrxd\history\-1b707747\7Eui.asm(319) : error A2039:line too long
+D:\rawrxd\history\-1b707747\7Eui.asm(3806) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\7Eui.asm(3853) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1b707747\7Eui.asm(4195) : error A2005:symbol redefinition : szBackDir
+D:\rawrxd\history\-1b707747\7Eui.asm(4196) : error A2005:symbol redefinition : szExplorerDir
+D:\rawrxd\history\-1b707747\7Eui.asm(4197) : error A2005:symbol redefinition : szExplorerPattern
+D:\rawrxd\history\-1b707747\7Eui.asm(4199) : error A2005:symbol redefinition : find_data
+D:\rawrxd\history\-1b707747\7Eui.asm(1034) : error A2006:undefined symbol : HandleFileDrop
+D:\rawrxd\history\-1b707747\7Eui.asm(1510) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\7Eui.asm(1634) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\7Eui.asm(1707) : error A2006:undefined symbol : szFeaturesMsg
+D:\rawrxd\history\-1b707747\7Eui.asm(1715) : error A2006:undefined symbol : save_theme_to_config
+D:\rawrxd\history\-1b707747\7Eui.asm(1749) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1b707747\7Eui.asm(3722) : error A2006:undefined symbol : EM_LINEFROMCHAR
+D:\rawrxd\history\-1b707747\7Eui.asm(4216) : error A2006:undefined symbol : HandleFileDrop
+D:\rawrxd\history\-1b707747\7Eui.asm(4217) : error A2006:undefined symbol : ProcessDroppedFile
+D:\rawrxd\history\-1b707747\7Eui.asm(4218) : error A2006:undefined symbol : GetFileExtension
+D:\rawrxd\history\-1b707747\7Eui.asm(4219) : error A2006:undefined symbol : RouteFileByExtension
+D:\rawrxd\history\-1b707747\7Eui.asm(4220) : error A2006:undefined symbol : OpenMASMFile
+D:\rawrxd\history\-1b707747\7Eui.asm(4221) : error A2006:undefined symbol : OpenTextFile
+D:\rawrxd\history\-1b707747\7Eui.asm(4222) : error A2006:undefined symbol : OpenBatchFile
+D:\rawrxd\history\-1b707747\7Eui.asm(392) : warning A4014:instructions and initialized data not supported in BSS segments

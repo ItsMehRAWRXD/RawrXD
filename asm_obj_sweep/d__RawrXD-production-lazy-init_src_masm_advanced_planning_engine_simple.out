@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_advanced_planning_engine_simple.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_advanced_planning_engine_simple.asm(94) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_advanced_planning_engine_simple.asm(95) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_advanced_planning_engine_simple.asm(96) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_advanced_planning_engine_simple.asm(109) : warning A6004:procedure argument or local not referenced : pTaskName
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_advanced_planning_engine_simple.asm(109) : warning A6004:procedure argument or local not referenced : duration
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_advanced_planning_engine_simple.asm(109) : warning A6004:procedure argument or local not referenced : priority
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_advanced_planning_engine_simple.asm(151) : warning A6004:procedure argument or local not referenced : taskId
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_advanced_planning_engine_simple.asm(151) : warning A6004:procedure argument or local not referenced : depId

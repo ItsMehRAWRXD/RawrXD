@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(10) : error A2034:must be in segment block : PiFabric_SelectQuantLevel
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(11) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(12) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(13) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(14) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(15) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(21) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(22) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(25) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_quant_policy.asm\1766358323380_WbwJ.asm(26) : fatal error A1010:unmatched block nesting : PiFabric_SelectQuantLevel

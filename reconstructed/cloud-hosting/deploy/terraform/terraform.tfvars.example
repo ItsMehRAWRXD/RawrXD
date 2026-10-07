@@ -1,0 +1,9 @@
+# Copy this to terraform.tfvars and fill in your values
+do_token         = "dop_v1_YOUR_TOKEN"
+ssh_fingerprint  = "ab:cd:ef:12:34:56:78:90"
+allowed_ssh_ips  = ["YOUR.PUBLIC.IP/32"]
+model_name       = "your-model.gguf"
+spaces_access_key = ""
+spaces_secret_key = ""
+api_key          = "your-secret-api-key"
+cdn_domain       = ""

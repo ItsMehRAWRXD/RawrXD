@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(140) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(142) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(152) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(165) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(180) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(186) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(192) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(196) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(206) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(208) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(261) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(270) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(275) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(276) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(279) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(280) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(283) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(284) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(287) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(288) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(290) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(291) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(302) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(319) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(320) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(321) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(322) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(323) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(324) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(328) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(391) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(400) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(413) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(414) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(415) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(424) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(438) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(440) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(441) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(456) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(469) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(524) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(525) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(546) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(555) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(566) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(583) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(584) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(587) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(588) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(589) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(593) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(612) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(621) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(632) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(641) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(642) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(643) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(646) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(662) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(675) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(682) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(683) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(684) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(685) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(686) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(689) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(712) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(716) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(765) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(767) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(769) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(771) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(773) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(775) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(777) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(779) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(783) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(785) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(787) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(789) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(791) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(793) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(795) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(797) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(802) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(804) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(805) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(809) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(826) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(829) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(843) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(845) : error A2008:syntax error : elseif
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(848) : error A2008:syntax error : elseif
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(851) : error A2008:syntax error : elseif
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(854) : error A2008:syntax error : elseif
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(857) : error A2008:syntax error : elseif
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(859) : error A2008:syntax error : elseif
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_omega_professional.asm(861) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,27 @@
+tree 197fe3c898d4dc871fae336096577710a1deba2e
+parent 68726ab046ce18b02d117ab79c8f1e2627799889
+author Diego Devesa <slarengh@gmail.com> 1734560502 +0100
+committer Georgi Gerganov <ggerganov@gmail.com> 1735905638 +0200
+
+ggml : fix arm build (llama/10890)
+
+* ggml: GGML_NATIVE uses -mcpu=native on ARM
+
+Signed-off-by: Adrien Gallouët <angt@huggingface.co>
+
+* ggml: Show detected features with GGML_NATIVE
+
+Signed-off-by: Adrien Gallouët <angt@huggingface.co>
+
+* remove msvc support, add GGML_CPU_ARM_ARCH option
+
+* disable llamafile in android example
+
+* march -> mcpu, skip adding feature macros
+
+ggml-ci
+
+---------
+
+Signed-off-by: Adrien Gallouët <angt@huggingface.co>
+Co-authored-by: Adrien Gallouët <angt@huggingface.co>

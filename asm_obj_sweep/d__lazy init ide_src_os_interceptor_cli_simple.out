@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_os_interceptor_cli_simple.asm
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_os_interceptor_cli_simple.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_os_interceptor_cli_simple.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_os_interceptor_cli_simple.asm(14) : fatal error A1000:cannot open file : \masm32\include\windows.inc

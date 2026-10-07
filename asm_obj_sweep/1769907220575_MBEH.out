@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(16) : error A2008:syntax error : MapViewOfFile
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(21) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(22) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(29) : error A2008:syntax error : STRUCGENERIC_READ
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(31) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(34) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(36) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907220575_MBEH.asm(36) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+
+MASM : fatal error A1016: Internal error

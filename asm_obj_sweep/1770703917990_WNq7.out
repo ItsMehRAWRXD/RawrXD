@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703917990_WNq7.asm
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703917990_WNq7.asm(6256) : error A2005:symbol redefinition : bbgen_append_entry
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703917990_WNq7.asm(1524) : error A2006:undefined symbol : DynTraceMode
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703917990_WNq7.asm(1622) : error A2006:undefined symbol : DynTraceMode
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703917990_WNq7.asm(5278) : error A2006:undefined symbol : bbcov_found_int3
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703917990_WNq7.asm(5408) : error A2006:undefined symbol : bbcov_jcc_near_skip_target
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703917990_WNq7.asm(5410) : error A2006:undefined symbol : bbcov_jcc_near_skip_target
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703917990_WNq7.asm(6075) : error A2006:undefined symbol : bbval_check_padding

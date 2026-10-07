@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769637093431_zPL2.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769637093431_zPL2.asm(153) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769637093431_zPL2.asm(101) : warning A6004:procedure argument or local not referenced : hModule
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769637093431_zPL2.asm(101) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769637093431_zPL2.asm(101) : warning A6004:procedure argument or local not referenced : lpReserved

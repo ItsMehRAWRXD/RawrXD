@@ -1,0 +1,5 @@
+Opened log file 'd:\rawrxd-ci-bootstrap\cdb_tiny_firstchance_08d8_2026-05-31_23-20-39-910.txt'
+ModLoad: 00007ffb`3b190000 00007ffb`3b1c2000   C:\WINDOWS\System32\IMM32.DLL
+ModLoad: 00007ffa`809d0000 00007ffa`81349000   d:\rawrxd-ci-bootstrap\Sovereign_SDK.dll
+ModLoad: 00007ffb`3b1d0000 00007ffb`3b250000   C:\WINDOWS\System32\WS2_32.dll
+ModLoad: 00007ffb`3b070000 00007ffb`3b188000   C:\WINDOWS\System32\RPCRT4.dll

@@ -1,0 +1,50 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(230) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(264) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(289) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(291) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(293) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(346) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(371) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(381) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(382) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(384) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(385) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(399) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(400) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(510) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(520) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(537) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(558) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(570) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(585) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(588) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(590) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(676) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(686) : error A2152:coprocessor register cannot be first operand
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(697) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(699) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(714) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(720) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(742) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(755) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(757) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(759) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(780) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(789) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(797) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(799) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(833) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(839) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(854) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(871) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(889) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(891) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(1011) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(1019) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(214) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(226) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(278) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(681) : error A2030:multiple index registers not allowed
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(976) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD\src\Titan\InferenceCore.asm(1012) : error A2030:multiple index registers not allowed

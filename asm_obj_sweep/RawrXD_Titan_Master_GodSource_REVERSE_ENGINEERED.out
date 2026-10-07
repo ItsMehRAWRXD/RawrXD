@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(12) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(13) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(14) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(15) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(16) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(17) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(90) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(387) : error A2005:symbol redefinition : KERNEL_PREFETCH
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(389) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(391) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\agentic\RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm(440) : fatal error A1010:unmatched block nesting : KERNEL_PREFETCH

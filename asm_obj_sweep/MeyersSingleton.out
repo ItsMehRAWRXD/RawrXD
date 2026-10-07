@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\MeyersSingleton.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\MeyersSingleton.asm(90) : warning A4000:cannot modify READONLY segment
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\MeyersSingleton.asm(149) : warning A4000:cannot modify READONLY segment
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\MeyersSingleton.asm(150) : warning A4000:cannot modify READONLY segment

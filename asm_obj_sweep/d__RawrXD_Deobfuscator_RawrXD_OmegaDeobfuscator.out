@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__RawrXD_Deobfuscator_RawrXD_OmegaDeobfuscator.asm
+D:\rawrxd\history\runoff\part_0009\d__RawrXD_Deobfuscator_RawrXD_OmegaDeobfuscator.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__RawrXD_Deobfuscator_RawrXD_OmegaDeobfuscator.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__RawrXD_Deobfuscator_RawrXD_OmegaDeobfuscator.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__RawrXD_Deobfuscator_RawrXD_OmegaDeobfuscator.asm(13) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0009\d__RawrXD_Deobfuscator_RawrXD_OmegaDeobfuscator.asm(54) : error A2008:syntax error : mask
+D:\rawrxd\history\runoff\part_0009\d__RawrXD_Deobfuscator_RawrXD_OmegaDeobfuscator.asm(63) : error A2008:syntax error : rax
+D:\rawrxd\history\runoff\part_0009\d__RawrXD_Deobfuscator_RawrXD_OmegaDeobfuscator.asm(1181) : fatal error A1010:unmatched block nesting : Handle_Encode

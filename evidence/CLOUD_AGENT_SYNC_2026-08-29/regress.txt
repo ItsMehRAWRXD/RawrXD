@@ -1,0 +1,13 @@
+
+REGRESS_MIN_2026-08-29 (branch sync/cloud-agent-2026-08-29 @ 37ad9e7df)
+parser_unit=PASS (all reverse parser checks passed)
+agent_scripted=PASS (Hello RawrXD exact stdout proof)
+DEEP2_PONG_PROBE_001=UNCHANGED (1 token, Response='!!', no explosion)
+win32ide_build=see WIN32IDE_EXIT / win32ide_build.txt
+deep2_agent_files_in_sync_commit=NONE (selective transplant only)
+gate_unchanged=parity/context stability -> logits/content -> PONG -> AGENT-E2E-002b
+
+WIN32IDE_BUILD_AFTER_NAMESPACE_FIX=PASS (exit 0)
+sync_commits=37ad9e7df + 994250b32
+branch=sync/cloud-agent-2026-08-29
+main_untouched=yes

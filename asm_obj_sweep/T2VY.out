@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(202) : error A2005:symbol redefinition : szFeatureHarnessInit
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(203) : error A2005:symbol redefinition : szFeatureToggleSuccess
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(204) : error A2005:symbol redefinition : szFeaturePresetApplied
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(208) : error A2005:symbol redefinition : FeatureHarness
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(209) : error A2005:symbol redefinition : FeatureStatusArray
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(210) : error A2005:symbol redefinition : FeatureCount
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(211) : error A2005:symbol redefinition : FeaturesEnabled
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(212) : error A2005:symbol redefinition : CurrentPreset
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(659) : error A2070:invalid instruction operands
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(680) : error A2070:invalid instruction operands
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(653) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(654) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(657) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(658) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\T2VY.asm(662) : error A2006:undefined symbol : INVALID_HANDLE_VALUE

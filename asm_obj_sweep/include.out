@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\tests\test\include.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\tests\test\include.asm(6) : error A2008:syntax error : main
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\tests\test\include.asm(6) : error A2088:END directive required at end of file

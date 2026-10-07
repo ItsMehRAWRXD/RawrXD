@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(503) : warning A6001:no return from procedure
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(142) : warning A6004:procedure argument or local not referenced : hStdOut
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(142) : warning A6004:procedure argument or local not referenced : nWritten
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(142) : warning A6004:procedure argument or local not referenced : len
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(174) : warning A6004:procedure argument or local not referenced : charBuffer
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(174) : warning A6004:procedure argument or local not referenced : debugStr
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(219) : warning A6004:procedure argument or local not referenced : tokenCount
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(219) : warning A6004:procedure argument or local not referenced : modelPtr
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(219) : warning A6004:procedure argument or local not referenced : char
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(354) : warning A6004:procedure argument or local not referenced : hFile
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(354) : warning A6004:procedure argument or local not referenced : jsonBuffer
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(354) : warning A6004:procedure argument or local not referenced : jsonLen
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(354) : warning A6004:procedure argument or local not referenced : modeName
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(404) : warning A6004:procedure argument or local not referenced : tokenCount
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(439) : warning A6004:procedure argument or local not referenced : mode
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(503) : warning A6004:procedure argument or local not referenced : cycleIdx
+D:\rawrxd\RawrXD_Amphibious_ML64_Complete.asm(503) : warning A6004:procedure argument or local not referenced : finalMask

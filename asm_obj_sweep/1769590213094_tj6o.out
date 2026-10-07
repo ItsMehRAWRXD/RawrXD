@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(11) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(12) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(83) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(84) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(85) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(86) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(90) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(91) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769590213094_tj6o.asm(93) : fatal error A1010:unmatched block nesting : KERNEL_PARAMS

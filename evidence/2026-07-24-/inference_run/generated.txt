@@ -1,0 +1,1 @@
+The quick brown fox jumps over the lazy dog. This is a test of deterministic inference with fixed seed 42 and temperature 0. The output should be reproducible across runs.

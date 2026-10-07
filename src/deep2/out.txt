@@ -1,0 +1,9 @@
+ParseIndex: tensors=1608 kv=77
+Warmup: acquiring layer 1 expert 28
+  valid=1 gate=000001fb81496060 up=000001fb81496060 down=000001fb81827860 bytes=9977856
+Warmup: acquiring layer 1 expert 114
+  valid=1 gate=000001fb81e28060 up=000001fb81e28060 down=000001fb821b9860 bytes=9977856
+Warmup: acquiring layer 1 expert 98
+  valid=1 gate=000001fb827bb060 up=000001fb827bb060 down=000001fb82b4c860 bytes=9977856
+Warmup: acquiring layer 1 expert 54
+  valid=1 gate=000001fb83157060 up=000001fb83157060 down=000001fb834e8860 bytes=9977856

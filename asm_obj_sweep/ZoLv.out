@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\-20f46be8\ZoLv.asm
+D:\rawrxd\history\-20f46be8\ZoLv.asm(8) : error A2008:syntax error : win64
+D:\rawrxd\history\-20f46be8\ZoLv.asm(9) : error A2008:syntax error : frame
+D:\rawrxd\history\-20f46be8\ZoLv.asm(251) : error A2008:syntax error : .
+D:\rawrxd\history\-20f46be8\ZoLv.asm(278) : error A2008:syntax error : .
+ ALIGN_FILE(11): Macro Called From
+  D:\rawrxd\history\-20f46be8\ZoLv.asm(278): Main Line Code
+D:\rawrxd\history\-20f46be8\ZoLv.asm(281) : fatal error A1010:unmatched block nesting : build_dos_header

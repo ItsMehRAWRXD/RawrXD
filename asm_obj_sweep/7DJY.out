@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-29b2499c\7DJY.asm
+D:\rawrxd\history\-29b2499c\7DJY.asm(75) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-29b2499c\7DJY.asm(82) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\-29b2499c\7DJY.asm(92) : error A2006:undefined symbol : lstrlenA

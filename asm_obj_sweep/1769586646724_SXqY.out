@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(112) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(113) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586646724_SXqY.asm(120) : fatal error A1010:unmatched block nesting : PerformanceCounter

@@ -1,0 +1,76 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(347) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(350) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(353) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(356) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(359) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(362) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(365) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(369) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(393) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(413) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(444) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(459) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(467) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(475) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(483) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(499) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(526) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(614) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(616) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(618) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(620) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(666) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(667) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1148) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(540) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(570) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(579) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(601) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(664) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(818) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(824) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(832) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(875) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(910) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(920) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(952) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(971) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(980) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(988) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1051) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1126) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1162) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1218) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1230) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1315) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1323) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1386) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1392) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1437) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1478) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1528) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1536) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1619) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1659) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1714) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1767) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1864) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1873) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1892) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1899) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1951) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1957) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1978) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(1991) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(2090) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(2096) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(2155) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(2162) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(2177) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(2193) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(2200) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(2271) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(348) : error A2167:unexpected literal found in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(351) : error A2167:unexpected literal found in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769587195376_IiMu.asm(354) : error A2167:unexpected literal found in expression

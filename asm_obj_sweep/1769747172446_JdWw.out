@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(106) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(364) : error A2006:undefined symbol : MAX_REQUEST_SIZE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(474) : error A2006:undefined symbol : HTTP_REQUEST
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(479) : error A2006:undefined symbol : HTTP_REQUEST
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(486) : error A2006:undefined symbol : HTTP_REQUEST
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(489) : error A2006:undefined symbol : HTTP_REQUEST
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(495) : error A2006:undefined symbol : MAX_RESPONSE_SIZE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(521) : error A2006:undefined symbol : MAX_RESPONSE_SIZE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(530) : error A2006:undefined symbol : MAX_RESPONSE_SIZE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(538) : error A2006:undefined symbol : MAX_RESPONSE_SIZE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(636) : error A2006:undefined symbol : MAX_RESPONSE_SIZE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(752) : error A2006:undefined symbol : MAX_REQUEST_SIZE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(762) : error A2006:undefined symbol : MAX_RESPONSE_SIZE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(787) : error A2006:undefined symbol : MAX_REQUEST_SIZE
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(818) : error A2006:undefined symbol : HTTP_REQUEST
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769747172446_JdWw.asm(965) : error A2006:undefined symbol : MAX_WORKER_THREADS

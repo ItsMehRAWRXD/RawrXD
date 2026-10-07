@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(141) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(178) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(184) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(222) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(226) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(230) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(377) : error A2006:undefined symbol : mutex_lock_done
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(398) : error A2006:undefined symbol : mutex_unlock_done
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(472) : error A2006:undefined symbol : event_set_done
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(878) : error A2006:undefined symbol : VirtualProtect
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(903) : error A2006:undefined symbol : VirtualProtect
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(909) : error A2006:undefined symbol : FlushInstructionCache
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(911) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(918) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_asm_hotpatch_integration.asm(959) : error A2206:missing operator in expression

@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(92) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(100) : error A2008:syntax error : k0
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(274) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(91) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_qtapp_critical_paths_bpe_tokenize_simd.asm(178) : error A2206:missing operator in expression

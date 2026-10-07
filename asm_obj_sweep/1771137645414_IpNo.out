@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\agentic_puppeteer_byte_ops.asm\1771137645414_IpNo.asm
+D:\rawrxd\history\all_versions\src\asm\agentic_puppeteer_byte_ops.asm\1771137645414_IpNo.asm(114) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\asm\agentic_puppeteer_byte_ops.asm\1771137645414_IpNo.asm(536) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\asm\agentic_puppeteer_byte_ops.asm\1771137645414_IpNo.asm(537) : error A2022:instruction operands must be the same size

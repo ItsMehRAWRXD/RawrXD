@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-16816e02\UfqK.asm
+D:\rawrxd\history\-16816e02\UfqK.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\-16816e02\UfqK.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\-16816e02\UfqK.asm(29) : error A2177:nested structure improperly initialized
+D:\rawrxd\history\-16816e02\UfqK.asm(47) : error A2070:invalid instruction operands
+D:\rawrxd\history\-16816e02\UfqK.asm(48) : error A2070:invalid instruction operands

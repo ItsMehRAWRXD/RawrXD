@@ -1,0 +1,27 @@
+ATTN-CERT-001 OBSERVATION GAP (closed)
+======================================
+date=2026-08-29
+
+diagnosis_confirmed=
+  first_run_console.txt: ATTN_Q / ATTN_K / ATTN_V PRESENT via B3_TraceState
+  first_run_frames.txt:  Q/K/V ABSENT
+  exit=21 one_token_missing_qkv was CORRECT (observation fail, not arithmetic)
+
+root_cause=
+  AttnCert::enable(false) cleared frames before harness snapshot()
+  (B3_TraceState only printf's stdout — never writes --evidence)
+
+fix=
+  enable(false) no longer clears frames
+  harness snapshots BEFORE disable
+  digest-only Frame {count,nonfinite,min,max,l2,sum,sumAbs,hash,aux}
+  no float buffer copies onto stack; deep2cert_bridge NOT re-enabled
+  QKV digests recorded after projection path converges (MHA/GQA + fused split)
+
+telemetry_separate=
+  ResidencyCounters remain 0 despite executed forward — TELEMETRY defect
+  NOT treated as neural-correctness / ATTN arithmetic failure
+
+inference_math_changed=NO
+streamer_touched=NO
+lifecycle_status=CANDIDATE_PASS (unchanged)

@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_LSP_Core.asm\1769502031654_1Qtt.asm
+D:\rawrxd\history\all_versions\src\RawrXD_LSP_Core.asm\1769502031654_1Qtt.asm(21) : error A2008:syntax error : Lock
+D:\rawrxd\history\all_versions\src\RawrXD_LSP_Core.asm\1769502031654_1Qtt.asm(29) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\src\RawrXD_LSP_Core.asm\1769502031654_1Qtt.asm(32) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\src\RawrXD_LSP_Core.asm\1769502031654_1Qtt.asm(35) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\src\RawrXD_LSP_Core.asm\1769502031654_1Qtt.asm(94) : error A2006:undefined symbol : LSP_Initialize_Clangd
+D:\rawrxd\history\all_versions\src\RawrXD_LSP_Core.asm\1769502031654_1Qtt.asm(97) : error A2006:undefined symbol : LSP_Initialized

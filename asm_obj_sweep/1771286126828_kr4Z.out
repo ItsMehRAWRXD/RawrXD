@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(20) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(22) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(131) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(135) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(136) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_DAP.asm\1771286126828_kr4Z.asm(151) : error A2008:syntax error : type
+
+MASM : fatal error A1016: Internal error

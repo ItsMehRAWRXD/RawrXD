@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(10) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(185) : error A2179:structure improperly initialized
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(185) : error A2008:syntax error : in structure
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(206) : error A2179:structure improperly initialized
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(206) : error A2008:syntax error : in structure
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(240) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(242) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(245) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(250) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(276) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(303) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(304) : error A2008:syntax error : ,
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(306) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(311) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(314) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(317) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(318) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(330) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(364) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(365) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(378) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(382) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(393) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(394) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(418) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(425) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(438) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(460) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(519) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(669) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(674) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(711) : error A2005:symbol redefinition : hFile
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(716) : error A2008:syntax error : strlen
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(719) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(754) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(763) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1060) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1104) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1114) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1115) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1116) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1117) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1159) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1163) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1166) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1218) : error A2008:syntax error : integer
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1546) : error A2008:syntax error : pushad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1558) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1564) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1568) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1582) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1611) : error A2008:syntax error : popad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1615) : error A2008:syntax error : popad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1619) : error A2008:syntax error : popad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1623) : error A2008:syntax error : popad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1628) : error A2008:syntax error : popad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1651) : error A2005:symbol redefinition : hFile
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1653) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1659) : error A2008:syntax error : WriteFile
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1660) : error A2008:syntax error : WriteFile
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1669) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1758) : error A2005:symbol redefinition : hFile
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1759) : error A2008:syntax error : integer
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1762) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1771) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1782) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1804) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1807) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1816) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1817) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1819) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1842) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1845) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1859) : error A2008:syntax error
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1877) : error A2008:syntax error : strcat
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1879) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1888) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1892) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1917) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1943) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1951) : error A2008:syntax error : pushad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1952) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1954) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1955) : error A2008:syntax error : popad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1964) : error A2008:syntax error : pushad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1969) : error A2008:syntax error : wsprintfA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1971) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1972) : error A2008:syntax error : popad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1982) : error A2008:syntax error : pushad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1983) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1984) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1985) : error A2008:syntax error : popad
+D:\rawrxd\reconstructed\RawrXD\src\dumpbin\final\backup.asm(1989) : fatal error A1012:error count exceeds 100; stopping assembly

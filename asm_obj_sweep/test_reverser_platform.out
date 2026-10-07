@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\reverser_compiler\tests\test_reverser_platform.asm
+D:\rawrxd\src\reverse_engineering\reverser_compiler\tests\test_reverser_platform.asm(4) : fatal error A1000:cannot open file : "reverser_platform.asm"

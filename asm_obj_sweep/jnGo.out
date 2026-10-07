@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\jnGo.asm
+D:\rawrxd\history\-1bd1bafa\jnGo.asm(3024) : error A2005:symbol redefinition : append_string
+D:\rawrxd\history\-1bd1bafa\jnGo.asm(3039) : fatal error A1010:unmatched block nesting : append_string
