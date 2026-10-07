@@ -1,0 +1,110 @@
+# Build artifacts
+build/
+build-*/
+out/
+tmp/
+build_prod/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.vcxproj
+*.vcxproj.filters
+*.sln
+CMakeSettings.json
+compile_commands.json
+
+# Qt
+*_autogen/
+moc_*.cpp
+moc_*.cpp.d
+*.qm
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sdf
+*.opensdf
+
+# IDE
+.vscode/
+.idea/
+.clangd
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python/venv
+.venv/
+ggml_env/
+__pycache__/
+*.pyc
+
+# Editors
+.exrc
+.cache
+*.sw?
+
+# Zig
+zig-out/
+zig-cache/
+
+# Object/build intermediates
+*.o
+*.d
+*.dot
+*.obj
+*.lib
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.log
+
+# Model files
+ggml-model-f16.bin
+*.gguf
+models/
+models-mnt
+
+src/arm_neon.h
+tests/arm_neon.h
+
+# Temporary/dev artifacts
+__*
+_*
+*.tmp
+*.temp
+*.bak
+*.backup
+*.log
+*.pid
+
+# Build/test scripts
+*.ps1
+*.bat
+*.cmd
+*.sh
+
+# Probe/test sources
+*_probe.cpp
+*_test.cpp
+*_diag.cpp
+*_smoke.cpp
+*_verify.cpp
+
+# Local configs
+*.json
+*.md
+*.csv
+*.html
+*.diag
+
+# Recovery/audit dirs
+_deps/
+_pre_merge_backup/
+_drop_5_block_parity/
+_build_*
