@@ -1488,7 +1488,7 @@ int main()
     printf("=============================================================================\n");
     fprintf(stderr, "[DEBUG] about to printf 2\n");
     fflush(stderr);
-    printf("RAWRXD_MODELGENIE_TOKEN0_EXECUTION_001\n");
+    printf("RAWRXD_MODELGENIE_TOKEN0_EXECUTABLE_001\n");
     fprintf(stderr, "[DEBUG] about to printf 3\n");
     fflush(stderr);
     printf("=============================================================================\n\n");
@@ -1612,13 +1612,14 @@ int main()
     } else {
         fprintf(stderr, "[Gate] MLA_STUB_PATH=0\n");
     }
+    bool mlFullExecution = (stats.mlaOps > 0);
 
     // MoE execution verification
     fprintf(stderr, "[Gate] MOE_OPS=%u\n", stats.moeOps);
     if (stats.moeOps > 0) {
         fprintf(stderr, "[Gate] MOE_PARTIAL_EXECUTION=1\n");
-        // MoE partial execution is noted but doesn't fail the gate yet
     }
+    bool moeFullExecution = (stats.moeOps == 0);
 
     // Final norm and LM head verification
     fprintf(stderr, "[Gate] FINAL_NORM_EXECUTED=%u\n", stats.finalNormExecuted);
@@ -1670,8 +1671,25 @@ int main()
 
     runtime.Shutdown();
 
+    fprintf(stderr, "[Gate] MLA_FULL_EXECUTION=%d\n", mlFullExecution ? 1 : 0);
+    fprintf(stderr, "[Gate] MOE_FULL_EXECUTION=%d\n", moeFullExecution ? 1 : 0);
+    fprintf(stderr, "[Gate] EXECUTION_OPS_EXPECTED=%u\n", (unsigned)Generated::kExecutionOpCount);
+    fprintf(stderr, "[Gate] EXECUTION_OPS_EXECUTED=%u\n", stats.opsExecuted);
+    fprintf(stderr, "[Gate] EXECUTION_OPS_SKIPPED=%u\n", (unsigned)(Generated::kExecutionOpCount - stats.opsExecuted));
+
     fprintf(stderr, "\n=============================================================================\n");
-    fprintf(stderr, "VERDICT=%s\n", pass ? "PASS_EXECUTABLE" : "FAIL");
+    if (pass && mlFullExecution && moeFullExecution)
+    {
+        fprintf(stderr, "VERDICT=PASS_EXECUTABLE\n");
+    }
+    else if (pass)
+    {
+        fprintf(stderr, "VERDICT=PASS_EXECUTABLE_PARTIAL_MODEL_MATH\n");
+    }
+    else
+    {
+        fprintf(stderr, "VERDICT=FAIL\n");
+    }
     fprintf(stderr, "=============================================================================\n");
 
     return pass ? 0 : 1;
