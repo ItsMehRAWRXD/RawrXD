@@ -1,4 +1,4 @@
-﻿# CMakeLists_native.txt - Pure Native RawrXD Build
+# CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
 
 # Phase 46: Enable Vulkan for dual GPU testing
