@@ -1,0 +1,124 @@
+RAWRXD_MODELGENIE_HEADER_AUTHORITY_001
+ARCHIVE DATE: 2026-10-07
+STATUS: CERTIFIED PASS
+
+=============================================================================
+FROZEN_EVIDENCE_RECOVERED=1
+  Source: evidence\ModelGenieSourceRecovery\ (9 files, ~131KB)
+  Evidence: evidence\ModelGenieSourceRecoveryFull\ (14 files, ~157KB)
+  Generator: build-modelgenie-tools\bin\rawrxd_modelgenie_header_export.exe
+
+MODELGENOME_RECOVERED=1
+  File: src\deep2\modelgenie\ModelGenome.hpp
+  Includes: Architecture, RopeScalingType, WeightTying, TensorRole, GGMLType,
+            Primitive, OpCode
+
+GENERATED_HEADERS=8
+  ModelIdentity.generated.hpp
+  ModelConfig.generated.hpp
+  TensorROM.generated.hpp
+  BlockGenome.generated.hpp
+  ExecutionIR.generated.hpp
+  CapabilityManifest.generated.hpp
+  ResidencyPlan.generated.hpp
+  ModelExport.generated.hpp
+
+GENERATED_HEADERS_COMPILE=1
+  Compiler: MSVC 19.39.33524
+  Standard: /std:c++20
+  Namespace fix: ModelGenieCompat.hpp + inline using declarations
+  Binary: tools\build_token0\bin\Release\rawrxd_modelgenie_token0_execution.exe
+  Size: 239,104 bytes
+
+=============================================================================
+RUNTIME PROOF (2026-10-07 00:52Z)
+=============================================================================
+
+ROM_OPEN=1
+ROM_PATH=G:\~dev\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+ROM_BYTES=10364416768
+
+TENSORS_EXPECTED=377
+TENSORS_BOUND=377
+TENSORS_MISSING=0
+
+BLOCKS_EXPECTED=27
+BLOCKS_AUTHORITY_PASS=27
+
+SOURCE_TENSOR_AUTHORITY=PASS
+  Mechanism: ValidateSourceTensorAuthority() runs before every ForwardBlock()
+  Block operand IDs matched BlockGenome table exactly
+  UNDECLARED_ALIASES=0
+
+STUB_PATHS=0
+ZERO_FILL_FALLBACKS=0
+SYNTHETIC_OUTPUTS=0
+
+=============================================================================
+BOUNDARY: WHAT IS PROVEN vs WHAT IS NOT
+=============================================================================
+
+PROVEN:
+  frozen evidence → ModelGenome.hpp → eight generated headers
+  → compiled C++ runtime
+  → ROM mapping and tensor binding
+  → all 27 BlockGenome tensor operands verified by source authority gate
+
+NOT_PROVEN:
+  numerical correctness of logits
+  forward pass produces finite values beyond Block 0
+  quant decode numerical parity
+  MatMul numerical parity
+  MLA numerics
+  MoE numerics
+
+NUMERICAL_EXECUTION_VERDICT=UNPROVEN
+CAUSE_OF_NONFINITE=UNRESOLVED
+FIRST_NUMERICAL_FAILURE≈BLOCK_1 (scalar RMSNorm sum=-nan at Block 1)
+TOKEN0_EMITTED=0
+
+=============================================================================
+NEXT PHASE: NUMERICAL BOUNDARY ISOLATION
+=============================================================================
+
+Ladder:
+  [NEXT] first-nonfinite boundary (Block 0→1 transition instrumented)
+       ↓
+  [NEXT] quant reference parity
+       ↓
+  [NEXT] MatMul reference parity
+       ↓
+  [NEXT] RMSNorm parity
+       ↓
+  [NEXT] MLA numerics
+       ↓
+  [NEXT] MoE numerics
+       ↓
+  [NEXT] final norm + LM head
+       ↓
+  LOGITS_FINITE=1
+  TOKEN0_EMITTED=1
+  VERDICT=PASS_EXECUTABLE
+
+=============================================================================
+COMPLETION CRITERIA FOR NUMERICAL PHASE
+=============================================================================
+
+This phase ends ONLY when:
+
+1. First nonfinite element is localized to exact operator
+   (e.g., BLOCK_1_RMS_OUTPUT, not BLOCK_1)
+2. That operator has standalone regression gate
+3. Gate passes on fixed data before being used in model-level forward
+4. No regression path depends on "minimal finite" shortcuts
+5. Logits are finite for full 27-block forward
+6. Token-0 is emitted with non-NaN logits
+
+=============================================================================
+EVIDENCE FILES
+=============================================================================
+
+  evidence\HEADER_AUTHORITY_MILESTONE\HEADER_AUTHORITY_001.txt
+  evidence\HEADER_AUTHORITY_MILESTONE\HEADER_AUTHORITY_001.json
+  tools\build_token0\bin\Release\rawrxd_modelgenie_token0_execution.exe
+  generated\DeepSeek-V2-Lite-Chat\ModelGenieCompat.hpp
