@@ -236,6 +236,7 @@ option(RAWRXD_ENABLE_ASAN "Enable AddressSanitizer for C++ components (MSVC only
 option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentation (tensor dumping for llama.cpp parity)" ON)
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 option(RAWRXD_ENABLE_QT "Build legacy Qt-dependent components (RawrXD-SoloIDE and other Qt-era targets)" OFF)
+option(RAWRXD_BUILD_EVIDENCE "Build runtime certification/evidence instrumentation" OFF)
 option(RAWR_HAS_MASM "Enable native MASM kernels when assembler is available" ON)
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -4889,6 +4890,13 @@ target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/d
 # Set MSVC runtime library to match RawrEngine (static CRT)
 set_property(TARGET InferenceEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+# Runtime evidence instrumentation (off by default for production)
+if(RAWRXD_BUILD_EVIDENCE)
+    target_compile_definitions(InferenceEngine PRIVATE RAWRXD_BUILD_EVIDENCE=1)
+else()
+    target_compile_definitions(InferenceEngine PRIVATE RAWRXD_BUILD_EVIDENCE=0)
+endif()
+
 add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
     src/inference/inference_standalone_main.cpp
 )
@@ -6763,6 +6771,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=${RAWRXD_HAS_SOVEREIGN_GPU_ASM})
     else()
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=0)
+    endif()
+
+    # Runtime evidence instrumentation (off by default for production)
+    if(RAWRXD_BUILD_EVIDENCE)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_BUILD_EVIDENCE=1)
+    else()
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_BUILD_EVIDENCE=0)
     endif()
 
     # Ensure link output dir exists; clear prior exe/pdb before link (mitigates MSVC LNK1104 when
