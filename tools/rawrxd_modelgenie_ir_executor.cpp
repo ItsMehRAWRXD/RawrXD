@@ -977,17 +977,20 @@ public:
             return ResolveWeight(op, idx, romResolver);
         };
         
-        auto getOutput = [&](const GEN::OperationIR& op) -> float* {
+auto getOutput = [&](const GEN::OperationIR& op) -> float* {
             return ResolveOutput(op, arena, romResolver);
         };
         
         // Compute layer index from blockIndex for MLA operations
-        // blockIndex = 2 + 11 * layerIdx
+        // Layer 0: blockIndex = UINT32_MAX (special)
+        // Layer 1+: blockIndex = layerIdx (1, 2, 3... 26)
         size_t layerIdx = 0;
         if (op.requiredPrimitive == Primitive::MlaDecompressFwd || 
             op.requiredPrimitive == Primitive::AttentionFwd) {
-            if (op.blockIndex >= 2) {
-                layerIdx = (op.blockIndex - 2) / 11;
+if (op.blockIndex == UINT32_MAX) {
+                layerIdx = 0;
+            } else if (op.blockIndex >= 1) {
+                layerIdx = op.blockIndex;
             }
         }
         
