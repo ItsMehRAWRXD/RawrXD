@@ -79,15 +79,47 @@ std::string HeaderEmitter::FormatTensorRole(TensorRole role) {
 }
 
 std::string HeaderEmitter::FormatOpCode(OpCode opcode) {
-    return std::to_string(static_cast<uint32_t>(opcode));
+    switch (opcode) {
+        case OpCode::Invalid: return "ModelGenie::OpCode::Invalid";
+        case OpCode::RmsNorm: return "ModelGenie::OpCode::RmsNorm";
+        case OpCode::Linear: return "ModelGenie::OpCode::Linear";
+        case OpCode::MatMul: return "ModelGenie::OpCode::MatMul";
+        case OpCode::Attention: return "ModelGenie::OpCode::Attention";
+        case OpCode::MlaDecompress: return "ModelGenie::OpCode::MlaDecompress";
+        case OpCode::Router: return "ModelGenie::OpCode::Router";
+        case OpCode::TopK: return "ModelGenie::OpCode::TopK";
+        case OpCode::MoEExecute: return "ModelGenie::OpCode::MoEExecute";
+        case OpCode::ResidualAdd: return "ModelGenie::OpCode::ResidualAdd";
+        case OpCode::LMHead: return "ModelGenie::OpCode::LMHead";
+        default: return "ModelGenie::OpCode::Invalid";
+    }
 }
 
 std::string HeaderEmitter::FormatPrimitive(Primitive prim) {
-    return std::to_string(static_cast<uint32_t>(prim));
+    switch (prim) {
+        case Primitive::None: return "ModelGenie::Primitive::None";
+        case Primitive::RmsNormFwd: return "ModelGenie::Primitive::RmsNormFwd";
+        case Primitive::LinearFwd: return "ModelGenie::Primitive::LinearFwd";
+        case Primitive::MatMulFwd: return "ModelGenie::Primitive::MatMulFwd";
+        case Primitive::AttentionFwd: return "ModelGenie::Primitive::AttentionFwd";
+        case Primitive::MlaDecompressFwd: return "ModelGenie::Primitive::MlaDecompressFwd";
+        case Primitive::RouterFwd: return "ModelGenie::Primitive::RouterFwd";
+        case Primitive::TopKFwd: return "ModelGenie::Primitive::TopKFwd";
+        case Primitive::MoEExecuteFwd: return "ModelGenie::Primitive::MoEExecuteFwd";
+        case Primitive::ResidualAddFwd: return "ModelGenie::Primitive::ResidualAddFwd";
+        case Primitive::LMHeadFwd: return "ModelGenie::Primitive::LMHeadFwd";
+        default: return "ModelGenie::Primitive::None";
+    }
 }
 
 std::string HeaderEmitter::FormatOperandDomain(OperandDomain domain) {
-    return std::to_string(static_cast<uint32_t>(domain));
+    switch (domain) {
+        case OperandDomain::None: return "ModelGenie::OperandDomain::None";
+        case OperandDomain::RomTensor: return "ModelGenie::OperandDomain::RomTensor";
+        case OperandDomain::Activation: return "ModelGenie::OperandDomain::Activation";
+        case OperandDomain::RuntimeScalar: return "ModelGenie::OperandDomain::RuntimeScalar";
+        default: return "ModelGenie::OperandDomain::None";
+    }
 }
 
 std::string HeaderEmitter::FormatOperandRef(const OperandRef& ref) {

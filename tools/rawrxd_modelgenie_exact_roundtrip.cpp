@@ -61,21 +61,54 @@ static bool LoadAndCompare(const std::string& evidenceDir, MismatchReport& repor
         return false;
     }
     
-    std::string originalHashStr = original.computeCanonicalHash();
-    std::string generatedHashStr = "unknown";
-    
-    bool hashMatch = true;
-    
+    // Accessor lambdas for generated flat struct (valid C++)
+    auto GenInput = [](const GEN::OperationIR& op, uint32_t i) -> MG::OperandRef {
+        switch (i) {
+            case 0: return op.input0;
+            case 1: return op.input1;
+            case 2: return op.input2;
+            case 3: return op.input3;
+            case 4: return op.input4;
+            case 5: return op.input5;
+            case 6: return op.input6;
+            case 7: return op.input7;
+            default: return MG::OperandRef{};
+        }
+    };
+
+    auto GenWeight = [](const GEN::OperationIR& op, uint32_t i) -> MG::OperandRef {
+        switch (i) {
+            case 0: return op.weight0;
+            case 1: return op.weight1;
+            case 2: return op.weight2;
+            case 3: return op.weight3;
+            case 4: return op.weight4;
+            case 5: return op.weight5;
+            case 6: return op.weight6;
+            case 7: return op.weight7;
+            default: return MG::OperandRef{};
+        }
+    };
+
+    // Get generated hash from CapabilityManifest
+    const std::string generatedHashStr = GEN::kCapabilityManifest.modelGenomeHash;
+    const std::string originalHashStr = original.computeCanonicalHash();
+    const bool hashMatch = (originalHashStr == generatedHashStr);
+
+    std::fprintf(stderr, "Original canonical hash: %s\n", originalHashStr.c_str());
+    std::fprintf(stderr, "Generated canonical hash: %s\n", generatedHashStr.c_str());
+    std::fprintf(stderr, "CANONICAL_HASH_MATCH=%u\n", hashMatch ? 1 : 0);
+
     // Compare execution ops
     uint32_t expectedCount = original.executionOps.size();
     uint32_t generatedCount = GEN::kExecutionOpCount;
-    
+
     if (expectedCount != generatedCount) {
-        std::fprintf(stderr, "EXECUTION_OP_COUNT_MISMATCH: expected=%u generated=%u\n", 
+        std::fprintf(stderr, "EXECUTION_OP_COUNT_MISMATCH: expected=%u generated=%u\n",
                      expectedCount, generatedCount);
         return false;
     }
-    
+
     // ABI sanity check
     std::fprintf(stderr, "[ABI] OperationIR source=%zu generated=%zu\n",
                  sizeof(MG::OperationIR), sizeof(GEN::OperationIR));
@@ -83,16 +116,15 @@ static bool LoadAndCompare(const std::string& evidenceDir, MismatchReport& repor
         std::fprintf(stderr, "ABI MISMATCH: OperationIR size differs!\n");
         return false;
     }
-    
+
     // Field-for-field comparison
-    MismatchReport result;
     for (uint32_t i = 0; i < expectedCount; ++i) {
         const auto& src = original.executionOps[i];
         const auto& gen = GEN::kExecutionIRTable[i];
-        
+
         if (src.opId != gen.opId) {
-            result.opIdMismatches++;
-            result.reportMismatch("opId", src.opId);
+            report.opIdMismatches++;
+            report.reportMismatch("opId", src.opId);
         }
         if (static_cast<uint32_t>(src.opcode) != static_cast<uint32_t>(gen.opcode)) {
             report.opcodeMismatches++;
@@ -123,12 +155,24 @@ static bool LoadAndCompare(const std::string& evidenceDir, MismatchReport& repor
             report.reportMismatch("blockIndex", src.opId);
         }
         
-        // Compare inputs
+// Compare inputs
         for (uint32_t j = 0; j < src.inputCount && j < gen.inputCount; ++j) {
             const auto& a = src.input(j);
-            // Access generated flat array
-            const MG::OperandRef* genInputs = &gen.input0;
-            const auto& b = genInputs[j];
+            // Use switch-based accessor (valid C++)
+            auto GenInput = [](const GEN::OperationIR& op, uint32_t i) -> MG::OperandRef {
+                switch (i) {
+                    case 0: return op.input0;
+                    case 1: return op.input1;
+                    case 2: return op.input2;
+                    case 3: return op.input3;
+                    case 4: return op.input4;
+                    case 5: return op.input5;
+                    case 6: return op.input6;
+                    case 7: return op.input7;
+                    default: return MG::OperandRef{};
+                }
+            };
+            const auto& b = GenInput(gen, j);
             if (static_cast<uint32_t>(a.domain) != static_cast<uint32_t>(b.domain)) {
                 report.inputDomainMismatches++;
                 report.reportMismatch("input.domain", src.opId);
@@ -138,13 +182,25 @@ static bool LoadAndCompare(const std::string& evidenceDir, MismatchReport& repor
                 report.reportMismatch("input.id", src.opId);
             }
         }
-        
+
         // Compare weights
         for (uint32_t j = 0; j < src.weightCount && j < gen.weightCount; ++j) {
             const auto& a = src.weight(j);
-            // Access generated flat array
-            const MG::OperandRef* genWeights = &gen.weight0;
-            const auto& b = genWeights[j];
+            // Use switch-based accessor (valid C++)
+            auto GenWeight = [](const GEN::OperationIR& op, uint32_t i) -> MG::OperandRef {
+                switch (i) {
+                    case 0: return op.weight0;
+                    case 1: return op.weight1;
+                    case 2: return op.weight2;
+                    case 3: return op.weight3;
+                    case 4: return op.weight4;
+                    case 5: return op.weight5;
+                    case 6: return op.weight6;
+                    case 7: return op.weight7;
+                    default: return MG::OperandRef{};
+                }
+            };
+            const auto& b = GenWeight(gen, j);
             if (static_cast<uint32_t>(a.domain) != static_cast<uint32_t>(b.domain)) {
                 report.weightDomainMismatches++;
                 report.reportMismatch("weight.domain", src.opId);
