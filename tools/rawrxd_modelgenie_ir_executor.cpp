@@ -928,14 +928,44 @@ public:
                 return LinearFwd(input,weight,output,v,xr,arena.Size(xr.id),arena.Size(op.output.id));
             }
             case Primitive::TopKFwd: {
-                const auto r=GenInput(op,0);
-                return TopKFwd(getInput(op,0),getOutput(op),arena.Size(r.id),arena.Size(op.output.id));
+                const auto r = GenInput(op, 0);
+                // getOutput() allocates the activation. Function arguments have
+                // unspecified evaluation order, so never query Size() in the same call.
+                const float* input = getInput(op, 0);
+                float* output = getOutput(op);
+                const size_t inputN = arena.Size(r.id);
+                const size_t outputN = arena.Size(op.output.id);
+                if (!input || !output || inputN != GEN::ModelConfig::kExpertCount ||
+                    outputN != 2u * GEN::ModelConfig::kExpertUsedCount) {
+                    std::fprintf(stderr,
+                        "[IR] TOPK_BIND_FAIL op=%u inputN=%zu outputN=%zu input=%d output=%d\n",
+                        op.opId, inputN, outputN, input != nullptr, output != nullptr);
+                    return false;
+                }
+                return TopKFwd(input, output, inputN, outputN);
             }
             case Primitive::MoEExecuteFwd: {
-                const auto a=GenInput(op,0),b=GenInput(op,1);
-                return MoEExecuteFwd(getInput(op,0),getInput(op,1),getOutput(op),
-                                     op,romResolver,arena.Size(a.id),arena.Size(b.id),
-                                     arena.Size(op.output.id));
+                const auto a = GenInput(op, 0), b = GenInput(op, 1);
+                const float* input = getInput(op, 0);
+                const float* choices = getInput(op, 1);
+                // ResolveOutput must run before any output Size query.
+                float* output = getOutput(op);
+                const size_t inputN = arena.Size(a.id);
+                const size_t choicesN = arena.Size(b.id);
+                const size_t outputN = arena.Size(op.output.id);
+                if (!input || !choices || !output ||
+                    inputN != GEN::ModelConfig::kEmbeddingLength ||
+                    choicesN != 2u * GEN::ModelConfig::kExpertUsedCount ||
+                    outputN != GEN::ModelConfig::kEmbeddingLength) {
+                    std::fprintf(stderr,
+                        "[IR] MOE_BIND_FAIL op=%u inputN=%zu choicesN=%zu outputN=%zu "
+                        "input=%d choices=%d output=%d\n",
+                        op.opId, inputN, choicesN, outputN,
+                        input != nullptr, choices != nullptr, output != nullptr);
+                    return false;
+                }
+                return MoEExecuteFwd(input, choices, output, op, romResolver,
+                                     inputN, choicesN, outputN);
             }
             case Primitive::ResidualAddFwd: {
                 const auto ar=GenInput(op,0), br=GenInput(op,1);
