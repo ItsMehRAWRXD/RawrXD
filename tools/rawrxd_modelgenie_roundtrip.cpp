@@ -758,6 +758,13 @@ int main(int argc, char *argv[])
     //=========================================================================
     std::cout << "[1/3] Loading original ModelGenome from evidence...\n";
     ModelGenome original;
+
+    // ABI breadcrumb
+    std::fprintf(stderr, "[ABI Caller] sizeof(OperationIR)=%zu sizeof(ModelGenome)=%zu\n", 
+                 sizeof(RawrXD::Deep2::ModelGenie::OperationIR), 
+                 sizeof(RawrXD::Deep2::ModelGenie::ModelGenome));
+    std::fflush(stderr);
+
     if (!LoadModelGenomeFromEvidence(evidenceDir, original))
     {
         std::cerr << "ERROR: Failed to load original ModelGenome\n";

@@ -51,6 +51,8 @@ struct OperationIR {
     // Output
     ModelGenie::OperandRef output;
     uint32_t blockIndex;
+
+
 };
 
 inline constexpr OperationIR kExecutionIRTable[300] = {

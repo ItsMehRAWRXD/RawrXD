@@ -30,7 +30,6 @@ struct CapabilityManifest {
     uint32_t unimplementedCount;
     Primitive firstUnimplementedPrimitive;
     bool runtimeExecutable;
-    const char* modelGenomeHash;
 };
 
 inline constexpr CapabilityManifest kCapabilityManifest = {
@@ -41,8 +40,7 @@ inline constexpr CapabilityManifest kCapabilityManifest = {
     .unimplementedPrimitives = {ModelGenie::Primitive::MlaDecompressFwd},
     .unimplementedCount = 1,
     .firstUnimplementedPrimitive = ModelGenie::Primitive::MlaDecompressFwd,
-    .runtimeExecutable = false,
-    .modelGenomeHash = "a1f2399df984ea69"
+    .runtimeExecutable = false
 };
 
 } // namespace Generated

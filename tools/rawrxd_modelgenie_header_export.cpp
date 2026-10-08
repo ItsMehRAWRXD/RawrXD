@@ -54,6 +54,12 @@ int main(int argc, char* argv[]) {
     std::cout << "[1/4] Loading frozen ModelGenome from evidence...\n" << std::flush;
     ModelGenome genome;
     
+    // ABI breadcrumb
+    std::fprintf(stderr, "[ABI Caller] sizeof(OperationIR)=%zu sizeof(ModelGenome)=%zu\n", 
+                 sizeof(RawrXD::Deep2::ModelGenie::OperationIR), 
+                 sizeof(RawrXD::Deep2::ModelGenie::ModelGenome));
+    std::fflush(stderr);
+    
     std::cout << "[DEBUG] Calling LoadModelGenomeFromEvidence...\n" << std::flush;
     
     if (!LoadModelGenomeFromEvidence(evidenceDir, genome)) {

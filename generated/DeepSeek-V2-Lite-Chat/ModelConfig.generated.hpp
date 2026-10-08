@@ -57,7 +57,7 @@ struct ModelConfig {
     static constexpr uint32_t kGgufVersion = 3;
     static constexpr uint32_t kTensorCount = 377;
     static constexpr uint32_t kAlignment = 32;
-    static constexpr uint64_t kDataStart = 3972000ULL;
+    static constexpr uint64_t kDataStart = 3996416ULL;
 };
 
 } // namespace Generated

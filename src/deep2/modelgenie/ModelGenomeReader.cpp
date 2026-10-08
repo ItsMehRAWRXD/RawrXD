@@ -110,6 +110,11 @@ namespace Deep2 {
 namespace ModelGenie {
 
 bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& genome) {
+    // ABI breadcrumb
+    std::fprintf(stderr, "[ABI Reader] sizeof(OperationIR)=%zu sizeof(ModelGenome)=%zu\n", 
+                 sizeof(OperationIR), sizeof(ModelGenome));
+    std::fflush(stderr);
+    
     std::string genomePath = evidenceDir + "/genie_out/model.genome.txt";
     std::string physicalPath = evidenceDir + "/genie_out/model.physical.txt";
     std::string executionPath = evidenceDir + "/genie_out/model.execution.txt";
