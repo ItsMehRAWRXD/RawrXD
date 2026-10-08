@@ -6,6 +6,7 @@
 // Replaces hand-coded Forward() with IR-driven execution.
 //=============================================================================
 
+#include "RawrXD_IR_Trace.hpp" // RAWRXD_PARITY_TRACE_INJECTED
 #include "ModelGenome.hpp"
 #include "ModelGenome.cpp"
 #include "ModelGenomeReader.cpp"
@@ -600,12 +601,12 @@ static void Softmax(float* x, int n)
 
 static void MatMul(const float* A, const float* B, float* C, int M, int K, int N)
 {
-    // Conventional row-major: C[M,N] = A[M,K] * B[K,N].
+    // GGUF 2D tensors: dim[0] contiguous.  B element (row k, col j) = B[k + j*K].
     #pragma omp parallel for schedule(static)
     for (int i=0;i<M;++i)
         for (int j=0;j<N;++j) {
             double sum=0.0;
-            for (int k=0;k<K;++k) sum+=double(A[i*K+k])*B[k*N+j];
+            for (int k=0;k<K;++k) sum+=double(A[i*K+k])*B[k+j*K];
             C[i*N+j]=float(sum);
         }
 }
@@ -981,9 +982,8 @@ private:
         }
     }
     
-    // All GGUF 2D tensors are [inputWidth, outputWidth], row-major on dim[0].
-    // weight[j * out + i] is element at row j (input), column i (output).
-    // Computes: output[i] = sum_j input[j] * weight[j * out + i]
+    // All GGUF 2D tensors are stored with dim[0] contiguous (GGML convention).
+    // Element (row j=input, column i=output) is at offset j + i * in.
     static bool LinearFwd(const float* input, const float* weight, float* output,
                            const TensorView* view, const MG::OperandRef& inputRef,
                            size_t inputN, size_t outputN, const float* gate = nullptr)
@@ -991,12 +991,13 @@ private:
         if (!view || view->rank != 2 || !input || !weight || !output) return false;
         const size_t in = view->dims[0], out = view->dims[1];
         if (inputRef.domain == MG::OperandDomain::RuntimeScalar) {
-            // Embedding lookup: input is token ID, weight is [hidden, vocab] row-major
+            // Embedding lookup: token ID indexes dim[1] (vocab).
+            // Row t starts at weight + t * in (GGML: dim[0] contiguous).
             // output = column `token` of weight, length = in (hidden)
             const uint32_t token = static_cast<uint32_t>(input[0]);
             if (token >= out || outputN != in) return false;
             for (size_t j = 0; j < in; ++j)
-                output[j] = weight[j * out + token];
+                output[j] = weight[j + token * in];
             return true;
         }
         if (inputN != in || outputN != out) return false;
@@ -1010,9 +1011,9 @@ private:
         return DotRows(weight, input, output, in, out);
     }
 
-    // All GGUF 2D tensors are [inputWidth, outputWidth], row-major on dim[0].
-    // weight[j * out + i] is element at row j, column i.
-    // Computes: output[i] = sum_j input[j] * weight[j * out + i]
+    // All GGUF 2D tensors are stored with dim[0] contiguous (GGML convention).
+    // Element (row j=input, column i=output) is at offset j + i * in.
+    // Computes: output[i] = sum_j input[j] * weight[j + i * in]
     static bool DotRows(const float* weight, const float* input, float* output,
                         size_t in, size_t out)
     {
@@ -1021,7 +1022,7 @@ private:
         for (int64_t i = 0; i < static_cast<int64_t>(out); ++i) {
             double sum = 0.0;
             for (size_t j = 0; j < in; ++j) {
-                sum += double(input[j]) * double(weight[j * out + i]);
+                sum += double(input[j]) * double(weight[j + i * in]);
             }
             output[i] = float(sum);
         }
@@ -1221,6 +1222,11 @@ public:
             
             // Dispatch primitive - let dispatcher decide if supported
             bool executed = PrimitiveDispatcher::Dispatch(op, arena_, romResolver_, tokenId_);
+            if (executed && op.output.domain == MG::OperandDomain::Activation) {
+                RawrXD_IR_Trace::save(op.opId, arena_.Get(op.output.id),
+                                     arena_.Size(op.output.id));
+            }
+
             
             if (executed && op.output.domain == MG::OperandDomain::Activation) {
                 const float* result = arena_.Get(op.output.id);

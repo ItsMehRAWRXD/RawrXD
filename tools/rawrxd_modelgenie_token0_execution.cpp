@@ -482,7 +482,8 @@ static void Softmax(float* x, int n)
 
 static void MatMul(const float* A, const float* B, float* C, int M, int K, int N)
 {
-#pragma omp parallel for collapse(2)
+    // GGUF 2D tensors: dim[0] contiguous.  B element (row k, col j) = B[k + j*K].
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < M; i++)
     {
         for (int j = 0; j < N; j++)
@@ -490,10 +491,10 @@ static void MatMul(const float* A, const float* B, float* C, int M, int K, int N
             __m512 s = _mm512_setzero_ps();
             int k = 0;
             for (; k + 15 < K; k += 16)
-                s = _mm512_fmadd_ps(_mm512_loadu_ps(A + i * K + k), _mm512_loadu_ps(B + k * N + j), s);
+                s = _mm512_fmadd_ps(_mm512_loadu_ps(A + i * K + k), _mm512_loadu_ps(B + k + j * K), s);
             float r = _mm512_reduce_add_ps(s);
             for (; k < K; k++)
-                r += A[i * K + k] * B[k * N + j];
+                r += A[i * K + k] * B[k + j * K];
             C[i * N + j] = r;
         }
     }
@@ -679,12 +680,15 @@ static std::vector<float> ExecuteMLADecompressForward(const TensorView& input,
     // Input dimensions
     const uint32_t inputDim = static_cast<uint32_t>(input.bytes / sizeof(float));
     
-    // Determine output dimension from kv_b weight shape
-    // kv_b is stored as [output_dim, input_dim] in the GGUF
-    uint32_t outputDim = 0;
-    if (kvB.rank >= 1) {
-        outputDim = kvB.dims[0];
-    }
+    // GGML storage: dim[0] is contiguous. For kv_a_mqa the GGUF shape is
+    // [hidden, rank+rope] so dims[0]=hidden (input), dims[1]=rank+rope (latent+rope).
+    // For kv_b the GGUF shape is [rank, heads*(noRope+value)] so dims[0]=rank, dims[1]=output.
+    uint32_t latentDim = 0;     // rank + rope (e.g. 512 + 64 = 576)
+    uint32_t rankDim = 0;       // kv_lora_rank (e.g. 512)
+    uint32_t outputDim = 0;     // heads * (no_rope + value)
+    if (kvAMqa.rank >= 2) latentDim = static_cast<uint32_t>(kvAMqa.dims[1]);
+    if (kvB.rank >= 1)    rankDim = static_cast<uint32_t>(kvB.dims[0]);   // contiguous dim
+    if (kvB.rank >= 2)    outputDim = static_cast<uint32_t>(kvB.dims[1]);  // outer dim
     
     if (outputDim == 0 || kvANormW.empty() || kvAMqaW.empty() || kvBW.empty()) {
         // Fallback: produce zero output of expected KV size
@@ -692,73 +696,41 @@ static std::vector<float> ExecuteMLADecompressForward(const TensorView& input,
     }
 
     // Step 1: Project input to latent space via kv_a_mqa
-    // kvAMqaW layout: [kv_lora_rank, inputDim] or [inputDim, kv_lora_rank] depending on storage
-    uint32_t latentDim = 0;
-    if (kvAMqa.rank >= 2) {
-        latentDim = kvAMqa.dims[0];
-    }
-    
-    if (latentDim == 0) {
-        return std::vector<float>(outputDim, 0.0f);
-    }
-
+    // GGML layout [hidden, latentDim]: element (i, o) = data[i + o * hidden]
+    // latent[o] = sum_i input[i] * kvAMqaW[i + o * inputDim]
     std::vector<float> latent(latentDim, 0.0f);
-    
-    // Try kvAMqaW as [inputDim][latentDim]
     if (kvAMqaW.size() == inputDim * latentDim) {
         for (uint32_t o = 0; o < latentDim; ++o) {
             float sum = 0.0f;
-            const float* row = kvAMqaW.data() + o * inputDim;
             for (uint32_t i = 0; i < inputDim; ++i) {
-                sum += row[i] * reinterpret_cast<const float*>(input.data)[i];
-            }
-            latent[o] = sum;
-        }
-    }
-    // Try kvAMqaW as [latentDim][inputDim]
-    else if (kvAMqaW.size() == latentDim * inputDim) {
-        for (uint32_t o = 0; o < latentDim; ++o) {
-            float sum = 0.0f;
-            const float* row = kvAMqaW.data() + o * inputDim;
-            for (uint32_t i = 0; i < inputDim; ++i) {
-                sum += row[i] * reinterpret_cast<const float*>(input.data)[i];
+                sum += kvAMqaW[i + o * inputDim] * reinterpret_cast<const float*>(input.data)[i];
             }
             latent[o] = sum;
         }
     }
 
-    // Step 2: Normalize latent via kv_a_norm
-    if (!kvANormW.empty() && kvANormW.size() >= latentDim) {
+    // Step 2: Normalize latent via kv_a_norm (only first rankDim elements)
+    if (!kvANormW.empty() && kvANormW.size() >= rankDim) {
         float ss = 0.0f;
-        for (uint32_t i = 0; i < latentDim; ++i) {
+        for (uint32_t i = 0; i < rankDim; ++i) {
             ss += latent[i] * latent[i];
         }
-        ss = 1.0f / sqrtf(ss / latentDim + 1e-6f);
-        for (uint32_t i = 0; i < latentDim; ++i) {
+        ss = 1.0f / sqrtf(ss / rankDim + 1e-6f);
+        for (uint32_t i = 0; i < rankDim; ++i) {
             latent[i] = latent[i] * kvANormW[i] * ss;
         }
     }
 
     // Step 3: Project latent to output via kv_b
+    // GGML layout [rankDim, outputDim]: element (j, o) = data[j + o * rankDim]
+    // output[o] = sum_j latent[j] * kvBW[j + o * rankDim]
     std::vector<float> output(outputDim, 0.0f);
     if (!kvBW.empty()) {
-        // Try kvBW as [outputDim][latentDim]
-        if (kvBW.size() == outputDim * latentDim) {
+        if (kvBW.size() == rankDim * outputDim) {
             for (uint32_t o = 0; o < outputDim; ++o) {
                 float sum = 0.0f;
-                const float* row = kvBW.data() + o * latentDim;
-                for (uint32_t i = 0; i < latentDim; ++i) {
-                    sum += row[i] * latent[i];
-                }
-                output[o] = sum;
-            }
-        }
-        // Try kvBW as [latentDim][outputDim]
-        else if (kvBW.size() == latentDim * outputDim) {
-            for (uint32_t o = 0; o < outputDim; ++o) {
-                float sum = 0.0f;
-                for (uint32_t i = 0; i < latentDim; ++i) {
-                    sum += kvBW[i * outputDim + o] * latent[i];
+                for (uint32_t j = 0; j < rankDim; ++j) {
+                    sum += latent[j] * kvBW[j + o * rankDim];
                 }
                 output[o] = sum;
             }
@@ -1760,16 +1732,30 @@ static void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
         }
         case ModelGenie::GGMLType::Q6_K:
         {
-            struct Q6KBlock { uint8_t ql[128]; uint8_t qh[64]; uint16_t scales[8]; uint16_t d; };
+            // Canonical GGML Q6_K block: 128 low 4-bit bytes, 64 high 2-bit bytes,
+            // 16 signed int8_t per-group scales, and one FP16 block scale d.
+            struct Q6KBlock { uint8_t ql[128]; uint8_t qh[64]; int8_t scales[16]; uint16_t d; };
+            static_assert(sizeof(Q6KBlock) == 210, "Q6_K block size");
             const Q6KBlock* src = reinterpret_cast<const Q6KBlock*>(tv.data);
             size_t blocks = tv.bytes / sizeof(Q6KBlock);
             for (size_t b = 0; b < blocks; ++b) {
-                float scale = FP16ToFloat(src[b].d);
-                for (int j = 0; j < 256; j++) {
-                    uint8_t low = (src[b].ql[j / 2] >> ((j % 2) * 4)) & 0xF;
-                    uint8_t high = (src[b].qh[j / 4] >> ((j % 4) * 2)) & 0x3;
-                    int8_t value = (low | (high << 4)) - 32;
-                    out[b * 256 + j] = scale * value;
+                const float d = FP16ToFloat(src[b].d);
+                for (int half = 0; half < 2; ++half) {
+                    const uint8_t* ql = src[b].ql + 64*half;
+                    const uint8_t* qh = src[b].qh + 32*half;
+                    const int8_t* sc = src[b].scales + 8*half;
+                    float* dst = out.data() + 256*b + 128*half;
+                    for (int l = 0; l < 32; ++l) {
+                        const int g = l/16;
+                        const int q0 = int((ql[l]      & 0x0f) | ((qh[l] & 0x03) << 4)) - 32;
+                        const int q1 = int((ql[l+32]   & 0x0f) | (((qh[l] >> 2) & 0x03) << 4)) - 32;
+                        const int q2 = int((ql[l]      >> 4)   | (((qh[l] >> 4) & 0x03) << 4)) - 32;
+                        const int q3 = int((ql[l+32]   >> 4)   | (((qh[l] >> 6) & 0x03) << 4)) - 32;
+                        dst[l]    = d * float(sc[g+0] * q0);
+                        dst[l+32] = d * float(sc[g+2] * q1);
+                        dst[l+64] = d * float(sc[g+4] * q2);
+                        dst[l+96] = d * float(sc[g+6] * q3);
+                    }
                 }
             }
             break;
