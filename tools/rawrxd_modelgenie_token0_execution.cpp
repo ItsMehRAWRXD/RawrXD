@@ -187,7 +187,8 @@ class GGUFROM
             uint32_t valueType = *reinterpret_cast<const uint32_t*>(ptr);
             ptr += 4;
             if (ptr + 4 > base + size) return false;
-            ptr += 4; // skip value type and padding?
+            // GGUF: valueType is uint32 with NO padding; ptr already advanced.
+            // The value itself begins here and is decoded by the switch below.
             
             // Skip value based on type (simplified - just advance ptr)
             // This is a minimal parser; real implementation would decode each type
@@ -339,9 +340,43 @@ class GGUFROM
         }
         
         // Calculate data section start (after tensor info)
-        ggufDataOffset = static_cast<uint64_t>(ptr - base);
+        // RAWRXD_ALIGNED_DATA_START_AUTHORITY_001
+        // rawEnd is the raw tensor-directory end; physical tensor data begins
+        // at the ALIGNMENT-aligned offset. The generated kDataStart must equal
+        // the runtime-computed aligned start or tensors bind shifted.
+        const uint64_t rawEnd = static_cast<uint64_t>(ptr - base);
+        constexpr uint64_t ALIGNMENT = 32;
+        ggufDataOffset = rawEnd + (ALIGNMENT - (rawEnd % ALIGNMENT)) % ALIGNMENT;
+
+        fprintf(stderr,
+            "[Gate] GGUF_RAW_DIRECTORY_END=%llu\n"
+            "[Gate] GGUF_ALIGNMENT=%u\n"
+            "[Gate] GGUF_ALIGNED_DATA_START=%llu\n"
+            "[Gate] GGUF_GENERATED_DATA_START=%llu\n",
+            (unsigned long long)rawEnd,
+            (unsigned)ALIGNMENT,
+            (unsigned long long)ggufDataOffset,
+            (unsigned long long)Generated::ModelConfig::kDataStart);
+        fflush(stderr);
+
+        if (ggufDataOffset != Generated::ModelConfig::kDataStart)
+        {
+            fprintf(stderr,
+                "[Gate] GGUF_DATA_START_AUTHORITY=FAIL\n"
+                "[Gate] GGUF_DATA_START_DELTA=%lld\n",
+                (long long)ggufDataOffset -
+                    (long long)Generated::ModelConfig::kDataStart);
+            fflush(stderr);
+            return false;
+        }
+
+        fprintf(stderr, "[Gate] GGUF_DATA_START_AUTHORITY=PASS\n");
+        fflush(stderr);
         
-        printf("[ROM] GGUF parsed: tensors=%zu, data_start=%llu\n", liveTensors.size(), (unsigned long long)ggufDataOffset);
+        printf("[ROM] GGUF parsed: tensors=%zu, raw_end=%llu, aligned_data_start=%llu\n",
+            liveTensors.size(),
+            (unsigned long long)rawEnd,
+            (unsigned long long)ggufDataOffset);
         return true;
     }
 };
@@ -601,186 +636,7 @@ static float FP16ToFloat(uint16_t h)
     return r;
 }
 
-void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
-{
-    // Use live GGUF type if available, otherwise fall back to generated type
-    ModelGenie::GGMLType effectiveType = tv.type;
-    if (tv.name && !liveTypeMap_.empty())
-    {
-        auto it = liveTypeMap_.find(tv.name);
-        if (it != liveTypeMap_.end())
-        {
-            effectiveType = it->second;
-        }
-    }
 
-    out.resize(tv.elementCount);
-    switch (effectiveType)
-    {
-        case ModelGenie::GGMLType::F32:
-            fprintf(stderr, "[Dequant] F32 tv.data=%p tv.bytes=%llu tv.elementCount=%llu\n",
-                (void*)tv.data, (unsigned long long)tv.bytes, (unsigned long long)tv.elementCount);
-            fflush(stderr);
-            memcpy(out.data(), tv.data, tv.bytes);
-            break;
-        case ModelGenie::GGMLType::Q4_K:
-        {
-            // Q4_K layout: 256 values per 144-byte block
-            //   bytes 0..1 : d      (FP16)
-            //   bytes 2..3 : dmin   (FP16)
-            //   bytes 4..15: scales[12] (packed 6-bit scale/min per sub-block)
-            //   bytes 16..143: qs[128] (256 4-bit values)
-            struct Q4KBlock { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qs[128]; };
-            static_assert(sizeof(Q4KBlock) == 144, "Q4_K block must be 144 bytes");
-            static_assert(offsetof(Q4KBlock, d)      == 0,  "Q4_K d offset");
-            static_assert(offsetof(Q4KBlock, dmin)   == 2,  "Q4_K dmin offset");
-            static_assert(offsetof(Q4KBlock, scales) == 4,  "Q4_K scales offset");
-            static_assert(offsetof(Q4KBlock, qs)     == 16, "Q4_K qs offset");
-            
-            const Q4KBlock* src = reinterpret_cast<const Q4KBlock*>(tv.data);
-            size_t blocks = tv.bytes / sizeof(Q4KBlock);
-            size_t badBlocks = 0;
-            size_t firstBadBlock = size_t(-1);
-            size_t firstBadElement = size_t(-1);
-            
-            // Canonical scale/min unpacker matching ggml/llama.cpp
-            auto get_scale_min_k4 = [](int j, const uint8_t* scales, uint8_t* d, uint8_t* m) {
-                if (j < 4) {
-                    *d = scales[j] & 63;
-                    *m = scales[j + 4] & 63;
-                } else {
-                    *d = (scales[j + 4] & 0x0F) | ((scales[j - 4] >> 6) << 4);
-                    *m = (scales[j + 4] >> 4) | ((scales[j] >> 6) << 4);
-                }
-            };
-            
-            for (size_t b = 0; b < blocks; ++b)
-            {
-                float d = FP16ToFloat(src[b].d);
-                float dmin = FP16ToFloat(src[b].dmin);
-                
-                if (!std::isfinite(d) || !std::isfinite(dmin))
-                {
-                    badBlocks++;
-                    if (firstBadBlock == size_t(-1))
-                    {
-                        firstBadBlock = b;
-                        firstBadElement = b * 256;
-                    }
-                    if (badBlocks <= 3)
-                    {
-                        std::printf("[Q4K_RAW] tensor_id=%u block=%zu d_raw=0x%04x dmin_raw=0x%04x d=%.6g dmin=%.6g\n",
-                                    (unsigned)tv.id,
-                                    b,
-                                    (unsigned)src[b].d,
-                                    (unsigned)src[b].dmin,
-                                    (double)d,
-                                    (double)dmin);
-                    }
-                    // Skip this block to avoid propagating NaN
-                    continue;
-                }
-                
-                // Decode 256 values from this block using canonical ggml layout
-                const uint8_t* q = src[b].qs;
-                float* out_ptr = &out[b * 256];
-                
-                int is = 0;
-                for (int j = 0; j < 256; j += 64)
-                {
-                    uint8_t sc1, m1;
-                    uint8_t sc2, m2;
-                    
-                    get_scale_min_k4(is + 0, src[b].scales, &sc1, &m1);
-                    get_scale_min_k4(is + 1, src[b].scales, &sc2, &m2);
-                    
-                    const float d1 = d * sc1;
-                    const float mn1 = dmin * m1;
-                    
-                    const float d2 = d * sc2;
-                    const float mn2 = dmin * m2;
-                    
-                    // First 32: low nibble
-                    for (int l = 0; l < 32; ++l)
-                    {
-                        out_ptr[j + l] = d1 * float(q[l] & 0x0F) - mn1;
-                    }
-                    // Next 32: high nibble (SAME q pointer)
-                    for (int l = 0; l < 32; ++l)
-                    {
-                        out_ptr[j + 32 + l] = d2 * float(q[l] >> 4) - mn2;
-                    }
-                    
-                    q += 32;  // Advance qs by 32 bytes per 64 elements
-                    is += 2;
-                }
-                
-                if (badBlocks > 0 && b == firstBadBlock)
-                {
-                    // Already printed above
-                }
-            }
-            
-            if (tv.bytes > 0)
-            {
-                std::printf("[Q4K] blocks=%zu badBlocks=%zu firstBadBlock=%zu firstBadElement=%zu outSize=%zu\n",
-                            blocks, badBlocks,
-                            firstBadBlock == size_t(-1) ? 0 : firstBadBlock,
-                            firstBadElement == size_t(-1) ? 0 : firstBadElement,
-                            out.size());
-            }
-            break;
-        }
-        case ModelGenie::GGMLType::Q8_0:
-        {
-            struct Q80Block { uint16_t d; int8_t qs[32]; };
-            const Q80Block* src = reinterpret_cast<const Q80Block*>(tv.data);
-            size_t blocks = tv.bytes / sizeof(Q80Block);
-            for (size_t b = 0; b < blocks; ++b) {
-                float scale = FP16ToFloat(src[b].d);
-                for (int j = 0; j < 32; j++) {
-                    out[b * 32 + j] = scale * src[b].qs[j];
-                }
-            }
-            break;
-        }
-        case ModelGenie::GGMLType::Q5_0:
-        {
-            struct Q50Block { uint16_t d; uint8_t qh[4]; uint8_t qs[16]; };
-            const Q50Block* src = reinterpret_cast<const Q50Block*>(tv.data);
-            size_t blocks = tv.bytes / sizeof(Q50Block);
-            for (size_t b = 0; b < blocks; ++b) {
-                float scale = FP16ToFloat(src[b].d);
-                for (int j = 0; j < 32; j++) {
-                    uint8_t low = (src[b].qs[j / 2] >> ((j % 2) * 4)) & 0xF;
-                    uint8_t high = (src[b].qh[j / 8] >> (j % 8)) & 0x1;
-                    int8_t value = (low | (high << 4)) - 16;
-                    out[b * 32 + j] = scale * value;
-                }
-            }
-            break;
-        }
-        case ModelGenie::GGMLType::Q6_K:
-        {
-            struct Q6KBlock { uint8_t ql[128]; uint8_t qh[64]; uint16_t scales[8]; uint16_t d; };
-            const Q6KBlock* src = reinterpret_cast<const Q6KBlock*>(tv.data);
-            size_t blocks = tv.bytes / sizeof(Q6KBlock);
-            for (size_t b = 0; b < blocks; ++b) {
-                float scale = FP16ToFloat(src[b].d);
-                for (int j = 0; j < 256; j++) {
-                    uint8_t low = (src[b].ql[j / 2] >> ((j % 2) * 4)) & 0xF;
-                    uint8_t high = (src[b].qh[j / 4] >> ((j % 4) * 2)) & 0x3;
-                    int8_t value = (low | (high << 4)) - 32;
-                    out[b * 256 + j] = scale * value;
-                }
-            }
-            break;
-        }
-        default:
-            memset(out.data(), 0, out.size() * sizeof(float));
-            break;
-    }
-}
 
 //=============================================================================
 // MLA Decompress Primitive
@@ -1351,7 +1207,6 @@ class ModelExportRuntime
 
   private:
     GGUFROM rom_;
-    std::unordered_map<std::string, ModelGenie::GGMLType> liveTypeMap_;
 
     void ForwardBlock(uint32_t l)
     {
@@ -1719,7 +1574,189 @@ class ModelExportRuntime
             EmitTensorStats(std::to_string(l).c_str(), "BLOCK_OUTPUT", stats);
         }
     }
-};
+}
+
+void ModelExportRuntime::DequantizeTensor(const TensorView& tv, std::vector<float>& out)
+{
+    // Use live GGUF type if available, otherwise fall back to generated type
+    ModelGenie::GGMLType effectiveType = tv.type;
+    if (tv.name && !liveTypeMap_.empty())
+    {
+        auto it = liveTypeMap_.find(tv.name);
+        if (it != liveTypeMap_.end())
+        {
+            effectiveType = it->second;
+        }
+    }
+
+    out.resize(tv.elementCount);
+    switch (effectiveType)
+    {
+        case ModelGenie::GGMLType::F32:
+            fprintf(stderr, "[Dequant] F32 tv.data=%p tv.bytes=%llu tv.elementCount=%llu\n",
+                (void*)tv.data, (unsigned long long)tv.bytes, (unsigned long long)tv.elementCount);
+            fflush(stderr);
+            memcpy(out.data(), tv.data, tv.bytes);
+            break;
+        case ModelGenie::GGMLType::Q4_K:
+        {
+            // Q4_K layout: 256 values per 144-byte block
+            //   bytes 0..1 : d      (FP16)
+            //   bytes 2..3 : dmin   (FP16)
+            //   bytes 4..15: scales[12] (packed 6-bit scale/min per sub-block)
+            //   bytes 16..143: qs[128] (256 4-bit values)
+            struct Q4KBlock { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qs[128]; };
+            static_assert(sizeof(Q4KBlock) == 144, "Q4_K block must be 144 bytes");
+            static_assert(offsetof(Q4KBlock, d)      == 0,  "Q4_K d offset");
+            static_assert(offsetof(Q4KBlock, dmin)   == 2,  "Q4_K dmin offset");
+            static_assert(offsetof(Q4KBlock, scales) == 4,  "Q4_K scales offset");
+            static_assert(offsetof(Q4KBlock, qs)     == 16, "Q4_K qs offset");
+            
+            const Q4KBlock* src = reinterpret_cast<const Q4KBlock*>(tv.data);
+            size_t blocks = tv.bytes / sizeof(Q4KBlock);
+            size_t badBlocks = 0;
+            size_t firstBadBlock = size_t(-1);
+            size_t firstBadElement = size_t(-1);
+            
+            // Canonical scale/min unpacker matching ggml/llama.cpp
+            auto get_scale_min_k4 = [](int j, const uint8_t* scales, uint8_t* d, uint8_t* m) {
+                if (j < 4) {
+                    *d = scales[j] & 63;
+                    *m = scales[j + 4] & 63;
+                } else {
+                    *d = (scales[j + 4] & 0x0F) | ((scales[j - 4] >> 6) << 4);
+                    *m = (scales[j + 4] >> 4) | ((scales[j] >> 6) << 4);
+                }
+            };
+            
+            for (size_t b = 0; b < blocks; ++b)
+            {
+                float d = FP16ToFloat(src[b].d);
+                float dmin = FP16ToFloat(src[b].dmin);
+                
+                if (!std::isfinite(d) || !std::isfinite(dmin))
+                {
+                    badBlocks++;
+                    if (firstBadBlock == size_t(-1))
+                    {
+                        firstBadBlock = b;
+                        firstBadElement = b * 256;
+                    }
+                    if (badBlocks <= 3)
+                    {
+                        std::printf("[Q4K_RAW] tensor_id=%u block=%zu d_raw=0x%04x dmin_raw=0x%04x d=%.6g dmin=%.6g\n",
+                                    (unsigned)tv.id,
+                                    b,
+                                    (unsigned)src[b].d,
+                                    (unsigned)src[b].dmin,
+                                    (double)d,
+                                    (double)dmin);
+                    }
+                    // Skip this block to avoid propagating NaN
+                    continue;
+                }
+                
+                // Decode 256 values from this block using canonical ggml layout
+                const uint8_t* q = src[b].qs;
+                float* out_ptr = &out[b * 256];
+                
+                int is = 0;
+                for (int j = 0; j < 256; j += 64)
+                {
+                    uint8_t sc1, m1;
+                    uint8_t sc2, m2;
+                    
+                    get_scale_min_k4(is + 0, src[b].scales, &sc1, &m1);
+                    get_scale_min_k4(is + 1, src[b].scales, &sc2, &m2);
+                    
+                    const float d1 = d * sc1;
+                    const float mn1 = dmin * m1;
+                    
+                    const float d2 = d * sc2;
+                    const float mn2 = dmin * m2;
+                    
+                    // First 32: low nibble
+                    for (int l = 0; l < 32; ++l)
+                    {
+                        out_ptr[j + l] = d1 * float(q[l] & 0x0F) - mn1;
+                    }
+                    // Next 32: high nibble (SAME q pointer)
+                    for (int l = 0; l < 32; ++l)
+                    {
+                        out_ptr[j + 32 + l] = d2 * float(q[l] >> 4) - mn2;
+                    }
+                    
+                    q += 32;  // Advance qs by 32 bytes per 64 elements
+                    is += 2;
+                }
+                
+                if (badBlocks > 0 && b == firstBadBlock)
+                {
+                    // Already printed above
+                }
+            }
+            
+            if (tv.bytes > 0)
+            {
+                std::printf("[Q4K] blocks=%zu badBlocks=%zu firstBadBlock=%zu firstBadElement=%zu outSize=%zu\n",
+                            blocks, badBlocks,
+                            firstBadBlock == size_t(-1) ? 0 : firstBadBlock,
+                            firstBadElement == size_t(-1) ? 0 : firstBadElement,
+                            out.size());
+            }
+            break;
+        }
+        case ModelGenie::GGMLType::Q8_0:
+        {
+            struct Q80Block { uint16_t d; int8_t qs[32]; };
+            const Q80Block* src = reinterpret_cast<const Q80Block*>(tv.data);
+            size_t blocks = tv.bytes / sizeof(Q80Block);
+            for (size_t b = 0; b < blocks; ++b) {
+                float scale = FP16ToFloat(src[b].d);
+                for (int j = 0; j < 32; j++) {
+                    out[b * 32 + j] = scale * src[b].qs[j];
+                }
+            }
+            break;
+        }
+        case ModelGenie::GGMLType::Q5_0:
+        {
+            struct Q50Block { uint16_t d; uint8_t qh[4]; uint8_t qs[16]; };
+            const Q50Block* src = reinterpret_cast<const Q50Block*>(tv.data);
+            size_t blocks = tv.bytes / sizeof(Q50Block);
+            for (size_t b = 0; b < blocks; ++b) {
+                float scale = FP16ToFloat(src[b].d);
+                for (int j = 0; j < 32; j++) {
+                    uint8_t low = (src[b].qs[j / 2] >> ((j % 2) * 4)) & 0xF;
+                    uint8_t high = (src[b].qh[j / 8] >> (j % 8)) & 0x1;
+                    int8_t value = (low | (high << 4)) - 16;
+                    out[b * 32 + j] = scale * value;
+                }
+            }
+            break;
+        }
+        case ModelGenie::GGMLType::Q6_K:
+        {
+            struct Q6KBlock { uint8_t ql[128]; uint8_t qh[64]; uint16_t scales[8]; uint16_t d; };
+            const Q6KBlock* src = reinterpret_cast<const Q6KBlock*>(tv.data);
+            size_t blocks = tv.bytes / sizeof(Q6KBlock);
+            for (size_t b = 0; b < blocks; ++b) {
+                float scale = FP16ToFloat(src[b].d);
+                for (int j = 0; j < 256; j++) {
+                    uint8_t low = (src[b].ql[j / 2] >> ((j % 2) * 4)) & 0xF;
+                    uint8_t high = (src[b].qh[j / 4] >> ((j % 4) * 2)) & 0x3;
+                    int8_t value = (low | (high << 4)) - 32;
+                    out[b * 256 + j] = scale * value;
+                }
+            }
+            break;
+        }
+        default:
+            memset(out.data(), 0, out.size() * sizeof(float));
+            break;
+    }
+}
+;
 
 //=============================================================================
 // Main
@@ -1799,18 +1836,56 @@ int main()
     }
 
     // Execution authority verification
+    //
+    // IMPORTANT:
+    //   stats.executionIrConsumed is a LEGACY reachability milestone from the
+    //   simplified forward path. It does NOT prove kExecutionIRTable owns
+    //   execution; full authority requires every generated op to complete.
     auto stats = runtime.GetExecutionStats();
-    fprintf(stderr, "[Gate] EXECUTION_IR_CONSUMED=%d\n", stats.executionIrConsumed ? 1 : 0);
-    if (!stats.executionIrConsumed) pass = false;
 
-    // Runtime execution verification
-    fprintf(stderr, "[Gate] EXECUTION_OPS_EXPECTED=%u\n", Generated::kExecutionOpCount);
-    fprintf(stderr, "[Gate] EXECUTION_OPS_EXECUTED=%u\n", stats.opsExecuted);
-    if (stats.opsExecuted == 0) {
-        fprintf(stderr, "[Gate] EXECUTION_OPS_SKIPPED=1\n");
+    const uint32_t irOpsExpected =
+        static_cast<uint32_t>(Generated::kExecutionOpCount);
+
+    const uint32_t legacyOpsExecuted = stats.opsExecuted;
+
+    const uint32_t legacyOpsSkipped =
+        legacyOpsExecuted < irOpsExpected
+            ? (irOpsExpected - legacyOpsExecuted)
+            : 0u;
+
+    const bool irTableReachable =
+        stats.executionIrConsumed;
+
+    const bool irTableAuthority =
+        irTableReachable &&
+        legacyOpsExecuted == irOpsExpected;
+
+    fprintf(stderr,
+        "[Gate] IR_TABLE_REACHABLE=%d\n"
+        "[Gate] IR_TABLE_AUTHORITY=%d\n"
+        "[Gate] EXECUTION_IR_CONSUMED=%d\n"
+        "[Gate] EXECUTION_OPS_EXPECTED=%u\n"
+        "[Gate] EXECUTION_OPS_EXECUTED=%u\n"
+        "[Gate] EXECUTION_OPS_SKIPPED=%u\n",
+        irTableReachable ? 1 : 0,
+        irTableAuthority ? 1 : 0,
+        irTableAuthority ? 1 : 0,
+        irOpsExpected,
+        legacyOpsExecuted,
+        legacyOpsSkipped);
+
+    // Partial handwritten-model execution is allowed to remain a PASS while
+    // native-IR authority is still under construction. Do NOT set pass=false
+    // merely because IR_TABLE_AUTHORITY is not yet closed.
+    //
+    // RAWRXD_MODELGENIE_NATIVE_IR_EXECUTION_001 may only PASS when
+    // irTableAuthority is true and the dedicated interpreter counters prove
+    // visited==dispatched==kExecutionOpCount with zero unsupported/fallbacks.
+
+    // Runtime execution verification (counts emitted via the authority gate above).
+    // opsExecuted==0 means no forward ran at all -- distinct from IR authority.
+    if (legacyOpsExecuted == 0) {
         pass = false;
-    } else {
-        fprintf(stderr, "[Gate] EXECUTION_OPS_SKIPPED=0\n");
     }
 
     // Quant decode verification
@@ -1910,6 +1985,46 @@ int main()
         fprintf(stderr, "[Gate] TOKEN0_ID=%u\n", token0);
         fprintf(stderr, "[Gate] TOKEN0_EMITTED=1\n");
         fprintf(stderr, "[Gate] ARGMAX_IN_RANGE=%d\n", (token0 < Generated::ModelConfig::kVocabSize) ? 1 : 0);
+        // RAWRXD_LOGITS_FINGERPRINT_001 -- parity baseline; decoding is greedy argmax.
+        {
+            const float* lg = logits.data();
+            const size_t n = logits.size();
+            size_t argmax = 0;
+            float mx = lg[0], mn = lg[0];
+            double lgsum = 0.0, lgsumsq = 0.0;
+            for (size_t i = 0; i < n; ++i) {
+                float v = lg[i];
+                if (v > mx) { mx = v; argmax = i; }
+                if (v < mn) mn = v;
+                double d = (double)v;
+                lgsum += d; lgsumsq += d * d;
+            }
+            const int K = 8;
+            struct TopE { float v; uint32_t i; };
+            TopE top[K];
+            for (int k = 0; k < K; ++k) { top[k].v = -1e30f; top[k].i = 0; }
+            for (size_t i = 0; i < n; ++i) {
+                float v = lg[i];
+                for (int k = 0; k < K; ++k) {
+                    if (v > top[k].v) {
+                        for (int s = K - 1; s > k; --s) top[s] = top[s - 1];
+                        top[k] = { v, (uint32_t)i };
+                        break;
+                    }
+                }
+            }
+            fprintf(stderr, "[Gate] LOGITS_ARGMAX=%u\n", (uint32_t)argmax);
+            fprintf(stderr, "[Gate] LOGITS_ARGMAX_VALUE=%.6f\n", mx);
+            for (int k = 0; k < K; ++k)
+                fprintf(stderr, "[Gate] LOGITS_TOPK_%d=IDX:%u LOGIT:%.6f\n", k, top[k].i, (double)top[k].v);
+            fprintf(stderr, "[Gate] LOGITS_SUM=%.6f\n", lgsum);
+            fprintf(stderr, "[Gate] LOGITS_SUMSQ=%.6f\n", lgsumsq);
+            fprintf(stderr, "[Gate] LOGITS_MIN=%.6f\n", mn);
+            fprintf(stderr, "[Gate] DECODING_MODE=GREEDY\n");
+            fprintf(stderr, "[Gate] DECODING_TEMPERATURE=0.0\n");
+            fprintf(stderr, "[Gate] DECODING_TOPK=0\n");
+            fprintf(stderr, "[Gate] DECODING_TOPP=1.0\n");
+        }
         if (token0 >= Generated::ModelConfig::kVocabSize)
             pass = false;
     }
@@ -1918,12 +2033,14 @@ int main()
 
     fprintf(stderr, "[Gate] MLA_FULL_EXECUTION=%d\n", mlFullExecution ? 1 : 0);
     fprintf(stderr, "[Gate] MOE_FULL_EXECUTION=%d\n", moeFullExecution ? 1 : 0);
-    fprintf(stderr, "[Gate] EXECUTION_OPS_EXPECTED=%u\n", (unsigned)Generated::kExecutionOpCount);
-    fprintf(stderr, "[Gate] EXECUTION_OPS_EXECUTED=%u\n", stats.opsExecuted);
-    fprintf(stderr, "[Gate] EXECUTION_OPS_SKIPPED=%u\n", (unsigned)(Generated::kExecutionOpCount - stats.opsExecuted));
+    fprintf(stderr, "[Gate] FINAL_IR_TABLE_REACHABLE=%d\n", irTableReachable ? 1 : 0);
+    fprintf(stderr, "[Gate] FINAL_IR_TABLE_AUTHORITY=%d\n", irTableAuthority ? 1 : 0);
+    fprintf(stderr, "[Gate] FINAL_EXECUTION_OPS_EXPECTED=%u\n", irOpsExpected);
+    fprintf(stderr, "[Gate] FINAL_EXECUTION_OPS_EXECUTED=%u\n", legacyOpsExecuted);
+    fprintf(stderr, "[Gate] FINAL_EXECUTION_OPS_SKIPPED=%u\n", legacyOpsSkipped);
 
     fprintf(stderr, "\n=============================================================================\n");
-    if (pass && mlFullExecution && moeFullExecution)
+    if (pass && mlFullExecution && moeFullExecution && irTableAuthority)
     {
         fprintf(stderr, "VERDICT=PASS_EXECUTABLE\n");
     }

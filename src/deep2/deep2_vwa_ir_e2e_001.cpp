@@ -181,7 +181,7 @@ extern "C" int RunDeep2IrResidencyE2e() {
 
             // Update next-use distances for all registered tensors
             space.ForEach([&](vwa::VirtualTensorRef& r) {
-                r.nextUseDistance = irIndex.NextUseDistance(r.desc.id, absOp);
+                r.nextUseDistance = irIndex.NextUseDistance(static_cast<uint32_t>(r.desc.id), absOp);
             });
 
             auto tensorIds = irTable.GetTensorIds(absOp);
@@ -268,3 +268,9 @@ extern "C" int RunDeep2IrResidencyE2e() {
 
     return pass ? 0 : 1;
 }
+
+#ifdef STANDALONE_IR_E2E
+int main() {
+    return RunDeep2IrResidencyE2e();
+}
+#endif

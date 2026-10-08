@@ -797,12 +797,14 @@ static MG::OperandRef GenWeight(const GEN::OperationIR& op, uint32_t i) {
     }
 }
 
-static const float* ResolveInput(const GEN::OperationIR& op, uint32_t idx, ActivationArena& arena) {
+static const float* ResolveInput(const GEN::OperationIR& op, uint32_t idx, ActivationArena& arena, uint32_t tokenId) {
     MG::OperandRef ref = GenInput(op, idx);
     if (ref.domain == MG::OperandDomain::Activation) {
         return arena.Get(ref.id);
     } else if (ref.domain == MG::OperandDomain::RuntimeScalar) {
+        // Use the provided tokenId (set by executor)
         static thread_local float tokenStorage = 0.0f;
+        tokenStorage = static_cast<float>(tokenId);
         return &tokenStorage;
     }
     return nullptr;
@@ -816,10 +818,40 @@ static const float* ResolveWeight(const GEN::OperationIR& op, uint32_t idx, cons
     return nullptr;
 }
 
-static float* ResolveOutput(const GEN::OperationIR& op, ActivationArena& arena) {
+static float* ResolveOutput(const GEN::OperationIR& op, ActivationArena& arena, const ROMResolver& romResolver) {
     MG::OperandRef ref = op.output;
     if (ref.domain == MG::OperandDomain::Activation) {
-        return arena.GetOrCreate(ref.id, 8192);
+        // Derive output size from weight tensor dimensions or operation type
+        size_t elementCount = 8192; // fallback
+        
+        if (op.weightCount > 0) {
+            MG::OperandRef weightRef = GenWeight(op, 0);
+            if (weightRef.domain == MG::OperandDomain::RomTensor) {
+                const TensorView* weightView = romResolver.Resolve(weightRef.id);
+                if (weightView && weightView->rank >= 1) {
+                    // For Linear/RMSNorm: weight is [out_features, ...], output = [out_features]
+                    elementCount = weightView->dims[0];
+                }
+            }
+        } else {
+            // For ops without weights, derive from input activation size
+            // or use model constants
+            switch (op.requiredPrimitive) {
+                case ModelGenie::Primitive::LMHeadFwd:
+                    // LM head output is vocab-sized logits
+                    elementCount = 102400; // vocab_size for DeepSeek-V2-Lite-Chat
+                    break;
+                case ModelGenie::Primitive::AttentionFwd:
+                case ModelGenie::Primitive::ResidualAddFwd:
+                case ModelGenie::Primitive::MoEExecuteFwd:
+                    // Hidden size output
+                    elementCount = 2048; // hidden_size for DeepSeek-V2-Lite-Chat
+                    break;
+                default:
+                    break;
+            }
+        }
+        return arena.GetOrCreate(ref.id, elementCount);
     }
     return nullptr;
 }
@@ -830,7 +862,8 @@ static float* ResolveOutput(const GEN::OperationIR& op, ActivationArena& arena) 
 class PrimitiveDispatcher
 {
 public:
-    static void Dispatch(const Generated::OperationIR& op, 
+    // Returns true if operation executed successfully, false if skipped/failed
+    static bool Dispatch(const Generated::OperationIR& op, 
                          ActivationArena& arena,
                          const ROMResolver& romResolver,
                          uint32_t tokenId)
@@ -839,7 +872,7 @@ public:
         
         // Helper to get operand pointers using global helper functions
         auto getInput = [&](const GEN::OperationIR& op, uint32_t idx) -> const float* {
-            return ResolveInput(op, idx, arena);
+            return ResolveInput(op, idx, arena, tokenId);
         };
         
         auto getWeight = [&](const GEN::OperationIR& op, uint32_t idx) -> const float* {
@@ -847,7 +880,7 @@ public:
         };
         
         auto getOutput = [&](const GEN::OperationIR& op) -> float* {
-            return ResolveOutput(op, arena);
+            return ResolveOutput(op, arena, romResolver);
         };
         
         switch (op.requiredPrimitive) {
@@ -858,8 +891,9 @@ public:
                 float* output = getOutput(op);
                 if (input && weight && output) {
                     RmsNormFwd(input, weight, output, op);
+                    return true;
                 }
-                break;
+                return false;
             }
             case Primitive::LinearFwd: {
                 // Linear: input activation + weight (RomTensor) -> output activation
@@ -875,11 +909,12 @@ public:
                         weightView = romResolver.Resolve(weightRef.id);
                     }
                     LinearFwd(input, weight, output, weightView, inputRef);
+                    return true;
                 }
-                break;
+                return false;
             }
             case Primitive::MatMulFwd: {
-                break;
+                return false;
             }
             case Primitive::AttentionFwd: {
                 const float* q = getInput(op, 0);
@@ -887,8 +922,9 @@ public:
                 float* output = getOutput(op);
                 if (q && kv && output) {
                     AttentionFwd(q, kv, output, op);
+                    return true;
                 }
-                break;
+                return false;
             }
             case Primitive::MlaDecompressFwd: {
                 // MLA Decompress: expands compressed KV latent to full K/V
@@ -900,8 +936,9 @@ public:
                 float* output = getOutput(op);
                 if (input && w_kv_a && w_kv_b && w_kv_c && output) {
                     MlaDecompressFwd(input, w_kv_a, w_kv_b, w_kv_c, output, op);
+                    return true;
                 }
-                break;
+                return false;
             }
             case Primitive::RouterFwd: {
                 // Router: linear for expert gate
@@ -916,8 +953,9 @@ public:
                         weightView = romResolver.Resolve(weightRef.id);
                     }
                     LinearFwd(input, weight, output, weightView, inputRef);
+                    return true;
                 }
-                break;
+                return false;
             }
             case Primitive::TopKFwd: {
                 // TopK: select top-k experts from router logits
@@ -925,12 +963,13 @@ public:
                 float* output = getOutput(op);
                 if (input && output) {
                     TopKFwd(input, output, op);
+                    return true;
                 }
-                break;
+                return false;
             }
             case Primitive::MoEExecuteFwd: {
                 // MoE Execute: executes selected experts
-                break;
+                return false;
             }
             case Primitive::ResidualAddFwd: {
                 // ResidualAdd: element-wise addition
@@ -939,8 +978,9 @@ public:
                 float* output = getOutput(op);
                 if (input0 && input1 && output) {
                     ResidualAddFwd(input0, input1, output, op);
+                    return true;
                 }
-                break;
+                return false;
             }
             case Primitive::LMHeadFwd: {
                 // LM Head: final linear projection to vocab
@@ -955,11 +995,13 @@ public:
                         weightView = romResolver.Resolve(weightRef.id);
                     }
                     LinearFwd(input, weight, output, weightView, inputRef);
+                    return true;
                 }
-                break;
+                return false;
             }
             default:
                 std::fprintf(stderr, "[IR] Unsupported primitive: %u\n", static_cast<uint32_t>(op.requiredPrimitive));
+                return false;
         }
     }
 
@@ -1036,10 +1078,47 @@ private:
     }
     
     // MLA Decompress forward pass
-    static void MlaDecompressFwd(const float* input, const float* w_kv_a, const float* w_kv_b, const float* w_kv_c, float* output, const GEN::OperationIR& op) {
-        // This is the unproven boundary - MLA latent KV expansion
-        // Need to implement: latent (512) -> K (192*2048) + V (128*2048)
-        std::fprintf(stderr, "[IR] MlaDecompressFwd opId=%u not implemented\n", op.opId);
+    // DeepSeek-V2 uses Multi-Latent Attention (MLA).
+    // The compressed KV latent is decompressed into K and V matrices.
+    // Input: compressed latent (typically 512-dim)
+    // Weights: w_kv_a (latent -> K projection), w_kv_b (latent -> V projection),
+    //          w_kv_c (optional normalization)
+    // Output: decompressed K and V activations concatenated
+    static void MlaDecompressFwd(const float* input, const float* w_kv_a, const float* w_kv_b, 
+                                  const float* w_kv_c, float* output, const GEN::OperationIR& op) {
+        // Resolve weight dimensions from ROM
+        // w_kv_a: [k_dim, latent_dim] - projects latent to K
+        // w_kv_b: [v_dim, latent_dim] - projects latent to V
+        // w_kv_c: optional, may be unused
+        
+        // In DeepSeek-V2 Lite: latent=512, k_dim=192, v_dim=128 per head
+        // Total: heads * (k_dim + v_dim) = 16 * (192 + 128) = 16 * 320 = 5120
+        // But for single token, input is [latent_dim] and output is [k_total + v_total]
+        
+        const uint32_t latentDim = 512;   // MLA compressed latent dimension
+        const uint32_t kDimsPerHead = 192;
+        const uint32_t vDimsPerHead = 128;
+        const uint32_t numHeads = 16;
+        const uint32_t kTotal = kDimsPerHead * numHeads;  // 3072
+        const uint32_t vTotal = vDimsPerHead * numHeads;  // 2048
+        
+        // K = w_kv_a @ input  (kTotal x latentDim matmul)
+        for (uint32_t i = 0; i < kTotal; ++i) {
+            float sum = 0.0f;
+            for (uint32_t j = 0; j < latentDim; ++j) {
+                sum += w_kv_a[i * latentDim + j] * input[j];
+            }
+            output[i] = sum;
+        }
+        
+        // V = w_kv_b @ input  (vTotal x latentDim matmul)
+        for (uint32_t i = 0; i < vTotal; ++i) {
+            float sum = 0.0f;
+            for (uint32_t j = 0; j < latentDim; ++j) {
+                sum += w_kv_b[i * latentDim + j] * input[j];
+            }
+            output[kTotal + i] = sum;
+        }
     }
     
     // TopK forward pass
@@ -1094,31 +1173,34 @@ public:
             const auto& op = GEN::kExecutionIRTable[i];
             opsVisited++;
             
-            // Check if this op is supported
-            if (op.requiredPrimitive == ModelGenie::Primitive::None ||
-                op.requiredPrimitive == ModelGenie::Primitive::MlaDecompressFwd)
-            {
-                std::fprintf(stderr, "[IR] Op %u: primitive %u not yet implemented\n", 
-                             op.opId, static_cast<uint32_t>(op.requiredPrimitive));
+            // Dispatch primitive - let dispatcher decide if supported
+            bool executed = PrimitiveDispatcher::Dispatch(op, arena_, romResolver_, tokenId_);
+            
+            if (executed) {
+                opsDispatched++;
+            } else {
                 opsSkipped++;
-                continue;
+                std::fprintf(stderr, "[IR] Op %u: primitive %u skipped/failed\n", 
+                             op.opId, static_cast<uint32_t>(op.requiredPrimitive));
             }
-            
-            // Dispatch primitive
-            PrimitiveDispatcher::Dispatch(op, arena_, romResolver_, tokenId_);
-            
-            opsDispatched++;
             
             if ((opsVisited % 50) == 0)
             {
-                std::fprintf(stderr, "[IR] Progress: %u/%u ops visited, %u dispatched\n",
-                             opsVisited, GEN::kExecutionOpCount, opsDispatched);
+                std::fprintf(stderr, "[IR] Progress: %u/%u ops visited, %u dispatched, %u skipped\n",
+                             opsVisited, GEN::kExecutionOpCount, opsDispatched, opsSkipped);
                 fflush(stderr);
             }
         }
         
         std::fprintf(stderr, "[IR] Execution complete: visited=%u dispatched=%u skipped=%u\n",
                      opsVisited, opsDispatched, opsSkipped);
+        
+        // Capture logits from final LM Head output (activation 299 based on IR table)
+        const float* logitsPtr = arena_.Get(299);
+        if (logitsPtr) {
+            // Vocab size is 102400
+            logits_.assign(logitsPtr, logitsPtr + 102400);
+        }
         
         return opsSkipped == 0;
     }
@@ -1136,8 +1218,17 @@ private:
 
 uint32_t IRExecutor::SampleToken() const
 {
-    // Placeholder
-    return 0;
+    if (logits_.empty()) return 0;
+    
+    uint32_t bestIdx = 0;
+    float bestVal = logits_[0];
+    for (uint32_t i = 1; i < logits_.size(); ++i) {
+        if (logits_[i] > bestVal) {
+            bestVal = logits_[i];
+            bestIdx = i;
+        }
+    }
+    return bestIdx;
 }
 
 //=============================================================================
@@ -1172,19 +1263,36 @@ int main(int argc, char* argv[])
     std::string originalHash = genome.computeCanonicalHash();
     std::fprintf(stderr, "Original canonical hash: %s\n", originalHash.c_str());
     
-    // Run IR executor
-    IRExecutor executor("G:\\~dev\\rawrxd\\models\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf", 0);
+    // Run IR executor with token 0 (first token)
+    IRExecutor executor(ggufPath, 0);
     bool success = executor.Execute();
+    
+    uint32_t predictedToken = executor.SampleToken();
+    const std::vector<float>* logits = executor.GetLogits();
+    bool logitsFinite = true;
+    if (logits) {
+        for (float v : *logits) {
+            if (!std::isfinite(v)) { logitsFinite = false; break; }
+        }
+    } else {
+        logitsFinite = false;
+    }
+    
+    // Get actual dispatched/skipped counts from executor
+    // Note: These would need to be exposed from IRExecutor
+    // For now, use the hardcoded values from the Execute method output
     
     std::fprintf(stderr, "\n=============================================================================\n");
     std::fprintf(stderr, "RAWRXD_MODELGENIE_NATIVE_IR_EXECUTION_001\n");
     std::fprintf(stderr, "IR_TABLE_AUTHORITY=1\n");
     std::fprintf(stderr, "IR_SOURCE_OP_COUNT=%u\n", GEN::kExecutionOpCount);
     std::fprintf(stderr, "IR_OPS_VISITED=%u\n", GEN::kExecutionOpCount);
-    std::fprintf(stderr, "IR_OPS_DISPATCHED=0\n");
-    std::fprintf(stderr, "IR_UNSUPPORTED_OPS=%u\n", GEN::kExecutionOpCount);
-    std::fprintf(stderr, "VERDICT=NOT_YET_IMPLEMENTED\n");
+    std::fprintf(stderr, "LOGITS_FINITE=%d\n", logitsFinite ? 1 : 0);
+    std::fprintf(stderr, "PREDICTED_TOKEN=%u\n", predictedToken);
+    std::fprintf(stderr, "EXPECTED_TOKEN=93633\n");
+    std::fprintf(stderr, "TOKEN_PARITY=%d\n", (predictedToken == 93633) ? 1 : 0);
+    std::fprintf(stderr, "VERDICT=%s\n", (success && logitsFinite && predictedToken == 93633) ? "PASS" : "FAIL");
     std::fprintf(stderr, "=============================================================================\n");
     
-    return 0;
+    return (success && logitsFinite && predictedToken == 93633) ? 0 : 1;
 }
