@@ -636,8 +636,148 @@ static void RoPE(float* q, float* k, int pos, int headDim, int numHeads)
 }
 
 //=============================================================================
-// MLA KV Cache - Persistent storage for compressed latent representations
+// Differential Execution Verifier - Activation Capture
 //=============================================================================
+struct ActivationRecord {
+    std::string op_name;
+    uint32_t op_id;
+    uint32_t layer_idx;
+    size_t position;
+    std::vector<int64_t> shape;
+    std::vector<float> data;
+    std::string tensor_type; // "input", "output", "weight", "intermediate"
+};
+
+class DifferentialRecorder {
+public:
+    std::vector<ActivationRecord> records;
+    bool enabled = false;
+    std::string output_dir;
+    
+    void Enable(const std::string& dir) {
+        enabled = true;
+        output_dir = dir;
+        records.clear();
+    }
+    
+    void Disable() {
+        enabled = false;
+    }
+    
+    void Record(const std::string& op_name, uint32_t op_id, uint32_t layer_idx, 
+                size_t position, const std::string& tensor_type,
+                const float* data, const std::vector<int64_t>& shape) {
+        if (!enabled) return;
+        
+        ActivationRecord rec;
+        rec.op_name = op_name;
+        rec.op_id = op_id;
+        rec.layer_idx = layer_idx;
+        rec.position = position;
+        rec.shape = shape;
+        rec.tensor_type = tensor_type;
+        
+        // Calculate total elements from shape
+        size_t total = 1;
+        for (int64_t d : shape) total *= d;
+        
+        // Safety check: limit tensor size to prevent memory issues
+        if (total > 200000) {
+            std::fprintf(stderr, "[DIFF] SKIP large tensor: %s (size=%zu)\n", op_name.c_str(), total);
+            return;
+        }
+        
+        if (data) {
+            rec.data.assign(data, data + total);
+        }
+        records.push_back(std::move(rec));
+    }
+    
+    void SaveAll() {
+        if (!enabled) return;
+        
+        // Create output directory
+        DWORD result = CreateDirectoryA(output_dir.c_str(), NULL);
+        if (result == 0 && GetLastError() != ERROR_ALREADY_EXISTS) {
+            std::fprintf(stderr, "[DIFF] Failed to create directory: %s (error %lu)\n", 
+                         output_dir.c_str(), GetLastError());
+        }
+        
+        // Save as binary files
+        for (const auto& rec : records) {
+            char fname[512];
+            sprintf_s(fname, "%s\\rec_%s_l%u_p%zu_%s.bin", 
+                     output_dir.c_str(), rec.op_name.c_str(), rec.layer_idx, rec.position, rec.tensor_type.c_str());
+            
+            // Save header + data
+            std::ofstream f(fname, std::ios::binary);
+            if (!f) {
+                std::fprintf(stderr, "[DIFF] Failed to open file: %s\n", fname);
+                continue;
+            }
+            
+            // Write metadata
+            uint32_t op_id = 0;
+            uint32_t layer = 0;
+            size_t pos = 0;
+            uint32_t ndim = static_cast<uint32_t>(rec.shape.size());
+            
+            f.write(reinterpret_cast<const char*>(&op_id), sizeof(op_id));
+            f.write(reinterpret_cast<const char*>(&rec.layer_idx), sizeof(rec.layer_idx));
+            f.write(reinterpret_cast<const char*>(&rec.position), sizeof(rec.position));
+            f.write(reinterpret_cast<const char*>(&ndim), sizeof(ndim));
+            for (int64_t d : rec.shape) {
+                f.write(reinterpret_cast<const char*>(&d), sizeof(d));
+            }
+            uint64_t data_size = rec.data.size();
+            f.write(reinterpret_cast<const char*>(&data_size), sizeof(data_size));
+            f.write(reinterpret_cast<const char*>(rec.data.data()), rec.data.size() * sizeof(float));
+            f.close();
+        }
+        
+        // Also save a manifest
+        std::ofstream manifest(output_dir + "\\manifest.json");
+        manifest << "[\n";
+        for (size_t i = 0; i < records.size(); ++i) {
+            const auto& r = records[i];
+            manifest << "  {\n";
+            manifest << "    \"index\": " << i << ",\n";
+            manifest << "    \"op_name\": \"" << r.op_name << "\",\n";
+            manifest << "    \"op_id\": " << r.op_id << ",\n";
+            manifest << "    \"layer_idx\": " << r.layer_idx << ",\n";
+            manifest << "    \"position\": " << r.position << ",\n";
+            manifest << "    \"tensor_type\": \"" << r.tensor_type << "\",\n";
+            manifest << "    \"shape\": [";
+            for (size_t j = 0; j < r.shape.size(); ++j) {
+                manifest << r.shape[j] << (j + 1 < r.shape.size() ? ", " : "");
+            }
+            manifest << "],\n";
+            manifest << "    \"num_elements\": " << r.data.size() << "\n";
+            manifest << "  }" << (i + 1 < records.size() ? "," : "") << "\n";
+        }
+        manifest << "]\n";
+        manifest.close();
+        
+        std::fprintf(stderr, "[DIFF] Saved %zu records to %s\n", records.size(), output_dir.c_str());
+    }
+    
+    void Clear() {
+        records.clear();
+    }
+};
+
+// Global differential recorder
+static DifferentialRecorder g_differential_recorder;
+
+#define DIFF_RECORD(op_name, op_id, layer_idx, position, tensor_type, data, shape) \
+    do { if (g_differential_recorder.enabled) \
+        g_differential_recorder.Record(op_name, op_id, layer_idx, position, tensor_type, data, shape); \
+    } while(0)
+
+#define DIFF_ENABLE(dir) do { g_differential_recorder.Enable(dir); } while(0)
+#define DIFF_DISABLE() do { g_differential_recorder.Disable(); } while(0)
+#define DIFF_SAVE() do { g_differential_recorder.SaveAll(); } while(0)
+#define DIFF_CLEAR() do { g_differential_recorder.Clear(); } while(0)
 class MlaKVCache
 {
 public:
@@ -1183,7 +1323,8 @@ private:
     // KV cache contains expanded K/V for all positions up to current (keys already have RoPE at their write position)
     static bool AttentionFwd(const float* q, const float* kv, float* output,
                              size_t qN, size_t kvN, size_t outputN,
-                             const MlaKVCache* kvCache = nullptr, size_t layerIdx = 0, size_t position = 0)
+                             const MlaKVCache* kvCache = nullptr, size_t layerIdx = 0, size_t position = 0,
+                             uint32_t opId = 0)
     {
         const size_t heads = GEN::ModelConfig::kHeadCount;
         const size_t key = GEN::ModelConfig::kKeyLength;
@@ -1231,6 +1372,9 @@ private:
         }
         
         const float scale = 1.0f / sqrtf(static_cast<float>(key)); // 1/sqrt(192)
+        
+        // DIFF: Record query after RoPE
+        DIFF_RECORD("Attention_Q_RoPE", opId, layerIdx, position, "q_rope", q_rope.data(), {(int64_t)heads * key});
         
         // For each head, compute attention over all cached positions
         for (size_t head = 0; head < heads; ++head) {
@@ -1283,6 +1427,9 @@ private:
                 out_head[i] = out_acc[i] / denom;
             }
         }
+        
+        // DIFF: Record attention output
+        DIFF_RECORD("Attention_Output", opId, layerIdx, position, "output", output, {(int64_t)heads * value});
         
         return true;
     }
@@ -1501,13 +1648,44 @@ public:
             const auto& op = GEN::kExecutionIRTable[i];
             opsVisited++;
             
+            // DIFF: Record input before execution
+            if (g_differential_recorder.enabled && op.requiredPrimitive == ModelGenie::Primitive::MlaDecompressFwd) {
+                const float* input = ResolveInput(op, 0, arena_, tokenId_);
+                if (input) {
+                    DIFF_RECORD("MlaDecompress_Input", op.opId, op.blockIndex, position_, "input", 
+                               ResolveInput(op, 0, arena_, tokenId_), {(int64_t)GEN::ModelConfig::kEmbeddingLength});
+                }
+            }
+            
             // Dispatch primitive - let dispatcher decide if supported
             bool executed = PrimitiveDispatcher::Dispatch(op, arena_, romResolver_, tokenId_, &kvCache_, position_);
-            if (executed && op.output.domain == MG::OperandDomain::Activation) {
+if (executed && op.output.domain == MG::OperandDomain::Activation) {
                 RawrXD_IR_Trace::save(op.opId, arena_.Get(op.output.id),
                                      arena_.Size(op.output.id));
             }
-
+            
+            // DIFF: Record key intermediate activations
+            if (g_differential_recorder.enabled && executed) {
+                const float* result = arena_.Get(op.output.id);
+                const size_t n = arena_.Size(op.output.id);
+                if (result && n > 0) {
+                    std::string tensor_type;
+                    if (op.requiredPrimitive == ModelGenie::Primitive::MlaDecompressFwd) {
+                        tensor_type = "MlaDecompress_Output";
+                    } else if (op.requiredPrimitive == ModelGenie::Primitive::AttentionFwd) {
+                        tensor_type = "Attention_Output";
+                    } else if (op.requiredPrimitive == ModelGenie::Primitive::MoEExecuteFwd) {
+                        tensor_type = "MoE_Output";
+                    } else if (op.requiredPrimitive == ModelGenie::Primitive::RmsNormFwd) {
+                        tensor_type = "RMSNorm_Output";
+                    } else if (op.requiredPrimitive == ModelGenie::Primitive::LinearFwd) {
+                        tensor_type = "Linear_Output";
+                    } else {
+                        tensor_type = "Output";
+                    }
+                    DIFF_RECORD(tensor_type.c_str(), op.opId, op.blockIndex, position_, "output", result, {(int64_t)n});
+                }
+            }
             
             if (executed && op.output.domain == MG::OperandDomain::Activation) {
                 const float* result = arena_.Get(op.output.id);
@@ -1596,7 +1774,7 @@ uint32_t IRExecutor::SampleToken() const
 int main(int argc, char* argv[])
 {
     if (argc < 3) {
-        std::fprintf(stderr, "Usage: %s <gguf_path> <evidence_dir> [--multitoken N | --teacher-forced token1 token2 ...]\n", argv[0]);
+        std::fprintf(stderr, "Usage: %s <gguf_path> <evidence_dir> [--multitoken N | --teacher-forced token1 token2 ... | --differential [output_dir]]\n", argv[0]);
         return 1;
     }
     
@@ -1605,6 +1783,8 @@ int main(int argc, char* argv[])
     bool multitoken = false;
     int max_tokens = 1;
     bool teacher_forced = false;
+    bool differential = false;
+    std::string differential_dir;
     std::vector<uint32_t> forced_tokens;
     
     if (argc >= 4) {
@@ -1617,6 +1797,9 @@ int main(int argc, char* argv[])
             for (int i = 4; i < argc; ++i) {
                 forced_tokens.push_back(static_cast<uint32_t>(std::stoul(argv[i])));
             }
+        } else if (arg3 == "--differential") {
+            differential = true;
+            differential_dir = (argc >= 5) ? argv[4] : "F:\\rawrxd\\evidence\\NUGVERSE_ESTIMATOR_001\\differential";
         } else {
             max_tokens = std::stoi(arg3);
             multitoken = true;
@@ -1625,7 +1808,8 @@ int main(int argc, char* argv[])
     
     std::fprintf(stderr, "=============================================================================\n");
     std::fprintf(stderr, teacher_forced ? "RAWRXD_MODELGENIE_TEACHER_FORCED_DECODE\n" : 
-                 multitoken ? "RAWRXD_MODELGENIE_MULTITOKEN_DECODE\n" : "RAWRXD_MODELGENIE_NATIVE_IR_EXECUTION_001\n");
+                 multitoken ? "RAWRXD_MODELGENIE_MULTITOKEN_DECODE\n" : 
+                 differential ? "RAWRXD_MODELGENIE_DIFFERENTIAL_CAPTURE\n" : "RAWRXD_MODELGENIE_NATIVE_IR_EXECUTION_001\n");
     std::fprintf(stderr, "=============================================================================\n\n");
     
     std::fprintf(stderr, "GGUF: %s\n", argv[1]);
@@ -1635,6 +1819,9 @@ int main(int argc, char* argv[])
         std::fprintf(stderr, "Teacher-forced tokens: ");
         for (auto t : forced_tokens) std::fprintf(stderr, "%u ", t);
         std::fprintf(stderr, "\n");
+    }
+    if (differential) {
+        std::fprintf(stderr, "Differential capture dir: %s\n", differential_dir.c_str());
     }
     fflush(stderr);
     
@@ -1651,6 +1838,11 @@ int main(int argc, char* argv[])
     if (teacher_forced) {
         // Teacher-forced decode with specified token sequence
         std::fprintf(stderr, "\n=== Teacher-forced decode (%zu tokens) ===\n", forced_tokens.size());
+        
+        if (differential) {
+            DIFF_ENABLE(differential_dir);
+            DIFF_CLEAR();
+        }
         
         IRExecutor executor(ggufPath, forced_tokens[0]);
         
@@ -1693,12 +1885,41 @@ int main(int argc, char* argv[])
                 return 1;
             }
             
+            if (differential) {
+                DIFF_SAVE();
+            }
+            
             executor.AdvancePosition();
+        }
+        
+        if (differential) {
+            DIFF_DISABLE();
         }
         
         std::fprintf(stderr, "\n=============================================================================\n");
         std::fprintf(stderr, "TEACHER_FORCED_DECODE=PASS\n");
         std::fprintf(stderr, "TOKENS_PROCESSED=%zu\n", forced_tokens.size());
+        std::fprintf(stderr, "=============================================================================\n");
+        
+        return 0;;
+    } else if (differential) {
+        // Differential execution capture mode
+        std::fprintf(stderr, "\n=== Differential capture mode ===\n");
+        
+        DIFF_ENABLE(differential_dir);
+        DIFF_CLEAR();
+        
+        IRExecutor executor(ggufPath, 1); // Start with token 1
+        
+        // Run single token with differential capture
+        executor.Execute();
+        DIFF_SAVE();
+        DIFF_DISABLE();
+        
+        std::fprintf(stderr, "\n=============================================================================\n");
+        std::fprintf(stderr, "DIFFERENTIAL_CAPTURE=PASS\n");
+        std::fprintf(stderr, "RECORDS_CAPTURED=%zu\n", g_differential_recorder.records.size());
+        std::fprintf(stderr, "OUTPUT_DIR=%s\n", differential_dir.c_str());
         std::fprintf(stderr, "=============================================================================\n");
         
         return 0;
