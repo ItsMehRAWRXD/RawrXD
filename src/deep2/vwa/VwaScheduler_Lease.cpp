@@ -99,10 +99,7 @@ bool VwaScheduler::EvictToMakeRoom(size_t needHost, size_t needDevice) {
                   return a->lastUse < b->lastUse;
               });
 
-    bool usedNextUse = false;
     for (auto* r : cands) {
-        // Verify next-use is available
-        if (r->nextUseDistance > 0) usedNextUse = true;
         Evict(r->desc.id);
         // Track that we used next-use distance for eviction
         if (r->nextUseDistance > 0) ++stats_.nextUseEvictions;
@@ -110,10 +107,8 @@ bool VwaScheduler::EvictToMakeRoom(size_t needHost, size_t needDevice) {
         if (room()) break;
     }
 
-    if (usedNextUse) {
-        // Record that next-use eviction was used for this cycle
-        // (used by VA-001 gate verification)
-    }
+    // usedNextUse is tracked via stats_.nextUseEvictions > 0
+    // (used by VA-001 gate verification)
 
     return room();
 }

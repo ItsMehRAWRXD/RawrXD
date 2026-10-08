@@ -10,7 +10,7 @@
 //=============================================================================
 
 #pragma once
-#include "vwa/VwaTypes.hpp"
+#include "VwaTypes.hpp"
 #include <cstdint>
 #include <atomic>
 
@@ -83,7 +83,7 @@ struct VirtualTensor {
 
     // Construct from a VirtualTensorRef (post-mount)
     explicit VirtualTensor(const vwa::VirtualTensorRef& ref)
-        : tensorId(ref.desc.id)
+        : tensorId(static_cast<uint32_t>(ref.desc.id))
         , romOffset(ref.desc.fileOffset)
         , encodedBytes(ref.desc.byteLength)
         , encoding(ref.desc.type)

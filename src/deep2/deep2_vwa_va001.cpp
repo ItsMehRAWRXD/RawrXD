@@ -37,11 +37,13 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <array>
 #include <atomic>
 #include <algorithm>
 #include <cmath>
 
 namespace vwa = Deep2::vwa;
+using Deep2::VirtualTensorDesc;
 
 //-----------------------------------------------------------------------------
 // Test IR table (synthetic, mirrors generated ExecutionIR.generated.hpp shape)
@@ -161,7 +163,7 @@ static Va001Certificate RunVa001Certificate() {
     uint64_t offset = 0;
     for (uint32_t i = 1; i <= kTensorCount; ++i) {
         uint64_t len = (i <= 2) ? kSmallTensorBytes : kMoeTensorBytes;
-        vwa::VirtualTensorDesc desc{};
+        VirtualTensorDesc desc{};
         desc.id = i;
         desc.shard = 0;
         desc.fileOffset = offset;
@@ -202,7 +204,7 @@ static Va001Certificate RunVa001Certificate() {
         cert.logicalModelBytes > (budget.maxHostBytes + budget.maxDeviceBytes);
 
     // --- Setup: IR-aware next-use index (mirrors kExecutionIRTable) ---
-    IrNextUseIndex irIndex;
+    vwa::IrNextUseIndex irIndex;
     irIndex.BuildFromTable(irTable);
 
     // --- Setup: Dual-GPU placer ---
@@ -233,8 +235,8 @@ static Va001Certificate RunVa001Certificate() {
 
             // --- Update next-use distances on all resident tensors ---
             // This is what VwaIrScheduler::UpdateNextUseDistances does in production.
-            space.ForEach([&](VirtualTensorRef& r) {
-                uint32_t dist = irIndex.NextUseDistance(r.desc.id, absOp);
+            space.ForEach([&](vwa::VirtualTensorRef& r) {
+                uint32_t dist = irIndex.NextUseDistance(static_cast<uint32_t>(r.desc.id), absOp);
                 r.nextUseDistance = dist;
             });
 
@@ -246,7 +248,7 @@ static Va001Certificate RunVa001Certificate() {
 
                 // Update this tensor's next-use distance for eviction policy
                 if (ref) {
-                    ref->nextUseDistance = irIndex.NextUseDistance(tid, absOp);
+                    ref->nextUseDistance = irIndex.NextUseDistance(tid, absOp);  // tid is uint32_t
                 }
 
                 // 2. Acquire the tensor (triggers IR-aware eviction if needed)
@@ -390,3 +392,9 @@ extern "C" int RunDeep2Va001Certificate() {
 
     return cert.OverallPass() ? 0 : 1;
 }
+
+#ifdef STANDALONE_VA001
+int main() {
+    return RunDeep2Va001Certificate();
+}
+#endif

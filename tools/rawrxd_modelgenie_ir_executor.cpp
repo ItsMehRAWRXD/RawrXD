@@ -355,13 +355,175 @@ private:
             liveTensors.push_back({name, type, dataOffset, encodedBytes, dims});
         }
         
-        // Calculate data section start (after tensor info)
-        ggufDataOffset = static_cast<uint64_t>(ptr - base);
+        // Calculate data section start (after tensor info, aligned to GGUF alignment)
+        uint64_t tensorInfoEnd = static_cast<uint64_t>(ptr - base);
+        uint64_t alignment = 32; // from metadata
+        uint64_t padding = (alignment - (tensorInfoEnd % alignment)) % alignment;
+        ggufDataOffset = tensorInfoEnd + padding;
         
-        std::fprintf(stderr, "[ROM] GGUF parsed: tensors=%zu, data_start=%llu\n", liveTensors.size(), (unsigned long long)ggufDataOffset);
+        std::fprintf(stderr, "[ROM] GGUF parsed: tensors=%zu, tensor_info_end=%llu, data_start=%llu (aligned)\n", 
+            liveTensors.size(), (unsigned long long)tensorInfoEnd, (unsigned long long)ggufDataOffset);
         return true;
     }
 };
+
+//=============================================================================
+// FP16 to Float conversion
+//=============================================================================
+static float FP16ToFloat(uint16_t h)
+{
+    uint32_t sign = (h >> 15) & 0x1;
+    uint32_t exp = (h >> 10) & 0x1F;
+    uint32_t mant = h & 0x3FF;
+    uint32_t f;
+    if (exp == 0)
+    {
+        f = mant ? ((sign << 31) | ((127 - 15 - 1) << 23) | (mant << 13)) : (sign << 31);
+    }
+    else if (exp == 31)
+    {
+        f = (sign << 31) | (0xFF << 23) | (mant << 13);
+    }
+    else
+    {
+        f = (sign << 31) | ((exp + 127 - 15) << 23) | (mant << 13);
+    }
+    float r;
+    memcpy(&r, &f, sizeof(r));
+    return r;
+}
+
+//=============================================================================
+// Dequantizer for GGUF tensor types
+//=============================================================================
+static void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
+{
+    ModelGenie::GGMLType effectiveType = tv.type;
+    
+    out.resize(tv.elementCount);
+    switch (effectiveType)
+    {
+        case ModelGenie::GGMLType::F32:
+            memcpy(out.data(), tv.data, tv.bytes);
+            break;
+        case ModelGenie::GGMLType::Q4_K:
+        {
+            // Q4_K layout: 256 values per 144-byte block
+            //   bytes 0..1 : d      (FP16)
+            //   bytes 2..3 : dmin   (FP16)
+            //   bytes 4..15: scales[12] (packed 6-bit scale/min per sub-block)
+            //   bytes 16..143: qs[128] (256 4-bit values)
+            struct Q4KBlock { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qs[128]; };
+            static_assert(sizeof(Q4KBlock) == 144, "Q4_K block must be 144 bytes");
+            
+            const Q4KBlock* src = reinterpret_cast<const Q4KBlock*>(tv.data);
+            size_t blocks = tv.bytes / sizeof(Q4KBlock);
+            
+            auto get_scale_min_k4 = [](int j, const uint8_t* scales, uint8_t* d, uint8_t* m) {
+                if (j < 4) {
+                    *d = scales[j] & 63;
+                    *m = scales[j + 4] & 63;
+                } else {
+                    *d = (scales[j + 4] & 0x0F) | ((scales[j - 4] >> 6) << 4);
+                    *m = (scales[j + 4] >> 4) | ((scales[j] >> 6) << 4);
+                }
+            };
+            
+            for (size_t b = 0; b < blocks; ++b)
+            {
+                float d = FP16ToFloat(src[b].d);
+                float dmin = FP16ToFloat(src[b].dmin);
+                
+                if (!std::isfinite(d) || !std::isfinite(dmin))
+                {
+                    // Skip this block to avoid propagating NaN
+                    continue;
+                }
+                
+                const uint8_t* q = src[b].qs;
+                float* out_ptr = &out[b * 256];
+                
+                int is = 0;
+                for (int j = 0; j < 256; j += 64)
+                {
+                    uint8_t sc1, m1;
+                    uint8_t sc2, m2;
+                    
+                    get_scale_min_k4(is + 0, src[b].scales, &sc1, &m1);
+                    get_scale_min_k4(is + 1, src[b].scales, &sc2, &m2);
+                    
+                    const float d1 = d * sc1;
+                    const float mn1 = dmin * m1;
+                    const float d2 = d * sc2;
+                    const float mn2 = dmin * m2;
+                    
+                    // First 32: low nibble
+                    for (int l = 0; l < 32; ++l)
+                    {
+                        out_ptr[j + l] = d1 * float(q[l] & 0x0F) - mn1;
+                    }
+                    // Next 32: high nibble
+                    for (int l = 0; l < 32; ++l)
+                    {
+                        out_ptr[j + 32 + l] = d2 * float(q[l] >> 4) - mn2;
+                    }
+                    
+                    q += 32;
+                    is += 2;
+                }
+            }
+            break;
+        }
+        case ModelGenie::GGMLType::Q8_0:
+        {
+            struct Q80Block { uint16_t d; int8_t qs[32]; };
+            const Q80Block* src = reinterpret_cast<const Q80Block*>(tv.data);
+            size_t blocks = tv.bytes / sizeof(Q80Block);
+            for (size_t b = 0; b < blocks; ++b) {
+                float scale = FP16ToFloat(src[b].d);
+                for (int j = 0; j < 32; j++) {
+                    out[b * 32 + j] = scale * src[b].qs[j];
+                }
+            }
+            break;
+        }
+        case ModelGenie::GGMLType::Q5_0:
+        {
+            struct Q50Block { uint16_t d; uint8_t qh[4]; uint8_t qs[16]; };
+            const Q50Block* src = reinterpret_cast<const Q50Block*>(tv.data);
+            size_t blocks = tv.bytes / sizeof(Q50Block);
+            for (size_t b = 0; b < blocks; ++b) {
+                float scale = FP16ToFloat(src[b].d);
+                for (int j = 0; j < 32; j++) {
+                    uint8_t low = (src[b].qs[j / 2] >> ((j % 2) * 4)) & 0xF;
+                    uint8_t high = (src[b].qh[j / 8] >> (j % 8)) & 0x1;
+                    int8_t value = (low | (high << 4)) - 16;
+                    out[b * 32 + j] = scale * value;
+                }
+            }
+            break;
+        }
+        case ModelGenie::GGMLType::Q6_K:
+        {
+            struct Q6KBlock { uint8_t ql[128]; uint8_t qh[64]; uint16_t scales[8]; uint16_t d; };
+            const Q6KBlock* src = reinterpret_cast<const Q6KBlock*>(tv.data);
+            size_t blocks = tv.bytes / sizeof(Q6KBlock);
+            for (size_t b = 0; b < blocks; ++b) {
+                float scale = FP16ToFloat(src[b].d);
+                for (int j = 0; j < 256; j++) {
+                    uint8_t low = (src[b].ql[j / 2] >> ((j % 2) * 4)) & 0xF;
+                    uint8_t high = (src[b].qh[j / 4] >> ((j % 4) * 2)) & 0x3;
+                    int8_t value = (low | (high << 4)) - 32;
+                    out[b * 256 + j] = scale * value;
+                }
+            }
+            break;
+        }
+        default:
+            memset(out.data(), 0, out.size() * sizeof(float));
+            break;
+    }
+}
 
 //=============================================================================
 // TensorStats for numerical boundary isolation
@@ -504,37 +666,6 @@ static void RoPE(float* q, float* k, int pos, int headDim, int numHeads)
     (void)q; (void)k;
 }
 
-static float FP16ToFloat(uint16_t h)
-{
-    uint32_t sign = (h & 0x8000) << 16;
-    uint32_t exp = (h & 0x7C00) >> 10;
-    uint32_t mant = h & 0x03FF;
-    uint32_t f;
-    if (exp == 0) {
-        if (mant == 0) f = sign;
-        else {
-            while ((mant & 0x0400) == 0) { mant <<= 1; exp--; }
-            mant &= 0x03FF;
-            f = sign | ((exp + 127 - 15) << 23) | (mant << 13);
-        }
-    } else if (exp == 0x1F) {
-        f = sign | 0x7F800000 | (mant << 13);
-    } else {
-        f = sign | ((exp + 127 - 15) << 23) | (mant << 13);
-    }
-    return *reinterpret_cast<float*>(&f);
-}
-
-//=============================================================================
-// Quantization Helpers
-//=============================================================================
-static void DequantizeTensor(const Generated::TensorROM& rom, const GGUFROM& romFile, std::vector<float>& out)
-{
-    if (!romFile.base) return;
-    // Simplified - actual implementation would dequantize based on GGML type
-    out.clear();
-}
-
 //=============================================================================
 // Activation Arena - Keyed by Activation.id
 //=============================================================================
@@ -615,10 +746,36 @@ public:
         return &view;
     }
     
+    // Get dequantized weight tensor (cached)
+    const float* GetDequantizedWeight(uint32_t romTensorId) const
+    {
+        // Check cache first
+        auto it = dequantCache_.find(romTensorId);
+        if (it != dequantCache_.end()) {
+            return it->second.data();
+        }
+        
+        const TensorView* view = Resolve(romTensorId);
+        if (!view || !view->data) return nullptr;
+        
+        if (view->type == ModelGenie::GGMLType::F32) {
+            return reinterpret_cast<const float*>(view->data);
+        }
+        
+        // Dequantize
+        std::vector<float> dequantized;
+        DequantizeTensor(*view, dequantized);
+        
+        // Store in cache and return pointer
+        auto result = dequantCache_.emplace(romTensorId, std::move(dequantized));
+        return result.first->second.data();
+    }
+    
     bool IsValid() const { return romFile_.base != nullptr; }
 
 private:
     GGUFROM romFile_;
+    mutable std::unordered_map<uint32_t, std::vector<float>> dequantCache_;
 };
 
 //=============================================================================
@@ -651,10 +808,10 @@ static const float* ResolveInput(const GEN::OperationIR& op, uint32_t idx, Activ
     return nullptr;
 }
 
-static const float* ResolveWeight(const GEN::OperationIR& op, uint32_t idx) {
+static const float* ResolveWeight(const GEN::OperationIR& op, uint32_t idx, const ROMResolver& romResolver) {
     MG::OperandRef ref = GenWeight(op, idx);
     if (ref.domain == MG::OperandDomain::RomTensor) {
-        return nullptr;
+        return romResolver.GetDequantizedWeight(ref.id);
     }
     return nullptr;
 }
@@ -686,7 +843,7 @@ public:
         };
         
         auto getWeight = [&](const GEN::OperationIR& op, uint32_t idx) -> const float* {
-            return ResolveWeight(op, idx);
+            return ResolveWeight(op, idx, romResolver);
         };
         
         auto getOutput = [&](const GEN::OperationIR& op) -> float* {
@@ -696,39 +853,207 @@ public:
         switch (op.requiredPrimitive) {
             case Primitive::RmsNormFwd: {
                 // RmsNorm: input activation + weight (RomTensor) -> output activation
-                // Implementation would go here
+                const float* input = getInput(op, 0);
+                const float* weight = getWeight(op, 0);
+                float* output = getOutput(op);
+                if (input && weight && output) {
+                    RmsNormFwd(input, weight, output, op);
+                }
                 break;
             }
             case Primitive::LinearFwd: {
                 // Linear: input activation + weight (RomTensor) -> output activation
+                const float* input = getInput(op, 0);
+                const float* weight = getWeight(op, 0);
+                float* output = getOutput(op);
+                if (input && weight && output) {
+                    // Get weight tensor view for dimensions
+                    MG::OperandRef weightRef = GenWeight(op, 0);
+                    MG::OperandRef inputRef = GenInput(op, 0);
+                    const TensorView* weightView = nullptr;
+                    if (weightRef.domain == MG::OperandDomain::RomTensor) {
+                        weightView = romResolver.Resolve(weightRef.id);
+                    }
+                    LinearFwd(input, weight, output, weightView, inputRef);
+                }
                 break;
             }
             case Primitive::MatMulFwd: {
                 break;
             }
             case Primitive::AttentionFwd: {
+                const float* q = getInput(op, 0);
+                const float* kv = getInput(op, 1);
+                float* output = getOutput(op);
+                if (q && kv && output) {
+                    AttentionFwd(q, kv, output, op);
+                }
                 break;
             }
             case Primitive::MlaDecompressFwd: {
+                // MLA Decompress: expands compressed KV latent to full K/V
+                // This is the unproven boundary - needs custom kernel
+                const float* input = getInput(op, 0);
+                const float* w_kv_a = getWeight(op, 0);
+                const float* w_kv_b = getWeight(op, 1);
+                const float* w_kv_c = getWeight(op, 2);
+                float* output = getOutput(op);
+                if (input && w_kv_a && w_kv_b && w_kv_c && output) {
+                    MlaDecompressFwd(input, w_kv_a, w_kv_b, w_kv_c, output, op);
+                }
                 break;
             }
             case Primitive::RouterFwd: {
+                // Router: linear for expert gate
+                const float* input = getInput(op, 0);
+                const float* weight = getWeight(op, 0);
+                float* output = getOutput(op);
+                if (input && weight && output) {
+                    MG::OperandRef weightRef = GenWeight(op, 0);
+                    MG::OperandRef inputRef = GenInput(op, 0);
+                    const TensorView* weightView = nullptr;
+                    if (weightRef.domain == MG::OperandDomain::RomTensor) {
+                        weightView = romResolver.Resolve(weightRef.id);
+                    }
+                    LinearFwd(input, weight, output, weightView, inputRef);
+                }
                 break;
             }
             case Primitive::TopKFwd: {
+                // TopK: select top-k experts from router logits
+                const float* input = getInput(op, 0);
+                float* output = getOutput(op);
+                if (input && output) {
+                    TopKFwd(input, output, op);
+                }
                 break;
             }
             case Primitive::MoEExecuteFwd: {
+                // MoE Execute: executes selected experts
                 break;
             }
             case Primitive::ResidualAddFwd: {
+                // ResidualAdd: element-wise addition
+                const float* input0 = getInput(op, 0);
+                const float* input1 = getInput(op, 1);
+                float* output = getOutput(op);
+                if (input0 && input1 && output) {
+                    ResidualAddFwd(input0, input1, output, op);
+                }
                 break;
             }
             case Primitive::LMHeadFwd: {
+                // LM Head: final linear projection to vocab
+                const float* input = getInput(op, 0);
+                const float* weight = getWeight(op, 0);
+                float* output = getOutput(op);
+                if (input && weight && output) {
+                    MG::OperandRef weightRef = GenWeight(op, 0);
+                    MG::OperandRef inputRef = GenInput(op, 0);
+                    const TensorView* weightView = nullptr;
+                    if (weightRef.domain == MG::OperandDomain::RomTensor) {
+                        weightView = romResolver.Resolve(weightRef.id);
+                    }
+                    LinearFwd(input, weight, output, weightView, inputRef);
+                }
                 break;
             }
             default:
                 std::fprintf(stderr, "[IR] Unsupported primitive: %u\n", static_cast<uint32_t>(op.requiredPrimitive));
+        }
+    }
+
+private:
+    // RMSNorm forward pass
+    static void RmsNormFwd(const float* input, const float* weight, float* output, const GEN::OperationIR& op) {
+        // Get dimensions from weight tensor (should be 1D: hidden_size)
+        // For now assume 2048 hidden size
+        const uint32_t hiddenSize = 2048;
+        const float eps = 1e-6f;
+        
+        // Compute RMS
+        float sumSq = 0.0f;
+        for (uint32_t i = 0; i < hiddenSize; ++i) {
+            float v = input[i];
+            sumSq += v * v;
+        }
+        float rms = sqrtf(sumSq / hiddenSize + eps);
+        
+        // Normalize and scale
+        for (uint32_t i = 0; i < hiddenSize; ++i) {
+            output[i] = (input[i] / rms) * weight[i];
+        }
+    }
+    
+    // Linear forward pass (matrix-vector: output = input @ weight.T)
+    // weight shape: [out_features, in_features]
+    // input shape: [in_features] (or RuntimeScalar for embedding lookup)
+    // output shape: [out_features]
+    static void LinearFwd(const float* input, const float* weight, float* output, const TensorView* weightView, const MG::OperandRef& inputRef) {
+        if (!weightView) {
+            std::fprintf(stderr, "[IR] LinearFwd: no weightView for dimensions\n");
+            return;
+        }
+        
+        // weightView->dims should be [out_features, in_features] for 2D
+        if (weightView->rank != 2) {
+            std::fprintf(stderr, "[IR] LinearFwd: weight rank=%u not 2\n", weightView->rank);
+            return;
+        }
+        
+        uint32_t out_features = weightView->dims[0];
+        uint32_t in_features = weightView->dims[1];
+        
+        // Check if input is RuntimeScalar (embedding lookup)
+        if (inputRef.domain == MG::OperandDomain::RuntimeScalar) {
+            // Embedding lookup: input is token ID, weight is [vocab, hidden]
+            // output = weight[token_id]
+            uint32_t token_id = static_cast<uint32_t>(input[0]);
+            if (token_id >= out_features) {
+                std::fprintf(stderr, "[IR] LinearFwd: token_id=%u >= vocab_size=%u\n", token_id, out_features);
+                memset(output, 0, out_features * sizeof(float));
+                return;
+            }
+            const float* src = weight + token_id * in_features;
+            memcpy(output, src, in_features * sizeof(float));
+            return;
+        }
+        
+        // Matrix-vector multiplication: output[i] = sum_j input[j] * weight[i][j]
+        for (uint32_t i = 0; i < out_features; ++i) {
+            float sum = 0.0f;
+            const float* w_row = weight + i * in_features;
+            for (uint32_t j = 0; j < in_features; ++j) {
+                sum += input[j] * w_row[j];
+            }
+            output[i] = sum;
+        }
+    }
+    
+    // Attention forward pass
+    static void AttentionFwd(const float* q, const float* kv, float* output, const GEN::OperationIR& op) {
+        std::fprintf(stderr, "[IR] AttentionFwd opId=%u not implemented\n", op.opId);
+    }
+    
+    // MLA Decompress forward pass
+    static void MlaDecompressFwd(const float* input, const float* w_kv_a, const float* w_kv_b, const float* w_kv_c, float* output, const GEN::OperationIR& op) {
+        // This is the unproven boundary - MLA latent KV expansion
+        // Need to implement: latent (512) -> K (192*2048) + V (128*2048)
+        std::fprintf(stderr, "[IR] MlaDecompressFwd opId=%u not implemented\n", op.opId);
+    }
+    
+    // TopK forward pass
+    static void TopKFwd(const float* input, float* output, const GEN::OperationIR& op) {
+        // TopK selects top-6 from 64 router logits
+        // Output should be indices of top-6 experts
+        std::fprintf(stderr, "[IR] TopKFwd opId=%u not implemented\n", op.opId);
+    }
+    
+    // ResidualAdd forward pass
+    static void ResidualAddFwd(const float* input0, const float* input1, float* output, const GEN::OperationIR& op) {
+        const uint32_t hiddenSize = 2048;
+        for (uint32_t i = 0; i < hiddenSize; ++i) {
+            output[i] = input0[i] + input1[i];
         }
     }
 };
@@ -780,7 +1105,7 @@ public:
             }
             
             // Dispatch primitive
-            // PrimitiveDispatcher::Dispatch(op, arena_, romResolver_, tokenId_);
+            PrimitiveDispatcher::Dispatch(op, arena_, romResolver_, tokenId_);
             
             opsDispatched++;
             

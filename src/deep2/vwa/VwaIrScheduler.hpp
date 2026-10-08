@@ -25,9 +25,9 @@
 #include "VirtualTensor.hpp"
 #include "NextUseEvictionPolicy.hpp"
 #include "IrPrefetchPipeline.hpp"
-#include "vwa/VwaTypes.hpp"
-#include "vwa/VwaExpert.hpp"
-#include "vwa/VwaScheduler.hpp"
+#include "VwaTypes.hpp"
+#include "VwaExpert.hpp"
+#include "VwaBlockMath.hpp"
 #include <cstdint>
 #include <vector>
 #include <unordered_map>

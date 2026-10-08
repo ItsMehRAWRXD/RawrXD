@@ -12,8 +12,8 @@
 #include "VirtualTensor.hpp"
 #include "VwaScheduler.hpp"
 #include "NextUseEvictionPolicy.hpp"
-#include "vwa/VwaTypes.hpp"
-#include "vwa/VwaExpert.hpp"
+#include "VwaTypes.hpp"
+#include "VwaExpert.hpp"
 #include <cstdint>
 #include <vector>
 #include <future>
@@ -77,6 +77,25 @@ public:
 
     void SetConfig(const PrefetchConfig& cfg) { config_ = cfg; }
     void SetTokenOpBase(uint32_t base) { tokenOpBase_.store(base, std::memory_order_release); }
+
+    /**
+     * Set the current IR op cursor. This updates the next-use distance
+     * for eviction decisions and prefetch lookahead.
+     */
+    void SetCurrentOp(uint32_t opId) {
+        currentOp_.store(opId, std::memory_order_release);
+        eviction_.SetCurrentOp(opId);
+        // Also propagate to tokenOpBase for circular wrap calculations
+        // (tokenOpBase_ = (opId / tokenStride_) * tokenStride_)
+        if (tokenStride_ > 0) {
+            tokenOpBase_.store((opId / tokenStride_) * tokenStride_,
+                               std::memory_order_release);
+        }
+    }
+
+    void SetTokenStride(uint32_t stride) {
+        tokenStride_ = stride;
+    }
 
     /**
      * Prepare residency for an op: resolve virtual addresses, ensure the
@@ -283,6 +302,7 @@ private:
     std::atomic<uint32_t> currentOp_;
     std::atomic<uint32_t> tokenOpBase_;   // Op index of current token's start
     uint32_t opCount_ = 300;
+    uint32_t tokenStride_ = 300;          // Number of ops per token pass
 
     VaCounters counters_{};
 };

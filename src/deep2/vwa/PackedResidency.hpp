@@ -12,7 +12,7 @@
 //=============================================================================
 
 #pragma once
-#include "QuantTypeTable.hpp"
+#include "../QuantTypeTable.hpp"
 #include "vwa/VirtualTensor.hpp"
 #include <cstdint>
 #include <cstddef>
@@ -158,12 +158,8 @@ public:
 
         // Dispatch to the appropriate dequant kernel
         // (These already exist in Deep2Engine.cpp)
-        switch (ggmlType) {
-            // The actual dequant calls are in Deep2Engine.cpp
-            // Here we just return the scratch pointer
-            default:
-                return blockElements;
-        }
+        // Here we just return the element count
+        (void)ggmlType;
         return blockElements;
     }
 

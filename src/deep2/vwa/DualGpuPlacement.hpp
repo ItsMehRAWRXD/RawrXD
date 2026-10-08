@@ -23,7 +23,7 @@
 //=============================================================================
 
 #pragma once
-#include "QuantTypeTable.hpp"
+#include "../QuantTypeTable.hpp"
 #include "VwaTypes.hpp"
 #include "VirtualTensor.hpp"
 #include <cstdint>
