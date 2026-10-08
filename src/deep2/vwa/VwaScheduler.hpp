@@ -19,6 +19,9 @@ public:
     VwaBudget& Budget() { return budget_; }
     DmaStage& Dma() { return dma_; }
 
+    VwaSpace& Space() { return space_; }
+    const VwaSpace& Space() const { return space_; }
+
     bool RequestBlocks(const BlockRange* ranges, size_t n);
     bool PrefetchBlocks(const BlockRange* ranges, size_t n);
     bool AcquireBlocks(const BlockRange& br, void*& outDevice, uint32_t& gen);
@@ -31,6 +34,7 @@ private:
     bool Fulfill(const std::vector<PhysicalRange>& phys, bool isPrefetch);
     bool EnsureHost(VirtualTensorRef& r);
     bool EnsureDevice(VirtualTensorRef& r);
+
     uint64_t NowUs() const {
         using clock = std::chrono::steady_clock;
         return static_cast<uint64_t>(

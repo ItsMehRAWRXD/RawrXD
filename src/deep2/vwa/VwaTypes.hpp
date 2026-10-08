@@ -42,6 +42,7 @@ struct VirtualTensorRef {
     VwaState state = VwaState::NotResident;
     uint32_t generation = 0;
     uint32_t pins = 0;
+    uint32_t nextUseDistance = 0;   // IR-derived next-use distance (0 = unknown/LRU)
     void* host = nullptr;
     void* device = nullptr;
     size_t hostBytes = 0;
@@ -68,6 +69,8 @@ struct VwaStats {
     uint64_t stallUs = 0;
     uint64_t computeOverlapUs = 0;
     uint64_t evictions = 0;
+    uint64_t nextUseEvictions = 0;   // IR-aware eviction count (VA-001 gate)
+    uint64_t lruEvictions = 0;       // legacy LRU fallback
     uint32_t expertPlans = 0;
 };
 

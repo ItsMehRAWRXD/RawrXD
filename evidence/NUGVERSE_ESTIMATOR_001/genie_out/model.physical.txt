@@ -4,7 +4,7 @@ file_bytes      10364416768
 gguf_version    3
 tensor_count    377
 alignment       32
-data_start      3972000
+data_start      3996416
 
 tensor	ggml_type	dims	encoded_bytes	file_offset
 output.weight	q6_K	[2048,102400]	172032000	0
