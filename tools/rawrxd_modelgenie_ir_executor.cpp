@@ -1595,8 +1595,8 @@ uint32_t IRExecutor::SampleToken() const
 //=============================================================================
 int main(int argc, char* argv[])
 {
-    if (argc < 3 || argc > 4) {
-        std::fprintf(stderr, "Usage: %s <gguf_path> <evidence_dir> [--multitoken N]\n", argv[0]);
+    if (argc < 3) {
+        std::fprintf(stderr, "Usage: %s <gguf_path> <evidence_dir> [--multitoken N | --teacher-forced token1 token2 ...]\n", argv[0]);
         return 1;
     }
     
@@ -1604,24 +1604,38 @@ int main(int argc, char* argv[])
     std::string evidenceDir = argv[2];
     bool multitoken = false;
     int max_tokens = 1;
+    bool teacher_forced = false;
+    std::vector<uint32_t> forced_tokens;
     
-    if (argc == 4 && std::string(argv[3]) == "--multitoken") {
-        // Default to 16 tokens if not specified
-        max_tokens = 16;
-        multitoken = true;
-    } else if (argc == 4) {
-        // Third arg is token count
-        max_tokens = std::stoi(argv[3]);
-        multitoken = true;
+    if (argc >= 4) {
+        std::string arg3 = argv[3];
+        if (arg3 == "--multitoken") {
+            max_tokens = 16;
+            multitoken = true;
+        } else if (arg3 == "--teacher-forced") {
+            teacher_forced = true;
+            for (int i = 4; i < argc; ++i) {
+                forced_tokens.push_back(static_cast<uint32_t>(std::stoul(argv[i])));
+            }
+        } else {
+            max_tokens = std::stoi(arg3);
+            multitoken = true;
+        }
     }
     
     std::fprintf(stderr, "=============================================================================\n");
-    std::fprintf(stderr, multitoken ? "RAWRXD_MODELGENIE_MULTITOKEN_DECODE\n" : "RAWRXD_MODELGENIE_NATIVE_IR_EXECUTION_001\n");
+    std::fprintf(stderr, teacher_forced ? "RAWRXD_MODELGENIE_TEACHER_FORCED_DECODE\n" : 
+                 multitoken ? "RAWRXD_MODELGENIE_MULTITOKEN_DECODE\n" : "RAWRXD_MODELGENIE_NATIVE_IR_EXECUTION_001\n");
     std::fprintf(stderr, "=============================================================================\n\n");
     
     std::fprintf(stderr, "GGUF: %s\n", argv[1]);
     std::fprintf(stderr, "Evidence: %s\n", argv[2]);
     if (multitoken) std::fprintf(stderr, "Max tokens: %d\n", max_tokens);
+    if (teacher_forced) {
+        std::fprintf(stderr, "Teacher-forced tokens: ");
+        for (auto t : forced_tokens) std::fprintf(stderr, "%u ", t);
+        std::fprintf(stderr, "\n");
+    }
     fflush(stderr);
     
     // Load ModelGenome from evidence to get token baseline
@@ -1634,7 +1648,61 @@ int main(int argc, char* argv[])
     std::string originalHash = genome.computeCanonicalHash();
     std::fprintf(stderr, "Original canonical hash: %s\n", originalHash.c_str());
     
-    if (!multitoken) {
+    if (teacher_forced) {
+        // Teacher-forced decode with specified token sequence
+        std::fprintf(stderr, "\n=== Teacher-forced decode (%zu tokens) ===\n", forced_tokens.size());
+        
+        IRExecutor executor(ggufPath, forced_tokens[0]);
+        
+        for (size_t step = 0; step < forced_tokens.size(); ++step) {
+            uint32_t input_token = forced_tokens[step];
+            executor.SetTokenId(input_token);
+            executor.ClearArena(); // Clear activations but keep KV cache
+            
+            std::fprintf(stderr, "\n--- Step %zu (position %zu), input token: %u ---\n", 
+                         step, executor.Position(), input_token);
+            
+            bool success = executor.Execute();
+            
+            uint32_t predictedToken = executor.SampleToken();
+            const std::vector<float>* logits = executor.GetLogits();
+            bool logitsFinite = true;
+            if (logits) {
+                for (float v : *logits) {
+                    if (!std::isfinite(v)) { logitsFinite = false; break; }
+                }
+            } else {
+                logitsFinite = false;
+            }
+            
+            // Save logits for comparison
+            char fname[512];
+            sprintf_s(fname, "F:\\rawrxd\\evidence\\NUGVERSE_ESTIMATOR_001\\native_tf_logits_pos%zu.bin", step);
+            if (logits && !logits->empty()) {
+                std::ofstream f(fname, std::ios::binary);
+                f.write(reinterpret_cast<const char*>(logits->data()), logits->size() * sizeof(float));
+                f.close();
+                std::fprintf(stderr, "Saved logits to %s\n", fname);
+            }
+            
+            std::fprintf(stderr, "Predicted token: %u, Logits finite: %d, Ops: %u/%u\n",
+                         predictedToken, logitsFinite ? 1 : 0, executor.Dispatched(), executor.Visited());
+            
+            if (!success || !logitsFinite) {
+                std::fprintf(stderr, "ERROR: Execution failed at step %zu\n", step);
+                return 1;
+            }
+            
+            executor.AdvancePosition();
+        }
+        
+        std::fprintf(stderr, "\n=============================================================================\n");
+        std::fprintf(stderr, "TEACHER_FORCED_DECODE=PASS\n");
+        std::fprintf(stderr, "TOKENS_PROCESSED=%zu\n", forced_tokens.size());
+        std::fprintf(stderr, "=============================================================================\n");
+        
+        return 0;
+    } else if (!multitoken) {
         // Single token execution (original mode)
         IRExecutor executor(ggufPath, 1);
         bool success = executor.Execute();
