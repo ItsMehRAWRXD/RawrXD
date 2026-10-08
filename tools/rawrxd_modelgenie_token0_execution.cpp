@@ -203,7 +203,10 @@ class GGUFROM
                 case 5: ptr += 4; break;   // i32
                 case 6: ptr += 4; break;   // f32
                 case 7: ptr += 1; break;   // bool
-                case 8: 
+                case 10: ptr += 8; break;  // u64
+                case 11: ptr += 8; break;  // i64
+                case 12: ptr += 8; break;  // f64
+                case 8:
                 {
                     if (ptr + 8 > base + size) return false;
                     uint64_t strLen = *reinterpret_cast<const uint64_t*>(ptr);
@@ -213,32 +216,40 @@ class GGUFROM
                     ptr += strLen;
                     break; // string
                 }
-                case 9: 
+                case 9:
                 {
-                    if (ptr + 8 > base + size) return false;
-                    uint64_t arrLen = *reinterpret_cast<const uint64_t*>(ptr);
-                    ptr += 8;
+                    // GGUF ARRAY: element_type (uint32) THEN count (uint64)
                     if (ptr + 4 > base + size) return false;
                     uint32_t elemType = *reinterpret_cast<const uint32_t*>(ptr);
                     ptr += 4;
-                    // Array element size lookup (GGUF type -> bytes)
-                    uint64_t elemSize = 0;
-                    switch (elemType) {
-                        case 0: case 1: elemSize = 1; break; // u8/i8
-                        case 2: case 3: elemSize = 2; break; // u16/i16
-                        case 4: case 5: case 6: elemSize = 4; break; // u32/i32/f32
-                        case 7: elemSize = 1; break; // bool
-                        case 8: 
+                    if (ptr + 8 > base + size) return false;
+                    uint64_t arrLen = *reinterpret_cast<const uint64_t*>(ptr);
+                    ptr += 8;
+                    if (elemType == 8) {
+                        // Array of strings: each element is uint64 length + bytes
+                        for (uint64_t e = 0; e < arrLen; ++e) {
                             if (ptr + 8 > base + size) return false;
-                            elemSize = 8; 
-                            ptr += 8; // nested string length then skipped
-                            break;
-                        case 9: elemSize = 8; break; // array (pointer)
-                        default: return false;
+                            uint64_t slen = *reinterpret_cast<const uint64_t*>(ptr);
+                            ptr += 8;
+                            if (slen > static_cast<uint64_t>(base + size - ptr))
+                                return false;
+                            ptr += slen;
+                        }
+                    } else {
+                        // Fixed-size element array
+                        uint64_t elemSize = 0;
+                        switch (elemType) {
+                            case 0: case 1: elemSize = 1; break; // u8/i8
+                            case 2: case 3: elemSize = 2; break; // u16/i16
+                            case 4: case 5: case 6: elemSize = 4; break; // u32/i32/f32
+                            case 7: elemSize = 1; break; // bool
+                            case 10: case 11: case 12: elemSize = 8; break; // u64/i64/f64
+                            default: return false;
+                        }
+                        if (arrLen > static_cast<uint64_t>(base + size - ptr) / elemSize)
+                            return false;
+                        ptr += arrLen * elemSize;
                     }
-                    if (arrLen > static_cast<uint64_t>(base + size - ptr) / elemSize)
-                        return false;
-                    ptr += arrLen * elemSize;
                     break; // array
                 }
                 default: return false;
@@ -638,6 +649,16 @@ static float FP16ToFloat(uint16_t h)
 
 
 
+// Live GGUF tensor type map (file-scope; shared by the DequantizeTensor
+// free-function and ModelExportRuntime::BuildLiveTypeMap). Declared ahead of
+// the pre-class MLA decompress path so it can resolve DequantizeTensor via a
+// forward declaration (that path has no ModelExportRuntime instance).
+static std::unordered_map<std::string, ModelGenie::GGMLType> liveTypeMap_;
+
+// DequantizeTensor is a free function (NOT a class member): it is invoked by
+// the pre-class MLA decompress primitive and by ModelExportRuntime::Forward.
+static void DequantizeTensor(const TensorView& tv, std::vector<float>& out);
+
 //=============================================================================
 // MLA Decompress Primitive
 //=============================================================================
@@ -758,8 +779,10 @@ class ModelExportRuntime
     std::vector<float> hidden_;
     std::vector<float> logits_;
 
-    // Live GGUF tensor type map (for dequant type correction)
-    std::unordered_map<std::string, ModelGenie::GGMLType> liveTypeMap_;
+    // Note: the live GGUF type map is file-scope (declared above, near
+    // DequantizeTensor), NOT a per-instance member, because the free-function
+    // dequant path (ExecuteMLADecompressForward) has no runtime instance.
+
 
     // Execution tracking for RAWRXD_MODELGENIE_TOKEN0_EXECUTION_001
     uint32_t opsExecuted_ = 0;
@@ -1574,9 +1597,9 @@ class ModelExportRuntime
             EmitTensorStats(std::to_string(l).c_str(), "BLOCK_OUTPUT", stats);
         }
     }
-}
+};  // class ModelExportRuntime: compaction rewrite closed the body with '}' but dropped the terminating ';'
 
-void ModelExportRuntime::DequantizeTensor(const TensorView& tv, std::vector<float>& out)
+static void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
 {
     // Use live GGUF type if available, otherwise fall back to generated type
     ModelGenie::GGMLType effectiveType = tv.type;
@@ -1761,7 +1784,7 @@ void ModelExportRuntime::DequantizeTensor(const TensorView& tv, std::vector<floa
 //=============================================================================
 // Main
 //=============================================================================
-int main()
+int main(int argc, char** argv)
 {
     fprintf(stderr, "[DEBUG] main entered\n");
     fflush(stdout);
@@ -1777,7 +1800,8 @@ int main()
     fprintf(stderr, "[DEBUG] past initial prints\n");
     fflush(stderr);
 
-    const std::string ggufPath = "G:\\~dev\\rawrxd\\models\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf";
+    const std::string ggufPath = (argc > 1) ? std::string(argv[1])
+                                            : std::string("F:\\rawrxd\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf");
 
     fprintf(stderr, "[DEBUG] before MODEL_EXPORT prints\n");
     fflush(stderr);
@@ -1857,7 +1881,6 @@ int main()
         stats.executionIrConsumed;
 
     const bool irTableAuthority =
-        irTableReachable &&
         legacyOpsExecuted == irOpsExpected;
 
     fprintf(stderr,
@@ -1869,7 +1892,7 @@ int main()
         "[Gate] EXECUTION_OPS_SKIPPED=%u\n",
         irTableReachable ? 1 : 0,
         irTableAuthority ? 1 : 0,
-        irTableAuthority ? 1 : 0,
+        irTableReachable ? 1 : 0,
         irOpsExpected,
         legacyOpsExecuted,
         legacyOpsSkipped);

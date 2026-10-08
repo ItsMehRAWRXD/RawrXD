@@ -7,7 +7,6 @@
 //=============================================================================
 
 #include "ModelGenome.hpp"
-#include "ModelGenome.cpp"
 #include "ModelGenomeReader.cpp"
 #include "ModelExport.generated.hpp"
 #include "ExecutionIR.generated.hpp"
@@ -982,21 +981,16 @@ private:
     }
     
     // All GGUF 2D tensors are [inputWidth, outputWidth], row-major on dim[0].
-    // weight[j * out + i] is element at row j (input), column i (output).
-    // Computes: output[i] = sum_j input[j] * weight[j * out + i]
     static bool LinearFwd(const float* input, const float* weight, float* output,
-                           const TensorView* view, const MG::OperandRef& inputRef,
-                           size_t inputN, size_t outputN, const float* gate = nullptr)
+                          const TensorView* view, const MG::OperandRef& inputRef,
+                          size_t inputN, size_t outputN, const float* gate = nullptr)
     {
         if (!view || view->rank != 2 || !input || !weight || !output) return false;
         const size_t in = view->dims[0], out = view->dims[1];
         if (inputRef.domain == MG::OperandDomain::RuntimeScalar) {
-            // Embedding lookup: input is token ID, weight is [hidden, vocab] row-major
-            // output = column `token` of weight, length = in (hidden)
             const uint32_t token = static_cast<uint32_t>(input[0]);
             if (token >= out || outputN != in) return false;
-            for (size_t j = 0; j < in; ++j)
-                output[j] = weight[j * out + token];
+            std::memcpy(output, weight + size_t(token)*in, in*sizeof(float));
             return true;
         }
         if (inputN != in || outputN != out) return false;
@@ -1010,20 +1004,21 @@ private:
         return DotRows(weight, input, output, in, out);
     }
 
-    // All GGUF 2D tensors are [inputWidth, outputWidth], row-major on dim[0].
-    // weight[j * out + i] is element at row j, column i.
-    // Computes: output[i] = sum_j input[j] * weight[j * out + i]
     static bool DotRows(const float* weight, const float* input, float* output,
                         size_t in, size_t out)
     {
         if (!weight || !input || !output || !in || !out) return false;
         #pragma omp parallel for schedule(static) if(out >= 128)
         for (int64_t i = 0; i < static_cast<int64_t>(out); ++i) {
-            double sum = 0.0;
-            for (size_t j = 0; j < in; ++j) {
-                sum += double(input[j]) * double(weight[j * out + i]);
-            }
-            output[i] = float(sum);
+            const float* row = weight + size_t(i)*in;
+            __m512 acc = _mm512_setzero_ps();
+            size_t j = 0;
+            for (; j+16 <= in; j += 16)
+                acc = _mm512_fmadd_ps(_mm512_loadu_ps(row+j),
+                                      _mm512_loadu_ps(input+j), acc);
+            float sum = _mm512_reduce_add_ps(acc);
+            for (; j < in; ++j) sum += row[j]*input[j];
+            output[i] = sum;
         }
         return true;
     }
@@ -1084,10 +1079,8 @@ private:
         return true;
     }
 
-    // Encode selected expert indices and unnormalized routing probabilities.
-    // With norm_topk_prob=false (DeepSeek-V2-Lite-Chat default), probabilities
-    // are preserved unnormalized: each output prob[i] = softmax(input)[ids[i]].
-    // MoEExecuteFwd applies the score as a linear weight in the weighted sum.
+    // Encode selected expert indices and normalized routing probabilities in
+    // a 12-float activation: [indices 0..5, probabilities 0..5].
     static bool TopKFwd(const float* input, float* output, size_t inputN, size_t outputN)
     {
         constexpr uint32_t total = GEN::ModelConfig::kExpertCount;
@@ -1105,9 +1098,12 @@ private:
         std::array<uint32_t,total> ids{};
         std::iota(ids.begin(), ids.end(), 0u);
         std::stable_sort(ids.begin(), ids.end(), [&](uint32_t a, uint32_t b) { return prob[a] > prob[b]; });
+        double chosen = 0.0;
+        for (uint32_t i=0;i<k;++i) chosen += prob[ids[i]];
+        if (!(chosen > 0.0)) return false;
         for (uint32_t i=0;i<k;++i) {
             output[i] = float(ids[i]);
-            output[k+i] = float(prob[ids[i]] / sum);
+            output[k+i] = float(prob[ids[i]] / chosen);
         }
         return true;
     }
