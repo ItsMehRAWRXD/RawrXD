@@ -1176,8 +1176,8 @@ private:
     // element and is exactly 1.0: the output is V regardless of Q/K scores.
     // This is ONLY a token-zero kernel, not an autoregressive KV-cache kernel.
     // Full causal attention with KV cache:
-    // q: [heads, key] - current query
-    // KV cache contains expanded K/V for all positions up to current
+    // q: [heads, key] - current query (content key + positional key with RoPE at current position)
+    // KV cache contains expanded K/V for all positions up to current (keys already have RoPE at their write position)
     static bool AttentionFwd(const float* q, const float* kv, float* output,
                              size_t qN, size_t kvN, size_t outputN,
                              const MlaKVCache* kvCache = nullptr, size_t layerIdx = 0, size_t position = 0)
@@ -1201,20 +1201,38 @@ private:
         }
         
         // Causal attention with KV cache
-        // q: [heads, key] - current query
-        // KV cache contains expanded K/V for all positions 0..position
+        // q: [heads, key] - current query (positional component NOT yet RoPE'd)
+        // KV cache contains expanded K/V for all positions 0..position (keys already RoPE'd at their positions)
         const size_t seq_len = position + 1; // including current
         const float* all_kv = kvCache->layers[layerIdx].ReadAllKV();
         if (!all_kv) return false;
         
-        // For each head, compute attention over all cached positions
-        // K cache layout: [seq_len, heads, key] - but stored as [seq_len, heads*(key+value)]
-        // Actually K/V are interleaved in the cache: K first (heads*key), then V (heads*value)
-        
-        // We'll compute attention per head
+        // Apply RoPE to query's positional component at current position
+        std::vector<float> q_rope(heads * key);
         for (size_t head = 0; head < heads; ++head) {
-            // Query for this head: q[head * key ... (head+1)*key - 1]
             const float* q_head = q + head * key;
+            float* q_rope_head = q_rope.data() + head * key;
+            // Content key (noRope) unchanged
+            std::memcpy(q_rope_head, q_head, noRope * sizeof(float));
+            // Positional key (rope) - apply RoPE at current position
+            const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase);
+            for (size_t i = 0; i < rope; i += 2) {
+                float theta = powf(base, -static_cast<float>(i) / static_cast<float>(rope));
+                float alpha = static_cast<float>(position) * theta;
+                float ca = cosf(alpha), sa = sinf(alpha);
+                float p0 = q_head[noRope + i];
+                float p1 = q_head[noRope + i + 1];
+                q_rope_head[noRope + i] = p0 * ca - p1 * sa;
+                q_rope_head[noRope + i + 1] = p0 * sa + p1 * ca;
+            }
+        }
+        
+        const float scale = 1.0f / sqrtf(static_cast<float>(key)); // 1/sqrt(192)
+        
+        // For each head, compute attention over all cached positions
+        for (size_t head = 0; head < heads; ++head) {
+            // Query for this head (with RoPE applied): q_rope[head * key ... (head+1)*key - 1]
+            const float* q_head = q_rope.data() + head * key;
             
             // Accumulator for output values - use vector to avoid stack overflow
             std::vector<float> out_acc(value, 0.0f);
@@ -1226,12 +1244,12 @@ private:
                 const float* kv_pos = all_kv + pos * kv_size;
                 const float* k_head = kv_pos + head * key;
                 
-                // Compute dot product q·k
+                // Compute dot product q·k (both have RoPE at their respective positions)
                 float score = 0.0f;
                 for (size_t i = 0; i < key; ++i) {
                     score += q_head[i] * k_head[i];
                 }
-                score *= 0.07216878364870322f; // 1/sqrt(192) scaling
+                score *= scale;
                 
                 if (score > max_score) max_score = score;
             }
@@ -1246,7 +1264,7 @@ private:
                 for (size_t i = 0; i < key; ++i) {
                     score += q_head[i] * k_head[i];
                 }
-                score *= 0.07216878364870322f; // 1/sqrt(192)
+                score *= scale;
                 
                 float exp_score = expf(score - max_score);
                 denom += exp_score;
@@ -1269,6 +1287,7 @@ private:
     // Input x[2048] -> A projection [576] -> RMSnorm latent [512] ->
     // B projection [4096] -> [16*192 key, 16*128 value] = 5120 floats.
     // With KV cache: writes latent and expanded K/V to cache at current position, returns expanded K/V for current position.
+    // Applies RoPE to positional key component at write position.
     static bool MlaDecompressFwd(const float* input, const float* norm,
                                  const float* kvA, const float* kvB, float* output,
                                  const TensorView* normView, const TensorView* aView,
@@ -1299,12 +1318,33 @@ private:
         
         if (!DotRows(kvB, latent.data(), expanded.data(), rank, expanded.size())) return false;
         const size_t kSize = heads*key;
+        
+        // Prepare positional key component with RoPE for this position
+        // The latent positional component (rank to rank+rope-1) is shared across heads
+        std::vector<float> rope_key(rope);
+        if (position == 0) {
+            // Position 0: RoPE is identity
+            std::memcpy(rope_key.data(), latent.data() + rank, rope * sizeof(float));
+        } else {
+            // Apply RoPE to positional component at this absolute position
+            const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase); // 10000
+            for (size_t i = 0; i < rope; i += 2) {
+                float theta = powf(base, -static_cast<float>(i) / static_cast<float>(rope));
+                float alpha = static_cast<float>(position) * theta;
+                float ca = cosf(alpha), sa = sinf(alpha);
+                float p0 = latent[rank + i];
+                float p1 = latent[rank + i + 1];
+                rope_key[i] = p0 * ca - p1 * sa;
+                rope_key[i + 1] = p0 * sa + p1 * ca;
+            }
+        }
+        
         for (size_t head = 0; head < heads; ++head) {
             const size_t src = head*(noRope+value);
             const size_t dst = head*key;
             std::memcpy(output+dst, expanded.data()+src, noRope*sizeof(float));
-            // Rotary component is shared across heads at position zero (RoPE identity).
-            std::memcpy(output+dst+noRope, latent.data()+rank, rope*sizeof(float));
+            // Rotary component with RoPE applied for this position
+            std::memcpy(output+dst+noRope, rope_key.data(), rope*sizeof(float));
             std::memcpy(output+kSize+head*value, expanded.data()+src+noRope, value*sizeof(float));
         }
         
