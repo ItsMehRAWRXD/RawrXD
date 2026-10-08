@@ -1322,7 +1322,7 @@ private:
         if (!DotRows(kvB, latent.data(), expanded.data(), rank, expanded.size())) return false;
         const size_t kSize = heads*key;
         
-        // Prepare positional key component with RoPE for this position
+// Prepare positional key component with RoPE for this position
         // The latent positional component (rank to rank+rope-1) is shared across heads
         std::vector<float> rope_key(rope);
         if (position == 0) {
@@ -1330,16 +1330,17 @@ private:
             std::memcpy(rope_key.data(), latent.data() + rank, rope * sizeof(float));
         } else {
             // Apply RoPE to positional component at this absolute position
+            // Use NEGATIVE alpha for key RoPE to match query convention (both negative)
             const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase); // 10000
             for (size_t i = 0; i < rope; i += 2) {
                 float theta = powf(base, -static_cast<float>(i) / static_cast<float>(rope));
-                float alpha = static_cast<float>(position) * theta;
+                float alpha = -static_cast<float>(position) * theta;
                 float ca = cosf(alpha), sa = sinf(alpha);
                 float p0 = latent[rank + i];
                 float p1 = latent[rank + i + 1];
                 rope_key[i] = p0 * ca - p1 * sa;
                 rope_key[i + 1] = p0 * sa + p1 * ca;
-            }
+}
         }
         
         for (size_t head = 0; head < heads; ++head) {
