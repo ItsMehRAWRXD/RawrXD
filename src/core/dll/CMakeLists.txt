@@ -11,9 +11,15 @@ endif()
 # Include shared library support
 include(${RAWRXD_SOURCE_DIR}/cmake/RawrXDSharedLibrary.cmake)
 
+# Determine library type: use shared when BUILD_SHARED_LIBS=ON, unless explicitly STATIC_ONLY
+set(RAWRXD_CORE_STATIC_ONLY FALSE)
+if(NOT BUILD_SHARED_LIBS)
+    set(RAWRXD_CORE_STATIC_ONLY TRUE)
+endif()
+
 # Create the library with proper exports
 rawrxd_add_shared_library(RawrXDCore
-    STATIC_ONLY
+    STATIC_ONLY ${RAWRXD_CORE_STATIC_ONLY}
     SOURCES
         RawrXDCore.cpp
     HEADERS
@@ -58,8 +64,14 @@ set_target_properties(RawrXDCore PROPERTIES
 
 # MSVC Runtime: MultiThreadedDLL (/MD /MDd) for DLLs
 if(MSVC)
-    # Don't set MSVC_RUNTIME_LIBRARY on target - let CMake infer from compile flags
-    # target_compile_options will add /MDd for Debug and /MD for Release
+    # Explicitly set target properties to override any auto-generated values
+    set_target_properties(RawrXDCore PROPERTIES
+        MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebugDLL"
+        MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreadedDLL"
+        MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreadedDLL"
+        MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreadedDLL"
+    )
+    
     target_compile_options(RawrXDCore PRIVATE
         $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:/MDd>
         $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:/MDd>

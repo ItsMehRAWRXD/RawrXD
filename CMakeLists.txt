@@ -1667,8 +1667,23 @@ endif()
 # CXX standard set above (MSVC 23, others 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Static link MSVC runtime â€” required for RawrEngine and Gold builds
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# MSVC Runtime Library Configuration
+# Default: Static runtime (/MT /MTd) for RawrEngine/Gold builds
+# When BUILD_SHARED_LIBS=ON: Dynamic runtime (/MD /MDd) for DLL compatibility
+# Explicitly set per-config values to avoid CMake 4.4 auto-generation of invalid "MultiThreadedDLLDebug"
+if(BUILD_SHARED_LIBS)
+    # Dynamic runtime for shared libraries
+    set(CMAKE_MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebugDLL" CACHE STRING "MSVC Runtime Debug" FORCE)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreadedDLL" CACHE STRING "MSVC Runtime Release" FORCE)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreadedDLL" CACHE STRING "MSVC Runtime RelWithDebInfo" FORCE)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreadedDLL" CACHE STRING "MSVC Runtime MinSizeRel" FORCE)
+else()
+    # Static runtime for standalone executables
+    set(CMAKE_MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebug" CACHE STRING "MSVC Runtime Debug" FORCE)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreaded" CACHE STRING "MSVC Runtime Release" FORCE)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreaded" CACHE STRING "MSVC Runtime RelWithDebInfo" FORCE)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreaded" CACHE STRING "MSVC Runtime MinSizeRel" FORCE)
+endif()
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
 

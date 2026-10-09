@@ -117,31 +117,26 @@ function(rawrxd_add_shared_library TARGET_NAME)
 
     # Set common properties for Visual Studio compatibility
     if(MSVC)
-        # Use MultiThreadedDLL for all configs - let compile flags handle /MDd vs /MD
-        # Explicitly set per-config to avoid CMake 4.4 auto-generation of invalid "MultiThreadedDLLDebug"
-        set_target_properties(${TARGET_NAME} PROPERTIES
-            MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDLL"
-            MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreadedDLL"
-            MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreadedDLL"
-            MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreadedDLL"
-        )
-        
-        # Also set compile options for /MDd in Debug, /MD in Release
-        target_compile_options(${TARGET_NAME} PRIVATE
-            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:/MDd>
-            $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:/MDd>
-            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Release>>:/MD>
-            $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Release>>:/MD>
-            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:RelWithDebInfo>>:/MD>
-            $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:RelWithDebInfo>>:/MD>
-            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:MinSizeRel>>:/MD>
-            $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:MinSizeRel>>:/MD>
-        )
-        
-        # Enable DLL export decorations
         if(NOT RAWR_SHARED_STATIC_ONLY)
+            # Shared library - use DLL runtime (/MD /MDd)
+            set_target_properties(${TARGET_NAME} PROPERTIES
+                MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebugDLL"
+                MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreadedDLL"
+                MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreadedDLL"
+                MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreadedDLL"
+            )
+            
+            # Enable DLL export decorations
             set_target_properties(${TARGET_NAME} PROPERTIES
                 WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+            )
+        else()
+            # Static library - use static runtime (/MT /MTd)
+            set_target_properties(${TARGET_NAME} PROPERTIES
+                MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebug"
+                MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreaded"
+                MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreaded"
+                MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreaded"
             )
         endif()
         
@@ -218,9 +213,9 @@ function(rawrxd_add_executable TARGET_NAME)
 # VS-specific settings for executables
     if(MSVC)
         if(NOT RAWR_EXE_NO_RUNTIME_DLL)
-            # Use MultiThreaded DLL runtime for executables linking to DLLs (/MD /MDd)
+            # Use MultiThreadedDebugDLL / MultiThreadedDLL for executables linking to DLLs (/MDd /MD)
             set_target_properties(${TARGET_NAME} PROPERTIES
-                MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDLLDebug"
+                MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebugDLL"
                 MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreadedDLL"
                 MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreadedDLL"
                 MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreadedDLL"
