@@ -1,0 +1,218 @@
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] ⚠️  Sovereign Interceptor: Could not locate Win32IDE.exe module
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[GGUF] validation begin
+[GGUF] path=F:\Franken\BackwardsUnlock\1b\unlock-1B-Q4_K_M.gguf
+[GGUF] extension=PASS
+[RawrXD][BACKEND] backend=gpu-only result=ok reason=gpu preflight passed
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 1925 MB placeholder window (zero commit)
+[VMM] SeLockMemoryPrivilege not held; Large Pages disabled (falling back).
+[RawrXD] Stage: parse_header_metadata
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001C332690000 (2000+ TPS ready)
+[GGUF] size=2019377376
+[GGUF] magic=0x46554747
+[GGUF] version=3
+[GGUF] magic=PASS
+[GGUF] version=PASS
+[RawrXD] Stage: parse_tensor_index tensor_count=255
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=255 indexed_storage=1.87 GB
+[RawrXD] Data starts at offset 7837664
+[RawrXD] Stage: build_tensor_lookup_map
+[RawrXD] Canonical tensor alias: output.weight -> token_embd.weight
+[GGUF] header=PASS
+[GGUF] metadata=PASS
+[GGUF] tensors=PASS
+[GGUF] accepted=PASS
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=3072, layers=28, heads=24, kv_heads=8, vocab=128256, ctx=131072, experts=0, experts_used=0
+[RawrXD] Tensor names in model (256 total):
+  [  0] type=12 dims=8192 3072 blk.6.ffn_down.weight
+  [  1] type=0 dims=3072 blk.13.ffn_norm.weight
+  [  2] type=12 dims=3072 1024 blk.0.attn_k.weight
+  [  3] type=12 dims=8192 3072 blk.15.ffn_down.weight
+  [  4] type=0 dims=64 rope_freqs.weight
+  [  5] type=14 dims=3072 1024 blk.25.attn_v.weight
+  [  6] type=12 dims=3072 8192 blk.18.ffn_up.weight
+  [  7] type=0 dims=3072 blk.0.ffn_norm.weight
+  [  8] type=14 dims=8192 3072 blk.0.ffn_down.weight
+  [  9] type=14 dims=3072 1024 blk.1.attn_v.weight
+  [ 10] type=0 dims=3072 blk.19.ffn_norm.weight
+  [ 11] type=12 dims=3072 8192 blk.1.ffn_up.weight
+  [ 12] type=12 dims=8192 3072 blk.22.ffn_down.weight
+  [ 13] type=12 dims=3072 3072 blk.19.attn_output.weight
+  [ 14] type=14 dims=3072 128256 token_embd.weight
+  [ 15] type=14 dims=3072 1024 blk.26.attn_v.weight
+  ... (240 more)
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+
+[B009] Testing prompt length=1 (requested=1)
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[Forward] GQA: dim=3072 heads=24 kv_heads=8 head_dim=128 kv_dim=1024 hidden=8192
+[MEM] Generation start: avail_phys=33551 MB, avail_virt=134210714 MB
+[MEM] KV footprint: k=224 MB, v=224 MB; tile_buf peak=16 MB
+[MEM] output.weight shard est: vocab=128256 * row_bytes(Q2_K)=1008 = 123 MB
+[Forward] prefill: tokens=1 layers=28 total_layer_execs=28 est_ms=3640
+[STEP] Layer 1/28 (pos=0 token=1/1)
+[CPU] token=0 layer=0  181.2 ms  SLOW
+[CPU] token=0 layer=1  268.4 ms  SLOW
+[CPU] token=0 layer=2  220.7 ms  SLOW
+[CPU] token=0 layer=3  290.3 ms  SLOW
+[CPU] token=0 layer=4  339.3 ms  SLOW
+[STEP] Layer 6/28 (pos=0 token=1/1)
+[CPU] token=0 layer=5  149.2 ms  SLOW
+[CPU] token=0 layer=6  157.9 ms  SLOW
+[CPU] token=0 layer=7  188.5 ms  SLOW
+[CPU] token=0 layer=8  157.7 ms  SLOW
+[CPU] token=0 layer=9  158.2 ms  SLOW
+[STEP] Layer 11/28 (pos=0 token=1/1)
+[CPU] token=0 layer=10  189.6 ms  SLOW
+[CPU] token=0 layer=11  161.3 ms  SLOW
+[CPU] token=0 layer=12  158.7 ms  SLOW
+[CPU] token=0 layer=13  185.6 ms  SLOW
+[CPU] token=0 layer=14  147.1 ms  SLOW
+[STEP] Layer 16/28 (pos=0 token=1/1)
+[CPU] token=0 layer=15  157.4 ms  SLOW
+[CPU] token=0 layer=16  187.3 ms  SLOW
+[CPU] token=0 layer=17  162.3 ms  SLOW
+[CPU] token=0 layer=18  155.6 ms  SLOW
+[CPU] token=0 layer=19  188.0 ms  SLOW
+[STEP] Layer 21/28 (pos=0 token=1/1)
+[CPU] token=0 layer=20  189.0 ms  SLOW
+[CPU] token=0 layer=21  145.4 ms  SLOW
+[CPU] token=0 layer=22  157.6 ms  SLOW
+[CPU] token=0 layer=23  187.4 ms  SLOW
+[CPU] token=0 layer=24  189.8 ms  SLOW
+[STEP] Layer 26/28 (pos=0 token=1/1)
+[CPU] token=0 layer=25  189.7 ms  SLOW
+[CPU] token=0 layer=26  189.1 ms  SLOW
+[STEP] Layer 28/28 (pos=0 token=1/1)
+[CPU] token=0 layer=27  178.4 ms  SLOW
+[CPU] token=0 total_layers=5230.8 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=28 execs=28 elapsed_ms=6001.37 ms_per_layer_exec=214.335
+[MEM] Forward end: avail_phys=34854 MB avail_virt=134210712 MB
+[Forward] returning logits, size=128256
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[ForwardBatch] prefill: tokens=1 layers=28
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[ForwardBatch] complete: tokens=1 layers=28 elapsed_ms=5319.27
+  MISMATCH at length=1: max_diff=66.766068 max_rel=1.999568
+
+[B009] Testing prompt length=3 (requested=3)
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[Forward] prefill: tokens=3 layers=28 total_layer_execs=84 est_ms=10920
+[Forward] B009 layer-outer batched prefill: T=3 layers=28
+[STEP] Layer 1/28 (batched T=3)
+[CPU] batched layer=0  528.2 ms  SLOW (T=3)
+[CPU] batched layer=1  523.1 ms  SLOW (T=3)
+[CPU] batched layer=2  472.7 ms  SLOW (T=3)
+[CPU] batched layer=3  479.0 ms  SLOW (T=3)
+[CPU] batched layer=4  529.8 ms  SLOW (T=3)
+[STEP] Layer 6/28 (batched T=3)
+[CPU] batched layer=5  473.5 ms  SLOW (T=3)
+[CPU] batched layer=6  476.6 ms  SLOW (T=3)
+[CPU] batched layer=7  529.2 ms  SLOW (T=3)
+[CPU] batched layer=8  474.4 ms  SLOW (T=3)
+[CPU] batched layer=9  478.5 ms  SLOW (T=3)
+[STEP] Layer 11/28 (batched T=3)
+[CPU] batched layer=10  563.7 ms  SLOW (T=3)
+[CPU] batched layer=11  464.6 ms  SLOW (T=3)
+[CPU] batched layer=12  477.0 ms  SLOW (T=3)
+[CPU] batched layer=13  529.3 ms  SLOW (T=3)
+[CPU] batched layer=14  473.1 ms  SLOW (T=3)
+[STEP] Layer 16/28 (batched T=3)
+[CPU] batched layer=15  475.7 ms  SLOW (T=3)
+[CPU] batched layer=16  528.6 ms  SLOW (T=3)
+[CPU] batched layer=17  472.1 ms  SLOW (T=3)
+[CPU] batched layer=18  477.2 ms  SLOW (T=3)
+[CPU] batched layer=19  533.3 ms  SLOW (T=3)
+[STEP] Layer 21/28 (batched T=3)
+[CPU] batched layer=20  527.1 ms  SLOW (T=3)
+[CPU] batched layer=21  465.7 ms  SLOW (T=3)
+[CPU] batched layer=22  2042.5 ms  SLOW (T=3)
+[CPU] batched layer=23  2202.3 ms  SLOW (T=3)
+[CPU] batched layer=24  527.4 ms  SLOW (T=3)
+[STEP] Layer 26/28 (batched T=3)
+[CPU] batched layer=25  590.3 ms  SLOW (T=3)
+[CPU] batched layer=26  520.1 ms  SLOW (T=3)
+[STEP] Layer 28/28 (batched T=3)
+[CPU] batched layer=27  524.7 ms  SLOW (T=3)
+[Forward] B009 batched prefill complete: T=3 layers=28 elapsed_ms=17360.43 ms_per_layer=620.02
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=3 layers=28 execs=84 elapsed_ms=17964.74 ms_per_layer_exec=213.866
+[MEM] Forward end: avail_phys=35025 MB avail_virt=134210707 MB
+[Forward] returning logits, size=128256
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[ForwardBatch] prefill: tokens=3 layers=28
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[ForwardBatch] complete: tokens=3 layers=28 elapsed_ms=18456.69
+  MISMATCH at length=3: max_diff=73.153076 max_rel=1.999870
+
+[B009] Testing prompt length=10 (requested=10)
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[Forward] prefill: tokens=10 layers=28 total_layer_execs=280 est_ms=36400
+[Forward] B009 layer-outer batched prefill: T=10 layers=28
+[STEP] Layer 1/28 (batched T=10)
+[CPU] batched layer=0  1730.2 ms  SLOW (T=10)
+[CPU] batched layer=1  1739.7 ms  SLOW (T=10)
+[CPU] batched layer=2  1574.2 ms  SLOW (T=10)
+[CPU] batched layer=3  1608.9 ms  SLOW (T=10)
+[CPU] batched layer=4  1746.1 ms  SLOW (T=10)
+[STEP] Layer 6/28 (batched T=10)
+[CPU] batched layer=5  1585.4 ms  SLOW (T=10)
+[CPU] batched layer=6  1589.3 ms  SLOW (T=10)
+[CPU] batched layer=7  1772.7 ms  SLOW (T=10)
+[CPU] batched layer=8  1589.1 ms  SLOW (T=10)
+[CPU] batched layer=9  1583.6 ms  SLOW (T=10)
+[STEP] Layer 11/28 (batched T=10)
+[CPU] batched layer=10  1751.4 ms  SLOW (T=10)
+[CPU] batched layer=11  1578.3 ms  SLOW (T=10)
+[CPU] batched layer=12  1592.5 ms  SLOW (T=10)
+[CPU] batched layer=13  2468.4 ms  SLOW (T=10)
+[CPU] batched layer=14  1577.3 ms  SLOW (T=10)
+[STEP] Layer 16/28 (batched T=10)
+[CPU] batched layer=15  1578.7 ms  SLOW (T=10)
+[CPU] batched layer=16  1784.0 ms  SLOW (T=10)
+[CPU] batched layer=17  1587.2 ms  SLOW (T=10)
+[CPU] batched layer=18  1590.6 ms  SLOW (T=10)
+[CPU] batched layer=19  1753.0 ms  SLOW (T=10)
+[STEP] Layer 21/28 (batched T=10)
+[CPU] batched layer=20  1749.6 ms  SLOW (T=10)
+[CPU] batched layer=21  1581.6 ms  SLOW (T=10)
+[CPU] batched layer=22  1588.0 ms  SLOW (T=10)
+[CPU] batched layer=23  1753.0 ms  SLOW (T=10)
+[CPU] batched layer=24  1756.6 ms  SLOW (T=10)
+[STEP] Layer 26/28 (batched T=10)
+[CPU] batched layer=25  1736.8 ms  SLOW (T=10)
+[CPU] batched layer=26  1749.6 ms  SLOW (T=10)
+[STEP] Layer 28/28 (batched T=10)
+[CPU] batched layer=27  1744.3 ms  SLOW (T=10)
+[Forward] B009 batched prefill complete: T=10 layers=28 elapsed_ms=47440.62 ms_per_layer=1694.31
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256
+[MATMUL] output.weight RETURN streaming ok=1
+[DECODE] output_projection complete
+[Forward] complete: tokens=10 layers=28 execs=280 elapsed_ms=48044.17 ms_per_layer_exec=171.586
+[MEM] Forward end: avail_phys=35898 MB avail_virt=134210708 MB
+[Forward] returning logits, size=128256

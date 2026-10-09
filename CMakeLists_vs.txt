@@ -1,0 +1,227 @@
+# RawrXD.sln.cmake - Main CMakeLists.txt for generating VS Solution
+# This demonstrates full Visual Studio compatibility with:
+# - Multi-config builds (Debug/Release/RelWithDebInfo/MinSizeRel)
+# - DLL and static library support
+# - Multiple executables
+# - MASM64 assembly integration
+# - Proper project dependencies
+# - Debugging support
+# - Property sheets for consistent settings
+
+cmake_minimum_required(VERSION 3.20)
+
+# =============================================================================
+# Project Definition (Must be first for multi-config generators)
+# =============================================================================
+
+project(RawrXD 
+    VERSION 14.7.3 
+    LANGUAGES C CXX ASM_MASM RC
+    DESCRIPTION "RawrXD - Native IDE with Agentic AI and Inference Engine"
+    HOMEPAGE_URL "https://github.com/rawrxd/rawrxd"
+)
+
+# =============================================================================
+# Include VS Configuration (sets up multi-config, toolchain, etc.)
+# =============================================================================
+
+include(${CMAKE_SOURCE_DIR}/cmake/RawrXDVSConfig.cmake)
+
+# =============================================================================
+# Options for Build Configuration
+# =============================================================================
+
+option(BUILD_SHARED_LIBS "Build shared libraries (DLLs) instead of static" ON)
+option(RAWRXD_BUILD_CORE_DLL "Build RawrXDCore as DLL" ON)
+option(RAWRXD_BUILD_WIN32IDE "Build Win32IDE executable" ON)
+option(RAWRXD_BUILD_INFERENCE_ENGINE "Build Inference Engine executable" ON)
+option(RAWRXD_BUILD_CLI "Build rawrxd CLI executable" ON)
+option(RAWRXD_BUILD_SERVE "Build rawrxd-serve HTTP server" ON)
+option(RAWRXD_BUILD_TESTS "Build test executables" ON)
+option(RAWRXD_BUILD_EXAMPLES "Build example applications" ON)
+option(RAWRXD_ENABLE_VULKAN "Enable Vulkan GPU acceleration" ON)
+option(RAWRXD_ENABLE_MASM "Enable MASM64 assembly kernels" ON)
+option(RAWRXD_INSTALL "Enable installation targets" OFF)
+
+# =============================================================================
+# Solution Folders (for VS Solution Explorer organization)
+# =============================================================================
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMakePredefinedTargets")
+
+# Define solution folders
+set(RAWRXD_FOLDER_CORE "1_Core")
+set(RAWRXD_FOLDER_ENGINE "2_Engine")
+set(RAWRXD_FOLDER_RUNTIME "3_Runtime")
+set(RAWRXD_FOLDER_APPS "4_Applications")
+set(RAWRXD_FOLDER_TOOLS "5_Tools")
+set(RAWRXD_FOLDER_TESTS "6_Tests")
+set(RAWRXD_FOLDER_EXAMPLES "7_Examples")
+set(RAWRXD_FOLDER_THIRDPARTY "8_ThirdParty")
+
+# =============================================================================
+# Third-party Dependencies
+# =============================================================================
+
+# nlohmann/json via FetchContent
+include(FetchContent)
+FetchContent_Declare(
+    nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
+# Vulkan (optional)
+if(RAWRXD_ENABLE_VULKAN)
+    find_package(Vulkan QUIET)
+    if(Vulkan_FOUND)
+        message(STATUS "[RawrXD] Vulkan found: ${Vulkan_INCLUDE_DIRS}")
+    else()
+        message(WARNING "[RawrXD] Vulkan not found - GPU acceleration disabled")
+    endif()
+endif()
+
+# WebView2 (for Win32IDE)
+if(RAWRXD_BUILD_WIN32IDE)
+    find_package(Microsoft.Web.WebView2 QUIET)
+    if(NOT Microsoft_Web_WebView2_FOUND)
+        message(WARNING "[RawrXD] WebView2 not found - Win32IDE WebView features disabled")
+    endif()
+endif()
+
+# =============================================================================
+# Core Libraries
+# =============================================================================
+
+# RawrXDCore DLL - Main runtime library
+if(RAWRXD_BUILD_CORE_DLL)
+    add_subdirectory(src/core/dll)
+endif()
+
+# RawrXD Runtime (static library)
+add_subdirectory(src/runtime)
+
+# RawrXD Engine (static library)
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/engine/CMakeLists.txt")
+    add_subdirectory(src/engine)
+endif()
+
+# =============================================================================
+# Applications
+# =============================================================================
+
+# Win32IDE - Main GUI Application
+if(RAWRXD_BUILD_WIN32IDE)
+    add_subdirectory(src/win32app)
+endif()
+
+# Inference Engine - Standalone inference executable
+if(RAWRXD_BUILD_INFERENCE_ENGINE)
+    add_subdirectory(src/inference)
+endif()
+
+# rawrxd CLI - Headless command line interface
+if(RAWRXD_BUILD_CLI)
+    add_subdirectory(src/cli)
+endif()
+
+# rawrxd-serve - Ollama-compatible HTTP server
+if(RAWRXD_BUILD_SERVE)
+    add_subdirectory(src/serve)
+endif()
+
+# =============================================================================
+# Tests
+# =============================================================================
+
+if(RAWRXD_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+# =============================================================================
+# Examples
+# =============================================================================
+
+if(RAWRXD_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+# =============================================================================
+# Installation
+# =============================================================================
+
+if(RAWRXD_INSTALL)
+    include(GNUInstallDirs)
+    
+    # Install headers
+    install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+    
+    # Install CMake config
+    install(FILES ${CMAKE_BINARY_DIR}/RawrXDConfig.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/RawrXD)
+    
+    # Install binaries
+    install(TARGETS RawrXDCore RawrXD-Win32IDE RawrXD-InferenceEngine rawrxd rawrxd-serve
+        EXPORT RawrXDTargets
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+    )
+    
+    install(EXPORT RawrXDTargets
+        FILE RawrXDTargets.cmake
+        NAMESPACE RawrXD::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/RawrXD
+    )
+endif()
+
+# =============================================================================
+# Solution-level Properties
+# =============================================================================
+
+# Set default startup project
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "RawrXD-Win32IDE")
+
+# Solution configurations
+if(CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "[RawrXD] Solution Configurations: ${CMAKE_CONFIGURATION_TYPES}")
+    message(STATUS "[RawrXD] Default Platform: ${CMAKE_VS_PLATFORM_NAME}")
+    message(STATUS "[RawrXD] Toolset: ${CMAKE_VS_PLATFORM_TOOLSET}")
+    message(STATUS "[RawrXD] Windows SDK: ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
+endif()
+
+# =============================================================================
+# Summary
+# =============================================================================
+
+message(STATUS "")
+message(STATUS "========================================")
+message(STATUS "RawrXD v${PROJECT_VERSION} - VS Solution Ready")
+message(STATUS "========================================")
+message(STATUS "Core DLL:          ${RAWRXD_BUILD_CORE_DLL}")
+message(STATUS "Win32IDE:          ${RAWRXD_BUILD_WIN32IDE}")
+message(STATUS "Inference Engine:  ${RAWRXD_BUILD_INFERENCE_ENGINE}")
+message(STATUS "CLI:               ${RAWRXD_BUILD_CLI}")
+message(STATUS "Serve:             ${RAWRXD_BUILD_SERVE}")
+message(STATUS "Tests:             ${RAWRXD_BUILD_TESTS}")
+message(STATUS "Examples:          ${RAWRXD_BUILD_EXAMPLES}")
+message(STATUS "Vulkan:            ${RAWRXD_ENABLE_VULKAN}")
+message(STATUS "MASM64:            ${RAWRXD_ENABLE_MASM}")
+message(STATUS "Shared Libs:       ${BUILD_SHARED_LIBS}")
+message(STATUS "Install:           ${RAWRXD_INSTALL}")
+message(STATUS "========================================")
+message(STATUS "")
+message(STATUS "Build commands:")
+message(STATUS "  cmake --build . --config Debug")
+message(STATUS "  cmake --build . --config Release")
+message(STATUS "  cmake --build . --config RelWithDebInfo")
+message(STATUS "  cmake --build . --config MinSizeRel")
+message(STATUS "")
+message(STATUS "Open in Visual Studio:")
+message(STATUS "  devenv RawrXD.sln")
+message(STATUS "  or")
+message(STATUS "  cmake --open . (VS 2022 17.6+)")

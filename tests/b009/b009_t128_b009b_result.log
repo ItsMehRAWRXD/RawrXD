@@ -1,0 +1,770 @@
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] ⚠️  Sovereign Interceptor: Could not locate Win32IDE.exe module
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[GGUF] validation begin
+[GGUF] path=F:\Franken\BackwardsUnlock\1b\unlock-1B-Q4_K_M.gguf
+[GGUF] extension=PASS
+[RawrXD][BACKEND] backend=gpu-only result=ok reason=gpu preflight passed
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 1925 MB placeholder window (zero commit)
+[VMM] SeLockMemoryPrivilege not held; Large Pages disabled (falling back).
+[RawrXD] Stage: parse_header_metadata
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 000001DDE2A00000 (2000+ TPS ready)
+[GGUF] size=2019377376
+[GGUF] magic=0x46554747
+[GGUF] version=3
+[GGUF] magic=PASS
+[GGUF] version=PASS
+[RawrXD] Stage: parse_tensor_index tensor_count=255
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=255 indexed_storage=1.87 GB
+[RawrXD] Data starts at offset 7837664
+[RawrXD] Stage: build_tensor_lookup_map
+[RawrXD] Canonical tensor alias: output.weight -> token_embd.weight
+[GGUF] header=PASS
+[GGUF] metadata=PASS
+[GGUF] tensors=PASS
+[GGUF] accepted=PASS
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=3072, layers=28, heads=24, kv_heads=8, vocab=128256, ctx=131072, experts=0, experts_used=0
+[RawrXD] Tensor names in model (256 total):
+  [  0] type=12 dims=8192 3072 blk.6.ffn_down.weight
+  [  1] type=0 dims=3072 blk.13.ffn_norm.weight
+  [  2] type=12 dims=3072 1024 blk.0.attn_k.weight
+  [  3] type=12 dims=8192 3072 blk.15.ffn_down.weight
+  [  4] type=0 dims=64 rope_freqs.weight
+  [  5] type=14 dims=3072 1024 blk.25.attn_v.weight
+  [  6] type=12 dims=3072 8192 blk.18.ffn_up.weight
+  [  7] type=0 dims=3072 blk.0.ffn_norm.weight
+  [  8] type=14 dims=8192 3072 blk.0.ffn_down.weight
+  [  9] type=14 dims=3072 1024 blk.1.attn_v.weight
+  [ 10] type=0 dims=3072 blk.19.ffn_norm.weight
+  [ 11] type=12 dims=3072 8192 blk.1.ffn_up.weight
+  [ 12] type=12 dims=8192 3072 blk.22.ffn_down.weight
+  [ 13] type=12 dims=3072 3072 blk.19.attn_output.weight
+  [ 14] type=14 dims=3072 128256 token_embd.weight
+  [ 15] type=14 dims=3072 1024 blk.26.attn_v.weight
+  ... (240 more)
+[B009-T128] Testing prompt length=128 (requested=128)
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[Forward] GQA: dim=3072 heads=24 kv_heads=8 head_dim=128 kv_dim=1024 hidden=8192
+[MEM] Generation start: avail_phys=38664 MB, avail_virt=134211163 MB
+[MEM] KV footprint: k=224 MB, v=224 MB; tile_buf peak=16 MB
+[MEM] output.weight shard est: vocab=128256 * row_bytes(Q2_K)=1008 = 123 MB
+[Forward] prefill: tokens=128 layers=28 total_layer_execs=3584 est_ms=465920
+[Forward] B009 layer-outer batched prefill: T=128 layers=28
+[STEP] Layer 1/28 (batched T=128)
+[CPU] batched layer=0  12237.3 ms  SLOW (T=128)
+[CPU] batched layer=1  12128.2 ms  SLOW (T=128)
+[CPU] batched layer=2  9279.9 ms  SLOW (T=128)
+[CPU] batched layer=3  9540.1 ms  SLOW (T=128)
+[CPU] batched layer=4  11830.2 ms  SLOW (T=128)
+[STEP] Layer 6/28 (batched T=128)
+[CPU] batched layer=5  9307.0 ms  SLOW (T=128)
+[CPU] batched layer=6  9596.5 ms  SLOW (T=128)
+[CPU] batched layer=7  11809.0 ms  SLOW (T=128)
+[CPU] batched layer=8  9225.0 ms  SLOW (T=128)
+[CPU] batched layer=9  9595.7 ms  SLOW (T=128)
+[STEP] Layer 11/28 (batched T=128)
+[CPU] batched layer=10  12137.9 ms  SLOW (T=128)
+[CPU] batched layer=11  9251.0 ms  SLOW (T=128)
+[CPU] batched layer=12  9263.9 ms  SLOW (T=128)
+[CPU] batched layer=13  12188.5 ms  SLOW (T=128)
+[CPU] batched layer=14  9229.1 ms  SLOW (T=128)
+[STEP] Layer 16/28 (batched T=128)
+[CPU] batched layer=15  9271.6 ms  SLOW (T=128)
+[CPU] batched layer=16  12148.3 ms  SLOW (T=128)
+[CPU] batched layer=17  9247.9 ms  SLOW (T=128)
+[CPU] batched layer=18  9238.5 ms  SLOW (T=128)
+[CPU] batched layer=19  12247.3 ms  SLOW (T=128)
+[STEP] Layer 21/28 (batched T=128)
+[CPU] batched layer=20  11793.0 ms  SLOW (T=128)
+[CPU] batched layer=21  9256.4 ms  SLOW (T=128)
+[CPU] batched layer=22  9241.7 ms  SLOW (T=128)
+[CPU] batched layer=23  12408.2 ms  SLOW (T=128)
+[CPU] batched layer=24  12240.6 ms  SLOW (T=128)
+[STEP] Layer 26/28 (batched T=128)
+[CPU] batched layer=25  12141.1 ms  SLOW (T=128)
+[CPU] batched layer=26  12197.4 ms  SLOW (T=128)
+[STEP] Layer 28/28 (batched T=128)
+[CPU] batched layer=27  12148.0 ms  SLOW (T=128)
+[Forward] B009 batched prefill complete: T=128 layers=28 elapsed_ms=300202.48 ms_per_layer=10721.52
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[DECODE] output_projection complete
+[Forward] complete: tokens=128 layers=28 execs=3584 elapsed_ms=300907.45 ms_per_layer_exec=83.959
+[MEM] Forward end: avail_phys=37817 MB avail_virt=134211160 MB
+[Forward] returning logits, size=128256
+
+
+==================================================
+
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+
+==================================================
+
+    [!] RED FLAG: call_count >= batch_size (T > 1)
+
+        Diagnosis: SUPERFICIAL BATCHING detected.
+
+        The loop is OUTSIDE the kernel.
+
+
+
+Analysis complete.
+
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[ForwardBatch] ENTRY: tokens=128 layers=28 dim=3072 heads=24 kv_heads=8 head_dim=128 kv_dim=1024 hidden=8192 cache_ctx=2048
+[FB-METRIC] forwardbatch_entry | CPU=298.98s | WS=1549.0MB | PeakWS=1549.0MB
+[ForwardBatch] prefill: tokens=128 layers=28
+[ForwardBatch] LAYER 1/28 START
+[FB-METRIC] layer_start | CPU=298.98s | WS=1549.0MB | PeakWS=1549.0MB
+[ForwardBatch] LAYER 1: attn_norm loaded
+[ForwardBatch] LAYER 1: attn_norm complete (T=128)
+[ForwardBatch] LAYER 1: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 1: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 1: KV cache update begin
+[ForwardBatch] LAYER 1: KV cache update complete
+[ForwardBatch] LAYER 1: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 1: Attention complete (T=128)
+[ForwardBatch] LAYER 1: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 1: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 1: Residual add begin
+[ForwardBatch] LAYER 1: Residual add complete
+[ForwardBatch] LAYER 1: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 1: FFN norm complete (T=128)
+[ForwardBatch] LAYER 1: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 1: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 1: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 1: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 1: FFN complete
+[ForwardBatch] LAYER 1/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=311.06s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 2/28 START
+[FB-METRIC] layer_start | CPU=311.06s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 2: attn_norm loaded
+[ForwardBatch] LAYER 2: attn_norm complete (T=128)
+[ForwardBatch] LAYER 2: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 2: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 2: KV cache update begin
+[ForwardBatch] LAYER 2: KV cache update complete
+[ForwardBatch] LAYER 2: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 2: Attention complete (T=128)
+[ForwardBatch] LAYER 2: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 2: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 2: Residual add begin
+[ForwardBatch] LAYER 2: Residual add complete
+[ForwardBatch] LAYER 2: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 2: FFN norm complete (T=128)
+[ForwardBatch] LAYER 2: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 2: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 2: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 2: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 2: FFN complete
+[ForwardBatch] LAYER 2/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=323.12s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 3/28 START
+[FB-METRIC] layer_start | CPU=323.12s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 3: attn_norm loaded
+[ForwardBatch] LAYER 3: attn_norm complete (T=128)
+[ForwardBatch] LAYER 3: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 3: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 3: KV cache update begin
+[ForwardBatch] LAYER 3: KV cache update complete
+[ForwardBatch] LAYER 3: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 3: Attention complete (T=128)
+[ForwardBatch] LAYER 3: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 3: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 3: Residual add begin
+[ForwardBatch] LAYER 3: Residual add complete
+[ForwardBatch] LAYER 3: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 3: FFN norm complete (T=128)
+[ForwardBatch] LAYER 3: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 3: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 3: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 3: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 3: FFN complete
+[ForwardBatch] LAYER 3/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=332.34s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 4/28 START
+[FB-METRIC] layer_start | CPU=332.34s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 4: attn_norm loaded
+[ForwardBatch] LAYER 4: attn_norm complete (T=128)
+[ForwardBatch] LAYER 4: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 4: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 4: KV cache update begin
+[ForwardBatch] LAYER 4: KV cache update complete
+[ForwardBatch] LAYER 4: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 4: Attention complete (T=128)
+[ForwardBatch] LAYER 4: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 4: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 4: Residual add begin
+[ForwardBatch] LAYER 4: Residual add complete
+[ForwardBatch] LAYER 4: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 4: FFN norm complete (T=128)
+[ForwardBatch] LAYER 4: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 4: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 4: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 4: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 4: FFN complete
+[ForwardBatch] LAYER 4/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=341.97s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 5/28 START
+[FB-METRIC] layer_start | CPU=341.97s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 5: attn_norm loaded
+[ForwardBatch] LAYER 5: attn_norm complete (T=128)
+[ForwardBatch] LAYER 5: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 5: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 5: KV cache update begin
+[ForwardBatch] LAYER 5: KV cache update complete
+[ForwardBatch] LAYER 5: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 5: Attention complete (T=128)
+[ForwardBatch] LAYER 5: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 5: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 5: Residual add begin
+[ForwardBatch] LAYER 5: Residual add complete
+[ForwardBatch] LAYER 5: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 5: FFN norm complete (T=128)
+[ForwardBatch] LAYER 5: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 5: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 5: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 5: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 5: FFN complete
+[ForwardBatch] LAYER 5/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=353.73s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 6/28 START
+[FB-METRIC] layer_start | CPU=353.73s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 6: attn_norm loaded
+[ForwardBatch] LAYER 6: attn_norm complete (T=128)
+[ForwardBatch] LAYER 6: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 6: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 6: KV cache update begin
+[ForwardBatch] LAYER 6: KV cache update complete
+[ForwardBatch] LAYER 6: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 6: Attention complete (T=128)
+[ForwardBatch] LAYER 6: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 6: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 6: Residual add begin
+[ForwardBatch] LAYER 6: Residual add complete
+[ForwardBatch] LAYER 6: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 6: FFN norm complete (T=128)
+[ForwardBatch] LAYER 6: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 6: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 6: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 6: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 6: FFN complete
+[ForwardBatch] LAYER 6/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=362.95s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 7/28 START
+[FB-METRIC] layer_start | CPU=362.95s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 7: attn_norm loaded
+[ForwardBatch] LAYER 7: attn_norm complete (T=128)
+[ForwardBatch] LAYER 7: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 7: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 7: KV cache update begin
+[ForwardBatch] LAYER 7: KV cache update complete
+[ForwardBatch] LAYER 7: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 7: Attention complete (T=128)
+[ForwardBatch] LAYER 7: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 7: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 7: Residual add begin
+[ForwardBatch] LAYER 7: Residual add complete
+[ForwardBatch] LAYER 7: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 7: FFN norm complete (T=128)
+[ForwardBatch] LAYER 7: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 7: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 7: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 7: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 7: FFN complete
+[ForwardBatch] LAYER 7/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=372.48s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 8/28 START
+[FB-METRIC] layer_start | CPU=372.48s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 8: attn_norm loaded
+[ForwardBatch] LAYER 8: attn_norm complete (T=128)
+[ForwardBatch] LAYER 8: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 8: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 8: KV cache update begin
+[ForwardBatch] LAYER 8: KV cache update complete
+[ForwardBatch] LAYER 8: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 8: Attention complete (T=128)
+[ForwardBatch] LAYER 8: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 8: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 8: Residual add begin
+[ForwardBatch] LAYER 8: Residual add complete
+[ForwardBatch] LAYER 8: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 8: FFN norm complete (T=128)
+[ForwardBatch] LAYER 8: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 8: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 8: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 8: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 8: FFN complete
+[ForwardBatch] LAYER 8/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=384.27s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 9/28 START
+[FB-METRIC] layer_start | CPU=384.27s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 9: attn_norm loaded
+[ForwardBatch] LAYER 9: attn_norm complete (T=128)
+[ForwardBatch] LAYER 9: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 9: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 9: KV cache update begin
+[ForwardBatch] LAYER 9: KV cache update complete
+[ForwardBatch] LAYER 9: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 9: Attention complete (T=128)
+[ForwardBatch] LAYER 9: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 9: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 9: Residual add begin
+[ForwardBatch] LAYER 9: Residual add complete
+[ForwardBatch] LAYER 9: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 9: FFN norm complete (T=128)
+[ForwardBatch] LAYER 9: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 9: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 9: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 9: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 9: FFN complete
+[ForwardBatch] LAYER 9/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=393.42s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 10/28 START
+[FB-METRIC] layer_start | CPU=393.42s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 10: attn_norm loaded
+[ForwardBatch] LAYER 10: attn_norm complete (T=128)
+[ForwardBatch] LAYER 10: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 10: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 10: KV cache update begin
+[ForwardBatch] LAYER 10: KV cache update complete
+[ForwardBatch] LAYER 10: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 10: Attention complete (T=128)
+[ForwardBatch] LAYER 10: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 10: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 10: Residual add begin
+[ForwardBatch] LAYER 10: Residual add complete
+[ForwardBatch] LAYER 10: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 10: FFN norm complete (T=128)
+[ForwardBatch] LAYER 10: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 10: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 10: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 10: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 10: FFN complete
+[ForwardBatch] LAYER 10/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=402.98s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 11/28 START
+[FB-METRIC] layer_start | CPU=402.98s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 11: attn_norm loaded
+[ForwardBatch] LAYER 11: attn_norm complete (T=128)
+[ForwardBatch] LAYER 11: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 11: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 11: KV cache update begin
+[ForwardBatch] LAYER 11: KV cache update complete
+[ForwardBatch] LAYER 11: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 11: Attention complete (T=128)
+[ForwardBatch] LAYER 11: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 11: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 11: Residual add begin
+[ForwardBatch] LAYER 11: Residual add complete
+[ForwardBatch] LAYER 11: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 11: FFN norm complete (T=128)
+[ForwardBatch] LAYER 11: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 11: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 11: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 11: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 11: FFN complete
+[ForwardBatch] LAYER 11/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=415.14s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 12/28 START
+[FB-METRIC] layer_start | CPU=415.14s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 12: attn_norm loaded
+[ForwardBatch] LAYER 12: attn_norm complete (T=128)
+[ForwardBatch] LAYER 12: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 12: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 12: KV cache update begin
+[ForwardBatch] LAYER 12: KV cache update complete
+[ForwardBatch] LAYER 12: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 12: Attention complete (T=128)
+[ForwardBatch] LAYER 12: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 12: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 12: Residual add begin
+[ForwardBatch] LAYER 12: Residual add complete
+[ForwardBatch] LAYER 12: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 12: FFN norm complete (T=128)
+[ForwardBatch] LAYER 12: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 12: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 12: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 12: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 12: FFN complete
+[ForwardBatch] LAYER 12/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=424.34s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 13/28 START
+[FB-METRIC] layer_start | CPU=424.34s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 13: attn_norm loaded
+[ForwardBatch] LAYER 13: attn_norm complete (T=128)
+[ForwardBatch] LAYER 13: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 13: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 13: KV cache update begin
+[ForwardBatch] LAYER 13: KV cache update complete
+[ForwardBatch] LAYER 13: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 13: Attention complete (T=128)
+[ForwardBatch] LAYER 13: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 13: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 13: Residual add begin
+[ForwardBatch] LAYER 13: Residual add complete
+[ForwardBatch] LAYER 13: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 13: FFN norm complete (T=128)
+[ForwardBatch] LAYER 13: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 13: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 13: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 13: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 13: FFN complete
+[ForwardBatch] LAYER 13/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=433.52s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 14/28 START
+[FB-METRIC] layer_start | CPU=433.52s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 14: attn_norm loaded
+[ForwardBatch] LAYER 14: attn_norm complete (T=128)
+[ForwardBatch] LAYER 14: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 14: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 14: KV cache update begin
+[ForwardBatch] LAYER 14: KV cache update complete
+[ForwardBatch] LAYER 14: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 14: Attention complete (T=128)
+[ForwardBatch] LAYER 14: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 14: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 14: Residual add begin
+[ForwardBatch] LAYER 14: Residual add complete
+[ForwardBatch] LAYER 14: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 14: FFN norm complete (T=128)
+[ForwardBatch] LAYER 14: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 14: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 14: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 14: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 14: FFN complete
+[ForwardBatch] LAYER 14/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=445.61s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 15/28 START
+[FB-METRIC] layer_start | CPU=445.61s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 15: attn_norm loaded
+[ForwardBatch] LAYER 15: attn_norm complete (T=128)
+[ForwardBatch] LAYER 15: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 15: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 15: KV cache update begin
+[ForwardBatch] LAYER 15: KV cache update complete
+[ForwardBatch] LAYER 15: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 15: Attention complete (T=128)
+[ForwardBatch] LAYER 15: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 15: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 15: Residual add begin
+[ForwardBatch] LAYER 15: Residual add complete
+[ForwardBatch] LAYER 15: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 15: FFN norm complete (T=128)
+[ForwardBatch] LAYER 15: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 15: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 15: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 15: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 15: FFN complete
+[ForwardBatch] LAYER 15/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=454.77s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 16/28 START
+[FB-METRIC] layer_start | CPU=454.77s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 16: attn_norm loaded
+[ForwardBatch] LAYER 16: attn_norm complete (T=128)
+[ForwardBatch] LAYER 16: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 16: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 16: KV cache update begin
+[ForwardBatch] LAYER 16: KV cache update complete
+[ForwardBatch] LAYER 16: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 16: Attention complete (T=128)
+[ForwardBatch] LAYER 16: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 16: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 16: Residual add begin
+[ForwardBatch] LAYER 16: Residual add complete
+[ForwardBatch] LAYER 16: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 16: FFN norm complete (T=128)
+[ForwardBatch] LAYER 16: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 16: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 16: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 16: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 16: FFN complete
+[ForwardBatch] LAYER 16/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=464.05s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 17/28 START
+[FB-METRIC] layer_start | CPU=464.05s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 17: attn_norm loaded
+[ForwardBatch] LAYER 17: attn_norm complete (T=128)
+[ForwardBatch] LAYER 17: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 17: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 17: KV cache update begin
+[ForwardBatch] LAYER 17: KV cache update complete
+[ForwardBatch] LAYER 17: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 17: Attention complete (T=128)
+[ForwardBatch] LAYER 17: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 17: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 17: Residual add begin
+[ForwardBatch] LAYER 17: Residual add complete
+[ForwardBatch] LAYER 17: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 17: FFN norm complete (T=128)
+[ForwardBatch] LAYER 17: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 17: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 17: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 17: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 17: FFN complete
+[ForwardBatch] LAYER 17/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=476.38s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 18/28 START
+[FB-METRIC] layer_start | CPU=476.38s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 18: attn_norm loaded
+[ForwardBatch] LAYER 18: attn_norm complete (T=128)
+[ForwardBatch] LAYER 18: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 18: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 18: KV cache update begin
+[ForwardBatch] LAYER 18: KV cache update complete
+[ForwardBatch] LAYER 18: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 18: Attention complete (T=128)
+[ForwardBatch] LAYER 18: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 18: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 18: Residual add begin
+[ForwardBatch] LAYER 18: Residual add complete
+[ForwardBatch] LAYER 18: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 18: FFN norm complete (T=128)
+[ForwardBatch] LAYER 18: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 18: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 18: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 18: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 18: FFN complete
+[ForwardBatch] LAYER 18/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=485.56s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 19/28 START
+[FB-METRIC] layer_start | CPU=485.56s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 19: attn_norm loaded
+[ForwardBatch] LAYER 19: attn_norm complete (T=128)
+[ForwardBatch] LAYER 19: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 19: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 19: KV cache update begin
+[ForwardBatch] LAYER 19: KV cache update complete
+[ForwardBatch] LAYER 19: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 19: Attention complete (T=128)
+[ForwardBatch] LAYER 19: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 19: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 19: Residual add begin
+[ForwardBatch] LAYER 19: Residual add complete
+[ForwardBatch] LAYER 19: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 19: FFN norm complete (T=128)
+[ForwardBatch] LAYER 19: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 19: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 19: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 19: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 19: FFN complete
+[ForwardBatch] LAYER 19/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=494.77s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 20/28 START
+[FB-METRIC] layer_start | CPU=494.77s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 20: attn_norm loaded
+[ForwardBatch] LAYER 20: attn_norm complete (T=128)
+[ForwardBatch] LAYER 20: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 20: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 20: KV cache update begin
+[ForwardBatch] LAYER 20: KV cache update complete
+[ForwardBatch] LAYER 20: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 20: Attention complete (T=128)
+[ForwardBatch] LAYER 20: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 20: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 20: Residual add begin
+[ForwardBatch] LAYER 20: Residual add complete
+[ForwardBatch] LAYER 20: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 20: FFN norm complete (T=128)
+[ForwardBatch] LAYER 20: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 20: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 20: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 20: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 20: FFN complete
+[ForwardBatch] LAYER 20/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=506.84s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 21/28 START
+[FB-METRIC] layer_start | CPU=506.84s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 21: attn_norm loaded
+[ForwardBatch] LAYER 21: attn_norm complete (T=128)
+[ForwardBatch] LAYER 21: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 21: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 21: KV cache update begin
+[ForwardBatch] LAYER 21: KV cache update complete
+[ForwardBatch] LAYER 21: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 21: Attention complete (T=128)
+[ForwardBatch] LAYER 21: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 21: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 21: Residual add begin
+[ForwardBatch] LAYER 21: Residual add complete
+[ForwardBatch] LAYER 21: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 21: FFN norm complete (T=128)
+[ForwardBatch] LAYER 21: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 21: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 21: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 21: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 21: FFN complete
+[ForwardBatch] LAYER 21/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=518.61s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 22/28 START
+[FB-METRIC] layer_start | CPU=518.61s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 22: attn_norm loaded
+[ForwardBatch] LAYER 22: attn_norm complete (T=128)
+[ForwardBatch] LAYER 22: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 22: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 22: KV cache update begin
+[ForwardBatch] LAYER 22: KV cache update complete
+[ForwardBatch] LAYER 22: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 22: Attention complete (T=128)
+[ForwardBatch] LAYER 22: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 22: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 22: Residual add begin
+[ForwardBatch] LAYER 22: Residual add complete
+[ForwardBatch] LAYER 22: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 22: FFN norm complete (T=128)
+[ForwardBatch] LAYER 22: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 22: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 22: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 22: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 22: FFN complete
+[ForwardBatch] LAYER 22/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=527.83s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 23/28 START
+[FB-METRIC] layer_start | CPU=527.83s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 23: attn_norm loaded
+[ForwardBatch] LAYER 23: attn_norm complete (T=128)
+[ForwardBatch] LAYER 23: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 23: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 23: KV cache update begin
+[ForwardBatch] LAYER 23: KV cache update complete
+[ForwardBatch] LAYER 23: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 23: Attention complete (T=128)
+[ForwardBatch] LAYER 23: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 23: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 23: Residual add begin
+[ForwardBatch] LAYER 23: Residual add complete
+[ForwardBatch] LAYER 23: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 23: FFN norm complete (T=128)
+[ForwardBatch] LAYER 23: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 23: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 23: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 23: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 23: FFN complete
+[ForwardBatch] LAYER 23/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=537.08s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 24/28 START
+[FB-METRIC] layer_start | CPU=537.08s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 24: attn_norm loaded
+[ForwardBatch] LAYER 24: attn_norm complete (T=128)
+[ForwardBatch] LAYER 24: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 24: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 24: KV cache update begin
+[ForwardBatch] LAYER 24: KV cache update complete
+[ForwardBatch] LAYER 24: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 24: Attention complete (T=128)
+[ForwardBatch] LAYER 24: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 24: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 24: Residual add begin
+[ForwardBatch] LAYER 24: Residual add complete
+[ForwardBatch] LAYER 24: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 24: FFN norm complete (T=128)
+[ForwardBatch] LAYER 24: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 24: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 24: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 24: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 24: FFN complete
+[ForwardBatch] LAYER 24/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=549.16s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 25/28 START
+[FB-METRIC] layer_start | CPU=549.16s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 25: attn_norm loaded
+[ForwardBatch] LAYER 25: attn_norm complete (T=128)
+[ForwardBatch] LAYER 25: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 25: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 25: KV cache update begin
+[ForwardBatch] LAYER 25: KV cache update complete
+[ForwardBatch] LAYER 25: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 25: Attention complete (T=128)
+[ForwardBatch] LAYER 25: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 25: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 25: Residual add begin
+[ForwardBatch] LAYER 25: Residual add complete
+[ForwardBatch] LAYER 25: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 25: FFN norm complete (T=128)
+[ForwardBatch] LAYER 25: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 25: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 25: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 25: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 25: FFN complete
+[ForwardBatch] LAYER 25/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=561.31s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 26/28 START
+[FB-METRIC] layer_start | CPU=561.31s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 26: attn_norm loaded
+[ForwardBatch] LAYER 26: attn_norm complete (T=128)
+[ForwardBatch] LAYER 26: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 26: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 26: KV cache update begin
+[ForwardBatch] LAYER 26: KV cache update complete
+[ForwardBatch] LAYER 26: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 26: Attention complete (T=128)
+[ForwardBatch] LAYER 26: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 26: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 26: Residual add begin
+[ForwardBatch] LAYER 26: Residual add complete
+[ForwardBatch] LAYER 26: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 26: FFN norm complete (T=128)
+[ForwardBatch] LAYER 26: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 26: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 26: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 26: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 26: FFN complete
+[ForwardBatch] LAYER 26/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=573.39s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 27/28 START
+[FB-METRIC] layer_start | CPU=573.39s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 27: attn_norm loaded
+[ForwardBatch] LAYER 27: attn_norm complete (T=128)
+[ForwardBatch] LAYER 27: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 27: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 27: KV cache update begin
+[ForwardBatch] LAYER 27: KV cache update complete
+[ForwardBatch] LAYER 27: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 27: Attention complete (T=128)
+[ForwardBatch] LAYER 27: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 27: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 27: Residual add begin
+[ForwardBatch] LAYER 27: Residual add complete
+[ForwardBatch] LAYER 27: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 27: FFN norm complete (T=128)
+[ForwardBatch] LAYER 27: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 27: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 27: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 27: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 27: FFN complete
+[ForwardBatch] LAYER 27/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=585.47s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 28/28 START
+[FB-METRIC] layer_start | CPU=585.47s | WS=1549.0MB | PeakWS=1557.0MB
+[ForwardBatch] LAYER 28: attn_norm loaded
+[ForwardBatch] LAYER 28: attn_norm complete (T=128)
+[ForwardBatch] LAYER 28: QKV projections begin (B009-B batched)
+[ForwardBatch] LAYER 28: QKV projections complete (B009-B batched)
+[ForwardBatch] LAYER 28: KV cache update begin
+[ForwardBatch] LAYER 28: KV cache update complete
+[ForwardBatch] LAYER 28: Attention begin (T=128, n_heads=24)
+[ForwardBatch] LAYER 28: Attention complete (T=128)
+[ForwardBatch] LAYER 28: Output projection begin (B009-B batched)
+[ForwardBatch] LAYER 28: Output projection complete (B009-B batched)
+[ForwardBatch] LAYER 28: Residual add begin
+[ForwardBatch] LAYER 28: Residual add complete
+[ForwardBatch] LAYER 28: FFN begin (B009-B batched)
+[ForwardBatch] LAYER 28: FFN norm complete (T=128)
+[ForwardBatch] LAYER 28: FFN gate+up complete (B009-B batched)
+[ForwardBatch] LAYER 28: FFN SiLU+mul complete (T=128)
+[ForwardBatch] LAYER 28: FFN down complete (B009-B batched)
+[ForwardBatch] LAYER 28: FFN residual add complete (T=128)
+[ForwardBatch] LAYER 28: FFN complete
+[ForwardBatch] LAYER 28/28 COMPLETE
+[FB-METRIC] layer_complete | CPU=597.52s | WS=1549.1MB | PeakWS=1557.1MB
+[ForwardBatch] complete: tokens=128 layers=28 elapsed_ms=301021.28
+  B008=300907.57ms B009=301025.67ms
+  MATCH at length=128: max_diff=0.000000 max_rel=0.000000
+PASS: B009-T128 layer-outer ForwardBatch correctness validation
+  B008=300907.57ms B009=301025.67ms max_diff=0.000000 max_rel=0.000000

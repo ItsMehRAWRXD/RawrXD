@@ -1,0 +1,34 @@
+# RawrXDCoreConfig.cmake.in - CMake config for downstream consumers
+# This file is configured by CMake and installed with the package
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Find dependencies
+find_dependency(Threads REQUIRED)
+
+# Import targets
+include("${CMAKE_CURRENT_LIST_DIR}/RawrXDCoreTargets.cmake")
+
+# Provide alias for easier use
+if(TARGET RawrXD::RawrXDCore AND NOT TARGET RawrXDCore)
+    add_library(RawrXDCore ALIAS RawrXD::RawrXDCore)
+endif()
+
+# Version check
+set(RawrXDCore_VERSION @PACKAGE_VERSION@)
+set(RawrXDCore_VERSION_MAJOR @PROJECT_VERSION_MAJOR@)
+set(RawrXDCore_VERSION_MINOR @PROJECT_VERSION_MINOR@)
+set(RawrXDCore_VERSION_PATCH @PROJECT_VERSION_PATCH@)
+
+# Provide include directory variable
+set(RawrXDCore_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIR@")
+
+# Provide library variable
+set(RawrXDCore_LIBRARIES RawrXD::RawrXDCore)
+
+# Provide definition for DLL import
+if(WIN32)
+    add_compile_definitions(RawrXDCore_EXPORTS=0)
+endif()
