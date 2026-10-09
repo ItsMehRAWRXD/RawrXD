@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <utility>
 
 #include "RawrXDCore.h"
 #include "ModelGenieRuntime.h"
@@ -313,6 +314,11 @@ int main(int argc, char* argv[])
     }
 
     //=== summary ==============================================================
+    // RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001: the certificate is written to a
+    // file, flushed and closed before the process exits, so a consumer can
+    // re-open it and validate the fields independently. Printing to stdout
+    // alone is not evidence: a truncated or redirected stream must not be able
+    // to make the run look like it passed.
     int passed = 0, failed = 0;
     std::printf("\nRAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001 CERTIFICATE\n\n");
     for (const auto& c : g_checks) {
@@ -321,5 +327,31 @@ int main(int argc, char* argv[])
     }
     std::printf("\nVERDICT = %s\n", failed == 0 ? "PASS" : "FAIL");
     std::fflush(stdout);
+
+    const char* certPath = std::getenv("RAWRXD_CERTIFICATE_PATH");
+    if (certPath && certPath[0]) {
+        FILE* f = std::fopen(certPath, "w");
+        if (f) {
+            std::fprintf(f, "GATE = RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001\n");
+            std::fprintf(f, "MODEL = %s\n", gguf.c_str());
+            std::fprintf(f, "RUNTIME = %s\n", mg_runtime_version());
+            std::fprintf(f, "CHECKS = %zu\n", g_checks.size());
+            for (const auto& c : g_checks) {
+                std::fprintf(f, "%s = %s", c.name.c_str(), c.passed ? "PASS" : "FAIL");
+                if (!c.detail.empty()) std::fprintf(f, " (%s)", c.detail.c_str());
+                std::fprintf(f, "\n");
+            }
+            std::fprintf(f, "PASSED = %d\n", passed);
+            std::fprintf(f, "FAILED = %d\n", failed);
+            std::fprintf(f, "VERDICT = %s\n", failed == 0 ? "PASS" : "FAIL");
+            std::fprintf(f, "END_CERTIFICATE = 1\n");
+            std::fflush(f);
+            std::fclose(f);
+            std::printf("certificate written to %s\n", certPath);
+        } else {
+            std::fprintf(stderr, "WARNING: could not open %s for the certificate\n", certPath);
+            failed++;
+        }
+    }
     return failed == 0 ? 0 : 1;
 }
