@@ -428,7 +428,7 @@ bool GGUFROM::ParseGGUFHeader()
 //=============================================================================
 // FP16 to Float conversion
 //=============================================================================
-static float FP16ToFloat(uint16_t h)
+float FP16ToFloat(uint16_t h)
 {
     const float sign = (h & 0x8000u) ? -1.0f : 1.0f;
     const uint32_t exp = (h >> 10) & 31u, mant = h & 1023u;
@@ -441,7 +441,7 @@ static float FP16ToFloat(uint16_t h)
 //=============================================================================
 // Dequantizer for GGUF tensor types
 //=============================================================================
-static void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
+void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
 {
     ModelGenie::GGMLType effectiveType = tv.type;
     

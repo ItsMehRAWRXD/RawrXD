@@ -88,6 +88,8 @@ private:
 };
 
 float FP16ToFloat(uint16_t h);
+// Defined in ModelGenieExecutor.cpp (extern so external tooling such as
+// tools/dump_weight.cpp can compare this dequantization against ggml).
 void DequantizeTensor(const TensorView& tv, std::vector<float>& out);
 
 class MlaKVCache
@@ -259,6 +261,8 @@ public:
     }
 
     bool IsValid() const { return romFile_.base != nullptr; }
+    // Base of the memory-mapped GGUF, so callers can report absolute offsets.
+    const uint8_t* Base() const { return romFile_.base; }
 
 private:
     GGUFROM romFile_;
