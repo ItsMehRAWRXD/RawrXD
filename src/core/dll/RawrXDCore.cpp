@@ -51,6 +51,7 @@ namespace {
     struct ModelImpl {
         std::string path;
         std::string name;
+        std::string arch;
         size_t size = 0;
         int layers = 0;
         bool loaded = false;
@@ -239,25 +240,70 @@ RawrXDCore_EXPORT RawrXDModel* RawrXDCore_LoadModel(const char* path) {
     
     // Extract metadata from GGUF
     modelImpl->size = modelImpl->loader->mappedBytes();
-    modelImpl->layers = static_cast<int>(modelImpl->loader->getMetaInt("general.block_count", 0));
+    
+    // Get architecture to determine correct metadata key for layer count
+    std::string arch = modelImpl->loader->getMetaString("general.architecture");
+    std::string blockCountKey = "general.block_count";  // default fallback
+    if (arch == "llama" || arch == "mistral" || arch == "falcon" || arch == "mpt" || arch == "gptneox" || arch == "bloom") {
+        blockCountKey = arch + ".block_count";
+    }
+    modelImpl->layers = static_cast<int>(modelImpl->loader->getMetaInt(blockCountKey.c_str(), 0));
+    modelImpl->arch = arch;  // Store architecture
     modelImpl->loaded = true;
     
     // Extract model name from metadata if available
     std::string metaName = modelImpl->loader->getMetaString("general.name");
     if (!metaName.empty()) {
-        modelImpl->name = metaName;
+        // Use the raw metadata name, but strip architecture prefix if duplicated
+        // e.g., "llama_llama-7b" -> "llama-7b", "tinyllama_tinyllama-1.1b" -> "tinyllama-1.1b"
+        bool stripped = false;
+        
+        // Try architecture-specific prefixes
+        if (!arch.empty()) {
+            std::string prefix = arch + "_";
+            if (metaName.rfind(prefix, 0) == 0) {
+                modelImpl->name = metaName.substr(prefix.length());
+                stripped = true;
+            }
+        }
+        
+        // If not stripped, try common architecture variants
+        if (!stripped) {
+            std::vector<std::pair<std::string, std::string>> variants = {
+                {"llama", "llama_"},
+                {"llama", "tinyllama_"},
+                {"mistral", "mistral_"},
+                {"falcon", "falcon_"},
+                {"mpt", "mpt_"},
+                {"gptneox", "gptneox_"},
+                {"bloom", "bloom_"}
+            };
+            
+            for (const auto& [archKey, prefix] : variants) {
+                if (metaName.rfind(prefix, 0) == 0) {
+                    modelImpl->name = metaName.substr(prefix.length());
+                    stripped = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!stripped) {
+            modelImpl->name = metaName;
+        }
     } else {
         // Fallback to filename
         size_t pos = modelImpl->path.find_last_of("/\\");
         modelImpl->name = (pos == std::string::npos) ? modelImpl->path : modelImpl->path.substr(pos + 1);
     }
     
-    logMessage(RAWXD_LOG_INFO, "Loaded model: %s (%zu MB, %d layers, %zu tensors, %zu MB mapped)", 
+    logMessage(RAWXD_LOG_INFO, "Loaded model: %s (%zu MB, %d layers, %zu tensors, %zu MB mapped, arch=%s)", 
                modelImpl->name.c_str(), 
                modelImpl->size / (1024*1024), 
-               modelImpl->loader->getMetaInt("general.block_count", 0),
+               modelImpl->layers,
                modelImpl->loader->tensorCount(),
-               modelImpl->loader->mappedBytes() / (1024*1024));
+               modelImpl->loader->mappedBytes() / (1024*1024),
+               arch.c_str());
     
     // Create handle
     RawrXDModel* handle = reinterpret_cast<RawrXDModel*>(modelImpl.release());
@@ -592,11 +638,29 @@ RawrXDCore_EXPORT void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps) {
     GetSystemInfo(&sysInfo);
     caps->cpuCoreCount = sysInfo.dwNumberOfProcessors;
     
-    // Check for AVX2/AVX512
+// Check for AVX2/AVX512 with proper CPUID + XGETBV
     int cpuInfo[4];
     __cpuid(cpuInfo, 1);
-    caps->hasAVX2 = (cpuInfo[2] & (1 << 5)) != 0;  // AVX2 bit
-    caps->hasAVX512 = (cpuInfo[2] & (1 << 16)) != 0; // AVX-512F bit
+    
+    bool hasOSXSAVE = (cpuInfo[2] & (1 << 27)) != 0;  // OSXSAVE bit
+    bool hasAVX = (cpuInfo[2] & (1 << 28)) != 0;      // AVX bit
+    
+    // Check if OS supports saving AVX state (XGETBV)
+    bool osSupportsAVX = false;
+    if (hasOSXSAVE && hasAVX) {
+        unsigned long long xcr0 = _xgetbv(0);
+        osSupportsAVX = (xcr0 & 0x6) == 0x6;  // XMM and YMM state enabled
+    }
+    
+    // AVX2 is in CPUID leaf 7, EBX bit 5
+    int cpuInfo7[4];
+    __cpuidex(cpuInfo7, 7, 0);
+    bool hasAVX2_CPUID = (cpuInfo7[1] & (1 << 5)) != 0;
+    
+    caps->hasAVX2 = osSupportsAVX && hasAVX2_CPUID;
+    
+    // AVX-512F requires AVX + OSXSAVE + specific CPUID leaf 7
+    caps->hasAVX512 = osSupportsAVX && ((cpuInfo7[1] & (1 << 16)) != 0);  // AVX-512F bit in EBX
     
     // System memory
     MEMORYSTATUSEX memStatus;
