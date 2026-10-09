@@ -92,6 +92,10 @@ def main():
                 q += n
             print("\n%s: %d tokens, elem_type=%d" % (tokens_key, len(toks), et))
             index = {t: i for i, t in enumerate(toks)}
+            for probe in [b" the", b" chat", b" Human", b" world", b"Hello,", b" ", b"the", b"chat"]:
+                print("  %-14r present=%s id=%s" % (probe, probe in index, index.get(probe, "-")))
+            lit = [i for i, t in enumerate(toks) if t.startswith(b" ")]
+            print("  tokens with a LITERAL leading space: %d, first=%s" % (len(lit), toks[lit[0]][:12] if lit else None))
             for probe in [b"\xe2\x96\x81", b"\xe2\x96\x81Human", b"Human",
                           b"Hello", b"world!", b"A", b"chat", b"the", b"!"]:
                 print("  %-14r present=%s id=%s" %
