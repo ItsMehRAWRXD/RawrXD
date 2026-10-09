@@ -62,6 +62,33 @@ static int ParseByteFallbackName(const std::string& tok) {
     return (hi << 4) | lo;
 }
 
+// RAWRXD tokenizer parity: DeepSeek-V2-Lite-Chat ships a SentencePiece vocab
+// with NO metaspace marker. Ids 0..187 hold the byte tokens as literal
+// characters ("!" -> 0, "A" -> 32), and no "<0xNN>" names exist at all. For
+// those vocabs the metaspace normalizer and the "<0xNN>" parser both miss, so
+// every space degrades to three unk tokens.
+static bool VocabHasMetaspace(const std::vector<std::string>& tokens) {
+    static const std::string kMeta("\xE2\x96\x81"); // U+2581
+    for (const auto& t : tokens) {
+        if (t == kMeta) return true;
+    }
+    return false;
+}
+
+// Fill byteFallback_ from single-character tokens, so the encoder can emit
+// real byte tokens for characters the vocabulary has no merge for.
+static void FillByteFallbackFromLiteralTokens(
+    std::vector<std::string>& tokens,
+    std::array<int32_t, 256>& byteFallback) {
+    for (uint32_t id = 0; id < static_cast<uint32_t>(tokens.size()); ++id) {
+        if (id >= 256) break;
+        const std::string& t = tokens[id];
+        if (t.size() != 1) continue;
+        const unsigned char b = static_cast<unsigned char>(t[0]);
+        if (byteFallback[b] < 0) byteFallback[b] = static_cast<int32_t>(id);
+    }
+}
+
 } // namespace
 
 bool GGUFEmbeddedTokenizer::IsValidRange(
@@ -201,6 +228,24 @@ void GGUFEmbeddedTokenizer::RebuildIndexes() {
         if (b >= 0 && b < 256 && byteFallback_[static_cast<size_t>(b)] < 0) {
             byteFallback_[static_cast<size_t>(b)] = static_cast<int32_t>(id);
         }
+    }
+
+    // RAWRXD tokenizer parity: DeepSeek-V2-Lite has no metaspace marker and no
+    // "<0xNN>" names, so the loop above never fills byteFallback_. Fall back to
+    // the literal single-character byte tokens this vocab does ship, and switch
+    // the encoder off the metaspace normalization.
+    // unkId_: prefer an explicit <unk>/<UNK> token. Ids 0..255 are real byte
+    // tokens in metaspace-free vocabs, so they must never be used as unk.
+    for (uint32_t id = 256; id < static_cast<uint32_t>(tokens_.size()); ++id) {
+        const std::string& s = tokens_[id];
+        if (s == "<unk>" || s == "<UNK>" || s == "<UNKNOWN>") { unkId_ = static_cast<int32_t>(id); break; }
+    }
+
+    if (!VocabHasMetaspace(tokens_)) {
+        FillByteFallbackFromLiteralTokens(tokens_, byteFallback_);
+        hasMetaspace_ = false;
+    } else {
+        hasMetaspace_ = true;
     }
 
     // Also treat bos/eos strings as atomic even if type metadata missing
@@ -470,7 +515,9 @@ bool GGUFEmbeddedTokenizer::EncodeOrdinarySpan(
     if (span.empty())
         return true;
 
-    // TOKENIZER-PARITY-002c: same Spm::encode as Deep2::BPETokenizer::Encode
+    // TOKENIZER-PARITY-002c: same Spm::encode as Deep2::BPETokenizer::Encode.
+    // Vocabs without a metaspace marker (DeepSeek-V2-Lite) must be encoded from
+    // the raw text: inserting the marker would split every word.
     std::array<int, 256> fb{};
     for (size_t i = 0; i < fb.size(); ++i) {
         fb[i] = byteFallback_[i];
@@ -484,8 +531,11 @@ bool GGUFEmbeddedTokenizer::EncodeOrdinarySpan(
     }
 
     std::vector<int> ids;
-    if (!RawrXD::Spm::encode(
-            span, vocabInt, fb, /*scores=*/nullptr, /*unkId=*/0, ids)) {
+    const bool ok = hasMetaspace_
+        ? RawrXD::Spm::encode(span, vocabInt, fb, /*scores=*/nullptr, unkId_, ids)
+        : RawrXD::Spm::encodeNoMetaspace(span, vocabInt, fb, /*scores=*/nullptr,
+                                         unkId_, ids);
+    if (!ok) {
         return false;
     }
     output.insert(output.end(), ids.begin(), ids.end());

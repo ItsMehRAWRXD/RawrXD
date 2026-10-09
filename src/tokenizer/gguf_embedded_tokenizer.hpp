@@ -61,8 +61,16 @@ private:
     // Byte fallback: raw byte -> vocab id of "<0xHH>" (or -1)
     std::array<int32_t, 256> byteFallback_{};
 
+    // RAWRXD tokenizer parity: false for SentencePiece vocabs that ship no
+    // metaspace marker (DeepSeek-V2-Lite). Selects non-metaspace normalization.
+    bool hasMetaspace_ = true;
+    void* reserved_ = nullptr;
+
     int32_t bosToken_ = -1;
     int32_t eosToken_ = -1;
+
+    // RAWRXD tokenizer parity: reserved for vocabs with no <unk> in 0..255.
+    int32_t unkId_ = 0;
 
     void RebuildIndexes();
     bool EncodeOrdinarySpan(

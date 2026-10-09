@@ -215,6 +215,20 @@ inline bool encodeNormalized(
     return true;
 }
 
+// Encode WITHOUT prepending the metaspace marker. Used by vocabs that ship no
+// metaspace marker at all (DeepSeek-V2-Lite, tokenizer.ggml.pre=deepseek-llm),
+// where normalizing "Human" to "\xE2\x96\x81Human" would split every word.
+inline bool encodeNoMetaspace(
+    std::string_view text,
+    const std::unordered_map<std::string, int>& vocab,
+    const std::array<int, 256>& byteFallback,
+    const float* scores,
+    int unkId,
+    std::vector<int>& output)
+{
+    return encodeNormalized(text, vocab, byteFallback, scores, unkId, output);
+}
+
 inline bool encode(
     std::string_view text,
     const std::unordered_map<std::string, int>& vocab,

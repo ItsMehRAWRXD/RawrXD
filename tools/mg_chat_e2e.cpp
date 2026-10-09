@@ -22,6 +22,9 @@ int main(int argc, char* argv[])
 {
     const char* model = (argc > 1) ? argv[1]
         : "F:\\rawrxd\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf";
+    // Optional: a raw prompt to tokenize and detokenize, in place of the chat
+    // template path, for tokenizer diagnostics.
+    const char* rawPrompt = (argc > 3) ? argv[3] : nullptr;
     const int maxTokens = (argc > 2) ? atoi(argv[2]) : 24;
 
     RawrXD::CPUInferenceEngine* engine = RawrXD::CPUInferenceEngine::GetSharedInstance();
@@ -29,6 +32,21 @@ int main(int argc, char* argv[])
     if (!engine->LoadModel(model)) {
         std::fprintf(stderr, "LoadModel failed: %s\n", model);
         return 2;
+    }
+    if (rawPrompt) {
+        std::vector<int> ids = engine->Tokenize(rawPrompt);
+        std::printf("RAW TOKENIZER DIAGNOSTIC\n");
+        std::printf("prompt = \"%s\"\n", rawPrompt);
+        std::printf("token count = %zu\n", ids.size());
+        std::string roundtrip;
+        for (size_t i = 0; i < ids.size(); ++i) {
+            std::printf("  [%3zu] id=%-6d\n", i, ids[i]);
+            roundtrip += std::to_string(ids[i]) + " ";
+        }
+        std::printf("ids: %s\n", roundtrip.c_str());
+        std::string detok = engine->Detokenize(ids);
+        std::printf("detokenized = \"%s\"\n", detok.c_str());
+        return ids.empty() ? 3 : 0;
     }
 
     // Same ChatML envelope the DeepSeek-V2-Lite chat template produces.
