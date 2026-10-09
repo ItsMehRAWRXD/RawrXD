@@ -1423,6 +1423,9 @@ private:
         // DIFF: Record query after RoPE
         DIFF_RECORD("Attention_Q_RoPE", opId, layerIdx, position, "q_rope", q_rope.data(), {(int64_t)heads * key});
         
+        // DIFF: Test capture at start of AttentionFwd
+        DIFF_RECORD("AttentionFwd_Entry", opId, layerIdx, position, "entry_test", q_rope.data(), {(int64_t)heads * key});
+        
         // For each head, compute attention over all cached positions
         for (size_t head = 0; head < heads; ++head) {
             // Query for this head (with RoPE applied): q_rope[head * key ... (head+1)*key - 1]
@@ -1514,6 +1517,11 @@ private:
                 // V is the value from expanded KV at this position
                 // kv passed to this function contains [K (3072), V (2048)] for current position
                 const float* v_head = kv + 3072 + head * 128;
+                
+                // DIFF: Capture reconstructed V for this head at this position
+                DIFF_RECORD("MLA_V_RECONSTRUCTED", opId, layerIdx, position, 
+                            "v_reconstructed", v_head, {(int64_t)value});
+                
                 for (size_t i = 0; i < 128; ++i) {
                     out_acc[i] += exp_score * v_head[i];
                 }
@@ -1534,6 +1542,12 @@ private:
             DIFF_RECORD("Attention_Weights", opId, layerIdx, position, "softmax",
                         captured_weights.data(), (std::vector<int64_t>{static_cast<int64_t>(heads), static_cast<int64_t>(seq_len)}));
         }
+        
+        // DIFF: Record pre-wo concatenated head outputs (MLA_PRE_WO)
+        DIFF_RECORD("MLA_PRE_WO", opId, layerIdx, position, "pre_wo", output, {(int64_t)heads * value});
+        
+        // DIFF: Test capture right before Attention_Output
+        DIFF_RECORD("Test_Before_Attention_Output", opId, layerIdx, position, "test_before_output", output, {(int64_t)heads * value});
         
         // DIFF: Record attention output
         DIFF_RECORD("Attention_Output", opId, layerIdx, position, "output", output, {(int64_t)heads * value});
