@@ -1412,6 +1412,7 @@ private:
         }
         
         const float scale = 1.0f / sqrtf(static_cast<float>(key)); // 1/sqrt(192)
+        const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase);
         const bool capture_scores = g_differential_recorder.ShouldRecord(position);
         std::vector<float> captured_scores, captured_weights;
         if (capture_scores) {
@@ -1426,6 +1427,10 @@ private:
         for (size_t head = 0; head < heads; ++head) {
             // Query for this head (with RoPE applied): q_rope[head * key ... (head+1)*key - 1]
             const float* q_head = q_rope.data() + head * key;
+            
+            // Split query into q_nope (128) and q_pe (64)
+            const float* q_nope = q_head;
+            const float* q_pe = q_head + 128;
             
             // Accumulator for output values - use vector to avoid stack overflow
             std::vector<float> out_acc(value, 0.0f);
@@ -1476,13 +1481,29 @@ private:
             
             // Compute softmax and weighted sum
             for (size_t pos = 0; pos < seq_len; ++pos) {
-                const float* kv_pos = all_kv + pos * kv_size;
-                const float* k_head = kv_pos + head * key;
-                const float* v_head = kv_pos + kSize + head * value;
+                const float* kv_latent_pos = kvCache->layers[0].ReadKvLatent(pos);
+                const float* k_rope_raw_pos = kvCache->layers[0].ReadKRopeRaw(pos);
+                if (!kv_latent_pos || !k_rope_raw_pos) return false;
+                
+                const float* k_nope = kv_latent_pos + head * 128;
+                const float* k_rope_raw = all_k_rope_raw + pos * 64;
+                float k_pe[64];
+                for (size_t i = 0; i < 64; i += 2) {
+                    float theta = powf(base, -static_cast<float>(i) / 64.0f);
+                    float alpha = static_cast<float>(pos) * theta;
+                    float ca = cosf(alpha), sa = sinf(alpha);
+                    float p0 = k_rope_raw[i];
+                    float p1 = k_rope_raw[i + 1];
+                    k_pe[i] = p0 * ca - p1 * sa;
+                    k_pe[i + 1] = p0 * sa + p1 * ca;
+                }
                 
                 float score = 0.0f;
-                for (size_t i = 0; i < key; ++i) {
-                    score += q_head[i] * k_head[i];
+                for (size_t i = 0; i < 128; ++i) {
+                    score += q_nope[i] * k_nope[i];
+                }
+                for (size_t i = 0; i < 64; ++i) {
+                    score += q_head[128 + i] * k_pe[i];
                 }
                 score *= scale;
                 
@@ -1490,7 +1511,10 @@ private:
                 if (capture_scores) captured_weights[head * seq_len + pos] = exp_score;
                 denom += exp_score;
                 
-                for (size_t i = 0; i < value; ++i) {
+                // V is the value from expanded KV at this position
+                // kv passed to this function contains [K (3072), V (2048)] for current position
+                const float* v_head = kv + 3072 + head * 128;
+                for (size_t i = 0; i < 128; ++i) {
                     out_acc[i] += exp_score * v_head[i];
                 }
             }
@@ -1793,9 +1817,9 @@ if (executed && op.output.domain == MG::OperandDomain::Activation) {
                             }
                         }
                         DIFF_RECORD("MLA_CacheKV_Prefix", op.opId, static_cast<uint32_t>(layer),
-                                    position_, "kv_latent", all_latent.data(), {(int64_t)cache.Size(), 512});
+                                    position_, "kv_latent", all_latent.data(), (std::vector<int64_t>{static_cast<int64_t>(cache.Size()), 512}));
                         DIFF_RECORD("MLA_CacheKV_Prefix", op.opId, static_cast<uint32_t>(layer),
-                                    position_, "k_rope_raw", all_rope.data(), {(int64_t)cache.Size(), 64});
+                                    position_, "k_rope_raw", all_rope.data(), (std::vector<int64_t>{static_cast<int64_t>(cache.Size()), 64}));
                     }
                 }
             }
