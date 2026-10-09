@@ -17,18 +17,15 @@
 
 // Deep2 includes
 #include <GGUFLoader.hpp>
-#include "Deep2InferenceAdapter.h"
+
+// Tokenizer - use the canonical GGUFEmbeddedTokenizer for exact parity with ModelGenieRuntime
+#include "../../tokenizer/gguf_embedded_tokenizer.hpp"
 
 // ModelGenie IRExecutor - the certified 300-op executor. This header pulls in
 // the authoritative generated IR table, tensor ROM and model config, so there
 // is exactly one definition of the execution graph for both the runtime library
 // and this DLL.
 #include "../../modelgenie/ModelGenieExecutor.hpp"
-
-// The production inference engine (RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001).
-// ModelGenieRuntime.h declares the C API; ModelGenie owns the certified
-// 300-operation IR executor.
-#include <ModelGenieRuntime.h>
 
 namespace {
     using namespace ::Deep2;  // Bring global Deep2 namespace into scope
@@ -631,13 +628,6 @@ int RawrXDCore_RunInference(
 
     // Reset the IRExecutor's KV cache for this new prompt
     impl->model->irExecutor->ResetPosition();
-
-    // Callback bridge to adapt our callback to the IRExecutor's pattern
-    struct CallbackBridge {
-        RawrXDTokenCallback fn;
-        void* userData;
-        TokenizerImpl* tokenizer;
-    } bridge{callback, userData, tokenizer};
 
     // Prefill the prompt tokens into the KV cache
     bool prefillOk = impl->model->irExecutor->Prefill(promptTokens);

@@ -55,6 +55,88 @@ inline bool MgRomTraceEnabled()
     return enabled;
 }
 #define MG_ROM_TRACE(...) do { if (MgRomTraceEnabled()) { std::fprintf(stderr, "[ROM]"); std::fprintf(stderr, __VA_ARGS__); } } while (0)
+
+//=============================================================================
+// YaRN attention scaling - reference equivalent (llama.cpp deepseek2.cpp)
+// RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001
+//
+// Mirrors, exactly, the parameters llama.cpp derives for DeepSeek-V2-Lite
+// (rope.scaling.type == "yarn", freq_scale 0.025, yarn_ext_factor 1.0):
+//
+//   cparams.yarn_attn_factor = get_mscale(40, rope_yarn_log_mul)
+//                              / get_mscale(40, rope_yarn_log_mul)
+//                              * (1 / (1 + 0.1*ln(1/freq_scale)))
+//                              * rope_attn_factor
+//   attn_factor_org = attn_factor * (1 + 0.1*ln(1/freq_scale))
+//   mscale          = attn_factor_org * (1 + 0.1*rope_yarn_log_mul*ln(1/freq_scale))
+//   kq_scale        = mscale^2 / sqrt(n_embd_head_k)
+//
+// The two factors cancel, so attn_factor_org == rope_attn_factor == 1.0 and the
+// RoPE mscale becomes 1.0 (i.e. cos/sin are NOT magnitude-scaled). The only
+// surviving effects are the frequency interpolation+ramp in the angle and the
+// mscale^2 factor folded into the attention score scale.
+//=============================================================================
+namespace MGRope {
+
+constexpr float kFreqBase    = 10000.0f;
+constexpr float kFreqScale   = 0.025f;      // deepseek2.rope.scaling.factor
+constexpr float kNCtxOrig    = 4096.0f;     // ...original_context_length
+constexpr float kYarnLogMul  = 0.707f;      // yarn_log_multiplier / 0.1
+constexpr float kBetaFast    = 32.0f;
+constexpr float kBetaSlow    = 1.0f;
+constexpr float kNEmbdHeadK  = static_cast<float>(GEN::ModelConfig::kKeyLength);   // 192
+constexpr float kNEmbdHeadV  = static_cast<float>(GEN::ModelConfig::kValueLength); // 128
+constexpr float kAttnFactor  = 1.0f;        // rope_attn_factor (GGUF default)
+
+// llama.cpp: n_rot * log(n_ctx_orig / (beta * 2 * pi)) / (2 * log(freq_base))
+inline float CorrDim(float beta)
+{
+    return GEN::ModelConfig::kRopeDimensionCount *
+           logf(kNCtxOrig / (beta * 2.0f * static_cast<float>(3.14159265358979323846))) /
+           (2.0f * logf(kFreqBase));
+}
+
+inline float CorrDimLow() { const float v = floorf(CorrDim(kBetaFast)); return v < 0.0f ? 0.0f : v; }
+inline float CorrDimHigh()
+{
+    const float v = ceilf(CorrDim(kBetaSlow));
+    const float cap = static_cast<float>(GEN::ModelConfig::kRopeDimensionCount) - 1.0f;
+    return v > cap ? cap : v;
+}
+
+// llama.cpp rope_yarn_ramp(): ramp = 1 - clamp((k - low) / max(0.001, high - low))
+inline float RampMix(float k)
+{
+    const float span = CorrDimHigh() - CorrDimLow();
+    const float denominator = span > 0.001f ? span : 0.001f;
+    const float y = (k - CorrDimLow()) / denominator;
+    if (y <= 0.0f) return 1.0f;
+    if (y >= 1.0f) return 0.0f;
+    return 1.0f - y;
+}
+
+// Effective rotation angle for RoPE pair k (k = i0/2 in ggml) at token position p.
+// theta_extrap = p * base^(-2k/n_rot); theta_interp = freq_scale * theta_extrap.
+inline float Alpha(size_t position, size_t k)
+{
+    const float theta_extrap =
+        static_cast<float>(position) * powf(kFreqBase, -2.0f * static_cast<float>(k) /
+                                                          static_cast<float>(GEN::ModelConfig::kRopeDimensionCount));
+    const float theta_interp = kFreqScale * theta_extrap;
+    const float ramp = RampMix(static_cast<float>(k));
+    // rope_yarn(): theta = theta_interp * (1 - ramp) + theta_extrap * ramp
+    return theta_interp * (1.0f - ramp) + theta_extrap * ramp;
+}
+
+// The attention score scale. mscale² replaces the plain 1/sqrt(head_dim).
+inline float AttentionScoreScale()
+{
+    const float attn_factor_org = kAttnFactor * (1.0f + 0.1f * logf(1.0f / kFreqScale));
+    const float mscale = attn_factor_org * (1.0f + 0.1f * kYarnLogMul * logf(1.0f / kFreqScale));
+    return mscale * mscale / sqrtf(kNEmbdHeadK);
+}
+
+} // namespace MGRope
 bool GGUFROM::Open(const std::string& path)
         {
             MG_ROM_TRACE("Opening: %s\n", path.c_str()); std::fflush(stderr);
@@ -957,12 +1039,13 @@ private:
         return true;
     }
 
-    // For position 0 with a single causal token, attention softmax contains one
-    // element and is exactly 1.0: the output is V regardless of Q/K scores.
-    // This is ONLY a token-zero kernel, not an autoregressive KV-cache kernel.
-    // Full causal attention with KV cache:
-    // q: [heads, key] - current query (content key + positional key with RoPE at current position)
-    // KV cache contains expanded K/V for all positions up to current (keys already have RoPE at their write position)
+
+// For position 0 with a single causal token, attention softmax contains one
+// element and is exactly 1.0: the output is V regardless of Q/K scores.
+// This is ONLY a token-zero kernel, not an autoregressive KV-cache kernel.
+// Full causal attention with KV cache:
+// q: [heads, key] - current query (content key + positional key with RoPE at current position)
+// KV cache contains expanded K/V for all positions up to current (keys already have RoPE at their write position)
     static bool AttentionFwd(const float* q, const float* kv, float* output,
                              size_t qN, size_t kvN, size_t outputN,
                              const MlaKVCache* kvCache = nullptr, size_t layerIdx = 0, size_t position = 0,
@@ -1005,12 +1088,10 @@ private:
             float* q_rope_head = q_rope.data() + head * key;
             // Content key (noRope) unchanged
             std::memcpy(q_rope_head, q_head, noRope * sizeof(float));
-            // Positional key (rope) - apply RoPE at current position
-            const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase);
+            // Positional key (rope) - apply YaRN-interpolated RoPE at current position
             for (size_t i = 0; i < rope; i += 2) {
-                float theta = powf(base, -static_cast<float>(i) / static_cast<float>(rope));
-                float alpha = static_cast<float>(position) * theta;
-                float ca = cosf(alpha), sa = sinf(alpha);
+                const float alpha = MGRope::Alpha(position, i / 2);
+                const float ca = cosf(alpha), sa = sinf(alpha);
                 float p0 = q_head[noRope + i];
                 float p1 = q_head[noRope + i + 1];
                 q_rope_head[noRope + i] = p0 * ca - p1 * sa;
@@ -1018,8 +1099,8 @@ private:
             }
         }
         
-        const float scale = 1.0f / sqrtf(static_cast<float>(key)); // 1/sqrt(192)
-        const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase);
+        // llama.cpp deepseek2: kq_scale = mscale^2 / sqrt(n_embd_head_k)
+        const float scale = MGRope::AttentionScoreScale();
         const bool capture_scores = g_differential_recorder.ShouldRecord(position);
         std::vector<float> captured_scores, captured_weights;
         if (capture_scores) {
@@ -1060,13 +1141,12 @@ private:
                 // K_nope for this head: 128 elements from kv_latent
                 const float* k_nope = kv_latent_pos + head * 128;
                 
-                // K_pe: apply RoPE to k_rope_raw at this position
+                // K_pe: apply YaRN-interpolated RoPE to k_rope_raw at this position
                 float k_pe[64];
                 const float* k_rope_raw = all_k_rope_raw + pos * 64;
                 for (size_t i = 0; i < 64; i += 2) {
-                    float theta = powf(base, -static_cast<float>(i) / 64.0f);
-                    float alpha = static_cast<float>(pos) * theta;
-                    float ca = cosf(alpha), sa = sinf(alpha);
+                    const float alpha = MGRope::Alpha(pos, i / 2);
+                    const float ca = cosf(alpha), sa = sinf(alpha);
                     float p0 = k_rope_raw[i];
                     float p1 = k_rope_raw[i + 1];
                     k_pe[i] = p0 * ca - p1 * sa;
@@ -1099,9 +1179,8 @@ private:
                 const float* k_rope_raw = all_k_rope_raw + pos * 64;
                 float k_pe[64];
                 for (size_t i = 0; i < 64; i += 2) {
-                    float theta = powf(base, -static_cast<float>(i) / 64.0f);
-                    float alpha = static_cast<float>(pos) * theta;
-                    float ca = cosf(alpha), sa = sinf(alpha);
+                    const float alpha = MGRope::Alpha(pos, i / 2);
+                    const float ca = cosf(alpha), sa = sinf(alpha);
                     float p0 = k_rope_raw[i];
                     float p1 = k_rope_raw[i + 1];
                     k_pe[i] = p0 * ca - p1 * sa;
