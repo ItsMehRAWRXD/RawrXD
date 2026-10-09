@@ -18,22 +18,35 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 # Create the library with proper exports
-rawrxd_add_shared_library(RawrXDCore
-    STATIC_ONLY ${RAWRXD_CORE_STATIC_ONLY}
-    SOURCES
-        RawrXDCore.cpp
-    HEADERS
-        RawrXDCore.h
-    INCLUDE_DIRS
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${RAWRXD_SOURCE_DIR}/include
-        ${RAWRXD_SOURCE_DIR}/src
-    COMPILE_DEFINITIONS
-        RAWRXD_CORE_DLL_BUILD
-    LINK_LIBRARIES
-        ${RAWRXD_SOURCE_DIR}/src/runtime/rawrxd_runtime  # If needed
-    # Generates RawrXDCore_exports.h automatically
-)
+# Note: STATIC_ONLY is a boolean option - only pass it when TRUE
+if(RAWRXD_CORE_STATIC_ONLY)
+    rawrxd_add_shared_library(RawrXDCore
+        STATIC_ONLY
+        SOURCES
+            RawrXDCore.cpp
+        HEADERS
+            RawrXDCore.h
+        INCLUDE_DIRS
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${RAWRXD_SOURCE_DIR}/include
+            ${RAWRXD_SOURCE_DIR}/src
+        COMPILE_DEFINITIONS
+            RAWRXD_CORE_DLL_BUILD
+    )
+else()
+    rawrxd_add_shared_library(RawrXDCore
+        SOURCES
+            RawrXDCore.cpp
+        HEADERS
+            RawrXDCore.h
+        INCLUDE_DIRS
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${RAWRXD_SOURCE_DIR}/include
+            ${RAWRXD_SOURCE_DIR}/src
+        COMPILE_DEFINITIONS
+            RAWRXD_CORE_DLL_BUILD
+    )
+endif()
 
 # Set DLL-specific properties
 set_target_properties(RawrXDCore PROPERTIES

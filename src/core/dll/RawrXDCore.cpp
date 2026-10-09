@@ -4,6 +4,9 @@
 #include <vector>
 #include <mutex>
 #include <unordered_map>
+#include <cstdarg>
+#include <cstdio>
+#include <windows.h>
 
 // Internal state
 namespace {
@@ -63,21 +66,21 @@ namespace {
 extern "C" {
 
 // Version
-RAWXDCORE_EXPORT const char* RawrXDCore_GetVersion(void) {
+RawrXDCore_EXPORT const char* RawrXDCore_GetVersion(void) {
     return "14.7.3";
 }
 
-RAWXDCORE_EXPORT int RawrXDCore_GetVersionMajor(void) { return 14; }
-RAWXDCORE_EXPORT int RawrXDCore_GetVersionMinor(void) { return 7; }
-RAWXDCORE_EXPORT int RawrXDCore_GetVersionPatch(void) { return 3; }
+RawrXDCore_EXPORT int RawrXDCore_GetVersionMajor(void) { return 14; }
+RawrXDCore_EXPORT int RawrXDCore_GetVersionMinor(void) { return 7; }
+RawrXDCore_EXPORT int RawrXDCore_GetVersionPatch(void) { return 3; }
 
 // Initialization
-RAWXDCORE_EXPORT bool RawrXDCore_Initialize(void) {
+RawrXDCore_EXPORT bool RawrXDCore_Initialize(void) {
     auto& state = getState();
     std::lock_guard<std::mutex> lock(state.mutex);
     
     if (state.initialized) {
-        setLastError(RAWRXD_ERROR_ALREADY_INITIALIZED);
+        setLastError(RAWXD_ERROR_ALREADY_INITIALIZED);
         return false;
     }
     
@@ -86,11 +89,11 @@ RAWXDCORE_EXPORT bool RawrXDCore_Initialize(void) {
     
     state.initialized = true;
     state.lastError = RAWXD_OK;
-    logMessage(RAWRXD_LOG_INFO, "RawrXDCore initialized v%s", RawrXDCore_GetVersion());
+    logMessage(RAWXD_LOG_INFO, "RawrXDCore initialized v%s", RawrXDCore_GetVersion());
     return true;
 }
 
-RAWXDCORE_EXPORT void RawrXDCore_Shutdown(void) {
+RawrXDCore_EXPORT void RawrXDCore_Shutdown(void) {
     auto& state = getState();
     std::lock_guard<std::mutex> lock(state.mutex);
     
@@ -111,29 +114,29 @@ RAWXDCORE_EXPORT void RawrXDCore_Shutdown(void) {
     state.initialized = false;
     state.logCallback = nullptr;
     state.logUserData = nullptr;
-    logMessage(RAWRXD_LOG_INFO, "RawrXDCore shutdown");
+    logMessage(RAWXD_LOG_INFO, "RawrXDCore shutdown");
 }
 
-RAWXDCORE_EXPORT bool RawrXDCore_IsInitialized(void) {
+RawrXDCore_EXPORT bool RawrXDCore_IsInitialized(void) {
     return getState().initialized;
 }
 
 // Logging
-RAWXDCORE_EXPORT void RawrXDCore_SetLogCallback(RawrXDLogCallback callback, void* userData) {
+RawrXDCore_EXPORT void RawrXDCore_SetLogCallback(RawrXDLogCallback callback, void* userData) {
     auto& state = getState();
     std::lock_guard<std::mutex> lock(state.mutex);
     state.logCallback = callback;
     state.logUserData = userData;
 }
 
-RAWXDCORE_EXPORT void RawrXDCore_SetLogLevel(RawrXDLogLevel level) {
+RawrXDCore_EXPORT void RawrXDCore_SetLogLevel(RawrXDLogLevel level) {
     auto& state = getState();
     std::lock_guard<std::mutex> lock(state.mutex);
     state.logLevel = level;
 }
 
 // Configuration
-RAWXDCORE_EXPORT void RawrXDCore_GetDefaultConfig(RawrXDConfig* config) {
+RawrXDCore_EXPORT void RawrXDCore_GetDefaultConfig(RawrXDConfig* config) {
     if (!config) return;
     config->enableVulkan = true;
     config->enableMASM = true;
@@ -144,36 +147,36 @@ RAWXDCORE_EXPORT void RawrXDCore_GetDefaultConfig(RawrXDConfig* config) {
     config->logFilePath = nullptr;
 }
 
-RAWXDCORE_EXPORT bool RawrXDCore_Configure(const RawrXDConfig* config) {
+RawrXDCore_EXPORT bool RawrXDCore_Configure(const RawrXDConfig* config) {
     auto& state = getState();
     std::lock_guard<std::mutex> lock(state.mutex);
     
     if (!state.initialized) {
-        setLastError(RAWRXD_ERROR_NOT_INITIALIZED);
+        setLastError(RAWXD_ERROR_NOT_INITIALIZED);
         return false;
     }
     
     if (!config) {
-        setLastError(RAWRXD_ERROR_INVALID_ARGUMENT);
+        setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return false;
     }
     
     state.config = *config;
-    logMessage(RAWRXD_LOG_INFO, "RawrXDCore configured: Vulkan=%d, MASM=%d, Threads=%d",
+    logMessage(RAWXD_LOG_INFO, "RawrXDCore configured: Vulkan=%d, MASM=%d, Threads=%d",
                config->enableVulkan, config->enableMASM, config->workerThreadCount);
     return true;
 }
 
 // Model Management
-RAWXDCORE_EXPORT RawrXDModel* RawrXDCore_LoadModel(const char* path) {
+RawrXDCore_EXPORT RawrXDModel* RawrXDCore_LoadModel(const char* path) {
     auto& state = getState();
     if (!state.initialized) {
-        setLastError(RAWRXD_ERROR_NOT_INITIALIZED);
+        setLastError(RAWXD_ERROR_NOT_INITIALIZED);
         return nullptr;
     }
     
     if (!path) {
-        setLastError(RAWRXD_ERROR_INVALID_ARGUMENT);
+        setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return nullptr;
     }
     
@@ -195,25 +198,25 @@ RAWXDCORE_EXPORT RawrXDModel* RawrXDCore_LoadModel(const char* path) {
     std::lock_guard<std::mutex> lock(g_modelsMutex);
     g_models[handle] = *reinterpret_cast<ModelImpl*>(handle);
     
-    logMessage(RAWRXD_LOG_INFO, "Loaded model: %s (%zu MB, %d layers)", 
+    logMessage(RAWXD_LOG_INFO, "Loaded model: %s (%zu MB, %d layers)", 
                model.name.c_str(), model.size / (1024*1024), model.layers);
-    setLastError(RAWRXD_OK);
+    setLastError(RAWXD_OK);
     return handle;
 }
 
-RAWXDCORE_EXPORT void RawrXDCore_UnloadModel(RawrXDModel* model) {
+RawrXDCore_EXPORT void RawrXDCore_UnloadModel(RawrXDModel* model) {
     if (!model) return;
     
     std::lock_guard<std::mutex> lock(g_modelsMutex);
     auto it = g_models.find(model);
     if (it != g_models.end()) {
-        logMessage(RAWRXD_LOG_INFO, "Unloaded model: %s", it->second.name.c_str());
+        logMessage(RAWXD_LOG_INFO, "Unloaded model: %s", it->second.name.c_str());
         delete reinterpret_cast<ModelImpl*>(model);
         g_models.erase(it);
     }
 }
 
-RAWXDCORE_EXPORT const char* RawrXDCore_GetModelName(const RawrXDModel* model) {
+RawrXDCore_EXPORT const char* RawrXDCore_GetModelName(const RawrXDModel* model) {
     if (!model) return "";
     std::lock_guard<std::mutex> lock(g_modelsMutex);
     auto it = g_models.find(const_cast<RawrXDModel*>(model));
@@ -223,7 +226,7 @@ RAWXDCORE_EXPORT const char* RawrXDCore_GetModelName(const RawrXDModel* model) {
     return "";
 }
 
-RAWXDCORE_EXPORT size_t RawrXDCore_GetModelSize(const RawrXDModel* model) {
+RawrXDCore_EXPORT size_t RawrXDCore_GetModelSize(const RawrXDModel* model) {
     if (!model) return 0;
     std::lock_guard<std::mutex> lock(g_modelsMutex);
     auto it = g_models.find(const_cast<RawrXDModel*>(model));
@@ -233,7 +236,7 @@ RAWXDCORE_EXPORT size_t RawrXDCore_GetModelSize(const RawrXDModel* model) {
     return 0;
 }
 
-RAWXDCORE_EXPORT int RawrXDCore_GetModelLayerCount(const RawrXDModel* model) {
+RawrXDCore_EXPORT int RawrXDCore_GetModelLayerCount(const RawrXDModel* model) {
     if (!model) return 0;
     std::lock_guard<std::mutex> lock(g_modelsMutex);
     auto it = g_models.find(const_cast<RawrXDModel*>(model));
@@ -244,15 +247,15 @@ RAWXDCORE_EXPORT int RawrXDCore_GetModelLayerCount(const RawrXDModel* model) {
 }
 
 // Inference Context
-RAWXDCORE_EXPORT RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* model) {
+RawrXDCore_EXPORT RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* model) {
     auto& state = getState();
     if (!state.initialized) {
-        setLastError(RAWRXD_ERROR_NOT_INITIALIZED);
+        setLastError(RAWXD_ERROR_NOT_INITIALIZED);
         return nullptr;
     }
     
     if (!model) {
-        setLastError(RAWRXD_ERROR_INVALID_ARGUMENT);
+        setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return nullptr;
     }
     
@@ -260,7 +263,7 @@ RAWXDCORE_EXPORT RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* m
     {
         std::lock_guard<std::mutex> lock(g_modelsMutex);
         if (g_models.find(model) == g_models.end()) {
-            setLastError(RAWRXD_ERROR_INVALID_ARGUMENT);
+            setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
             return nullptr;
         }
     }
@@ -275,24 +278,24 @@ RAWXDCORE_EXPORT RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* m
     std::lock_guard<std::mutex> lock(g_contextsMutex);
     g_contexts[handle] = *ctx;
     
-    logMessage(RAWRXD_LOG_DEBUG, "Created inference context for model: %s", ctx->model->name.c_str());
-    setLastError(RAWRXD_OK);
+    logMessage(RAWXD_LOG_DEBUG, "Created inference context for model: %s", ctx->model->name.c_str());
+    setLastError(RAWXD_OK);
     return handle;
 }
 
-RAWXDCORE_EXPORT void RawrXDCore_DestroyContext(RawrXDInferenceContext* ctx) {
+RawrXDCore_EXPORT void RawrXDCore_DestroyContext(RawrXDInferenceContext* ctx) {
     if (!ctx) return;
     
     std::lock_guard<std::mutex> lock(g_contextsMutex);
     auto it = g_contexts.find(ctx);
     if (it != g_contexts.end()) {
-        logMessage(RAWRXD_LOG_DEBUG, "Destroyed inference context");
+        logMessage(RAWXD_LOG_DEBUG, "Destroyed inference context");
         delete reinterpret_cast<ContextImpl*>(ctx);
         g_contexts.erase(it);
     }
 }
 
-RAWXDCORE_EXPORT void RawrXDCore_GetDefaultInferenceParams(RawrXDInferenceParams* params) {
+RawrXDCore_EXPORT void RawrXDCore_GetDefaultInferenceParams(RawrXDInferenceParams* params) {
     if (!params) return;
     params->maxTokens = 256;
     params->temperature = 0.8f;
@@ -305,7 +308,7 @@ RAWXDCORE_EXPORT void RawrXDCore_GetDefaultInferenceParams(RawrXDInferenceParams
 }
 
 // Inference (dummy implementation - returns token count)
-RAWXDCORE_EXPORT int RawrXDCore_RunInference(
+RawrXDCore_EXPORT int RawrXDCore_RunInference(
     RawrXDInferenceContext* ctx,
     const char* prompt,
     const RawrXDInferenceParams* params,
@@ -314,26 +317,26 @@ RAWXDCORE_EXPORT int RawrXDCore_RunInference(
 ) {
     auto& state = getState();
     if (!state.initialized) {
-        setLastError(RAWRXD_ERROR_NOT_INITIALIZED);
+        setLastError(RAWXD_ERROR_NOT_INITIALIZED);
         return 0;
     }
     
     if (!ctx || !prompt || !callback) {
-        setLastError(RAWRXD_ERROR_INVALID_ARGUMENT);
+        setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return 0;
     }
     
     std::lock_guard<std::mutex> lock(g_contextsMutex);
     auto it = g_contexts.find(ctx);
     if (it == g_contexts.end()) {
-        setLastError(RAWRXD_ERROR_INVALID_ARGUMENT);
+        setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return 0;
     }
     
     ContextImpl& context = it->second;
     if (params) context.params = *params;
     
-    logMessage(RAWRXD_LOG_INFO, "Running inference: \"%s\" (max_tokens=%d, temp=%.2f)",
+    logMessage(RAWXD_LOG_INFO, "Running inference: \"%s\" (max_tokens=%d, temp=%.2f)",
                prompt, context.params.maxTokens, context.params.temperature);
     
     // Dummy token generation for demonstration
@@ -351,12 +354,12 @@ RAWXDCORE_EXPORT int RawrXDCore_RunInference(
         Sleep(10);
     }
     
-    setLastError(RAWRXD_OK);
+    setLastError(RAWXD_OK);
     return tokenCount;
 }
 
 // Memory Management
-RAWXDCORE_EXPORT void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats) {
+RawrXDCore_EXPORT void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats) {
     if (!stats) return;
     // Dummy stats
     stats->totalAllocated = 512 * 1024 * 1024;
@@ -366,12 +369,12 @@ RAWXDCORE_EXPORT void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats) {
     stats->peakUsage = 768 * 1024 * 1024;
 }
 
-RAWXDCORE_EXPORT void RawrXDCore_TrimMemory(void) {
-    logMessage(RAWRXD_LOG_INFO, "Memory trim requested");
+RawrXDCore_EXPORT void RawrXDCore_TrimMemory(void) {
+    logMessage(RAWXD_LOG_INFO, "Memory trim requested");
 }
 
 // Error handling
-RAWXDCORE_EXPORT const char* RawrXDCore_GetErrorString(RawrXDError error) {
+RawrXDCore_EXPORT const char* RawrXDCore_GetErrorString(RawrXDError error) {
     switch (error) {
         case RAWXD_OK: return "Success";
         case RAWXD_ERROR_INVALID_ARGUMENT: return "Invalid argument";
@@ -387,12 +390,12 @@ RAWXDCORE_EXPORT const char* RawrXDCore_GetErrorString(RawrXDError error) {
     }
 }
 
-RAWXDCORE_EXPORT RawrXDError RawrXDCore_GetLastError(void) {
+RawrXDCore_EXPORT RawrXDError RawrXDCore_GetLastError(void) {
     return getState().lastError;
 }
 
 // Hardware Capabilities
-RAWXDCORE_EXPORT void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps) {
+RawrXDCore_EXPORT void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps) {
     if (!caps) return;
     
     // CPU detection

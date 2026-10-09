@@ -8,7 +8,7 @@
 // Detect platform and compiler for proper export decorations
 #if defined(_WIN32) || defined(__CYGWIN__)
   // Windows (MSVC, MinGW, Clang-CL)
-  #ifdef @EXPORT_MACRO_NAME@_EXPORTS
+  #ifdef @EXPORT_DEFINES@
     // Building the DLL - export symbols
     #define @EXPORT_MACRO_NAME@ __declspec(dllexport)
   #else
@@ -25,7 +25,7 @@
 
 // Helper for deprecated API
 #if defined(_WIN32) || defined(__CYGWIN__)
-  #ifdef @EXPORT_MACRO_NAME@_EXPORTS
+  #ifdef @EXPORT_DEFINES@
     #define @EXPORT_MACRO_NAME@_DEPRECATED __declspec(deprecated) __declspec(dllexport)
   #else
     #define @EXPORT_MACRO_NAME@_DEPRECATED __declspec(deprecated) __declspec(dllimport)

@@ -21,7 +21,7 @@ int main() {
     // Test initialization
     std::cout << "\n--- Initialization ---" << std::endl;
     RawrXDCore_SetLogCallback(logCallback, nullptr);
-    RawrXDCore_SetLogLevel(RAWRXD_LOG_DEBUG);
+    RawrXDCore_SetLogLevel(RAWXD_LOG_DEBUG);
     
     if (!RawrXDCore_Initialize()) {
         std::cerr << "Failed to initialize: " << RawrXDCore_GetErrorString(RawrXDCore_GetLastError()) << std::endl;
@@ -115,7 +115,7 @@ int main() {
         using namespace rawrxd;
         
         Core::SetLogCallback(logCallback);
-        Core::SetLogLevel(RAWRXD_LOG_INFO);
+        Core::SetLogLevel(RAWXD_LOG_INFO);
         
         if (Core::Initialize()) {
             std::cout << "C++ API Initialized: " << Core::GetVersion() << std::endl;

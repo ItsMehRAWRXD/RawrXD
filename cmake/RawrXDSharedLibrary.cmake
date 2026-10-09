@@ -20,6 +20,7 @@ set(RAWRXD_SHARED_LIB_TEMPLATE_DIR "${CMAKE_SOURCE_DIR}/cmake")
 function(rawrxd_generate_export_header TARGET_NAME OUTPUT_HEADER)
     set(EXPORT_MACRO_NAME "${TARGET_NAME}_EXPORT")
     set(EXPORT_MACRO_NAME_UPPER "${EXPORT_MACRO_NAME}")
+    set(EXPORT_DEFINES "${TARGET_NAME}_EXPORTS")
 
     message(STATUS "[RawrXDSharedLib] Generating export header for ${TARGET_NAME} using template dir: ${RAWRXD_SHARED_LIB_TEMPLATE_DIR}")
     
@@ -81,7 +82,7 @@ function(rawrxd_add_shared_library TARGET_NAME)
     if(NOT RAWR_SHARED_STATIC_ONLY AND NOT RAWR_SHARED_NO_EXPORT_HEADER AND WIN32)
         set(EXPORT_HEADER "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_exports.h")
         rawrxd_generate_export_header(${TARGET_NAME} ${EXPORT_HEADER})
-        target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+        target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
         target_compile_definitions(${TARGET_NAME} PRIVATE ${TARGET_NAME}_EXPORTS)
     endif()
 

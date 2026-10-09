@@ -4,19 +4,20 @@
 #include "RawrXDCore_exports.h"
 
 #ifdef __cplusplus
+#include <functional>
 extern "C" {
 #endif
 
 // Version information
-RAWXDCORE_EXPORT const char* RawrXDCore_GetVersion(void);
-RAWXDCORE_EXPORT int RawrXDCore_GetVersionMajor(void);
-RAWXDCORE_EXPORT int RawrXDCore_GetVersionMinor(void);
-RAWXDCORE_EXPORT int RawrXDCore_GetVersionPatch(void);
+RawrXDCore_EXPORT const char* RawrXDCore_GetVersion(void);
+RawrXDCore_EXPORT int RawrXDCore_GetVersionMajor(void);
+RawrXDCore_EXPORT int RawrXDCore_GetVersionMinor(void);
+RawrXDCore_EXPORT int RawrXDCore_GetVersionPatch(void);
 
 // Initialization/Shutdown
-RAWXDCORE_EXPORT bool RawrXDCore_Initialize(void);
-RAWXDCORE_EXPORT void RawrXDCore_Shutdown(void);
-RAWXDCORE_EXPORT bool RawrXDCore_IsInitialized(void);
+RawrXDCore_EXPORT bool RawrXDCore_Initialize(void);
+RawrXDCore_EXPORT void RawrXDCore_Shutdown(void);
+RawrXDCore_EXPORT bool RawrXDCore_IsInitialized(void);
 
 // Logging
 typedef enum RawrXDLogLevel {
@@ -30,8 +31,8 @@ typedef enum RawrXDLogLevel {
 
 typedef void (*RawrXDLogCallback)(RawrXDLogLevel level, const char* message, void* userData);
 
-RAWXDCORE_EXPORT void RawrXDCore_SetLogCallback(RawrXDLogCallback callback, void* userData);
-RAWXDCORE_EXPORT void RawrXDCore_SetLogLevel(RawrXDLogLevel level);
+RawrXDCore_EXPORT void RawrXDCore_SetLogCallback(RawrXDLogCallback callback, void* userData);
+RawrXDCore_EXPORT void RawrXDCore_SetLogLevel(RawrXDLogLevel level);
 
 // Configuration
 typedef struct RawrXDConfig {
@@ -44,23 +45,23 @@ typedef struct RawrXDConfig {
     const char* logFilePath;
 } RawrXDConfig;
 
-RAWXDCORE_EXPORT void RawrXDCore_GetDefaultConfig(RawrXDConfig* config);
-RAWXDCORE_EXPORT bool RawrXDCore_Configure(const RawrXDConfig* config);
+RawrXDCore_EXPORT void RawrXDCore_GetDefaultConfig(RawrXDConfig* config);
+RawrXDCore_EXPORT bool RawrXDCore_Configure(const RawrXDConfig* config);
 
 // Model Management
 typedef struct RawrXDModel RawrXDModel;
 
-RAWXDCORE_EXPORT RawrXDModel* RawrXDCore_LoadModel(const char* path);
-RAWXDCORE_EXPORT void RawrXDCore_UnloadModel(RawrXDModel* model);
-RAWXDCORE_EXPORT const char* RawrXDCore_GetModelName(const RawrXDModel* model);
-RAWXDCORE_EXPORT size_t RawrXDCore_GetModelSize(const RawrXDModel* model);
-RAWXDCORE_EXPORT int RawrXDCore_GetModelLayerCount(const RawrXDModel* model);
+RawrXDCore_EXPORT RawrXDModel* RawrXDCore_LoadModel(const char* path);
+RawrXDCore_EXPORT void RawrXDCore_UnloadModel(RawrXDModel* model);
+RawrXDCore_EXPORT const char* RawrXDCore_GetModelName(const RawrXDModel* model);
+RawrXDCore_EXPORT size_t RawrXDCore_GetModelSize(const RawrXDModel* model);
+RawrXDCore_EXPORT int RawrXDCore_GetModelLayerCount(const RawrXDModel* model);
 
 // Inference
 typedef struct RawrXDInferenceContext RawrXDInferenceContext;
 
-RAWXDCORE_EXPORT RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* model);
-RAWXDCORE_EXPORT void RawrXDCore_DestroyContext(RawrXDInferenceContext* ctx);
+RawrXDCore_EXPORT RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* model);
+RawrXDCore_EXPORT void RawrXDCore_DestroyContext(RawrXDInferenceContext* ctx);
 
 typedef struct RawrXDInferenceParams {
     int maxTokens;
@@ -73,12 +74,12 @@ typedef struct RawrXDInferenceParams {
     int gpuDeviceId;
 } RawrXDInferenceParams;
 
-RAWXDCORE_EXPORT void RawrXDCore_GetDefaultInferenceParams(RawrXDInferenceParams* params);
+RawrXDCore_EXPORT void RawrXDCore_GetDefaultInferenceParams(RawrXDInferenceParams* params);
 
 // Streaming callback for token-by-token generation
 typedef bool (*RawrXDTokenCallback)(int tokenId, const char* tokenText, void* userData);
 
-RAWXDCORE_EXPORT int RawrXDCore_RunInference(
+RawrXDCore_EXPORT int RawrXDCore_RunInference(
     RawrXDInferenceContext* ctx,
     const char* prompt,
     const RawrXDInferenceParams* params,
@@ -95,8 +96,8 @@ typedef struct RawrXDMemoryStats {
     size_t peakUsage;
 } RawrXDMemoryStats;
 
-RAWXDCORE_EXPORT void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats);
-RAWXDCORE_EXPORT void RawrXDCore_TrimMemory(void);
+RawrXDCore_EXPORT void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats);
+RawrXDCore_EXPORT void RawrXDCore_TrimMemory(void);
 
 // Error handling
 typedef enum RawrXDError {
@@ -112,8 +113,8 @@ typedef enum RawrXDError {
     RAWXD_ERROR_INTERNAL = -100
 } RawrXDError;
 
-RAWXDCORE_EXPORT const char* RawrXDCore_GetErrorString(RawrXDError error);
-RAWXDCORE_EXPORT RawrXDError RawrXDCore_GetLastError(void);
+RawrXDCore_EXPORT const char* RawrXDCore_GetErrorString(RawrXDError error);
+RawrXDCore_EXPORT RawrXDError RawrXDCore_GetLastError(void);
 
 // Hardware Capabilities
 typedef struct RawrXDHardwareCaps {
@@ -128,7 +129,7 @@ typedef struct RawrXDHardwareCaps {
     char gpuNames[4][128];
 } RawrXDHardwareCaps;
 
-RAWXDCORE_EXPORT void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps);
+RawrXDCore_EXPORT void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps);
 
 #ifdef __cplusplus
 }
@@ -139,7 +140,7 @@ RAWXDCORE_EXPORT void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps);
 
 namespace rawrxd {
 
-class RAWXDCORE_EXPORT Core {
+class RawrXDCore_EXPORT Core {
 public:
     static bool Initialize(const RawrXDConfig* config = nullptr);
     static void Shutdown();
