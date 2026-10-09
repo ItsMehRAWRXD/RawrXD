@@ -30,8 +30,11 @@ if(RAWRXD_CORE_STATIC_ONLY)
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${RAWRXD_SOURCE_DIR}/include
             ${RAWRXD_SOURCE_DIR}/src
+            ${RAWRXD_SOURCE_DIR}/deep2
         COMPILE_DEFINITIONS
             RAWRXD_CORE_DLL_BUILD
+        LINK_LIBRARIES
+            psapi
     )
 else()
     rawrxd_add_shared_library(RawrXDCore
@@ -43,8 +46,11 @@ else()
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${RAWRXD_SOURCE_DIR}/include
             ${RAWRXD_SOURCE_DIR}/src
+            ${RAWRXD_SOURCE_DIR}/deep2
         COMPILE_DEFINITIONS
             RAWRXD_CORE_DLL_BUILD
+        LINK_LIBRARIES
+            psapi
     )
 endif()
 

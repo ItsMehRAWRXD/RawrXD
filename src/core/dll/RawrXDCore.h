@@ -57,6 +57,15 @@ RawrXDCore_EXPORT const char* RawrXDCore_GetModelName(const RawrXDModel* model);
 RawrXDCore_EXPORT size_t RawrXDCore_GetModelSize(const RawrXDModel* model);
 RawrXDCore_EXPORT int RawrXDCore_GetModelLayerCount(const RawrXDModel* model);
 
+// NEW: Extended model metadata
+RawrXDCore_EXPORT size_t RawrXDCore_GetModelTensorCount(const RawrXDModel* model);
+RawrXDCore_EXPORT uint64_t RawrXDCore_GetModelMappedBytes(const RawrXDModel* model);
+RawrXDCore_EXPORT int64_t RawrXDCore_GetModelMetaInt(const RawrXDModel* model, const char* key, int64_t def);
+RawrXDCore_EXPORT double RawrXDCore_GetModelMetaFloat(const RawrXDModel* model, const char* key, double def);
+RawrXDCore_EXPORT const char* RawrXDCore_GetModelMetaString(const RawrXDModel* model, const char* key);
+RawrXDCore_EXPORT size_t RawrXDCore_ListModelTensors(const RawrXDModel* model, char*** outNames);
+RawrXDCore_EXPORT void RawrXDCore_FreeTensorList(char** names, size_t count);
+
 // Inference
 typedef struct RawrXDInferenceContext RawrXDInferenceContext;
 

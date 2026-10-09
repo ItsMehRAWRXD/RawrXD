@@ -61,7 +61,7 @@ int main() {
     
     // Test model loading
     std::cout << "\n--- Model Loading ---" << std::endl;
-    RawrXDModel* model = RawrXDCore_LoadModel("models/qwen2.5-7b-instruct-q4_k_m.gguf");
+    RawrXDModel* model = RawrXDCore_LoadModel("F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf");
     if (!model) {
         std::cerr << "Failed to load model: " << RawrXDCore_GetErrorString(RawrXDCore_GetLastError()) << std::endl;
     } else {
