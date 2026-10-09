@@ -8,8 +8,8 @@
 
 #include "RawrXD_IR_Trace.hpp" // RAWRXD_PARITY_TRACE_INJECTED
 #include "ModelGenome.hpp"
-#include "ModelGenome.cpp"
-#include "ModelGenomeReader.cpp"
+#include "ModelGenomeReader.hpp"
+#include "ModelGenieCompat.hpp"
 #include "ModelExport.generated.hpp"
 #include "ExecutionIR.generated.hpp"
 #include "CapabilityManifest.generated.hpp"
@@ -798,51 +798,51 @@ class MlaKVCache
 {
 public:
     struct LayerCache {
-        // Latent representation: [max_seq_len, rank + rope] = [max_seq_len, 576]
-        // Stored as contiguous: position * (rank + rope) + latent_idx
-        std::vector<float> latent;  // size = max_seq_len * (rank + rope)
-        // Expanded K/V cache: [max_seq_len, heads * (key + value)] = [max_seq_len, 5120]
-        std::vector<float> kv;      // size = max_seq_len * heads * (key + value)
+        // Latent KV cache: [max_seq_len, 512] - compressed KV latent
+        std::vector<float> kv_latent;     // size = max_seq_len * 512
+        // RoPE key component: [max_seq_len, 64] - raw positional key (no RoPE applied)
+        std::vector<float> k_rope_raw;    // size = max_seq_len * 64
         size_t max_seq_len = 0;
-        size_t rank_plus_rope = 0;  // 576
-        size_t kv_size = 0;         // 5120
         size_t current_len = 0;
         
-        void Init(size_t max_seq_len_, size_t rank_plus_rope_, size_t kv_size_) {
+        void Init(size_t max_seq_len_) {
             max_seq_len = max_seq_len_;
-            rank_plus_rope = rank_plus_rope_;
-            kv_size = kv_size_;
-            latent.assign(max_seq_len * rank_plus_rope, 0.0f);
-            kv.assign(max_seq_len * kv_size, 0.0f);
+            kv_latent.assign(max_seq_len_ * 512, 0.0f);
+            k_rope_raw.assign(max_seq_len_ * 64, 0.0f);
             current_len = 0;
         }
         
-        // Write latent and expanded K/V at current position, advance position
-        bool Write(const float* latent_in, const float* kv_in) {
+        // Write kv_latent (512) and k_rope_raw (64) at current position, advance position
+        bool WriteLatentKv(const float* kv_latent_in, const float* k_rope_raw_in) {
             if (current_len >= max_seq_len) return false;
-            float* latent_dst = latent.data() + current_len * rank_plus_rope;
-            float* kv_dst = kv.data() + current_len * kv_size;
-            std::memcpy(latent_dst, latent_in, rank_plus_rope * sizeof(float));
-            std::memcpy(kv_dst, kv_in, kv_size * sizeof(float));
+            float* latent_dst = kv_latent.data() + current_len * 512;
+            float* rope_dst = k_rope_raw.data() + current_len * 64;
+            std::memcpy(latent_dst, kv_latent_in, 512 * sizeof(float));
+            std::memcpy(rope_dst, k_rope_raw_in, 64 * sizeof(float));
             current_len++;
             return true;
         }
         
-        // Read latent at specific position
-        const float* ReadLatent(size_t pos) const {
+        // Read kv_latent at specific position
+        const float* ReadKvLatent(size_t pos) const {
             if (pos >= current_len) return nullptr;
-            return latent.data() + pos * rank_plus_rope;
+            return kv_latent.data() + pos * 512;
         }
         
-        // Read K/V at specific position
-        const float* ReadKV(size_t pos) const {
+        // Read k_rope_raw at specific position
+        const float* ReadKRopeRaw(size_t pos) const {
             if (pos >= current_len) return nullptr;
-            return kv.data() + pos * kv_size;
+            return k_rope_raw.data() + pos * 64;
         }
         
-        // Read all K/V up to current_len (for attention)
-        const float* ReadAllKV() const {
-            return kv.data();
+        // Read all kv_latent up to current_len (for attention)
+        const float* ReadAllKvLatent() const {
+            return kv_latent.data();
+        }
+        
+        // Read all k_rope_raw up to current_len
+        const float* ReadAllKRopeRaw() const {
+            return k_rope_raw.data();
         }
         
         size_t Size() const { return current_len; }
@@ -854,10 +854,8 @@ public:
     
     void Init(size_t max_seq_len_) {
         max_seq_len = max_seq_len_;
-        const size_t rank_plus_rope = GEN::ModelConfig::kKvLoraRank + GEN::ModelConfig::kRopeDimensionCount; // 512 + 64 = 576
-        const size_t kv_size = GEN::ModelConfig::kHeadCount * (GEN::ModelConfig::kKeyLength + GEN::ModelConfig::kValueLength); // 16 * (192 + 128) = 5120
         for (auto& layer : layers) {
-            layer.Init(max_seq_len, rank_plus_rope, kv_size);
+            layer.Init(max_seq_len_);
         }
     }
     
@@ -1254,7 +1252,28 @@ if (op.blockIndex == UINT32_MAX) {
                 const float* input=getInput(op,0), *weight=getWeight(op,0);
                 float* output=getOutput(op);
                 const TensorView* v=wr.domain==MG::OperandDomain::RomTensor ? romResolver.Resolve(wr.id):nullptr;
-                return LinearFwd(input,weight,output,v,xr,arena.Size(xr.id),arena.Size(op.output.id));
+                
+                // Diagnostic: LM-head write boundary
+                const size_t outputCount = arena.Size(op.output.id);
+                std::fprintf(stderr, "[LMHEAD_WRITE] op=%u output_id=%u ptr=%p elements=%zu\n",
+                             op.opId, op.output.id, static_cast<const void*>(output), outputCount);
+                fflush(stderr);
+                
+                bool result = LinearFwd(input,weight,output,v,xr,arena.Size(xr.id),arena.Size(op.output.id));
+                
+                // Verify output after write
+                if (result && output && outputCount == 102400) {
+                    bool finite = true;
+                    uint32_t argmaxIdx = 0;
+                    float argmaxVal = output[0];
+                    for (size_t i = 0; i < 102400; ++i) {
+                        if (!std::isfinite(output[i])) { finite = false; break; }
+                        if (output[i] > argmaxVal) { argmaxVal = output[i]; argmaxIdx = static_cast<uint32_t>(i); }
+                    }
+                    std::fprintf(stderr, "[LMHEAD_WRITE] finite=%d argmax=%u max_val=%.6f\n", finite ? 1 : 0, argmaxIdx, argmaxVal);
+                    fflush(stderr);
+                }
+                return result;
             }
             default:
                 std::fprintf(stderr, "[IR] Unsupported primitive: %u\n", static_cast<uint32_t>(op.requiredPrimitive));
@@ -1368,8 +1387,9 @@ private:
             std::fprintf(stderr, "[KV] Invalid layer or prefix at position %zu, layer %zu\n", position, layerIdx);
             return false;
         }
-        const float* all_kv = kvCache->layers[layerIdx].ReadAllKV();
-        if (!all_kv) return false;
+        const float* all_kv_latent = kvCache->layers[layerIdx].ReadAllKvLatent();
+        const float* all_k_rope_raw = kvCache->layers[layerIdx].ReadAllKRopeRaw();
+        if (!all_kv_latent || !all_k_rope_raw) return false;
         
         // Apply RoPE to query's positional component at current position
         std::vector<float> q_rope(heads * key);
@@ -1414,13 +1434,39 @@ private:
             // Find max score for numerical stability
             float max_score = -INFINITY;
             for (size_t pos = 0; pos < seq_len; ++pos) {
-                const float* kv_pos = all_kv + pos * kv_size;
-                const float* k_head = kv_pos + head * key;
+                const float* kv_latent_pos = kvCache->layers[0].ReadKvLatent(pos);
+                const float* k_rope_raw_pos = kvCache->layers[0].ReadKRopeRaw(pos);
+                if (!kv_latent_pos || !k_rope_raw_pos) return false;
+                
+                // Reconstruct K for this position and head:
+                // K = [kv_latent (512) per pos] + [k_rope (64) with RoPE at pos]
+                // Per head: K_nope (128) from kv_latent + K_pe (64) from k_rope_raw with RoPE at pos
+                
+                // K_nope for this head: 128 elements from kv_latent
+                const float* k_nope = kv_latent_pos + head * 128;
+                
+                // K_pe: apply RoPE to k_rope_raw at this position
+                float k_pe[64];
+                const float* k_rope_raw = all_k_rope_raw + pos * 64;
+                for (size_t i = 0; i < 64; i += 2) {
+                    float theta = powf(base, -static_cast<float>(i) / 64.0f);
+                    float alpha = static_cast<float>(pos) * theta;
+                    float ca = cosf(alpha), sa = sinf(alpha);
+                    float p0 = k_rope_raw[i];
+                    float p1 = k_rope_raw[i + 1];
+                    k_pe[i] = p0 * ca - p1 * sa;
+                    k_pe[i + 1] = p0 * sa + p1 * ca;
+                }
                 
                 // Compute dot product q·k (both have RoPE at their respective positions)
                 float score = 0.0f;
-                for (size_t i = 0; i < key; ++i) {
-                    score += q_head[i] * k_head[i];
+                // q_nope (128) dot k_nope (128)
+                for (size_t i = 0; i < 128; ++i) {
+                    score += q_nope[i] * k_nope[i];
+                }
+                // q_pe (64) dot k_pe (64) - both have RoPE at their positions
+                for (size_t i = 0; i < 64; ++i) {
+                    score += q_head[128 + i] * k_pe[i];
                 }
                 score *= scale;
                 if (capture_scores) captured_scores[head * seq_len + pos] = score;
@@ -1471,10 +1517,11 @@ private:
         return true;
     }
 
-    // Input x[2048] -> A projection [576] -> RMSnorm latent [512] ->
-    // B projection [4096] -> [16*192 key, 16*128 value] = 5120 floats.
-    // With KV cache: writes latent and expanded K/V to cache at current position, returns expanded K/V for current position.
-    // Applies RoPE to positional key component at write position.
+// Input x[2048] -> A projection [576] -> RMSNorm latent [512] ->
+    // RoPE key component [64] -> B projection [4096] -> [16*128 key_nope, 16*128 value] = 4096 floats.
+    // With KV cache: writes latent [512] and k_rope_raw [64] to cache at current position.
+    // Returns expanded K/V for current position: [16*128 key_nope, 16*64 key_pe, 16*128 value] = 5120 floats.
+    // Applies RoPE to key positional component at write position.
     static bool MlaDecompressFwd(const float* input, const float* norm,
                                  const float* kvA, const float* kvB, float* output,
                                  const TensorView* normView, const TensorView* aView,
@@ -1482,68 +1529,87 @@ private:
                                  MlaKVCache* kvCache = nullptr, size_t layerIdx = 0, size_t position = 0)
     {
         const size_t hidden = GEN::ModelConfig::kEmbeddingLength;
-        const size_t rank = GEN::ModelConfig::kKvLoraRank;
-        const size_t rope = GEN::ModelConfig::kRopeDimensionCount;
-        const size_t heads = GEN::ModelConfig::kHeadCount;
-        const size_t key = GEN::ModelConfig::kKeyLength;
-        const size_t value = GEN::ModelConfig::kValueLength;
-        const size_t noRope = key-rope;
+        const size_t rank = GEN::ModelConfig::kKvLoraRank;          // 512
+        const size_t rope = GEN::ModelConfig::kRopeDimensionCount;  // 64
+        const size_t heads = GEN::ModelConfig::kHeadCount;          // 16
+        const size_t key = GEN::ModelConfig::kKeyLength;            // 192
+        const size_t value = GEN::ModelConfig::kValueLength;        // 128
+        const size_t noRope = key - rope;                           // 128
         if (!input || !norm || !kvA || !kvB || !output ||
             !normView || !aView || !bView ||
-            rank+rope != 576 || noRope != value ||
+            rank + rope != 576 || noRope != value ||
             normView->rank != 1 || normView->dims[0] != rank ||
-            aView->rank != 2 || aView->dims[0] != hidden || aView->dims[1] != rank+rope ||
-            bView->rank != 2 || bView->dims[0] != rank ||
-            bView->dims[1] != heads*(noRope+value) ||
-            inputN != hidden || outputN != heads*(key+value)) return false;
-        std::vector<float> latent(rank+rope), expanded(heads*(noRope+value));
-        if (!DotRows(kvA, input, latent.data(), hidden, rank+rope)) return false;
+            aView->rank != 2 || aView->dims[0] != hidden || aView->dims[1] != rank + rope ||
+            bView->rank != 2 || bView->dims[0] != rank || bView->dims[1] != heads * (noRope + value) ||
+            inputN != hidden || outputN != heads * (key + value)) return false;
+        
+        // Latent decomposition: [512 kv_latent | 64 k_rope_raw]
+        std::vector<float> latent(rank + rope);
+        if (!DotRows(kvA, input, latent.data(), hidden, rank + rope)) return false;
+        
+        // RMSNorm on kv_latent only (first 512 elements)
         double ss = 0;
-        for (size_t j = 0; j < rank; ++j) ss += double(latent[j])*latent[j];
-        const float factor = 1.0f / std::sqrt(float(ss/rank) + float(GEN::ModelConfig::kRmsEps));
-        for (size_t j = 0; j < rank; ++j) latent[j] *= factor*norm[j];
+        for (size_t j = 0; j < rank; ++j) ss += double(latent[j]) * latent[j];
+        const float factor = 1.0f / std::sqrt(float(ss / rank) + float(GEN::ModelConfig::kRmsEps));
+        for (size_t j = 0; j < rank; ++j) latent[j] *= factor * norm[j];
         
-        if (!DotRows(kvB, latent.data(), expanded.data(), rank, expanded.size())) return false;
-        const size_t kSize = heads*key;
+        // Separate kv_latent (512) and k_rope_raw (64)
+        const float* kv_latent = latent.data();          // [512]
+        const float* k_rope_raw = latent.data() + rank;  // [64]
         
-// Prepare positional key component with RoPE for this position
-        // The latent positional component (rank to rank+rope-1) is shared across heads
-        std::vector<float> rope_key(rope);
+        // B projection: [512] -> [4096] = 16 * (128 key_nope + 128 value)
+        std::vector<float> expanded(heads * (noRope + value));
+        if (!DotRows(kvB, kv_latent, expanded.data(), rank, expanded.size())) return false;
+        const size_t kSize = heads * key;  // 3072
+        
+        // Prepare positional key component with RoPE for this position
+        // Apply RoPE to k_rope_raw at write position
+        std::vector<float> k_rope(rope);
         if (position == 0) {
             // Position 0: RoPE is identity
-            std::memcpy(rope_key.data(), latent.data() + rank, rope * sizeof(float));
+            std::memcpy(k_rope.data(), k_rope_raw, rope * sizeof(float));
         } else {
-            // Apply RoPE to positional component at this absolute position
-            // Use POSITIVE alpha for cached key RoPE, matching query rotation.
-            const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase); // 10000
+            const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase);
             for (size_t i = 0; i < rope; i += 2) {
                 float theta = powf(base, -static_cast<float>(i) / static_cast<float>(rope));
                 float alpha = static_cast<float>(position) * theta;
                 float ca = cosf(alpha), sa = sinf(alpha);
-                float p0 = latent[rank + i];
-                float p1 = latent[rank + i + 1];
-                rope_key[i] = p0 * ca - p1 * sa;
-                rope_key[i + 1] = p0 * sa + p1 * ca;
-}
+                float p0 = k_rope_raw[i];
+                float p1 = k_rope_raw[i + 1];
+                k_rope[i] = p0 * ca - p1 * sa;
+                k_rope[i + 1] = p0 * sa + p1 * ca;
+            }
         }
         
+        // DIFF: Capture MLA components
+        if (g_differential_recorder.ShouldRecord(position)) {
+            DIFF_RECORD("MLA_kv_latent", 0, layerIdx, position, "kv_latent", kv_latent, {(int64_t)rank});
+            DIFF_RECORD("MLA_k_rope_raw", 0, layerIdx, position, "k_rope_raw", k_rope_raw, {(int64_t)rope});
+            DIFF_RECORD("MLA_k_rope", 0, layerIdx, position, "k_rope", k_rope.data(), {(int64_t)rope});
+            DIFF_RECORD("MLA_expanded", 0, layerIdx, position, "expanded_KV", expanded.data(), {(int64_t)heads * (noRope + value)});
+        }
+        
+        // Build output: [16*192 K (128 nope + 64 pe), 16*128 V]
         for (size_t head = 0; head < heads; ++head) {
-            const size_t src = head*(noRope+value);
-            const size_t dst = head*key;
-            std::memcpy(output+dst, expanded.data()+src, noRope*sizeof(float));
-            // Rotary component with RoPE applied for this position
-            std::memcpy(output+dst+noRope, rope_key.data(), rope*sizeof(float));
-            std::memcpy(output+kSize+head*value, expanded.data()+src+noRope, value*sizeof(float));
+            const size_t src = head * (noRope + value);  // 256 per head
+            const size_t dst = head * key;               // 192 per head
+            // K_nope from expanded
+            std::memcpy(output + dst, expanded.data() + src, noRope * sizeof(float));
+            // K_pe from k_rope (shared across heads)
+            std::memcpy(output + dst + noRope, k_rope.data(), rope * sizeof(float));
+            // V from expanded
+            std::memcpy(output + kSize + head * value, expanded.data() + src + noRope, value * sizeof(float));
         }
         
-        // Write latent and expanded K/V to KV cache if provided
+        // Write kv_latent (512) and k_rope_raw (64) to KV cache if provided
         if (kvCache) {
             if (layerIdx >= kvCache->layers.size() ||
                 kvCache->layers[layerIdx].Size() != position) {
                 std::fprintf(stderr, "[KV] Duplicate/gap write at position %zu layer %zu\n", position, layerIdx);
                 return false;
             }
-            if (!kvCache->layers[layerIdx].Write(latent.data(), output)) return false;
+            // Store kv_latent (512) and k_rope_raw (64) in cache
+            if (!kvCache->layers[layerIdx].WriteLatentKv(kv_latent, k_rope_raw)) return false;
         }
         
         return true;
@@ -1713,11 +1779,24 @@ if (executed && op.output.domain == MG::OperandDomain::Activation) {
                 const size_t layer = op.blockIndex == UINT32_MAX ? 0 : op.blockIndex;
                 if (layer < kvCache_.layers.size()) {
                     const auto& cache = kvCache_.layers[layer];
-                    const size_t count = cache.Size() * cache.kv_size;
-                    if (count && count <= 200000u)
+                    const size_t count = cache.Size() * 512;  // kv_latent size
+                    if (count && count <= 200000u) {
+                        // Read all kv_latent and k_rope_raw for captured positions
+                        std::vector<float> all_latent(count);
+                        std::vector<float> all_rope(cache.Size() * 64);
+                        for (size_t pos = 0; pos < cache.Size(); ++pos) {
+                            const float* src_latent = cache.ReadKvLatent(pos);
+                            const float* src_rope = cache.ReadKRopeRaw(pos);
+                            if (src_latent && src_rope) {
+                                std::memcpy(all_latent.data() + pos * 512, src_latent, 512 * sizeof(float));
+                                std::memcpy(all_rope.data() + pos * 64, src_rope, 64 * sizeof(float));
+                            }
+                        }
                         DIFF_RECORD("MLA_CacheKV_Prefix", op.opId, static_cast<uint32_t>(layer),
-                                    position_, "kv_prefix", cache.ReadAllKV(),
-                                    (std::vector<int64_t>{static_cast<int64_t>(cache.Size()), static_cast<int64_t>(cache.kv_size)}));
+                                    position_, "kv_latent", all_latent.data(), {(int64_t)cache.Size(), 512});
+                        DIFF_RECORD("MLA_CacheKV_Prefix", op.opId, static_cast<uint32_t>(layer),
+                                    position_, "k_rope_raw", all_rope.data(), {(int64_t)cache.Size(), 64});
+                    }
                 }
             }
 
@@ -1779,12 +1858,67 @@ if (executed && op.output.domain == MG::OperandDomain::Activation) {
         visited_ = opsVisited;
         dispatched_ = opsDispatched;
         skipped_ = opsSkipped;
-        // Capture logits from final LM Head output (activation 299 based on IR table)
-        const float* logitsPtr = arena_.Get(299);
-        if (logitsPtr) {
-            // Vocab size is 102400
-            logits_.assign(logitsPtr, logitsPtr + 102400);
+        // Resolve LM-head output activation from IR table (op 299)
+        constexpr uint32_t kLmHeadOpId = 299;
+        constexpr size_t kExpectedVocab = 102400;
+        
+        const auto& lmHeadOp = GEN::kExecutionIRTable[kLmHeadOpId];
+        const uint32_t logitsActivationId = lmHeadOp.output.id;
+        
+        // Diagnostic: trace both candidate activation IDs
+        const float* logitsPtr299 = arena_.Get(299);
+        const size_t count299 = arena_.Size(299);
+        const float* logitsPtr14000 = arena_.Get(14000);
+        const size_t count14000 = arena_.Size(14000);
+        
+        std::fprintf(stderr, "[LMHEAD_READ] requested=299 ptr=%p elements=%zu\n",
+                     static_cast<const void*>(logitsPtr299), count299);
+        std::fprintf(stderr, "[LMHEAD_READ] requested=14000 ptr=%p elements=%zu\n",
+                     static_cast<const void*>(logitsPtr14000), count14000);
+        std::fprintf(stderr, "[LMHEAD_AUTHORITY] op=%u output_id=%u ptr=%p elements=%zu\n",
+                     kLmHeadOpId, logitsActivationId, 
+                     static_cast<const void*>(arena_.Get(logitsActivationId)), 
+                     arena_.Size(logitsActivationId));
+        fflush(stderr);
+        
+        // Use the IR-declared output activation
+        const float* logitsPtr = arena_.Get(logitsActivationId);
+        const size_t logitsCount = arena_.Size(logitsActivationId);
+        
+        // Fail-closed: require valid, correctly sized, finite logits
+        if (!logitsPtr || logitsCount != kExpectedVocab) {
+            std::fprintf(stderr, "[LMHEAD_AUTHORITY] FAIL: missing or incorrectly sized output (ptr=%p count=%zu expected=%zu)\n",
+                         static_cast<const void*>(logitsPtr), logitsCount, kExpectedVocab);
+            fflush(stderr);
+            return false;
         }
+        
+        // Verify all logits are finite
+        bool allFinite = true;
+        uint32_t argmaxIdx = 0;
+        float argmaxVal = logitsPtr[0];
+        for (size_t i = 0; i < kExpectedVocab; ++i) {
+            if (!std::isfinite(logitsPtr[i])) {
+                allFinite = false;
+                std::fprintf(stderr, "[LMHEAD_AUTHORITY] FAIL: nonfinite logit at index %zu\n", i);
+                fflush(stderr);
+                break;
+            }
+            if (logitsPtr[i] > argmaxVal) {
+                argmaxVal = logitsPtr[i];
+                argmaxIdx = static_cast<uint32_t>(i);
+            }
+        }
+        
+        if (!allFinite) {
+            return false;
+        }
+        
+        std::fprintf(stderr, "[LMHEAD_AUTHORITY] PASS: argmax=%u max_val=%.6f\n", argmaxIdx, argmaxVal);
+        fflush(stderr);
+        
+        // Capture the authoritative logits snapshot (same buffer used for sampling)
+        logits_.assign(logitsPtr, logitsPtr + kExpectedVocab);
         
         return opsSkipped == 0;
     }
