@@ -41,6 +41,9 @@ function(add_runtime_flags TARGET)
     )
 endfunction()
 
+# Include directories for RawrXDCore
+set(RAWRXD_CORE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src/core/dll")
+
 # =============================================================================
 # Test 1: Basic DLL Load/Unload
 # =============================================================================

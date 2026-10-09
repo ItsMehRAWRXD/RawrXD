@@ -11,6 +11,12 @@ endif()
 # Include shared library support
 include(${RAWRXD_SOURCE_DIR}/cmake/RawrXDSharedLibrary.cmake)
 
+# The production inference engine: the certified 300-operation Deep2 IR executor.
+# RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001 - one implementation shared by the
+# standalone verification harness and this DLL. src/deep2/Deep2Engine.cpp is
+# intentionally NOT built (unverified, non-IR path).
+include(${RAWRXD_SOURCE_DIR}/cmake/ModelGenieRuntime.cmake)
+
 # Determine library type: use shared when BUILD_SHARED_LIBS=ON, unless explicitly STATIC_ONLY
 set(RAWRXD_CORE_STATIC_ONLY FALSE)
 if(NOT BUILD_SHARED_LIBS)
@@ -18,18 +24,19 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 # Create the library target
+# Inference is served exclusively by the ModelGenie IR executor
+# (ModelGenieRuntime, linked below). Deep2InferenceAdapter.cpp and
+# cpu_inference_engine.cpp are deliberately excluded: both depend on
+# src/deep2/Deep2Engine.cpp, which is intentionally NOT built here
+# (unverified, non-IR path).
 if(RAWRXD_CORE_STATIC_ONLY)
     add_library(RawrXDCore STATIC
         RawrXDCore.cpp
-        Deep2InferenceAdapter.cpp
-        ${RAWRXD_SOURCE_DIR}/src/cpu_inference_engine.cpp
         ${RAWRXD_SOURCE_DIR}/src/GGUFLoader.cpp
     )
 else()
     add_library(RawrXDCore SHARED
         RawrXDCore.cpp
-        Deep2InferenceAdapter.cpp
-        ${RAWRXD_SOURCE_DIR}/src/cpu_inference_engine.cpp
         ${RAWRXD_SOURCE_DIR}/src/GGUFLoader.cpp
     )
 endif()
@@ -37,7 +44,6 @@ endif()
 # Generate export header for shared libraries on Windows using the shared library function
 if(NOT RAWRXD_CORE_STATIC_ONLY AND WIN32)
     rawrxd_generate_export_header(RawrXDCore ${CMAKE_CURRENT_BINARY_DIR}/RawrXDCore_exports.h)
-    target_include_directories(RawrXDCore PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     target_compile_definitions(RawrXDCore PRIVATE RAWRXD_CORE_DLL_BUILD RawrXDCore_EXPORTS)
 endif()
 
@@ -48,14 +54,26 @@ target_include_directories(RawrXDCore PRIVATE
     ${RAWRXD_SOURCE_DIR}/src
     ${RAWRXD_SOURCE_DIR}/src/core
     ${RAWRXD_SOURCE_DIR}/src/deep2
+    ${RAWRXD_SOURCE_DIR}/src/deep2/modelgenie
+    ${RAWRXD_SOURCE_DIR}/src/modelgenie
+    ${RAWRXD_SOURCE_DIR}/generated/DeepSeek-V2-Lite-Chat
+    ${RAWRXD_SOURCE_DIR}/tools
+    ${CMAKE_CURRENT_BINARY_DIR}
     C:/VulkanSDK/1.4.357.0/Include
 )
 
 # Compile definitions
-target_compile_definitions(RawrXDCore PRIVATE RAWRXD_CORE_DLL_BUILD)
+# NOMINMAX: windows.h must not macroize min/max - GGUFLoader.hpp and
+# the ModelGenie generated headers use std::numeric_limits<>::max().
+target_compile_definitions(RawrXDCore PRIVATE
+    RAWRXD_CORE_DLL_BUILD
+    RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001
+    NOMINMAX
+    WIN32_LEAN_AND_MEAN
+)
 
 # Link libraries
-target_link_libraries(RawrXDCore PRIVATE psapi)
+target_link_libraries(RawrXDCore PRIVATE psapi ModelGenieRuntime)
 
 # Set C++ standard
 set_target_properties(RawrXDCore PROPERTIES

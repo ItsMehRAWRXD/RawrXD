@@ -120,3 +120,16 @@ _deps/
 _pre_merge_backup/
 _drop_5_block_parity/
 _build_*
+
+# --- RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001 -------------------------------
+# Generated verification captures and build trees (multi-GB, reproducible).
+evidence/
+tmp_build*/
+build_vs/
+vs_validation/build/
+tools/build_token0/
+# Linker / compiler intermediates
+*.pdb
+*.lib
+*.exp
+*.ilk

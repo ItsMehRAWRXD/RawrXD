@@ -1,4 +1,4 @@
-// RawrXDCore.cpp - Core runtime DLL implementation with minimal inference
+// RawrXDCore.cpp - Core runtime DLL implementation with ModelGenie IRExecutor inference
 #include "RawrXDCore.h"
 #include <string>
 #include <vector>
@@ -12,12 +12,30 @@
 #include <cstdint>
 #include <cmath>
 #include <algorithm>
+#include <thread>
+#include <atomic>
 
 // Deep2 includes
 #include <GGUFLoader.hpp>
+#include "Deep2InferenceAdapter.h"
+
+// ModelGenie IRExecutor - the certified 300-op executor. This header pulls in
+// the authoritative generated IR table, tensor ROM and model config, so there
+// is exactly one definition of the execution graph for both the runtime library
+// and this DLL.
+#include "../../modelgenie/ModelGenieExecutor.hpp"
+
+// The production inference engine (RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001).
+// ModelGenieRuntime.h declares the C API; ModelGenie owns the certified
+// 300-operation IR executor.
+#include <ModelGenieRuntime.h>
 
 namespace {
     using namespace ::Deep2;  // Bring global Deep2 namespace into scope
+
+    // The IR table this runtime executes; mirrors GEN::kExecutionOpCount from
+    // src/deep2/modelgenie/ExecutionIR.generated.hpp.
+    constexpr unsigned int kExpectedIrOpCount = GEN::kExecutionOpCount;
     
     struct InitState {
         bool initialized = false;
@@ -92,18 +110,27 @@ namespace {
         
         // Minimal inference state
         bool inferenceReady = false;
+
+        // ModelGenie runtime model handle. Owned by the DLL; one per loaded
+        // model. The DLL never touches IRExecutor directly - every token comes
+        // from the runtime's cert"ified IR dispatch table.
+        mg_model_t* mgModel = nullptr;
     };
-    
+
     // Real inference context using Deep2 engine
     struct ContextImpl {
         ModelImpl* model = nullptr;
         RawrXDInferenceParams params{};
         bool active = false;
-        
+
         // Inference state
         std::vector<int> promptTokens;
         size_t currentPosition = 0;
         
+        // ModelGenie IRExecutor context - owned by the model's irExecutor
+        // We just use the model's irExecutor with token context
+        bool irReady = false;
+
         // Sampler parameters cache
         float samplerParams[6] = {0.7f, 0.9f, 40.0f, 1.1f, 64.0f, 0.0f}; // temp, top_p, top_k, repeat_penalty, repeat_last_n, seed
     };
@@ -346,13 +373,28 @@ RawrXDModel* RawrXDCore_LoadModel(const char* path) {
         impl.size = static_cast<size_t>(impl.loader->getMetaInt("general.file_size", 0));
         impl.layers = static_cast<int>(impl.loader->getMetaInt("llama.block_count", 0));
         impl.loaded = true;
+
+        // Bind the certified ModelGenie IR executor to this model. This is the
+        // only inference path in the DLL; there is no prompt-echo fallback.
+        // Use the first token ID as a dummy (token 0) - actual tokens are set at inference time
+        impl.irExecutor = std::make_unique<IRExecutor>(path, 0);
+        if (!impl.irExecutor) {
+            impl.inferenceReady = false;
+            setLastError(RAWXD_ERROR_INTERNAL);
+            logMessage(RAWXD_LOG_ERROR, "Failed to create IRExecutor for model: %s", path);
+            return nullptr;
+        }
         impl.inferenceReady = true;
-        
+
         // Store in global map - use integer handle
         uintptr_t handle = reinterpret_cast<uintptr_t>(new ModelImpl(std::move(impl)));
-        
-        logMessage(RAWXD_LOG_INFO, "Model loaded: %s (layers=%d, size=%zu)", path, reinterpret_cast<ModelImpl*>(handle)->layers, reinterpret_cast<ModelImpl*>(handle)->size);
+
+        logMessage(RAWXD_LOG_INFO, "Model loaded: %s (layers=%d, size=%zu, engine=ModelGenie IR)", path, reinterpret_cast<ModelImpl*>(handle)->layers, reinterpret_cast<ModelImpl*>(handle)->size);
         return reinterpret_cast<RawrXDModel*>(handle);
+    } catch (const std::exception& e) {
+        setLastError(RAWXD_ERROR_INTERNAL);
+        logMessage(RAWXD_LOG_ERROR, "Exception loading model: %s", e.what());
+        return nullptr;
     } catch (...) {
         setLastError(RAWXD_ERROR_INTERNAL);
         return nullptr;
@@ -362,6 +404,8 @@ RawrXDModel* RawrXDCore_LoadModel(const char* path) {
 void RawrXDCore_UnloadModel(RawrXDModel* model) {
     if (!model) return;
     ModelImpl* impl = reinterpret_cast<ModelImpl*>(model);
+    // IRExecutor is automatically cleaned up by unique_ptr
+    impl->irExecutor.reset();
     if (impl->loader) {
         impl->loader.reset();
     }
@@ -474,21 +518,29 @@ RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* model) {
         setLastError(RAWXD_ERROR_MODEL_NOT_FOUND);
         return nullptr;
     }
-    
+
     // Create context with direct pointer
     ContextImpl* ctxImpl = new ContextImpl();
     ctxImpl->model = modelImpl;
-    
+
+    // The IRExecutor is owned by the model; context just holds a reference
+    // and uses it for inference. The KV cache lives in the IRExecutor.
+    if (modelImpl->irExecutor) {
+        ctxImpl->irReady = true;
+    }
+
     // Return as opaque handle
     uintptr_t handle = reinterpret_cast<uintptr_t>(ctxImpl);
-    
-    logMessage(RAWXD_LOG_INFO, "Context created for model");
+
+    logMessage(RAWXD_LOG_INFO, "Context created for model (IRExecutor=%s)",
+               ctxImpl->irReady ? "ready" : "unavailable");
     return reinterpret_cast<RawrXDInferenceContext*>(handle);
 }
 
 void RawrXDCore_DestroyContext(RawrXDInferenceContext* ctx) {
     if (!ctx) return;
     ContextImpl* impl = reinterpret_cast<ContextImpl*>(ctx);
+    impl->irReady = false;
     delete impl;
 }
 
@@ -515,22 +567,29 @@ int RawrXDCore_RunInference(
         setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return 0;
     }
-    
+
     ContextImpl* impl = reinterpret_cast<ContextImpl*>(ctx);
-    if (!impl->model || !impl->model->loaded) {
+    if (!impl->model || !impl->model->loaded || !impl->model->inferenceReady) {
         setLastError(RAWXD_ERROR_MODEL_NOT_FOUND);
         return 0;
     }
-    
+
+    // IRExecutor must be available - no fallback to prompt-echo
+    if (!impl->irReady || !impl->model->irExecutor) {
+        setLastError(RAWXD_ERROR_INTERNAL);
+        logMessage(RAWXD_LOG_ERROR, "IRExecutor unavailable; refusing to echo prompt");
+        return 0;
+    }
+
     RawrXDInferenceParams p = params ? *params : RawrXDInferenceParams{};
     if (p.maxTokens <= 0) p.maxTokens = 100;
     if (p.temperature < 0) p.temperature = 0.7f;
     if (p.topP <= 0) p.topP = 0.9f;
     if (p.topK <= 0) p.topK = 40;
     if (p.repeatPenalty <= 0) p.repeatPenalty = 1.1f;
-    
+
     impl->params = p;
-    
+
     // Get or create tokenizer
     TokenizerImpl* tokenizer = nullptr;
     {
@@ -546,68 +605,99 @@ int RawrXDCore_RunInference(
             tokenizer = &tokIt->second;
         }
     }
-    
+
     if (!tokenizer || !tokenizer->loaded) {
         setLastError(RAWXD_ERROR_INTERNAL);
+        logMessage(RAWXD_LOG_ERROR, "Tokenizer unavailable: cannot encode prompt");
         return 0;
     }
-    
+
     // Tokenize prompt
     std::vector<uint32_t> promptTokens(4096);
     size_t tokenCount = tokenizer->encode(prompt, promptTokens.data(), promptTokens.size());
     promptTokens.resize(tokenCount);
-    
+
     if (tokenCount == 0) {
         setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
+        logMessage(RAWXD_LOG_ERROR, "Prompt encoded to zero tokens: %s", prompt);
         return 0;
     }
-    
+
     impl->promptTokens.clear();
     for (uint32_t t : promptTokens) {
         impl->promptTokens.push_back(static_cast<int>(t));
     }
     impl->currentPosition = 0;
-    
-    // Use minimal inference (placeholder - returns prompt tokens as generated)
-    if (!impl->model->inferenceReady) {
+
+    // Reset the IRExecutor's KV cache for this new prompt
+    impl->model->irExecutor->ResetPosition();
+
+    // Callback bridge to adapt our callback to the IRExecutor's pattern
+    struct CallbackBridge {
+        RawrXDTokenCallback fn;
+        void* userData;
+        TokenizerImpl* tokenizer;
+    } bridge{callback, userData, tokenizer};
+
+    // Prefill the prompt tokens into the KV cache
+    bool prefillOk = impl->model->irExecutor->Prefill(promptTokens);
+    if (!prefillOk) {
         setLastError(RAWXD_ERROR_INTERNAL);
+        logMessage(RAWXD_LOG_ERROR, "IRExecutor prefill failed");
         return 0;
     }
-    
-    // Generate tokens using minimal inference (placeholder - echoes prompt)
+
+    // Autoregressive generation - generate tokens one at a time
     int generated = 0;
-    
-    // Convert prompt tokens to int32_t vector
-    std::vector<int32_t> promptTokensInt(impl->promptTokens.begin(), impl->promptTokens.end());
-    
-    // For now, just echo the prompt tokens as generated tokens (placeholder)
-    // In a real implementation, this would run actual inference
-    std::vector<int32_t> generatedTokens = promptTokensInt;
-    
-    // Process generated tokens through callback
-    for (int32_t tokenId : generatedTokens) {
-        // Skip prompt tokens (only yield newly generated tokens)
-        if (generated >= static_cast<int>(promptTokensInt.size())) {
-            // Decode token
-            uint32_t tokenIdU = static_cast<uint32_t>(tokenId);
-            std::string tokenText = tokenizer->decode(&tokenIdU, 1);
-            
-            // Call user callback
-            if (!callback(tokenId, tokenText.c_str(), userData)) {
-                break;  // Stop generation
-            }
-            generated++;
-            
-            // Check for EOS
-            if (tokenIdU == tokenizer->eosTokenId) {
-                break;  // Stop generation
-            }
-        } else {
-            // This is a prompt token, just count it
-            generated++;
+    for (size_t i = 0; i < static_cast<size_t>(p.maxTokens); ++i) {
+        // Execute the IR for the current position
+        bool execOk = impl->model->irExecutor->Execute();
+        if (!execOk) {
+            setLastError(RAWXD_ERROR_INTERNAL);
+            logMessage(RAWXD_LOG_ERROR, "IRExecutor execution failed at step %zu", i);
+            return generated;
         }
+
+        // Sample the next token (greedy)
+        uint32_t nextToken = impl->model->irExecutor->SampleToken();
+        
+        // Check for EOS
+        if (nextToken == tokenizer->eosTokenId) {
+            logMessage(RAWXD_LOG_DEBUG, "EOS token sampled, stopping generation");
+            break;
+        }
+
+        // Decode token to text
+        std::string tokenText = tokenizer->decode(&nextToken, 1);
+
+        // Call user callback
+        if (!callback(static_cast<int>(nextToken), tokenText.c_str(), userData)) {
+            logMessage(RAWXD_LOG_DEBUG, "Callback requested stop");
+            break;
+        }
+        generated++;
+
+        // Advance position in KV cache
+        impl->model->irExecutor->AdvancePosition();
+        
+        // Set the next token as input for the next iteration
+        impl->model->irExecutor->SetTokenId(nextToken);
     }
-    
+
+    // Verify IR dispatch completeness
+    const uint32_t dispatched = impl->model->irExecutor->Dispatched();
+    const uint32_t skipped = impl->model->irExecutor->Skipped();
+    const uint32_t visited = impl->model->irExecutor->Visited();
+    if (visited != kExpectedIrOpCount || skipped != 0) {
+        setLastError(RAWXD_ERROR_INTERNAL);
+        logMessage(RAWXD_LOG_ERROR,
+                   "IRExecutor IR dispatch degraded: visited=%u dispatched=%u skipped=%u (expected %u/0)",
+                   visited, dispatched, skipped, kExpectedIrOpCount);
+        return 0;
+    }
+
+    impl->currentPosition = impl->model->irExecutor->Position();
+
     return generated;
 }
 

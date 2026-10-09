@@ -1,0 +1,102 @@
+#include <llama.h>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+
+void write_binary(const char* path, const float* data, size_t count) {
+    std::ofstream f(path, std::ios::binary);
+    f.write(reinterpret_cast<const char*>(data), count * sizeof(float));
+    f.close();
+}
+
+int main() {
+    llama_backend_init();
+    
+    llama_model_params model_params = llama_model_default_params();
+    model_params.n_gpu_layers = 0;
+    
+    const char* model_path = "G:\\~dev\\rawrxd\\models\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf";
+    llama_model* model = llama_model_load_from_file(model_path, model_params);
+    if (!model) {
+        std::cerr << "Failed to load model\n";
+        return 1;
+    }
+    
+    const llama_vocab* vocab = llama_model_get_vocab(model);
+    int n_vocab = llama_vocab_n_tokens(vocab);
+    std::cout << "Vocab size: " << n_vocab << std::endl;
+    
+    // Token sequence from native executor (with RoPE fix) - first 20 positions
+    std::vector<uint32_t> native_tokens = {
+        1, 185, 16, 15, 15, 15, 15, 15, 15, 15, 12, 384, 2, 16, 24, 207, 71955,
+        1392, 13, 1002
+    };
+    
+    std::cout << "=== Reference Multi-Token Validation (fresh context per position) ===" << std::endl;
+    std::cout << "Total positions: " << native_tokens.size() << std::endl;
+    
+    for (size_t pos = 0; pos < native_tokens.size(); ++pos) {
+        // Create fresh context for each position (small context, no flash attention issues)
+        llama_context_params ctx_params = llama_context_default_params();
+        ctx_params.n_ctx = 256;
+        ctx_params.n_batch = 1;
+        ctx_params.n_ubatch = 1;
+        ctx_params.n_threads = 1;
+        ctx_params.n_threads_batch = 1;
+        
+        llama_context* ctx = llama_init_from_model(model, ctx_params);
+        if (!ctx) {
+            std::cerr << "Failed to create context at position " << pos << std::endl;
+            continue;
+        }
+        
+        uint32_t input_token = native_tokens[pos];
+        
+        llama_token tokens[] = {static_cast<llama_token>(input_token)};
+        llama_batch batch = llama_batch_get_one(tokens, 1);
+        batch.pos[0] = static_cast<llama_pos>(pos);
+        
+        if (llama_decode(ctx, batch)) {
+            std::cerr << "Failed to decode at position " << pos << std::endl;
+            llama_free(ctx);
+            continue;
+        }
+        
+        float* logits = llama_get_logits_ith(ctx, 0);
+        if (!logits) {
+            std::cerr << "Failed to get logits at position " << pos << std::endl;
+            llama_free(ctx);
+            continue;
+        }
+        
+        // Find argmax
+        int argmax_token = 0;
+        float max_logit = logits[0];
+        for (int i = 1; i < n_vocab; ++i) {
+            if (logits[i] > max_logit) {
+                max_logit = logits[i];
+                argmax_token = i;
+            }
+        }
+        
+        // Save logits
+        char fname[256];
+        sprintf_s(fname, "F:\\rawrxd\\evidence\\NUGVERSE_ESTIMATOR_001\\ref_logits_pos%zu.bin", pos);
+        write_binary(fname, logits, n_vocab);
+        
+        char token_text[32];
+        llama_token_to_piece(vocab, argmax_token, token_text, sizeof(token_text), 0, false);
+        std::cout << "Pos " << pos << ": input=" << input_token 
+                  << " ref_argmax=" << argmax_token 
+                  << " (" << token_text << ") logit=" << max_logit << std::endl;
+        
+        llama_free(ctx);
+    }
+    
+    llama_model_free(model);
+    llama_backend_free();
+    
+    std::cout << "\nReference logits saved for all positions." << std::endl;
+    return 0;
+}

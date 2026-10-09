@@ -3183,7 +3183,12 @@ message(STATUS "âœ“ RawrXD_Compression configured (runtime ZLIB loader, zero
 add_subdirectory(src/reverse_engineering)
 
 # =============================================================================
-# CEO Agent Module â€” Autonomous Software Engineering Layer
+# Core DLL — Runtime library with C/C++ API
+# =============================================================================
+add_subdirectory(src/core/dll)
+
+# =============================================================================
+# CEO Agent Module — Autonomous Software Engineering Layer
 # =============================================================================
 add_subdirectory(src/ceo)
 

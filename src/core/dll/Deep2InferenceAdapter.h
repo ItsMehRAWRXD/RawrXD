@@ -56,6 +56,24 @@ typedef struct Deep2SamplerParams {
 extern "C" void Deep2_ResetKVCache(Deep2Context* ctx);
 extern "C" void Deep2_TrimKVCache(Deep2Context* ctx, size_t keep_tokens);
 
+// Tokenization (uses the engine's real BPE tokenizer loaded from the GGUF)
+// Deep2_Tokenize returns the total token count; when outTokens/maxTokens are
+// provided it writes up to maxTokens ids (two-phase sizing supported).
+extern "C" int Deep2_Tokenize(Deep2Model* model, const char* text,
+                              int* outTokens, int maxTokens);
+
+// Deep2_Detokenize writes the decoded text into outText (null-terminated) and
+// returns its length; when outText is null it returns the required size.
+extern "C" int Deep2_Detokenize(Deep2Model* model, const int* tokens,
+                                int tokenCount, char* outText, int outSize);
+
+// Apply sampler parameters to the engine (temperature, top_p, top_k, ...)
+extern "C" int Deep2_ConfigureSampler(Deep2Context* ctx,
+                                      const Deep2SamplerParams* params);
+
+// Vocabulary size of the loaded model
+extern "C" int Deep2_GetVocabSize(Deep2Model* model);
+
 // Memory info
 extern "C" void Deep2_GetMemoryInfo(
     Deep2Context* ctx,

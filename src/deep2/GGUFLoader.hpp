@@ -898,11 +898,46 @@ private:
 
 } // namespace Deep2
 
+// ============================================================================
+// Extended types for ModelOpenCompat.hpp and Deep2Engine.cpp compatibility
+// ============================================================================
+namespace Deep2 {
+
+struct TensorInfo {
+    std::string name;
+    std::vector<uint64_t> dimensions;
+    uint32_t type = 0;
+    uint64_t offset = 0;
+    uint64_t size = 0;
+    uint64_t dataOffset = 0;
+};
+
+struct ModelMetadata {
+    uint32_t vocabSize = 0;
+    uint32_t hiddenSize = 0;
+    uint32_t numLayers = 0;
+    uint32_t numHeads = 0;
+    uint32_t numKeyValueHeads = 0;
+    uint32_t intermediateSize = 0;
+    uint32_t keyLength = 0;
+    std::vector<std::string> vocab;
+    std::string architecture;
+};
+
+} // namespace Deep2
+
 struct GGUFLoadResult {
-    bool ok = false;
+    bool success = false;
+    bool ok = false;  // alias for compatibility
     int mmapBound = 0;
     uint32_t shardCount = 0;
+    uint64_t totalSize = 0;
+    uint64_t dataOffset = 0;
     std::shared_ptr<Deep2::GGUFLoader> loader;
+    Deep2::ModelMetadata metadata;
+    std::vector<Deep2::TensorInfo> tensors;
+    std::string error;
+    std::unique_ptr<void, void(*)(void*)> mmapKeep{nullptr, [](void*){}};
 };
 
 inline bool load_gguf(const std::string& path, void* out) {
@@ -911,11 +946,56 @@ inline bool load_gguf(const std::string& path, void* out) {
     *result = {};
 
     auto loader = std::make_shared<Deep2::GGUFLoader>();
-    if (!loader->load(path)) return false;
+    if (!loader->load(path)) {
+        result->error = loader->error();
+        return false;
+    }
 
+    result->success = true;
     result->ok = true;
     result->mmapBound = 1;
     result->shardCount = loader->shardCount();
     result->loader = std::move(loader);
+
+    // Populate metadata from GGUF metadata
+    auto& meta = result->metadata;
+    meta.vocabSize = static_cast<uint32_t>(result->loader->getMetaInt("tokenizer.ggml.vocab_size", 
+                                                                   result->loader->getMetaInt("llama.vocab_size", 0)));
+    meta.hiddenSize = static_cast<uint32_t>(result->loader->getMetaInt("llama.embedding_length", 0));
+    meta.numLayers = static_cast<uint32_t>(result->loader->getMetaInt("llama.block_count", 0));
+    meta.numHeads = static_cast<uint32_t>(result->loader->getMetaInt("llama.attention.head_count", 0));
+    meta.numKeyValueHeads = static_cast<uint32_t>(result->loader->getMetaInt("llama.attention.head_count_kv", meta.numHeads));
+    meta.intermediateSize = static_cast<uint32_t>(result->loader->getMetaInt("llama.feed_forward_length", 0));
+    meta.keyLength = static_cast<uint32_t>(result->loader->getMetaInt("llama.attention.key_length", 0));
+    meta.architecture = result->loader->getMetaString("general.architecture", "unknown");
+
+    // Load vocab
+    std::vector<std::string> tokens;
+    if (result->loader->getMetaStringArray("tokenizer.ggml.tokens", tokens)) {
+        meta.vocab = std::move(tokens);
+        if (meta.vocabSize == 0) meta.vocabSize = static_cast<uint32_t>(meta.vocab.size());
+    }
+
+    // Populate tensors
+    auto& tensors = result->tensors;
+    auto tensorNames = result->loader->listTensors();
+    tensors.reserve(tensorNames.size());
+    for (const auto& name : tensorNames) {
+        const auto* gt = result->loader->getTensor(name);
+        if (gt) {
+            Deep2::TensorInfo ti;
+            ti.name = name;
+            ti.dimensions.reserve(gt->shape.size());
+            for (int64_t d : gt->shape) {
+                ti.dimensions.push_back(static_cast<uint64_t>(d));
+            }
+            ti.type = static_cast<uint32_t>(gt->type);
+            ti.offset = gt->tensorOffset;
+            ti.size = gt->sizeBytes;
+            ti.dataOffset = gt->fileOffset;
+            tensors.push_back(std::move(ti));
+        }
+    }
+
     return true;
 }

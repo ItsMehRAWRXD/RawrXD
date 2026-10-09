@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- RawrXD.DLL.props - Property sheet for DLL projects -->
+  <!-- Import this AFTER RawrXD.Common.props -->
+  
+  <PropertyGroup Label="RawrXD DLL Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <TargetExtension>.dll</TargetExtension>
+    <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+  </PropertyGroup>
+
+  <PropertyGroup Label="RawrXD DLL Debug" Condition="'$(Configuration)'=='Debug'">
+    <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    <GenerateProgramDatabaseFile>$(OutDir)$(TargetName)d.pdb</GenerateProgramDatabaseFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="RawrXD DLL Release" Condition="'$(Configuration)'=='Release'">
+    <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    <GenerateProgramDatabaseFile>$(OutDir)$(TargetName).pdb</GenerateProgramDatabaseFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="RawrXD DLL RelWithDebInfo" Condition="'$(Configuration)'=='RelWithDebInfo'">
+    <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    <GenerateProgramDatabaseFile>$(OutDir)$(TargetName).pdb</GenerateProgramDatabaseFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="RawrXD DLL MinSizeRel" Condition="'$(Configuration)'=='MinSizeRel'">
+    <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+  </PropertyGroup>
+
+  <!-- DLL-specific linker settings -->
+  <ItemDefinitionGroup>
+    <Link>
+      <Dll>true</Dll>
+      <ExportSymbols>true</ExportSymbols>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <LinkTimeCodeGeneration Condition="'$(Configuration)'!='Debug'">UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration Condition="'$(Configuration)'=='Debug'">Default</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- MIDL for COM interfaces if needed -->
+  <ItemDefinitionGroup>
+    <Midl>
+      <TypeLibraryName>$(OutDir)$(TargetName).tlb</TypeLibraryName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+    </Midl>
+  </ItemDefinitionGroup>
+
+  <!-- Resource compiler for DLL version info -->
+  <ItemDefinitionGroup>
+    <ResourceCompile>
+      <PreprocessorDefinitions>
+        _WIN32;
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+        $(SolutionDir)include;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+</Project>

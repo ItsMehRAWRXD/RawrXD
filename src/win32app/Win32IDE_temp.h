@@ -716,6 +716,11 @@ struct RefactoringOption
     bool isModelLoaded() const;
     std::string generateResponse(const std::string& prompt);
     void generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback);
+
+    // RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001 - runs on the Win32 UI thread to
+    // dispatch a token streamed by the ModelGenie IR executor worker.
+    void OnNativeChatToken(LPARAM lParam);
+    static constexpr UINT kWin32IDENativeChatTokenMessage = WM_APP + 309;
     void stopInference();
     void setInferenceConfig(const InferenceConfig& config);
     InferenceConfig getInferenceConfig() const;

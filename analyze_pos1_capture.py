@@ -1,0 +1,89 @@
+import numpy as np
+import struct
+import json
+import os
+
+def load_bin(path, expected_count=None):
+    with open(path, 'rb') as f:
+        data = f.read()
+    if expected_count and len(data) != expected_count * 4:
+        raise ValueError(f"Expected {expected_count*4} bytes, got {len(data)}")
+    arr = np.frombuffer(data, dtype=np.float32)
+    return arr
+
+def load_manifest(manifest_path):
+    with open(manifest_path, 'r') as f:
+        return json.load(f)
+
+def load_binary_record(record_path, manifest_entry):
+    with open(record_path, 'rb') as f:
+        op_id = struct.unpack('I', f.read(4))[0]
+        layer_idx = struct.unpack('I', f.read(4))[0]
+        position = struct.unpack('Q', f.read(8))[0]
+        ndim = struct.unpack('I', f.read(4))[0]
+        shape = []
+        for _ in range(ndim):
+            shape.append(struct.unpack('q', f.read(8))[0])
+        data_size = struct.unpack('Q', f.read(8))[0]
+        data = np.frombuffer(f.read(data_size * 4), dtype=np.float32)
+    return data, shape
+
+def compare_records(native_dir, ref_path, pos):
+    ref = load_bin(os.path.join(ref_dir, f'ref_logits_pos{pos}.bin'))
+    
+    native_manifest = load_manifest(os.path.join(native_dir, 'manifest.json'))
+    pos_records = [r for r in native_manifest if r['position'] == pos]
+    
+    print(f"=== Position {pos} Analysis ===")
+    print(f"Native records at pos {pos}: {len(pos_records)}")
+    
+    by_type = {}
+    for r in pos_records:
+        t = r['tensor_type']
+        if t not in by_type:
+            by_type[t] = []
+        by_type[t].append(r)
+    
+    print(f"Tensor types at pos {pos}: {list(by_type.keys())}")
+    
+    # Compare reference logits with native logits
+    logits_records = [r for r in pos_records if r['tensor_type'] == 'output' and r['op_id'] == 299]
+    if logits_records:
+        native_logits_path = os.path.join(native_dir, f"rec_{logits_records[0]['index']:06d}_op{logits_records[0]['op_id']}_Output_l4294967295_p{pos}_output.bin")
+        if os.path.exists(native_logits_path):
+            native_logits = load_binary_record(native_logits_path, None)[0]
+            ref_logits = load_bin(os.path.join(ref_dir, f'ref_logits_pos{pos}.bin'))
+            
+            print(f"\n=== Position {pos} Logits Comparison ===")
+            native_argmax = int(native_logits.argmax())
+            ref_argmax = int(ref_logits.argmax())
+            print(f"Native argmax: {native_argmax} (logit={native_logits[native_argmax]:.6f})")
+            print(f"Ref argmax:    {ref_argmax} (logit={ref_logits[ref_argmax]:.6f})")
+            print(f"Argmax match: {native_argmax == ref_argmax}")
+            
+            diff = native_logits - ref_logits
+            abs_diff = np.abs(diff)
+            max_abs_diff = abs_diff.max()
+            rmse = np.sqrt(np.mean(diff * diff))
+            dot = np.dot(native_logits, ref_logits)
+            norm_n = np.linalg.norm(native_logits)
+            norm_r = np.linalg.norm(ref_logits)
+            cos_sim = dot / (norm_n * norm_r) if norm_n > 0 and norm_r > 0 else 0
+            
+            print(f"Max abs diff: {max_abs_diff:.6f} at {abs_diff.argmax()}")
+            print(f"RMSE: {rmse:.6f}")
+            print(f"Cosine: {cos_sim:.10f}")
+            
+            native_top10 = np.argpartition(native_logits, -10)[-10:]
+            native_top10 = native_top10[np.argsort(native_logits[native_top10])[::-1]]
+            ref_top10 = np.argpartition(ref_logits, -10)[-10:]
+            ref_top10 = ref_top10[np.argsort(ref_logits[ref_top10])[::-1]]
+            print(f"Native top-10: {native_top10.tolist()}")
+            print(f"Ref top-10:    {ref_top10.tolist()}")
+            print(f"Top-10 overlap: {len(set(native_top10) & set(ref_top10))}/10")
+
+if __name__ == '__main__':
+    native_dir = r'F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001\pos1_capture_fixed'
+    ref_dir = r'F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001'
+    
+    compare_records(native_dir, os.path.join(ref_dir, 'ref_logits_pos1.bin'), 1)

@@ -43,6 +43,19 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Iterable
 from urllib.parse import parse_qs, urlparse
 
+# Deep2 Streaming Backend Integration
+try:
+    import sys as _sys
+    _backend_path = os.path.join(os.path.dirname(__file__), '..', 'backend')
+    _backend_path = os.path.abspath(_backend_path)
+    if _backend_path not in _sys.path:
+        _sys.path.insert(0, _backend_path)
+    from deep2_backend import Deep2BackendManager, get_backend_manager, initialize_deep2_models
+    DEEP2_BACKEND_AVAILABLE = True
+except ImportError as e:
+    DEEP2_BACKEND_AVAILABLE = False
+    print(f"[RawrEngine] Deep2 backend not available: {e}")
+
 
 DEFAULT_ALLOWED_ORIGINS = [
     "http://localhost",
@@ -65,6 +78,7 @@ if os.name == "nt":
         r"D:\OllamaModels",
         r"D:\models",
         r"C:\models",
+        r"F:\rawrxd\models",
     ]
 else:
     _MODEL_DIRS = [
@@ -195,6 +209,252 @@ def _build_tool_calls(prompt: str) -> list[dict[str, Any]]:
     if "@terminal" in text:
         calls.append({"tool": "terminal_exec", "params": {"shell": "bash"}})
     return calls
+
+
+def _get_tool_schemas() -> list[dict[str, Any]]:
+    """Return JSON schema definitions for all available tools."""
+    return [
+        {
+            "name": "file_reader",
+            "description": "Read a file from the workspace",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Path to the file to read"}
+                },
+                "required": ["path"]
+            }
+        },
+        {
+            "name": "file_writer",
+            "description": "Write content to a file in the workspace",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Path to the file to write"},
+                    "content": {"type": "string", "description": "Content to write to the file"}
+                },
+                "required": ["path", "content"]
+            }
+        },
+        {
+            "name": "code_edit",
+            "description": "Apply a code edit/patch to a file",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Path to the file to edit"},
+                    "old_string": {"type": "string", "description": "The exact string to replace"},
+                    "new_string": {"type": "string", "description": "The new string to insert"}
+                },
+                "required": ["path", "old_string", "new_string"]
+            }
+        },
+        {
+            "name": "terminal_exec",
+            "description": "Execute a shell command in the workspace",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "command": {"type": "string", "description": "The command to execute"},
+                    "cwd": {"type": "string", "description": "Working directory (optional)", "default": "."}
+                },
+                "required": ["command"]
+            }
+        },
+        {
+            "name": "fs_list",
+            "description": "List files and directories in the workspace",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Directory path to list", "default": "."},
+                    "depth": {"type": "integer", "description": "Max depth to traverse", "default": 2}
+                },
+                "required": []
+            }
+        },
+        {
+            "name": "search",
+            "description": "Search for text in workspace files",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"},
+                    "path": {"type": "string", "description": "Directory to search in", "default": "."}
+                },
+                "required": ["query"]
+            }
+        },
+        {
+            "name": "git_status",
+            "description": "Get git status of the workspace",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "cwd": {"type": "string", "description": "Working directory", "default": "."}
+                },
+                "required": []
+            }
+        },
+        {
+            "name": "git_diff",
+            "description": "Get git diff of the workspace",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Optional file path"},
+                    "staged": {"type": "boolean", "description": "Show staged changes", "default": False}
+                },
+                "required": []
+            }
+        }
+    ]
+
+
+def _build_tool_prompt(tool_schemas: list[dict[str, Any]]) -> str:
+    """Build a system prompt with tool definitions for the model."""
+    tool_descriptions = []
+    for tool in tool_schemas:
+        params = tool.get("parameters", {})
+        props = params.get("properties", {})
+        required = params.get("required", [])
+        prop_strs = []
+        for name, spec in props.items():
+            req_str = " (required)" if name in required else ""
+            prop_strs.append(f"  {name}: {spec.get('description', '')}{req_str}")
+        tool_descriptions.append(
+            f"## {tool['name']}\n{tool['description']}\nParameters:\n" + "\n".join(prop_strs)
+        )
+    
+    return f"""You are an AI coding agent with access to tools. Use tools to accomplish tasks.
+
+Available tools:
+{chr(10).join(tool_descriptions)}
+
+To use a tool, respond with a JSON object in this exact format:
+{{"tool": "tool_name", "arguments": {{"arg1": "value1", "arg2": "value2"}}}}
+
+Only use one tool per response. After the tool executes, you will receive the result and can continue.
+When the task is complete, provide a final response without a tool call.""""
+
+
+def _parse_tool_call(text: str) -> dict[str, Any] | None:
+    """Parse a tool call from model output."""
+    import re
+    import json as _json
+    
+    # Try to find JSON tool call in the response
+    # Look for {"tool": "...", "arguments": {...}}
+    pattern = r'\{\s*"tool"\s*:\s*"([^"]+)"\s*,\s*"arguments"\s*:\s*(\{.*?\})\s*\}'
+    match = re.search(pattern, text, re.DOTALL)
+    if match:
+        tool_name = match.group(1)
+        try:
+            arguments = _json.loads(match.group(2))
+            return {"tool": tool_name, "arguments": arguments}
+        except _json.JSONDecodeError:
+            pass
+    
+    # Also try to find just a JSON object with tool field
+    json_pattern = r'\{[^{}]*"tool"[^{}]*\}'
+    for match in re.finditer(json_pattern, text, re.DOTALL):
+        try:
+            parsed = _json.loads(match.group())
+            if "tool" in parsed:
+                return parsed
+        except _json.JSONDecodeError:
+            continue
+    
+    return None
+
+
+def _execute_tool_call(tool_call: dict[str, Any]) -> dict[str, Any]:
+    """Execute a tool call and return the result."""
+    tool_name = tool_call.get("tool")
+    arguments = tool_call.get("arguments", {})
+    
+    if tool_name == "file_reader":
+        path = arguments.get("path", "")
+        if not path:
+            return {"error": "Missing 'path' argument"}
+        try:
+            return _read_workspace_file(path)
+        except Exception as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "file_writer":
+        path = arguments.get("path", "")
+        content = arguments.get("content", "")
+        if not path:
+            return {"error": "Missing 'path' argument"}
+        try:
+            return _write_workspace_file(path, content)
+        except Exception as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "code_edit":
+        path = arguments.get("path", "")
+        old_string = arguments.get("old_string", "")
+        new_string = arguments.get("new_string", "")
+        if not path or old_string == "":
+            return {"error": "Missing 'path' or 'old_string' argument"}
+        try:
+            # Read current content
+            current = _read_workspace_file(path)
+            content = current.get("content", "")
+            if old_string not in content:
+                return {"error": f"String not found in file: {old_string[:50]}..."}
+            new_content = content.replace(old_string, new_string, 1)
+            return _write_workspace_file(path, new_content)
+        except Exception as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "terminal_exec":
+        command = arguments.get("command", "")
+        cwd = arguments.get("cwd", ".")
+        if not command:
+            return {"error": "Missing 'command' argument"}
+        try:
+            return _exec_command(command, cwd=cwd)
+        except Exception as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "fs_list":
+        path = arguments.get("path", ".")
+        depth = arguments.get("depth", 2)
+        try:
+            return _list_workspace(path, depth=depth)
+        except Exception as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "search":
+        query = arguments.get("query", "")
+        path = arguments.get("path", ".")
+        if not query:
+            return {"error": "Missing 'query' argument"}
+        try:
+            return _search_workspace(query, path=path)
+        except Exception as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "git_status":
+        cwd = arguments.get("cwd", ".")
+        try:
+            return _git_status(cwd=cwd)
+        except Exception as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "git_diff":
+        path = arguments.get("path", "")
+        staged = arguments.get("staged", False)
+        try:
+            return _git_diff(cwd=".", path=path, staged=staged)
+        except Exception as e:
+            return {"error": str(e)}
+    
+    else:
+        return {"error": f"Unknown tool: {tool_name}"}
 
 
 def _query_ollama(model: str, messages: list[dict[str, Any]]) -> str | None:
@@ -663,7 +923,20 @@ def _build_response(prompt: str, model: str, mode: str) -> str:
     if not cleaned:
         return f"RawrEngine local mode is ready on model '{model}'."
 
-    # Try Ollama backend first for a real AI response
+    # Try Deep2 backend first for real AI response
+    if DEEP2_BACKEND_AVAILABLE:
+        backend_mgr = get_backend_manager()
+        backend = backend_mgr.get_backend(model)
+        if backend and backend.is_initialized():
+            try:
+                # Use Deep2 for generation
+                response = backend.generate(cleaned, max_tokens=512)
+                if response and response.strip():
+                    return response
+            except Exception as e:
+                print(f"[RawrEngine] Deep2 backend error: {e}, falling back to Ollama")
+
+    # Try Ollama backend as fallback
     messages = [{"role": "user", "content": cleaned}]
     if mode == "plan":
         messages.insert(0, {"role": "system", "content": "Break the task into numbered steps. Return only the steps."})
@@ -853,7 +1126,7 @@ class RawrEngineHandler(BaseHTTPRequestHandler):
             "workspace_root": WORKSPACE_ROOT,
         }
 
-    def _stream_chat(self, response_text: str, model: str) -> None:
+    def _stream_chat(self, prompt: str, model: str) -> None:
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/event-stream; charset=utf-8")
         self.send_header("Cache-Control", "no-cache")
@@ -862,9 +1135,87 @@ class RawrEngineHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
         created = int(time.time())
+        completion_id = f"chatcmpl-{uuid.uuid4().hex[:10]}"
+        
+        # Try Deep2 streaming backend first
+        if DEEP2_BACKEND_AVAILABLE:
+            backend_mgr = get_backend_manager()
+            backend = backend_mgr.get_backend(model)
+            if backend and backend.is_initialized():
+                try:
+                    # Stream from Deep2 backend
+                    def stream_callback(chunk: str) -> bool:
+                        payload = {
+                            "id": completion_id,
+                            "object": "chat.completion.chunk",
+                            "created": created,
+                            "model": model,
+                            "choices": [{"index": 0, "delta": {"content": chunk}, "finish_reason": None}],
+                        }
+                        data_line = f"data: {json.dumps(payload)}\n\n".encode("utf-8")
+                        try:
+                            self.wfile.write(data_line)
+                            self.wfile.flush()
+                        except (BrokenPipeError, ConnectionResetError):
+                            return False
+                        return True
+                    
+                    # Send initial role
+                    initial_payload = {
+                        "id": completion_id,
+                        "object": "chat.completion.chunk",
+                        "created": created,
+                        "model": model,
+                        "choices": [{"index": 0, "delta": {"role": "assistant"}, "finish_reason": None}],
+                    }
+                    self.wfile.write(f"data: {json.dumps(initial_payload)}\n\n".encode("utf-8"))
+                    self.wfile.flush()
+                    
+                    backend.generate_stream(
+                        prompt,
+                        max_tokens=512,
+                        callback=stream_callback
+                    )
+                    
+                    # Send final chunk with finish_reason
+                    final_payload = {
+                        "id": completion_id,
+                        "object": "chat.completion.chunk",
+                        "created": created,
+                        "model": model,
+                        "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+                    }
+                    self.wfile.write(f"data: {json.dumps(final_payload)}\n\n".encode("utf-8"))
+                    self.wfile.flush()
+                    
+                    # Send [DONE]
+                    try:
+                        self.wfile.write(b"data: [DONE]\n\n")
+                        self.wfile.flush()
+                    except (BrokenPipeError, ConnectionResetError):
+                        pass
+                    self.close_connection = True
+                    return
+                except Exception as e:
+                    print(f"[RawrEngine] Deep2 streaming error: {e}, falling back to chunked response")
+        
+        # Fallback: generate response and chunk it
+        response_text = _build_response(prompt, model, mode="ask")
+        
+        # Send initial role
+        initial_payload = {
+            "id": completion_id,
+            "object": "chat.completion.chunk",
+            "created": created,
+            "model": model,
+            "choices": [{"index": 0, "delta": {"role": "assistant"}, "finish_reason": None}],
+        }
+        self.wfile.write(f"data: {json.dumps(initial_payload)}\n\n".encode("utf-8"))
+        self.wfile.flush()
+        
         for chunk in _chunk_text(response_text, chunk_size=26):
             payload = {
-                "id": f"chatcmpl-{uuid.uuid4().hex[:10]}",
+                "id": completion_id,
                 "object": "chat.completion.chunk",
                 "created": created,
                 "model": model,
@@ -877,6 +1228,17 @@ class RawrEngineHandler(BaseHTTPRequestHandler):
             except (BrokenPipeError, ConnectionResetError):
                 return
             time.sleep(0.01)
+
+        # Send final chunk with finish_reason
+        final_payload = {
+            "id": completion_id,
+            "object": "chat.completion.chunk",
+            "created": created,
+            "model": model,
+            "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+        }
+        self.wfile.write(f"data: {json.dumps(final_payload)}\n\n".encode("utf-8"))
+        self.wfile.flush()
 
         try:
             self.wfile.write(b"data: [DONE]\n\n")
@@ -1004,12 +1366,12 @@ class RawrEngineHandler(BaseHTTPRequestHandler):
             if not isinstance(model, str) or not model.strip():
                 model = STATE.current_model
             prompt = _extract_prompt(payload)
-            response_text = _build_response(prompt, model, mode="ask")
             stream = bool(payload.get("stream"))
             if stream:
-                self._stream_chat(response_text, model)
+                self._stream_chat(prompt, model)  # Pass prompt, not response
                 return
 
+            response_text = _build_response(prompt, model, mode="ask")
             completion = {
                 "id": f"chatcmpl-{uuid.uuid4().hex[:10]}",
                 "object": "chat.completion",
@@ -1046,13 +1408,64 @@ class RawrEngineHandler(BaseHTTPRequestHandler):
                 return
 
             if mode == "full":
+                # Implement full agentic tool-calling loop
+                tool_schemas = _get_tool_schemas()
+                tool_prompt = _build_tool_prompt(tool_schemas)
+                
+                # Build messages with tool prompt
+                messages = [
+                    {"role": "system", "content": tool_prompt},
+                    {"role": "user", "content": prompt}
+                ]
+                
+                # Get initial response from Deep2
+                response_text = _build_response(
+                    json.dumps(messages, ensure_ascii=False), 
+                    model, 
+                    mode="full"
+                )
+                
+                # Tool calling loop
+                max_iterations = 10
+                tool_calls_made = []
+                
+                for iteration in range(max_iterations):
+                    # Parse tool call from response
+                    tool_call = _parse_tool_call(response_text)
+                    
+                    if not tool_call:
+                        # No tool call - task complete
+                        break
+                    
+                    # Execute tool
+                    tool_result = _execute_tool_call(tool_call)
+                    tool_calls_made.append({
+                        "tool": tool_call.get("tool"),
+                        "arguments": tool_call.get("arguments"),
+                        "result": tool_result
+                    })
+                    
+                    # Feed result back to model
+                    followup_prompt = json.dumps([
+                        {"role": "system", "content": tool_prompt},
+                        {"role": "user", "content": prompt},
+                        {"role": "assistant", "content": response_text},
+                        {"role": "tool", "content": json.dumps(tool_result, ensure_ascii=False)}
+                    ], ensure_ascii=False)
+                    
+                    response_text = _build_response(followup_prompt, model, mode="full")
+                    
+                    # Check if model wants to stop (no more tool calls)
+                    if not _parse_tool_call(response_text):
+                        break
+                
                 self._json(
                     HTTPStatus.OK,
                     {
                         "mode": "full",
                         "model": model,
-                        "response": _build_response(prompt, model, mode="full"),
-                        "tool_calls": _build_tool_calls(prompt),
+                        "response": response_text,
+                        "tool_calls": tool_calls_made,
                     },
                 )
                 return
@@ -1269,6 +1682,19 @@ def main() -> int:
 
     if STATE.current_model not in STATE.models:
         STATE.models.insert(0, STATE.current_model)
+
+    # Initialize Deep2 backend models
+    if DEEP2_BACKEND_AVAILABLE:
+        print("[RawrEngine] Initializing Deep2 streaming backend...")
+        model_count = initialize_deep2_models(_MODEL_DIRS)
+        if model_count > 0:
+            backend_mgr = get_backend_manager()
+            for model_id in backend_mgr.list_models():
+                if model_id not in STATE.models:
+                    STATE.models.append(model_id)
+            print(f"[RawrEngine] Deep2 backend ready with {model_count} models: {backend_mgr.list_models()}")
+        else:
+            print("[RawrEngine] No GGUF models found for Deep2 backend")
 
     server = ReusableThreadingHTTPServer((args.host, args.port), RawrEngineHandler)
     print(f"[RawrEngine] Local server listening on http://{args.host}:{args.port}")

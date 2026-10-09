@@ -332,6 +332,105 @@ void Win32IDE::sendChatMessageToOllama(const std::string& message,
 }
 
 // ============================================================================
+// Native IDE chat -> ModelGenie runtime
+// RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001
+//
+// The Copilot send handler ends here. Streaming token callbacks are marshalled
+// back onto the Win32 UI thread with PostMessage so the RichEdit control is
+// only touched from the thread that owns it; the worker returns immediately
+// after enqueueing so ModelGenie IR execution never blocks the message loop.
+// ============================================================================
+
+// Per-request state shared with the UI thread through the message queue.
+struct Win32IDENativeChatChunk {
+    std::string token;
+    bool complete;
+    std::function<void(const std::string&, bool)> callback;
+};
+
+void Win32IDE::generateResponseAsync(
+    const std::string& prompt,
+    std::function<void(const std::string&, bool)> callback)
+{
+    if (prompt.empty() || !callback) return;
+
+    // Route through the RawrXD native inference engine, which is backed by the
+    // ModelGenie IR executor (no Ollama, no prompt echo). When the IDE has no
+    // explicitly initialised engine, use the process-wide singleton so the chat
+    // panel still works after a plain model load.
+    RawrXD::CPUInferenceEngine* engine = m_nativeEngine.get();
+    if (!engine) {
+        engine = RawrXD::CPUInferenceEngine::GetSharedInstance();
+        m_nativeEngine = std::shared_ptr<RawrXD::CPUInferenceEngine>(
+            engine, [](RawrXD::CPUInferenceEngine*) {});  // non-owning alias
+        m_nativeEngineLoaded = true;
+    }
+
+    if (!engine || !engine->IsModelLoaded()) {
+        callback("Error: no GGUF model loaded. Load a local model first.", true);
+        return;
+    }
+
+    // Build the chat-formatted prompt (DeepSeek-V2-Lite ChatML template).
+    const std::string formatted = buildChatPrompt(prompt);
+
+    std::vector<int32_t> tokens;
+    try {
+        tokens = engine->Tokenize(formatted);
+    } catch (...) {
+        callback("Error: tokenizer unavailable for the loaded model.", true);
+        return;
+    }
+    if (tokens.empty()) {
+        callback("Error: prompt produced no tokens.", true);
+        return;
+    }
+
+    if (!m_hwndMain) {
+        // Headless/console host: stream synchronously, there is no UI thread.
+        engine->GenerateStreaming(
+            tokens, 256,
+            [callback](const std::string& token) {
+                if (!token.empty()) callback(token, false);
+            },
+            [callback]() { callback("", true); },
+            [](int32_t) {});
+        callback("", true);
+        return;
+    }
+
+    // Detached worker: ModelGenie IR execution is CPU-bound and blocking.
+    std::thread([engine, tokens, callback, hwndMain = m_hwndMain]() {
+        auto deliver = [hwndMain, callback](const std::string& token, bool done) {
+            auto* chunk = new (std::nothrow) Win32IDENativeChatChunk{token, done, callback};
+            if (!chunk) return;
+            if (!PostMessage(hwndMain, kWin32IDENativeChatTokenMessage, 0,
+                             reinterpret_cast<LPARAM>(chunk))) {
+                delete chunk;
+            }
+        };
+
+        engine->GenerateStreaming(
+            tokens, 256,
+            [deliver](const std::string& token) { deliver(token, false); },
+            [deliver]() { deliver("", true); },
+            [](int32_t) {});
+
+        deliver("", true);
+    }).detach();
+}
+
+// UI-thread message handler for the chunk messages posted above. Registered by
+// Win32IDE::RegisterNativeChatMessageHandler() so the window proc stays generic.
+void Win32IDE::OnNativeChatToken(LPARAM lParam)
+{
+    auto* chunk = reinterpret_cast<Win32IDENativeChatChunk*>(lParam);
+    if (!chunk) return;
+    if (chunk->callback) chunk->callback(chunk->token, chunk->complete);
+    delete chunk;
+}
+
+// ============================================================================
 // Unified Chat Handler - HexMag controller first, then local GGUF / Ollama
 // ============================================================================
 void Win32IDE::HandleCopilotSend_Ollama()

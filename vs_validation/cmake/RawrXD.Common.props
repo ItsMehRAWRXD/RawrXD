@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- RawrXD.Common.props - Shared property sheet for all RawrXD projects -->
+  <!-- Import this in your .vcxproj or use via CMake's VS_GLOBAL_<Property> -->
+  
+  <PropertyGroup Label="RawrXD Common Configuration">
+    <!-- Project identity -->
+    <RawrXDProjectVersion>14.7.3</RawrXDProjectVersion>
+    <RawrXDProjectName>RawrXD</RawrXDProjectName>
+    
+    <!-- Platform and architecture -->
+    <PlatformToolset>v143</PlatformToolset>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <TargetPlatformVersion>10.0.26100.0</TargetPlatformVersion>
+    
+    <!-- C++ Language Standard -->
+    <CppLanguageStandard>stdcpp20</CppLanguageStandard>
+    <CppLanguageStandard_C>c17</CppLanguageStandard_C>
+    
+    <!-- Common preprocessor definitions -->
+    <PreprocessorDefinitions>
+      _CRT_SECURE_NO_WARNINGS;
+      NOMINMAX;
+      WIN32_LEAN_AND_MEAN;
+      UNICODE;
+      _UNICODE;
+      RAWXD_BUILD;
+      %(PreprocessorDefinitions)
+    </PreprocessorDefinitions>
+    
+    <!-- Warning level -->
+    <WarningLevel>Level3</WarningLevel>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <SDLCheck>true</SDLCheck>
+    
+    <!-- Common include paths (relative to solution) -->
+    <IncludePath>
+      $(SolutionDir)src;
+      $(SolutionDir)include;
+      $(SolutionDir)3rdparty;
+      $(SolutionDir)3rdparty/ggml/include;
+      $(WindowsSDK_IncludePath);
+      $(VC_IncludePath);
+      %(IncludePath)
+    </IncludePath>
+  </PropertyGroup>
+
+  <PropertyGroup Label="RawrXD Debug Configuration" Condition="'$(Configuration)'=='Debug'">
+    <!-- Debug-specific settings -->
+    <Optimization>Disabled</Optimization>
+    <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    <GenerateProgramDatabaseFile>$(OutDir)$(TargetName)d.pdb</GenerateProgramDatabaseFile>
+    <PreprocessorDefinitions>DEBUG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    <ExceptionHandling>Sync</ExceptionHandling>
+  </PropertyGroup>
+
+  <PropertyGroup Label="RawrXD Release Configuration" Condition="'$(Configuration)'=='Release'">
+    <!-- Release-specific settings -->
+    <Optimization>MaxSpeed</Optimization>
+    <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    <GenerateProgramDatabaseFile>$(OutDir)$(TargetName).pdb</GenerateProgramDatabaseFile>
+    <PreprocessorDefinitions>NDEBUG;RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    <FunctionLevelLinking>true</FunctionLevelLinking>
+    <IntrinsicFunctions>true</IntrinsicFunctions>
+    <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+
+  <PropertyGroup Label="RawrXD RelWithDebInfo Configuration" Condition="'$(Configuration)'=='RelWithDebInfo'">
+    <!-- Release with debug info -->
+    <Optimization>MaxSpeed</Optimization>
+    <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    <GenerateProgramDatabaseFile>$(OutDir)$(TargetName).pdb</GenerateProgramDatabaseFile>
+    <PreprocessorDefinitions>NDEBUG;RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    <FunctionLevelLinking>true</FunctionLevelLinking>
+    <IntrinsicFunctions>true</IntrinsicFunctions>
+  </PropertyGroup>
+
+  <PropertyGroup Label="RawrXD MinSizeRel Configuration" Condition="'$(Configuration)'=='MinSizeRel'">
+    <!-- Minimum size release -->
+    <Optimization>MinSpace</Optimization>
+    <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    <PreprocessorDefinitions>NDEBUG;RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+  </PropertyGroup>
+
+  <!-- MASM64 support -->
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <MASM>
+      <IncludePath>$(SolutionDir)src\asm;$(SolutionDir)include;%(IncludePath)</IncludePath>
+      <PreprocessorDefinitions>DEBUG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </MASM>
+  </ItemDefinitionGroup>
+  
+  <ItemDefinitionGroup Condition="'$(Configuration)'!='Debug'">
+    <MASM>
+      <IncludePath>$(SolutionDir)src\asm;$(SolutionDir)include;%(IncludePath)</IncludePath>
+      <PreprocessorDefinitions>NDEBUG;RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </MASM>
+  </ItemDefinitionGroup>
+
+  <!-- Linker common settings -->
+  <ItemDefinitionGroup>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <DynamicBase>true</DynamicBase>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <LargeAddressAware>true</LargeAddressAware>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- Debug linker settings -->
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <Link>
+      <IncrementalLinking>true</IncrementalLinking>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- Release linker settings -->
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' Or '$(Configuration)'=='RelWithDebInfo' Or '$(Configuration)'=='MinSizeRel'">
+    <Link>
+      <IncrementalLinking>false</IncrementalLinking>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- Common system libraries -->
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>
+        kernel32.lib;
+        user32.lib;
+        gdi32.lib;
+        winspool.lib;
+        comdlg32.lib;
+        advapi32.lib;
+        shell32.lib;
+        ole32.lib;
+        oleaut32.lib;
+        uuid.lib;
+        odbc32.lib;
+        odbccp32.lib;
+        shlwapi.lib;
+        comctl32.lib;
+        version.lib;
+        ws2_32.lib;
+        %(AdditionalDependencies)
+      </AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>

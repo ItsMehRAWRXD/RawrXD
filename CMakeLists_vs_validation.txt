@@ -1,0 +1,56 @@
+# Minimal CMakeLists for VS Compatibility Validation
+# Only builds RawrXDCore DLL and VS Compat Tests
+
+cmake_minimum_required(VERSION 3.20)
+
+project(RawrXD_VSValidation VERSION 14.7.3 LANGUAGES C CXX ASM_MASM RC)
+
+# Include VS configuration
+include(${CMAKE_SOURCE_DIR}/cmake/RawrXDVSConfig.cmake)
+
+# Options
+option(BUILD_SHARED_LIBS "Build shared libraries (DLLs)" ON)
+option(RAWRXD_ENABLE_VULKAN "Enable Vulkan" ON)
+option(RAWRXD_ENABLE_MASM "Enable MASM64" ON)
+
+# nlohmann/json via FetchContent
+include(FetchContent)
+FetchContent_Declare(
+    nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
+# Vulkan
+if(RAWRXD_ENABLE_VULKAN)
+    find_package(Vulkan QUIET)
+endif()
+
+# MASM64
+if(RAWRXD_ENABLE_MASM AND MSVC)
+    enable_language(ASM_MASM)
+endif()
+
+# RC
+if(WIN32)
+    enable_language(RC)
+endif()
+
+# Build RawrXDCore DLL
+add_subdirectory(src/core/dll)
+
+# Build Tests
+add_subdirectory(tests)
+
+# Summary
+message(STATUS "")
+message(STATUS "========================================")
+message(STATUS "RawrXD VS Validation Configured")
+message(STATUS "========================================")
+message(STATUS "RawrXDCore DLL: ON")
+message(STATUS "VS Compat Tests: ON")
+message(STATUS "Vulkan: ${RAWRXD_ENABLE_VULKAN}")
+message(STATUS "MASM64: ${RAWRXD_ENABLE_MASM}")
+message(STATUS "Shared Libs: ${BUILD_SHARED_LIBS}")
+message(STATUS "========================================")

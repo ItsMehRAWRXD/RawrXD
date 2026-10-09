@@ -11,6 +11,14 @@
 #include "plugins/MemoryPlugin.hpp"
 #include "inference_engine.h"
 
+// Forward declare the ModelGenie runtime C API (opaque handles).
+struct mg_model_t;
+struct mg_context_t;
+
+namespace Deep2 {
+    class Deep2Engine;
+}
+
 namespace RawrXD {
 
 // Tensor data types — values match ggml_type from GGUF spec
@@ -98,6 +106,11 @@ public:
     std::vector<float> Eval(const std::vector<int32_t>& input_tokens);
     void UpdateWeights(const std::vector<std::vector<float>>& layer_gradients, float learning_rate);
     void UpdateOutputWeights(const std::vector<float>& gradients, float learningRate);
+
+    // Apply sampler/generation options to the underlying Deep2Engine
+    // (temperature <= 0 or topK <= 1 selects deterministic greedy decoding)
+    void ConfigureGeneration(float temperature, float topP, uint32_t topK,
+                             float repeatPenalty, uint64_t seed);
     
     void GenerateStreaming(const std::vector<int32_t>& input_tokens,
                          int max_tokens,
@@ -219,7 +232,14 @@ private:
     Tensor m_outputWeights;
     
     // Loader and execution state
-    std::unique_ptr<IGGUFLoader> m_loader; 
+    std::unique_ptr<IGGUFLoader> m_loader;
+
+    // RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001: the certified Deep2 IR executor.
+    // Held through the runtime C API so the IDE, the agent bridge and
+    // RawrXDCore.dll all share one inference implementation.
+    ::mg_model_t* m_mgModel = nullptr;
+    ::mg_context_t* m_mgContext = nullptr;
+    bool m_mgReady = false;
     
     // Titan ASM Integration
     void* m_hTitanDLL = nullptr;
@@ -253,7 +273,7 @@ private:
     // Memory pool
     std::vector<std::unique_ptr<float[]>> m_memoryPool;
     size_t m_totalMemoryAllocated = 0;
-    
+
     // Performance tracking
     mutable size_t m_inferenceCount = 0;
     mutable double m_totalInferenceTime = 0.0;

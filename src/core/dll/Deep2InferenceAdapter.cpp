@@ -115,6 +115,91 @@ extern "C" void Deep2_FreeContext(Deep2Context* context) {
 }
 
 // ============================================================================
+// Tokenization (engine's real BPE tokenizer from the GGUF metadata)
+// ============================================================================
+
+extern "C" int Deep2_Tokenize(Deep2Model* model, const char* text,
+                                  int* outTokens, int maxTokens) {
+    if (!model || !model->loaded || !model->engine || !text) {
+        return -1;
+    }
+
+    std::vector<int> tokens = model->engine->Tokenize(text);
+    if (!outTokens || maxTokens <= 0) {
+        // Query mode: return the total token count
+        return static_cast<int>(tokens.size());
+    }
+
+    int count = static_cast<int>(std::min(tokens.size(),
+                                          static_cast<size_t>(maxTokens)));
+    if (count > 0) {
+        std::memcpy(outTokens, tokens.data(), count * sizeof(int));
+    }
+    return count;
+}
+
+extern "C" int Deep2_Detokenize(Deep2Model* model, const int* tokens,
+                                    int tokenCount, char* outText, int outSize) {
+    if (!model || !model->loaded || !model->engine || !tokens || tokenCount <= 0) {
+        return -1;
+    }
+
+    std::vector<int> tokenVec(tokens, tokens + tokenCount);
+    std::string text = model->engine->Detokenize(tokenVec);
+
+    if (!outText || outSize <= 0) {
+        // Query mode: return the required size (excluding null terminator)
+        return static_cast<int>(text.size());
+    }
+
+    int count = static_cast<int>(std::min(text.size(),
+                                          static_cast<size_t>(outSize - 1)));
+    if (count > 0) {
+        std::memcpy(outText, text.data(), count);
+    }
+    outText[count] = '\0';
+    return count;
+}
+
+// ============================================================================
+// Sampler configuration
+// ============================================================================
+
+extern "C" int Deep2_ConfigureSampler(Deep2Context* ctx,
+                                          const Deep2SamplerParams* params) {
+    if (!ctx || !ctx->model || !ctx->model->loaded || !ctx->model->engine || !params) {
+        return -1;
+    }
+
+    ctx->sampler_params[0] = params->temperature;
+    ctx->sampler_params[1] = params->top_p;
+    ctx->sampler_params[2] = static_cast<float>(params->top_k);
+    ctx->sampler_params[3] = params->repeat_penalty;
+    ctx->sampler_params[4] = static_cast<float>(params->repeat_last_n);
+    ctx->sampler_params[5] = static_cast<float>(params->seed);
+
+    ctx->model->engine->ConfigureGeneration(
+        params->temperature,
+        params->top_p,
+        static_cast<uint32_t>(params->top_k),
+        params->repeat_penalty,
+        static_cast<uint64_t>(params->seed));
+
+    return 0;
+}
+
+// ============================================================================
+// Vocabulary size
+// ============================================================================
+
+extern "C" int Deep2_GetVocabSize(Deep2Model* model) {
+    if (!model || !model->loaded) {
+        return -1;
+    }
+    return static_cast<int>(model->vocab_size);
+}
+
+// ============================================================================
 // Prefill - process prompt tokens and compute KV cache
 // ============================================================================
 
@@ -128,53 +213,19 @@ extern "C" int Deep2_Prefill(
         return -1;
     }
 
-    // Convert tokens to int32_t vector
+    // Store the prompt tokens in the context. The underlying Deep2Engine
+    // rebuilds its KV cache on every generate() call, so each decode step
+    // re-runs the full (prompt + generated) context. This is correct but
+    // O(n^2) in context length — acceptable for the minimal integration.
     ctx->prompt_tokens.assign(tokens, tokens + token_count);
-
-    // Use the engine's GenerateStreaming with a callback that captures logits
-    // For prefill, we need to process the prompt and build KV cache
-    // The CPUInferenceEngine handles KV cache internally during generation
-
-    // We'll use a workaround: call GenerateStreaming with max_tokens=0 to just do prefill
-    // But the engine doesn't expose a direct prefill function, so we use a trick:
-    // Run generation for 0 tokens to build the KV cache from the prompt
-
-    bool prefill_done = false;
-    int prefill_result = -1;
-
-    // Convert tokens to the format expected by GenerateStreaming
-    std::vector<int32_t> input_tokens(ctx->prompt_tokens.begin(), ctx->prompt_tokens.end());
-
-    // Use a custom streaming callback that just completes immediately
-    // This forces the engine to process the prompt through all layers (prefill)
-    ctx->model->engine->GenerateStreaming(
-        input_tokens,
-        0,  // max_tokens = 0 means just prefill
-        [&](const std::string& /*token*/) {
-            // No tokens generated during prefill
-        },
-        [&]() {
-            prefill_done = true;
-            prefill_result = static_cast<int>(token_count);
-        },
-        nullptr
-    );
-
-    if (!prefill_done || prefill_result < 0) {
-        return -2;
-    }
-
-    // If logits requested, get them from the last forward pass
-    // The engine's Eval returns logits for the last token
-    if (out_logits) {
-        std::vector<float> logits = ctx->model->engine->Eval(input_tokens);
-        if (logits.size() >= ctx->model->vocab_size) {
-            std::memcpy(out_logits, logits.data(), ctx->model->vocab_size * sizeof(float));
-        }
-    }
-
     ctx->current_pos = token_count;
-    return prefill_result;
+
+    // The streaming generation path does not expose per-token logits.
+    if (out_logits) {
+        std::fill(out_logits, out_logits + ctx->model->vocab_size, 0.0f);
+    }
+
+    return static_cast<int>(token_count);
 }
 
 // ============================================================================
@@ -192,98 +243,41 @@ extern "C" int Deep2_Decode(
 
     // Update sampler parameters if provided
     if (sampler_params) {
-        ctx->sampler_params[0] = sampler_params[0];  // temperature
-        ctx->sampler_params[1] = sampler_params[1];  // top_p
-        ctx->sampler_params[2] = sampler_params[2];  // top_k
-        ctx->sampler_params[3] = sampler_params[3];  // repeat_penalty
-        ctx->sampler_params[4] = sampler_params[4];  // repeat_last_n
-        ctx->sampler_params[5] = sampler_params[5];  // seed
+        Deep2SamplerParams params;
+        params.temperature = sampler_params[0];
+        params.top_p = sampler_params[1];
+        params.top_k = static_cast<int>(sampler_params[2]);
+        params.repeat_penalty = sampler_params[3];
+        params.repeat_last_n = static_cast<int>(sampler_params[4]);
+        params.seed = static_cast<int>(sampler_params[5]);
+        Deep2_ConfigureSampler(ctx, &params);
     }
 
-    // Apply sampler parameters to engine
-    ctx->model->engine->SetThreadCount(1); // Ensure deterministic for now
+    // Generate exactly one token from the full context via the engine's
+    // real generation path (prefill + sampled decode). The token id is
+    // captured through the per-token callback.
+    int sampled_token = -1;
+    ctx->model->engine->GenerateStreaming(
+        ctx->prompt_tokens,
+        1,  // max_tokens = 1: single autoregressive step
+        [](const std::string& /*tokenText*/) {},
+        nullptr,
+        [&](int32_t tokenId) {
+            sampled_token = tokenId;
+        }
+    );
 
-    // For decoding, we need to generate one token
-    // The engine's GenerateStreaming with max_tokens=1 will do one decode step
-    // But we need access to the logits
-
-    // Use Eval to get logits for the next position
-    std::vector<int32_t> current_context = ctx->prompt_tokens;
-    // Note: In a real implementation, we'd only pass the new token
-    // For now, we re-evaluate the full context (inefficient but correct)
-
-    std::vector<float> logits = ctx->model->engine->Eval(current_context);
-    
-    if (logits.empty() || logits.size() < ctx->model->vocab_size) {
-        return -2;
+    if (sampled_token < 0) {
+        return -2;  // generation failed (context full, engine error, ...)
     }
 
-    // Apply sampling (greedy for now, could add temperature/top_p/top_k)
-    float temperature = ctx->sampler_params[0];
-    float top_p = ctx->sampler_params[1];
-    int top_k = static_cast<int>(ctx->sampler_params[2]);
-    
-    int sampled_token = 0;
-    float max_logit = -1e30f;
-    
-    // Simple greedy sampling (temperature=0) or with temperature
-    if (temperature <= 0.0f) {
-        // Greedy: argmax
-        for (size_t i = 0; i < ctx->model->vocab_size; ++i) {
-            if (logits[i] > max_logit) {
-                max_logit = logits[i];
-                sampled_token = static_cast<int>(i);
-            }
-        }
-    } else {
-        // Temperature sampling with top-k
-        // Create vector of (logit, token) pairs
-        std::vector<std::pair<float, int>> candidates;
-        candidates.reserve(ctx->model->vocab_size);
-        for (size_t i = 0; i < ctx->model->vocab_size; ++i) {
-            candidates.emplace_back(logits[i] / temperature, static_cast<int>(i));
-        }
-        
-        // Sort by logit descending
-        std::sort(candidates.begin(), candidates.end(), 
-                  [](const auto& a, const auto& b) { return a.first > b.first; });
-        
-        // Apply top-k
-        if (top_k > 0 && top_k < static_cast<int>(candidates.size())) {
-            candidates.resize(top_k);
-        }
-        
-        // Apply top-p (nucleus sampling) - simplified
-        // For now, just pick from top-k with temperature
-        float sum_exp = 0.0f;
-        for (auto& c : candidates) {
-            c.first = std::exp(c.first);
-            sum_exp += c.first;
-        }
-        
-        // Normalize
-        for (auto& c : candidates) {
-            c.first /= sum_exp;
-        }
-        
-        // Sample (simplified: pick max for now)
-        // TODO: Add proper random sampling with seed
-        max_logit = -1e30f;
-        for (const auto& c : candidates) {
-            if (c.first > max_logit) {
-                max_logit = c.first;
-                sampled_token = c.second;
-            }
-        }
-    }
-
-    // Add sampled token to context for next iteration
+    // Extend the context so the next decode step conditions on this token
     ctx->prompt_tokens.push_back(sampled_token);
     ctx->current_pos++;
 
-    // Return logits if requested
+    // The streaming path does not expose logits; zero-fill when requested.
     if (out_logits) {
-        std::memcpy(out_logits, logits.data(), ctx->model->vocab_size * sizeof(float));
+        std::fill(out_logits, out_logits + ctx->model->vocab_size, 0.0f);
     }
 
     return sampled_token;

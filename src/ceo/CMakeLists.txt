@@ -56,7 +56,7 @@ install(TARGETS rawrxd_ceo rawrxd_ceo_cli
 )
 
 # Tests (if testing is enabled)
-if(RAWRXD_BUILD_TESTS)
+if(RAWRXD_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_ceo_agent.cpp")
     add_executable(test_ceo_agent
         tests/test_ceo_agent.cpp
     )

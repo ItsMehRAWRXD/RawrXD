@@ -1,5 +1,6 @@
 // test_main.cpp - Test executable for RawrXDCore DLL
 #include "RawrXDCore.h"
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
@@ -8,7 +9,7 @@ void logCallback(RawrXDLogLevel level, const char* message, void* userData) {
     std::cout << "[" << levelStr[level] << "] " << message << std::endl;
 }
 
-int main() {
+int main(int argc, char** argv) {
     std::cout << "=== RawrXDCore DLL Test ===" << std::endl;
     
     // Test version
@@ -61,7 +62,18 @@ int main() {
     
     // Test model loading
     std::cout << "\n--- Model Loading ---" << std::endl;
-    RawrXDModel* model = RawrXDCore_LoadModel("F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf");
+    // The ModelGenie IR ROM table is generated for DeepSeek-V2-Lite-Chat,
+    // so that is the default model. Override with argv[1] or
+    // RAWRXD_TEST_MODEL.
+    std::string modelPath = "F:/rawrxd/DeepSeek-V2-Lite-Chat.Q4_K_M.gguf";
+    if (const char* envPath = std::getenv("RAWRXD_TEST_MODEL")) {
+        if (envPath && envPath[0]) modelPath = envPath;
+    }
+    if (argc > 1 && argv[1] && argv[1][0]) {
+        modelPath = argv[1];
+    }
+    std::cout << "Model: " << modelPath << std::endl;
+    RawrXDModel* model = RawrXDCore_LoadModel(modelPath.c_str());
     if (!model) {
         std::cerr << "Failed to load model: " << RawrXDCore_GetErrorString(RawrXDCore_GetLastError()) << std::endl;
     } else {

@@ -326,30 +326,39 @@ void GGUFRunner::checkCpuFeatures()
     context_.hasAVX512 = false;
     context_.hasFMA = false;
 
-#if defined(__AVX2__)
-    context_.hasAVX2 = true;
-#endif
-
-#if defined(__AVX512F__)
-    context_.hasAVX512 = true;
-#endif
-
-#if defined(__FMA__)
-    context_.hasFMA = true;
-#endif
-
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
     int cpuInfo[4] = {0};
-    __cpuid(cpuInfo, 0x7);
-    if ((cpuInfo[1] & (1 << 5)) != 0) {
-        context_.hasAVX2 = true;
+    
+    // Check for OSXSAVE support (CPUID.1:ECX bit 27)
+    __cpuid(cpuInfo, 1);
+    bool osxsave = (cpuInfo[2] & (1 << 27)) != 0;
+    
+    // Check for AVX2 support (CPUID.7.0:EBX bit 5)
+    __cpuidex(cpuInfo, 0x7, 0);
+    bool avx2Hardware = (cpuInfo[1] & (1 << 5)) != 0;
+    bool avx512fHardware = (cpuInfo[1] & (1 << 16)) != 0;
+    bool fmaHardware = (cpuInfo[1] & (1 << 12)) != 0;
+    
+    // Verify OS support for AVX/AVX2/AVX-512 via XCR0
+    bool osSupportsAVX = false;
+    bool osSupportsAVX512 = false;
+    if (osxsave) {
+        unsigned long long xcr0 = _xgetbv(0);
+        osSupportsAVX = (xcr0 & 0x6) == 0x6;  // XMM + YMM state
+        osSupportsAVX512 = osSupportsAVX && ((xcr0 & 0xe0) == 0xe0);  // ZMM + opmask + hi_ZMM
     }
-    if ((cpuInfo[1] & (1 << 16)) != 0) {
-        context_.hasAVX512 = true;
-    }
-    if ((cpuInfo[1] & (1 << 12)) != 0) {
-        context_.hasFMA = true;
-    }
+    
+    context_.hasAVX2 = avx2Hardware && osSupportsAVX;
+    context_.hasAVX512 = avx512fHardware && osSupportsAVX512;
+    context_.hasFMA = fmaHardware;
+#else
+    // GCC/Clang runtime detection
+    // Note: __AVX2__ etc. are compile-time, so we rely on compiler defining them
+    // only when the target architecture supports them. For runtime detection
+    // on GCC/Clang, inline asm CPUID would be needed.
+    context_.hasAVX2 = false;
+    context_.hasAVX512 = false;
+    context_.hasFMA = false;
 #endif
 
     qDebug() << "CPU Features: AVX2=" << context_.hasAVX2 

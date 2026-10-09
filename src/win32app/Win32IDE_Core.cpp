@@ -1545,6 +1545,14 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 delete models;  // FIX: free heap-allocated vector from sender
                 return 0;
             }
+            // RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001 - native IDE chat token
+            // streamed by the ModelGenie IR executor worker. lParam points at a
+            // heap chunk owned by the UI thread (freed by the handler).
+            if (uMsg == Win32IDE::kWin32IDENativeChatTokenMessage)
+            {
+                OnNativeChatToken(lParam);
+                return 0;
+            }
             if (uMsg == WM_APP_PS_SESSION_BRINGUP)
             {
                 // Rebuild phases 0–4: do not spin up PowerShell chrome.

@@ -1,8 +1,16 @@
-// cpu_inference_engine.cpp — Delegates to real Deep2Engine for actual inference
-// Replaces stub implementations with calls to the working Deep2 IR executor
+// cpu_inference_engine.cpp - delegates to the certified ModelGenie IR executor
+// RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001
+//
+// CPUInferenceEngine keeps its existing public API (Tokenize / Generate /
+// GenerateStreaming / Eval / LoadModel) so every existing caller - the Win32IDE
+// chat panel, AIAgenticBridge, AIAssistantEngine - keeps working. All actual
+// inference now flows through ModelGenieRuntime, the same 300-operation IR
+// dispatch table the standalone rawrxd_modelgenie_ir_executor harness verifies.
+// No prompt echo, no second inference implementation.
 
 #include "cpu_inference_engine.h"
-#include "Deep2Engine.h"
+#include "ModelGenieRuntime.h"
+
 #include <filesystem>
 #include <iostream>
 #include <algorithm>
@@ -10,25 +18,23 @@
 #include <cstring>
 #include <windows.h>
 #include <vector>
+#include <memory>
+#include <mutex>
 
 namespace RawrXD {
 
-CPUInferenceEngine::CPUInferenceEngine() 
-    : m_modelLoaded(false), m_vocabSize(0), m_embeddingDim(0), m_numLayers(0), m_numHeads(0), 
-      m_threadCount(1), m_contextSize(0), m_maxMode(false), m_deepThinking(false), 
-      m_deepResearch(false), m_useTitanAssembly(true), m_currentPos(0), 
-      m_totalMemoryAllocated(0), m_inferenceCount(0), m_totalInferenceTime(0.0) {
-    
-    // Initialize the real Deep2 engine
-    m_deep2Engine = std::make_unique<::Deep2::Deep2Engine>();
-    
-    // Configure engine
-    ::Deep2::EngineConfig cfg;
-    cfg.maxSeqLen = 4096;
-    cfg.numThreads = 8;
-    cfg.useThreadPool = true;
-    cfg.useKVCache = true;
-    m_deep2Engine->initialize(cfg);
+namespace {
+std::mutex g_mgMutex;
+constexpr int kMGMaxTokensDefault = 256;
+}
+
+CPUInferenceEngine::CPUInferenceEngine()
+: m_modelLoaded(false), m_vocabSize(0), m_embeddingDim(0), m_numLayers(0), m_numHeads(0),
+m_threadCount(1), m_contextSize(0), m_maxMode(false), m_deepThinking(false),
+m_deepResearch(false), m_useTitanAssembly(true), m_currentPos(0),
+m_totalMemoryAllocated(0), m_inferenceCount(0), m_totalInferenceTime(0.0) {
+    // Nothing heavy here: the ModelGenie runtime is bound in LoadModel() so a
+    // context can be created against an already-mapped GGUF.
 }
 
 CPUInferenceEngine::~CPUInferenceEngine() {
@@ -37,25 +43,37 @@ CPUInferenceEngine::~CPUInferenceEngine() {
 
 bool CPUInferenceEngine::LoadModel(const std::string& path) {
     if (path.empty()) return false;
-    
-    // Delegate to real Deep2Engine
-    bool success = m_deep2Engine->loadModel(path);
-    if (success) {
-        m_modelLoaded = true;
-        
-        // Sync metadata
-        const auto& weights = m_deep2Engine->getModelWeights();
-        m_vocabSize = weights.vocabSize;
-        m_embeddingDim = weights.hiddenDim;
-        m_numLayers = weights.numLayers;
-        m_numHeads = weights.numHeads;
-        
-        // Get vocab from tokenizer
-        auto vocab = m_deep2Engine->tokenize("test"); // This will populate vocab internally
-        // The actual vocab is loaded via the tokenizer in Deep2Engine
+
+    std::lock_guard<std::mutex> lock(g_mgMutex);
+
+    // Tear down any previously bound runtime handles before rebinding.
+    if (m_mgContext) { mg_context_free(m_mgContext); m_mgContext = nullptr; }
+    if (m_mgModel) { mg_model_free(m_mgModel); m_mgModel = nullptr; }
+    m_mgReady = false;
+    m_modelLoaded = false;
+
+    mg_model_config_t cfg{};
+    cfg.max_seq_len = 4096;
+    cfg.use_kv_cache = true;
+    if (mg_model_load(path.c_str(), &cfg, &m_mgModel) != MG_SUCCESS) {
+        m_mgModel = nullptr;
+        ClearCache();
+        return false;
     }
-    
-    return success;
+    if (mg_context_create(m_mgModel, &m_mgContext) != MG_SUCCESS) {
+        m_mgContext = nullptr;
+        mg_model_free(m_mgModel);
+        m_mgModel = nullptr;
+        ClearCache();
+        return false;
+    }
+
+    m_mgReady = true;
+    m_modelLoaded = true;
+    m_vocabSize = static_cast<int>(mg_model_vocab_size(m_mgModel));
+    m_embeddingDim = static_cast<int>(mg_model_embedding_dim(m_mgModel));
+    m_contextSize = static_cast<size_t>(mg_model_max_seq_len(m_mgModel));
+    return true;
 }
 
 void CPUInferenceEngine::GenerateStreaming(
@@ -65,144 +83,110 @@ void CPUInferenceEngine::GenerateStreaming(
     std::function<void()> on_done,
     std::function<void(int32_t)> on_token_id
 ) {
-    if (!m_modelLoaded || !m_deep2Engine->isModelLoaded()) {
+    if (!m_modelLoaded || !m_mgReady || !m_mgContext) {
         if (on_done) on_done();
         return;
     }
-    
-    // Convert int32_t to int for Deep2Engine
-    std::vector<int> promptTokens(tokens.begin(), tokens.end());
-    
-    // Allocate output buffer
-    std::vector<int> outputTokens(max_tokens);
-    
-    // Track generated tokens for callback
-    size_t tokensGenerated = 0;
-    
-    // Call Deep2Engine generate with callbacks
-    size_t generated = m_deep2Engine->generate(
-        promptTokens.data(), promptTokens.size(),
-        outputTokens.data(), static_cast<size_t>(max_tokens),
-        nullptr, // stats
-        [&](int tokenId) -> bool {
-            // Convert token to text
-            std::string tokenText = m_deep2Engine->detokenize({tokenId});
-            
-            // Call callbacks
-            if (on_token) on_token(tokenText);
-            if (on_token_id) on_token_id(tokenId);
-            
-            tokensGenerated++;
-            return true; // Continue generating
+
+    if (tokens.empty()) {
+        if (on_done) on_done();
+        return;
+    }
+
+    // Non-volatile variant: collect ids, then marshal to the caller's thread.
+    std::vector<uint32_t> prompt(tokens.begin(), tokens.end());
+    uint32_t ids[1024] = {0};
+    size_t produced = 0;
+    if (mg_context_capture_tokens(m_mgContext, prompt.data(), prompt.size(),
+                                  static_cast<uint32_t>(max_tokens > 0 ? max_tokens : kMGMaxTokensDefault),
+                                  ids, sizeof(ids) / sizeof(ids[0]), &produced) != MG_SUCCESS) {
+        if (on_done) on_done();
+        return;
+    }
+
+    char buf[512] = {0};
+    for (size_t i = 0; i < produced; ++i) {
+        if (!mg_model_token_text(m_mgModel, ids[i], buf, sizeof(buf))) {
+            buf[0] = '\0';
         }
-    );
-    
+        if (on_token) on_token(buf);
+        if (on_token_id) on_token_id(static_cast<int32_t>(ids[i]));
+    }
     if (on_done) on_done();
 }
 
 std::vector<int> CPUInferenceEngine::Tokenize(const std::string& text) {
-    if (!m_deep2Engine->isInitialized()) {
-        return {};
-    }
-    return m_deep2Engine->tokenize(text);
+    if (m_mgModel == nullptr) return {};
+    uint32_t ids[8192] = {0};
+    size_t count = sizeof(ids) / sizeof(ids[0]);
+    if (mg_model_tokenize(m_mgModel, text.c_str(), ids, &count) != MG_SUCCESS) return {};
+    return std::vector<int>(ids, ids + count);
 }
 
 std::string CPUInferenceEngine::Detokenize(const std::vector<int>& tokens) {
-    if (!m_deep2Engine->isInitialized()) {
-        return "";
+    if (m_mgModel == nullptr) return "";
+    std::string out;
+    char buf[512] = {0};
+    for (int t : tokens) {
+        if (mg_model_token_text(m_mgModel, static_cast<uint32_t>(t), buf, sizeof(buf))) {
+            out += buf;
+        }
     }
-    return m_deep2Engine->detokenize(tokens);
+    return out;
 }
 
 void CPUInferenceEngine::ClearCache() {
-    if (m_deep2Engine) {
-        m_deep2Engine->unloadModel();
+    std::lock_guard<std::mutex> lock(g_mgMutex);
+    if (m_mgContext) {
+        mg_context_free(m_mgContext);
+        m_mgContext = nullptr;
     }
+    if (m_mgModel) {
+        mg_model_free(m_mgModel);
+        m_mgModel = nullptr;
+    }
+    m_mgReady = false;
+    m_modelLoaded = false;
     m_kv_cache.clear();
     m_memoryPool.clear();
     m_totalMemoryAllocated = 0;
-    m_modelLoaded = false;
 }
 
 size_t CPUInferenceEngine::GetMemoryUsage() const {
-    if (m_deep2Engine && m_deep2Engine->isInitialized()) {
-        // Deep2Engine doesn't expose memory usage directly, return tracked amount
-        return m_totalMemoryAllocated;
-    }
     return m_totalMemoryAllocated;
 }
 
-// Stub implementations for other required methods in header
-std::vector<float> CPUInferenceEngine::Eval(const std::vector<int32_t>& input_tokens) { 
-    if (!m_modelLoaded || !m_deep2Engine->isModelLoaded()) {
+// Eval() returns the LM-head logits of the last position so callers can
+// inspect the distribution rather than just the argmax.
+std::vector<float> CPUInferenceEngine::Eval(const std::vector<int32_t>& input_tokens) {
+    if (!m_modelLoaded || !m_mgReady || !m_mgContext || input_tokens.empty()) return {};
+
+    const size_t vocab = mg_model_vocab_size(m_mgModel);
+    if (vocab == 0) return {};
+
+    std::vector<uint32_t> prompt(input_tokens.begin(), input_tokens.end());
+    std::vector<float> logits(vocab);
+    size_t available = logits.size();
+    if (mg_context_eval_buffer(m_mgContext, prompt.data(), prompt.size(),
+                               logits.data(), &available) != MG_SUCCESS) {
         return {};
     }
-    
-    // Convert to int
-    std::vector<int> tokens(input_tokens.begin(), input_tokens.end());
-    
-    // Use the real Deep2Engine to generate 1 token and capture logits
-    // We'll use generate with maxOutputLen=1 and a callback that captures the logits
-    // But the real Deep2Engine doesn't expose logits directly in the callback
-    // So we need to run the forward pass manually
-    
-    // For now, run generate to get the token, then compute logits from the hidden state
-    // The real Deep2Engine has computeLogits() but we need the hidden state first
-    
-    // Use generateText for single token generation (it returns the text, not logits)
-    // We'll use the internal forward pass
-    
-    // Allocate output buffer for 1 token
-    std::vector<int> outputTokens(1);
-    
-    // Configure for greedy sampling
-    ::Deep2::GenerationOptions opts;
-    opts.temperature = 0.0f; // Greedy
-    opts.topK = 1;
-    opts.maxTokens = 1;
-    m_deep2Engine->configureGeneration(opts);
-    
-    size_t gen = m_deep2Engine->generate(
-        tokens.data(), tokens.size(),
-        outputTokens.data(), 1,
-        nullptr,
-        nullptr
-    );
-    
-    if (gen > 0 && !tokens.empty()) {
-        // Now we need to get the logits for the last position
-        // Run forward pass through all layers to get hidden state for the last token
-        const auto& weights = m_deep2Engine->getModelWeights();
-        size_t vocabSize = weights.vocabSize;
-        size_t hiddenDim = weights.hiddenDim;
-        
-        // Allocate buffers for forward pass
-        std::vector<float> hidden(hiddenDim);
-        std::vector<float> logits(vocabSize);
-        
-        // Get token embedding for the last token
-        int lastToken = tokens.back();
-        if (m_deep2Engine->embedToken(lastToken, hidden.data())) {
-            // Forward pass through all layers
-            for (size_t layer = 0; layer < weights.numLayers; ++layer) {
-                m_deep2Engine->forwardLayerPublic(layer, hidden.data(), hidden.data(), 1);
-            }
-            
-            // Apply final norm
-            m_deep2Engine->RMSNormW(weights.finalNorm, hidden.data(), hidden.data(), hiddenDim, weights.normEps);
-            
-            // Compute logits
-            m_deep2Engine->computeLogits(hidden.data(), logits.data());
-            
-            return logits;
-        }
-    }
-    
-    return {};
+    logits.resize(available);
+    return logits;
 }
 
 void CPUInferenceEngine::UpdateWeights(const std::vector<std::vector<float>>& layer_gradients, float learning_rate) {}
 void CPUInferenceEngine::UpdateOutputWeights(const std::vector<float>& gradients, float learningRate) {}
+
+void CPUInferenceEngine::ConfigureGeneration(float temperature, float topP,
+                                             uint32_t topK, float repeatPenalty,
+                                             uint64_t seed) {
+    // Sampling configuration for the ModelGenie IR path. The runtime currently
+    // decodes greedily over the IR LM-head activation; retain the parameters so
+    // callers keep working and so a sampler can be attached without touching
+    // the executor kernels.
+    (void)temperature; (void)topP; (void)topK; (void)repeatPenalty; (void)seed;
+}
 void CPUInferenceEngine::SetContextLimit(size_t limit) { m_contextLimit = limit; }
 void CPUInferenceEngine::RegisterMemoryPlugin(std::shared_ptr<RawrXD::IMemoryPlugin> plugin) { m_memoryPlugins.push_back(plugin); }
 bool CPUInferenceEngine::LoadWeights(const std::unordered_map<std::string, Tensor>& tensors) { return true; }
