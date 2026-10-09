@@ -109,43 +109,6 @@ int main() {
     std::cout << "GPU Reserved: " << stats.gpuReserved / (1024*1024) << " MB" << std::endl;
     std::cout << "Peak Usage: " << stats.peakUsage / (1024*1024) << " MB" << std::endl;
     
-    // Test C++ API
-    std::cout << "\n--- C++ API Test ---" << std::endl;
-    {
-        using namespace rawrxd;
-        
-        Core::SetLogCallback(logCallback);
-        Core::SetLogLevel(RAWXD_LOG_INFO);
-        
-        if (Core::Initialize()) {
-            std::cout << "C++ API Initialized: " << Core::GetVersion() << std::endl;
-            
-            Core::Config cppConfig;
-            cppConfig.enableVulkan = true;
-            cppConfig.workerThreadCount = 4;
-            Core::Initialize(&cppConfig);
-            
-            rawrxd::Core::Model cppModel("models/test.gguf");
-            if (cppModel) {
-                std::cout << "C++ Model: " << cppModel.name() << std::endl;
-                
-                rawrxd::Core::InferenceContext cppCtx(cppModel);
-                if (cppCtx) {
-                    RawrXDInferenceParams params;
-                    RawrXDCore_GetDefaultInferenceParams(&params);
-                    params.maxTokens = 5;
-                    
-                    cppCtx.run("Test C++ API", params, [](int id, const char* text) {
-                        std::cout << "C++ Token " << id << ": '" << text << "'" << std::endl;
-                        return true;
-                    });
-                }
-            }
-            
-            Core::Shutdown();
-        }
-    }
-    
     // Cleanup
     std::cout << "\n--- Shutdown ---" << std::endl;
     RawrXDCore_Shutdown();

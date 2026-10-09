@@ -17,42 +17,50 @@ if(NOT BUILD_SHARED_LIBS)
     set(RAWRXD_CORE_STATIC_ONLY TRUE)
 endif()
 
-# Create the library with proper exports
-# Note: STATIC_ONLY is a boolean option - only pass it when TRUE
+# Create the library target
 if(RAWRXD_CORE_STATIC_ONLY)
-    rawrxd_add_shared_library(RawrXDCore
-        STATIC_ONLY
-        SOURCES
-            RawrXDCore.cpp
-        HEADERS
-            RawrXDCore.h
-        INCLUDE_DIRS
-            ${CMAKE_CURRENT_SOURCE_DIR}
-            ${RAWRXD_SOURCE_DIR}/include
-            ${RAWRXD_SOURCE_DIR}/src
-            ${RAWRXD_SOURCE_DIR}/deep2
-        COMPILE_DEFINITIONS
-            RAWRXD_CORE_DLL_BUILD
-        LINK_LIBRARIES
-            psapi
+    add_library(RawrXDCore STATIC
+        RawrXDCore.cpp
+        Deep2InferenceAdapter.cpp
+        ${RAWRXD_SOURCE_DIR}/src/cpu_inference_engine.cpp
+        ${RAWRXD_SOURCE_DIR}/src/GGUFLoader.cpp
     )
 else()
-    rawrxd_add_shared_library(RawrXDCore
-        SOURCES
-            RawrXDCore.cpp
-        HEADERS
-            RawrXDCore.h
-        INCLUDE_DIRS
-            ${CMAKE_CURRENT_SOURCE_DIR}
-            ${RAWRXD_SOURCE_DIR}/include
-            ${RAWRXD_SOURCE_DIR}/src
-            ${RAWRXD_SOURCE_DIR}/deep2
-        COMPILE_DEFINITIONS
-            RAWRXD_CORE_DLL_BUILD
-        LINK_LIBRARIES
-            psapi
+    add_library(RawrXDCore SHARED
+        RawrXDCore.cpp
+        Deep2InferenceAdapter.cpp
+        ${RAWRXD_SOURCE_DIR}/src/cpu_inference_engine.cpp
+        ${RAWRXD_SOURCE_DIR}/src/GGUFLoader.cpp
     )
 endif()
+
+# Generate export header for shared libraries on Windows using the shared library function
+if(NOT RAWRXD_CORE_STATIC_ONLY AND WIN32)
+    rawrxd_generate_export_header(RawrXDCore ${CMAKE_CURRENT_BINARY_DIR}/RawrXDCore_exports.h)
+    target_include_directories(RawrXDCore PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    target_compile_definitions(RawrXDCore PRIVATE RAWRXD_CORE_DLL_BUILD RawrXDCore_EXPORTS)
+endif()
+
+# Include directories - use PRIVATE to avoid CMP0104 policy issues
+target_include_directories(RawrXDCore PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${RAWRXD_SOURCE_DIR}/include
+    ${RAWRXD_SOURCE_DIR}/src
+    ${RAWRXD_SOURCE_DIR}/src/deep2
+)
+
+# Compile definitions
+target_compile_definitions(RawrXDCore PRIVATE RAWRXD_CORE_DLL_BUILD)
+
+# Link libraries
+target_link_libraries(RawrXDCore PRIVATE psapi)
+
+# Set C++ standard
+set_target_properties(RawrXDCore PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
 
 # Set DLL-specific properties
 set_target_properties(RawrXDCore PROPERTIES
@@ -83,13 +91,23 @@ set_target_properties(RawrXDCore PROPERTIES
 
 # MSVC Runtime: MultiThreadedDLL (/MD /MDd) for DLLs
 if(MSVC)
-    # Explicitly set target properties to override any auto-generated values
-    set_target_properties(RawrXDCore PROPERTIES
-        MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebugDLL"
-        MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreadedDLL"
-        MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreadedDLL"
-        MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreadedDLL"
-    )
+    if(NOT RAWRXD_CORE_STATIC_ONLY)
+        # Shared library - use DLL runtime (/MD /MDd)
+        set_target_properties(RawrXDCore PROPERTIES
+            MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebugDLL"
+            MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreadedDLL"
+            MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreadedDLL"
+            MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreadedDLL"
+        )
+    else()
+        # Static library - use static runtime (/MT /MTd)
+        set_target_properties(RawrXDCore PROPERTIES
+            MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebug"
+            MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreaded"
+            MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreaded"
+            MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreaded"
+        )
+    endif()
     
     target_compile_options(RawrXDCore PRIVATE
         $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>>:/MDd>
@@ -137,12 +155,10 @@ install(EXPORT RawrXDCoreTargets
 )
 
 # Example executable that uses the DLL
-rawrxd_add_executable(RawrXDCore_Test
-    SOURCES
-        test_main.cpp
-    LINK_LIBRARIES
-        RawrXDCore
-)
+# Use standard CMake for the test executable
+add_executable(RawrXDCore_Test test_main.cpp)
+target_link_libraries(RawrXDCore_Test PRIVATE RawrXDCore)
+target_include_directories(RawrXDCore_Test PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 # Set test executable properties
 set_target_properties(RawrXDCore_Test PROPERTIES
@@ -153,7 +169,10 @@ set_target_properties(RawrXDCore_Test PROPERTIES
 
 if(MSVC)
     set_target_properties(RawrXDCore_Test PROPERTIES
-        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>"
+        MSVC_RUNTIME_LIBRARY_DEBUG "MultiThreadedDebugDLL"
+        MSVC_RUNTIME_LIBRARY_RELEASE "MultiThreadedDLL"
+        MSVC_RUNTIME_LIBRARY_RELWITHDEBINFO "MultiThreadedDLL"
+        MSVC_RUNTIME_LIBRARY_MINSIZEREL "MultiThreadedDLL"
     )
 endif()
 

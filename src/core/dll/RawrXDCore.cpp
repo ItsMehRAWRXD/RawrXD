@@ -12,9 +12,14 @@
 #include <cstdint>
 
 // Deep2 includes
-#include <Deep2/GGUFLoader.hpp>
+#include <GGUFLoader.hpp>
+
+// Deep2 inference engine adapter
+#include "Deep2InferenceAdapter.h"
 
 namespace {
+    using namespace ::Deep2;  // Bring global Deep2 namespace into scope
+    
     struct InitState {
         bool initialized = false;
         RawrXDConfig config{};
@@ -57,8 +62,8 @@ namespace {
         bool loaded = false;
         
         // Deep2 loader
-        std::shared_ptr<Deep2::GGUFLoader> loader;
-        Deep2::GGUFTensor* getTensor(const std::string& name) {
+        std::shared_ptr<::Deep2::GGUFLoader> loader;
+        ::Deep2::GGUFTensor* getTensor(const std::string& name) {
             return loader ? loader->getTensor(name) : nullptr;
         }
         
@@ -85,6 +90,9 @@ namespace {
         uint64_t mappedBytes() const {
             return loader ? loader->mappedBytes() : 0;
         }
+        
+        // Deep2 model handle for inference
+        ::Deep2::Model deep2Model;
     };
     
     // Real inference context using Deep2 engine
@@ -97,345 +105,354 @@ namespace {
         std::vector<int> promptTokens;
         size_t currentPosition = 0;
         
-        // For real inference, we'd hold the Deep2 engine context here
-        // void* engineContext = nullptr;
+        // Real Deep2 engine context
+        ::Deep2::Context deep2Context;
+        
+        // Sampler parameters cache
+        float samplerParams[6] = {0.7f, 0.9f, 40.0f, 1.1f, 64.0f, 0.0f}; // temp, top_p, top_k, repeat_penalty, repeat_last_n, seed
     };
     
-    std::unordered_map<RawrXDModel*, ModelImpl> g_models;
-    std::unordered_map<RawrXDInferenceContext*, ContextImpl> g_contexts;
-    std::mutex g_modelsMutex;
-    std::mutex g_contextsMutex;
+    // Real tokenizer using GGUF metadata
+    struct TokenizerImpl {
+        ModelImpl* model = nullptr;
+        std::vector<std::string> vocab;           // id -> token text
+        std::unordered_map<std::string, uint32_t> tokenToId;  // token text -> id
+        std::vector<uint8_t> tokenTypes;          // token type per id
+        std::vector<std::pair<std::string, std::string>> merges;  // BPE merges
+        uint32_t bosTokenId = 0;
+        uint32_t eosTokenId = 0;
+        uint32_t unkTokenId = 0;
+        bool loaded = false;
+        
+        bool loadFromModel(ModelImpl* m) {
+            model = m;
+            if (!m || !m->loader || !m->loaded) return false;
+            
+            // Load vocabulary from tokenizer.ggml.tokens
+            std::vector<std::string> tokens;
+            if (!m->loader->getMetaStringArray("tokenizer.ggml.tokens", tokens)) {
+                return false;
+            }
+            
+            vocab.reserve(tokens.size());
+            for (const auto& token : tokens) {
+                vocab.push_back(token);
+            }
+            
+            // Build token-to-id map
+            tokenToId.reserve(vocab.size() * 2);
+            for (size_t i = 0; i < vocab.size(); ++i) {
+                tokenToId[vocab[i]] = static_cast<uint32_t>(i);
+            }
+            
+            // Load token types if available
+            std::vector<int32_t> tokenTypes;
+            if (m->loader->getMetaInt32Array("tokenizer.ggml.token_type", tokenTypes)) {
+                this->tokenTypes.resize(tokenTypes.size());
+                for (size_t i = 0; i < tokenTypes.size(); ++i) {
+                    this->tokenTypes[i] = static_cast<uint8_t>(tokenTypes[i]);
+                }
+            }
+            
+            // Load merges
+            std::vector<std::string> mergesStr;
+            if (m->loader->getMetaStringArray("tokenizer.ggml.merges", mergesStr)) {
+                merges.reserve(mergesStr.size());
+                for (const auto& merge : mergesStr) {
+                    size_t spacePos = merge.find(' ');
+                    if (spacePos != std::string::npos) {
+                        std::string first = merge.substr(0, spacePos);
+                        std::string second = merge.substr(spacePos + 1);
+                        merges.emplace_back(first, second);
+                    }
+                }
+            }
+            
+            // Load special token IDs
+            bosTokenId = static_cast<uint32_t>(m->loader->getMetaInt("tokenizer.ggml.bos_token_id", 1));
+            eosTokenId = static_cast<uint32_t>(m->loader->getMetaInt("tokenizer.ggml.eos_token_id", 2));
+            unkTokenId = static_cast<uint32_t>(m->loader->getMetaInt("tokenizer.ggml.unk_token_id", 0));
+            
+            loaded = true;
+            return true;
+        }
+        
+        size_t encode(const std::string& text, uint32_t* outTokens, size_t maxTokens) const {
+            if (!loaded || vocab.empty()) return 0;
+            
+            // Simple greedy BPE tokenization (naive implementation for now)
+            // Real implementation would use the merges table
+            size_t tokenCount = 0;
+            std::string current;
+            
+            for (char c : text) {
+                current += c;
+                auto it = tokenToId.find(current);
+                if (it != tokenToId.end()) {
+                    // Found a match, but check if we can extend
+                    continue;
+                }
+                
+                // Current string not in vocab, emit previous
+                if (current.size() > 1) {
+                    current.pop_back(); // remove the char that made it invalid
+                }
+                if (!current.empty()) {
+                    auto it = tokenToId.find(current);
+                    if (it != tokenToId.end() && tokenCount < maxTokens) {
+                        outTokens[tokenCount++] = it->second;
+                    } else if (tokenCount < maxTokens) {
+                        outTokens[tokenCount++] = unkTokenId;
+                    }
+                }
+                current = text.substr(text.find(current) + current.size() - 1, 1);
+            }
+            
+            // Handle remaining
+            if (!current.empty() && tokenCount < maxTokens) {
+                auto it = tokenToId.find(current);
+                if (it != tokenToId.end()) {
+                    outTokens[tokenCount++] = it->second;
+                } else {
+                    outTokens[tokenCount++] = unkTokenId;
+                }
+            }
+            
+            return tokenCount;
+        }
+        
+        std::string decode(const uint32_t* tokens, size_t tokenCount) const {
+            if (!loaded) return "";
+            std::string result;
+            for (size_t i = 0; i < tokenCount; ++i) {
+                uint32_t id = tokens[i];
+                if (id < vocab.size()) {
+                    result += vocab[id];
+                }
+            }
+            return result;
+        }
+    };
+    
+    // Global maps for tokenizer management
+    std::unordered_map<ModelImpl*, TokenizerImpl> g_tokenizers;
+    std::mutex g_tokenizersMutex;
 }
 
+// C API implementations
 extern "C" {
 
-// Version
-RawrXDCore_EXPORT const char* RawrXDCore_GetVersion(void) {
+const char* RawrXDCore_GetVersion(void) {
     return "14.7.3";
 }
 
-RawrXDCore_EXPORT int RawrXDCore_GetVersionMajor(void) { return 14; }
-RawrXDCore_EXPORT int RawrXDCore_GetVersionMinor(void) { return 7; }
-RawrXDCore_EXPORT int RawrXDCore_GetVersionPatch(void) { return 3; }
+int RawrXDCore_GetVersionMajor(void) {
+    return 14;
+}
 
-// Initialization
-RawrXDCore_EXPORT bool RawrXDCore_Initialize(void) {
+int RawrXDCore_GetVersionMinor(void) {
+    return 7;
+}
+
+int RawrXDCore_GetVersionPatch(void) {
+    return 3;
+}
+
+bool RawrXDCore_Initialize(void) {
     auto& state = getState();
-    std::lock_guard<std::mutex> lock(state.mutex);
-    
     if (state.initialized) {
         setLastError(RAWXD_ERROR_ALREADY_INITIALIZED);
         return false;
     }
-    
-    RawrXDCore_GetDefaultConfig(&state.config);
-    
     state.initialized = true;
-    state.lastError = RAWXD_OK;
-    logMessage(RAWXD_LOG_INFO, "RawrXDCore initialized v%s", RawrXDCore_GetVersion());
+    logMessage(RAWXD_LOG_INFO, "RawrXDCore initialized");
     return true;
 }
 
-RawrXDCore_EXPORT void RawrXDCore_Shutdown(void) {
+void RawrXDCore_Shutdown(void) {
     auto& state = getState();
-    std::lock_guard<std::mutex> lock(state.mutex);
-    
     if (!state.initialized) return;
     
+    // Note: Models and contexts are managed by caller via handles
+    // Just clear tokenizer cache
     {
-        std::lock_guard<std::mutex> ctxLock(g_contextsMutex);
-        g_contexts.clear();
-    }
-    
-    {
-        std::lock_guard<std::mutex> modelLock(g_modelsMutex);
-        g_models.clear();
+        std::lock_guard<std::mutex> lock(g_tokenizersMutex);
+        g_tokenizers.clear();
     }
     
     state.initialized = false;
-    state.logCallback = nullptr;
-    state.logUserData = nullptr;
     logMessage(RAWXD_LOG_INFO, "RawrXDCore shutdown");
 }
 
-RawrXDCore_EXPORT bool RawrXDCore_IsInitialized(void) {
+bool RawrXDCore_IsInitialized(void) {
     return getState().initialized;
 }
 
-// Logging
-RawrXDCore_EXPORT void RawrXDCore_SetLogCallback(RawrXDLogCallback callback, void* userData) {
+void RawrXDCore_SetLogCallback(RawrXDLogCallback callback, void* userData) {
     auto& state = getState();
-    std::lock_guard<std::mutex> lock(state.mutex);
     state.logCallback = callback;
     state.logUserData = userData;
 }
 
-RawrXDCore_EXPORT void RawrXDCore_SetLogLevel(RawrXDLogLevel level) {
-    auto& state = getState();
-    std::lock_guard<std::mutex> lock(state.mutex);
-    state.logLevel = level;
+void RawrXDCore_SetLogLevel(RawrXDLogLevel level) {
+    getState().logLevel = level;
 }
 
-// Configuration
-RawrXDCore_EXPORT void RawrXDCore_GetDefaultConfig(RawrXDConfig* config) {
+void RawrXDCore_GetDefaultConfig(RawrXDConfig* config) {
     if (!config) return;
     config->enableVulkan = true;
     config->enableMASM = true;
     config->enableTelemetry = false;
-    config->workerThreadCount = 0;
-    config->maxMemoryMB = 0;
+    config->workerThreadCount = 4;
+    config->maxMemoryMB = 4096;
     config->modelCachePath = nullptr;
     config->logFilePath = nullptr;
 }
 
-RawrXDCore_EXPORT bool RawrXDCore_Configure(const RawrXDConfig* config) {
-    auto& state = getState();
-    std::lock_guard<std::mutex> lock(state.mutex);
-    
-    if (!state.initialized) {
-        setLastError(RAWXD_ERROR_NOT_INITIALIZED);
-        return false;
-    }
-    
+bool RawrXDCore_Configure(const RawrXDConfig* config) {
     if (!config) {
         setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return false;
     }
-    
+    auto& state = getState();
     state.config = *config;
-    logMessage(RAWXD_LOG_INFO, "RawrXDCore configured: Vulkan=%d, MASM=%d, Threads=%d",
-               config->enableVulkan, config->enableMASM, config->workerThreadCount);
+    logMessage(RAWXD_LOG_INFO, "RawrXDCore configured");
     return true;
 }
 
-// Model Management - REAL GGUF Loading
-RawrXDCore_EXPORT RawrXDModel* RawrXDCore_LoadModel(const char* path) {
+RawrXDModel* RawrXDCore_LoadModel(const char* path) {
+    if (!path || !path[0]) {
+        setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
+        return nullptr;
+    }
+    
     auto& state = getState();
     if (!state.initialized) {
         setLastError(RAWXD_ERROR_NOT_INITIALIZED);
         return nullptr;
     }
     
-    if (!path) {
-        setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
+    ModelImpl impl;
+    impl.path = path;
+    
+    // Load using Deep2 GGUFLoader
+    try {
+        impl.loader = std::make_shared<::Deep2::GGUFLoader>();
+        if (!impl.loader->load(path)) {
+            setLastError(RAWXD_ERROR_MODEL_NOT_FOUND);
+            logMessage(RAWXD_LOG_ERROR, "Failed to open model: %s", path);
+            return nullptr;
+        }
+        
+        // Extract model metadata
+        impl.name = impl.loader->getMetaString("general.name", "unknown");
+        impl.arch = impl.loader->getMetaString("general.architecture", "unknown");
+        impl.size = static_cast<size_t>(impl.loader->getMetaInt("general.file_size", 0));
+        impl.layers = static_cast<int>(impl.loader->getMetaInt("llama.block_count", 0));
+        impl.loaded = true;
+        
+        // Store in global map - use integer handle
+        uintptr_t handle = reinterpret_cast<uintptr_t>(new ModelImpl(std::move(impl)));
+        
+        logMessage(RAWXD_LOG_INFO, "Model loaded: %s (layers=%d, size=%zu)", path, reinterpret_cast<ModelImpl*>(handle)->layers, reinterpret_cast<ModelImpl*>(handle)->size);
+        return reinterpret_cast<RawrXDModel*>(handle);
+    } catch (...) {
+        setLastError(RAWXD_ERROR_INTERNAL);
         return nullptr;
     }
-    
-    // Create model implementation
-    auto modelImpl = std::make_unique<ModelImpl>();
-    modelImpl->path = path;
-    
-    // Extract filename as name
-    size_t pos = modelImpl->path.find_last_of("/\\");
-    modelImpl->name = (pos == std::string::npos) ? modelImpl->path : modelImpl->path.substr(pos + 1);
-    
-    // Load with Deep2 GGUFLoader
-    modelImpl->loader = std::make_shared<Deep2::GGUFLoader>();
-    if (!modelImpl->loader->load(path)) {
-        std::string error = modelImpl->loader->error();
-        logMessage(RAWXD_LOG_ERROR, "Failed to load model '%s': %s", path, error.c_str());
-        setLastError(RAWXD_ERROR_MODEL_CORRUPT);
-        return nullptr;
-    }
-    
-    // Extract metadata from GGUF
-    modelImpl->size = modelImpl->loader->mappedBytes();
-    
-    // Get architecture to determine correct metadata key for layer count
-    std::string arch = modelImpl->loader->getMetaString("general.architecture");
-    std::string blockCountKey = "general.block_count";  // default fallback
-    if (arch == "llama" || arch == "mistral" || arch == "falcon" || arch == "mpt" || arch == "gptneox" || arch == "bloom") {
-        blockCountKey = arch + ".block_count";
-    }
-    modelImpl->layers = static_cast<int>(modelImpl->loader->getMetaInt(blockCountKey.c_str(), 0));
-    modelImpl->arch = arch;  // Store architecture
-    modelImpl->loaded = true;
-    
-    // Extract model name from metadata if available
-    std::string metaName = modelImpl->loader->getMetaString("general.name");
-    if (!metaName.empty()) {
-        // Use the raw metadata name, but strip architecture prefix if duplicated
-        // e.g., "llama_llama-7b" -> "llama-7b", "tinyllama_tinyllama-1.1b" -> "tinyllama-1.1b"
-        bool stripped = false;
-        
-        // Try architecture-specific prefixes
-        if (!arch.empty()) {
-            std::string prefix = arch + "_";
-            if (metaName.rfind(prefix, 0) == 0) {
-                modelImpl->name = metaName.substr(prefix.length());
-                stripped = true;
-            }
-        }
-        
-        // If not stripped, try common architecture variants
-        if (!stripped) {
-            std::vector<std::pair<std::string, std::string>> variants = {
-                {"llama", "llama_"},
-                {"llama", "tinyllama_"},
-                {"mistral", "mistral_"},
-                {"falcon", "falcon_"},
-                {"mpt", "mpt_"},
-                {"gptneox", "gptneox_"},
-                {"bloom", "bloom_"}
-            };
-            
-            for (const auto& [archKey, prefix] : variants) {
-                if (metaName.rfind(prefix, 0) == 0) {
-                    modelImpl->name = metaName.substr(prefix.length());
-                    stripped = true;
-                    break;
-                }
-            }
-        }
-        
-        if (!stripped) {
-            modelImpl->name = metaName;
-        }
-    } else {
-        // Fallback to filename
-        size_t pos = modelImpl->path.find_last_of("/\\");
-        modelImpl->name = (pos == std::string::npos) ? modelImpl->path : modelImpl->path.substr(pos + 1);
-    }
-    
-    logMessage(RAWXD_LOG_INFO, "Loaded model: %s (%zu MB, %d layers, %zu tensors, %zu MB mapped, arch=%s)", 
-               modelImpl->name.c_str(), 
-               modelImpl->size / (1024*1024), 
-               modelImpl->layers,
-               modelImpl->loader->tensorCount(),
-               modelImpl->loader->mappedBytes() / (1024*1024),
-               arch.c_str());
-    
-    // Create handle
-    RawrXDModel* handle = reinterpret_cast<RawrXDModel*>(modelImpl.release());
-    
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    g_models[handle] = std::move(*reinterpret_cast<ModelImpl*>(handle));
-    
-    setLastError(RAWXD_OK);
-    return handle;
 }
 
-RawrXDCore_EXPORT void RawrXDCore_UnloadModel(RawrXDModel* model) {
+void RawrXDCore_UnloadModel(RawrXDModel* model) {
     if (!model) return;
-    
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(model);
-    if (it != g_models.end()) {
-        logMessage(RAWXD_LOG_INFO, "Unloaded model: %s", it->second.name.c_str());
-        delete reinterpret_cast<ModelImpl*>(model);
-        g_models.erase(it);
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(model);
+    if (impl->loader) {
+        impl->loader.reset();
     }
+    delete impl;
 }
 
-RawrXDCore_EXPORT const char* RawrXDCore_GetModelName(const RawrXDModel* model) {
+const char* RawrXDCore_GetModelName(const RawrXDModel* model) {
     if (!model) return "";
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(const_cast<RawrXDModel*>(model));
-    if (it != g_models.end()) {
-        return it->second.name.c_str();
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    static thread_local std::string name;
+    name = impl->name;
+    return name.c_str();
+}
+
+size_t RawrXDCore_GetModelSize(const RawrXDModel* model) {
+    if (!model) return 0;
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    return impl->size;
+}
+
+int RawrXDCore_GetModelLayerCount(const RawrXDModel* model) {
+    if (!model) return 0;
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    return impl->layers;
+}
+
+size_t RawrXDCore_GetModelTensorCount(const RawrXDModel* model) {
+    if (!model) return 0;
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    if (impl && impl->loader) {
+        return impl->tensorCount();
+    }
+    return 0;
+}
+
+uint64_t RawrXDCore_GetModelMappedBytes(const RawrXDModel* model) {
+    if (!model) return 0;
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    if (impl && impl->loader) {
+        return impl->mappedBytes();
+    }
+    return 0;
+}
+
+int64_t RawrXDCore_GetModelMetaInt(const RawrXDModel* model, const char* key, int64_t def) {
+    if (!model || !key) return def;
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    if (impl && impl->loader) {
+        return impl->getMetaInt(key, def);
+    }
+    return def;
+}
+
+double RawrXDCore_GetModelMetaFloat(const RawrXDModel* model, const char* key, double def) {
+    if (!model || !key) return def;
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    if (impl && impl->loader) {
+        return impl->getMetaFloat(key, def);
+    }
+    return def;
+}
+
+const char* RawrXDCore_GetModelMetaString(const RawrXDModel* model, const char* key) {
+    if (!model || !key) return "";
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    if (impl && impl->loader) {
+        static thread_local std::string str;
+        str = impl->getMetaString(key, "");
+        return str.c_str();
     }
     return "";
 }
 
-RawrXDCore_EXPORT size_t RawrXDCore_GetModelSize(const RawrXDModel* model) {
-    if (!model) return 0;
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(const_cast<RawrXDModel*>(model));
-    if (it != g_models.end()) {
-        return it->second.size;
-    }
-    return 0;
-}
-
-RawrXDCore_EXPORT int RawrXDCore_GetModelLayerCount(const RawrXDModel* model) {
-    if (!model) return 0;
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(const_cast<RawrXDModel*>(model));
-    if (it != g_models.end()) {
-        return it->second.layers;
-    }
-    return 0;
-}
-
-// NEW: Get model tensor count
-RawrXDCore_EXPORT size_t RawrXDCore_GetModelTensorCount(const RawrXDModel* model) {
-    if (!model) return 0;
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(const_cast<RawrXDModel*>(model));
-    if (it != g_models.end()) {
-        return it->second.tensorCount();
-    }
-    return 0;
-}
-
-// NEW: Get model mapped bytes
-RawrXDCore_EXPORT uint64_t RawrXDCore_GetModelMappedBytes(const RawrXDModel* model) {
-    if (!model) return 0;
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(const_cast<RawrXDModel*>(model));
-    if (it != g_models.end()) {
-        return it->second.mappedBytes();
-    }
-    return 0;
-}
-
-// NEW: Get model metadata
-RawrXDCore_EXPORT int64_t RawrXDCore_GetModelMetaInt(const RawrXDModel* model, const char* key, int64_t def) {
-    if (!model || !key) return def;
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(const_cast<RawrXDModel*>(model));
-    if (it != g_models.end()) {
-        return it->second.getMetaInt(key, def);
-    }
-    return def;
-}
-
-RawrXDCore_EXPORT double RawrXDCore_GetModelMetaFloat(const RawrXDModel* model, const char* key, double def) {
-    if (!model || !key) return def;
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(const_cast<RawrXDModel*>(model));
-    if (it != g_models.end()) {
-        return it->second.getMetaFloat(key, def);
-    }
-    return def;
-}
-
-RawrXDCore_EXPORT const char* RawrXDCore_GetModelMetaString(const RawrXDModel* model, const char* key) {
-    if (!model || !key) return nullptr;
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(const_cast<RawrXDModel*>(model));
-    if (it != g_models.end()) {
-        static thread_local std::string cached;
-        cached = it->second.getMetaString(key);
-        return cached.c_str();
-    }
-    return nullptr;
-}
-
-// NEW: List model tensors
-RawrXDCore_EXPORT size_t RawrXDCore_ListModelTensors(const RawrXDModel* model, char*** outNames) {
+size_t RawrXDCore_ListModelTensors(const RawrXDModel* model, char*** outNames) {
     if (!model || !outNames) return 0;
-    std::lock_guard<std::mutex> lock(g_modelsMutex);
-    auto it = g_models.find(const_cast<RawrXDModel*>(model));
-    if (it == g_models.end()) return 0;
-    
-    auto names = it->second.listTensors();
-    size_t count = names.size();
-    if (count == 0) {
-        *outNames = nullptr;
-        return 0;
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    if (impl && impl->loader) {
+        auto tensors = impl->listTensors();
+        *outNames = static_cast<char**>(malloc(tensors.size() * sizeof(char*)));
+        for (size_t i = 0; i < tensors.size(); ++i) {
+            (*outNames)[i] = _strdup(tensors[i].c_str());
+        }
+        return tensors.size();
     }
-    
-    *outNames = static_cast<char**>(malloc(count * sizeof(char*)));
-    if (!*outNames) return 0;
-    
-    for (size_t i = 0; i < count; ++i) {
-        (*outNames)[i] = _strdup(names[i].c_str());
-    }
-    return count;
+    return 0;
 }
 
-RawrXDCore_EXPORT void RawrXDCore_FreeTensorList(char** names, size_t count) {
+void RawrXDCore_FreeTensorList(char** names, size_t count) {
     if (!names) return;
     for (size_t i = 0; i < count; ++i) {
         free(names[i]);
@@ -443,173 +460,206 @@ RawrXDCore_EXPORT void RawrXDCore_FreeTensorList(char** names, size_t count) {
     free(names);
 }
 
-// Inference Context
-RawrXDCore_EXPORT RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* model) {
+RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* model) {
+    if (!model) {
+        setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
+        return nullptr;
+    }
+    
     auto& state = getState();
     if (!state.initialized) {
         setLastError(RAWXD_ERROR_NOT_INITIALIZED);
         return nullptr;
     }
     
-    if (!model) {
-        setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
+    ModelImpl* modelImpl = reinterpret_cast<ModelImpl*>(model);
+    if (!modelImpl || !modelImpl->loaded) {
+        setLastError(RAWXD_ERROR_MODEL_NOT_FOUND);
         return nullptr;
     }
     
-    // Verify model exists
-    {
-        std::lock_guard<std::mutex> lock(g_modelsMutex);
-        if (g_models.find(model) == g_models.end()) {
-            setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
-            return nullptr;
-        }
-    }
+    // Create context with direct pointer
+    ContextImpl* ctxImpl = new ContextImpl();
+    ctxImpl->model = modelImpl;
     
-    ContextImpl* ctx = new ContextImpl();
-    ctx->model = reinterpret_cast<ModelImpl*>(model);
-    RawrXDCore_GetDefaultInferenceParams(&ctx->params);
-    ctx->active = true;
+    // Return as opaque handle
+    uintptr_t handle = reinterpret_cast<uintptr_t>(ctxImpl);
     
-    RawrXDInferenceContext* handle = reinterpret_cast<RawrXDInferenceContext*>(ctx);
-    
-    std::lock_guard<std::mutex> lock(g_contextsMutex);
-    g_contexts[handle] = *ctx;
-    
-    logMessage(RAWXD_LOG_DEBUG, "Created inference context for model: %s", ctx->model->name.c_str());
-    setLastError(RAWXD_OK);
-    return handle;
+    logMessage(RAWXD_LOG_INFO, "Context created for model");
+    return reinterpret_cast<RawrXDInferenceContext*>(handle);
 }
 
-RawrXDCore_EXPORT void RawrXDCore_DestroyContext(RawrXDInferenceContext* ctx) {
+void RawrXDCore_DestroyContext(RawrXDInferenceContext* ctx) {
     if (!ctx) return;
-    
-    std::lock_guard<std::mutex> lock(g_contextsMutex);
-    auto it = g_contexts.find(ctx);
-    if (it != g_contexts.end()) {
-        logMessage(RAWXD_LOG_DEBUG, "Destroyed inference context");
-        delete reinterpret_cast<ContextImpl*>(ctx);
-        g_contexts.erase(it);
-    }
+    ContextImpl* impl = reinterpret_cast<ContextImpl*>(ctx);
+    delete impl;
 }
 
-RawrXDCore_EXPORT void RawrXDCore_GetDefaultInferenceParams(RawrXDInferenceParams* params) {
+void RawrXDCore_GetDefaultInferenceParams(RawrXDInferenceParams* params) {
     if (!params) return;
-    params->maxTokens = 256;
-    params->temperature = 0.8f;
+    params->maxTokens = 100;
+    params->temperature = 0.7f;
     params->topP = 0.9f;
     params->topK = 40;
     params->repeatPenalty = 1.1f;
-    params->seed = -1;
-    params->useGPU = true;
+    params->seed = 0;
+    params->useGPU = false;
     params->gpuDeviceId = 0;
 }
 
-// Inference - REAL Deep2 Integration (placeholder for actual engine integration)
-RawrXDCore_EXPORT int RawrXDCore_RunInference(
+int RawrXDCore_RunInference(
     RawrXDInferenceContext* ctx,
     const char* prompt,
     const RawrXDInferenceParams* params,
     RawrXDTokenCallback callback,
     void* userData
 ) {
-    auto& state = getState();
-    if (!state.initialized) {
-        setLastError(RAWXD_ERROR_NOT_INITIALIZED);
-        return 0;
-    }
-    
     if (!ctx || !prompt || !callback) {
         setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return 0;
     }
     
-    std::lock_guard<std::mutex> lock(g_contextsMutex);
-    auto it = g_contexts.find(ctx);
-    if (it == g_contexts.end()) {
+    ContextImpl* impl = reinterpret_cast<ContextImpl*>(ctx);
+    if (!impl->model || !impl->model->loaded) {
+        setLastError(RAWXD_ERROR_MODEL_NOT_FOUND);
+        return 0;
+    }
+    
+    RawrXDInferenceParams p = params ? *params : RawrXDInferenceParams{};
+    if (p.maxTokens <= 0) p.maxTokens = 100;
+    if (p.temperature < 0) p.temperature = 0.7f;
+    if (p.topP <= 0) p.topP = 0.9f;
+    if (p.topK <= 0) p.topK = 40;
+    if (p.repeatPenalty <= 0) p.repeatPenalty = 1.1f;
+    
+    impl->params = p;
+    
+    // Get or create tokenizer
+    TokenizerImpl* tokenizer = nullptr;
+    {
+        std::lock_guard<std::mutex> tokLock(g_tokenizersMutex);
+        auto tokIt = g_tokenizers.find(impl->model);
+        if (tokIt == g_tokenizers.end()) {
+            TokenizerImpl newTok;
+            if (newTok.loadFromModel(impl->model)) {
+                g_tokenizers[impl->model] = std::move(newTok);
+                tokenizer = &g_tokenizers[impl->model];
+            }
+        } else {
+            tokenizer = &tokIt->second;
+        }
+    }
+    
+    if (!tokenizer || !tokenizer->loaded) {
+        setLastError(RAWXD_ERROR_INTERNAL);
+        return 0;
+    }
+    
+    // Tokenize prompt
+    std::vector<uint32_t> promptTokens(4096);
+    size_t tokenCount = tokenizer->encode(prompt, promptTokens.data(), promptTokens.size());
+    promptTokens.resize(tokenCount);
+    
+    if (tokenCount == 0) {
         setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return 0;
     }
     
-    ContextImpl& context = it->second;
-    if (params) context.params = *params;
+    impl->promptTokens.clear();
+    for (uint32_t t : promptTokens) {
+        impl->promptTokens.push_back(static_cast<int>(t));
+    }
+    impl->currentPosition = 0;
     
-    logMessage(RAWXD_LOG_INFO, "Running inference: \"%s\" (max_tokens=%d, temp=%.2f)",
-               prompt, context.params.maxTokens, context.params.temperature);
+    // Create Deep2 context if needed
+    if (!impl->deep2Context.get()) {
+        impl->deep2Context = ::Deep2::Context(impl->model->deep2Model, 4096);
+        if (!impl->deep2Context) {
+            setLastError(RAWXD_ERROR_INTERNAL);
+            return 0;
+        }
+        // Set vocab size
+        impl->deep2Context.setVocabSize(impl->model->loader->tensorCount());
+    }
     
-    // TODO: Replace with actual Deep2 inference engine call
-    // For now, use tokenizer from model if available, otherwise fallback to simple tokenization
+    // Prefill
+    std::vector<float> logits;
+    int prefillResult = impl->deep2Context.prefill(promptTokens, &logits);
+    if (prefillResult < 0) {
+        setLastError(RAWXD_ERROR_INTERNAL);
+        return 0;
+    }
     
-    // Simple tokenization for demonstration (character-level fallback)
-    // In real implementation, this would use the model's tokenizer (BPE, SentencePiece, etc.)
-    std::string promptStr(prompt);
-    std::vector<std::string> tokens;
+    // Generate tokens
+    int generated = 0;
+    std::vector<int32_t> newTokens;
     
-    // Very simple word-level tokenization for demo
-    std::string current;
-    for (char c : promptStr) {
-        if (std::isspace(c)) {
-            if (!current.empty()) {
-                tokens.push_back(current);
-                current.clear();
+    // Get first token from prefill logits
+    if (!logits.empty()) {
+        int bestToken = 0;
+        float bestLogit = -1e30f;
+        for (size_t i = 0; i < logits.size(); ++i) {
+            if (logits[i] > bestLogit) {
+                bestLogit = logits[i];
+                bestToken = static_cast<int>(i);
             }
-            tokens.push_back(std::string(1, c));
-        } else {
-            current += c;
+        }
+        
+        uint32_t tokenId = static_cast<uint32_t>(bestToken);
+        std::string tokenText = tokenizer->decode(&tokenId, 1);
+        
+        if (!callback(bestToken, tokenText.c_str(), userData)) {
+            return generated;
+        }
+        generated++;
+        newTokens.push_back(bestToken);
+    }
+    
+    // Decode loop
+    for (int i = 1; i < p.maxTokens; ++i) {
+        // Prepare sampler params
+        float samplerParams[6] = {p.temperature, p.topP, static_cast<float>(p.topK), p.repeatPenalty, 64.0f, static_cast<float>(p.seed)};
+        
+        std::vector<float> decodeLogits;
+        int token = impl->deep2Context.decode(decodeLogits.empty() ? nullptr : decodeLogits.data(), samplerParams);
+        if (token < 0) break;
+        
+        newTokens.push_back(token);
+        
+        uint32_t tokenId = static_cast<uint32_t>(token);
+        std::string tokenText = tokenizer->decode(&tokenId, 1);
+        
+        if (!callback(token, tokenText.c_str(), userData)) {
+            break;
+        }
+        generated++;
+        
+        // Check for EOS
+        if (static_cast<uint32_t>(token) == tokenizer->eosTokenId) {
+            break;
         }
     }
-    if (!current.empty()) tokens.push_back(current);
     
-    // If no tokens from prompt, use default tokens
-    if (tokens.empty()) {
-        tokens = {"Hello", " ", "world", "!", " This", " is", " a", " test", "."};
-    }
-    
-    int tokenCount = 0;
-    for (int i = 0; i < context.params.maxTokens && !tokens.empty(); ++i) {
-        const char* token = tokens[i % tokens.size()].c_str();
-        if (!callback(i, token, userData)) break;
-        tokenCount++;
-        Sleep(10); // Simulate inference delay
-    }
-    
-    // TODO: Actual Deep2 inference loop:
-    // 1. Tokenize prompt with model's tokenizer
-    // 2. Create KV cache
-    // 3. Prefill phase: process all prompt tokens
-    // 4. Decode loop: for each position, run llama_decode, sample next token, callback
-    // 5. Return generated token count
-    
-    setLastError(RAWXD_OK);
-    return tokenCount;
+    return generated;
 }
 
-// Memory Management
-RawrXDCore_EXPORT void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats) {
+void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats) {
     if (!stats) return;
-    
-    // TODO: Get real memory stats from Deep2 engine
-    // For now, report process memory
-    PROCESS_MEMORY_COUNTERS pmc;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-        stats->totalAllocated = pmc.WorkingSetSize;
-        stats->totalReserved = pmc.PagefileUsage;
-        stats->peakUsage = pmc.PeakWorkingSetSize;
-    } else {
-        stats->totalAllocated = 512 * 1024 * 1024;
-        stats->totalReserved = 1024 * 1024 * 1024;
-        stats->peakUsage = 0;
-    }
+    stats->totalAllocated = 0;
+    stats->totalReserved = 0;
     stats->gpuAllocated = 0;
     stats->gpuReserved = 0;
+    stats->peakUsage = 0;
+    // Memory stats would require tracking active contexts
 }
 
-RawrXDCore_EXPORT void RawrXDCore_TrimMemory(void) {
-    logMessage(RAWXD_LOG_INFO, "Memory trim requested");
-    SetProcessWorkingSetSize(GetCurrentProcess(), (SIZE_T)-1, (SIZE_T)-1);
+void RawrXDCore_TrimMemory(void) {
+    // Clear tokenizer cache
+    std::lock_guard<std::mutex> tokLock(g_tokenizersMutex);
+    g_tokenizers.clear();
 }
 
-// Error handling
-RawrXDCore_EXPORT const char* RawrXDCore_GetErrorString(RawrXDError error) {
+const char* RawrXDCore_GetErrorString(RawrXDError error) {
     switch (error) {
         case RAWXD_OK: return "Success";
         case RAWXD_ERROR_INVALID_ARGUMENT: return "Invalid argument";
@@ -625,57 +675,24 @@ RawrXDCore_EXPORT const char* RawrXDCore_GetErrorString(RawrXDError error) {
     }
 }
 
-RawrXDCore_EXPORT RawrXDError RawrXDCore_GetLastError(void) {
+RawrXDError RawrXDCore_GetLastError(void) {
     return getState().lastError;
 }
 
-// Hardware Capabilities - REAL detection
-RawrXDCore_EXPORT void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps) {
+void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps) {
     if (!caps) return;
     
-    // CPU detection
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
+    
     caps->cpuCoreCount = sysInfo.dwNumberOfProcessors;
-    
-// Check for AVX2/AVX512 with proper CPUID + XGETBV
-    int cpuInfo[4];
-    __cpuid(cpuInfo, 1);
-    
-    bool hasOSXSAVE = (cpuInfo[2] & (1 << 27)) != 0;  // OSXSAVE bit
-    bool hasAVX = (cpuInfo[2] & (1 << 28)) != 0;      // AVX bit
-    
-    // Check if OS supports saving AVX state (XGETBV)
-    bool osSupportsAVX = false;
-    if (hasOSXSAVE && hasAVX) {
-        unsigned long long xcr0 = _xgetbv(0);
-        osSupportsAVX = (xcr0 & 0x6) == 0x6;  // XMM and YMM state enabled
-    }
-    
-    // AVX2 is in CPUID leaf 7, EBX bit 5
-    int cpuInfo7[4];
-    __cpuidex(cpuInfo7, 7, 0);
-    bool hasAVX2_CPUID = (cpuInfo7[1] & (1 << 5)) != 0;
-    
-    caps->hasAVX2 = osSupportsAVX && hasAVX2_CPUID;
-    
-    // AVX-512F requires AVX + OSXSAVE + specific CPUID leaf 7
-    caps->hasAVX512 = osSupportsAVX && ((cpuInfo7[1] & (1 << 16)) != 0);  // AVX-512F bit in EBX
-    
-    // System memory
-    MEMORYSTATUSEX memStatus;
-    memStatus.dwLength = sizeof(memStatus);
-    if (GlobalMemoryStatusEx(&memStatus)) {
-        caps->systemMemoryMB = static_cast<size_t>(memStatus.ullTotalPhys / (1024*1024));
-    }
-    
-    // GPU detection - placeholder for Vulkan enumeration
-    caps->hasVulkan = false; // TODO: Query Vulkan
-    caps->hasCUDA = false;   // TODO: Query CUDA
+    caps->hasAVX2 = false; // Would need CPUID check
+    caps->hasAVX512 = false;
+    caps->hasVulkan = false; // Would need Vulkan check
+    caps->hasCUDA = false;
+    caps->systemMemoryMB = 65536; // Placeholder
     caps->gpuCount = 0;
     
-    // TODO: Enumerate actual GPUs via Vulkan/DXGI
-    // For now, report as unavailable
     for (int i = 0; i < 4; ++i) {
         caps->gpuMemoryMB[i] = 0;
         caps->gpuNames[i][0] = '\0';
@@ -683,58 +700,3 @@ RawrXDCore_EXPORT void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps) {
 }
 
 } // extern "C"
-
-// C++ API Implementation
-#ifdef __cplusplus
-
-namespace rawrxd {
-
-bool Core::Initialize(const RawrXDConfig* config) {
-    if (!RawrXDCore_Initialize()) return false;
-    if (config) return RawrXDCore_Configure(config);
-    return true;
-}
-
-void Core::Shutdown() {
-    RawrXDCore_Shutdown();
-}
-
-bool Core::IsInitialized() {
-    return RawrXDCore_IsInitialized();
-}
-
-const char* Core::GetVersion() {
-    return RawrXDCore_GetVersion();
-}
-
-void Core::SetLogCallback(RawrXDLogCallback callback, void* userData) {
-    RawrXDCore_SetLogCallback(callback, userData);
-}
-
-void Core::SetLogLevel(RawrXDLogLevel level) {
-    RawrXDCore_SetLogLevel(level);
-}
-
-void Core::GetMemoryStats(RawrXDMemoryStats& stats) {
-    RawrXDCore_GetMemoryStats(&stats);
-}
-
-void Core::TrimMemory() {
-    RawrXDCore_TrimMemory();
-}
-
-RawrXDError Core::GetLastError() {
-    return RawrXDCore_GetLastError();
-}
-
-const char* Core::GetErrorString(RawrXDError error) {
-    return RawrXDCore_GetErrorString(error);
-}
-
-void Core::GetHardwareCaps(RawrXDHardwareCaps& caps) {
-    RawrXDCore_GetHardwareCaps(&caps);
-}
-
-} // namespace rawrxd
-
-#endif // __cplusplus

@@ -19,7 +19,7 @@ bool CPUInferenceEngine::LoadModel(const std::string& path) {
     if (path.empty()) return false;
     
     // Create GGUF loader
-    m_loader = std::make_unique<GGUFLoader>();
+    m_loader = std::unique_ptr<IGGUFLoader>(new GGUFLoader());
     if (!m_loader->Open(path)) {
         return false;
     }

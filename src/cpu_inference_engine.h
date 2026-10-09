@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include <functional>
-#include "gguf_loader.h" 
+#include "GGUFLoader.h" 
 
 #include "plugins/MemoryPlugin.hpp"
 #include "inference_engine.h"
@@ -75,6 +75,9 @@ public:
 
     // Singleton Pattern for Memory Manager
     static CPUInferenceEngine* getInstance();
+    
+    // Compatibility shim for older binaries (identical ownership/lifetime)
+    static CPUInferenceEngine* GetSharedInstance() { return getInstance(); }
     
     // Context Management
     void SetContextLimit(size_t limit);
