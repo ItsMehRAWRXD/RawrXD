@@ -22,6 +22,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <fstream>
 #include <cstring>
 #include <immintrin.h>
 #include <limits>
@@ -653,6 +654,10 @@ public:
     std::vector<ActivationRecord> records;
     bool enabled = false;
     std::string output_dir;
+    size_t capture_position = (std::numeric_limits<size_t>::max)();
+    bool ShouldRecord(size_t pos) const {
+        return enabled && (capture_position == (std::numeric_limits<size_t>::max)() || capture_position == pos);
+    }
     
     void Enable(const std::string& dir) {
         enabled = true;
@@ -667,7 +672,7 @@ public:
     void Record(const std::string& op_name, uint32_t op_id, uint32_t layer_idx, 
                 size_t position, const std::string& tensor_type,
                 const float* data, const std::vector<int64_t>& shape) {
-        if (!enabled) return;
+        if (!ShouldRecord(position) || !data || shape.empty()) return;
         
         ActivationRecord rec;
         rec.op_name = op_name;
@@ -679,7 +684,13 @@ public:
         
         // Calculate total elements from shape
         size_t total = 1;
-        for (int64_t d : shape) total *= d;
+        for (int64_t d : shape) {
+            if (d <= 0 || static_cast<uint64_t>(d) > 200000u / total) {
+                std::fprintf(stderr, "[DIFF] Invalid or oversized tensor: %s\n", op_name.c_str());
+                return;
+            }
+            total *= static_cast<size_t>(d);
+        }
         
         // Safety check: limit tensor size to prevent memory issues
         if (total > 200000) {
@@ -704,10 +715,17 @@ public:
         }
         
         // Save as binary files
-        for (const auto& rec : records) {
-            char fname[512];
-            sprintf_s(fname, "%s\\rec_%s_l%u_p%zu_%s.bin", 
-                     output_dir.c_str(), rec.op_name.c_str(), rec.layer_idx, rec.position, rec.tensor_type.c_str());
+        for (size_t record_index = 0; record_index < records.size(); ++record_index) {
+            const auto& rec = records[record_index];
+            char fname[1024];
+            const int nchars = std::snprintf(fname, sizeof(fname),
+                "%s\\rec_%06zu_op%u_%s_l%u_p%zu_%s.bin",
+                output_dir.c_str(), record_index, rec.op_id, rec.op_name.c_str(),
+                rec.layer_idx, rec.position, rec.tensor_type.c_str());
+            if (nchars < 0 || static_cast<size_t>(nchars) >= sizeof(fname)) {
+                std::fprintf(stderr, "[DIFF] Record output path too long\n");
+                continue;
+            }
             
             // Save header + data
             std::ofstream f(fname, std::ios::binary);
@@ -717,9 +735,7 @@ public:
             }
             
             // Write metadata
-            uint32_t op_id = 0;
-            uint32_t layer = 0;
-            size_t pos = 0;
+            const uint32_t op_id = rec.op_id;
             uint32_t ndim = static_cast<uint32_t>(rec.shape.size());
             
             f.write(reinterpret_cast<const char*>(&op_id), sizeof(op_id));
@@ -1163,7 +1179,7 @@ if (op.blockIndex == UINT32_MAX) {
                 const float* q=getInput(op,0), *kv=getInput(op,1);
                 float* output=getOutput(op);
                 return AttentionFwd(q,kv,output,arena.Size(qr.id),arena.Size(kr.id),
-                                    arena.Size(op.output.id), kvCache, layerIdx, position);
+                                    arena.Size(op.output.id), kvCache, layerIdx, position, op.opId);
             }
             case Primitive::MlaDecompressFwd: {
                 const auto xr=GenInput(op,0), n=GenWeight(op,0), a=GenWeight(op,1),b=GenWeight(op,2);
@@ -1348,6 +1364,10 @@ private:
         // q: [heads, key] - current query (positional component NOT yet RoPE'd)
         // KV cache contains expanded K/V for all positions 0..position (keys already RoPE'd at their positions)
         const size_t seq_len = position + 1; // including current
+        if (layerIdx >= kvCache->layers.size() || kvCache->layers[layerIdx].Size() != seq_len) {
+            std::fprintf(stderr, "[KV] Invalid layer or prefix at position %zu, layer %zu\n", position, layerIdx);
+            return false;
+        }
         const float* all_kv = kvCache->layers[layerIdx].ReadAllKV();
         if (!all_kv) return false;
         
@@ -1372,6 +1392,12 @@ private:
         }
         
         const float scale = 1.0f / sqrtf(static_cast<float>(key)); // 1/sqrt(192)
+        const bool capture_scores = g_differential_recorder.ShouldRecord(position);
+        std::vector<float> captured_scores, captured_weights;
+        if (capture_scores) {
+            captured_scores.resize(heads * seq_len);
+            captured_weights.resize(heads * seq_len);
+        }
         
         // DIFF: Record query after RoPE
         DIFF_RECORD("Attention_Q_RoPE", opId, layerIdx, position, "q_rope", q_rope.data(), {(int64_t)heads * key});
@@ -1397,6 +1423,7 @@ private:
                     score += q_head[i] * k_head[i];
                 }
                 score *= scale;
+                if (capture_scores) captured_scores[head * seq_len + pos] = score;
                 
                 if (score > max_score) max_score = score;
             }
@@ -1414,6 +1441,7 @@ private:
                 score *= scale;
                 
                 float exp_score = expf(score - max_score);
+                if (capture_scores) captured_weights[head * seq_len + pos] = exp_score;
                 denom += exp_score;
                 
                 for (size_t i = 0; i < value; ++i) {
@@ -1426,6 +1454,15 @@ private:
             for (size_t i = 0; i < value; ++i) {
                 out_head[i] = out_acc[i] / denom;
             }
+            if (capture_scores)
+                for (size_t pos = 0; pos < seq_len; ++pos)
+                    captured_weights[head * seq_len + pos] /= denom;
+        }
+        if (capture_scores) {
+            DIFF_RECORD("Attention_Scores", opId, layerIdx, position, "scaled_scores",
+                        captured_scores.data(), (std::vector<int64_t>{static_cast<int64_t>(heads), static_cast<int64_t>(seq_len)}));
+            DIFF_RECORD("Attention_Weights", opId, layerIdx, position, "softmax",
+                        captured_weights.data(), (std::vector<int64_t>{static_cast<int64_t>(heads), static_cast<int64_t>(seq_len)}));
         }
         
         // DIFF: Record attention output
@@ -1477,11 +1514,11 @@ private:
             std::memcpy(rope_key.data(), latent.data() + rank, rope * sizeof(float));
         } else {
             // Apply RoPE to positional component at this absolute position
-            // Use NEGATIVE alpha for key RoPE to match query convention (both negative)
+            // Use POSITIVE alpha for cached key RoPE, matching query rotation.
             const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase); // 10000
             for (size_t i = 0; i < rope; i += 2) {
                 float theta = powf(base, -static_cast<float>(i) / static_cast<float>(rope));
-                float alpha = -static_cast<float>(position) * theta;
+                float alpha = static_cast<float>(position) * theta;
                 float ca = cosf(alpha), sa = sinf(alpha);
                 float p0 = latent[rank + i];
                 float p1 = latent[rank + i + 1];
@@ -1501,6 +1538,11 @@ private:
         
         // Write latent and expanded K/V to KV cache if provided
         if (kvCache) {
+            if (layerIdx >= kvCache->layers.size() ||
+                kvCache->layers[layerIdx].Size() != position) {
+                std::fprintf(stderr, "[KV] Duplicate/gap write at position %zu layer %zu\n", position, layerIdx);
+                return false;
+            }
             if (!kvCache->layers[layerIdx].Write(latent.data(), output)) return false;
         }
         
@@ -1664,6 +1706,21 @@ if (executed && op.output.domain == MG::OperandDomain::Activation) {
                                      arena_.Size(op.output.id));
             }
             
+            // Capture the persistent prefix (including all earlier positions) after
+            // the current position has been written into the layer's cache.
+            if (executed && op.requiredPrimitive == MG::Primitive::MlaDecompressFwd &&
+                g_differential_recorder.ShouldRecord(position_)) {
+                const size_t layer = op.blockIndex == UINT32_MAX ? 0 : op.blockIndex;
+                if (layer < kvCache_.layers.size()) {
+                    const auto& cache = kvCache_.layers[layer];
+                    const size_t count = cache.Size() * cache.kv_size;
+                    if (count && count <= 200000u)
+                        DIFF_RECORD("MLA_CacheKV_Prefix", op.opId, static_cast<uint32_t>(layer),
+                                    position_, "kv_prefix", cache.ReadAllKV(),
+                                    (std::vector<int64_t>{static_cast<int64_t>(cache.Size()), static_cast<int64_t>(cache.kv_size)}));
+                }
+            }
+
             // DIFF: Record key intermediate activations
             if (g_differential_recorder.enabled && executed) {
                 const float* result = arena_.Get(op.output.id);
@@ -1676,6 +1733,8 @@ if (executed && op.output.domain == MG::OperandDomain::Activation) {
                         tensor_type = "Attention_Output";
                     } else if (op.requiredPrimitive == ModelGenie::Primitive::MoEExecuteFwd) {
                         tensor_type = "MoE_Output";
+                    } else if (op.requiredPrimitive == ModelGenie::Primitive::TopKFwd) {
+                        tensor_type = "MoE_TopK";
                     } else if (op.requiredPrimitive == ModelGenie::Primitive::RmsNormFwd) {
                         tensor_type = "RMSNorm_Output";
                     } else if (op.requiredPrimitive == ModelGenie::Primitive::LinearFwd) {
@@ -1787,25 +1846,66 @@ int main(int argc, char* argv[])
     std::string differential_dir;
     std::vector<uint32_t> forced_tokens;
     
-    if (argc >= 4) {
-        std::string arg3 = argv[3];
-        if (arg3 == "--multitoken") {
-            max_tokens = 16;
-            multitoken = true;
-        } else if (arg3 == "--teacher-forced") {
+    // Order-independent CLI options. Differential flags are never parsed as token IDs.
+    size_t diff_position = (std::numeric_limits<size_t>::max)();
+    auto parse_uint = [](const char* raw, uint32_t& value) -> bool {
+        if (!raw || !raw[0] || raw[0] == '-') return false;
+        try {
+            size_t consumed = 0;
+            const unsigned long long parsed = std::stoull(raw, &consumed, 10);
+            if (consumed != std::strlen(raw) ||
+                parsed > (std::numeric_limits<uint32_t>::max)()) return false;
+            value = static_cast<uint32_t>(parsed);
+            return true;
+        } catch (const std::exception&) { return false; }
+    };
+    for (int i = 3; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (arg == "--teacher-forced") {
             teacher_forced = true;
-            for (int i = 4; i < argc; ++i) {
-                forced_tokens.push_back(static_cast<uint32_t>(std::stoul(argv[i])));
-            }
-        } else if (arg3 == "--differential") {
+        } else if (arg == "--differential") {
             differential = true;
-            differential_dir = (argc >= 5) ? argv[4] : "F:\\rawrxd\\evidence\\NUGVERSE_ESTIMATOR_001\\differential";
-        } else {
-            max_tokens = std::stoi(arg3);
+            if (i + 1 < argc && argv[i + 1][0] != '-') differential_dir = argv[++i];
+        } else if (arg == "--diff-position") {
+            uint32_t p = 0;
+            if (i + 1 >= argc || !parse_uint(argv[++i], p)) {
+                std::fprintf(stderr, "ERROR: --diff-position needs an unsigned integer\n");
+                return 2;
+            }
+            diff_position = p;
+        } else if (arg == "--multitoken") {
             multitoken = true;
+            max_tokens = 16;
+            uint32_t n = 0;
+            if (i + 1 < argc && parse_uint(argv[i + 1], n)) {
+                ++i;
+                if (n == 0 || n > 1024) { std::fprintf(stderr, "ERROR: invalid token count\n"); return 2; }
+                max_tokens = static_cast<int>(n);
+            }
+        } else {
+            uint32_t n = 0;
+            if (!parse_uint(argv[i], n)) {
+                std::fprintf(stderr, "ERROR: unknown option or invalid token: %s\n", argv[i]);
+                return 2;
+            }
+            if (teacher_forced) forced_tokens.push_back(n);
+            else if (i == 3 && n > 0 && n <= 1024) { multitoken = true; max_tokens = static_cast<int>(n); }
+            else { std::fprintf(stderr, "ERROR: numeric token requires --teacher-forced\n"); return 2; }
         }
     }
-    
+    if (differential && differential_dir.empty()) differential_dir = evidenceDir + "\\differential";
+    if (teacher_forced && forced_tokens.empty()) {
+        std::fprintf(stderr, "ERROR: --teacher-forced needs at least one token\n"); return 2;
+    }
+    if (teacher_forced && multitoken) {
+        std::fprintf(stderr, "ERROR: choose teacher-forced or multitoken, not both\n"); return 2;
+    }
+    if (diff_position != (std::numeric_limits<size_t>::max)() &&
+        (!differential || !teacher_forced || diff_position >= forced_tokens.size())) {
+        std::fprintf(stderr, "ERROR: --diff-position requires an in-range teacher-forced position and --differential\n");
+        return 2;
+    }
+
     std::fprintf(stderr, "=============================================================================\n");
     std::fprintf(stderr, teacher_forced ? "RAWRXD_MODELGENIE_TEACHER_FORCED_DECODE\n" : 
                  multitoken ? "RAWRXD_MODELGENIE_MULTITOKEN_DECODE\n" : 
@@ -1841,6 +1941,7 @@ int main(int argc, char* argv[])
         
         if (differential) {
             DIFF_ENABLE(differential_dir);
+            g_differential_recorder.capture_position = diff_position;
             DIFF_CLEAR();
         }
         
@@ -1869,7 +1970,7 @@ int main(int argc, char* argv[])
             
             // Save logits for comparison
             char fname[512];
-            sprintf_s(fname, "F:\\rawrxd\\evidence\\NUGVERSE_ESTIMATOR_001\\native_tf_logits_pos%zu.bin", step);
+            sprintf_s(fname, "%s\\native_tf_logits_pos%zu.bin", evidenceDir.c_str(), step);
             if (logits && !logits->empty()) {
                 std::ofstream f(fname, std::ios::binary);
                 f.write(reinterpret_cast<const char*>(logits->data()), logits->size() * sizeof(float));
@@ -1882,17 +1983,15 @@ int main(int argc, char* argv[])
             
             if (!success || !logitsFinite) {
                 std::fprintf(stderr, "ERROR: Execution failed at step %zu\n", step);
+                if (differential) DIFF_SAVE(); // preserve partial evidence
                 return 1;
-            }
-            
-            if (differential) {
-                DIFF_SAVE();
             }
             
             executor.AdvancePosition();
         }
         
         if (differential) {
+            DIFF_SAVE();
             DIFF_DISABLE();
         }
         

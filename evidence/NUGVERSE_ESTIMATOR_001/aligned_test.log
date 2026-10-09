@@ -1,0 +1,438 @@
+=============================================================================
+RAWRXD_MODELGENIE_TEACHER_FORCED_DECODE
+=============================================================================
+
+GGUF: G:\~dev\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+Evidence: F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001
+Teacher-forced tokens: 1 185 16 15 
+[ABI Reader] sizeof(OperationIR)=156 sizeof(ModelGenome)=440
+[DEBUG Reader] Opening files...
+[DEBUG Reader] genomePath: F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001/genie_out/model.genome.txt
+[DEBUG Reader] physicalPath: F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001/genie_out/model.physical.txt
+[DEBUG Reader] executionPath: F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001/genie_out/model.execution.txt
+[DEBUG Reader] OPEN_BEGIN=model.genome.txt
+[DEBUG Reader] OPEN_END=model.genome.txt
+[DEBUG Reader] CLOSE_END=model.genome.txt
+[DEBUG Reader] OPEN_BEGIN=model.physical.txt
+[DEBUG Reader] OPEN_END=model.physical.txt
+[DEBUG Reader] CLOSE_END=model.physical.txt
+[DEBUG Reader] OPEN_BEGIN=model.execution.txt
+[DEBUG Reader] OPEN_END=model.execution.txt
+[DEBUG Reader] CLOSE_END=model.execution.txt
+[DEBUG Reader] All files exist
+[DEBUG Reader] Parsing genome file...
+[DEBUG Reader] Parsing genome line 10
+[DEBUG Reader] Parsing genome line 20
+[DEBUG Reader] Parsing genome line 30
+[DEBUG Reader] Parsing genome line 40
+[DEBUG Reader] Parsing genome line 50
+[DEBUG Reader] Parsing genome line 60
+[DEBUG Reader] Parsing genome line 70
+[DEBUG Reader] Genome file parsed
+[DEBUG Reader] Parsing physical file...
+[DEBUG Reader] PHYSICAL_BEGIN
+[DEBUG Reader] PHYSICAL_OPEN_BEGIN
+[DEBUG Reader] PHYSICAL_OPEN_END
+[DEBUG Reader] RAW_LINE1=[# PHYSICAL: literal GGUF tensor directory. No interpretation.]
+[DEBUG Reader] RAW_LINE2=[# source: G:\~dev\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf]
+[DEBUG Reader] RAW_LINE3=[file_bytes      10364416768]
+[DEBUG Reader] META key=[file_bytes] value=[10364416768]
+[DEBUG Reader] RAW_LINE4=[gguf_version    3]
+[DEBUG Reader] META key=[gguf_version] value=[3]
+[DEBUG Reader] RAW_LINE5=[tensor_count    377]
+[DEBUG Reader] RAW_LINE6=[alignment       32]
+[DEBUG Reader] META key=[alignment] value=[32]
+[DEBUG Reader] RAW_LINE7=[data_start      3996416]
+[DEBUG Reader] META key=[data_start] value=[3996416]
+[DEBUG Reader] PARSED data_start=3996416
+[DEBUG Reader] RAW_LINE8=[]
+[DEBUG Reader] RAW_LINE9=[tensor	ggml_type	dims	encoded_bytes	file_offset]
+[DEBUG Reader] RAW_LINE10=[output.weight	q6_K	[2048,102400]	172032000	0]
+[DEBUG Reader] META key=[output.weight] value=[q6_K]
+[DEBUG Reader] PHYSICAL_LINE=50
+[DEBUG Reader] PHYSICAL_LINE=100
+[DEBUG Reader] PHYSICAL_LINE=150
+[DEBUG Reader] PHYSICAL_LINE=200
+[DEBUG Reader] PHYSICAL_LINE=250
+[DEBUG Reader] PHYSICAL_LINE=300
+[DEBUG Reader] PHYSICAL_LINE=350
+[DEBUG Reader] Physical file parsed, tensor count: 377
+[DEBUG Reader] LoadModelGenomeFromEvidence returning true
+Original canonical hash: a1f2399df984ea69
+
+=== Teacher-forced decode (4 tokens) ===
+[ROM] Opening: G:\~dev\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+[ROM] File size: 10364416768
+[ROM] Mapped at base=000001FFEC220000
+[ROM] ParseGGUFHeader ENTERED: size=10364416768
+[ROM] magic=0x46554747
+[ROM] version=3
+[ROM] tensorCount=377 metadataKvCount=45
+[ROM] KV 0: ptr=000001FFEC220018
+[ROM] KV 0: keyLen=20
+[ROM] KV 0: key='general.architecture'
+[ROM] KV 0: valueType=8
+[ROM] KV 0: before value ptr=000001FFEC220038
+[ROM] KV 0: string case
+[ROM] KV 0: strLen=9
+[ROM] KV 0: after value ptr=000001FFEC220049
+[ROM] KV 1: ptr=000001FFEC220049
+[ROM] KV 1: keyLen=12
+[ROM] KV 1: key='general.name'
+[ROM] KV 1: valueType=8
+[ROM] KV 1: before value ptr=000001FFEC220061
+[ROM] KV 1: string case
+[ROM] KV 1: strLen=21
+[ROM] KV 1: after value ptr=000001FFEC22007E
+[ROM] KV 2: ptr=000001FFEC22007E
+[ROM] KV 2: keyLen=21
+[ROM] KV 2: key='deepseek2.block_count'
+[ROM] KV 2: valueType=4
+[ROM] KV 2: before value ptr=000001FFEC22009F
+[ROM] KV 2: after value ptr=000001FFEC2200A3
+[ROM] KV 3: ptr=000001FFEC2200A3
+[ROM] KV 3: keyLen=24
+[ROM] KV 3: key='deepseek2.context_length'
+[ROM] KV 3: valueType=4
+[ROM] KV 3: before value ptr=000001FFEC2200C7
+[ROM] KV 3: after value ptr=000001FFEC2200CB
+[ROM] KV 4: ptr=000001FFEC2200CB
+[ROM] KV 4: keyLen=26
+[ROM] KV 4: key='deepseek2.embedding_length'
+[ROM] KV 4: valueType=4
+[ROM] KV 4: before value ptr=000001FFEC2200F1
+[ROM] KV 4: after value ptr=000001FFEC2200F5
+[ROM] KV 5: ptr=000001FFEC2200F5
+[ROM] KV 5: keyLen=29
+[ROM] KV 5: key='deepseek2.feed_forward_length'
+[ROM] KV 5: valueType=4
+[ROM] KV 5: before value ptr=000001FFEC22011E
+[ROM] KV 5: after value ptr=000001FFEC220122
+[ROM] KV 6: ptr=000001FFEC220122
+[ROM] KV 6: keyLen=30
+[ROM] KV 6: key='deepseek2.attention.head_count'
+[ROM] KV 6: valueType=4
+[ROM] KV 6: before value ptr=000001FFEC22014C
+[ROM] KV 6: after value ptr=000001FFEC220150
+[ROM] KV 7: ptr=000001FFEC220150
+[ROM] KV 7: keyLen=33
+[ROM] KV 7: key='deepseek2.attention.head_count_kv'
+[ROM] KV 7: valueType=4
+[ROM] KV 7: before value ptr=000001FFEC22017D
+[ROM] KV 7: after value ptr=000001FFEC220181
+[ROM] KV 8: ptr=000001FFEC220181
+[ROM] KV 8: keyLen=24
+[ROM] KV 8: key='deepseek2.rope.freq_base'
+[ROM] KV 8: valueType=6
+[ROM] KV 8: before value ptr=000001FFEC2201A5
+[ROM] KV 8: after value ptr=000001FFEC2201A9
+[ROM] KV 9: ptr=000001FFEC2201A9
+[ROM] KV 9: keyLen=42
+[ROM] KV 9: key='deepseek2.attention.layer_norm_rms_epsilon'
+[ROM] KV 9: valueType=6
+[ROM] KV 9: before value ptr=000001FFEC2201DF
+[ROM] KV 9: after value ptr=000001FFEC2201E3
+[ROM] KV 10: ptr=000001FFEC2201E3
+[ROM] KV 10: keyLen=27
+[ROM] KV 10: key='deepseek2.expert_used_count'
+[ROM] KV 10: valueType=4
+[ROM] KV 10: before value ptr=000001FFEC22020A
+[ROM] KV 10: after value ptr=000001FFEC22020E
+[ROM] KV 11: ptr=000001FFEC22020E
+[ROM] KV 11: keyLen=17
+[ROM] KV 11: key='general.file_type'
+[ROM] KV 11: valueType=4
+[ROM] KV 11: before value ptr=000001FFEC22022B
+[ROM] KV 11: after value ptr=000001FFEC22022F
+[ROM] KV 12: ptr=000001FFEC22022F
+[ROM] KV 12: keyLen=35
+[ROM] KV 12: key='deepseek2.leading_dense_block_count'
+[ROM] KV 12: valueType=4
+[ROM] KV 12: before value ptr=000001FFEC22025E
+[ROM] KV 12: after value ptr=000001FFEC220262
+[ROM] KV 13: ptr=000001FFEC220262
+[ROM] KV 13: keyLen=20
+[ROM] KV 13: key='deepseek2.vocab_size'
+[ROM] KV 13: valueType=4
+[ROM] KV 13: before value ptr=000001FFEC220282
+[ROM] KV 13: after value ptr=000001FFEC220286
+[ROM] KV 14: ptr=000001FFEC220286
+[ROM] KV 14: keyLen=32
+[ROM] KV 14: key='deepseek2.attention.kv_lora_rank'
+[ROM] KV 14: valueType=4
+[ROM] KV 14: before value ptr=000001FFEC2202B2
+[ROM] KV 14: after value ptr=000001FFEC2202B6
+[ROM] KV 15: ptr=000001FFEC2202B6
+[ROM] KV 15: keyLen=30
+[ROM] KV 15: key='deepseek2.attention.key_length'
+[ROM] KV 15: valueType=4
+[ROM] KV 15: before value ptr=000001FFEC2202E0
+[ROM] KV 15: after value ptr=000001FFEC2202E4
+[ROM] KV 16: ptr=000001FFEC2202E4
+[ROM] KV 16: keyLen=32
+[ROM] KV 16: key='deepseek2.attention.value_length'
+[ROM] KV 16: valueType=4
+[ROM] KV 16: before value ptr=000001FFEC220310
+[ROM] KV 16: after value ptr=000001FFEC220314
+[ROM] KV 17: ptr=000001FFEC220314
+[ROM] KV 17: keyLen=36
+[ROM] KV 17: key='deepseek2.expert_feed_forward_length'
+[ROM] KV 17: valueType=4
+[ROM] KV 17: before value ptr=000001FFEC220344
+[ROM] KV 17: after value ptr=000001FFEC220348
+[ROM] KV 18: ptr=000001FFEC220348
+[ROM] KV 18: keyLen=22
+[ROM] KV 18: key='deepseek2.expert_count'
+[ROM] KV 18: valueType=4
+[ROM] KV 18: before value ptr=000001FFEC22036A
+[ROM] KV 18: after value ptr=000001FFEC22036E
+[ROM] KV 19: ptr=000001FFEC22036E
+[ROM] KV 19: keyLen=29
+[ROM] KV 19: key='deepseek2.expert_shared_count'
+[ROM] KV 19: valueType=4
+[ROM] KV 19: before value ptr=000001FFEC220397
+[ROM] KV 19: after value ptr=000001FFEC22039B
+[ROM] KV 20: ptr=000001FFEC22039B
+[ROM] KV 20: keyLen=30
+[ROM] KV 20: key='deepseek2.expert_weights_scale'
+[ROM] KV 20: valueType=6
+[ROM] KV 20: before value ptr=000001FFEC2203C5
+[ROM] KV 20: after value ptr=000001FFEC2203C9
+[ROM] KV 21: ptr=000001FFEC2203C9
+[ROM] KV 21: keyLen=30
+[ROM] KV 21: key='deepseek2.rope.dimension_count'
+[ROM] KV 21: valueType=4
+[ROM] KV 21: before value ptr=000001FFEC2203F3
+[ROM] KV 21: after value ptr=000001FFEC2203F7
+[ROM] KV 22: ptr=000001FFEC2203F7
+[ROM] KV 22: keyLen=27
+[ROM] KV 22: key='deepseek2.rope.scaling.type'
+[ROM] KV 22: valueType=8
+[ROM] KV 22: before value ptr=000001FFEC22041E
+[ROM] KV 22: string case
+[ROM] KV 22: strLen=4
+[ROM] KV 22: after value ptr=000001FFEC22042A
+[ROM] KV 23: ptr=000001FFEC22042A
+[ROM] KV 23: keyLen=29
+[ROM] KV 23: key='deepseek2.rope.scaling.factor'
+[ROM] KV 23: valueType=6
+[ROM] KV 23: before value ptr=000001FFEC220453
+[ROM] KV 23: after value ptr=000001FFEC220457
+[ROM] KV 24: ptr=000001FFEC220457
+[ROM] KV 24: keyLen=46
+[ROM] KV 24: key='deepseek2.rope.scaling.original_context_length'
+[ROM] KV 24: valueType=4
+[ROM] KV 24: before value ptr=000001FFEC220491
+[ROM] KV 24: after value ptr=000001FFEC220495
+[ROM] KV 25: ptr=000001FFEC220495
+[ROM] KV 25: keyLen=42
+[ROM] KV 25: key='deepseek2.rope.scaling.yarn_log_multiplier'
+[ROM] KV 25: valueType=6
+[ROM] KV 25: before value ptr=000001FFEC2204CB
+[ROM] KV 25: after value ptr=000001FFEC2204CF
+[ROM] KV 26: ptr=000001FFEC2204CF
+[ROM] KV 26: keyLen=20
+[ROM] KV 26: key='tokenizer.ggml.model'
+[ROM] KV 26: valueType=8
+[ROM] KV 26: before value ptr=000001FFEC2204EF
+[ROM] KV 26: string case
+[ROM] KV 26: strLen=4
+[ROM] KV 26: after value ptr=000001FFEC2204FB
+[ROM] KV 27: ptr=000001FFEC2204FB
+[ROM] KV 27: keyLen=18
+[ROM] KV 27: key='tokenizer.ggml.pre'
+[ROM] KV 27: valueType=8
+[ROM] KV 27: before value ptr=000001FFEC220519
+[ROM] KV 27: string case
+[ROM] KV 27: strLen=12
+[ROM] KV 27: after value ptr=000001FFEC22052D
+[ROM] KV 28: ptr=000001FFEC22052D
+[ROM] KV 28: keyLen=21
+[ROM] KV 28: key='tokenizer.ggml.tokens'
+[ROM] KV 28: valueType=9
+[ROM] KV 28: before value ptr=000001FFEC22054E
+[ROM] KV 28: array case
+[ROM] KV 28: elemType=8
+[ROM] KV 28: arrLen=102400
+[ROM] KV 28: after value ptr=000001FFEC3CC8BA
+[ROM] KV 29: ptr=000001FFEC3CC8BA
+[ROM] KV 29: keyLen=25
+[ROM] KV 29: key='tokenizer.ggml.token_type'
+[ROM] KV 29: valueType=9
+[ROM] KV 29: before value ptr=000001FFEC3CC8DF
+[ROM] KV 29: array case
+[ROM] KV 29: elemType=5
+[ROM] KV 29: arrLen=102400
+[ROM] KV 29: after value ptr=000001FFEC4308EB
+[ROM] KV 30: ptr=000001FFEC4308EB
+[ROM] KV 30: keyLen=21
+[ROM] KV 30: key='tokenizer.ggml.merges'
+[ROM] KV 30: valueType=9
+[ROM] KV 30: before value ptr=000001FFEC43090C
+[ROM] KV 30: array case
+[ROM] KV 30: elemType=8
+[ROM] KV 30: arrLen=99757
+[ROM] KV 30: after value ptr=000001FFEC5E96C3
+[ROM] KV 31: ptr=000001FFEC5E96C3
+[ROM] KV 31: keyLen=27
+[ROM] KV 31: key='tokenizer.ggml.bos_token_id'
+[ROM] KV 31: valueType=4
+[ROM] KV 31: before value ptr=000001FFEC5E96EA
+[ROM] KV 31: after value ptr=000001FFEC5E96EE
+[ROM] KV 32: ptr=000001FFEC5E96EE
+[ROM] KV 32: keyLen=27
+[ROM] KV 32: key='tokenizer.ggml.eos_token_id'
+[ROM] KV 32: valueType=4
+[ROM] KV 32: before value ptr=000001FFEC5E9715
+[ROM] KV 32: after value ptr=000001FFEC5E9719
+[ROM] KV 33: ptr=000001FFEC5E9719
+[ROM] KV 33: keyLen=31
+[ROM] KV 33: key='tokenizer.ggml.padding_token_id'
+[ROM] KV 33: valueType=4
+[ROM] KV 33: before value ptr=000001FFEC5E9744
+[ROM] KV 33: after value ptr=000001FFEC5E9748
+[ROM] KV 34: ptr=000001FFEC5E9748
+[ROM] KV 34: keyLen=28
+[ROM] KV 34: key='tokenizer.ggml.add_bos_token'
+[ROM] KV 34: valueType=7
+[ROM] KV 34: before value ptr=000001FFEC5E9770
+[ROM] KV 34: after value ptr=000001FFEC5E9771
+[ROM] KV 35: ptr=000001FFEC5E9771
+[ROM] KV 35: keyLen=28
+[ROM] KV 35: key='tokenizer.ggml.add_eos_token'
+[ROM] KV 35: valueType=7
+[ROM] KV 35: before value ptr=000001FFEC5E9799
+[ROM] KV 35: after value ptr=000001FFEC5E979A
+[ROM] KV 36: ptr=000001FFEC5E979A
+[ROM] KV 36: keyLen=23
+[ROM] KV 36: key='tokenizer.chat_template'
+[ROM] KV 36: valueType=8
+[ROM] KV 36: before value ptr=000001FFEC5E97BD
+[ROM] KV 36: string case
+[ROM] KV 36: strLen=459
+[ROM] KV 36: after value ptr=000001FFEC5E9990
+[ROM] KV 37: ptr=000001FFEC5E9990
+[ROM] KV 37: keyLen=28
+[ROM] KV 37: key='general.quantization_version'
+[ROM] KV 37: valueType=4
+[ROM] KV 37: before value ptr=000001FFEC5E99B8
+[ROM] KV 37: after value ptr=000001FFEC5E99BC
+[ROM] KV 38: ptr=000001FFEC5E99BC
+[ROM] KV 38: keyLen=11
+[ROM] KV 38: key='general.url'
+[ROM] KV 38: valueType=8
+[ROM] KV 38: before value ptr=000001FFEC5E99D3
+[ROM] KV 38: string case
+[ROM] KV 38: strLen=62
+[ROM] KV 38: after value ptr=000001FFEC5E9A19
+[ROM] KV 39: ptr=000001FFEC5E9A19
+[ROM] KV 39: keyLen=29
+[ROM] KV 39: key='mradermacher.quantize_version'
+[ROM] KV 39: valueType=8
+[ROM] KV 39: before value ptr=000001FFEC5E9A42
+[ROM] KV 39: string case
+[ROM] KV 39: strLen=1
+[ROM] KV 39: after value ptr=000001FFEC5E9A4B
+[ROM] KV 40: ptr=000001FFEC5E9A4B
+[ROM] KV 40: keyLen=25
+[ROM] KV 40: key='mradermacher.quantized_by'
+[ROM] KV 40: valueType=8
+[ROM] KV 40: before value ptr=000001FFEC5E9A70
+[ROM] KV 40: string case
+[ROM] KV 40: strLen=12
+[ROM] KV 40: after value ptr=000001FFEC5E9A84
+[ROM] KV 41: ptr=000001FFEC5E9A84
+[ROM] KV 41: keyLen=25
+[ROM] KV 41: key='mradermacher.quantized_at'
+[ROM] KV 41: valueType=8
+[ROM] KV 41: before value ptr=000001FFEC5E9AA9
+[ROM] KV 41: string case
+[ROM] KV 41: strLen=25
+[ROM] KV 41: after value ptr=000001FFEC5E9ACA
+[ROM] KV 42: ptr=000001FFEC5E9ACA
+[ROM] KV 42: keyLen=25
+[ROM] KV 42: key='mradermacher.quantized_on'
+[ROM] KV 42: valueType=8
+[ROM] KV 42: before value ptr=000001FFEC5E9AEF
+[ROM] KV 42: string case
+[ROM] KV 42: strLen=4
+[ROM] KV 42: after value ptr=000001FFEC5E9AFB
+[ROM] KV 43: ptr=000001FFEC5E9AFB
+[ROM] KV 43: keyLen=18
+[ROM] KV 43: key='general.source.url'
+[ROM] KV 43: valueType=8
+[ROM] KV 43: before value ptr=000001FFEC5E9B19
+[ROM] KV 43: string case
+[ROM] KV 43: strLen=56
+[ROM] KV 43: after value ptr=000001FFEC5E9B59
+[ROM] KV 44: ptr=000001FFEC5E9B59
+[ROM] KV 44: keyLen=25
+[ROM] KV 44: key='mradermacher.convert_type'
+[ROM] KV 44: valueType=8
+[ROM] KV 44: before value ptr=000001FFEC5E9B7E
+[ROM] KV 44: string case
+[ROM] KV 44: strLen=2
+[ROM] KV 44: after value ptr=000001FFEC5E9B88
+[ROM] GGUF parsed: tensors=377, tensor_info_end=3996398, data_start=3996416 (aligned)
+[ROM] Mapped 10364416768 bytes
+
+--- Step 0 (position 0), input token: 1 ---
+[DEBUG] Calling executor.Execute()
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[DEBUG] executor.Execute() returned: 1
+Saved logits to F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001\native_tf_logits_pos0.bin
+Predicted token: 185, Logits finite: 1, Ops: 300/300
+
+--- Step 1 (position 1), input token: 185 ---
+[DEBUG] Calling executor.Execute()
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[DEBUG] executor.Execute() returned: 1
+Saved logits to F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001\native_tf_logits_pos1.bin
+Predicted token: 185, Logits finite: 1, Ops: 300/300
+
+--- Step 2 (position 2), input token: 16 ---
+[DEBUG] Calling executor.Execute()
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[DEBUG] executor.Execute() returned: 1
+Saved logits to F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001\native_tf_logits_pos2.bin
+Predicted token: 1, Logits finite: 1, Ops: 300/300
+
+--- Step 3 (position 3), input token: 15 ---
+[DEBUG] Calling executor.Execute()
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[DEBUG] executor.Execute() returned: 1
+Saved logits to F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001\native_tf_logits_pos3.bin
+Predicted token: 15, Logits finite: 1, Ops: 300/300
+
+=============================================================================
+TEACHER_FORCED_DECODE=PASS
+TOKENS_PROCESSED=4
+=============================================================================
