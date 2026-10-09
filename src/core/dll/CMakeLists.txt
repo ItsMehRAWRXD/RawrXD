@@ -46,7 +46,9 @@ target_include_directories(RawrXDCore PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${RAWRXD_SOURCE_DIR}/include
     ${RAWRXD_SOURCE_DIR}/src
+    ${RAWRXD_SOURCE_DIR}/src/core
     ${RAWRXD_SOURCE_DIR}/src/deep2
+    C:/VulkanSDK/1.4.357.0/Include
 )
 
 # Compile definitions
