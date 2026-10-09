@@ -1,5 +1,0 @@
-CMake Warning at CMakeLists.txt:7703 (message):
-  [SoloIDE] Qt6 not found — SoloIDE target skipped.  Install Qt6 or set
-  CMAKE_PREFIX_PATH.
-
-

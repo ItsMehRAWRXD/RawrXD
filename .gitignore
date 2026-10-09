@@ -15,18 +15,19 @@ cmake_install.cmake
 CMakeSettings.json
 compile_commands.json
 
-# Qt
-*_autogen/
-moc_*.cpp
-moc_*.cpp.d
-*.qm
-
-# Visual Studio
+# Visual Studio / MSVC
 .vs/
 *.user
 *.suo
 *.sdf
 *.opensdf
+*.pdb
+*.ilk
+*.idb
+*.pch
+*.ipch
+*.tlog
+*.lastbuildstate
 
 # IDE
 .vscode/
@@ -63,6 +64,16 @@ zig-cache/
 *.pdb
 *.ilk
 *.log
+
+# Test build artifacts (in subdirectories)
+/tests/*.exe
+/tests/*.obj
+/tests/CMakeFiles/
+/tests/CMakeCache.txt
+/tests/*.log
+/tests/b*/*.log
+/tests/b*/*.exe
+/tests/b*/*.obj
 
 # Model files
 ggml-model-f16.bin

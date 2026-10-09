@@ -1,9 +1,0 @@
-[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
-[RawrXD] ⚠️  Sovereign Interceptor: Could not locate Win32IDE.exe module
-[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
-[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
-[GGUF] validation begin
-[GGUF] path=F:\Franken\BackwardsUnlock\1b\unlock-1B-Q4_K_M.gguf 
-[RawrXD][GATE-1] Model format rejected: only valid GGUF files accepted
-[GGUF] extension=FAIL
-FAIL: could not load model
