@@ -64,7 +64,27 @@ private:
     // RAWRXD tokenizer parity: false for SentencePiece vocabs that ship no
     // metaspace marker (DeepSeek-V2-Lite). Selects non-metaspace normalization.
     bool hasMetaspace_ = true;
+
+    // RAWRXD tokenizer parity: true for GPT-2-style byte-level BPE
+    // vocabs (tokenizer.ggml.model=gpt2) that represent whitespace
+    // with the U+0120 (Ġ) marker instead of the SentencePiece
+    // metaspace. Selects the GPT-2 byte-to-Unicode normalization
+    // (space -> Ġ, LF -> Ċ, TAB -> ĉ) before BPE merging.
+    bool hasGpt2Space_ = false;
     void* reserved_ = nullptr;
+
+    // DeepSeek-V2-Lite and other GPT-2 BPE vocabs ship
+    // tokenizer.ggml.merges instead of per-token scores. mergeRanks_ maps
+    // "left right" -> rank (first occurrence wins), the priority order the
+    // BPE merge loop must use (lowest rank first, ties leftmost). Only
+    // consulted on the byte-level path, where pieces cannot contain a raw
+    // space, so the " " key separator is unambiguous.
+    std::vector<std::string> merges_;
+    std::unordered_map<std::string, int> mergeRanks_;
+
+    // Lowercased tokenizer.ggml.pre. "deepseek-llm" selects the
+    // DeepSeek-LLM word splitter applied before BPE merging.
+    std::string preType_;
 
     int32_t bosToken_ = -1;
     int32_t eosToken_ = -1;
