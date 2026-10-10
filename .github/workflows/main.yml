@@ -12,9 +12,6 @@ jobs:
     env:
       # Windows console cp1252 cannot encode the smoke-test's unicode output
       PYTHONIOENCODING: utf-8
-    defaults:
-      run:
-        working-directory: RawrXD-ModelLoader
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -22,17 +19,16 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt via aqtinstall
+      - name: Install NASM
         shell: pwsh
         run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+          choco install nasm -y
+          $env:PATH += ";C:\Program Files\NASM"
 
-      - name: Build Win32 IDE
+      # RawrXD is dependency-free and native: this workflow builds the native
+      # root project (no Qt, no GPU SDK). Qt-dependent surfaces are excluded
+      # by the build system and reported, never silently skipped.
+      - name: Build native project
         run: .\scripts\build.ps1 -Config Release -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
 
       - name: Set up Python
@@ -41,11 +37,11 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python dependencies
-        working-directory: RawrXD-ModelLoader/services
+        working-directory: services
         run: pip install -r requirements.txt
 
       - name: Start HexMag Test Swarm (background on port 8001)
-        working-directory: RawrXD-ModelLoader
+        working-directory: services/hexmag
         shell: pwsh
         run: |
           Start-Process python -ArgumentList @('hexmag_engine.py', '--port', '8001') -NoNewWindow
@@ -55,7 +51,7 @@ jobs:
           } while ($r -ne 200)
 
       - name: Smoke-test /ask and /agent endpoints
-        working-directory: RawrXD-ModelLoader/services
+        working-directory: services
         shell: pwsh
         run: python test_smoke.py
 

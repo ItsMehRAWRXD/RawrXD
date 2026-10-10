@@ -35,14 +35,6 @@ jobs:
           choco install llvm -y --allow-downgrade --force
           echo "C:\Program Files\LLVM\bin" >> $env:GITHUB_PATH
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Create .clang-tidy Config
         shell: pwsh
@@ -124,14 +116,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build with /W4 (All Warnings)
         shell: pwsh
@@ -273,7 +257,6 @@ jobs:
         shell: pwsh
         run: |
           $dependencies = @(
-            @{ name = "Qt"; version = "6.7.3"; minVersion = "6.5.0" },
             @{ name = "GGML"; source = "3rdparty/ggml" },
             @{ name = "GoogleTest"; source = "3rdparty/googletest" }
           )

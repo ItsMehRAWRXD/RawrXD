@@ -35,15 +35,6 @@ jobs:
           choco install nasm -y
           $env:PATH += ";C:\Program Files\NASM"
 
-      - name: Install Qt via aqtinstall
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.5.2 win64_msvc2019_64 -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.5.2\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Clean build folder
         shell: pwsh

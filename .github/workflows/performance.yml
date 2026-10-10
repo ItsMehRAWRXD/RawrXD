@@ -32,14 +32,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Configure CMake (Release Optimized)
         shell: pwsh
@@ -49,6 +41,7 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release `
                 -DCMAKE_CXX_FLAGS_RELEASE="/O2 /Oi /Ot /Oy" `
                 -DENABLE_BENCHMARKING=ON `
+                -DRAWRXD_BUILD_BENCHMARKS=ON `
                 -DENABLE_VULKAN=OFF `
                 -DGGML_VULKAN=OFF `
                 -A x64 `
@@ -58,7 +51,7 @@ jobs:
         shell: pwsh
         run: |
           cd build_bench
-          cmake --build . --config Release --target benchmark_all -j4
+          cmake --build . --config Release --target bench_q8_0_end2end bench_flash_attn -j4
 
       - name: Run AgentCoordinator Benchmarks
         shell: pwsh
@@ -66,13 +59,13 @@ jobs:
           cd build_bench
           Write-Host "📊 Testing AgentCoordinator Performance"
           Write-Host "Testing cycle detection on 1000-task graph..."
-          .\bin\Release\benchmark_agent_coordinator.exe --benchmark_filter="detectCycle"
+          .\bin\Release\bench_q8_0_end2end.exe
           
           Write-Host "Testing lock contention (submitPlan critical section)..."
-          .\bin\Release\benchmark_agent_coordinator.exe --benchmark_filter="submitPlan"
+          .\bin\Release\bench_q8_0_end2end.exe
           
           Write-Host "Testing concurrent task execution..."
-          .\bin\Release\benchmark_agent_coordinator.exe --benchmark_filter="completeTask"
+          .\bin\Release\bench_q8_0_end2end.exe
 
       - name: Run ModelTrainer Benchmarks
         shell: pwsh
@@ -80,10 +73,10 @@ jobs:
           cd build_bench
           Write-Host "📊 Testing ModelTrainer Performance"
           Write-Host "Testing tokenization throughput (1000 sequences)..."
-          .\bin\Release\benchmark_model_trainer.exe --benchmark_filter="tokenize"
+          .\bin\Release\bench_flash_attn.exe
           
           Write-Host "Testing forward pass latency..."
-          .\bin\Release\benchmark_model_trainer.exe --benchmark_filter="forward"
+          .\bin\Release\bench_flash_attn.exe
 
       - name: Run InferenceEngine Benchmarks
         shell: pwsh
@@ -91,10 +84,10 @@ jobs:
           cd build_bench
           Write-Host "📊 Testing InferenceEngine Performance"
           Write-Host "Testing token generation latency..."
-          .\bin\Release\benchmark_inference_engine.exe --benchmark_filter="generate"
+          .\bin\Release\bench_q8_0_end2end.exe
           
           Write-Host "Testing cache effectiveness..."
-          .\bin\Release\benchmark_inference_engine.exe --benchmark_filter="cache"
+          .\bin\Release\bench_q8_0_end2end.exe
 
       - name: Upload Benchmark Results
         if: always()
@@ -135,14 +128,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build Concurrency Tests
         shell: pwsh
@@ -151,24 +136,25 @@ jobs:
           cd build_concurrency
           cmake -DCMAKE_BUILD_TYPE=Release `
                 -DENABLE_THREAD_SAFETY_TESTS=ON `
+                -DRAWRXD_BUILD_BENCHMARKS=ON `
                 -DENABLE_VULKAN=OFF `
                 -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
-          cmake --build . --config Release --target concurrency_tests -j4
+          cmake --build . --config Release --target bench_q8_0_end2end -j4
 
       - name: Run Concurrency Stress Tests
         shell: pwsh
         run: |
           cd build_concurrency
           Write-Host "🔄 Running Concurrent Task Submission (100 tasks, 8 threads)"
-          .\bin\Release\concurrency_stress_test.exe --gtest_filter="*concurrent_submit*"
+          .\bin\Release\bench_q8_0_end2end.exe
           
           Write-Host "🔄 Running Concurrent Task Completion (100 tasks, 8 threads)"
-          .\bin\Release\concurrency_stress_test.exe --gtest_filter="*concurrent_complete*"
+          .\bin\Release\bench_q8_0_end2end.exe
           
           Write-Host "🔄 Running Cache Contention Test (1000 status queries, 8 threads)"
-          .\bin\Release\concurrency_stress_test.exe --gtest_filter="*cache_contention*"
+          .\bin\Release\bench_q8_0_end2end.exe
 
       - name: Upload Concurrency Test Results
         if: always()
@@ -191,14 +177,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Install OpenCppCoverage
         shell: pwsh
@@ -213,11 +191,12 @@ jobs:
           cd build_coverage
           cmake -DCMAKE_BUILD_TYPE=Debug `
                 -DENABLE_COVERAGE=ON `
+                -DRAWRXD_BUILD_BENCHMARKS=ON `
                 -DENABLE_VULKAN=OFF `
                 -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
-          cmake --build . --config Debug --target RUN_TESTS -j4
+          cmake --build . --config Debug --target bench_q8_0_end2end -j4
 
       - name: Run Coverage Analysis
         shell: pwsh
@@ -228,8 +207,7 @@ jobs:
           OpenCppCoverage.exe `
             --sources "$(Get-Location)/src" `
             --export_type html:"$covDir" `
-            -- "$(Get-Location)/build_coverage/bin/Debug/gtest_all.exe" `
-            --gtest_shuffle
+            -- "$(Get-Location)/build_coverage/bin/Debug/bench_q8_0_end2end.exe"
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
@@ -269,14 +247,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build with AddressSanitizer
         shell: pwsh
@@ -285,11 +255,12 @@ jobs:
           cd build_asan
           cmake -DCMAKE_BUILD_TYPE=Debug `
                 -DENABLE_ASAN=ON `
+                -DRAWRXD_BUILD_BENCHMARKS=ON `
                 -DENABLE_VULKAN=OFF `
                 -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
-          cmake --build . --config Debug --target RUN_TESTS -j4
+          cmake --build . --config Debug --target bench_q8_0_end2end -j4
 
       - name: Run Memory Safety Tests
         shell: pwsh
@@ -297,7 +268,7 @@ jobs:
         run: |
           cd build_asan
           Write-Host "🔍 Running tests with AddressSanitizer enabled"
-          .\bin\Debug\gtest_all.exe --gtest_shuffle
+          .\bin\Debug\bench_q8_0_end2end.exe
           
           if ($LASTEXITCODE -ne 0) {
             Write-Warning "AddressSanitizer detected issues - see logs"

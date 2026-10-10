@@ -86,14 +86,6 @@ jobs:
         shell: pwsh
         run: choco install nasm -y
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Configure Release Build
         shell: pwsh
@@ -121,15 +113,23 @@ jobs:
           $version = "${{ github.ref_name }}" -Replace "^v", ""
           $platform = "${{ matrix.platform }}"
           $outDir = "release_package_$platform"
-          
+
           mkdir $outDir -Force
-          
-          # Copy executable
-          Copy-Item "build_release/bin/Release/RawrXD-AgenticIDE.exe" -Destination "$outDir/"
-          
+
+          # Native dependency-free binaries produced by this project
+          # (Qt-dependent surfaces are excluded from the native build).
+          Copy-Item "build_release/bin/Release/RawrXD-Chromatic.exe" -Destination "$outDir/" -ErrorAction SilentlyContinue
+          Copy-Item "build_release/bin/Release/quant_scalar_smoke.exe" -Destination "$outDir/" -ErrorAction SilentlyContinue
+
           # Copy dependencies
           Copy-Item "build_release/bin/Release/*.dll" -Destination "$outDir/" -Force -ErrorAction SilentlyContinue
-          
+
+          $packaged = Get-ChildItem "$outDir" -Filter *.exe -ErrorAction SilentlyContinue
+          if (-not $packaged) {
+            Write-Error "No native executables found in build_release/bin/Release - nothing to package"
+            exit 1
+          }
+
           # Create manifest
           @"
           {
@@ -140,17 +140,17 @@ jobs:
             "git_branch": "${{ github.ref }}"
           }
           "@ | Out-File "$outDir/MANIFEST.json"
-          
+
           # Create archive
-          7z a "RawrXD-AgenticIDE-$version-$platform.zip" $outDir
-          
-          Write-Host "✅ Package created: RawrXD-AgenticIDE-$version-$platform.zip"
+          7z a "RawrXD-native-$version-$platform.zip" $outDir
+
+          Write-Host "Package created: RawrXD-native-$version-$platform.zip"
 
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.platform }}
-          path: RawrXD-AgenticIDE-*.zip
+          path: RawrXD-native-*.zip
           retention-days: 90
 
   # ============================================================
@@ -183,7 +183,7 @@ jobs:
         shell: bash
         run: |
           cat > RELEASE_NOTES.md << 'EOF'
-          # RawrXD-AgenticIDE Release ${{ env.VERSION }}
+          # RawrXD Native Release ${{ env.VERSION }}
           
           ## 🎉 Release Highlights
           
@@ -211,7 +211,7 @@ jobs:
           - Production-ready configuration management
           
           ### Testing
-          - 290+ unit tests (Google Test + Qt Test)
+          - Native unit tests (quant_scalar_smoke) run in CI
           - Performance benchmarks with baselines
           - Concurrency stress testing (8-thread loads)
           - Code coverage reporting
@@ -220,16 +220,16 @@ jobs:
           
           | Platform | Download |
           |----------|----------|
-          | Windows x64 | `RawrXD-AgenticIDE-${{ env.VERSION }}-x64.zip` |
-          | Windows x86 | `RawrXD-AgenticIDE-${{ env.VERSION }}-x86.zip` |
-          | Windows ARM64 | `RawrXD-AgenticIDE-${{ env.VERSION }}-ARM64.zip` |
-          | Linux | `RawrXD-AgenticIDE-${{ env.VERSION }}-linux.tar.gz` |
+          | Windows x64 | `RawrXD-native-${{ env.VERSION }}-x64.zip` |
+          | Windows x86 | `RawrXD-native-${{ env.VERSION }}-x86.zip` |
+          | Windows ARM64 | `RawrXD-native-${{ env.VERSION }}-ARM64.zip` |
+          | Linux | `RawrXD-native-${{ env.VERSION }}-linux.tar.gz` |
           
           ## 🔧 Installation
           
           1. Download the appropriate package for your platform
           2. Extract to desired location
-          3. Run `RawrXD-AgenticIDE.exe` (Windows) or `RawrXD-AgenticIDE` (Linux)
+          3. Run `RawrXD-Chromatic.exe` (Windows) or `quant_scalar_smoke` (Linux)
           
           ## 📝 Commits Since Last Release
           
@@ -288,8 +288,8 @@ jobs:
         shell: bash
         run: |
           cd artifacts
-          unzip -l RawrXD-AgenticIDE-*.zip
-          unzip RawrXD-AgenticIDE-*.zip
+          unzip -l RawrXD-native-*.zip
+          unzip RawrXD-native-*.zip
 
       - name: Deploy to Staging Server
         shell: bash

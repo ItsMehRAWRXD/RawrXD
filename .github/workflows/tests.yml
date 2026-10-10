@@ -19,14 +19,18 @@ on:
 
 jobs:
   # ============================================================
-  # Test Suite: Google Test + Qt Test
+  # Native test suite (dependency-free, no Qt):
+  # quant_scalar_smoke verifies the Q5/Q6 quantization bit-packers.
+  # The Qt-based gtest/component test binaries in this repository's
+  # history are not part of the native build; when their sources are
+  # restored they must be added back explicitly (no silent skips).
   # ============================================================
   test-suite:
     runs-on: windows-latest
     strategy:
       matrix:
         config: [Debug, Release]
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -41,28 +45,8 @@ jobs:
           choco install nasm -y
           $env:PATH += ";C:\Program Files\NASM"
 
-      - name: Install Qt via aqtinstall
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
-      - name: Download Google Test
-        shell: pwsh
-        run: |
-          if (!(Test-Path "3rdparty/googletest")) {
-            New-Item -ItemType Directory -Path 3rdparty -Force | Out-Null
-            Invoke-WebRequest -Uri "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip" -OutFile googletest.zip
-            Expand-Archive -Path googletest.zip -DestinationPath 3rdparty
-            Rename-Item -Path "3rdparty/googletest-1.14.0" -NewName "googletest"
-            Remove-Item googletest.zip
-          }
-
-      - name: Configure CMake (Tests)
+      - name: Configure CMake (Native Tests)
         shell: pwsh
         run: |
           $BuildDir = "build_tests"
@@ -72,45 +56,34 @@ jobs:
           mkdir $BuildDir
           cd $BuildDir
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.config }} `
-                -DENABLE_TESTING=ON `
-                -DENABLE_GTEST=ON `
-                -DENABLE_QT_TESTS=ON `
+                -DRAWRXD_BUILD_TESTS=ON `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
-      - name: Build Tests
+      - name: Build Native Tests
         shell: pwsh
         run: |
           cd build_tests
-          cmake --build . --config ${{ matrix.config }} --target RUN_TESTS -j4
+          cmake --build . --config ${{ matrix.config }} --target quant_scalar_smoke -j4
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
-      - name: Run Google Test Suite
+      - name: Run Native Test Suite
         shell: pwsh
-        continue-on-error: false
         run: |
           cd build_tests
-          $testExe = "bin/${{ matrix.config }}/gtest_all.exe"
+          $testExe = "bin/${{ matrix.config }}/quant_scalar_smoke.exe"
           if (Test-Path $testExe) {
-            & $testExe --gtest_shuffle --gtest_repeat=2
-            if ($LASTEXITCODE -ne 0) { exit 1 }
-          } else {
-            Write-Warning "Google Test executable not found at $testExe"
-          }
-
-      - name: Run Qt Tests
-        shell: pwsh
-        continue-on-error: false
-        run: |
-          cd build_tests
-          Get-ChildItem -Path "bin/${{ matrix.config }}" -Filter "*_test.exe" | ForEach-Object {
-            Write-Host "Running $($_.Name)..."
-            & $_.FullName -v2
+            & $testExe
             if ($LASTEXITCODE -ne 0) {
-              Write-Error "Test $($_.Name) failed"
+              Write-Error "quant_scalar_smoke failed"
               exit 1
             }
+          } else {
+            Write-Error "Native test executable not found at $testExe"
+            exit 1
           }
 
       - name: Upload Test Results
@@ -143,14 +116,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build VoiceProcessor Tests
         shell: pwsh
@@ -182,14 +147,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build AIMergeResolver Tests
         shell: pwsh
@@ -221,14 +178,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build SemanticDiffAnalyzer Tests
         shell: pwsh
@@ -260,14 +209,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build ZeroRetentionManager Tests
         shell: pwsh
@@ -299,14 +240,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build SandboxedTerminal Tests
         shell: pwsh
@@ -338,14 +271,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build ModelRegistry Tests
         shell: pwsh

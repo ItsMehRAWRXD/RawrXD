@@ -8,22 +8,22 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Qt via aqtinstall
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -m qtcharts -O "$PWD\Qt"
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
-      - name: Build agent
-        run: cmake -B build -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF && cmake --build build --config Release --target RawrXD-Agent
+      - name: Build native project
+        run: cmake -B build -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF && cmake --build build --config Release
       - name: Let IDE improve itself
         shell: pwsh
         run: |
+          # The autonomous agent binary (RawrXD-Agent) is a Qt-dependent
+          # target and Qt is not part of this dependency-free project. It is
+          # excluded by the build system and this step FAILS EXPLICITLY until a
+          # native agent target exists - it never silently skips.
+          $agent = "build\bin\Release\RawrXD-Agent.exe"
+          if (-not (Test-Path $agent)) {
+            Write-Error "RawrXD-Agent.exe not built: RawrXD-Agent is a Qt target and this project is dependency-free (no Qt). A native agent target is required before self-release can run."
+            exit 1
+          }
           $env:RAWRXD_WISH = "Improve inference speed by 10 % without quality loss"
-          build\bin\Release\RawrXD-Agent.exe
+          & $agent
         env:
           CERT_PATH: ${{ secrets.CERT_PATH }}
           CERT_PASS: ${{ secrets.CERT_PASS }}

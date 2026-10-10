@@ -197,48 +197,55 @@ if(Qt6_FOUND)
     # ============================================================
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../../bin")
     
-    function(deploy_runtime_dependencies target_name)
-        if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
-            # Use windeployqt to automatically deploy Qt DLLs, plugins, and MSVC runtime
-            add_custom_command(TARGET ${target_name} POST_BUILD
-                COMMAND "${WINDEPLOYQT_EXECUTABLE}" 
-                    --release 
-                    --compiler-runtime 
-                    --no-translations 
-                    --no-system-d3d-compiler
-                    --no-opengl-sw
-                    "$<TARGET_FILE:${target_name}>"
-                WORKING_DIRECTORY "$<TARGET_FILE_DIR:${target_name}>"
-                COMMENT "Deploying Qt dependencies for ${target_name}..."
-            )
-            
-            # Additionally copy Qt6Sql.dll explicitly (sometimes missed by windeployqt)
-            add_custom_command(TARGET ${target_name} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "$<TARGET_FILE:Qt6::Sql>"
-                    "$<TARGET_FILE_DIR:${target_name}>/"
-                COMMENT "Ensuring Qt6Sql.dll is deployed for ${target_name}"
-            )
-            
-            # Copy MSVC OpenMP runtime (vcomp140.dll) if not already deployed
-            if(EXISTS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35207/x64/Microsoft.VC144.OpenMP/vcomp140.dll")
-                add_custom_command(TARGET ${target_name} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35207/x64/Microsoft.VC144.OpenMP/vcomp140.dll"
-                        "$<TARGET_FILE_DIR:${target_name}>/"
-                    COMMENT "Deploying vcomp140.dll for ${target_name}"
-                )
-            endif()
-            
-            message(STATUS "Γ£ô Automatic DLL deployment enabled for ${target_name}")
-        else()
-            message(WARNING "windeployqt not found - manual DLL deployment required for ${target_name}")
-        endif()
-    endfunction()
+    # NOTE: deploy_runtime_dependencies is defined unconditionally below the
+    # Qt6_FOUND block: a second find_package(Qt6 ...) later in this file can
+    # re-enable Qt6_FOUND after this block was skipped, and the QtShell /
+    # AgenticIDE call sites must always be able to call it.
+    
     
 else()
     message(STATUS "Qt6 not found - native dependency-free build (Qt-dependent targets excluded)")
 endif()
+
+# ============================================================
+# AUTOMATIC DLL DEPLOYMENT HELPER (defined unconditionally)
+# ============================================================
+# A second find_package(Qt6 ...) later in this file can re-enable Qt6_FOUND
+# after the block above was skipped, so the QtShell / AgenticIDE call sites
+# must always be able to call this function.
+find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../../bin")
+function(deploy_runtime_dependencies target_name)
+    if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
+        add_custom_command(TARGET ${target_name} POST_BUILD
+            COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+                --release
+                --compiler-runtime
+                --no-translations
+                --no-system-d3d-compiler
+                --no-opengl-sw
+                "$<TARGET_FILE:${target_name}>"
+            WORKING_DIRECTORY "$<TARGET_FILE_DIR:${target_name}>"
+            COMMENT "Deploying Qt dependencies for ${target_name}..."
+        )
+        add_custom_command(TARGET ${target_name} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "$<TARGET_FILE:Qt6::Sql>"
+                "$<TARGET_FILE_DIR:${target_name}>/"
+            COMMENT "Ensuring Qt6Sql.dll is deployed for ${target_name}"
+        )
+        if(EXISTS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35207/x64/Microsoft.VC144.OpenMP/vcomp140.dll")
+            add_custom_command(TARGET ${target_name} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35207/x64/Microsoft.VC144.OpenMP/vcomp140.dll"
+                    "$<TARGET_FILE_DIR:${target_name}>/"
+                COMMENT "Deploying vcomp140.dll for ${target_name}"
+            )
+        endif()
+        message(STATUS "Automatic DLL deployment enabled for ${target_name}")
+    else()
+        message(WARNING "windeployqt not found - manual DLL deployment required for ${target_name}")
+    endif()
+endfunction()
 
 # ============================================================
 # GGML Submodule Integration (Quantized Transformer Kernels)
@@ -384,8 +391,12 @@ else()
 endif()
 
 # Qt-based IDE shell (separate executable, no Vulkan)
+# NOTE: Qt6 is optional and this project does not depend on it. When Qt6 is
+# absent these targets are excluded and reported (see the summary at the end
+# of this file). No second find_package(Qt6 ...) here: a partial component
+# list could re-enable Qt6_FOUND after the Qt6-guarded helper functions above
+# were skipped, producing "Unknown CMake command" errors at the call sites.
 if(MSVC)
-    find_package(Qt6 COMPONENTS Widgets Network Concurrent QUIET)
     if(Qt6_FOUND) # Enabled to build Qt shell
         message(STATUS "Building Qt Shell with Qt version: ${Qt6_VERSION}")
         
