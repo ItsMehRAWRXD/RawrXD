@@ -75,10 +75,11 @@ jobs:
         shell: pwsh
         run: |
           $BuildDir = "build_${{ matrix.config }}_${{ matrix.arch }}"
-          cd $BuildDir
-          
-          msbuild "$PWD\RawrXD-ModelLoader.sln" /p:Configuration=${{ matrix.config }} /p:Platform=${{ matrix.arch }} /m:4
-          
+          # cmake --build drives the generated solution reliably on the
+          # runner's Visual Studio 2026 toolchain (direct msbuild invocation
+          # of the .sln is not available there).
+          cmake --build $BuildDir --config ${{ matrix.config }} --parallel 4
+
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Build failed"
             exit 1
@@ -254,8 +255,7 @@ jobs:
       - name: Build ARM64
         shell: pwsh
         run: |
-          cd build_arm64
-          msbuild "$PWD\RawrXD-ModelLoader.sln" /p:Configuration=Release /p:Platform=ARM64 /m:4
+          cmake --build build_arm64 --config Release --parallel 4
 
       - name: Verify ARM64 Executable
         shell: pwsh

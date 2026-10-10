@@ -104,8 +104,7 @@ jobs:
       - name: Build Release
         shell: pwsh
         run: |
-          cd build_release
-          msbuild "$PWD\RawrXD-ModelLoader.sln" /p:Configuration=Release /p:Platform=${{ matrix.platform }} /m:4
+          cmake --build build_release --config Release --parallel 4
 
       - name: Create Release Package
         shell: pwsh
