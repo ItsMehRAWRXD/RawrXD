@@ -1,12 +1,12 @@
 **********************
 PowerShell transcript start
-Start time: 20261010183240
+Start time: 20261010183446
 Username: RAWRXD\Garrett
 RunAs User: RAWRXD\Garrett
 Configuration Name: 
 Machine: RAWRXD (Microsoft Windows NT 10.0.26200.0)
 Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.6.0_x64__8wekyb3d8bbwe\pwsh.dll -NoProfile -ExecutionPolicy Bypass -File F:\rawrxd\scripts\certify_agent_reliability.ps1
-Process ID: 6632
+Process ID: 5660
 PSVersion: 7.6.6
 PSEdition: Core
 GitCommitId: 7.6.6
@@ -18,11 +18,9 @@ SerializationVersion: 1.1.0.1
 WSManStackVersion: 3.0
 **********************
 [certify] === RAWRXD_AGENT_RELIABILITY_001 certification run ===
-[certify] source commit : 23e0b66192d8c9476c78def320ccfda41d16a3bd
+[certify] source commit : 07dee937bb5738671660118775c4e30a63c78f90
 [certify] branch        : ci/github-control-loop-001
-[certify] in-scope dirty: 2 file(s)
-[certify]    - .github/workflows/resilience.yml
-[certify]    - scripts/certify_agent_reliability.ps1
+[certify] in-scope dirty: 0 file(s)
 [certify] configuring + building...
 -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
 -- The C compiler identification is MSVC 19.44.35228.0
@@ -123,7 +121,7 @@ suppress it.
 -- Performing Test HAS_AVX512_1 - Success
 -- Adding CPU backend variant ggml-cpu: /arch:AVX512 GGML_AVX512
 -- ggml version: 0.9.4
--- ggml commit:  23e0b66192
+-- ggml commit:  07dee937bb
 -- CUDA Toolkit not found - NVIDIA GPU support disabled
 -- ROCm/HIP not found - AMD GPU support disabled
 -- To enable AMD GPU: Install ROCm for Windows and set HIP_PATH
@@ -186,7 +184,7 @@ CMake Warning at CMakeLists.txt:371 (message):
 -- RawrXD Project Configuration Summary
 -- ========================================
 -- Qt-dependent targets EXCLUDED (Qt6 not installed): RawrXDOrchestration;RawrXDGit;RawrXDTerminal;RawrXDPaint;RawrXD-Win32IDE;test_ide_main;test_qmainwindow;test_header;bench_deflate_50mb;quant_engine_test;quant_correctness_tests;test_agent_coordinator;test_agent_coordinator_integration;test_gguf_loader;test_gguf_loader_simple;test-suite
--- Configuring done (36.0s)
+-- Configuring done (36.8s)
 -- Generating done (0.5s)
 -- Build files have been written to: F:/rawrxd/build-certification
 CONFIG_EXITCODE=0
@@ -203,8 +201,8 @@ F:\rawrxd\src\agentic\conflict_resolution.cpp(550,58): warning C4100: 'filePath'
   agentic-resilience-tests.vcxproj -> F:\rawrxd\build-certification\Release\agentic-resilience-tests.exe
 BUILD_EXITCODE=0
 [certify] executable    : F:\rawrxd\build-certification\Release\agentic-resilience-tests.exe
-[certify] source tree   : 15db8d775c34e254548d81d18703959dafe78ca3
-[certify] exec sha256   : 5aca2ec887869124c088c1cbc27665c8bdb9f68cfcec5aef4d618acf165a44c9  (identifies THIS binary only - see note below)
+[certify] source tree   : edfd24fb00d369ca51e60b5d69dd3b49934684e3
+[certify] exec sha256   : 45411ce23d0bc703e4f0a77317700e7d4db9825fca301d0b1ba9f7ecd700b7d2  (identifies THIS binary only - see note below)
 [certify] size          : 424448 bytes
 [certify] running tests...
 RawrXD Agentic Resilience Test Suite (no dependencies)\
@@ -278,8 +276,8 @@ RawrXD Agentic Resilience Test Suite (no dependencies)\
   stats: detected=1 autoResolved=1 manualRequired=0\
 
 === conflict: manual resolution of an unresolved conflict ===
-  unresolved count=1 cid='1a127f35b04-3'
-  manually resolved conflict 1a127f35b04-3\
+  unresolved count=1 cid='1a127f54ce4-3'
+  manually resolved conflict 1a127f54ce4-3\
 
 === conflict: conflict log export ===
   exported conflict log\
@@ -289,7 +287,7 @@ RawrXD Agentic Resilience Test Suite (no dependencies)\
   dependency violation correctly classified\
 
 === delegation: create, delegate, complete ===
-  task task-1a127f35b0e-1 -> success in 0ms\
+  task task-1a127f54cf6-1 -> success in 0ms\
   agent state after completion: completed\
 
 === delegation: max delegation depth enforced ===
@@ -351,5 +349,5 @@ ALL TESTS PASSED\
 [certify] manifest      : F:\rawrxd\build-certification\manifest.json
 **********************
 PowerShell transcript end
-End time: 20261010183342
+End time: 20261010183550
 **********************
