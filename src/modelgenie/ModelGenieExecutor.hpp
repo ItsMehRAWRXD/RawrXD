@@ -311,6 +311,21 @@ public:
         return result.first->second.data();
     }
 
+    // Raw bytes for one expert slice of a [in, out, experts] blocked-quantized
+    // tensor; nullptr when the layout is not a handled one.
+    const uint8_t* GetExpertRaw(uint32_t id, uint32_t expert) const
+    {
+        const TensorView* v = Resolve(id);
+        if (!v || v->rank != 3 || !v->data) return nullptr;
+        if (expert >= v->dims[2] || !v->dims[2] ||
+            v->bytes % v->dims[2] || v->elementCount % v->dims[2])
+            return nullptr;
+        const uint64_t bytesPerExpert = v->bytes / v->dims[2];
+        const uint64_t offset = bytesPerExpert * expert;
+        if (offset > v->bytes - bytesPerExpert) return nullptr;
+        return v->data + offset;
+    }
+
     bool IsValid() const { return romFile_.base != nullptr; }
     // Base of the memory-mapped GGUF, so callers can report absolute offsets.
     const uint8_t* Base() const { return romFile_.base; }

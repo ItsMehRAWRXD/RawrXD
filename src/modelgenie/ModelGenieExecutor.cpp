@@ -1278,6 +1278,15 @@ private:
         // ggml reference parity: quantize the activation vector the same way
         // llama.cpp's CPU backend does for the weight quant before the dot.
         // The embedding lookup above is a row copy and must stay exact.
+        // ggml reference parity: when the raw quantized tensor is available run
+        // the blocked dot in ggml's order (integer products, one scale multiply
+        // per super-block). This reproduces llama.cpp to ~1e-8; the dequantized
+        // order below stays as the fallback for anything it does not handle.
+        if (view->data && view->bytes >= BlockedRowBytes(view->type, in) * out) {
+            if (DotBlocked(view->type, view->data, input, output, in, out)) {
+                return true;
+            }
+        }
         quantized.assign(input, input + in);
         GGMLPreQuantizeActivation(quantized, view->type);
         return DotRows(weight, quantized.data(), output, in, out);
@@ -1301,6 +1310,305 @@ private:
         return true;
     }
 
+
+//-------------------------------------------------------------------------
+// ggml-compatible blocked quantized dot products
+//
+// ggml_vec_dot_q4_K_q8_K / q6_K_q8_K form the integer products first and apply
+// the scales once per 256-element super-block, accumulating in eight int32
+// lanes. Dequantizing the weight to f32 and dotting is the same sum
+// mathematically but rounds every element, which measures 2.8e-3 off against
+// llama.cpp on a real q4_K matmul (512 -> 4096, layer 0 attn_kv_b) where this
+// order agrees to 1e-8 (tools/bproj_order_ab.py).
+//
+// Callers that hold the raw quantized tensor use these kernels; every other
+// caller keeps the dequantized order through DotRows().
+//-------------------------------------------------------------------------
+static constexpr int kQK_K = 256;
+
+// q8_K activation: one 256-element group, one f32 scale, per-16 sums.
+struct Q8KAct {
+    float d = 0.0f;
+    int8_t q[kQK_K];
+    int16_t bsums[16];
+};
+
+static inline void QuantizeQ8KGroup(const float* src, Q8KAct& blk)
+{
+    float amax = 0.0f;
+    for (int j = 0; j < kQK_K; ++j) {
+        const float a = std::fabs(src[j]);
+        if (a > amax) amax = a;
+    }
+    const float d = amax / 127.0f;
+    blk.d = d;
+    if (d == 0.0f) {
+        std::memset(blk.q, 0, sizeof(blk.q));
+        std::memset(blk.bsums, 0, sizeof(blk.bsums));
+        return;
+    }
+    const float id = 1.0f / d;
+    int sums[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    for (int j = 0; j < kQK_K; ++j) {
+        int v = static_cast<int>(std::roundf(src[j] * id));
+        if (v > 127) v = 127;
+        if (v < -128) v = -128;
+        blk.q[j] = static_cast<int8_t>(v);
+        sums[j / 16] += v;
+    }
+    for (int j = 0; j < 16; ++j) blk.bsums[j] = static_cast<int16_t>(sums[j]);
+}
+
+static inline void QuantizeQ8K(const float* x, size_t n, std::vector<Q8KAct>& out)
+{
+    out.clear();
+    if (n == 0 || (n % kQK_K) != 0) return;
+    out.resize(n / kQK_K);
+    for (size_t b = 0; b < out.size(); ++b)
+        QuantizeQ8KGroup(x + b * kQK_K, out[b]);
+}
+
+// q8_0 activation (32-element groups, fp16 scale) for q8_0 / q5_0 weight dots.
+struct Q8_0Act {
+    float d = 0.0f;
+    int8_t q[32];
+};
+
+static inline void QuantizeQ8_0(const float* x, size_t n, std::vector<Q8_0Act>& out)
+{
+    out.clear();
+    if (n == 0 || (n % 32) != 0) return;
+    out.resize(n / 32);
+    for (size_t b = 0; b < out.size(); ++b) {
+        const float* src = x + b * 32;
+        float amax = 0.0f;
+        for (int j = 0; j < 32; ++j) {
+            const float a = std::fabs(src[j]);
+            if (a > amax) amax = a;
+        }
+        const float d = amax / 127.0f;
+        out[b].d = FP16ToFloat(FloatToFP16(d));
+        if (d == 0.0f) {
+            std::memset(out[b].q, 0, sizeof(out[b].q));
+            continue;
+        }
+        const float id = 1.0f / d;
+        for (int j = 0; j < 32; ++j) {
+            int v = static_cast<int>(std::roundf(src[j] * id));
+            if (v > 127) v = 127;
+            if (v < -128) v = -128;
+            out[b].q[j] = static_cast<int8_t>(v);
+        }
+    }
+}
+
+// ggml_vec_dot_q4_K_q8_K, for one output row of a [in, out] q4_K weight.
+static inline float DotQ4KRow(const uint8_t* row, const Q8KAct* act, size_t blocks)
+{
+    static const uint32_t kmask1 = 0x3f3f3f3fu;
+    static const uint32_t kmask2 = 0x0f0f0f0fu;
+    static const uint32_t kmask3 = 0x03030303u;
+
+    uint32_t utmp[4];
+    float sums[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    float sumf = 0.0f;
+
+    for (size_t i = 0; i < blocks; ++i) {
+        const uint8_t* blk = row + i * 144;
+        const float d = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk));
+        const float dmin = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk + 2));
+
+        std::memcpy(utmp, blk + 4, 12);
+        utmp[3] = ((utmp[2] >> 4) & kmask2) | (((utmp[1] >> 6) & kmask3) << 4);
+        const uint32_t uaux = utmp[1] & kmask1;
+        utmp[1] = (utmp[2] & kmask2) | (((utmp[0] >> 6) & kmask3) << 4);
+        utmp[2] = uaux;
+        utmp[0] &= kmask1;
+        const uint8_t* scales = reinterpret_cast<const uint8_t*>(&utmp[0]);
+        const uint8_t* mins = reinterpret_cast<const uint8_t*>(&utmp[2]);
+
+        int8_t a[kQK_K];
+        const uint8_t* q4 = blk + 16;
+        int8_t* ap = a;
+        for (int j = 0; j < kQK_K / 64; ++j) {
+            for (int l = 0; l < 32; ++l) ap[l] = static_cast<int8_t>(q4[l] & 0xF);
+            ap += 32;
+            for (int l = 0; l < 32; ++l) ap[l] = static_cast<int8_t>(q4[l] >> 4);
+            ap += 32;
+            q4 += 32;
+        }
+
+        const Q8KAct& y = act[i];
+        int32_t aux32[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        const int8_t* q8 = y.q;
+        ap = a;
+        int is = 0;
+        for (int sub = 0; sub < kQK_K / 32; ++sub) {
+            const int32_t scale = scales[is++];
+            for (int g = 0; g < 4; ++g) {
+                for (int l = 0; l < 8; ++l) {
+                    aux32[l] += scale * static_cast<int32_t>(q8[l]) *
+                                static_cast<int32_t>(ap[l]);
+                }
+                q8 += 8;
+                ap += 8;
+            }
+        }
+        int32_t sumi = 0;
+        for (int j = 0; j < 16; ++j) sumi += y.bsums[j] * mins[j / 2];
+
+        const float dd = d * y.d;
+        for (int l = 0; l < 8; ++l) sums[l] += dd * static_cast<float>(aux32[l]);
+        sumf -= (dmin * y.d) * static_cast<float>(sumi);
+    }
+    for (int l = 0; l < 8; ++l) sumf += sums[l];
+    return sumf;
+}
+
+// ggml_vec_dot_q6_K_q8_K, for one output row of a [in, out] q6_K weight.
+static inline float DotQ6KRow(const uint8_t* row, const Q8KAct* act, size_t blocks)
+{
+    float sums[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    float sumf = 0.0f;
+
+    for (size_t i = 0; i < blocks; ++i) {
+        const uint8_t* blk = row + i * 210;
+        const float d = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk + 208));
+
+        int8_t a[kQK_K];
+        const uint8_t* ql = blk;
+        const uint8_t* qh = blk + 128;
+        int8_t* ap = a;
+        for (int j = 0; j < kQK_K; j += 128) {
+            for (int l = 0; l < 32; ++l) {
+                ap[l + 0] = static_cast<int8_t>(((ql[l + 0] & 0xF) |
+                                (((qh[l] >> 0) & 3) << 4)) - 32);
+                ap[l + 32] = static_cast<int8_t>(((ql[l + 32] & 0xF) |
+                                 (((qh[l] >> 2) & 3) << 4)) - 32);
+                ap[l + 64] = static_cast<int8_t>(((ql[l + 0] >> 4) |
+                                 (((qh[l] >> 4) & 3) << 4)) - 32);
+                ap[l + 96] = static_cast<int8_t>(((ql[l + 32] >> 4) |
+                                 (((qh[l] >> 6) & 3) << 4)) - 32);
+            }
+            ap += 128;
+            ql += 64;
+            qh += 32;
+        }
+
+        const int8_t* sc = reinterpret_cast<const int8_t*>(blk + 192);
+        const Q8KAct& y = act[i];
+        int32_t aux32[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        const int8_t* q8 = y.q;
+        ap = a;
+        int is = 0;
+        for (int j = 0; j < kQK_K / 16; ++j) {
+            const int32_t scale = sc[is++];
+            for (int g = 0; g < 2; ++g) {
+                for (int l = 0; l < 8; ++l) {
+                    aux32[l] += scale * static_cast<int32_t>(q8[l]) *
+                                static_cast<int32_t>(ap[l]);
+                }
+                q8 += 8;
+                ap += 8;
+            }
+        }
+
+        const float dd = d * y.d;
+        for (int l = 0; l < 8; ++l) sums[l] += dd * static_cast<float>(aux32[l]);
+    }
+    for (int l = 0; l < 8; ++l) sumf += sums[l];
+    return sumf;
+}
+
+// ggml_vec_dot_q8_0_q8_0, for one output row of a [in, out] q8_0 weight.
+static inline float DotQ8_0Row(const uint8_t* row, const Q8_0Act* act, size_t blocks)
+{
+    float sumf = 0.0f;
+    for (size_t i = 0; i < blocks; ++i) {
+        const uint8_t* blk = row + i * 34;
+        const float dw = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk));
+        const int8_t* w = reinterpret_cast<const int8_t*>(blk + 2);
+        const Q8_0Act& y = act[i];
+        int32_t sumi = 0;
+        for (int j = 0; j < 32; ++j) sumi += static_cast<int32_t>(w[j]) * y.q[j];
+        sumf += dw * y.d * static_cast<float>(sumi);
+    }
+    return sumf;
+}
+
+// ggml_vec_dot_q5_0_q8_0, for one output row of a [in, out] q5_0 weight.
+static inline float DotQ5_0Row(const uint8_t* row, const Q8_0Act* act, size_t blocks)
+{
+    float sumf = 0.0f;
+    for (size_t i = 0; i < blocks; ++i) {
+        const uint8_t* blk = row + i * 22;
+        const float dw = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk));
+        uint32_t qh = 0;
+        std::memcpy(&qh, blk + 2, 4);
+        const uint8_t* qs = blk + 6;
+        const Q8_0Act& y = act[i];
+        int8_t w[32];
+        for (int j = 0; j < 16; ++j) {
+            w[j] = static_cast<int8_t>(
+                int((qs[j] & 15u) | (((qh >> j) & 1u) << 4)) - 16);
+            w[j + 16] = static_cast<int8_t>(
+                int((qs[j] >> 4) | (((qh >> (j + 16)) & 1u) << 4)) - 16);
+        }
+        int32_t sumi = 0;
+        for (int j = 0; j < 32; ++j) sumi += static_cast<int32_t>(w[j]) * y.q[j];
+        sumf += dw * y.d * static_cast<float>(sumi);
+    }
+    return sumf;
+}
+
+// Row bytes for one output row of a blocked quantized [in, rows] weight.
+static inline size_t BlockedRowBytes(ModelGenie::GGMLType t, size_t in)
+{
+    switch (t) {
+        case ModelGenie::GGMLType::Q4_K: return (in / kQK_K) * 144;
+        case ModelGenie::GGMLType::Q6_K: return (in / kQK_K) * 210;
+        case ModelGenie::GGMLType::Q8_0: return (in / 32) * 34;
+        case ModelGenie::GGMLType::Q5_0: return (in / 32) * 22;
+        default: return 0;
+    }
+}
+
+// ggml-order matmul for one quantized 2D tensor stored dim[0]-contiguous.
+// Returns false for types/layouts the caller must handle via DotRows().
+static bool DotBlocked(ModelGenie::GGMLType type, const uint8_t* weight,
+                       const float* act, float* out, size_t in, size_t rows)
+{
+    const size_t rowBytes = BlockedRowBytes(type, in);
+    if (rowBytes == 0 || in == 0 || rows == 0) return false;
+    if (type == ModelGenie::GGMLType::Q4_K || type == ModelGenie::GGMLType::Q6_K) {
+        if (in % kQK_K != 0) return false;
+        const size_t blocks = in / kQK_K;
+        std::vector<Q8KAct> q8;
+        QuantizeQ8K(act, in, q8);
+        if (q8.size() != blocks) return false;
+        #pragma omp parallel for schedule(static) if(rows >= 128)
+        for (int64_t r = 0; r < static_cast<int64_t>(rows); ++r) {
+            const uint8_t* row = weight + static_cast<size_t>(r) * rowBytes;
+            out[r] = (type == ModelGenie::GGMLType::Q4_K)
+                ? DotQ4KRow(row, q8.data(), blocks)
+                : DotQ6KRow(row, q8.data(), blocks);
+        }
+        return true;
+    }
+    if (in % 32 != 0) return false;
+    const size_t blocks = in / 32;
+    std::vector<Q8_0Act> q8;
+    QuantizeQ8_0(act, in, q8);
+    if (q8.size() != blocks) return false;
+    #pragma omp parallel for schedule(static) if(rows >= 128)
+    for (int64_t r = 0; r < static_cast<int64_t>(rows); ++r) {
+        const uint8_t* row = weight + static_cast<size_t>(r) * rowBytes;
+        out[r] = (type == ModelGenie::GGMLType::Q8_0)
+            ? DotQ8_0Row(row, q8.data(), blocks)
+            : DotQ5_0Row(row, q8.data(), blocks);
+    }
+    return true;
+}
 
 // For position 0 with a single causal token, attention softmax contains one
 // element and is exactly 1.0: the output is V regardless of Q/K scores.
@@ -1614,7 +1922,12 @@ private:
         {
             std::vector<float> aIn(input, input + hidden);
             GGMLPreQuantizeActivation(aIn, aView->type);
-            if (!DotRows(kvA, aIn.data(), latent.data(), hidden, rank + rope)) return false;
+            if (DotBlocked(aView->type, aView->data, input, latent.data(),
+                           hidden, rank + rope)) {
+                // ggml-order blocked dot
+            } else if (!DotRows(kvA, aIn.data(), latent.data(), hidden, rank + rope)) {
+                return false;
+            }
         }
         
         // RMSNorm on kv_latent only (first 512 elements)
@@ -1632,7 +1945,12 @@ private:
         {
             std::vector<float> bIn(kv_latent, kv_latent + rank);
             GGMLPreQuantizeActivation(bIn, bView->type);
-            if (!DotRows(kvB, bIn.data(), expanded.data(), rank, expanded.size())) return false;
+            if (DotBlocked(bView->type, bView->data, kv_latent, expanded.data(),
+                           rank, expanded.size())) {
+                // ggml-order blocked dot
+            } else if (!DotRows(kvB, bIn.data(), expanded.data(), rank, expanded.size())) {
+                return false;
+            }
         }
         const size_t kSize = heads * key;  // 3072
         
@@ -1787,15 +2105,28 @@ private:
             const auto* downView = rom.Resolve(downId.id);
             if (!gateView || !upView || !downView) return false;
             // ggml quantizes the activation vector per expert matmul
-            std::vector<float> qIn(input, input + hidden);
-            GGMLPreQuantizeActivation(qIn, gateView->type);
-            if (!DotRows(gateW.data(),qIn.data(),g.data(),hidden,ffn) ||
-                !DotRows(upW.data(),qIn.data(),u.data(),hidden,ffn)) return false;
+            // ggml-order blocked dot when the raw expert slice is available.
+            const uint8_t* gateRaw = rom.GetExpertRaw(gateId.id, id);
+            const uint8_t* upRaw = rom.GetExpertRaw(upId.id, id);
+            const uint8_t* downRaw = rom.GetExpertRaw(downId.id, id);
+            const bool gateOk = gateRaw &&
+                DotBlocked(gateView->type, gateRaw, input, g.data(), hidden, ffn);
+            const bool upOk = upRaw &&
+                DotBlocked(upView->type, upRaw, input, u.data(), hidden, ffn);
+            if (!gateOk || !upOk) {
+                std::vector<float> qIn(input, input + hidden);
+                GGMLPreQuantizeActivation(qIn, gateView->type);
+                if (!DotRows(gateW.data(),qIn.data(),g.data(),hidden,ffn) ||
+                    !DotRows(upW.data(),qIn.data(),u.data(),hidden,ffn)) return false;
+            }
             for (size_t j=0;j<ffn;++j)
                 g[j] = (g[j] / (1.0f + std::exp(-g[j]))) * u[j];
             std::vector<float> qSwiglu(g.data(), g.data() + ffn);
             GGMLPreQuantizeActivation(qSwiglu, downView->type);
-            if (!DotRows(downW.data(),qSwiglu.data(),tmp.data(),ffn,hidden)) return false;
+            if (!downRaw || !DotBlocked(downView->type, downRaw, qSwiglu.data(),
+                                        tmp.data(), ffn, hidden)) {
+                if (!DotRows(downW.data(),qSwiglu.data(),tmp.data(),ffn,hidden)) return false;
+            }
             for (size_t j=0;j<hidden;++j) output[j] += score*tmp[j];
         }
         // Two always-active shared experts are concatenated into a single FFN.
@@ -1812,14 +2143,24 @@ private:
             downView->rank!=2 || downView->dims[0]!=shared || downView->dims[1]!=hidden)
             return false;
         g.resize(shared);u.resize(shared);
-        std::vector<float> qShIn(input, input + hidden);
-        GGMLPreQuantizeActivation(qShIn, gateView->type);
-        if (!DotRows(sharedGate,qShIn.data(),g.data(),hidden,shared) ||
-            !DotRows(sharedUp,qShIn.data(),u.data(),hidden,shared)) return false;
+        // ggml-order blocked dot for the two always-active shared experts.
+        const bool sGateOk = DotBlocked(gateView->type, gateView->data, input,
+                                        g.data(), hidden, shared);
+        const bool sUpOk = DotBlocked(upView->type, upView->data, input,
+                                      u.data(), hidden, shared);
+        if (!sGateOk || !sUpOk) {
+            std::vector<float> qShIn(input, input + hidden);
+            GGMLPreQuantizeActivation(qShIn, gateView->type);
+            if (!DotRows(sharedGate,qShIn.data(),g.data(),hidden,shared) ||
+                !DotRows(sharedUp,qShIn.data(),u.data(),hidden,shared)) return false;
+        }
         for (size_t j=0;j<shared;++j) g[j] = (g[j]/(1.0f+std::exp(-g[j])))*u[j];
         std::vector<float> qShSwiglu(g.data(), g.data() + shared);
         GGMLPreQuantizeActivation(qShSwiglu, downView->type);
-        if (!DotRows(sharedDown,qShSwiglu.data(),tmp.data(),shared,hidden)) return false;
+        if (!DotBlocked(downView->type, downView->data, qShSwiglu.data(), tmp.data(),
+                        shared, hidden)) {
+            if (!DotRows(sharedDown,qShSwiglu.data(),tmp.data(),shared,hidden)) return false;
+        }
         for (size_t j=0;j<hidden;++j) output[j] += tmp[j];
         return true;
     }
