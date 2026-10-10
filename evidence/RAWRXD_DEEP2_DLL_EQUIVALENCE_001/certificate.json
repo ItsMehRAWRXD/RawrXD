@@ -4,7 +4,7 @@
   "verdict": "PASS",
   "scope": "Proves RawrXDCore.dll and the standalone ModelGenie executor produce bitwise-identical full-logit vectors for the same teacher-forced input. This is runtime equivalence, NOT reference parity with llama.cpp.",
   "provenance": {
-    "git_commit": "394da2823f000de986ca379fc02a727a2ace7b3b",
+    "git_commit": "22975efe4063e2a0e0f952ce83bf62672d58d164",
     "git_branch": "ci/github-control-loop-001",
     "standalone_executable": "F:\\\\rawrxd\\\\tmp_build\\\\modelgenie_ir_executor.exe",
     "standalone_sha256": "B0A0DA0FE48648EEAB70E8C7F29EBB08F8544BBCD4BB7E959FBD8EFBF7C45B8A",
@@ -35,7 +35,10 @@
       "output_artifact_native_65pos_sha256": "e889e229f0860cb545c76970f7d55073ebe1027beb60ea11537de46bd8998801",
       "output_artifact_dll_65pos_sha256": "e889e229f0860cb545c76970f7d55073ebe1027beb60ea11537de46bd8998801",
       "note": "Both native and DLL 65-position aggregate hashes are identical and stable across rebuilds."
-    }
+    },
+    "git_commit_note": "Source under test is committed at 22975efe40. The repo HEAD at the moment the tests were executed was 394da2823f, but that commit did NOT contain the tested ModelGenie sources (they were missing from the working tree and were restored and committed afterwards). Use 22975efe40 plus the source blob hashes in authoritative_provenance as the tested baseline.",
+    "repo_head_at_test_time": "394da2823f000de986ca379fc02a727a2ace7b3b",
+    "repo_head_at_test_time_note": "HEAD when tests ran; NOT the tested source. Recorded only to avoid ambiguity."
   },
   "test_tokens": [
     1,

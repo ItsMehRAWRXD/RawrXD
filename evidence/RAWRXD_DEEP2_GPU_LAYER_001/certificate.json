@@ -1,0 +1,102 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_GPU_LAYER_001",
+  "date": "2026-10-10",
+  "verdict": "FAIL",
+  "verdict_summary": "Deep2 Layer 0 GPU inference cannot be certified. Three independent blockers, each with evidence below.",
+  "requested_gates": {
+    "SAME_GGUF_SHA256": "N/A - not reached",
+    "SAME_INPUT_SEQUENCE": "N/A - not reached",
+    "CPU_BASELINE_FROZEN": "PASS (RAWRXD_DEEP2_DLL_EQUIVALENCE_001, 65/65 bitwise)",
+    "VULKAN_DEVICE_SELECTED": "PASS (AMD Radeon AI PRO R9700)",
+    "LAYER0_GPU_WEIGHTS_RESIDENT": "NOT TESTED - no GPU inference path exists",
+    "REAL_GPU_DISPATCH_COUNT_GT_0": "PASS for the standalone matmul kernel only",
+    "LAYER0_CPU_FALLBACKS": "FAIL - Deep2 inference is 100% CPU",
+    "QKV_NUMERIC_PARITY": "FAIL - not implemented",
+    "ROPE_NUMERIC_PARITY": "FAIL - ExecuteRoPE is a no-op placeholder",
+    "ATTENTION_NUMERIC_PARITY": "FAIL - ExecuteAttention is a CPU implementation",
+    "FFN_NUMERIC_PARITY": "FAIL - not implemented",
+    "LAYER0_OUTPUT_PARITY": "FAIL - not implemented",
+    "KV_CACHE_PARITY": "FAIL - not implemented",
+    "ALL_ACTIVATIONS_FINITE": "PASS (matmul kernel)",
+    "CLEAN_PROCESS_REPEATABILITY": "PASS (matmul kernel is deterministic)",
+    "UNEXPECTED_STUB_EXECUTION": "FAIL - a stub header is actively used"
+  },
+  "blocker_1_deep2_has_no_gpu_path": {
+    "finding": "ModelGenieExecutor.cpp and ModelGenieExecutor.hpp contain zero references to Vulkan.",
+    "evidence": "Grep for /Vulkan|vulkan/ across both files returns no matches.",
+    "consequence": "There is no GPU execution path in the Deep2 inference engine to certify. All LinearFwd, AttentionFwd, RMSNorm, RoPE and MoE primitives execute on the CPU."
+  },
+  "blocker_2_stub_header_shadows_real_vulkan": {
+    "finding": "include/vulkan/vulkan.h is a minimal stub that shadows the real Vulkan SDK header.",
+    "evidence": "File header comment: \"Minimal Vulkan stub for compilation without Vulkan SDK - Defines only the types used by vulkan_compute.h\". It forward-declares opaque handles but provides no Vk*CreateInfo structs and no vk* entry points.",
+    "consequence": "src/vulkan_compute.cpp (66 KB, 8 real vkCmdDispatch/vkQueueSubmit/vkWaitForFences calls) does NOT compile against the real Vulkan API in the main tree. Every build configuration that puts include/ before the SDK silently gets the stub. This is why the GPU path never materialised.",
+    "workaround_used_in_test": "The test harness orders the SDK Include directory first. That is a harness-only change; the repository build was not modified."
+  },
+  "blocker_3_existing_kernel_is_numerically_wrong": {
+    "finding": "When src/vulkan_compute.cpp IS compiled against the real Vulkan API, the one genuine GPU kernel produces incorrect results.",
+    "environment": {
+      "device": "AMD Radeon AI PRO R9700",
+      "vendor_id": "0x1002",
+      "device_id": "0x7551",
+      "vulkan_api": "1.4.349",
+      "compute_queue_family": 0,
+      "shader": ".kilo/worktrees/thorn-measure/src/backend/matmul.spv"
+    },
+    "result": {
+      "shape": "A[64x128] * B[128x96] -> C[64x96]",
+      "workgroups_dispatched": "6x4x1",
+      "gpu_vs_cpu_cosine": -0.2647591411,
+      "gpu_vs_cpu_rmse": 0.0003395579,
+      "gpu_vs_cpu_rmse_exact": 0.0003395579,
+      "gpu_vs_cpu_max_abs": 1.124616,
+      "relative_rmse": 1.598994,
+      "cpu_result_magnitude": 0.212357
+    },
+    "defect_localization": {
+      "method": "Compared the GPU output against five layout hypotheses.",
+      "H1_A_times_B_expected": {
+        "cosine": -0.26475914,
+        "match": false
+      },
+      "H2_transpose_of_expected": {
+        "cosine": 0.0097529,
+        "match": false
+      },
+      "H3_A_times_B_as_N_K": {
+        "cosine": 0.00347871,
+        "match": false
+      },
+      "H4_A_as_K_M_times_B": {
+        "cosine": -0.03246805,
+        "match": false
+      },
+      "H5_all_zero": {
+        "cosine": 0.0,
+        "match": false
+      },
+      "conclusion": "The defect is NOT a simple transpose or layout mismatch. The GPU output has approximately the correct magnitude (sum(Cpu)=-0.8924 vs sum(Gpu)=-0.3995) but wrong values, which points at incorrect tile/workgroup-to-matrix mapping or incorrect K accumulation bounds inside the shader or its push-constant contract."
+    },
+    "deterministic_repeat": "PASS - a second dispatch reproduced the same (wrong) result bitwise."
+  },
+  "what_was_genuinely_established": {
+    "real_gpu_device_usable": true,
+    "real_device_residency": true,
+    "real_compute_pipeline_created": true,
+    "real_vkCmdDispatch_executed": true,
+    "gpu_deterministic_repeat": true,
+    "note": "The R9700 is genuinely usable through the existing Vulkan wrapper. The infrastructure works; the arithmetic does not."
+  },
+  "prerequisite_work_to_unblock": [
+    "Remove or rename include/vulkan/vulkan.h so the real Vulkan SDK header is used, and verify src/vulkan_compute.cpp compiles against the real API in the main build.",
+    "Fix the matmul kernel so GPU matches CPU within a declared per-tensor tolerance. Localize by validating the shader push-constant contract against the dispatch call (M, K, N and tile sizes).",
+    "Implement real GPU RoPE. VulkanCompute::ExecuteRoPE is a documented placeholder that performs no work.",
+    "Implement a GPU execution path inside ModelGenieExecutor, or prove the existing wrapper can drive Deep2 Layer 0, before any Deep2 Layer 0 GPU parity gate is meaningful."
+  ],
+  "reproduction": {
+    "harness_source": "tools/gpu_matmul_verify.cpp",
+    "build": "tools/build_gpu_verify.bat",
+    "note": "The build script deliberately places the Vulkan SDK Include before the repository include directory so the real API is used rather than the stub.",
+    "dependencies": "None. Uses the installed Vulkan SDK 1.4.357.0 loader and the existing src/vulkan_compute.cpp."
+  },
+  "scope_discipline": "No GPU success is claimed. The only PASS results above concern the matmul kernel dispatch mechanics, not Deep2 correctness. Deep2 Layer 0 GPU parity remains entirely unverified."
+}
