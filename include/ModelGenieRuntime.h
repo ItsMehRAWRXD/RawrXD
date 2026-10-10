@@ -132,6 +132,19 @@ MG_RUNTIME_API bool mg_model_token_text(
     size_t out_buf_size
 );
 
+// Detokenize ids -> unescaped UTF-8 text: vocab pieces with the GPT-2
+// byte-to-Unicode escapes reversed (llama.cpp detokenize parity for
+// gpt2/deepseek-llm vocab). out_size reports the required size (including
+// the null terminator) when the buffer is too small; returns the length
+// written (excluding the null terminator), or 0 when the buffer is too small.
+MG_RUNTIME_API size_t mg_model_detokenize(
+    const mg_model_t* model,
+    const uint32_t* token_ids,
+    size_t token_count,
+    char* out_buf,
+    size_t* out_size
+);
+
 // SentencePiece text -> token ids. in_out_count holds buffer capacity on entry
 // and receives the token count on exit (including the required capacity when
 // the supplied buffer is too small).

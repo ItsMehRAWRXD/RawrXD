@@ -98,6 +98,8 @@ public:
     struct LayerCache {
         std::vector<float> kv_latent;    // [max_seq_len, kKvLoraRank]
         std::vector<float> k_rope_raw;   // [max_seq_len, kRopeDimensionCount]
+        std::vector<float> kv_knope;     // [max_seq_len, heads * noRope(up-projected K_nope)]
+        std::vector<float> kv_value;     // [max_seq_len, heads * kValueLength]
         size_t max_seq_len = 0;
         size_t current_len = 0;
 
@@ -106,17 +108,43 @@ public:
             max_seq_len = max_seq_len_;
             kv_latent.assign(max_seq_len_ * GEN::ModelConfig::kKvLoraRank, 0.0f);
             k_rope_raw.assign(max_seq_len_ * GEN::ModelConfig::kRopeDimensionCount, 0.0f);
+            // Up-projected K_nope per position: heads(16) * noRope(128) = 2048.
+            // MLA K_nope must come from the B up-projection of the compressed
+            // latent (llama.cpp deepseek2: wkv_b rows) - never re-read from the
+            // latent itself, which is 512 floats and not per-head k_nope.
+            kv_knope.assign(max_seq_len_ * (GEN::ModelConfig::kHeadCount * (GEN::ModelConfig::kKeyLength - GEN::ModelConfig::kRopeDimensionCount)), 0.0f);
+            // Store V in cache: 16 heads * 128 value length
+            kv_value.assign(max_seq_len_ * (GEN::ModelConfig::kHeadCount * GEN::ModelConfig::kValueLength), 0.0f);
             current_len = 0;
+        }
+        bool WriteLatentKv(const float* kv_latent_in, const float* k_rope_raw_in,
+                           const float* kv_value_in, const float* kv_knope_in)
+        {
+            if (current_len >= max_seq_len) return false;
+            constexpr size_t kStride =
+                GEN::ModelConfig::kHeadCount * (GEN::ModelConfig::kKeyLength - GEN::ModelConfig::kRopeDimensionCount);
+            float* latent_dst = kv_latent.data() + current_len * GEN::ModelConfig::kKvLoraRank;
+            float* rope_dst = k_rope_raw.data() + current_len * GEN::ModelConfig::kRopeDimensionCount;
+            float* nope_dst = kv_knope.data() + current_len * kStride;
+            float* value_dst = kv_value.data() + current_len * kStride;
+            std::memcpy(latent_dst, kv_latent_in, GEN::ModelConfig::kKvLoraRank * sizeof(float));
+            std::memcpy(rope_dst, k_rope_raw_in, GEN::ModelConfig::kRopeDimensionCount * sizeof(float));
+            if (kv_knope_in) {
+                std::memcpy(nope_dst, kv_knope_in, kStride * sizeof(float));
+            } else {
+                std::memset(nope_dst, 0, kStride * sizeof(float));
+            }
+            if (kv_value_in) {
+                std::memcpy(value_dst, kv_value_in, kStride * sizeof(float));
+            } else {
+                std::memset(value_dst, 0, kStride * sizeof(float));
+            }
+            current_len++;
+            return true;
         }
         bool WriteLatentKv(const float* kv_latent_in, const float* k_rope_raw_in)
         {
-            if (current_len >= max_seq_len) return false;
-            float* latent_dst = kv_latent.data() + current_len * GEN::ModelConfig::kKvLoraRank;
-            float* rope_dst = k_rope_raw.data() + current_len * GEN::ModelConfig::kRopeDimensionCount;
-            std::memcpy(latent_dst, kv_latent_in, GEN::ModelConfig::kKvLoraRank * sizeof(float));
-            std::memcpy(rope_dst, k_rope_raw_in, GEN::ModelConfig::kRopeDimensionCount * sizeof(float));
-            current_len++;
-            return true;
+            return WriteLatentKv(kv_latent_in, k_rope_raw_in, nullptr, nullptr);
         }
         const float* ReadKvLatent(size_t pos) const
         {
@@ -128,8 +156,24 @@ public:
             if (pos >= current_len) return nullptr;
             return k_rope_raw.data() + pos * GEN::ModelConfig::kRopeDimensionCount;
         }
+        const float* ReadKvKnope(size_t pos) const
+        {
+            static constexpr size_t kStride =
+                GEN::ModelConfig::kHeadCount * (GEN::ModelConfig::kKeyLength - GEN::ModelConfig::kRopeDimensionCount);
+            if (pos >= current_len) return nullptr;
+            return kv_knope.data() + pos * kStride;
+        }
+        const float* ReadKvValue(size_t pos) const
+        {
+            constexpr size_t kStride =
+                GEN::ModelConfig::kHeadCount * (GEN::ModelConfig::kKeyLength - GEN::ModelConfig::kRopeDimensionCount);
+            if (pos >= current_len) return nullptr;
+            return kv_value.data() + pos * kStride;
+        }
         const float* ReadAllKvLatent() const { return kv_latent.data(); }
         const float* ReadAllKRopeRaw() const { return k_rope_raw.data(); }
+        const float* ReadAllKvKnope() const { return kv_knope.data(); }
+        const float* ReadAllKvValue() const { return kv_value.data(); }
         size_t Size() const { return current_len; }
         void Reset() { current_len = 0; }
     };

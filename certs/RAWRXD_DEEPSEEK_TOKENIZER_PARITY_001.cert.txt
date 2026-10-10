@@ -1,0 +1,13 @@
+RAWRXD_DEEPSEEK_TOKENIZER_PARITY_001
+MODEL_SHA256=5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4
+TOKENIZER_REFERENCE_IDS=PASS
+  28/28 corpus cases byte-identical to llama.cpp llama_tokenize (BOS excluded)
+MULTISPACE_UNICODE=PASS
+  corpus covers multi-space, tab, CJK, Cyrillic, Arabic, Devanagari, combining marks, zero-width joiners, byte fallbacks
+DETOKENIZE_ROUNDTRIP=PASS
+  DLL Detokenize(Tokenize(s)) == s on the templated probe string
+GIT_COMMIT=INFO
+  96b090335f63ef3f339ed8aa087d83bc51a2c6f1
+MODEL_SHA256=INFO
+  5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4
+VERDICT=PASS

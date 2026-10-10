@@ -1,4 +1,4 @@
-// RawrXDCore.cpp - Core runtime DLL implementation with ModelGenie IRExecutor inference
+// RawrXDCore.cpp - Core runtime DLL implementation with ModelGenie IR inference
 #include "RawrXDCore.h"
 #include <string>
 #include <vector>
@@ -18,8 +18,8 @@
 // Deep2 includes
 #include <GGUFLoader.hpp>
 
-// Tokenizer - use the canonical GGUFEmbeddedTokenizer for exact parity with ModelGenieRuntime
-#include "../../tokenizer/gguf_embedded_tokenizer.hpp"
+// Native chat template renderer (GGUF tokenizer.chat_template)
+#include "ChatTemplate.hpp"
 
 // ModelGenie IRExecutor - the certified 300-op executor. This header pulls in
 // the authoritative generated IR table, tensor ROM and model config, so there
@@ -27,13 +27,19 @@
 // and this DLL.
 #include "../../modelgenie/ModelGenieExecutor.hpp"
 
+// ModelGenie runtime C API (mg_model_t / mg_context_t). The DLL's only
+// inference path: mg_model_load verifies the IR ROM table against the GGUF,
+// mg_context_generate streams generated tokens through the certified
+// dispatch table.
+#include <ModelGenieRuntime.h>
+
 namespace {
     using namespace ::Deep2;  // Bring global Deep2 namespace into scope
 
     // The IR table this runtime executes; mirrors GEN::kExecutionOpCount from
     // src/deep2/modelgenie/ExecutionIR.generated.hpp.
     constexpr unsigned int kExpectedIrOpCount = GEN::kExecutionOpCount;
-    
+
     struct InitState {
         bool initialized = false;
         RawrXDConfig config{};
@@ -43,28 +49,55 @@ namespace {
         RawrXDError lastError = RAWXD_OK;
         std::mutex mutex;
     };
-    
+
     InitState& getState() {
         static InitState state;
         return state;
     }
-    
+
     void setLastError(RawrXDError err) {
         getState().lastError = err;
     }
-    
+
     void logMessage(RawrXDLogLevel level, const char* fmt, ...) {
         auto& state = getState();
         if (level < state.logLevel || !state.logCallback) return;
-        
+
         va_list args;
         va_start(args, fmt);
         char buffer[4096];
         vsnprintf(buffer, sizeof(buffer), fmt, args);
         va_end(args);
-        
+
         state.logCallback(level, buffer, state.logUserData);
     }
+
+    // Trampoline carrying the user callback + userData through
+    // the ModelGenie runtime's token callback. EOS terminates
+    // the stream (it is not delivered as text); returning false
+    // from the user callback cancels generation.
+    struct TokenCallbackBridge {
+        RawrXDTokenCallback callback;
+        void* userData;
+        uint32_t eosId;
+        int delivered = 0;
+
+        static bool Invoke(uint32_t tokenId, const char* tokenText,
+                             void* userData) {
+            auto* self = static_cast<TokenCallbackBridge*>(userData);
+            if (!self || !self->callback) return false;
+            if (self->eosId != 0 && tokenId == self->eosId) {
+                return false;  // EOS terminates the stream
+            }
+            if (!self->callback(static_cast<int>(tokenId),
+                                  tokenText ? tokenText : "",
+                                  self->userData)) {
+                return false;  // caller requested cancellation
+            }
+            self->delivered++;
+            return true;
+        }
+    };
 
     // Real model implementation using Deep2::GGUFLoader
     struct ModelImpl {
@@ -74,47 +107,47 @@ namespace {
         size_t size = 0;
         int layers = 0;
         bool loaded = false;
-        
+
         // Deep2 loader
         std::shared_ptr<::Deep2::GGUFLoader> loader;
         ::Deep2::GGUFTensor* getTensor(const std::string& name) {
             return loader ? loader->getTensor(name) : nullptr;
         }
-        
+
         const std::vector<std::string> listTensors() const {
             return loader ? loader->listTensors() : std::vector<std::string>{};
         }
-        
+
         int64_t getMetaInt(const std::string& key, int64_t def = 0) const {
             return loader ? loader->getMetaInt(key, def) : def;
         }
-        
+
         double getMetaFloat(const std::string& key, double def = 0.0) const {
             return loader ? loader->getMetaFloat(key, def) : def;
         }
-        
+
         std::string getMetaString(const std::string& key, const std::string& def = {}) const {
             return loader ? loader->getMetaString(key, def) : def;
         }
-        
+
         size_t tensorCount() const {
             return loader ? loader->tensorCount() : 0;
         }
-        
+
         uint64_t mappedBytes() const {
             return loader ? loader->mappedBytes() : 0;
         }
-        
+
         // Minimal inference state
         bool inferenceReady = false;
 
         // ModelGenie runtime model handle. Owned by the DLL; one per loaded
         // model. The DLL never touches IRExecutor directly - every token comes
-        // from the runtime's cert"ified IR dispatch table.
+        // from the runtime's certified IR dispatch table.
         mg_model_t* mgModel = nullptr;
     };
 
-    // Real inference context using Deep2 engine
+    // Real inference context using the ModelGenie runtime
     struct ContextImpl {
         ModelImpl* model = nullptr;
         RawrXDInferenceParams params{};
@@ -123,140 +156,15 @@ namespace {
         // Inference state
         std::vector<int> promptTokens;
         size_t currentPosition = 0;
-        
-        // ModelGenie IRExecutor context - owned by the model's irExecutor
-        // We just use the model's irExecutor with token context
-        bool irReady = false;
+
+        // ModelGenie runtime context. One runtime context per
+        // inference context so the KV cache and decode
+        // position are unambiguously owned.
+        mg_context_t* mgContext = nullptr;
 
         // Sampler parameters cache
         float samplerParams[6] = {0.7f, 0.9f, 40.0f, 1.1f, 64.0f, 0.0f}; // temp, top_p, top_k, repeat_penalty, repeat_last_n, seed
     };
-    
-    // Real tokenizer using GGUF metadata
-    struct TokenizerImpl {
-        ModelImpl* model = nullptr;
-        std::vector<std::string> vocab;           // id -> token text
-        std::unordered_map<std::string, uint32_t> tokenToId;  // token text -> id
-        std::vector<uint8_t> tokenTypes;          // token type per id
-        std::vector<std::pair<std::string, std::string>> merges;  // BPE merges
-        uint32_t bosTokenId = 0;
-        uint32_t eosTokenId = 0;
-        uint32_t unkTokenId = 0;
-        bool loaded = false;
-        
-        bool loadFromModel(ModelImpl* m) {
-            model = m;
-            if (!m || !m->loader || !m->loaded) return false;
-            
-            // Load vocabulary from tokenizer.ggml.tokens
-            std::vector<std::string> tokens;
-            if (!m->loader->getMetaStringArray("tokenizer.ggml.tokens", tokens)) {
-                return false;
-            }
-            
-            vocab.reserve(tokens.size());
-            for (const auto& token : tokens) {
-                vocab.push_back(token);
-            }
-            
-            // Build token-to-id map
-            tokenToId.reserve(vocab.size() * 2);
-            for (size_t i = 0; i < vocab.size(); ++i) {
-                tokenToId[vocab[i]] = static_cast<uint32_t>(i);
-            }
-            
-            // Load token types if available
-            std::vector<int32_t> tokenTypes;
-            if (m->loader->getMetaInt32Array("tokenizer.ggml.token_type", tokenTypes)) {
-                this->tokenTypes.resize(tokenTypes.size());
-                for (size_t i = 0; i < tokenTypes.size(); ++i) {
-                    this->tokenTypes[i] = static_cast<uint8_t>(tokenTypes[i]);
-                }
-            }
-            
-            // Load merges
-            std::vector<std::string> mergesStr;
-            if (m->loader->getMetaStringArray("tokenizer.ggml.merges", mergesStr)) {
-                merges.reserve(mergesStr.size());
-                for (const auto& merge : mergesStr) {
-                    size_t spacePos = merge.find(' ');
-                    if (spacePos != std::string::npos) {
-                        std::string first = merge.substr(0, spacePos);
-                        std::string second = merge.substr(spacePos + 1);
-                        merges.emplace_back(first, second);
-                    }
-                }
-            }
-            
-            // Load special token IDs
-            bosTokenId = static_cast<uint32_t>(m->loader->getMetaInt("tokenizer.ggml.bos_token_id", 1));
-            eosTokenId = static_cast<uint32_t>(m->loader->getMetaInt("tokenizer.ggml.eos_token_id", 2));
-            unkTokenId = static_cast<uint32_t>(m->loader->getMetaInt("tokenizer.ggml.unk_token_id", 0));
-            
-            loaded = true;
-            return true;
-        }
-        
-        size_t encode(const std::string& text, uint32_t* outTokens, size_t maxTokens) const {
-            if (!loaded || vocab.empty()) return 0;
-            
-            // Simple greedy BPE tokenization (naive implementation for now)
-            // Real implementation would use the merges table
-            size_t tokenCount = 0;
-            std::string current;
-            
-            for (char c : text) {
-                current += c;
-                auto it = tokenToId.find(current);
-                if (it != tokenToId.end()) {
-                    // Found a match, but check if we can extend
-                    continue;
-                }
-                
-                // Current string not in vocab, emit previous
-                if (current.size() > 1) {
-                    current.pop_back(); // remove the char that made it invalid
-                }
-                if (!current.empty()) {
-                    auto it = tokenToId.find(current);
-                    if (it != tokenToId.end() && tokenCount < maxTokens) {
-                        outTokens[tokenCount++] = it->second;
-                    } else if (tokenCount < maxTokens) {
-                        outTokens[tokenCount++] = unkTokenId;
-                    }
-                }
-                current = text.substr(text.find(current) + current.size() - 1, 1);
-            }
-            
-            // Handle remaining
-            if (!current.empty() && tokenCount < maxTokens) {
-                auto it = tokenToId.find(current);
-                if (it != tokenToId.end()) {
-                    outTokens[tokenCount++] = it->second;
-                } else {
-                    outTokens[tokenCount++] = unkTokenId;
-                }
-            }
-            
-            return tokenCount;
-        }
-        
-        std::string decode(const uint32_t* tokens, size_t tokenCount) const {
-            if (!loaded) return "";
-            std::string result;
-            for (size_t i = 0; i < tokenCount; ++i) {
-                uint32_t id = tokens[i];
-                if (id < vocab.size()) {
-                    result += vocab[id];
-                }
-            }
-            return result;
-        }
-    };
-    
-    // Global maps for tokenizer management
-    std::unordered_map<ModelImpl*, TokenizerImpl> g_tokenizers;
-    std::mutex g_tokenizersMutex;
 }
 
 // C API implementations
@@ -292,14 +200,8 @@ bool RawrXDCore_Initialize(void) {
 void RawrXDCore_Shutdown(void) {
     auto& state = getState();
     if (!state.initialized) return;
-    
+
     // Note: Models and contexts are managed by caller via handles
-    // Just clear tokenizer cache
-    {
-        std::lock_guard<std::mutex> lock(g_tokenizersMutex);
-        g_tokenizers.clear();
-    }
-    
     state.initialized = false;
     logMessage(RAWXD_LOG_INFO, "RawrXDCore shutdown");
 }
@@ -345,16 +247,16 @@ RawrXDModel* RawrXDCore_LoadModel(const char* path) {
         setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return nullptr;
     }
-    
+
     auto& state = getState();
     if (!state.initialized) {
         setLastError(RAWXD_ERROR_NOT_INITIALIZED);
         return nullptr;
     }
-    
+
     ModelImpl impl;
     impl.path = path;
-    
+
     // Load using Deep2 GGUFLoader
     try {
         impl.loader = std::make_shared<::Deep2::GGUFLoader>();
@@ -363,22 +265,45 @@ RawrXDModel* RawrXDCore_LoadModel(const char* path) {
             logMessage(RAWXD_LOG_ERROR, "Failed to open model: %s", path);
             return nullptr;
         }
-        
+
         // Extract model metadata
         impl.name = impl.loader->getMetaString("general.name", "unknown");
         impl.arch = impl.loader->getMetaString("general.architecture", "unknown");
-        impl.size = static_cast<size_t>(impl.loader->getMetaInt("general.file_size", 0));
-        impl.layers = static_cast<int>(impl.loader->getMetaInt("llama.block_count", 0));
+        // general.file_size is optional; when a GGUF omits it, report the
+        // bytes the loader actually mapped instead of 0. mappedBytes() is the
+        // sum of the mapped shard sizes, so a single-file model is its size.
+        uint64_t fileSize = static_cast<uint64_t>(
+            impl.loader->getMetaInt("general.file_size", 0));
+        if (fileSize == 0) {
+            fileSize = impl.loader->mappedBytes();
+        }
+        impl.size = static_cast<size_t>(fileSize);
+        // Block count is written per architecture: deepseek2 models carry
+        // deepseek2.block_count and only some writers mirror it to
+        // llama.block_count. Resolve the arch key first, then fall back.
+        int64_t blockCount = impl.loader->getMetaInt(impl.arch + ".block_count", 0);
+        if (blockCount == 0) {
+            blockCount = impl.loader->getMetaInt("llama.block_count", 0);
+        }
+        impl.layers = static_cast<int>(blockCount);
         impl.loaded = true;
 
-        // Bind the certified ModelGenie IR executor to this model. This is the
-        // only inference path in the DLL; there is no prompt-echo fallback.
-        // Use the first token ID as a dummy (token 0) - actual tokens are set at inference time
-        impl.irExecutor = std::make_unique<IRExecutor>(path, 0);
-        if (!impl.irExecutor) {
+        // Bind the certified ModelGenie IR executor to this model. This is
+        // the only inference path in the DLL; there is no prompt-echo
+        // fallback. mg_model_load verifies the IR ROM table resolves
+        // against the GGUF before handing the handle back, so a model
+        // the runtime accepts is a model the executor can execute.
+        mg_model_config_t mgCfg{};
+        mgCfg.max_seq_len = 1024;
+        mgCfg.use_kv_cache = true;
+        if (mg_model_load(path, &mgCfg, &impl.mgModel) != MG_SUCCESS ||
+            !impl.mgModel) {
+            impl.mgModel = nullptr;
             impl.inferenceReady = false;
-            setLastError(RAWXD_ERROR_INTERNAL);
-            logMessage(RAWXD_LOG_ERROR, "Failed to create IRExecutor for model: %s", path);
+            setLastError(RAWXD_ERROR_MODEL_CORRUPT);
+            logMessage(RAWXD_LOG_ERROR,
+                       "ModelGenie runtime rejected model (IR ROM table mismatch): %s",
+                       path);
             return nullptr;
         }
         impl.inferenceReady = true;
@@ -401,8 +326,10 @@ RawrXDModel* RawrXDCore_LoadModel(const char* path) {
 void RawrXDCore_UnloadModel(RawrXDModel* model) {
     if (!model) return;
     ModelImpl* impl = reinterpret_cast<ModelImpl*>(model);
-    // IRExecutor is automatically cleaned up by unique_ptr
-    impl->irExecutor.reset();
+    if (impl->mgModel) {
+        mg_model_free(impl->mgModel);
+        impl->mgModel = nullptr;
+    }
     if (impl->loader) {
         impl->loader.reset();
     }
@@ -503,13 +430,13 @@ RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* model) {
         setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         return nullptr;
     }
-    
+
     auto& state = getState();
     if (!state.initialized) {
         setLastError(RAWXD_ERROR_NOT_INITIALIZED);
         return nullptr;
     }
-    
+
     ModelImpl* modelImpl = reinterpret_cast<ModelImpl*>(model);
     if (!modelImpl || !modelImpl->loaded) {
         setLastError(RAWXD_ERROR_MODEL_NOT_FOUND);
@@ -520,24 +447,32 @@ RawrXDInferenceContext* RawrXDCore_CreateContext(RawrXDModel* model) {
     ContextImpl* ctxImpl = new ContextImpl();
     ctxImpl->model = modelImpl;
 
-    // The IRExecutor is owned by the model; context just holds a reference
-    // and uses it for inference. The KV cache lives in the IRExecutor.
-    if (modelImpl->irExecutor) {
-        ctxImpl->irReady = true;
+    // Bind a ModelGenie runtime context. One runtime context
+    // per inference context so the KV cache and decode
+    // position are unambiguously owned.
+    if (!modelImpl->mgModel ||
+        mg_context_create(modelImpl->mgModel, &ctxImpl->mgContext) != MG_SUCCESS ||
+        !ctxImpl->mgContext) {
+        delete ctxImpl;
+        setLastError(RAWXD_ERROR_INTERNAL);
+        logMessage(RAWXD_LOG_ERROR, "Failed to create ModelGenie runtime context");
+        return nullptr;
     }
 
     // Return as opaque handle
     uintptr_t handle = reinterpret_cast<uintptr_t>(ctxImpl);
 
-    logMessage(RAWXD_LOG_INFO, "Context created for model (IRExecutor=%s)",
-               ctxImpl->irReady ? "ready" : "unavailable");
+    logMessage(RAWXD_LOG_INFO, "Context created for model (ModelGenie runtime=ready)");
     return reinterpret_cast<RawrXDInferenceContext*>(handle);
 }
 
 void RawrXDCore_DestroyContext(RawrXDInferenceContext* ctx) {
     if (!ctx) return;
     ContextImpl* impl = reinterpret_cast<ContextImpl*>(ctx);
-    impl->irReady = false;
+    if (impl->mgContext) {
+        mg_context_free(impl->mgContext);
+        impl->mgContext = nullptr;
+    }
     delete impl;
 }
 
@@ -571,10 +506,11 @@ int RawrXDCore_RunInference(
         return 0;
     }
 
-    // IRExecutor must be available - no fallback to prompt-echo
-    if (!impl->irReady || !impl->model->irExecutor) {
+    // ModelGenie runtime must be available - no fallback to
+    // prompt-echo
+    if (!impl->mgContext || !impl->model->mgModel) {
         setLastError(RAWXD_ERROR_INTERNAL);
-        logMessage(RAWXD_LOG_ERROR, "IRExecutor unavailable; refusing to echo prompt");
+        logMessage(RAWXD_LOG_ERROR, "ModelGenie runtime unavailable; refusing to echo prompt");
         return 0;
     }
 
@@ -587,108 +523,219 @@ int RawrXDCore_RunInference(
 
     impl->params = p;
 
-    // Get or create tokenizer
-    TokenizerImpl* tokenizer = nullptr;
-    {
-        std::lock_guard<std::mutex> tokLock(g_tokenizersMutex);
-        auto tokIt = g_tokenizers.find(impl->model);
-        if (tokIt == g_tokenizers.end()) {
-            TokenizerImpl newTok;
-            if (newTok.loadFromModel(impl->model)) {
-                g_tokenizers[impl->model] = std::move(newTok);
-                tokenizer = &g_tokenizers[impl->model];
-            }
-        } else {
-            tokenizer = &tokIt->second;
+    // Native prompt construction (RAWRXD_MODELGENIE_NATIVE_CHAT_001):
+    // 1. Apply the model's native chat template (GGUF
+    //    tokenizer.chat_template) for a single user turn
+    //    with the assistant generation prefix.
+    // 2. Tokenize with the runtime's native tokenizer
+    //    (mg_model_tokenize - GGUFEmbeddedTokenizer
+    //    SentencePiece longest-match, the same
+    //    implementation the standalone runtime uses).
+    const uint32_t bosId = mg_model_bos_token_id(impl->model->mgModel);
+    const uint32_t eosId = mg_model_eos_token_id(impl->model->mgModel);
+    char bosText[256] = {};
+    char eosText[256] = {};
+    mg_model_token_text(impl->model->mgModel, bosId, bosText, sizeof(bosText));
+    mg_model_token_text(impl->model->mgModel, eosId, eosText, sizeof(eosText));
+
+    const std::string chatTemplate =
+        impl->model->getMetaString("tokenizer.chat_template", "");
+    std::string rendered;
+    bool templated = false;
+    if (!chatTemplate.empty()) {
+        RawrXD::ChatTemplateVars tmplVars;
+        tmplVars.bosToken = bosText;
+        tmplVars.eosToken = eosText;
+        tmplVars.addGenerationPrompt = true;
+        tmplVars.messages.push_back({"user", prompt});
+        templated = RawrXD::RenderChatTemplate(chatTemplate, tmplVars, rendered);
+        if (!templated) {
+            logMessage(RAWXD_LOG_WARN,
+                       "Chat template uses unsupported constructs; "
+                       "falling back to raw prompt");
         }
     }
 
-    if (!tokenizer || !tokenizer->loaded) {
-        setLastError(RAWXD_ERROR_INTERNAL);
-        logMessage(RAWXD_LOG_ERROR, "Tokenizer unavailable: cannot encode prompt");
-        return 0;
+    // Tokenize. The template renders {{ bos_token }} as the
+    // BOS token's string form; emit the BOS id directly so
+    // the first token never depends on atomic special-token
+    // matching. mg_model_tokenize reports the required
+    // capacity when the output buffer is too small.
+    std::vector<uint32_t> promptTokens;
+    const char* encodeText = prompt;
+    bool prependBos = true;
+    if (templated) {
+        encodeText = rendered.c_str();
+        const size_t bosLen = std::char_traits<char>::length(bosText);
+        if (bosId != 0 && bosLen > 0 &&
+            rendered.size() >= bosLen &&
+            rendered.compare(0, bosLen, bosText) == 0) {
+            promptTokens.push_back(bosId);
+            encodeText = rendered.c_str() + bosLen;
+            prependBos = false;
+        }
     }
 
-    // Tokenize prompt
-    std::vector<uint32_t> promptTokens(4096);
-    size_t tokenCount = tokenizer->encode(prompt, promptTokens.data(), promptTokens.size());
-    promptTokens.resize(tokenCount);
-
+    size_t tokenCount = 0;
+    const mg_error_t capRc = mg_model_tokenize(
+        impl->model->mgModel, encodeText, nullptr, &tokenCount);
+    if (capRc == MG_ERROR_INVALID_STATE) {
+        setLastError(RAWXD_ERROR_INTERNAL);
+        logMessage(RAWXD_LOG_ERROR, "Native tokenizer unavailable (model vocab not loaded)");
+        return 0;
+    }
     if (tokenCount == 0) {
         setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         logMessage(RAWXD_LOG_ERROR, "Prompt encoded to zero tokens: %s", prompt);
         return 0;
     }
 
-    impl->promptTokens.clear();
-    for (uint32_t t : promptTokens) {
-        impl->promptTokens.push_back(static_cast<int>(t));
-    }
-    impl->currentPosition = 0;
-
-    // Reset the IRExecutor's KV cache for this new prompt
-    impl->model->irExecutor->ResetPosition();
-
-    // Prefill the prompt tokens into the KV cache
-    bool prefillOk = impl->model->irExecutor->Prefill(promptTokens);
-    if (!prefillOk) {
+    if (prependBos && bosId != 0) promptTokens.push_back(bosId);
+    const size_t baseCount = promptTokens.size();
+    promptTokens.resize(baseCount + tokenCount);
+    size_t fillCount = tokenCount;
+    if (mg_model_tokenize(impl->model->mgModel, encodeText,
+                              promptTokens.data() + baseCount,
+                              &fillCount) != MG_SUCCESS ||
+        fillCount != tokenCount) {
         setLastError(RAWXD_ERROR_INTERNAL);
-        logMessage(RAWXD_LOG_ERROR, "IRExecutor prefill failed");
+        logMessage(RAWXD_LOG_ERROR, "Native tokenizer capacity mismatch");
         return 0;
     }
 
-    // Autoregressive generation - generate tokens one at a time
-    int generated = 0;
-    for (size_t i = 0; i < static_cast<size_t>(p.maxTokens); ++i) {
-        // Execute the IR for the current position
-        bool execOk = impl->model->irExecutor->Execute();
-        if (!execOk) {
-            setLastError(RAWXD_ERROR_INTERNAL);
-            logMessage(RAWXD_LOG_ERROR, "IRExecutor execution failed at step %zu", i);
-            return generated;
-        }
+    impl->promptTokens.assign(promptTokens.begin(), promptTokens.end());
+    impl->currentPosition = 0;
 
-        // Sample the next token (greedy)
-        uint32_t nextToken = impl->model->irExecutor->SampleToken();
-        
-        // Check for EOS
-        if (nextToken == tokenizer->eosTokenId) {
-            logMessage(RAWXD_LOG_DEBUG, "EOS token sampled, stopping generation");
-            break;
-        }
+    // Reset the runtime context (executor position + KV
+    // cache) so this prompt starts from a clean slate.
+    mg_context_reset(impl->mgContext);
 
-        // Decode token to text
-        std::string tokenText = tokenizer->decode(&nextToken, 1);
+    // Generation configuration
+    mg_generation_config_t mgGenCfg{};
+    mgGenCfg.max_tokens = static_cast<size_t>(p.maxTokens);
+    mgGenCfg.temperature = p.temperature;
+    mgGenCfg.top_p = p.topP;
+    mgGenCfg.top_k = p.topK;
+    mgGenCfg.repeat_penalty = p.repeatPenalty;
+    mgGenCfg.seed = static_cast<uint64_t>(p.seed);
 
-        // Call user callback
-        if (!callback(static_cast<int>(nextToken), tokenText.c_str(), userData)) {
-            logMessage(RAWXD_LOG_DEBUG, "Callback requested stop");
-            break;
-        }
-        generated++;
+    // Generate. The runtime prefills the prompt, decodes
+    // greedily, and streams tokens through the callback;
+    // EOS terminates the stream and a false return from
+    // the user callback cancels it.
+    TokenCallbackBridge bridge{callback, userData, eosId};
+    const mg_error_t genRc = mg_context_generate(
+        impl->mgContext, promptTokens.data(), promptTokens.size(),
+        &mgGenCfg, &TokenCallbackBridge::Invoke, &bridge);
 
-        // Advance position in KV cache
-        impl->model->irExecutor->AdvancePosition();
-        
-        // Set the next token as input for the next iteration
-        impl->model->irExecutor->SetTokenId(nextToken);
+    if (genRc != MG_SUCCESS) {
+        setLastError(RAWXD_ERROR_INTERNAL);
+        logMessage(RAWXD_LOG_ERROR, "ModelGenie generation failed (mg_error_t=%d)",
+                   static_cast<int>(genRc));
+        return bridge.delivered;
     }
 
-    // Verify IR dispatch completeness
-    const uint32_t dispatched = impl->model->irExecutor->Dispatched();
-    const uint32_t skipped = impl->model->irExecutor->Skipped();
-    const uint32_t visited = impl->model->irExecutor->Visited();
+    // Verify IR dispatch completeness (the runtime's
+    // certified 300-operation dispatch table must be fully
+    // exercised on every step)
+    const uint32_t dispatched = mg_context_ops_dispatched(impl->mgContext);
+    const uint32_t skipped = mg_context_ops_skipped(impl->mgContext);
+    const uint32_t visited = mg_context_ops_visited(impl->mgContext);
     if (visited != kExpectedIrOpCount || skipped != 0) {
         setLastError(RAWXD_ERROR_INTERNAL);
         logMessage(RAWXD_LOG_ERROR,
-                   "IRExecutor IR dispatch degraded: visited=%u dispatched=%u skipped=%u (expected %u/0)",
+                   "ModelGenie IR dispatch degraded: visited=%u dispatched=%u skipped=%u (expected %u/0)",
                    visited, dispatched, skipped, kExpectedIrOpCount);
         return 0;
     }
 
-    impl->currentPosition = impl->model->irExecutor->Position();
+    impl->currentPosition = mg_context_position(impl->mgContext);
 
-    return generated;
+    return bridge.delivered;
+}
+
+size_t RawrXDCore_Tokenize(
+    const RawrXDModel* model,
+    const char* text,
+    int* outTokens,
+    size_t maxTokens
+) {
+    if (!model || !text) return 0;
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    if (!impl->loaded || !impl->mgModel) return 0;
+
+    // Encode with the runtime's native tokenizer - the
+    // same GGUFEmbeddedTokenizer the standalone runtime
+    // uses. No BOS is prepended and no chat template is
+    // applied; the text is encoded exactly as given.
+    size_t tokenCount = 0;
+    const mg_error_t capRc = mg_model_tokenize(
+        impl->mgModel, text, nullptr, &tokenCount);
+    if ((capRc != MG_SUCCESS && capRc != MG_ERROR_INVALID_ARGUMENT) ||
+        tokenCount == 0) {
+        return 0;
+    }
+
+    if (!outTokens || maxTokens == 0) return tokenCount;
+
+    std::vector<uint32_t> ids(tokenCount);
+    size_t fillCount = tokenCount;
+    if (mg_model_tokenize(impl->mgModel, text, ids.data(),
+                              &fillCount) != MG_SUCCESS ||
+        fillCount != tokenCount) {
+        return 0;
+    }
+
+    const size_t n = ids.size() < maxTokens ? ids.size() : maxTokens;
+    for (size_t i = 0; i < n; ++i) {
+        outTokens[i] = static_cast<int>(ids[i]);
+    }
+    return ids.size();
+}
+
+size_t RawrXDCore_Detokenize(
+    const RawrXDModel* model,
+    const int* tokenIds,
+    size_t count,
+    char* outText,
+    size_t* outSize
+) {
+    if (!model || !outSize) {
+        if (outSize) *outSize = 0;
+        return 0;
+    }
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    if (!impl || !impl->loaded || !impl->mgModel) {
+        *outSize = 0;
+        return 0;
+    }
+
+    // ids come from the runtime as ints; remap to the runtime's
+    // uint32 domain first.
+    std::vector<uint32_t> ids;
+    ids.reserve(count);
+    for (size_t i = 0; i < count; ++i) {
+        ids.push_back(static_cast<uint32_t>(tokenIds[i]));
+    }
+
+    size_t required = 0;
+    mg_model_detokenize(impl->mgModel, ids.data(), ids.size(),
+                        nullptr, &required);
+    if (required == 0) {
+        *outSize = 0;
+        return 0;
+    }
+
+    if (!outText || *outSize < required) {
+        *outSize = required;
+        return 0;
+    }
+
+    size_t cap = required;
+    const size_t written = mg_model_detokenize(
+        impl->mgModel, ids.data(), ids.size(), outText, &cap);
+    *outSize = required;
+    return written;
 }
 
 void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats) {
@@ -702,9 +749,8 @@ void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats) {
 }
 
 void RawrXDCore_TrimMemory(void) {
-    // Clear tokenizer cache
-    std::lock_guard<std::mutex> tokLock(g_tokenizersMutex);
-    g_tokenizers.clear();
+    // Runtime-owned caches are trimmed inside the ModelGenie
+    // runtime; nothing DLL-side to release.
 }
 
 const char* RawrXDCore_GetErrorString(RawrXDError error) {
@@ -729,10 +775,10 @@ RawrXDError RawrXDCore_GetLastError(void) {
 
 void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps) {
     if (!caps) return;
-    
+
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
-    
+
     caps->cpuCoreCount = sysInfo.dwNumberOfProcessors;
     caps->hasAVX2 = false; // Would need CPUID check
     caps->hasAVX512 = false;
@@ -740,7 +786,7 @@ void RawrXDCore_GetHardwareCaps(RawrXDHardwareCaps* caps) {
     caps->hasCUDA = false;
     caps->systemMemoryMB = 65536; // Placeholder
     caps->gpuCount = 0;
-    
+
     for (int i = 0; i < 4; ++i) {
         caps->gpuMemoryMB[i] = 0;
         caps->gpuNames[i][0] = '\0';

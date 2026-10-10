@@ -119,14 +119,15 @@ inline std::string gpt2ByteEncode(unsigned char b) {
     static const std::array<uint32_t, 256> kByteToCpt = [] {
         std::array<uint32_t, 256> m{};
         std::array<bool, 256> identity{};
-        for (int ch = 0x21; ch <= 0x7E; ++ch) identity[ch] = true;
-        for (int ch = 0xA1; ch <= 0xAC; ++ch) identity[ch] = true;
-        for (int ch = 0xAE; ch <= 0xFF; ++ch) identity[ch] = true;
+        for (int ch = 0x21; ch <= 0x7E; ++ch) identity[static_cast<size_t>(ch)] = true;
+        for (int ch = 0xA1; ch <= 0xAC; ++ch) identity[static_cast<size_t>(ch)] = true;
+        for (int ch = 0xAE; ch <= 0xFF; ++ch) identity[static_cast<size_t>(ch)] = true;
         uint32_t n = 0;
-        for (int b = 0; b < 256; ++b)
+        for (int b = 0; b < 256; ++b) {
             m[static_cast<size_t>(b)] =
                 identity[static_cast<size_t>(b)] ? static_cast<uint32_t>(b)
                                                  : (256u + n++);
+        }
         return m;
     }();
     const uint32_t cp = kByteToCpt[b];

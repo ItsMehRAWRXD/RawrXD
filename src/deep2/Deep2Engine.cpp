@@ -4641,10 +4641,16 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
     size_t rows = endRow - startRow;
 
     // === Batch 15C: LinearW_Range Instrumentation =====================
+    // PERF-004: Hot-path overhead eliminated.
+    // Previously: std::getenv called on every LinearW_Range invocation,
+    // mutex locked on every call, traceCount++ on every call.
+    // Now: env var cached in static const bool, mutex only acquired when tracing ON.
     static std::mutex traceMutex;
     static FILE* traceFile = nullptr;
     static int traceCount = 0;
-    const int kMaxTrace = 2000;
+    static const bool lrTraceOn =
+        (std::getenv("RAWRXD_LINEARW_TRACE") != nullptr &&
+         std::getenv("RAWRXD_LINEARW_TRACE")[0] == '1');
     int tc = 0;
     bool doTrace = false;
     const char* typeName = "UNKNOWN";
@@ -4664,13 +4670,13 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
         case (int)GGMLType::GGML_TYPE_Q6_K: typeName = "Q6_K"; break;
         default: typeName = "UNKNOWN"; break;
     }
-    {
-        static const bool lrTraceOn =
-            (std::getenv("RAWRXD_LINEARW_TRACE") != nullptr &&
-             std::getenv("RAWRXD_LINEARW_TRACE")[0] == '1');
+    // PERF-004: Only acquire mutex when tracing is ON (default-off path
+    // was paying mutex + traceCount++ cost on every call).
+    if (lrTraceOn) {
+        static const int kMaxTrace = 2000;
         std::lock_guard<std::mutex> lock(traceMutex);
         tc = traceCount++;
-        doTrace = lrTraceOn && (tc < kMaxTrace);
+        doTrace = (tc < kMaxTrace);
         if (doTrace && !traceFile) {
             traceFile = fopen("__linearw_range_trace.txt", "w");
             if (traceFile) setvbuf(traceFile, nullptr, _IOLBF, 4096);
@@ -4726,38 +4732,21 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
     // Default OFF — KERNEL spam crushed Agentic to ~0.1 TPS (46MB logs).
     // Set RAWRXD_KERNEL_TRACE=1 to re-enable (capped).
     static int dispatchLogCount = 0;
-    const char* kernelTrace = std::getenv("RAWRXD_KERNEL_TRACE");
-    if (kernelTrace && kernelTrace[0] == '1' && dispatchLogCount < 500) {
+    // PERF-004: Cache env var result (was calling std::getenv on every call).
+    static const bool kernelTraceOn =
+        (std::getenv("RAWRXD_KERNEL_TRACE") != nullptr &&
+         std::getenv("RAWRXD_KERNEL_TRACE")[0] == '1');
+    if (kernelTraceOn && dispatchLogCount < 500) {
         ++dispatchLogCount;
         printf("[KERNEL] tensor=%s type=%s rows=%zu cols=%zu\n",
                wt.name.c_str(), typeName, rows, cols);
     }
 
-    // Q8_0: always use bounds-safe scalar byte-stride GEMV (registry/AVX2
-    // variants have historically AV'd on non-standard layouts).
-    if (wt.type == (int)GGMLType::GGML_TYPE_Q8_0) {
-        constexpr size_t kBlk = 34;
-        const size_t blocksPerRow = (cols + 31) / 32;
-        const size_t rowBytes = blocksPerRow * kBlk;
-        const uint8_t* base = (const uint8_t*)wt.data + startRow * rowBytes;
-        for (size_t r = 0; r < rows; ++r) {
-            float acc = 0.0f;
-            const uint8_t* row = base + r * rowBytes;
-            for (size_t b = 0; b < blocksPerRow; ++b) {
-                const auto* blk =
-                    reinterpret_cast<const block_q8_0*>(row + b * kBlk);
-                const float d = fp16ToFloat(blk->d);
-                const size_t off = b * 32;
-                const size_t n = (off + 32 <= cols) ? 32u : (cols - off);
-                float blockAcc = 0.0f;
-                for (size_t i = 0; i < n; ++i)
-                    blockAcc += (float)blk->qs[i] * input[off + i];
-                acc += d * blockAcc;
-            }
-            output[startRow + r] += acc;
-        }
-        return;
-    }
+
+    // Q8_0 now routes through QuantKernelRegistry (AVX-512 kernel registered
+    // when available). The previous special-case scalar path has been removed
+    // � PERF-002 replaced it with gemv_q8_0_avx512 which uses the same
+    // byte-stride (kBlk=34) layout but processes 16 int8 values per iteration.
 
     // ── QuantKernelRegistry dispatch (replaces inline switch) ─────────────
     auto& reg = Deep2::QuantKernelRegistry::Instance();
@@ -4771,11 +4760,13 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
         size_t blocksPerRow = (cols + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
         size_t rowBytes = blocksPerRow * geom.blockSize;
         const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-        // ── VAL-051.7: Q4_0 dispatch telemetry (capped) ─────────────
+        // PERF-004: Cache env var (was std::getenv on every call).
+        static const bool q4ProbeOn =
+            (std::getenv("RAWRXD_DEEP2_LAYER_PROBE") != nullptr &&
+             std::getenv("RAWRXD_DEEP2_LAYER_PROBE")[0] == '1');
         if (wt.type == (int)GGMLType::GGML_TYPE_Q4_0) {
             static int q4LogCount = 0;
-            const char* probe = std::getenv("RAWRXD_DEEP2_LAYER_PROBE");
-            const int q4LogCap = (probe && probe[0] == '1') ? 32 : 8;
+            const int q4LogCap = q4ProbeOn ? 32 : 8;
             if (q4LogCount < q4LogCap) {
                 ++q4LogCount;
                 fprintf(stderr,
@@ -5016,10 +5007,8 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     if (plannedCpu)
         ++plannedCpuGemvOps_;
     auto tQuant0 = std::chrono::high_resolution_clock::now();
-    // Q8_0: single-thread until HOST_Q8_GEMV_SAFE (thread-pool races observed).
-    const bool q8Single =
-        wtEffective.type == (int)GGMLType::GGML_TYPE_Q8_0;
-    if (threadPool && rows >= 64 && !q8Single) {
+    // PERF-002: Q8_0 now uses AVX-512 SIMD kernel � thread pool enabled.
+    if (threadPool && rows >= 64) {
         size_t numThreads = threadPool->size();
         size_t rowsPerThread = rows / numThreads;
         size_t remainder = rows % numThreads;

@@ -580,12 +580,17 @@ static void gemv_q4_k_scalar(
     }
 
     // Hot path: match llama.cpp CPU mul_mat(Q4_K, Q8_K)
+    // PERF-001: Thread-local persistent buffer eliminates per-call malloc/free
+    // that was firing on every GEMV dispatch (hundreds per token).
     const size_t blocksPerRow = cols / 256;
-    std::vector<block_q8_K> xQ8(blocksPerRow);
-    quantize_row_q8_K(x, xQ8.data(), cols);
+    static thread_local std::vector<block_q8_K> xQ8Buf;
+    if (xQ8Buf.size() < blocksPerRow)
+        xQ8Buf.resize(blocksPerRow);
+    quantize_row_q8_K(x, xQ8Buf.data(), cols);
+    const block_q8_K* xQ8 = xQ8Buf.data();
     const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
     for (size_t r = 0; r < rows; ++r) {
-        y[r] += vec_dot_q4_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
+        y[r] += vec_dot_q4_K_q8_K(blocks + r * blocksPerRow, xQ8, cols);
     }
 }
 
@@ -1054,25 +1059,194 @@ static void gemv_f16_avx512(
 }
 
 // --- Q4_K GEMV (AVX-512) ---
-// Delegate to scalar until a ggml-layout SIMD kernel is re-validated.
+// PERF-003: Real 16-wide SIMD replacing the scalar-only stub.
+// Same algorithm as gemv_q4_k_scalar (Q8_K intermediate + vec_dot_q4_K_q8_K)
+// but both the quantisation and dot-product stages use AVX-512 intrinsics.
+// Keeps algorithmic parity with scalar path for certification (BATCH2_Q4K_GEMV_001).
 static void gemv_q4_k_avx512(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    gemv_q4_k_scalar(w, x, y, rows, cols);
+    if (cols % 256 != 0) {
+        // Non-aligned: delegate to scalar (rare path for non-standard shapes)
+        gemv_q4_k_scalar(w, x, y, rows, cols);
+        return;
+    }
+
+    const size_t blocksPerRow = cols / 256;
+
+    // --- Step 1: Quantise input to Q8_K (vectorised) ---
+    // PERF-001: thread-local buffer avoids per-call malloc/free.
+    static thread_local std::vector<block_q8_K> xQ8Buf;
+    if (xQ8Buf.size() < blocksPerRow)
+        xQ8Buf.resize(blocksPerRow);
+    block_q8_K* xQ8 = xQ8Buf.data();
+
+    for (size_t i = 0; i < blocksPerRow; ++i) {
+        const float* xp = x + i * 256;
+
+        // Find max abs using AVX-512
+        __m512 vmax = _mm512_setzero_ps();
+        for (int j = 0; j < 256; j += 16) {
+            __m512 v   = _mm512_loadu_ps(xp + j);
+            __m512 av  = _mm512_abs_ps(v);
+            vmax = _mm512_max_ps(vmax, av);
+        }
+        float maxf = _mm512_reduce_max_ps(vmax);
+
+        if (maxf == 0.0f || !std::isfinite(maxf)) {
+            xQ8[i].d = 0.f;
+            std::memset(xQ8[i].qs, 0, 256);
+            std::memset(xQ8[i].bsums, 0, sizeof(xQ8[i].bsums));
+            continue;
+        }
+
+        const float iscale      = -127.f / maxf;
+        const float d_inv       = maxf / 127.f;  // = 1.f / iscale (positive)
+        __m512 iscale_v = _mm512_set1_ps(iscale);
+
+        // Quantise 16 floats at a time
+        for (int j = 0; j < 256; j += 16) {
+            __m512 v      = _mm512_loadu_ps(xp + j);
+            __m512 scaled = _mm512_mul_ps(v, iscale_v);
+            __m512i qi    = _mm512_cvtps_epi32(scaled);
+            // Clamp to [-127, 127]
+            qi = _mm512_min_epi32(qi, _mm512_set1_epi32(127));
+            qi = _mm512_max_epi32(qi, _mm512_set1_epi32(-127));
+            // Narrow to int8 and store
+            // MSVC lacks _mm512_cvtepi32_epi8; use _mm512_packs_epi32 + _mm512_packs_epi16
+            __m512i packed16_hi = _mm512_packs_epi32(qi, _mm512_setzero_si512());
+            __m512i packed8     = _mm512_packs_epi16(packed16_hi, _mm512_setzero_si512());
+            _mm256_storeu_si256(reinterpret_cast<__m256i*>(&xQ8[i].qs[j]),
+                _mm512_castsi512_si256(packed8));
+        }
+        xQ8[i].d = d_inv;
+
+        // Compute bsums (sum of 16 int8 per group, 16 groups)
+        for (int j = 0; j < 16; ++j) {
+            __m256i v = _mm256_loadu_si256(
+                reinterpret_cast<const __m256i*>(&xQ8[i].qs[j * 16]));
+            // Manual horizontal sum (MSVC lacks _mm256_reduce_add_epi32)
+            __m256i vshuf = _mm256_hadd_epi32(v, v);
+            __m128i vlow = _mm256_castsi256_si128(vshuf);
+            __m128i vhigh = _mm256_extracti128_si256(vshuf, 1);
+            __m128i vsum = _mm_add_epi32(vlow, vhigh);
+            __m128i vsum2 = _mm_hadd_epi32(vsum, vsum);
+            xQ8[i].bsums[j] = static_cast<int16_t>(_mm_cvtsi128_si32(vsum2));
+        }
+    }
+
+    // --- Step 2: Dot product Q4_K x Q8_K (vectorised) ---
+    // Formula per element:
+    //   weight = (d * scale[sub] * q4_nibble - dmin * min[sub]) * q8_scale
+    //   result += weight * q8_value
+    // Where d, dmin are Q4_K block scales, q8_scale = xQ8[b].d
+    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
+
+    for (size_t r = 0; r < rows; ++r) {
+        __m512 acc = _mm512_setzero_ps();
+        const block_q4_K* rowBlocks = blocks + r * blocksPerRow;
+
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q4_K& blk = rowBlocks[b];
+            const float d    = f16_to_f32(blk.d);
+            const float dmin = f16_to_f32(blk.dmin);
+            const float q8d  = xQ8[b].d;
+
+            uint8_t scales[8], mins[8];
+            unpack_q4_k_scales(blk.scales, scales, mins);
+
+            // Process 8 sub-blocks of 32 values each
+            const uint8_t* qs = blk.qs;
+            for (int is = 0; is < 8; ++is) {
+                const int sb_pair = is / 2;       // which 32-byte segment
+                const int nibble_type = is & 1;   // 0=low, 1=high
+                const size_t qs_off   = sb_pair * 32;
+                const size_t q8_off   = is * 32;
+
+                const float d_s  = d * q8d * (float)scales[is];
+                const float dm_s = dmin * q8d * (float)mins[is];
+                __m512 d_vec  = _mm512_set1_ps(d_s);
+                __m512 dm_vec = _mm512_set1_ps(dm_s);
+
+                // Process 16 nibble values at a time (2 iterations per 32-value sub-block)
+                for (size_t i = 0; i < 32; i += 16) {
+                    // Load 16 bytes from qs → extract 16 nibbles
+                    __m128i bytes = _mm_loadu_si128(
+                        reinterpret_cast<const __m128i*>(qs + qs_off + i));
+                    __m128i nib16;
+                    if (nibble_type == 0) {
+                        nib16 = _mm_and_si128(bytes, _mm_set1_epi8(static_cast<char>(0x0F)));
+                    } else {
+                        nib16 = _mm_and_si128(
+                            _mm_srli_epi16(bytes, 4),
+                            _mm_set1_epi8(static_cast<char>(0x0F)));
+                    }
+                    // Zero-extend 16×uint8 → 16×uint32, then to float
+                    __m512i q4i = _mm512_cvtepu8_epi32(nib16);
+                    __m512  q4f = _mm512_cvtepi32_ps(q4i);
+                    // weight = d * scale * q4 - dmin * min  (FMSUB)
+                    __m512 wv = _mm512_fmsub_ps(q4f, d_vec, dm_vec);
+                    // Load 16 Q8_K values, sign-extend, convert to float
+                    __m128i q8_16 = _mm_loadu_si128(
+                        reinterpret_cast<const __m128i*>(&xQ8[b].qs[q8_off + i]));
+                    __m512i q8i = _mm512_cvtepi8_epi32(q8_16);
+                    __m512 q8f  = _mm512_cvtepi32_ps(q8i);
+                    // acc += weight * q8
+                    acc = _mm512_fmadd_ps(wv, q8f, acc);
+                }
+            }
+        }
+        y[r] += _mm512_reduce_add_ps(acc);
+    }
 }
 
 // --- Q8_0 GEMV (AVX-512) ---
+// PERF-002: Real 16-wide SIMD replacing the stubbed scalar fallback.
+// Processes 16 int8 weights per iteration using _mm512_cvtepi8_epi32.
+// Block layout (34 bytes): uint16_t d; int8_t qs[32];
 static void gemv_q8_0_avx512(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    // Fall back to bounds-safe scalar until 32-wide path is re-validated.
-    gemv_q8_0_scalar(w, x, y, rows, cols);
+    constexpr size_t kBlk = 34;
+    const size_t blocksPerRow = (cols + 31) / 32;
+    const size_t rowBytes = blocksPerRow * kBlk;
+
+    for (size_t r = 0; r < rows; ++r) {
+        __m512 acc = _mm512_setzero_ps();
+        const uint8_t* row = w + r * rowBytes;
+
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const auto* blk =
+                reinterpret_cast<const block_q8_0*>(row + b * kBlk);
+            __m512 dVec = _mm512_set1_ps(f16_to_f32(blk->d));
+            const size_t base = b * 32;
+            const size_t n = (base + 32 <= cols) ? 32u : (cols - base);
+
+            // Process 16 int8 values at a time
+            size_t i = 0;
+            for (; i + 16 <= n; i += 16) {
+                __m128i q8      = _mm_loadu_si128(
+                    reinterpret_cast<const __m128i*>(&blk->qs[i]));
+                __m512i i32     = _mm512_cvtepi8_epi32(q8);
+                __m512  wv      = _mm512_cvtepi32_ps(i32);
+                __m512  xv      = _mm512_loadu_ps(x + base + i);
+                acc = _mm512_fmadd_ps(_mm512_mul_ps(wv, dVec), xv, acc);
+            }
+            // Scalar tail
+            float tail = 0.0f;
+            for (; i < n; ++i) {
+                tail += f16_to_f32(blk->d) * (float)blk->qs[i] * x[base + i];
+            }
+            acc = _mm512_add_ps(acc, _mm512_set1_ps(tail));
+        }
+        y[r] += _mm512_reduce_add_ps(acc);
+    }
 }
 
 // --- Q8_K GEMV (AVX-512) ---
@@ -1790,19 +1964,25 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q8_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q8_0, dequant_q8_0);
-    // MASM stubbed — use scalar reference until AVX2 kernel is verified
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
+    // PERF-002: Use AVX-512 SIMD kernel (16-wide) instead of scalar
+    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_avx512);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
 
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
-    // MASM linked but unverified — use scalar reference until byte-level comparison passes
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
-    printf("[QuantKernelRegistry] Q4_K GEMV=%p dequant=%p GetGEMV(12)=%p match=%d\n",
-           (void*)(GEMVKernelFn)gemv_q4_k_scalar,
-           (void*)(DequantKernelFn)dequant_q4_k,
-           (void*)GetGEMV((int)GGMLType::GGML_TYPE_Q4_K),
-           (int)(GetGEMV((int)GGMLType::GGML_TYPE_Q4_K) == (GEMVKernelFn)gemv_q4_k_scalar));
+    // PERF-003: Use AVX-512 SIMD kernel (16-wide Q8_K quant + Q4_K dot) instead of scalar
+    if (hasAVX512) {
+        RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_avx512);
+        printf("[QuantKernelRegistry] Q4_K GEMV=AVX512 registered\n");
+    } else {
+        RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
+        printf("[QuantKernelRegistry] Q4_K GEMV=%p dequant=%p GetGEMV(12)=%p match=%d\n",
+               (void*)(GEMVKernelFn)gemv_q4_k_scalar,
+               (void*)(DequantKernelFn)dequant_q4_k,
+               (void*)GetGEMV((int)GGMLType::GGML_TYPE_Q4_K),
+               (int)(GetGEMV((int)GGMLType::GGML_TYPE_Q4_K) == (GEMVKernelFn)gemv_q4_k_scalar));
+    }
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));

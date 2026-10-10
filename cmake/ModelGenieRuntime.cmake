@@ -25,7 +25,7 @@ if(NOT TARGET ModelGenieRuntime)
         FOLDER "Deep2"
     )
 
-    target_include_directories(ModelGenieRuntime PUBLIC
+    target_include_directories(ModelGenieRuntime PRIVATE
         ${RAWRXD_SOURCE_DIR}
         ${RAWRXD_SOURCE_DIR}/include
         ${RAWRXD_SOURCE_DIR}/src
@@ -34,7 +34,6 @@ if(NOT TARGET ModelGenieRuntime)
         ${RAWRXD_SOURCE_DIR}/src/modelgenie
         ${RAWRXD_SOURCE_DIR}/src/tokenizer
         ${RAWRXD_SOURCE_DIR}/tools
-        ${RAWRXD_SOURCE_DIR}/generated/DeepSeek-V2-Lite-Chat
     )
 
     if(MSVC)
@@ -55,5 +54,19 @@ if(NOT TARGET ModelGenieRuntime)
     include(FindOpenMP)
     if(OPENMP_FOUND)
         target_link_libraries(ModelGenieRuntime PUBLIC OpenMP::OpenMP_CXX)
+    endif()
+endif()
+
+# Export ModelGenieRuntime into RawrXDCoreTargets export set when called from DLL build
+if(TARGET ModelGenieRuntime)
+    get_property(_already_installed TARGET ModelGenieRuntime PROPERTY EXPORT_NAME SET)
+    if(NOT _already_installed)
+        install(TARGETS ModelGenieRuntime
+            EXPORT RawrXDCoreTargets
+            ARCHIVE DESTINATION lib
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin
+        )
+        set_property(TARGET ModelGenieRuntime PROPERTY EXPORT_NAME ModelGenieRuntime)
     endif()
 endif()

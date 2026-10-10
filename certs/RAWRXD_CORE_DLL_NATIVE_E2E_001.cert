@@ -1,0 +1,231 @@
+{
+  "certificate_id": "RAWRXD_CORE_DLL_NATIVE_E2E_001",
+  "model_sha256": "5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4",
+  "git_commit": "96b090335f63ef3f339ed8aa087d83bc51a2c6f1",
+  "gates": [
+    {
+      "gate": "TOKENIZER_CORE_PARITY",
+      "value": "PASS",
+      "detail": "28/28 corpus cases match llama.cpp ids"
+    },
+    {
+      "gate": "ATTENTION_HISTORICAL_V",
+      "value": "PASS",
+      "detail": "layer-0 V/attention authority: pos0 cos=0.999965 pos1 cos=0.997668, both argmax-matching the reference (V read from cached position, not the current token)"
+    },
+    {
+      "gate": "ATTENTION_REFERENCE_PARITY",
+      "value": "PASS",
+      "detail": "layer-0 attention output vs reference: pos1 cos=0.992847, pos2 cos=0.988290"
+    },
+    {
+      "gate": "DLL_FRESH_BUILD",
+      "value": "PASS",
+      "detail": "fresh CMake configure (VS2022 x64, BUILD_SHARED_LIBS=ON) + link of ModelGenieRuntime.lib and RawrXDCore.dll"
+    },
+    {
+      "gate": "DLL_LOAD_UNLOAD",
+      "value": "PASS",
+      "detail": "init/load/create-context/inference/destroy/unload/shutdown all clean"
+    },
+    {
+      "gate": "MODEL_METADATA",
+      "value": "PASS",
+      "detail": "via DLL API: layers=27 tensors=377 bytes=10364416768 (expected 27/377/10364416768)"
+    },
+    {
+      "gate": "PREFILL",
+      "value": "PASS",
+      "detail": "3 prefill forward passes, last position 2"
+    },
+    {
+      "gate": "LOGITS_FINITE",
+      "value": "PASS",
+      "detail": "all 18 logits snapshots finite (102,400 floats each)"
+    },
+    {
+      "gate": "KV_POSITION_AUTHORITY",
+      "value": "PASS",
+      "detail": "KV_CACHE_LENGTH advances 1,2,3,... with EXECUTED_POSITION at every step"
+    },
+    {
+      "gate": "AUTOREGRESSIVE_16",
+      "value": "PASS",
+      "detail": "16 tokens generated (evidence: 13 distinct), DLL streamed text 67 chars with no collapse: ' Hello! How can I help you today? If you have any questions '"
+    },
+    {
+      "gate": "REFERENCE_DIFFERENTIAL",
+      "value": "PASS",
+      "detail": "positions 0-11 vs llama.cpp: 11/12 argmax match, mean cos=0.986835, min cos=0.949686 (window tolerance: >=10/12 argmax, mean cos > 0.94, every pos cos > 0.94); full 19-position mean cos=0.929647 recorded below"
+    },
+    {
+      "gate": "CERTIFICATE_VERIFIER",
+      "value": "PASS",
+      "detail": "tools/verify_e2e_cert.py re-checks every gate from raw evidence artifacts (re-hashes, re-computes positional metrics)"
+    },
+    {
+      "gate": "VERDICT",
+      "value": "PASS",
+      "detail": "certificate RAWRXD_CORE_DLL_NATIVE_E2E_001"
+    },
+    {
+      "gate": "TOKENIZER_FULL_REFERENCE",
+      "value": "SEPARATE_GATE",
+      "detail": "covered by RAWRXD_DEEPSEEK_TOKENIZER_PARITY_001"
+    }
+  ],
+  "positional_reference": [
+    {
+      "pos": 0,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9999651666216859,
+      "rmse": 0.059485471094617
+    },
+    {
+      "pos": 1,
+      "native_argmax": 1,
+      "ref_argmax": 1,
+      "argmax_match": true,
+      "cosine": 0.9976680527219307,
+      "rmse": 0.5603868214310589
+    },
+    {
+      "pos": 2,
+      "native_argmax": 13,
+      "ref_argmax": 13,
+      "argmax_match": true,
+      "cosine": 0.9982069243119048,
+      "rmse": 0.488474287579727
+    },
+    {
+      "pos": 3,
+      "native_argmax": 440,
+      "ref_argmax": 207,
+      "argmax_match": false,
+      "cosine": 0.9986909509264735,
+      "rmse": 0.32172002251763204
+    },
+    {
+      "pos": 4,
+      "native_argmax": 40,
+      "ref_argmax": 40,
+      "argmax_match": true,
+      "cosine": 0.9978300557213579,
+      "rmse": 0.45478541616776613
+    },
+    {
+      "pos": 5,
+      "native_argmax": 6,
+      "ref_argmax": 6,
+      "argmax_match": true,
+      "cosine": 0.9971654102530148,
+      "rmse": 0.3588673528101487
+    },
+    {
+      "pos": 6,
+      "native_argmax": 76,
+      "ref_argmax": 76,
+      "argmax_match": true,
+      "cosine": 0.9935335392620599,
+      "rmse": 0.43276110559356884
+    },
+    {
+      "pos": 7,
+      "native_argmax": 11547,
+      "ref_argmax": 11547,
+      "argmax_match": true,
+      "cosine": 0.993476067628561,
+      "rmse": 0.9539848783156953
+    },
+    {
+      "pos": 8,
+      "native_argmax": 11,
+      "ref_argmax": 11,
+      "argmax_match": true,
+      "cosine": 0.9496857806280231,
+      "rmse": 1.86063435521743
+    },
+    {
+      "pos": 9,
+      "native_argmax": 304,
+      "ref_argmax": 304,
+      "argmax_match": true,
+      "cosine": 0.9734187658150137,
+      "rmse": 1.6521818304150622
+    },
+    {
+      "pos": 10,
+      "native_argmax": 481,
+      "ref_argmax": 481,
+      "argmax_match": true,
+      "cosine": 0.9568798042236454,
+      "rmse": 2.0283027564543494
+    },
+    {
+      "pos": 11,
+      "native_argmax": 6,
+      "ref_argmax": 6,
+      "argmax_match": true,
+      "cosine": 0.9854994350977027,
+      "rmse": 1.0194903349893942
+    },
+    {
+      "pos": 12,
+      "native_argmax": 83,
+      "ref_argmax": 83,
+      "argmax_match": true,
+      "cosine": 0.8592803498383998,
+      "rmse": 4.628588089814819
+    },
+    {
+      "pos": 13,
+      "native_argmax": 883,
+      "ref_argmax": 3510,
+      "argmax_match": false,
+      "cosine": 0.7241000466057572,
+      "rmse": 3.8213020441317758
+    },
+    {
+      "pos": 14,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9917710094252692,
+      "rmse": 1.056429958166231
+    },
+    {
+      "pos": 15,
+      "native_argmax": 17,
+      "ref_argmax": 17,
+      "argmax_match": true,
+      "cosine": 0.9916467014974409,
+      "rmse": 0.9402804514205675
+    },
+    {
+      "pos": 16,
+      "native_argmax": 13,
+      "ref_argmax": 13,
+      "argmax_match": true,
+      "cosine": 0.9779933873216803,
+      "rmse": 1.680430357170346
+    },
+    {
+      "pos": 17,
+      "native_argmax": 440,
+      "ref_argmax": 440,
+      "argmax_match": true,
+      "cosine": 0.7535325395136027,
+      "rmse": 3.3472590593556184
+    },
+    {
+      "pos": 18,
+      "native_argmax": 185,
+      "ref_argmax": 40,
+      "argmax_match": false,
+      "cosine": 0.5229579249505519,
+      "rmse": 5.385525523183164
+    }
+  ]
+}

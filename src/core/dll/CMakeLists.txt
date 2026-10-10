@@ -41,10 +41,11 @@ else()
     )
 endif()
 
-# Generate export header for shared libraries on Windows using the shared library function
-if(NOT RAWRXD_CORE_STATIC_ONLY AND WIN32)
-    rawrxd_generate_export_header(RawrXDCore ${CMAKE_CURRENT_BINARY_DIR}/RawrXDCore_exports.h)
-    target_compile_definitions(RawrXDCore PRIVATE RAWRXD_CORE_DLL_BUILD RawrXDCore_EXPORTS)
+# Generate export header (always: RawrXDCore.h includes it unconditionally,
+# and the template resolves to empty macros on non-Windows platforms).
+rawrxd_generate_export_header(RawrXDCore ${CMAKE_CURRENT_BINARY_DIR}/RawrXDCore_exports.h)
+if(NOT RAWRXD_CORE_STATIC_ONLY)
+    target_compile_definitions(RawrXDCore PRIVATE RawrXDCore_EXPORTS)
 endif()
 
 # Include directories - use PRIVATE to avoid CMP0104 policy issues

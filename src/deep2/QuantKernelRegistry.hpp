@@ -35,6 +35,103 @@ namespace Deep2 {
 // GGMLType is defined in QuantTypeTable.hpp (canonical ggml IDs).
 
 // ---------------------------------------------------------------------------
+// Block type structs — must match GGML layout byte-for-byte.
+// These are used by the K-quant GEMV kernels in QuantKernelRegistry_K.h.
+// ---------------------------------------------------------------------------
+#pragma pack(push, 1)
+
+// Q4_0: 32 weights, 1 fp16 scale — 18 bytes total (2+16)
+struct block_q4_0 {
+    uint16_t d;           // fp16 scale
+    uint8_t  qs[16];      // 4-bit weights (32 values, packed 2/byte)
+};
+
+// Q4_1: 32 weights, fp16 scale + fp16 min — 20 bytes (2+2+16)
+struct block_q4_1 {
+    uint16_t d;           // fp16 scale
+    uint16_t m;           // fp16 min
+    uint8_t  qs[16];      // 4-bit weights
+};
+
+// Q5_0: 32 weights, 1 fp16 scale, 4-bit high bit mask — 22 bytes (2+16+4+1... no, actual is 2+4+16+128 bits=4 bytes, total 90? Let me check)
+// Actually Q5_0: 32 values, 5 bits each = 160 bits, d (2 bytes), 4 bytes high bits, 16 bytes qs = 22 bytes
+struct block_q5_0 {
+    uint16_t d;           // fp16 scale
+    uint8_t  qh[4];       // high bits (1 per value, 32 bits = 4 bytes)
+    uint8_t  qs[16];      // 4 low bits of each value
+};
+
+// Q5_1: 32 weights, fp16 scale + fp16 min, 5 bits — 24 bytes
+struct block_q5_1 {
+    uint16_t d;           // fp16 scale
+    uint16_t m;           // fp16 min
+    uint8_t  qh[4];       // high bits
+    uint8_t  qs[16];      // low 4 bits
+};
+
+// Q8_0: 32 int8 weights, 1 fp16 scale — 34 bytes total (2+32)
+struct block_q8_0 {
+    uint16_t d;           // fp16 scale
+    int8_t   qs[32];      // int8 quantized values
+};
+
+// Q2_K: 256 weights, 16 scales — 84 bytes
+struct block_q2_K {
+    uint16_t d;           // fp16 super-scale
+    uint16_t dmin;        // fp16 super-min
+    uint8_t  scales[16];  // 4-bit scale/min pairs
+    uint8_t  qs[64];      // 2-bit weights (256 values)
+};
+
+// Q3_K: 256 weights, 12-byte scale packing, hmask — 110 bytes
+struct block_q3_K {
+    uint16_t d;
+    uint8_t  hmask[32];   // high-bit mask
+    uint8_t  qs[64];      // 3-bit weights
+    uint8_t  scales[12];  // packed scales
+};
+
+// Q4_K: 256 weights, 12-byte scales, 128-byte qs — 144 bytes
+struct block_q4_K {
+    uint16_t d;           // fp16 scale
+    uint16_t dmin;        // fp16 min
+    uint8_t  scales[12];  // packed scales/mins
+    uint8_t  qs[128];     // 4-bit weights
+};
+
+// Q5_K: 256 weights, 12-byte scales, 64-byte qs, 32-byte qh — 176 bytes
+struct block_q5_K {
+    uint16_t d;
+    uint16_t dmin;
+    uint8_t  scales[12];
+    uint8_t  qs[64];
+    uint8_t  qh[32];      // high bits for 5th bit
+};
+
+// Q6_K: 256 weights, 16 signed scales, 128-byte ql, 64-byte qh, fp16 d — 210 bytes
+struct block_q6_K {
+    uint8_t  ql[128];     // low 4 bits
+    uint8_t  qh[64];      // high 2 bits
+    int8_t   scales[16];  // signed scales
+    uint16_t d;           // fp16 scale
+};
+
+// Q8_K: 256 int8 weights, 1 fp32 scale, 16 int16 block sums — 292 bytes
+struct block_q8_K {
+    float   d;            // fp32 scale
+    int8_t  qs[256];      // int8 quantized values
+    int16_t bsums[16];    // block sums for vec_dot correction
+};
+
+#pragma pack(pop)
+
+// QK_K: number of weights per K-quant block (256 for llama.cpp K-quants)
+constexpr size_t QK_K = 256;
+
+static_assert(sizeof(block_q8_0) == 34, "block_q8_0 must be 34 bytes");
+static_assert(sizeof(block_q8_K) == 292, "block_q8_K must be 292 bytes");
+
+// ---------------------------------------------------------------------------
 // Universal GEMV kernel signature.
 //
 //   weight_block_ptr  - raw mmap pointer to the packed weight data

@@ -29,6 +29,43 @@
 #include <vector>
 #include <windows.h>
 
+// Debug helper to dump raw float tensors to disk for Python verification
+static void debug_dump_tensor(const std::string& filename, const float* data, size_t count) {
+    if (!data || count == 0) return;
+    std::ofstream file(filename, std::ios::binary);
+    if (file.is_open()) {
+        file.write(reinterpret_cast<const char*>(data), count * sizeof(float));
+        file.close();
+        std::fprintf(stderr, "[DUMP] Wrote %zu floats to %s\n", count, filename.c_str());
+    } else {
+        std::fprintf(stderr, "[DUMP ERROR] Failed to open %s\n", filename.c_str());
+    }
+}
+
+// Call this inside AttentionFwd when layer_idx == 0 and position == 1
+static void debug_log_layer0_pos1(
+    int layer_idx, 
+    int token_pos, 
+    const float* q_ptr, size_t q_size,
+    const float* k_ptr, size_t k_size,
+    const float* attn_weights_ptr, size_t attn_weights_size
+) {
+    if (layer_idx == 0 && token_pos == 1) {
+        std::fprintf(stderr, "--- TRACING LAYER 0, POSITION 1 ---\n");
+        
+        // Dump Queries
+        debug_dump_tensor("layer0_pos1_q.bin", q_ptr, q_size);
+        
+        // Dump Keys (K_nope / K_pe or combined K)
+        debug_dump_tensor("layer0_pos1_k.bin", k_ptr, k_size);
+        
+        // Dump Softmax Attention Weights (QK^T / sqrt(d)) before V multiplication
+        if (attn_weights_ptr != nullptr && attn_weights_size > 0) {
+            debug_dump_tensor("layer0_pos1_attn_weights.bin", attn_weights_ptr, attn_weights_size);
+        }
+    }
+}
+
 namespace ModelGenie = ::RawrXD::Deep2::ModelGenie;
 namespace Generated = ::RawrXD::Deep2::Generated;
 
@@ -438,6 +475,39 @@ float FP16ToFloat(uint16_t h)
     return sign * std::ldexp(1.0f + float(mant) / 1024.0f, int(exp) - 15);
 }
 
+// Round-trip float through fp16 (round-to-nearest-even, matching _cvtss_sh).
+uint16_t FloatToFP16(float f)
+{
+    uint32_t bits;
+    std::memcpy(&bits, &f, sizeof(bits));
+    const uint32_t sign = (bits >> 16) & 0x8000u;
+    int32_t exp = static_cast<int32_t>((bits >> 23) & 0xFFu) - 127 + 15;
+    uint32_t mant = bits & 0x7FFFFFu;
+    if (((bits >> 23) & 0xFFu) == 0xFFu) {
+        return static_cast<uint16_t>(sign | 0x7C00u | (mant ? 0x200u : 0u));
+    }
+    if (exp >= 31) return static_cast<uint16_t>(sign | 0x7C00u);
+    if (exp <= 0) {
+        if (exp < -10) return static_cast<uint16_t>(sign);
+        mant |= 0x800000u;
+        const uint32_t shift = static_cast<uint32_t>(14 - exp);
+        const uint32_t half = 1u << (shift - 1);
+        uint32_t sub = mant >> shift;
+        if ((mant & ((half << 1) - 1)) > half ||
+            ((mant & ((half << 1) - 1)) == half && (sub & 1u))) {
+            ++sub;
+        }
+        return static_cast<uint16_t>(sign | sub);
+    }
+    // normal: round mantissa from 23 to 10 bits
+    const uint32_t half = 0x1000u;
+    uint16_t out = static_cast<uint16_t>(sign | (static_cast<uint32_t>(exp) << 10) | (mant >> 13));
+    if ((mant & 0x1FFFu) > half || ((mant & 0x1FFFu) == half && (out & 1u))) {
+        ++out; // carries into exponent naturally
+    }
+    return out;
+}
+
 //=============================================================================
 // Dequantizer for GGUF tensor types
 //=============================================================================
@@ -575,6 +645,85 @@ void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
         }
         default:
             memset(out.data(), 0, out.size() * sizeof(float));
+            break;
+    }
+}
+
+//=============================================================================
+// ggml-compatible activation pre-quantization
+//
+// The llama.cpp reference quantizes every activation vector that feeds a
+// quantized matmul: k-quant weights (Q4_K/Q5_K/Q6_K) consume q8_K blocks of
+// 256, Q8_0/Q4_0/Q5_0 weights consume q8_0 blocks of 32. Reproducing that
+// quantize/dequantize step in-place is what brings this runtime into
+// reference parity (~1e-6 relative); skipping it left a 1.2% activation error
+// that compounded across layers and destroyed positional parity.
+//=============================================================================
+static void GGMLQuantDequantizeQ8K(std::vector<float>& x)
+{
+    const size_t hidden = x.size();
+    if (hidden == 0 || (hidden % 256) != 0) return;
+    for (size_t b = 0; b < hidden; b += 256) {
+        float* blk = x.data() + b;
+        float amax = 0.0f;
+        float mx = 0.0f;
+        for (size_t j = 0; j < 256; ++j) {
+            const float ax = std::fabs(blk[j]);
+            if (ax > amax) { amax = ax; mx = blk[j]; }
+        }
+        if (amax == 0.0f) {
+            std::memset(blk, 0, 256 * sizeof(float));
+            continue;
+        }
+        const float iscale = -127.0f / mx;
+        const float d = 1.0f / iscale;
+        for (size_t j = 0; j < 256; ++j) {
+            int v = static_cast<int>(std::rintf(iscale * blk[j]));
+            if (v > 127) v = 127;
+            blk[j] = static_cast<float>(v) * d;
+        }
+    }
+}
+
+static void GGMLQuantDequantizeQ80(std::vector<float>& x)
+{
+    const size_t hidden = x.size();
+    if (hidden == 0 || (hidden % 32) != 0) return;
+    for (size_t b = 0; b < hidden; b += 32) {
+        float* blk = x.data() + b;
+        float amax = 0.0f;
+        for (size_t j = 0; j < 32; ++j) {
+            const float ax = std::fabs(blk[j]);
+            if (ax > amax) amax = ax;
+        }
+        const float d = amax / 127.0f;
+        if (d == 0.0f) {
+            std::memset(blk, 0, 32 * sizeof(float));
+            continue;
+        }
+        // ggml stores the q8_0 block scale as fp16 and dequantizes with it.
+        const uint16_t d16 = FloatToFP16(d);
+        const float dq = FP16ToFloat(d16);
+        const float id = 1.0f / d;
+        for (size_t j = 0; j < 32; ++j) {
+            const int v = static_cast<int>(std::roundf(blk[j] * id));
+            blk[j] = static_cast<float>(v) * dq;
+        }
+    }
+}
+
+static void GGMLPreQuantizeActivation(std::vector<float>& x, ModelGenie::GGMLType type)
+{
+    switch (type) {
+        case ModelGenie::GGMLType::Q4_K:
+        case ModelGenie::GGMLType::Q6_K:
+            GGMLQuantDequantizeQ8K(x);
+            break;
+        case ModelGenie::GGMLType::Q8_0:
+        case ModelGenie::GGMLType::Q5_0:
+            GGMLQuantDequantizeQ80(x);
+            break;
+        default:
             break;
     }
 }
@@ -1012,13 +1161,19 @@ private:
         }
         if (inputN != in || outputN != out) return false;
         std::vector<float> gated;
+        std::vector<float> quantized;
         if (gate) {
             gated.resize(in);
             for (size_t j = 0; j < in; ++j)
                 gated[j] = (input[j] / (1.0f + std::exp(-input[j]))) * gate[j];
             input = gated.data();
         }
-        return DotRows(weight, input, output, in, out);
+        // ggml reference parity: quantize the activation vector the same way
+        // llama.cpp's CPU backend does for the weight quant before the dot.
+        // The embedding lookup above is a row copy and must stay exact.
+        quantized.assign(input, input + in);
+        GGMLPreQuantizeActivation(quantized, view->type);
+        return DotRows(weight, quantized.data(), output, in, out);
     }
 
     // All GGUF 2D tensors are stored with dim[0] contiguous (GGML convention).
@@ -1077,9 +1232,8 @@ private:
             std::fprintf(stderr, "[KV] Invalid layer or prefix at position %zu, layer %zu\n", position, layerIdx);
             return false;
         }
-        const float* all_kv_latent = kvCache->layers[layerIdx].ReadAllKvLatent();
         const float* all_k_rope_raw = kvCache->layers[layerIdx].ReadAllKRopeRaw();
-        if (!all_kv_latent || !all_k_rope_raw) return false;
+        if (!all_k_rope_raw) return false;
         
         // Apply RoPE to query's positional component at current position
         std::vector<float> q_rope(heads * key);
@@ -1114,6 +1268,11 @@ private:
         // DIFF: Test capture at start of AttentionFwd
         DIFF_RECORD("AttentionFwd_Entry", opId, layerIdx, position, "entry_test", q_rope.data(), {(int64_t)heads * key});
         
+        // Debug dump: Q after RoPE at layer 0, position 1
+        if (layerIdx == 0 && position == 1) {
+            debug_dump_tensor("layer0_pos1_q.bin", q_rope.data(), heads * key);
+        }
+        
         // For each head, compute attention over all cached positions
         for (size_t head = 0; head < heads; ++head) {
             // Query for this head (with RoPE applied): q_rope[head * key ... (head+1)*key - 1]
@@ -1130,16 +1289,19 @@ private:
             // Find max score for numerical stability
             float max_score = -INFINITY;
             for (size_t pos = 0; pos < seq_len; ++pos) {
-                const float* kv_latent_pos = kvCache->layers[layerIdx].ReadKvLatent(pos);
+                const float* kv_knope_pos = kvCache->layers[layerIdx].ReadKvKnope(pos);
                 const float* k_rope_raw_pos = kvCache->layers[layerIdx].ReadKRopeRaw(pos);
-                if (!kv_latent_pos || !k_rope_raw_pos) return false;
+                if (!kv_knope_pos || !k_rope_raw_pos) return false;
                 
                 // Reconstruct K for this position and head:
-                // K = [kv_latent (512) per pos] + [k_rope (64) with RoPE at pos]
-                // Per head: K_nope (128) from kv_latent + K_pe (64) from k_rope_raw with RoPE at pos
+                // K = [k_nope (128) per head, up-projected by the B matrix at write
+                //      time and cached per position] + [k_rope (64) with RoPE at pos]
+                // The cached latent is the shared compressed representation
+                // (512 floats) - it is NOT per-head k_nope; reading k_nope from it
+                // overruns the buffer and produces garbage scores for heads 4..15.
                 
-                // K_nope for this head: 128 elements from kv_latent
-                const float* k_nope = kv_latent_pos + head * 128;
+                // K_nope for this head: 128 elements from the cached up-projection
+                const float* k_nope = kv_knope_pos + head * 128;
                 
                 // K_pe: apply YaRN-interpolated RoPE to k_rope_raw at this position
                 float k_pe[64];
@@ -1166,16 +1328,27 @@ private:
                 score *= scale;
                 if (capture_scores) captured_scores[head * seq_len + pos] = score;
                 
+                // Debug dump: K for head 0 at layer 0, position 1
+                if (layerIdx == 0 && position == 1 && head == 0 && pos == 1) {
+                    // Reconstruct full K for this head and position for dumping
+                    std::vector<float> k_full(key);
+                    std::memcpy(k_full.data(), k_nope, 128 * sizeof(float));
+                    std::memcpy(k_full.data() + 128, k_pe, 64 * sizeof(float));
+                    debug_dump_tensor("layer0_pos1_k.bin", k_full.data(), key);
+                }
+                
                 if (score > max_score) max_score = score;
             }
             
             // Compute softmax and weighted sum
             for (size_t pos = 0; pos < seq_len; ++pos) {
-                const float* kv_latent_pos = kvCache->layers[layerIdx].ReadKvLatent(pos);
+                const float* kv_knope_pos = kvCache->layers[layerIdx].ReadKvKnope(pos);
                 const float* k_rope_raw_pos = kvCache->layers[layerIdx].ReadKRopeRaw(pos);
-                if (!kv_latent_pos || !k_rope_raw_pos) return false;
+                if (!kv_knope_pos || !k_rope_raw_pos) return false;
                 
-                const float* k_nope = kv_latent_pos + head * 128;
+                // K_nope from the cached up-projection (see the score pass above);
+                // k_nope must never be read out of the compressed latent.
+                const float* k_nope = kv_knope_pos + head * 128;
                 const float* k_rope_raw = all_k_rope_raw + pos * 64;
                 float k_pe[64];
                 for (size_t i = 0; i < 64; i += 2) {
@@ -1200,15 +1373,23 @@ private:
                 if (capture_scores) captured_weights[head * seq_len + pos] = exp_score;
                 denom += exp_score;
                 
-                // V is the value from expanded KV at this position
-                // kv passed to this function contains [K (3072), V (2048)] for current position
-                const float* v_head = kv + 3072 + head * 128;
+                // V must come from THIS position's cached value vector, never
+                // from the current token's: every cached position contributes
+                // its own V. The cache holds [heads * value] per position in
+                // head-major order, so offset by head * value.
+                const float* v_pos = kvCache->layers[layerIdx].ReadKvValue(pos);
+                if (!v_pos) {
+                    std::fprintf(stderr, "[KV] Missing cached V at position %zu layer %zu\n",
+                                 pos, layerIdx);
+                    return false;
+                }
+                const float* v_head = v_pos + head * value;
                 
                 // DIFF: Capture reconstructed V for this head at this position
                 DIFF_RECORD("MLA_V_RECONSTRUCTED", opId, layerIdx, position, 
                             "v_reconstructed", v_head, {(int64_t)value});
                 
-                for (size_t i = 0; i < 128; ++i) {
+                for (size_t i = 0; i < value; ++i) {
                     out_acc[i] += exp_score * v_head[i];
                 }
             }
@@ -1221,6 +1402,12 @@ private:
             if (capture_scores)
                 for (size_t pos = 0; pos < seq_len; ++pos)
                     captured_weights[head * seq_len + pos] /= denom;
+        
+        // Debug dump: Attention weights for head 0 at layer 0, position 1
+        if (layerIdx == 0 && position == 1 && head == 0) {
+            debug_dump_tensor("layer0_pos1_attn_weights.bin", captured_weights.data(), heads * seq_len);
+        }
+        
         }
         if (capture_scores) {
             DIFF_RECORD("Attention_Scores", opId, layerIdx, position, "scaled_scores",
@@ -1269,7 +1456,11 @@ private:
         
         // Latent decomposition: [512 kv_latent | 64 k_rope_raw]
         std::vector<float> latent(rank + rope);
-        if (!DotRows(kvA, input, latent.data(), hidden, rank + rope)) return false;
+        {
+            std::vector<float> aIn(input, input + hidden);
+            GGMLPreQuantizeActivation(aIn, aView->type);
+            if (!DotRows(kvA, aIn.data(), latent.data(), hidden, rank + rope)) return false;
+        }
         
         // RMSNorm on kv_latent only (first 512 elements)
         double ss = 0;
@@ -1283,7 +1474,11 @@ private:
         
         // B projection: [512] -> [4096] = 16 * (128 key_nope + 128 value)
         std::vector<float> expanded(heads * (noRope + value));
-        if (!DotRows(kvB, kv_latent, expanded.data(), rank, expanded.size())) return false;
+        {
+            std::vector<float> bIn(kv_latent, kv_latent + rank);
+            GGMLPreQuantizeActivation(bIn, bView->type);
+            if (!DotRows(kvB, bIn.data(), expanded.data(), rank, expanded.size())) return false;
+        }
         const size_t kSize = heads * key;  // 3072
         
         // Prepare positional key component with RoPE for this position
@@ -1332,8 +1527,20 @@ private:
                 std::fprintf(stderr, "[KV] Duplicate/gap write at position %zu layer %zu\n", position, layerIdx);
                 return false;
             }
-            // Store kv_latent (512) and k_rope_raw (64) in cache
-            if (!kvCache->layers[layerIdx].WriteLatentKv(kv_latent, k_rope_raw)) return false;
+            // Extract V and K_nope from expanded: expanded is
+            // [16*(128 key_nope + 128 value)] = 16*256 = 4096 with an
+            // interleaved per-head layout (llama.cpp deepseek2 wkv_b view):
+            // inside each head's 256-element block, K_nope starts at offset 0
+            // and V starts at offset noRope (128).
+            // Build V and K_nope arrays [heads*128 = 2048] each.
+            std::vector<float> kv_value(heads * value);
+            std::vector<float> kv_knope(heads * noRope);
+            for (size_t head = 0; head < heads; ++head) {
+                const size_t src = head * (noRope + value);
+                std::memcpy(kv_knope.data() + head * noRope, expanded.data() + src, noRope * sizeof(float));
+                std::memcpy(kv_value.data() + head * value, expanded.data() + src + noRope, value * sizeof(float));
+            }
+            if (!kvCache->layers[layerIdx].WriteLatentKv(kv_latent, k_rope_raw, kv_value.data(), kv_knope.data())) return false;
         }
         
         return true;
@@ -1398,11 +1605,20 @@ private:
                 !rom.GetExpertSlice(downId.id,id,downW) ||
                 gateW.size() != ffn*hidden || upW.size() != ffn*hidden ||
                 downW.size() != hidden*ffn) return false;
-            if (!DotRows(gateW.data(),input,g.data(),hidden,ffn) ||
-                !DotRows(upW.data(),input,u.data(),hidden,ffn)) return false;
+            const auto* gateView = rom.Resolve(gateId.id);
+            const auto* upView = rom.Resolve(upId.id);
+            const auto* downView = rom.Resolve(downId.id);
+            if (!gateView || !upView || !downView) return false;
+            // ggml quantizes the activation vector per expert matmul
+            std::vector<float> qIn(input, input + hidden);
+            GGMLPreQuantizeActivation(qIn, gateView->type);
+            if (!DotRows(gateW.data(),qIn.data(),g.data(),hidden,ffn) ||
+                !DotRows(upW.data(),qIn.data(),u.data(),hidden,ffn)) return false;
             for (size_t j=0;j<ffn;++j)
                 g[j] = (g[j] / (1.0f + std::exp(-g[j]))) * u[j];
-            if (!DotRows(downW.data(),g.data(),tmp.data(),ffn,hidden)) return false;
+            std::vector<float> qSwiglu(g.data(), g.data() + ffn);
+            GGMLPreQuantizeActivation(qSwiglu, downView->type);
+            if (!DotRows(downW.data(),qSwiglu.data(),tmp.data(),ffn,hidden)) return false;
             for (size_t j=0;j<hidden;++j) output[j] += score*tmp[j];
         }
         // Two always-active shared experts are concatenated into a single FFN.
@@ -1419,10 +1635,14 @@ private:
             downView->rank!=2 || downView->dims[0]!=shared || downView->dims[1]!=hidden)
             return false;
         g.resize(shared);u.resize(shared);
-        if (!DotRows(sharedGate,input,g.data(),hidden,shared) ||
-            !DotRows(sharedUp,input,u.data(),hidden,shared)) return false;
+        std::vector<float> qShIn(input, input + hidden);
+        GGMLPreQuantizeActivation(qShIn, gateView->type);
+        if (!DotRows(sharedGate,qShIn.data(),g.data(),hidden,shared) ||
+            !DotRows(sharedUp,qShIn.data(),u.data(),hidden,shared)) return false;
         for (size_t j=0;j<shared;++j) g[j] = (g[j]/(1.0f+std::exp(-g[j])))*u[j];
-        if (!DotRows(sharedDown,g.data(),tmp.data(),shared,hidden)) return false;
+        std::vector<float> qShSwiglu(g.data(), g.data() + shared);
+        GGMLPreQuantizeActivation(qShSwiglu, downView->type);
+        if (!DotRows(sharedDown,qShSwiglu.data(),tmp.data(),shared,hidden)) return false;
         for (size_t j=0;j<hidden;++j) output[j] += tmp[j];
         return true;
     }
@@ -1697,13 +1917,18 @@ std::vector<uint32_t> IRExecutor::Generate(const std::vector<uint32_t>& prompt, 
     }
 
     for (uint32_t i = 0; i < maxTokens; ++i) {
-        if (i > 0 || prompt.empty()) {
-            SetTokenId(next);
-            ClearArena();
-            if (!Execute()) break;
-            AdvancePosition();
-        }
+        // Emit the token sampled from the previous forward
+        // pass (the prefill logits for the first token), then
+        // feed it back and advance one position so the next
+        // sample comes from fresh logits. Pushing before the
+        // execute keeps the token/position alignment exact:
+        // out[i] is the token at position (prompt + i).
         out.push_back(next);
+        if (i + 1 >= maxTokens) break;
+        SetTokenId(next);
+        ClearArena();
+        if (!Execute()) break;
+        AdvancePosition();
         next = SampleToken();
     }
     return out;

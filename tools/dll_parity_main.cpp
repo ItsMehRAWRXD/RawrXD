@@ -93,6 +93,8 @@ double MaxAbsDiff(const std::vector<float>& a, const std::vector<float>& b)
 
 int main(int argc, char* argv[])
 {
+    // Enable differential recorder for tensor debugging
+    g_differential_recorder.Enable(R"(F:\rawrxd\evidence\DIFF_DEBUG_001)");
     const std::string gguf = (argc > 1) ? argv[1]
         : R"(F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf)";
     const std::string evidenceDir = (argc > 2) ? argv[2]
@@ -353,5 +355,7 @@ int main(int argc, char* argv[])
             failed++;
         }
     }
+    g_differential_recorder.SaveAll();
+
+
     return failed == 0 ? 0 : 1;
-}

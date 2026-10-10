@@ -96,6 +96,40 @@ RawrXDCore_EXPORT int RawrXDCore_RunInference(
     void* userData
 );
 
+// Native tokenizer access (RAWRXD_MODELGENIE_NATIVE_CHAT_001).
+// Tokenizes text with the model's native SentencePiece
+// tokenizer - the same GGUFEmbeddedTokenizer implementation
+// the runtime's mg_model_tokenize uses. No BOS is prepended
+// and no chat template is applied; the text is encoded
+// exactly as given.
+// Returns the total token count. When outTokens is non-null
+// up to maxTokens ids are written; pass a null outTokens to
+// query the required capacity.
+RawrXDCore_EXPORT size_t RawrXDCore_Tokenize(
+    const RawrXDModel* model,
+    const char* text,
+    int* outTokens,
+    size_t maxTokens
+);
+
+// Native detokenizer access (RAWRXD_MODELGENIE_NATIVE_CHAT_001).
+// Converts token ids to unescaped UTF-8 text with the model's
+// native tokenizer - the runtime's mg_model_detokenize path,
+// with GPT-2/SentencePiece byte escapes (e.g. U+0120 = space)
+// resolved to raw bytes, matching llama.cpp detokenization.
+// Returns the length written (excluding the null terminator).
+// When outText is null (or outSize is too small), it reports
+// the required buffer size (including the null terminator) in
+// *outSize and returns 0.
+
+RawrXDCore_EXPORT size_t RawrXDCore_Detokenize(
+    const RawrXDModel* model,
+    const int* tokenIds,
+    size_t count,
+    char* outText,
+    size_t* outSize
+);
+
 // Memory Management
 typedef struct RawrXDMemoryStats {
     size_t totalAllocated;

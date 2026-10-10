@@ -15,6 +15,50 @@
 
 #include "gguf_embedded_tokenizer.hpp"
 
+#include "../tokenizer/sentencepiece_encode.hpp"
+
+#include <cstdint>
+
+// Local GPT-2 detokenization: inverse of normalizeGpt2 in sentencepiece_encode.hpp.
+// Maps vocab pieces' byte-to-Unicode escapes (U+0100..U+0143) back to raw bytes.
+// Matches llama.cpp GPT-2 BPE detokenize (unicode_utf8_to_byte_map).
+static std::string DenormalizeGpt2Piece(std::string_view piece)
+{
+    static const std::array<uint32_t, 512> kCptToByte = [] {
+        std::array<uint32_t, 512> m{};
+        m.fill(0xFFFFFFFFu);
+        for (int ch = 0x21; ch <= 0x7E; ++ch) m[static_cast<size_t>(ch)] = static_cast<uint32_t>(ch);
+        for (int ch = 0xA1; ch <= 0xAC; ++ch) m[static_cast<size_t>(ch)] = static_cast<uint32_t>(ch);
+        for (int ch = 0xAE; ch <= 0xFF; ++ch) m[static_cast<size_t>(ch)] = static_cast<uint32_t>(ch);
+        uint32_t n = 0;
+        for (int b = 0; b < 256; ++b) {
+            const bool identity =
+                (b >= 0x21 && b <= 0x7E) || (b >= 0xA1 && b <= 0xAC) || (b >= 0xAE && b <= 0xFF);
+            if (!identity) m[static_cast<size_t>(256u + n++)] = static_cast<uint32_t>(b);
+        }
+        return m;
+    }();
+    std::string out;
+    out.reserve(piece.size());
+    for (size_t i = 0; i < piece.size();) {
+        const unsigned char c0 = static_cast<unsigned char>(piece[i]);
+        if (c0 >= 0xC0 && c0 < 0xE0 && i + 1 < piece.size()) {
+            const uint32_t cp =
+                ((static_cast<uint32_t>(c0 & 0x1F)) << 6) |
+                static_cast<uint32_t>(static_cast<unsigned char>(piece[i + 1]) & 0x3F);
+            const uint32_t b = cp < 512 ? kCptToByte[static_cast<size_t>(cp)] : 0xFFFFFFFFu;
+            if (b != 0xFFFFFFFFu) {
+                out.push_back(static_cast<char>(b));
+                i += 2;
+                continue;
+            }
+        }
+        out.push_back(piece[i]);
+        i += 1;
+    }
+    return out;
+}
+
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -217,6 +261,18 @@ static const char* mg_token_text(const mg_model_t* model, uint32_t id)
     return s.empty() ? nullptr : s.c_str();
 }
 
+// User-facing detokenization: GGUF vocab pieces store the GPT-2
+// byte-to-Unicode escapes (U+0120 = 0x20 space, U+010A = 0x0A newline, ...).
+// Escaped codepoints are mapped back to raw bytes - the llama.cpp GPT-2 BPE
+// detokenize behavior (unicode_utf8_to_byte_map un-mapping) for
+// tokenizer.ggml.model=gpt2 vocabularies such as deepseek-llm.
+static std::string mg_token_text_unescaped(const mg_model_t* model, uint32_t id)
+{
+    const char* text = mg_token_text(model, id);
+    if (!text) return std::string();
+    return DenormalizeGpt2Piece(text);
+}
+
 MG_RUNTIME_API mg_error_t mg_model_tokenize(
     mg_model_t* model,
     const char* text,
@@ -250,12 +306,42 @@ MG_RUNTIME_API bool mg_model_token_text(
 {
     if (!out_buf || out_buf_size == 0) return false;
     out_buf[0] = '\0';
-    const char* text = mg_token_text(model, token_id);
-    if (!text) return false;
-    const size_t len = std::strlen(text);
+    // Delivered text is unescaped (sentencepiece/GPT-2 byte escapes resolved),
+    // per the documented contract of this export.
+    const std::string text = mg_token_text_unescaped(model, token_id);
+    const size_t len = text.size();
     if (len + 1 > out_buf_size) return false;
-    std::memcpy(out_buf, text, len + 1);
+    std::memcpy(out_buf, text.data(), len + 1);
     return true;
+}
+
+// Detokenize ids -> unescaped UTF-8 text (llama.cpp detokenize parity for
+// gpt2/deepseek-llm vocabularies). Returns the length written (excluding the
+// null terminator); a too-small buffer reports the required size in out_size.
+MG_RUNTIME_API size_t mg_model_detokenize(
+    const mg_model_t* model,
+    const uint32_t* token_ids,
+    size_t token_count,
+    char* out_buf,
+    size_t* out_size)
+{
+    if (!model || !out_size || (!token_ids && token_count)) {
+        if (out_size) *out_size = 0;
+        return 0;
+    }
+    std::string text;
+    text.reserve(token_count * 4);
+    for (size_t i = 0; i < token_count; ++i) {
+        text += mg_token_text_unescaped(model, token_ids[i]);
+    }
+    const size_t required = text.size() + 1;
+    if (out_buf && *out_size >= required) {
+        std::memcpy(out_buf, text.data(), required);
+        *out_size = required;
+        return text.size();
+    }
+    *out_size = required;
+    return 0;
 }
 
 //=============================================================================
@@ -290,7 +376,8 @@ MG_RUNTIME_API mg_error_t mg_context_generate(
 
     for (uint32_t id : produced) {
         if (!callback) break;
-        if (!callback(id, mg_token_text(context->model, id), callback_user_data)) break;
+        const std::string text = mg_token_text_unescaped(context->model, id);
+        if (!callback(id, text.c_str(), callback_user_data)) break;
     }
     return MG_SUCCESS;
 }
@@ -403,7 +490,8 @@ MG_RUNTIME_API mg_error_t mg_context_generate_text(
 
     for (uint32_t id : produced) {
         if (!callback) break;
-        if (!callback(id, mg_token_text(context->model, id), callback_user_data)) break;
+        const std::string text = mg_token_text_unescaped(context->model, id);
+        if (!callback(id, text.c_str(), callback_user_data)) break;
     }
     return MG_SUCCESS;
 }

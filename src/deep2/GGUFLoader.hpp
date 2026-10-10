@@ -19,6 +19,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include "QuantTypeTable.hpp"
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -36,28 +37,6 @@
 #endif
 
 namespace Deep2 {
-
-enum class GGMLType : uint32_t {
-    GGML_TYPE_F32     = 0,
-    GGML_TYPE_F16     = 1,
-    GGML_TYPE_Q4_0    = 2,
-    GGML_TYPE_Q4_1    = 3,
-    GGML_TYPE_Q5_0    = 6,
-    GGML_TYPE_Q5_1    = 7,
-    GGML_TYPE_Q8_0    = 8,
-    GGML_TYPE_Q2_K    = 10,
-    GGML_TYPE_Q3_K    = 11,
-    GGML_TYPE_Q4_K    = 12,
-    GGML_TYPE_Q5_K    = 13,
-    GGML_TYPE_Q6_K    = 14,
-    GGML_TYPE_Q8_K    = 15,
-    GGML_TYPE_I8      = 24,
-    GGML_TYPE_I16     = 25,
-    GGML_TYPE_I32     = 26,
-    GGML_TYPE_I64     = 27,
-    GGML_TYPE_F64     = 28,
-    GGML_TYPE_BF16    = 30,
-};
 
 enum class GGUFMetaType : uint32_t {
     UINT8   = 0,
