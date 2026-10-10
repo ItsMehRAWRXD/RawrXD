@@ -331,6 +331,45 @@ bool VulkanCompute::CreateInstance() {
     return true;
 }
 
+std::vector<VulkanCompute::EnumeratedDevice> VulkanCompute::EnumerateDevices() {
+    std::vector<EnumeratedDevice> out;
+
+    VkApplicationInfo app{};
+    app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    app.pApplicationName = "RawrXD-Enumerate";
+    app.apiVersion = VK_API_VERSION_1_1;
+
+    VkInstanceCreateInfo ci{};
+    ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    ci.pApplicationInfo = &app;
+
+    VkInstance inst = VK_NULL_HANDLE;
+    if (vkCreateInstance(&ci, nullptr, &inst) != VK_SUCCESS) return out;
+
+    uint32_t n = 0;
+    vkEnumeratePhysicalDevices(inst, &n, nullptr);
+    if (n == 0) { vkDestroyInstance(inst, nullptr); return out; }
+
+    std::vector<VkPhysicalDevice> devs(n);
+    vkEnumeratePhysicalDevices(inst, &n, devs.data());
+
+    out.reserve(n);
+    for (uint32_t i = 0; i < n; ++i) {
+        VkPhysicalDeviceProperties p{};
+        vkGetPhysicalDeviceProperties(devs[i], &p);
+        EnumeratedDevice e;
+        e.index = (int32_t)i;
+        e.name = p.deviceName;
+        e.vendor_id = p.vendorID;
+        e.device_id = p.deviceID;
+        e.device_type = p.deviceType;
+        out.push_back(e);
+    }
+
+    vkDestroyInstance(inst, nullptr);
+    return out;
+}
+
 bool VulkanCompute::SelectPhysicalDevice() {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(instance_, &device_count, nullptr);
@@ -372,9 +411,17 @@ bool VulkanCompute::SelectPhysicalDevice() {
             best_device_idx = i;
         }
 
-        std::cout << "Found device " << i << ": " << props.deviceName 
-                  << " (Vendor: 0x" << std::hex << vendor_id << std::dec 
+        std::cout << "Found device " << i << ": " << props.deviceName
+                  << " (Vendor: 0x" << std::hex << vendor_id << std::dec
                   << ", Score: " << score << ")" << std::endl;
+    }
+
+    // Multi-GPU: honour an explicit device index when one was requested.
+    // This lets a single process drive more than one GPU.
+    if (preferred_device_index_ >= 0 &&
+        (uint32_t)preferred_device_index_ < device_count) {
+        best_device_idx = preferred_device_index_;
+        std::cout << "Pinning to requested device index " << best_device_idx << std::endl;
     }
 
     if (best_device_idx < 0) {
@@ -383,6 +430,7 @@ bool VulkanCompute::SelectPhysicalDevice() {
     }
 
     physical_device_ = devices[best_device_idx];
+    active_device_index_ = best_device_idx;
     vkGetPhysicalDeviceProperties(physical_device_, &device_info_.properties);
     vkGetPhysicalDeviceMemoryProperties(physical_device_, &device_info_.memory_props);
     
@@ -942,8 +990,11 @@ bool VulkanCompute::DispatchMatMul(uint32_t input_a_idx,
     // --- 3. Execute Command Buffer (Dispatch) ---
     bool success = ExecuteSingleTimeCommands([&](VkCommandBuffer cmd_buffer) {
         
-        // Push Constants (M, K, N dimensions to shader)
-        uint32_t push_data[3] = {M, K, N};
+        // Push Constants. NOTE: the shader declares its push-constant block as
+        // { m, n, k }, so the values MUST be written in that order. This was
+        // previously { M, K, N }, which silently swapped n and k and made the
+        // GPU compute a differently-shaped matmul than the CPU reference.
+        uint32_t push_data[3] = {M, N, K};
         vkCmdPushConstants(cmd_buffer, 
                            it->second.layout, 
                            VK_SHADER_STAGE_COMPUTE_BIT, 

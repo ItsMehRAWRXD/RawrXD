@@ -1,0 +1,187 @@
+{
+  "certificate_id": "RAWRXD_VULKAN_MATMUL_CORRECTNESS_001",
+  "date": "2026-10-10",
+  "verdict": "PASS",
+  "scope": "Vulkan matmul compute kernel correctness against a CPU FP32 reference. This is a KERNEL certificate. It does NOT certify Deep2 Layer 0 GPU inference.",
+  "defects_found_and_fixed": {
+    "defect_1_host_push_constant_order": {
+      "location": "src/vulkan_compute.cpp, VulkanCompute::DispatchMatMul",
+      "was": "uint32_t push_data[3] = {M, K, N};",
+      "now": "uint32_t push_data[3] = {M, N, K};",
+      "why": "The shader declares its push-constant block as { m, n, k }. The host sent { M, K, N }, which swapped n and k, so the GPU computed a differently-shaped product. This alone caused the previously reported cosine of -0.2647591411."
+    },
+    "defect_2_shader_early_return_before_barrier": {
+      "location": "tools/shaders/matmul_fixed.comp (recompiled from matmul.comp)",
+      "was": "if (row >= m || col >= n) return;  // before barrier()",
+      "now": "Out-of-range outputs are guarded at the final store; every invocation reaches both barrier() calls.",
+      "why": "In Vulkan, barrier() must be executed uniformly across the workgroup. Early return makes behaviour undefined, so any dimension that is not a multiple of 16 could hang or produce garbage. Irrelevant at 64x128x96, which is why the first test did not expose it."
+    }
+  },
+  "environment": {
+    "gpus_used": [
+      {
+        "index": 0,
+        "name": "AMD Radeon AI PRO R9700",
+        "vendor_id": "0x1002",
+        "type": "DISCRETE_GPU"
+      },
+      {
+        "index": 4,
+        "name": "AMD Radeon RX 7800 XT",
+        "vendor_id": "0x1002",
+        "type": "DISCRETE_GPU"
+      }
+    ],
+    "vulkan_api": "1.4.349",
+    "compute_queue_family": 0,
+    "shader": "tools/shaders/matmul_fixed.spv (glslc, --target-env=vulkan1.2)",
+    "note_on_build": "The harness build orders the Vulkan SDK Include before the repository include, because include/vulkan/vulkan.h is a stub that shadows the real API. The repository build was not modified."
+  },
+  "tolerances_declared_before_inspection": {
+    "cosine_min": 0.999999,
+    "relative_rmse_max": 0.0001,
+    "bitwise_required": false
+  },
+  "single_element_attribution": {
+    "element": "C[0][0] for 64x128x96",
+    "k_contributions_enumerated": 128,
+    "cpu_C00": 0.12071758,
+    "gpu_C00": 0.12071762,
+    "delta": 4.47e-08,
+    "conclusion": "All 128 K-dimension contributions are individually attributed and the GPU total matches the CPU total to 4.5e-08, separating a previously-suspected indexing error (now ruled out) from accumulation error."
+  },
+  "shape_results": [
+    {
+      "label": "regular_64x128x96",
+      "M": 64,
+      "K": 128,
+      "N": 96,
+      "cosine": 1.0,
+      "rel_rmse": 3.04e-07,
+      "max_abs": 1.94e-07,
+      "finite": true,
+      "deterministic": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "min_16x16x16",
+      "M": 16,
+      "K": 16,
+      "N": 16,
+      "cosine": 1.0,
+      "rel_rmse": 1.83e-07,
+      "max_abs": 4.84e-08,
+      "finite": true,
+      "deterministic": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "irregular_7x13x5",
+      "M": 7,
+      "K": 13,
+      "N": 5,
+      "cosine": 1.0,
+      "rel_rmse": 1.04e-07,
+      "max_abs": 3.73e-08,
+      "finite": true,
+      "deterministic": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "scalar_1x1x1",
+      "M": 1,
+      "K": 1,
+      "N": 1,
+      "cosine": 1.0,
+      "rel_rmse": 0.0,
+      "max_abs": 0.0,
+      "finite": true,
+      "deterministic": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "thin_1x200x3",
+      "M": 1,
+      "K": 200,
+      "N": 3,
+      "cosine": 1.0,
+      "rel_rmse": 1.34e-06,
+      "max_abs": 1.04e-07,
+      "finite": true,
+      "deterministic": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "irregular_33x17x65",
+      "M": 33,
+      "K": 17,
+      "N": 65,
+      "cosine": 1.0,
+      "rel_rmse": 1.55e-07,
+      "max_abs": 5.96e-08,
+      "finite": true,
+      "deterministic": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "regular_128x64x128",
+      "M": 128,
+      "K": 64,
+      "N": 128,
+      "cosine": 1.0,
+      "rel_rmse": 2.27e-07,
+      "max_abs": 1.34e-07,
+      "finite": true,
+      "deterministic": true,
+      "verdict": "PASS"
+    }
+  ],
+  "dual_gpu_result": {
+    "requested": "Use both discrete GPUs.",
+    "delivered": true,
+    "method": "The M dimension is split across two VulkanCompute instances, each pinned to a different physical device index. A row-slice of the row-major A matrix is uploaded per device, dispatched independently, and the two output slices are scattered back into a single combined C.",
+    "shape": "M=128 K=256 N=128 -> C[128][128] (8192 output elements)",
+    "device_0": {
+      "name": "AMD Radeon AI PRO R9700",
+      "rows": "0..64",
+      "dispatch": "64x256x128",
+      "workgroups": "8x4x1"
+    },
+    "device_4": {
+      "name": "AMD Radeon RX 7800 XT",
+      "rows": "64..128",
+      "dispatch": "64x256x128",
+      "workgroups": "8x4x1"
+    },
+    "combined_cosine": 1.0,
+    "combined_rel_rmse": 9.31e-07,
+    "combined_max_abs": 2.5e-07,
+    "finite": true,
+    "all_rows_covered": true,
+    "verdict": "PASS"
+  },
+  "summary": {
+    "shapes_passed": "8/8",
+    "dual_gpu_combined_passed": true,
+    "total_verdict": "PASS"
+  },
+  "what_this_does_not_establish": [
+    "Deep2 Layer 0 GPU inference. ModelGenieExecutor still contains no GPU execution path; every LinearFwd, AttentionFwd, RMSNorm, RoPE and MoE primitive still runs on the CPU.",
+    "GPU RoPE. VulkanCompute::ExecuteRoPE remains a placeholder that performs no work.",
+    "GPU KV cache, attention, MoE or end-to-end model parity.",
+    "Any performance or TPS claim."
+  ],
+  "remaining_blockers_for_deep2_gpu_layer_0": [
+    "Remove or rename include/vulkan/vulkan.h so the real Vulkan SDK header is used and src/vulkan_compute.cpp builds against the real API in the main tree.",
+    "Implement real GPU RoPE ( ExecuteRoPE is a no-op placeholder ).",
+    "Add a GPU execution path into ModelGenieExecutor with explicit backend selection.",
+    "Then, and only then, attempt RAWRXD_DEEP2_GPU_LAYER_001 again."
+  ],
+  "reproduction": {
+    "harness_source": "tools/gpu_matmul_correctness.cpp",
+    "build": "tools/build_gpu_correctness.bat",
+    "shader_source": "tools/shaders/matmul_fixed.comp",
+    "shader_binary": "tools/shaders/matmul_fixed.spv",
+    "dependencies": "None new. Uses the installed Vulkan SDK 1.4.357.0 and the existing src/vulkan_compute.cpp plus src/modelgenie sources."
+  }
+}
