@@ -1,1 +1,1 @@
-ninja: warning: premature end of file; recovering
+cl : Command line warning D9002 : ignoring unknown option '/std=c++20'

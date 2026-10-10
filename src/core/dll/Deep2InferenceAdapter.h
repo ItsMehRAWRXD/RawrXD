@@ -85,6 +85,14 @@ extern "C" void Deep2_GetMemoryInfo(
 // Engine version
 extern "C" const char* Deep2_GetVersion();
 
+// DEEP2_RUNTIME_OWNERSHIP_001: the authority this shim delegates to. Exposed so
+// a client can verify (rather than assume) that both entry points share one
+// runtime: the same mg_model_t* / mg_context_t* back both APIs.
+typedef struct mg_model_t mg_model_t;
+typedef struct mg_context_t mg_context_t;
+extern "C" mg_model_t* Deep2_AuthorityModel(const Deep2Model* model);
+extern "C" mg_context_t* Deep2_AuthorityContext(const Deep2Context* ctx);
+
 #ifdef __cplusplus
 }
 #endif

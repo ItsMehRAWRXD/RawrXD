@@ -68,6 +68,11 @@ int main(int argc, char** argv) {
     const char* model_path = "F:/rawrxd/DeepSeek-V2-Lite-Chat.Q4_K_M.gguf";
     const char* mode = argc > 1 ? argv[1] : "--len";
     int n = argc > 2 ? std::atoi(argv[2]) : 16;
+    // Optional prompt override (argv[3]): the certification must exercise the
+    // requested token count, and under the corrected numerics a short task
+    // (e.g. listing 300 numbers) finishes at the model's own EOS well before
+    // 512 tokens, so the endurance mode uses a long-form prompt instead.
+    const char* prompt_override = argc > 3 ? argv[3] : nullptr;
 
     if (!RawrXDCore_Initialize()) return 1;
     RawrXDCore_SetLogLevel(RAWXD_LOG_ERROR);
@@ -96,7 +101,8 @@ int main(int argc, char** argv) {
     // ~190 tokens and then emits EOS, so the range must exceed the token
     // budget: 1..1000 needs ~640 tokens at ~0.64 tokens per number.
     const char* prompt =
-        "List the numbers from one to one thousand, separated by commas:";
+        prompt_override ? prompt_override
+            : "List the numbers from one to one thousand, separated by commas:";
     int rc = 0;
 
     if (std::strcmp(mode, "--len") == 0) {
