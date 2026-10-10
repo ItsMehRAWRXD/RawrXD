@@ -9,6 +9,9 @@ on:
 jobs:
   build-and-test:
     runs-on: windows-latest
+    env:
+      # Windows console cp1252 cannot encode the smoke-test's unicode output
+      PYTHONIOENCODING: utf-8
     defaults:
       run:
         working-directory: RawrXD-ModelLoader
@@ -23,7 +26,7 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
           $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
           echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV

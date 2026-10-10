@@ -75,7 +75,6 @@ jobs:
                 -DENABLE_TESTING=ON `
                 -DENABLE_GTEST=ON `
                 -DENABLE_QT_TESTS=ON `
-                -G "Visual Studio 17 2022" `
                 -A x64 `
                 ..
           if ($LASTEXITCODE -ne 0) { exit 1 }
@@ -158,7 +157,7 @@ jobs:
         run: |
           mkdir build_voice -Force
           cd build_voice
-          cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 ..
+          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
           cmake --build . --config Release --target voice_processor_test -j4
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
@@ -197,7 +196,7 @@ jobs:
         run: |
           mkdir build_merge -Force
           cd build_merge
-          cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 ..
+          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
           cmake --build . --config Release --target ai_merge_resolver_test -j4
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
@@ -236,7 +235,7 @@ jobs:
         run: |
           mkdir build_semantic -Force
           cd build_semantic
-          cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 ..
+          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
           cmake --build . --config Release --target semantic_diff_analyzer_test -j4
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
@@ -275,7 +274,7 @@ jobs:
         run: |
           mkdir build_retention -Force
           cd build_retention
-          cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 ..
+          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
           cmake --build . --config Release --target zero_retention_manager_test -j4
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
@@ -314,7 +313,7 @@ jobs:
         run: |
           mkdir build_sandbox -Force
           cd build_sandbox
-          cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 ..
+          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
           cmake --build . --config Release --target sandboxed_terminal_test -j4
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
@@ -353,7 +352,7 @@ jobs:
         run: |
           mkdir build_registry -Force
           cd build_registry
-          cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 ..
+          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
           cmake --build . --config Release --target model_registry_test -j4
           if ($LASTEXITCODE -ne 0) { exit 1 }
 

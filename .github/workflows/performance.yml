@@ -36,9 +36,9 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
           $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
           echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Configure CMake (Release Optimized)
@@ -139,9 +139,9 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
           $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
           echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build Concurrency Tests
@@ -195,9 +195,9 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
           $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
           echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Install OpenCppCoverage
@@ -273,9 +273,9 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -O "$PWD\Qt"
           $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
           echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build with AddressSanitizer
