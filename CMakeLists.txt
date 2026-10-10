@@ -354,6 +354,32 @@ if(ENABLE_VULKAN)
     if(Vulkan_FOUND)
         message(STATUS "Vulkan found: ${Vulkan_VERSION}")
         add_compile_definitions(HAVE_VULKAN=1)
+
+        # Point include/vulkan/vulkan.h at the real SDK header. Without this,
+        # that file shadows <vulkan/vulkan.h> with a stub that has no vk*
+        # entry points and no Vk*CreateInfo structs, which makes
+        # src/vulkan_compute.cpp uncompilable. Normalise to forward slashes so
+        # the path survives being embedded in a string literal definition.
+        set(_rawrxd_vk_inc "${Vulkan_INCLUDE_DIRS}")
+        if(NOT _rawrxd_vk_inc)
+            set(_rawrxd_vk_inc "${Vulkan_INCLUDE_DIR}")
+        endif()
+        if(_rawrxd_vk_inc)
+            file(TO_CMAKE_PATH "${_rawrxd_vk_inc}" _rawrxd_vk_inc)
+            set(_rawrxd_vk_hdr "${_rawrxd_vk_inc}/vulkan/vulkan.h")
+            if(EXISTS "${_rawrxd_vk_hdr}")
+                # BEFORE so the real SDK header is selected rather than the
+                # local stub. It also puts vk_video/ on the search path, which
+                # vulkan_core.h needs for its transitive includes.
+                include_directories(BEFORE SYSTEM "${_rawrxd_vk_inc}")
+                add_compile_definitions(
+                    RAWXRD_VULKAN_SDK_HEADER="${_rawrxd_vk_hdr}")
+                message(STATUS "Vulkan header: ${_rawrxd_vk_hdr}")
+            else()
+                message(WARNING "Vulkan found but header not located at ${_rawrxd_vk_hdr}; the local stub will be used and real GPU code will not compile")
+            endif()
+        endif()
+
         set(GPU_BACKEND_LIBS ${GPU_BACKEND_LIBS} Vulkan::Vulkan)
     else()
         message(STATUS "Vulkan not found - Vulkan Compute support disabled")
@@ -2532,6 +2558,156 @@ if(RAWRXD_BUILD_TESTS)
     else()
         list(APPEND RAWRXD_QT_TARGETS test-suite)
         message(STATUS "Qt-dependent test suite EXCLUDED (Qt6 not installed)")
+    endif()
+
+    # ------------------------------------------------------------------
+    # Component tests (Qt-coupled components): voice_processor, terminal
+    # sandbox, semantic diff, model registry, zero retention, AI merge
+    # resolver. The components themselves live in src/orchestration,
+    # src/terminal, src/git and src/ and are Qt6-based, so these targets
+    # are configured only when Qt6 is present. Each is additionally
+    # guarded on its sources being present; missing pieces are REPORTED,
+    # never silently skipped. Build with Qt6 + gtest available (the CI
+    # component jobs provision both).
+    # ------------------------------------------------------------------
+    # GoogleTest: provisioned by the CI component jobs into 3rdparty/googletest
+    # (renamed from the downloaded archive). Without it the component targets
+    # are excluded and reported rather than failing configure.
+    set(RAWRXD_GTEST_AVAILABLE OFF)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/3rdparty/googletest/CMakeLists.txt")
+        set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+        set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+        add_subdirectory(3rdparty/googletest EXCLUDE_FROM_ALL)
+        set(RAWRXD_GTEST_AVAILABLE ON)
+    else()
+        message(STATUS "Component tests: 3rdparty/googletest not present - "
+            "GoogleTest-based component tests will be excluded")
+    endif()
+    if(Qt6_FOUND AND RAWRXD_GTEST_AVAILABLE AND EXISTS "${CMAKE_SOURCE_DIR}/tests/voice_processor_test.cpp")
+        add_executable(voice_processor_test
+            tests/voice_processor_test.cpp
+            src/orchestration/voice_processor.cpp
+        )
+        target_include_directories(voice_processor_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests
+        )
+        target_link_libraries(voice_processor_test PRIVATE
+            Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Multimedia
+            Qt6::Test GTest::gtest
+        )
+        set_target_properties(voice_processor_test PROPERTIES
+            AUTOMOC ON RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+        add_test(NAME voice-processor COMMAND voice_processor_test)
+    else()
+        list(APPEND RAWRXD_QT_TARGETS voice_processor_test)
+        message(STATUS "voice_processor_test EXCLUDED (Qt6 or sources absent)")
+    endif()
+
+    if(Qt6_FOUND AND RAWRXD_GTEST_AVAILABLE AND EXISTS "${CMAKE_SOURCE_DIR}/tests/sandboxed_terminal_test.cpp")
+        add_executable(sandboxed_terminal_test
+            tests/sandboxed_terminal_test.cpp
+            src/terminal/sandboxed_terminal.cpp
+        )
+        target_include_directories(sandboxed_terminal_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests
+        )
+        target_link_libraries(sandboxed_terminal_test PRIVATE
+            Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network
+            Qt6::Test GTest::gtest
+        )
+        set_target_properties(sandboxed_terminal_test PROPERTIES
+            AUTOMOC ON RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+        add_test(NAME sandboxed-terminal COMMAND sandboxed_terminal_test)
+    else()
+        list(APPEND RAWRXD_QT_TARGETS sandboxed_terminal_test)
+        message(STATUS "sandboxed_terminal_test EXCLUDED (Qt6 or sources absent)")
+    endif()
+
+    if(Qt6_FOUND AND RAWRXD_GTEST_AVAILABLE AND EXISTS "${CMAKE_SOURCE_DIR}/tests/semantic_diff_analyzer_test.cpp")
+        add_executable(semantic_diff_analyzer_test
+            tests/semantic_diff_analyzer_test.cpp
+            src/git/semantic_diff_analyzer.cpp
+        )
+        target_include_directories(semantic_diff_analyzer_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests
+        )
+        target_link_libraries(semantic_diff_analyzer_test PRIVATE
+            Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network
+            Qt6::Test GTest::gtest
+        )
+        set_target_properties(semantic_diff_analyzer_test PROPERTIES
+            AUTOMOC ON RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+        add_test(NAME semantic-diff-analyzer COMMAND semantic_diff_analyzer_test)
+    else()
+        list(APPEND RAWRXD_QT_TARGETS semantic_diff_analyzer_test)
+        message(STATUS "semantic_diff_analyzer_test EXCLUDED (Qt6 or sources absent)")
+    endif()
+
+    if(Qt6_FOUND AND RAWRXD_GTEST_AVAILABLE AND EXISTS "${CMAKE_SOURCE_DIR}/tests/model_registry_test.cpp")
+        add_executable(model_registry_test
+            tests/model_registry_test.cpp
+            src/model_registry.cpp
+        )
+        target_include_directories(model_registry_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests
+        )
+        target_link_libraries(model_registry_test PRIVATE
+            Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Sql
+            Qt6::Test GTest::gtest
+        )
+        set_target_properties(model_registry_test PROPERTIES
+            AUTOMOC ON RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+        add_test(NAME model-registry COMMAND model_registry_test)
+    else()
+        list(APPEND RAWRXD_QT_TARGETS model_registry_test)
+        message(STATUS "model_registry_test EXCLUDED (Qt6 or sources absent)")
+    endif()
+
+    if(Qt6_FOUND AND RAWRXD_GTEST_AVAILABLE AND EXISTS "${CMAKE_SOURCE_DIR}/tests/zero_retention_manager_test.cpp")
+        add_executable(zero_retention_manager_test
+            tests/zero_retention_manager_test.cpp
+            src/terminal/zero_retention_manager.cpp
+        )
+        target_include_directories(zero_retention_manager_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests
+        )
+        target_link_libraries(zero_retention_manager_test PRIVATE
+            Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network
+            Qt6::Test GTest::gtest
+        )
+        set_target_properties(zero_retention_manager_test PROPERTIES
+            AUTOMOC ON RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+        add_test(NAME zero-retention COMMAND zero_retention_manager_test)
+    else()
+        list(APPEND RAWRXD_QT_TARGETS zero_retention_manager_test)
+        message(STATUS "zero_retention_manager_test EXCLUDED (Qt6 or sources absent)")
+    endif()
+
+    if(Qt6_FOUND AND RAWRXD_GTEST_AVAILABLE AND EXISTS "${CMAKE_SOURCE_DIR}/src/git/ai_merge_resolver.cpp")
+        add_executable(ai_merge_resolver_test
+            tests/ai_merge_resolver_test.cpp
+            src/git/ai_merge_resolver.cpp
+        )
+        target_include_directories(ai_merge_resolver_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests
+        )
+        target_link_libraries(ai_merge_resolver_test PRIVATE
+            Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network
+            Qt6::Test GTest::gtest
+        )
+        set_target_properties(ai_merge_resolver_test PROPERTIES
+            AUTOMOC ON RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+        add_test(NAME ai-merge-resolver-command COMMAND ai_merge_resolver_test)
+    else()
+        list(APPEND RAWRXD_QT_TARGETS ai_merge_resolver_test)
+        message(STATUS "ai_merge_resolver_test EXCLUDED (Qt6 or sources absent)")
     endif()
 endif()
 

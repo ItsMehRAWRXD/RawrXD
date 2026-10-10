@@ -158,12 +158,33 @@
     "combined_max_abs": 2.5e-07,
     "finite": true,
     "all_rows_covered": true,
-    "verdict": "PASS"
+    "verdict": "PASS_WITH_INTERMITTENT_FAILURE",
+    "observed_repeatability": "10 runs: 9 PASS, 1 FAIL",
+    "passing_metrics_when_correct": {
+      "cosine": 1.0,
+      "rel_rmse": 9.31e-07,
+      "max_abs": 2.5e-07,
+      "finite": true
+    },
+    "intermittent_failure": {
+      "observed": true,
+      "occurrences": "1 of 10 clean-process runs",
+      "failing_metrics": {
+        "cosine": 0.7026019831,
+        "rel_rmse": 0.712,
+        "max_abs": 0.148,
+        "finite": true
+      },
+      "when": "On the first run immediately after rebuilding with the modified include/vulkan/vulkan.h. The following 8 consecutive runs all passed with identical correct metrics.",
+      "not_root_caused": true,
+      "note": "Both devices still enumerated, dispatched and read back; rows_done was 128 of 128. The compute shader itself is proven correct (7 shapes x 10 runs, always cos 1.0), and ExecuteSingleTimeCommands is fully synchronous (fence + vkWaitForFences). The remaining suspicion is a first-initialisation or driver interaction when two AMD devices are driven from one process, but this is not established.",
+      "consequence": "The dual-GPU path is correct when it succeeds and is deterministic within a run, but it is not yet demonstrably reliable. Treat dual-GPU as qualified rather than fully certified."
+    }
   },
   "summary": {
     "shapes_passed": "8/8",
-    "dual_gpu_combined_passed": true,
-    "total_verdict": "PASS"
+    "dual_gpu_combined_passed": "9 of 10 runs",
+    "total_verdict": "PASS (single-device kernel fully verified; dual-GPU qualified)"
   },
   "what_this_does_not_establish": [
     "Deep2 Layer 0 GPU inference. ModelGenieExecutor still contains no GPU execution path; every LinearFwd, AttentionFwd, RMSNorm, RoPE and MoE primitive still runs on the CPU.",
@@ -183,5 +204,14 @@
     "shader_source": "tools/shaders/matmul_fixed.comp",
     "shader_binary": "tools/shaders/matmul_fixed.spv",
     "dependencies": "None new. Uses the installed Vulkan SDK 1.4.357.0 and the existing src/vulkan_compute.cpp plus src/modelgenie sources."
+  },
+  "vulkan_header_resolution_fix": {
+    "problem": "include/vulkan/vulkan.h shadowed <vulkan/vulkan.h> with a stub that declared only opaque handles. It provides no Vk*CreateInfo structs, no vk* entry points, and several VK_STRUCTURE_TYPE_* macros whose values disagree with the specification. src/vulkan_compute.cpp (66 KB, 8 real vk* dispatch calls) therefore could not compile in the main tree.",
+    "fix": [
+      "include/vulkan/vulkan.h now forwards to the real SDK header via RAWXRD_VULKAN_SDK_HEADER when the build defines it and the file exists, and falls back to the dependency-free stub otherwise.",
+      "CMakeLists.txt: after find_package(Vulkan), when Vulkan_FOUND, define RAWXRD_VULKAN_SDK_HEADER to the absolute SDK header path and add the SDK include dir with include_directories(BEFORE SYSTEM ...) so the real header is selected and vk_video/ is on the search path for vulkan_core.h transitive includes."
+    ],
+    "verification": "Compiled src/vulkan_compute.cpp using only the repository include directory plus RAWXRD_VULKAN_SDK_HEADER. It now emits only the two pre-existing size_t-to-int warnings and produces an object file. Before the fix the same compile failed with 100+ errors (unknown VkFenceCreateInfo, unknown vkCreateFence, unknown VK_TRUE).",
+    "preserved": "Dependency-free builds without a Vulkan SDK still configure; the stub remains as the fallback path."
   }
 }
