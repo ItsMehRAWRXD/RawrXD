@@ -20,7 +20,7 @@
     {
       "gate": "GIT_COMMIT",
       "value": "INFO",
-      "detail": "96b090335f63ef3f339ed8aa087d83bc51a2c6f1"
+      "detail": "aa52fa36bf7b1e647e808b39197bc622fe49d6ef"
     },
     {
       "gate": "MODEL_SHA256",

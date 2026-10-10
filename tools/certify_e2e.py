@@ -153,12 +153,10 @@ def main():
 
     # ---- certificate-level -------------------------------------------------
     all_pass = all(g["value"] == "PASS" for g in gates)
-    verify_ok = run_independent_verifier()
     gates.append({"gate": "CERTIFICATE_VERIFIER",
-                  "value": "PASS" if verify_ok else "FAIL",
+                  "value": "PENDING",
                   "detail": "tools/verify_e2e_cert.py re-checks every gate from raw "
                             "evidence artifacts (re-hashes, re-computes positional metrics)"})
-    all_pass = all_pass and verify_ok
     gates.append({"gate": "VERDICT", "value": "PASS" if all_pass else "FAIL",
                   "detail": "certificate RAWRXD_CORE_DLL_NATIVE_E2E_001"})
     gates.append({"gate": "TOKENIZER_FULL_REFERENCE",
@@ -186,10 +184,28 @@ def main():
             f.write("%s=%s\n" % (g["gate"], g["value"]))
             f.write("  %s\n" % g["detail"])
 
+    # verify the certificate that was just written, then fold the result in
+    verify_ok = run_independent_verifier()
+    for g in gates:
+        if g["gate"] == "CERTIFICATE_VERIFIER":
+            g["value"] = "PASS" if verify_ok else "FAIL"
+        if g["gate"] == "VERDICT":
+            g["value"] = "PASS" if (verify_ok and all_pass) else "FAIL"
+    cert["gates"] = gates
+    with open(cert_path, "w") as f:
+        json.dump(cert, f, indent=2)
+    with open(txt, "w") as f:
+        f.write("RAWRXD_CORE_DLL_NATIVE_E2E_001\n")
+        f.write("MODEL_SHA256=%s\n" % cert["model_sha256"])
+        f.write("GIT_COMMIT=%s\n" % cert["git_commit"])
+        for g in gates:
+            f.write("%s=%s\n" % (g["gate"], g["value"]))
+            f.write("  %s\n" % g["detail"])
+
     for g in gates:
         print("%-28s %s" % (g["gate"], g["value"]))
     print("\ncertificate: %s" % cert_path)
-    return 0 if all_pass else 1
+    return 0 if all(g["value"] == "PASS" for g in gates) else 1
 
 
 # ---------------------------------------------------------------- helpers ----

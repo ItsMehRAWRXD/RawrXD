@@ -66,12 +66,17 @@ bool rawrxd_probe_enabled() {
 
 void rawrxd_probe_register(ggml_tensor * t, const char * name, int il) {
     if (!probe_enabled() || !t || !name) return;
-    // each graph build starts again with layer 0 (first kv_up): keep only the latest build
-    if (il == 0 && std::strcmp(name, "kv_up") == 0) {
+    // each graph build starts again with layer 0 (first registered tensor):
+    // keep only the latest build
+    if (il == 0 && std::strcmp(name, "q_proj") == 0) {
         probe_last_build() = probe_registry();
         probe_registry().clear();
         ++probe_epoch();
     }
+    // mark as a graph output: without this the graph allocator is free to
+    // reuse the tensor's buffer once its consumers are done, and the dump
+    // would read whatever a later op wrote there
+    ggml_set_output(t);
     probe_registry().push_back({t, name, il, probe_epoch()});
 }
 
