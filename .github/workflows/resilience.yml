@@ -37,7 +37,7 @@ jobs:
       - name: Configure (CMake, tests only, no Qt)
         shell: pwsh
         run: |
-          cmake -B build-resilience -G "Visual Studio 17 2022" -A x64 `
+          cmake -B build-resilience -A x64 `
                 -DRAWRXD_BUILD_TESTS=ON -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF `
                 -DUSE_ZLIB_FETCHCONTENT=OFF
           if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
