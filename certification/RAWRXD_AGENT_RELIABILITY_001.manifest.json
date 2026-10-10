@@ -1,6 +1,6 @@
 {
   "certification_id": "RAWRXD_AGENT_RELIABILITY_001",
-  "generated_utc": "2026-10-10T22:48:08Z",
+  "generated_utc": "2026-10-10T22:56:04Z",
   "environment": {
     "os": "Microsoft Windows NT 10.0.26200.0",
     "architecture": "AMD64",
@@ -8,22 +8,15 @@
     "compiler": "MSVC (from VS BuildTools)"
   },
   "source": {
-    "commit": "7db0e113849b8175271f03e216df278ff15e6160",
+    "commit": "61c45e00fffa4bef22232ffb1edda5512e9169c5",
     "branch": "ci/github-control-loop-001",
-    "dirty_in_scope": [
-      "src/agent/adaptive_retry.cpp",
-      "src/agentic/conflict_resolution.cpp",
-      "tests/agentic_resilience/agentic_resilience_test.cpp",
-      "CMakeLists.txt",
-      ".github/workflows/resilience.yml",
-      "scripts/certify_agent_reliability.ps1"
-    ],
-    "source_tree_sha1": "ada097097bc3fff49515c5949311590da054bae8",
+    "dirty_in_scope": [],
+    "source_tree_sha1": "23e00929823c7101e2e6ff2947bc7a76c054cd4c",
     "note": "Only files covered by this certification are checked; the workspace contains many pre-existing untracked artifacts outside this scope."
   },
   "artifact": {
     "name": "agentic-resilience-tests.exe",
-    "sha256": "544c2301422d65137b68103ce8fbebb6e2062f6e49eeed07c3cfaf69e284fe6f",
+    "sha256": "767d98e1770d51df507149326a3752eaecd2343b48db5efd0244f1e3c40f91af",
     "size_bytes": 423936,
     "path": "build-certification/agentic-resilience-tests.exe",
     "reproducibility_note": "IMPORTANT: MSVC builds are NOT bit-for-bit deterministic (timestamps and local paths are embedded), so this SHA256 will differ on every rebuild even from identical sources. It identifies the specific binary that was executed for this certification; it is NOT a reproducible-build proof. For reproducible provenance use source.source_tree_sha1, or re-run the suite and confirm the same 148/148 pass."

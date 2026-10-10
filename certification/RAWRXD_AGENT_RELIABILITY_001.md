@@ -77,9 +77,53 @@ Stated honestly, per the project's "no mocked success" rule:
    messaging, and merge engines are mutex-protected and tested for single-agent
    races, but not proven under a large multi-process load test.
 4. **Not verified on Linux.** This run is MSVC x64 Release only.
-5. **No CI-green claim.** A local green run is not a green GitHub Actions run.
-   All three stages of the workflow have been replayed locally, but the remote
-   Actions execution for this tree is not recorded here.
+5. **No broader CI-green claim.** This certification covers only the agentic
+   resilience workflow, which is genuinely green (see the remote CI evidence
+   below). Other workflows on the branch - `Code Quality & Static Analysis`,
+   `Performance & Benchmark Tests`, and six Vulkan-dependent component jobs
+   under `Automated Unit Tests & Component Tests` - remain failing. Those
+   failures are outside this certification and are **not** claimed by it.
+
+---
+
+## Remote CI evidence (verified against GitHub, not just locally)
+
+Run: **`38093080886`**
+Repository: `ItsMehRAWRXD/RawrXD`
+Head SHA: **`61c45e00fffa4bef22232ffb1edda5512e9169c5`** (this commit)
+Conclusion: **`success`**
+URL: https://github.com/ItsMehRAWRXD/RawrXD/actions/runs/38093080886
+
+| Step | Result | Log evidence |
+|---|---|---|
+| Checkout Code | success | - |
+| Initialize MSVC environment | success | `ilammy/msvc-dev-cmd` populated `cl.exe`/`link.exe` |
+| Configure (self-contained project, Ninja) | success | - |
+| Build | success | - |
+| Test | success | `1/1 Test #1: agentic-resilience ... Passed 0.26 sec` / `100% tests passed out of 1` |
+| Verify no Qt dependency | success | `OK: agentic resilience subsystems are Qt-free (pure C++20).` |
+
+All seven steps succeeded on the GitHub-hosted `windows-latest` runner.
+
+### How this run was obtained (and why it first went unrun)
+
+The earlier green result could not be attributed to the commit that contains the
+build fix. Specifically, run `38092819413` has `headSha c0bdc3a645...`, which is
+the *merge base*, not the commit introducing the self-contained/Ninja build.
+
+The cause was in the workflow's own trigger definition, not the build:
+
+- the `push` filter listed only `main`, `dev`, `feature/**`, `feat/**`,
+  `bugfix/**`, `hotfix/**`, none of which match the active branch
+  `ci/github-control-loop-001`, so pushing to that branch produced **no run at
+  all**;
+- the concurrency group was
+  `${{ github.head_ref && github.ref || github.run_id }}`, which evaluates to a
+  per-run id for branch pushes, so push-triggered runs never superseded each
+  other.
+
+Both defects are fixed, and the run above was produced by `workflow_dispatch`
+on this branch to obtain immediate evidence.
 
 ---
 

@@ -1,12 +1,12 @@
 **********************
 PowerShell transcript start
-Start time: 20261010184755
+Start time: 20261010185555
 Username: RAWRXD\Garrett
 RunAs User: RAWRXD\Garrett
 Configuration Name: 
 Machine: RAWRXD (Microsoft Windows NT 10.0.26200.0)
 Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.6.0_x64__8wekyb3d8bbwe\pwsh.dll -NoProfile -ExecutionPolicy Bypass -File F:\rawrxd\scripts\certify_agent_reliability.ps1
-Process ID: 20220
+Process ID: 8712
 PSVersion: 7.6.6
 PSEdition: Core
 GitCommitId: 7.6.6
@@ -18,15 +18,9 @@ SerializationVersion: 1.1.0.1
 WSManStackVersion: 3.0
 **********************
 [certify] === RAWRXD_AGENT_RELIABILITY_001 certification run ===
-[certify] source commit : 7db0e113849b8175271f03e216df278ff15e6160
+[certify] source commit : 61c45e00fffa4bef22232ffb1edda5512e9169c5
 [certify] branch        : ci/github-control-loop-001
-[certify] in-scope dirty: 6 file(s)
-[certify]    - src/agent/adaptive_retry.cpp
-[certify]    - src/agentic/conflict_resolution.cpp
-[certify]    - tests/agentic_resilience/agentic_resilience_test.cpp
-[certify]    - CMakeLists.txt
-[certify]    - .github/workflows/resilience.yml
-[certify]    - scripts/certify_agent_reliability.ps1
+[certify] in-scope dirty: 0 file(s)
 [certify] configuring + building...
 -- The CXX compiler identification is MSVC 19.44.35228.0
 -- Detecting CXX compiler ABI info
@@ -41,19 +35,19 @@ WSManStackVersion: 3.0
 -- Looking for pthread_create in pthread
 -- Looking for pthread_create in pthread - not found
 -- Found Threads: TRUE
--- Configuring done (2.4s)
+-- Configuring done (1.4s)
 -- Generating done (0.0s)
 -- Build files have been written to: F:/rawrxd/build-certification
 CONFIG_EXITCODE=0
 [1/5] Building CXX object CMakeFiles\agentic-resilience-tests.dir\F_\rawrxd\src\agent\adaptive_retry.cpp.obj
-[2/5] Building CXX object CMakeFiles\agentic-resilience-tests.dir\agentic_resilience_test.cpp.obj
-[3/5] Building CXX object CMakeFiles\agentic-resilience-tests.dir\F_\rawrxd\src\agent\delegated_agents.cpp.obj
+[2/5] Building CXX object CMakeFiles\agentic-resilience-tests.dir\F_\rawrxd\src\agent\delegated_agents.cpp.obj
+[3/5] Building CXX object CMakeFiles\agentic-resilience-tests.dir\agentic_resilience_test.cpp.obj
 [4/5] Building CXX object CMakeFiles\agentic-resilience-tests.dir\F_\rawrxd\src\agentic\conflict_resolution.cpp.obj
 [5/5] Linking CXX executable agentic-resilience-tests.exe
 BUILD_EXITCODE=0
 [certify] executable    : F:\rawrxd\build-certification\agentic-resilience-tests.exe
-[certify] source tree   : ada097097bc3fff49515c5949311590da054bae8
-[certify] exec sha256   : 544c2301422d65137b68103ce8fbebb6e2062f6e49eeed07c3cfaf69e284fe6f  (identifies THIS binary only - see note below)
+[certify] source tree   : 23e00929823c7101e2e6ff2947bc7a76c054cd4c
+[certify] exec sha256   : 767d98e1770d51df507149326a3752eaecd2343b48db5efd0244f1e3c40f91af  (identifies THIS binary only - see note below)
 [certify] size          : 423936 bytes
 [certify] running tests...
 RawrXD Agentic Resilience Test Suite (no dependencies)\
@@ -127,8 +121,8 @@ RawrXD Agentic Resilience Test Suite (no dependencies)\
   stats: detected=1 autoResolved=1 manualRequired=0\
 
 === conflict: manual resolution of an unresolved conflict ===
-  unresolved count=1 cid='1a128008f71-3'
-  manually resolved conflict 1a128008f71-3\
+  unresolved count=1 cid='1a12807d599-3'
+  manually resolved conflict 1a12807d599-3\
 
 === conflict: conflict log export ===
   exported conflict log\
@@ -138,7 +132,7 @@ RawrXD Agentic Resilience Test Suite (no dependencies)\
   dependency violation correctly classified\
 
 === delegation: create, delegate, complete ===
-  task task-1a128008f7b-1 -> success in 0ms\
+  task task-1a12807d59f-1 -> success in 0ms\
   agent state after completion: completed\
 
 === delegation: max delegation depth enforced ===
@@ -200,5 +194,5 @@ ALL TESTS PASSED\
 [certify] manifest      : F:\rawrxd\build-certification\manifest.json
 **********************
 PowerShell transcript end
-End time: 20261010184808
+End time: 20261010185604
 **********************
