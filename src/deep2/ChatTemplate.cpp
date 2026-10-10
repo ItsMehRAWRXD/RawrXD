@@ -201,13 +201,8 @@ const char* ChatTemplate::getTypeName() const {
 // Initialization
 // ============================================================================
 bool ChatTemplate::initFromGGUF(const std::string& ggufPath) {
-    // Use the existing GGUFLoader to read metadata
-    GGUFLoader loader;
-    GGUFLoadOptions opts;
-    opts.loadTensors = false;  // Only need metadata
-    opts.verbose = false;
-
-    GGUFLoadResult result = GGUFLoader::Load(ggufPath.c_str(), opts);
+    // Use GGUFLoader::LoadMetadata to read metadata only (no tensor data)
+    GGUFLoadResult result = GGUFLoader::LoadMetadata(ggufPath.c_str());
     if (!result.success) {
         printf("[ChatTemplate] Failed to load GGUF metadata from %s\n", ggufPath.c_str());
         return false;

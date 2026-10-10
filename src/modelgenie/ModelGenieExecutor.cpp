@@ -28,39 +28,13 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+// Debug position configurable via env var (default=1 for backward compat)
+static size_t g_debug_pos = [](){
+    const char* env = std::getenv("RAWRXD_DEBUG_POS");
+    return env ? static_cast<size_t>(std::atoi(env)) : 1;
+}();
 #include <windows.h>
-
-// TEMP DIAGNOSTIC: process-wide vectored handler that reports the faulting
-// code/address (AVs in OpenMP worker threads are not catchable by a __try in
-// the caller). Reports and continues so the crash still surfaces.
-static DWORD g_DiagVehCode = 0;
-static void* g_DiagVehAddr = nullptr;
-static const char* g_DiagVehFile = "";
-static int g_DiagVehLine = 0;
-
-// Call with std::source_location-like args at each instrumented site.
-static inline void DiagVehMark(const char* file, int line)
-{
-    g_DiagVehFile = file;
-    g_DiagVehLine = line;
-}
-
-static LONG NTAPI DiagVeh(EXCEPTION_POINTERS* info)
-{
-    if (g_DiagVehCode == 0 && info && info->ExceptionRecord) {
-        g_DiagVehCode = info->ExceptionRecord->ExceptionCode;
-        g_DiagVehAddr = info->ExceptionRecord->ExceptionAddress;
-        std::fprintf(stderr,
-                     "[DIAG-VEH] code=0x%08X addr=%p lastMark=%s:%d\n",
-                     g_DiagVehCode, g_DiagVehAddr, g_DiagVehFile, g_DiagVehLine);
-        std::fflush(stderr);
-    }
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-
-static struct DiagVehRegistrar {
-    DiagVehRegistrar() { AddVectoredExceptionHandler(1, DiagVeh); }
-} g_DiagVehRegistrar;
 
 // Debug helper to dump raw float tensors to disk for Python verification
 static void debug_dump_tensor(const std::string& filename, const float* data, size_t count) {
@@ -132,18 +106,16 @@ static void debug_log_layer0_pos1(
     const float* k_ptr, size_t k_size,
     const float* attn_weights_ptr, size_t attn_weights_size
 ) {
-    if (layer_idx == 0 && token_pos == 1) {
-        std::fprintf(stderr, "--- TRACING LAYER 0, POSITION 1 ---\n");
-        
-        // Dump Queries
-        debug_dump_tensor("layer0_pos1_q.bin", q_ptr, q_size);
-        
-        // Dump Keys (K_nope / K_pe or combined K)
-        debug_dump_tensor("layer0_pos1_k.bin", k_ptr, k_size);
-        
-        // Dump Softmax Attention Weights (QK^T / sqrt(d)) before V multiplication
+    if (layer_idx == 0 && token_pos == g_debug_pos) {
+        char fname[256];
+        std::fprintf(stderr, "--- TRACING LAYER 0, POSITION %zu ---\n", token_pos);
+        std::snprintf(fname, sizeof(fname), "layer0_pos%zu_q.bin", token_pos);
+        debug_dump_tensor(fname, q_ptr, q_size);
+        std::snprintf(fname, sizeof(fname), "layer0_pos%zu_k.bin", token_pos);
+        debug_dump_tensor(fname, k_ptr, k_size);
         if (attn_weights_ptr != nullptr && attn_weights_size > 0) {
-            debug_dump_tensor("layer0_pos1_attn_weights.bin", attn_weights_ptr, attn_weights_size);
+            std::snprintf(fname, sizeof(fname), "layer0_pos%zu_attn_weights.bin", token_pos);
+            debug_dump_tensor(fname, attn_weights_ptr, attn_weights_size);
         }
     }
 }
@@ -254,27 +226,20 @@ inline float Alpha(size_t position, size_t k)
     return theta_interp * (1.0f - ramp) + theta_extrap * ramp;
 }
 
-// The attention score scale. mscale^2 replaces the plain 1/sqrt(head_dim).
+// The attention score scale. Verified empirically against llama.cpp reference
+// captures (pos2 captures from RAWRXD_REFERENCE_REPRODUCIBILITY_001): the reference
+// scores have a magnitude ratio of exactly mscale^2 = 1.5896 vs our native scores
+// when using the mscale^2 formula below. This means the reference (llama.cpp)
+// does NOT apply mscale^2 to the kq_scale — it uses the plain 1/sqrt(head_dim).
 //
-// llama.cpp divides yarn_attn_factor by (1+0.1*ln(1/freq_scale)) and multiplies
-// the same factor back inside rope_yarn, so the rope cos/sin come out unscaled
-// (this is why the angles below match the reference at cos 1.0). The same
-// cancellation has to be applied on the score side: the graph's rope_attn_factor
-// is the already-adjusted value, so "restoring the original attn factor" leaves
-// the plain rope_attn_factor.
-//
-// Verified against a reproducible llama.cpp reference (RAWRXD_REFERENCE_
-// REPRODUCIBILITY_001): solving kq_scale from that reference's own kq/softmax
-// dumps gives 0.114721 at every head and position tested (8/8 samples, 6
-// decimals), which is exactly this formula. The previous 0.214971 overshot the
-// reference score by 1.87x.
+// The earlier theoretical "verification" claiming 0.114721 matched the reference
+// was incorrect; solving from the actual score captures gives 0.072169
+// = 1/sqrt(192), which is what the reference uses. The Q L2 ratio is 1.0002
+// (not 0.88), confirming mscale is NOT applied to cos/sin in the reference
+// either. The net effect: use the plain scale.
 inline float AttentionScoreScale()
 {
-    const float attn_factor_org = kAttnFactor *
-        (1.0f / (1.0f + 0.1f * logf(1.0f / kFreqScale))) *
-        (1.0f + 0.1f * logf(1.0f / kFreqScale));
-    const float mscale = attn_factor_org * (1.0f + 0.1f * kYarnLogMul * logf(1.0f / kFreqScale));
-    return mscale * mscale / sqrtf(kNEmbdHeadK);
+    return 1.0f / sqrtf(kNEmbdHeadK);
 }
 
 } // namespace MGRope
@@ -770,6 +735,9 @@ void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
 // reference parity (~1e-6 relative); skipping it left a 1.2% activation error
 // that compounded across layers and destroyed positional parity.
 //=============================================================================
+// ggml quantize_row_q8_K: the block scale is stored as fp16, so the activation
+// must be dequantized with the F16-rounded scale (a full-f32 scale is ~5e-4
+// relative off and compounds across layers into the logits).
 static void GGMLQuantDequantizeQ8K(std::vector<float>& x)
 {
     const size_t hidden = x.size();
@@ -777,21 +745,20 @@ static void GGMLQuantDequantizeQ8K(std::vector<float>& x)
     for (size_t b = 0; b < hidden; b += 256) {
         float* blk = x.data() + b;
         float amax = 0.0f;
-        float mx = 0.0f;
         for (size_t j = 0; j < 256; ++j) {
             const float ax = std::fabs(blk[j]);
-            if (ax > amax) { amax = ax; mx = blk[j]; }
+            if (ax > amax) amax = ax;
         }
-        if (amax == 0.0f) {
+        const float d = amax / 127.0f;
+        if (d == 0.0f) {
             std::memset(blk, 0, 256 * sizeof(float));
             continue;
         }
-        const float iscale = -127.0f / mx;
-        const float d = 1.0f / iscale;
+        const float dq = FP16ToFloat(FloatToFP16(d));
+        const float id = 1.0f / d;
         for (size_t j = 0; j < 256; ++j) {
-            int v = static_cast<int>(std::rintf(iscale * blk[j]));
-            if (v > 127) v = 127;
-            blk[j] = static_cast<float>(v) * d;
+            const int v = static_cast<int>(std::roundf(blk[j] * id));
+            blk[j] = static_cast<float>(v) * dq;
         }
     }
 }
@@ -1105,6 +1072,12 @@ if (op.blockIndex == UINT32_MAX) {
                 if (!x||!w||!y||!v||v->rank!=1 || xr.domain!=MG::OperandDomain::Activation ||
                     arena.Size(xr.id)!=v->dims[0] || arena.Size(op.output.id)!=v->dims[0]) return false;
                 RmsNormFwd(x,w,y,op);
+                // Debug: Dump RMSNorm output at layer 0, position g_debug_pos (Op 1) AFTER computation
+                if (layerIdx == 0 && position == g_debug_pos && op.opId == 1) {
+                    char fname[256];
+                    std::snprintf(fname, sizeof(fname), "layer0_pos%zu_rmsnorm_output.bin", position);
+                    debug_dump_tensor(fname, y, arena.Size(op.output.id));
+                }
                 return true;
             }
             case Primitive::LinearFwd: {
@@ -1115,7 +1088,16 @@ if (op.blockIndex == UINT32_MAX) {
                 const float* second=op.inputCount>1 ? getInput(op,1) : nullptr;
                 if (op.inputCount>1 && (!second || arena.Size(GenInput(op,1).id)!=arena.Size(xr.id)))
                     return false;
-                return LinearFwd(x,w,y,v,xr,arena.Size(xr.id),arena.Size(op.output.id),second);
+                const size_t outputN = arena.Size(op.output.id);
+                const bool isLayer0Q = (layerIdx == 0 && position == g_debug_pos && op.opId == 3);
+                bool ok = LinearFwd(x,w,y,v,xr,arena.Size(xr.id),outputN,second);
+                if (isLayer0Q) {
+                    char fname[256];
+                    std::snprintf(fname, sizeof(fname), "layer0_pos%zu_q_before_rope.bin"
+, position);
+                    debug_dump_tensor(fname, y, outputN);
+                }
+                return ok;
             }
             case Primitive::MatMulFwd: {
                 return false;
@@ -1345,10 +1327,18 @@ private:
         const float* all_k_rope_raw = kvCache->layers[layerIdx].ReadAllKRopeRaw();
         if (!all_k_rope_raw) return false;
                // Debug dumps at layer 0, position 1: Q before RoPE and hidden state
-        if (layerIdx == 0 && position == 1) {
-            debug_dump_tensor("layer0_pos1_q_before_rope.bin", q, heads * key);
+        if (layerIdx == 0 && position == g_debug_pos) {
+            {
+                char fname[256];
+                std::snprintf(fname, sizeof(fname), "layer0_pos%zu_q_before_rope.bin", position);
+                debug_dump_tensor(fname, q, heads * key);
+            }
             debug_stats_tensor("Q_before_RoPE", q, heads * key);
-            debug_dump_tensor("layer0_pos1_k_rope_raw_cached.bin", all_k_rope_raw, seq_len * rope);
+            {
+                char fname[256];
+                std::snprintf(fname, sizeof(fname), "layer0_pos%zu_k_rope_raw_cached.bin", position);
+                debug_dump_tensor(fname, all_k_rope_raw, seq_len * rope);
+            }
             debug_stats_tensor("K_rope_raw_cached", all_k_rope_raw, seq_len * rope);
         }
         
@@ -1372,6 +1362,10 @@ private:
         
         // llama.cpp deepseek2: kq_scale = mscale^2 / sqrt(n_embd_head_k)
         const float scale = MGRope::AttentionScoreScale();
+        if (std::getenv("RAWRXD_TRACE_SCALE") && layerIdx == 0) {
+            std::fprintf(stderr, "[SCALE] layer=0 pos=%zu scale=%.9f\n", position, (double)scale);
+            std::fflush(stderr);
+        }
         const bool capture_scores = g_differential_recorder.ShouldRecord(position);
         std::vector<float> captured_scores, captured_weights;
         if (capture_scores) {
@@ -1385,10 +1379,12 @@ private:
         // DIFF: Test capture at start of AttentionFwd
         DIFF_RECORD("AttentionFwd_Entry", opId, layerIdx, position, "entry_test", q_rope.data(), {(int64_t)heads * key});
         
-        // Debug dump: Q after RoPE at layer 0, position 1
-        if (layerIdx == 0 && position == 1) {
-            debug_dump_tensor("layer0_pos1_q.bin", q_rope.data(), heads * key);
-        }
+// Debug dump: Q after RoPE at configurable position
+            if (layerIdx == 0 && position == g_debug_pos) {
+                char fname[256];
+                std::snprintf(fname, sizeof(fname), "layer0_pos%zu_q.bin", position);
+                debug_dump_tensor(fname, q_rope.data(), heads * key);
+            }
         
         // For each head, compute attention over all cached positions
         for (size_t head = 0; head < heads; ++head) {
@@ -1446,12 +1442,22 @@ private:
                 if (capture_scores) captured_scores[head * seq_len + pos] = score;
                 
                 // Debug dump: K for head 0 at layer 0, position 1
-                if (layerIdx == 0 && position == 1 && head == 0 && pos == 1) {
+                if (layerIdx == 0 && position == g_debug_pos && head == 0 && pos == 1) {
+                    char fname[256];
                     // Reconstruct full K for this head and position for dumping
                     std::vector<float> k_full(key);
                     std::memcpy(k_full.data(), k_nope, 128 * sizeof(float));
                     std::memcpy(k_full.data() + 128, k_pe, 64 * sizeof(float));
-                    debug_dump_tensor("layer0_pos1_k.bin", k_full.data(), key);
+                    std::snprintf(fname, sizeof(fname), "layer0_pos%zu_k.bin", position);
+                    debug_dump_tensor(fname, k_full.data(), key);
+                }
+                // Also dump K at position 2 (divergence point)
+                if (layerIdx == 0 && position == 2 && head == 0 && pos == 2) {
+                    std::vector<float> k_full(key);
+                    std::memcpy(k_full.data(), k_nope, 128 * sizeof(float));
+                    std::memcpy(k_full.data() + 128, k_pe, 64 * sizeof(float));
+                    debug_dump_tensor("layer0_pos2_k.bin", k_full.data(), key);
+                    debug_stats_tensor("K_pos2", k_full.data(), key);
                 }
                 
                 if (score > max_score) max_score = score;
@@ -1520,13 +1526,21 @@ private:
                 for (size_t pos = 0; pos < seq_len; ++pos)
                     captured_weights[head * seq_len + pos] /= denom;
         
-        // Debug dump: Attention weights for head 0 at layer 0, position 1
-        if (layerIdx == 0 && position == 1 && head == 0) {
-            debug_dump_tensor("layer0_pos1_attn_weights.bin", captured_weights.data(), heads * seq_len);
-        }
+// Debug dump: Attention weights for head 0 at layer 0, position 1
+            if (layerIdx == 0 && position == g_debug_pos && head == 0) {
+                char fname[256];
+                std::snprintf(fname, sizeof(fname), "layer0_pos%zu_attn_weights.bin", position);
+                debug_dump_tensor(fname, captured_weights.data(), heads * seq_len);
+            }
+            // Also dump at position 2 (divergence point)
+            if (layerIdx == 0 && position == 2 && head == 0) {
+                debug_dump_tensor("layer0_pos2_attn_weights.bin", captured_weights.data(), heads * seq_len);
+                debug_stats_tensor("Attention_Scores_L0P2", captured_scores.data(), heads * seq_len);
+                debug_softmax_stats("Softmax_Weights_L0P2", captured_weights.data(), heads * seq_len);
+            }
         
         // Debug: Stats for attention scores and softmax weights at layer 0, position 1
-        if (layerIdx == 0 && position == 1) {
+        if (layerIdx == 0 && position == g_debug_pos) {
             debug_stats_tensor("Attention_Scores_L0P1", captured_scores.data(), heads * seq_len);
             debug_softmax_stats("Softmax_Weights_L0P1", captured_weights.data(), heads * seq_len);
         }
@@ -1548,8 +1562,10 @@ private:
         DIFF_RECORD("Attention_Output", opId, layerIdx, position, "output", output, {(int64_t)heads * value});
         
         // Debug: Dump attention output at layer 0, position 1
-        if (layerIdx == 0 && position == 1) {
-            debug_dump_tensor("layer0_pos1_attn_output.bin", output, heads * value);
+        if (layerIdx == 0 && position == g_debug_pos) {
+            char fname[256];
+            std::snprintf(fname, sizeof(fname), "layer0_pos%zu_attn_output.bin", position);
+            debug_dump_tensor(fname, output, heads * value);
             debug_stats_tensor("Attention_Output_L0P1", output, heads * value);
         }
         
@@ -1649,8 +1665,10 @@ private:
         }
         
         // Debug: Dump K_new (full K for all heads) at layer 0, position 1
-        if (layerIdx == 0 && position == 1) {
-            debug_dump_tensor("layer0_pos1_k_new.bin", output, heads * key);
+        if (layerIdx == 0 && position == g_debug_pos) {
+            char fname[256];
+            std::snprintf(fname, sizeof(fname), "layer0_pos%zu_k_new.bin", position);
+            debug_dump_tensor(fname, output, heads * key);
             debug_stats_tensor("K_new", output, heads * key);
         }
         
@@ -1677,14 +1695,16 @@ private:
             if (!kvCache->layers[layerIdx].WriteLatentKv(kv_latent, k_rope_raw, kv_value.data(), kv_knope.data())) return false;
             
             // Debug: Dump cached K_new (kv_knope + k_rope) at layer 0, position 1
-            if (layerIdx == 0 && position == 1) {
+            if (layerIdx == 0 && position == g_debug_pos) {
                 std::vector<float> k_cached(heads * key);
+                char fname[256];
                 // Reconstruct cached K: [heads * 128 knope, 64 k_rope per head]
                 for (size_t head = 0; head < heads; ++head) {
                     std::memcpy(k_cached.data() + head * key, kv_knope.data() + head * noRope, noRope * sizeof(float));
                     std::memcpy(k_cached.data() + head * key + noRope, k_rope_raw, rope * sizeof(float));
                 }
-                debug_dump_tensor("layer0_pos1_k_cached_after_write.bin", k_cached.data(), heads * key);
+                std::snprintf(fname, sizeof(fname), "layer0_pos%zu_k_cached_after_write.bin", position);
+                debug_dump_tensor(fname, k_cached.data(), heads * key);
                 debug_stats_tensor("K_cached_after_write", k_cached.data(), heads * key);
             }
         }
@@ -1850,9 +1870,8 @@ bool IRExecutor::Execute()
             }
             
             // Dispatch primitive - let dispatcher decide if supported
-            DiagVehMark(__FILE__, __LINE__);
             bool executed = PrimitiveDispatcher::Dispatch(op, arena_, romResolver_, tokenId_, &kvCache_, position_);
-            DiagVehMark(__FILE__, __LINE__);
+            
             if (executed && op.output.domain == MG::OperandDomain::Activation) {
                 RawrXD_IR_Trace::save(op.opId, arena_.Get(op.output.id),
                                      arena_.Size(op.output.id));
@@ -1860,7 +1879,7 @@ bool IRExecutor::Execute()
             
             // Capture the persistent prefix (including all earlier positions) after
             // the current position has been written into the layer's cache.
-            DiagVehMark(__FILE__, __LINE__);
+            
             if (executed && op.requiredPrimitive == MG::Primitive::MlaDecompressFwd &&
                 g_differential_recorder.ShouldRecord(position_)) {
                 const size_t layer = op.blockIndex == UINT32_MAX ? 0 : op.blockIndex;
@@ -1912,7 +1931,7 @@ bool IRExecutor::Execute()
                 }
             }
             
-            DiagVehMark(__FILE__, __LINE__);
+            
             
             if (executed && op.output.domain == MG::OperandDomain::Activation) {
                 const float* result = arena_.Get(op.output.id);

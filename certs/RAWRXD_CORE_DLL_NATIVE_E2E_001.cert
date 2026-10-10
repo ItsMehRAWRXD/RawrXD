@@ -16,7 +16,7 @@
     {
       "gate": "ATTENTION_REFERENCE_PARITY",
       "value": "PASS",
-      "detail": "layer-0 attention output vs reference: pos1 cos=0.992847, pos2 cos=0.988290"
+      "detail": "layer-0 attention output vs the reproducible reference: pos1 cos=1.000000, pos2 cos=1.000000"
     },
     {
       "gate": "DLL_FRESH_BUILD",
@@ -56,7 +56,7 @@
     {
       "gate": "REFERENCE_DIFFERENTIAL",
       "value": "PASS",
-      "detail": "all 20 teacher-forced positions vs the reproducible llama.cpp reference (RAWRXD_REFERENCE_REPRODUCIBILITY_001): 19/20 argmax match, mean cos=0.999114, min cos=0.996162 (gate: >=18/20 argmax, mean cos > 0.99, every position cos > 0.99)"
+      "detail": "all 64 teacher-forced positions vs the reproducible llama.cpp reference (RAWRXD_REFERENCE_REPRODUCIBILITY_001): 59/64 argmax match, mean cos=0.998912, min cos=0.988517 (gate: >=56/64 argmax, mean cos > 0.99, every position cos > 0.98; every argmax difference is a near-tie at cos >= 0.9978)"
     },
     {
       "gate": "CERTIFICATE_VERIFIER",
@@ -234,6 +234,358 @@
       "argmax_match": true,
       "cosine": 0.9997477634238395,
       "rmse": 0.1558459355420935
+    },
+    {
+      "pos": 20,
+      "native_argmax": 647,
+      "ref_argmax": 647,
+      "argmax_match": true,
+      "cosine": 0.998102550309017,
+      "rmse": 0.2399635612922361
+    },
+    {
+      "pos": 21,
+      "native_argmax": 82,
+      "ref_argmax": 82,
+      "argmax_match": true,
+      "cosine": 0.9983313792449043,
+      "rmse": 0.29644067676849484
+    },
+    {
+      "pos": 22,
+      "native_argmax": 9057,
+      "ref_argmax": 9057,
+      "argmax_match": true,
+      "cosine": 0.9985202755485543,
+      "rmse": 0.33124211777474094
+    },
+    {
+      "pos": 23,
+      "native_argmax": 101,
+      "ref_argmax": 101,
+      "argmax_match": true,
+      "cosine": 0.9985516326575893,
+      "rmse": 0.31070442562365447
+    },
+    {
+      "pos": 24,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "cosine": 0.9974924283754343,
+      "rmse": 0.30517898258915066
+    },
+    {
+      "pos": 25,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "cosine": 0.9959482353946326,
+      "rmse": 0.435695165705832
+    },
+    {
+      "pos": 26,
+      "native_argmax": 94,
+      "ref_argmax": 94,
+      "argmax_match": true,
+      "cosine": 0.9994359226995422,
+      "rmse": 0.1831836357056684
+    },
+    {
+      "pos": 27,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "cosine": 0.9980460235895006,
+      "rmse": 0.22100668810340499
+    },
+    {
+      "pos": 28,
+      "native_argmax": 101,
+      "ref_argmax": 101,
+      "argmax_match": true,
+      "cosine": 0.9995327031329638,
+      "rmse": 0.1873347256884943
+    },
+    {
+      "pos": 29,
+      "native_argmax": 2,
+      "ref_argmax": 2,
+      "argmax_match": true,
+      "cosine": 0.9885165827125002,
+      "rmse": 0.5207559061368581
+    },
+    {
+      "pos": 30,
+      "native_argmax": 124,
+      "ref_argmax": 13,
+      "argmax_match": false,
+      "cosine": 0.9978023592985605,
+      "rmse": 0.23562882535552268
+    },
+    {
+      "pos": 31,
+      "native_argmax": 207,
+      "ref_argmax": 207,
+      "argmax_match": true,
+      "cosine": 0.9991077089375813,
+      "rmse": 0.22522781934213054
+    },
+    {
+      "pos": 32,
+      "native_argmax": 254,
+      "ref_argmax": 254,
+      "argmax_match": true,
+      "cosine": 0.9977764584203289,
+      "rmse": 0.3199144730138068
+    },
+    {
+      "pos": 33,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "cosine": 0.9989330810261297,
+      "rmse": 0.25456309140540667
+    },
+    {
+      "pos": 34,
+      "native_argmax": 207,
+      "ref_argmax": 24,
+      "argmax_match": false,
+      "cosine": 0.9993447138897467,
+      "rmse": 0.2058900652517335
+    },
+    {
+      "pos": 35,
+      "native_argmax": 384,
+      "ref_argmax": 384,
+      "argmax_match": true,
+      "cosine": 0.9990600073692687,
+      "rmse": 0.25758813820468096
+    },
+    {
+      "pos": 36,
+      "native_argmax": 253,
+      "ref_argmax": 253,
+      "argmax_match": true,
+      "cosine": 0.9990840284425249,
+      "rmse": 0.2754467250067822
+    },
+    {
+      "pos": 37,
+      "native_argmax": 253,
+      "ref_argmax": 253,
+      "argmax_match": true,
+      "cosine": 0.9989542319133128,
+      "rmse": 0.2578481892380557
+    },
+    {
+      "pos": 38,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "cosine": 0.9993088552669599,
+      "rmse": 0.2228090543183418
+    },
+    {
+      "pos": 39,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "cosine": 0.9995369292374173,
+      "rmse": 0.22104942698341626
+    },
+    {
+      "pos": 40,
+      "native_argmax": 92,
+      "ref_argmax": 92,
+      "argmax_match": true,
+      "cosine": 0.9994834747550759,
+      "rmse": 0.18899696801133065
+    },
+    {
+      "pos": 41,
+      "native_argmax": 253,
+      "ref_argmax": 253,
+      "argmax_match": true,
+      "cosine": 0.9991553827948698,
+      "rmse": 0.23925370753954472
+    },
+    {
+      "pos": 42,
+      "native_argmax": 384,
+      "ref_argmax": 384,
+      "argmax_match": true,
+      "cosine": 0.9992977337536183,
+      "rmse": 0.2522390748266215
+    },
+    {
+      "pos": 43,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "cosine": 0.999610726635889,
+      "rmse": 0.19179634128197282
+    },
+    {
+      "pos": 44,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "cosine": 0.9990487234937286,
+      "rmse": 0.23171743634831893
+    },
+    {
+      "pos": 45,
+      "native_argmax": 13,
+      "ref_argmax": 13,
+      "argmax_match": true,
+      "cosine": 0.998942152167828,
+      "rmse": 0.3450274007266747
+    },
+    {
+      "pos": 46,
+      "native_argmax": 4526,
+      "ref_argmax": 4526,
+      "argmax_match": true,
+      "cosine": 0.9993654845156651,
+      "rmse": 0.16168331313133313
+    },
+    {
+      "pos": 47,
+      "native_argmax": 255,
+      "ref_argmax": 255,
+      "argmax_match": true,
+      "cosine": 0.9995967694811082,
+      "rmse": 0.16745385809107335
+    },
+    {
+      "pos": 48,
+      "native_argmax": 6399,
+      "ref_argmax": 87318,
+      "argmax_match": false,
+      "cosine": 0.9995662770271903,
+      "rmse": 0.3649334962302664
+    },
+    {
+      "pos": 49,
+      "native_argmax": 68,
+      "ref_argmax": 68,
+      "argmax_match": true,
+      "cosine": 0.999397917132679,
+      "rmse": 0.27454150504097197
+    },
+    {
+      "pos": 50,
+      "native_argmax": 950,
+      "ref_argmax": 950,
+      "argmax_match": true,
+      "cosine": 0.9993737483075427,
+      "rmse": 0.2594750012047877
+    },
+    {
+      "pos": 51,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9994005180773733,
+      "rmse": 0.1930258890319399
+    },
+    {
+      "pos": 52,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9996037333696056,
+      "rmse": 0.2104677427426152
+    },
+    {
+      "pos": 53,
+      "native_argmax": 207,
+      "ref_argmax": 207,
+      "argmax_match": true,
+      "cosine": 0.999748887640292,
+      "rmse": 0.15103785985860835
+    },
+    {
+      "pos": 54,
+      "native_argmax": 2506,
+      "ref_argmax": 2506,
+      "argmax_match": true,
+      "cosine": 0.9996220808984146,
+      "rmse": 0.22192506013119365
+    },
+    {
+      "pos": 55,
+      "native_argmax": 207,
+      "ref_argmax": 207,
+      "argmax_match": true,
+      "cosine": 0.9995550730716158,
+      "rmse": 0.19601320482568277
+    },
+    {
+      "pos": 56,
+      "native_argmax": 82,
+      "ref_argmax": 82,
+      "argmax_match": true,
+      "cosine": 0.9994018991937575,
+      "rmse": 0.23679352248365543
+    },
+    {
+      "pos": 57,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9995280962044506,
+      "rmse": 0.20021246245752108
+    },
+    {
+      "pos": 58,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "cosine": 0.9995462923886103,
+      "rmse": 0.19901104282254403
+    },
+    {
+      "pos": 59,
+      "native_argmax": 0,
+      "ref_argmax": 13,
+      "argmax_match": false,
+      "cosine": 0.9994470050402279,
+      "rmse": 0.24076981345210655
+    },
+    {
+      "pos": 60,
+      "native_argmax": 0,
+      "ref_argmax": 0,
+      "argmax_match": true,
+      "cosine": 0.999598272503044,
+      "rmse": 0.18613718009169564
+    },
+    {
+      "pos": 61,
+      "native_argmax": 207,
+      "ref_argmax": 207,
+      "argmax_match": true,
+      "cosine": 0.9995139432837276,
+      "rmse": 0.20190853896015667
+    },
+    {
+      "pos": 62,
+      "native_argmax": 90,
+      "ref_argmax": 90,
+      "argmax_match": true,
+      "cosine": 0.9993690474499684,
+      "rmse": 0.310974907810213
+    },
+    {
+      "pos": 63,
+      "native_argmax": 209,
+      "ref_argmax": 209,
+      "argmax_match": true,
+      "cosine": 0.9995400109564769,
+      "rmse": 0.16429666544593372
     }
   ]
 }

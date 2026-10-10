@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <map>
 #include <limits>
 #include <memory>
 #include <string>
@@ -36,7 +37,13 @@
 #include <unistd.h>
 #endif
 
+// Forward declaration for LoadMetadata return type (defined at global scope below)
+struct GGUFLoadResult;
+
 namespace Deep2 {
+
+// Make GGUFLoadResult accessible as Deep2::GGUFLoadResult
+using ::GGUFLoadResult;
 
 enum class GGUFMetaType : uint32_t {
     UINT8   = 0,
@@ -144,7 +151,7 @@ public:
         return true;
     }
 
-    void close() {
+     void close() {
         tensors_.clear();
         metaInt_.clear();
         metaFloat_.clear();
@@ -156,12 +163,25 @@ public:
         version_ = 0;
         shardCount_ = 0;
         totalMappedBytes_ = 0;
+        tensorCountHeader_ = 0;
+        metadataCountHeader_ = 0;
     }
+
+    /**
+     * LoadMetadata — metadata-only load (no tensor data population).
+     * Returns a GGUFLoadResult with rawKv, metadata, and header counts populated.
+     * This is the sovereign authority seal entry point.
+     * Implementation is below (requires complete GGUFLoadResult type).
+     */
+    static GGUFLoadResult LoadMetadata(const char* filepath);
+
 
     bool loaded() const { return loaded_; }
     uint32_t version() const { return version_; }
     uint32_t shardCount() const { return shardCount_; }
     uint64_t mappedBytes() const { return totalMappedBytes_; }
+    uint64_t tensorCountHeader() const { return tensorCountHeader_; }
+    uint64_t metadataCountHeader() const { return metadataCountHeader_; }
     const std::string& path() const { return path_; }
     const std::string& error() const { return error_; }
 
@@ -224,6 +244,21 @@ public:
     bool hasMeta(const std::string& key) const {
         return metaInt_.count(key) || metaFloat_.count(key) ||
                metaString_.count(key) || metaArrays_.count(key);
+    }
+
+    // Serialize all metadata to string-keyed map (for rawKv in LoadMetadata)
+    std::map<std::string,std::string> getMetaAllStrings() const {
+        std::map<std::string,std::string> out;
+        for (const auto& kv : metaInt_)
+            out[kv.first] = std::to_string(kv.second);
+        for (const auto& kv : metaFloat_) {
+            char buf[64];
+            std::snprintf(buf, sizeof(buf), "%g", kv.second);
+            out[kv.first] = buf;
+        }
+        for (const auto& kv : metaString_)
+            out[kv.first] = kv.second;
+        return out;
     }
 
     // Materializes only when requested. Large tokenizer token arrays therefore
@@ -712,6 +747,12 @@ private:
         if (version_ == 0) version_ = version;
         if (version_ != version) return fail("mixed GGUF versions across shards");
 
+        // Store header counts for metadata-only queries (LoadMetadata)
+        if (shardId == 0) {
+            tensorCountHeader_ = tensorCount;
+            metadataCountHeader_ = metadataCount;
+        }
+
         uint64_t localAlignment = kDefaultAlignment;
 
         for (uint64_t i = 0; i < metadataCount; ++i) {
@@ -860,10 +901,12 @@ private:
         return std::string(buf);
     }
 
-    bool loaded_ = false;
-    uint32_t version_ = 0;
-    uint32_t shardCount_ = 0;
-    uint64_t totalMappedBytes_ = 0;
+        bool loaded_ = false;
+        uint32_t version_ = 0;
+        uint32_t shardCount_ = 0;
+        uint64_t totalMappedBytes_ = 0;
+        uint64_t tensorCountHeader_ = 0;   // GGUF header tensor count
+        uint64_t metadataCountHeader_ = 0; // GGUF header metadata count
     std::string path_;
     std::string error_;
 
@@ -901,9 +944,16 @@ struct ModelMetadata {
     uint32_t keyLength = 0;
     std::vector<std::string> vocab;
     std::string architecture;
+    std::string name;        // general.name from GGUF metadata
+    std::string chatTemplate; // tokenizer.chat_template from GGUF metadata
+    std::string bosToken;     // tokenizer.bos_token or tokenizer.ggml.bos_token
+    std::string eosToken;     // tokenizer.eos_token or tokenizer.ggml.eos_token
 };
 
 } // namespace Deep2
+
+// GGUFLoadResult defined at global scope (not in namespace Deep2)
+// The forward declaration + using-alias above (in namespace Deep2) makes it accessible as Deep2::GGUFLoadResult
 
 struct GGUFLoadResult {
     bool success = false;
@@ -917,7 +967,81 @@ struct GGUFLoadResult {
     std::vector<Deep2::TensorInfo> tensors;
     std::string error;
     std::unique_ptr<void, void(*)(void*)> mmapKeep{nullptr, [](void*){}};
+    // Sovereign authority fields
+    std::map<std::string,std::string> rawKv; // all GGUF metadata as string KV pairs
+    uint32_t ggufVersion = 0;
+    uint64_t tensorCountHeader = 0;
+    uint64_t metadataCountHeader = 0;
 };
+
+// Implementation of GGUFLoader::LoadMetadata (requires complete GGUFLoadResult)
+namespace Deep2 {
+inline GGUFLoadResult GGUFLoader::LoadMetadata(const char* filepath) {
+    GGUFLoadResult result;
+    if (!filepath || !filepath[0]) {
+        result.error = "empty GGUF path";
+        return result;
+    }
+
+    auto loader = std::make_shared<GGUFLoader>();
+    if (!loader->load(std::string(filepath))) {
+        result.success = false;
+        result.ok = false;
+        result.error = loader->error();
+        return result;
+    }
+
+    result.success = true;
+    result.ok = true;
+    result.mmapBound = loader->mappedBytes() > 0 ? 1 : 0;
+    result.shardCount = loader->shardCount();
+    result.ggufVersion = loader->version();
+    result.tensorCountHeader = loader->tensorCountHeader();
+    result.metadataCountHeader = loader->metadataCountHeader();
+    result.totalSize = loader->mappedBytes();
+    result.loader = std::move(loader);
+
+    // Populate rawKv from all metadata key-value pairs
+    auto rawStrings = result.loader->getMetaAllStrings();
+    result.rawKv = std::move(rawStrings);
+
+    // Populate structured metadata
+    auto& meta = result.metadata;
+    meta.architecture = result.loader->getMetaString("general.architecture", "unknown");
+    meta.name = result.loader->getMetaString("general.name", "");
+    meta.vocabSize = static_cast<uint32_t>(result.loader->getMetaInt(
+        "tokenizer.ggml.vocab_size",
+        result.loader->getMetaInt("llama.vocab_size", 0)));
+    meta.numLayers = static_cast<uint32_t>(result.loader->getMetaInt("llama.block_count", 0));
+    meta.numHeads = static_cast<uint32_t>(result.loader->getMetaInt("llama.attention.head_count", 0));
+    meta.numKeyValueHeads = static_cast<uint32_t>(result.loader->getMetaInt("llama.attention.head_count_kv", meta.numHeads));
+    meta.intermediateSize = static_cast<uint32_t>(result.loader->getMetaInt("llama.feed_forward_length", 0));
+    meta.keyLength = static_cast<uint32_t>(result.loader->getMetaInt("llama.attention.key_length", 0));
+    meta.chatTemplate = result.loader->getMetaString("tokenizer.chat_template", "");
+
+    // Populate tensor descriptors
+    auto tensorNames = result.loader->listTensors();
+    result.tensors.reserve(tensorNames.size());
+    for (const auto& name : tensorNames) {
+        const auto* gt = result.loader->getTensor(name);
+        if (gt) {
+            TensorInfo ti;
+            ti.name = name;
+            ti.dimensions.reserve(gt->shape.size());
+            for (int64_t d : gt->shape)
+                ti.dimensions.push_back(static_cast<uint64_t>(d));
+            ti.type = static_cast<uint32_t>(gt->type);
+            ti.offset = gt->tensorOffset;
+            ti.size = gt->sizeBytes;
+            ti.dataOffset = gt->fileOffset;
+            result.tensors.push_back(std::move(ti));
+        }
+    }
+
+    return result;
+}
+
+} // namespace Deep2
 
 inline bool load_gguf(const std::string& path, void* out) {
     if (!out) return false;

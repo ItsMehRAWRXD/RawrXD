@@ -1219,6 +1219,7 @@ static void gemv_q8_0_avx512(
 
     for (size_t r = 0; r < rows; ++r) {
         __m512 acc = _mm512_setzero_ps();
+        float scalarTail = 0.0f;
         const uint8_t* row = w + r * rowBytes;
 
         for (size_t b = 0; b < blocksPerRow; ++b) {
@@ -1238,14 +1239,14 @@ static void gemv_q8_0_avx512(
                 __m512  xv      = _mm512_loadu_ps(x + base + i);
                 acc = _mm512_fmadd_ps(_mm512_mul_ps(wv, dVec), xv, acc);
             }
-            // Scalar tail
-            float tail = 0.0f;
+            // Accumulate scalar tail separately — adding to the SIMD
+            // accumulator would cause _mm512_reduce_add_ps to count it
+            // 16× (once per lane) instead of once.
             for (; i < n; ++i) {
-                tail += f16_to_f32(blk->d) * (float)blk->qs[i] * x[base + i];
+                scalarTail += f16_to_f32(blk->d) * (float)blk->qs[i] * x[base + i];
             }
-            acc = _mm512_add_ps(acc, _mm512_set1_ps(tail));
         }
-        y[r] += _mm512_reduce_add_ps(acc);
+        y[r] += _mm512_reduce_add_ps(acc) + scalarTail;
     }
 }
 

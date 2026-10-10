@@ -1,6 +1,8 @@
 # Build artifacts
 build/
 build-*/
+build_cert/
+build_fresh/
 out/
 tmp/
 build_prod/

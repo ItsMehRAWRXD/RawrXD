@@ -11,7 +11,7 @@ import os
 import struct
 import sys
 
-REF = r"F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001\ref_capture_v9"
+REF = r"F:\rawrxd\evidence\RAWRXD_REFERENCE_REPRODUCIBILITY_001\ref_capture_repro"
 EV = r"F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001"
 
 

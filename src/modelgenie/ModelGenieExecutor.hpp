@@ -41,6 +41,13 @@ namespace Generated = ::RawrXD::Deep2::Generated;
 namespace MG = ModelGenie;
 namespace GEN = Generated;
 
+// Round-trip a float through fp16 (round-to-nearest-even). Used to match
+// llama.cpp's F16 MLA KV-cache precision on every cached entry.
+// Implemented in ModelGenieExecutor.cpp next to the fp16 codecs.
+float MGExecF16RoundTrip(float f);
+
+inline float MGRopeF16(float f) { return MGExecF16RoundTrip(f); }
+
 
 struct TensorView
 {

@@ -37,6 +37,7 @@
 #include "ToroidalKVCache.hpp"
 #include "PlasmaGovernor.hpp"
 #include "SovereignOutOfCoreRuntime.hpp"
+#include "lavapath/LocalModelAuthority_Bundle.hpp"
 // Vulkan GPU backend
 #include "vulkan_compute.h"
 #include "Deep2MultiGpuLayerPlan.hpp"
@@ -71,6 +72,8 @@ namespace Deep2
 
         // BP16 / external mapping support
         bool mapped = false; // true if data is externally owned (do not free)
+        bool hasFileBacking = false; // true if weight data is file-backed (mmap/mmap_range)
+        uint64_t fileOffset = 0;    // byte offset in the backing GGUF file
     };
 
     // ============================================================================
@@ -472,6 +475,18 @@ namespace Deep2
         void enableWarmupScheduler(bool enable);
         void enableCompressedKV(bool enable, KVQuantType quantType = KVQuantType::KV_Q8_0);
         void enableNVMeStreaming(bool enable, const std::string &modelPath = "");
+        // VAL-000 Component: Memory Engine → NVMe Streaming (HostNvme accessor)
+        NVMeStream* HostNvme() const { return nvmeStream_.get(); }
+
+        // Sovereign Runtime: session authority accessors
+        bool sessionAuthorityPass() const { return sessionAuthority_.PASS != 0; }
+        const rawr::olma::AuthorityBundle& sessionAuthority() const { return sessionAuthority_; }
+        void setSessionAuthority(const rawr::olma::AuthorityBundle& a) { sessionAuthority_ = a; }
+
+        // Product Open: GGUF mmap boundary query
+        int GgufMmapBound() const {
+            return (modelWeights.loaded && (nvmeStream_ || bp16Enabled_)) ? 1 : 0;
+        }
         void enableSlidingWindow(bool enable, size_t windowSize = 4096);
         // Turn on the full VAL-000 + Sovereign + GPU stack (fail-soft per feature).
         void enableAllEnhancements();
@@ -650,6 +665,9 @@ namespace Deep2
         bool nvmeStreamingEnabled_ = false;
         bool slidingWindowEnabled_ = false;
         bool reverseAnalysisEnabled_ = false;
+
+        // Sovereign Runtime: session authority bundle (sealed at model open)
+        rawr::olma::AuthorityBundle sessionAuthority_{};
 
         // MARS: Dynamic dual-GPU VRAM orchestration
         std::unique_ptr<MARS::MARSController> marsController_;

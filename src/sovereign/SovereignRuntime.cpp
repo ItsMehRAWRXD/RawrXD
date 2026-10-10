@@ -9,6 +9,7 @@
 #include "agentic/BoundedAgentLoop.h"
 #include "agentic/AgentToolHandlers.h"
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <filesystem>
