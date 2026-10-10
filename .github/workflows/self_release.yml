@@ -8,11 +8,21 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install Qt via aqtinstall
+        shell: pwsh
+        run: |
+          pip install aqtinstall
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
+          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
       - name: Build agent
         run: cmake -B build -G "Visual Studio 17 2022" -A x64 && cmake --build build --config Release --target RawrXD-Agent
       - name: Let IDE improve itself
+        shell: pwsh
         run: |
-          set RAWRXD_WISH="Improve inference speed by 10 % without quality loss"
+          $env:RAWRXD_WISH = "Improve inference speed by 10 % without quality loss"
           build\bin\Release\RawrXD-Agent.exe
         env:
           CERT_PATH: ${{ secrets.CERT_PATH }}

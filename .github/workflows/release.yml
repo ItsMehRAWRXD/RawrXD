@@ -1,13 +1,8 @@
-<<<<<<< HEAD
 name: Release & Deployment
-=======
-name: Release
->>>>>>> upstream/master
 
 on:
   push:
     tags:
-<<<<<<< HEAD
       - 'v*.*.*'
   workflow_dispatch:
     inputs:
@@ -367,25 +362,30 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## 🚀 Production Deployment Complete
-
-**Release**: ${{ github.ref_name }}
-
-### Deployment Summary
-- ✅ Windows x64, x86, ARM64 built successfully
-- ✅ All tests passed
-- ✅ Security scan complete
-- ✅ Production servers updated
-
-### Verification
-- Visit [Release Page](https://github.com/ItsMehRAWRXD/RawrXD/releases/tag/${{ github.ref_name }})
-- Download binaries for your platform
-- Run the application`
-            });
+            // Guard: tag pushes and workflow_dispatch runs carry no issue number.
+            if (context.issue && context.issue.number) {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: [
+                  '## Production Deployment Complete',
+                  '',
+                  '**Release**: ' + context.refName,
+                  '',
+                  '### Deployment Summary',
+                  '- Windows x64, x86, ARM64 built successfully',
+                  '- All tests passed',
+                  '- Security scan complete',
+                  '- Production servers updated',
+                  '',
+                  '### Verification',
+                  '- ' + context.serverUrl + '/' + context.repo.owner + '/' + context.repo.repo + '/releases/tag/' + context.refName
+                ].join('\n')
+              });
+            } else {
+              core.notice('No issue context - deployment notification comment skipped.');
+            }
 
       - name: Create Deployment Record
         shell: bash
@@ -430,27 +430,3 @@ jobs:
           echo ""
           echo "Artifacts available at:"
           echo "https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
-=======
-      - 'v*'
-
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Create Release
-      id: create_release
-      uses: ggml-org/action-create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
->>>>>>> upstream/master
