@@ -1431,8 +1431,9 @@ endif()
 target_compile_definitions(RawrXD-SimpleIDE PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
 
-# Chromatic Wave Demo - Chameleon/Neon effects with D3D11
+# Chromatic Wave Demo - Chameleon/Neon effects with D3D11 (Windows-only)
 # Target: 540Hz @ 3840x2160 (4K UHD)
+if(WIN32)
 add_executable(RawrXD-Chromatic WIN32
     src/chromatic_main.cpp
     src/ui/chromatic_window.cpp
@@ -1461,6 +1462,7 @@ else()
     target_compile_options(RawrXD-Chromatic PRIVATE -fexceptions -O2)
 endif()
 target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMINMAX)
+endif() # WIN32 - RawrXD-Chromatic
 
 # Agentic IDE - Advanced AI-powered IDE with terminal integration (Qt-based GUI app)
 # Enabled with Qt6 6.7.2+ support
@@ -1934,8 +1936,10 @@ endif()
 
 message(STATUS "RawrXD-ModelLoader configured successfully with Clang C++20")
 
-# Stub test to verify WinMain can be reached at all
-add_executable(stub_test WIN32 src/stub_main.cpp)
+# Stub test to verify WinMain can be reached at all (Windows-only source)
+if(WIN32)
+    add_executable(stub_test WIN32 src/stub_main.cpp)
+endif()
 
 # Qt-dependent target: test_ide_main (requires Qt6)
 if(Qt6_FOUND)
