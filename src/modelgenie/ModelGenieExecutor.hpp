@@ -530,6 +530,33 @@ public:
     // Sampling is greedy over the IR-declared LM-head output activation.
     std::vector<uint32_t> Generate(const std::vector<uint32_t>& prompt, uint32_t maxTokens);
 
+    // Streaming decode (RAWRXD_STREAM_CANCEL_001): identical token sequence to
+    // Generate(), but the sink is invoked immediately after each token's logits
+    // are computed and BEFORE the next forward pass runs. Returning false from
+    // the sink stops the decode at once, so no forward pass is issued after a
+    // cancellation (or after an EOS stop), and each emitted token reaches the
+    // caller while the next decode step has not started yet.
+    struct TokenSink {
+        virtual ~TokenSink() = default;
+        virtual bool OnToken(uint32_t tokenId) = 0;
+    };
+
+    enum class GenerateStatus {
+        kCompleted = 0,       // every requested token was produced
+        kCancelled = 1,       // the sink returned false; the terminating token
+                              // is not reported as generated
+        kExecutionFailed = 2  // a forward pass failed; LastFailedOp() names it
+    };
+
+    std::vector<uint32_t> GenerateStreaming(const std::vector<uint32_t>& prompt,
+                                            uint32_t maxTokens,
+                                            TokenSink* sink,
+                                            GenerateStatus* status);
+
+    GenerateStatus LastGenerateStatus() const { return last_status_; }
+    uint32_t LastFailedOp() const { return last_failed_op_; }
+    uint32_t ForwardPasses() const { return forward_passes_; }
+
     // Returns the number of logits held by the last Execute(), for validation.
     size_t LogitCount() const { return logits_.size(); }
 
@@ -540,6 +567,9 @@ private:
     float tokenStorage_ = 0.0f;
     std::vector<float> logits_;
     uint32_t visited_ = 0, dispatched_ = 0, skipped_ = 0;
+    GenerateStatus last_status_ = GenerateStatus::kCompleted;
+    uint32_t last_failed_op_ = 0;
+    uint32_t forward_passes_ = 0;
 };
 
 

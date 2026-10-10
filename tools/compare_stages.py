@@ -78,9 +78,16 @@ def main():
     print("native records at pos %d: %d" % (pos, len(nat)))
 
     # Reference stage -> per-layer
+    # Stage map (verified against tmp_llama-clone/src/models/deepseek2.cpp and
+    # the native DifferentialRecorder captures):
+    #   ref k_pe is registered BEFORE ggml_rope_ext (deepseek2.cpp:536), so its
+    #   native counterpart is MLA_k_rope_raw, not the post-rope MLA_k_rope.
+    #   ref ffn_moe_out is routed-experts only while the native MoE_Output is
+    #   the fused routed+shared result, so the combined reference ffn_out is
+    #   the apples-to-apples comparison for it. The dense lead layer (0) has a
+    #   separate down-projection Linear_Output.
     stages = ["inp_embd", "attn_norm", "q", "attn_out", "ffn_norm",
-              "ffn_out", "l_out", "kv_cmpr", "k_pe", "ffn_moe_out",
-              "result_norm"]
+              "ffn_out", "l_out", "kv_cmpr", "k_pe", "result_norm"]
 
     print("%-22s %8s %8s %12s %12s %12s %10s" %
           ("stage", "layer", "n", "cosine", "rmse", "max|d|", "norm_ratio"))
@@ -96,7 +103,9 @@ def main():
             if st == "kv_cmpr":
                 cand = [x for x in nat if x["layer"] == L and "MLA_kv_latent" in x["path"]]
             elif st == "k_pe":
-                cand = [x for x in nat if x["layer"] == L and "MLA_k_rope" in x["path"] and "raw" not in x["path"]]
+                # ref k_pe is captured before rope_ext; the native pre-rope
+                # record is MLA_k_rope_raw (post-rope has no ref counterpart).
+                cand = [x for x in nat if x["layer"] == L and "MLA_k_rope_raw" in x["path"]]
             elif st == "inp_embd":
                 cand = [x for x in nat if x["op"] == 0 and "Linear_Output" in x["path"]]
             elif st == "attn_norm":
@@ -108,11 +117,14 @@ def main():
             elif st == "ffn_norm":
                 cand = [x for x in nat if x["layer"] == L and x["op"] == 7 + 12 * L and "RMSNorm" in x["path"]]
             elif st == "ffn_out":
+                # dense lead layer: down-projection Linear_Output;
+                # MoE layers: the fusedMoE routed+shared output (matches the
+                # reference's combined ffn_out, not the routed-only ffn_moe_out)
                 cand = [x for x in nat if x["layer"] == L and x["op"] == 10 + 12 * L and "Linear_Output" in x["path"]]
+                if not cand:
+                    cand = [x for x in nat if x["layer"] == L and "MoE_Output" in x["path"]]
             elif st == "l_out":
                 cand = [x for x in nat if x["layer"] == L and x["op"] == 11 + 12 * L and "Output" in x["path"]]
-            elif st == "ffn_moe_out":
-                cand = [x for x in nat if x["layer"] == L and "MoE_Output" in x["path"]]
             elif st == "result_norm":
                 cand = [x for x in nat if x["layer"] == (1 << 32) - 1 and "RMSNorm" in x["path"] and x["op"] == 297]
             else:

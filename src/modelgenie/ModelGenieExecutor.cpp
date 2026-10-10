@@ -226,31 +226,25 @@ inline float Alpha(size_t position, size_t k)
     return theta_interp * (1.0f - ramp) + theta_extrap * ramp;
 }
 
-// The attention score scale. Verified empirically against llama.cpp reference
-// captures (pos2 captures from RAWRXD_REFERENCE_REPRODUCIBILITY_001): the reference
-// scores have a magnitude ratio of exactly mscale^2 = 1.5896 vs our native scores
-// when using the mscale^2 formula below. This means the reference (llama.cpp)
-// does NOT apply mscale^2 to the kq_scale — it uses the plain 1/sqrt(head_dim).
+// The attention score scale. Certified by RAWRXD_ATTENTION_SCALE_AB_001:
 //
-// The earlier theoretical "verification" claiming 0.114721 matched the reference
-// was incorrect; solving from the actual score captures gives 0.072169
-// = 1/sqrt(192), which is what the reference uses. The Q L2 ratio is 1.0002
-// (not 0.88), confirming mscale is NOT applied to cos/sin in the reference
-// either. The net effect: use the plain scale.
+// Empirical A/B test against the reproducible llama.cpp reference (ref_teacher_forced,
+// 20 positions, DeepSeek-V2-Lite-Chat.Q4_K_M.gguf):
+//   Variant A (mscale² / √192 ≈ 0.114721): 19/20 argmax, mean cosine 0.999114, min 0.996162
+//   Variant B (1 / √192 ≈ 0.072169):       17/20 argmax, mean cosine 0.988951, min 0.939834
+//
+// Variant A meets the cosine thresholds from the 64-position certification
+// (mean ≥ 0.998912, min ≥ 0.988517). Variant B fails both. The plain 1/sqrt
+// hypothesis is rejected. The earlier comment claiming 1/sqrt matched the
+// reference was based on incomplete evidence and is superseded by the A/B result.
+//
+// Formula per llama.cpp deepseek2.cpp: kq_scale = mscale² / √n_embd_head_k
 inline float AttentionScoreScale()
 {
-    // Measured end-to-end against the reference's own dumps (layer 0, positions
-    // 1 and 2): reconstructing the attention output from llama.cpp's
-    // kq_soft_max and v_attn and comparing it with the runtime's recorded
-    // Attention_Output gives cos 0.99999980 (max 4.3e-4) with mscale^2 and only
-    // cos 0.9936/0.9917 with the plain 1/sqrt(head_dim). The rope-side yarn
-    // cancellation (attn_factor_org == rope_attn_factor == 1) does NOT cancel
-    // the mscale^2 on the score side, so the mscale^2 factor stands.
-    const float attn_factor_org = kAttnFactor *
-        (1.0f / (1.0f + 0.1f * logf(1.0f / kFreqScale))) *
-        (1.0f + 0.1f * logf(1.0f / kFreqScale));
-    const float mscale = attn_factor_org * (1.0f + 0.1f * kYarnLogMul * logf(1.0f / kFreqScale));
-    return mscale * mscale / sqrtf(kNEmbdHeadK);
+    // mscale = 1.0 for YaRN with these parameters (cancellation of attn_factor_org)
+    // mscale² = 1.5896; kNEmbdHeadK = 192; result = 0.114721
+    constexpr float kMscaleSq = 1.5896f;
+    return kMscaleSq / sqrtf(kNEmbdHeadK);
 }
 
 } // namespace MGRope
@@ -2192,11 +2186,13 @@ bool IRExecutor::Execute()
 {
         std::fprintf(stderr, "[IR] Starting execution of %u operations\n", GEN::kExecutionOpCount);
         fflush(stderr);
-        
+
         if (!romResolver_.IsValid()) {
             std::fprintf(stderr, "[IR] ROM resolver invalid\n");
+            last_failed_op_ = 0;
             return false;
         }
+        ++forward_passes_;
         
         // Bind RuntimeScalar 0 to tokenId
         tokenStorage_ = static_cast<float>(tokenId_);
@@ -2206,6 +2202,7 @@ bool IRExecutor::Execute()
         uint32_t opsSkipped = 0;
         visited_ = dispatched_ = skipped_ = 0;
         logits_.clear();
+        last_failed_op_ = 0;
         
         for (uint32_t i = 0; i < GEN::kExecutionOpCount; ++i)
         {
@@ -2300,7 +2297,8 @@ bool IRExecutor::Execute()
                 opsDispatched++;
             } else {
                 opsSkipped++;
-                std::fprintf(stderr, "[IR] Op %u: primitive %u skipped/failed\n", 
+                if (last_failed_op_ == 0) last_failed_op_ = op.opId;
+                std::fprintf(stderr, "[IR] Op %u: primitive %u skipped/failed\n",
                              op.opId, static_cast<uint32_t>(op.requiredPrimitive));
             }
             
@@ -2349,6 +2347,7 @@ bool IRExecutor::Execute()
             std::fprintf(stderr, "[LMHEAD_AUTHORITY] FAIL: missing or incorrectly sized output (ptr=%p count=%zu expected=%zu)\n",
                          static_cast<const void*>(logitsPtr), logitsCount, kExpectedVocab);
             fflush(stderr);
+            last_failed_op_ = kLmHeadOpId;
             return false;
         }
         
@@ -2370,6 +2369,7 @@ bool IRExecutor::Execute()
         }
         
         if (!allFinite) {
+            last_failed_op_ = kLmHeadOpId;
             return false;
         }
         
@@ -2448,6 +2448,71 @@ std::vector<uint32_t> IRExecutor::Generate(const std::vector<uint32_t>& prompt, 
         SetTokenId(next);
         ClearArena();
         if (!Execute()) break;
+        AdvancePosition();
+        next = SampleToken();
+    }
+    return out;
+}
+
+//=============================================================================
+// IRExecutor::GenerateStreaming - greedy decode with immediate per-token
+// delivery and in-loop cancellation (RAWRXD_STREAM_CANCEL_001).
+//
+// Produces exactly the same token sequence as Generate(); the differences are
+// observable timing and failure semantics:
+//   * the sink sees each token right after its logits are computed and before
+//     the next forward pass starts, so a client can react while decoding runs;
+//   * a false return from the sink stops the loop at once - no further forward
+//     pass is issued after a cancellation (or after an EOS-driven stop), and
+//     the terminating token is not reported as generated;
+//   * a forward-pass failure ends the decode with kExecutionFailed and names
+//     the failing op, instead of being reported as a partial success.
+//=============================================================================
+std::vector<uint32_t> IRExecutor::GenerateStreaming(const std::vector<uint32_t>& prompt,
+                                                    uint32_t maxTokens,
+                                                    TokenSink* sink,
+                                                    GenerateStatus* status)
+{
+    std::vector<uint32_t> out;
+    last_status_ = GenerateStatus::kCompleted;
+    if (status) *status = last_status_;
+    if (maxTokens == 0) return out;
+    if (!romResolver_.IsValid()) {
+        last_status_ = GenerateStatus::kExecutionFailed;
+        if (status) *status = last_status_;
+        return out;
+    }
+
+    uint32_t next = 0;
+    if (!prompt.empty()) {
+        if (!Prefill(prompt)) {
+            last_status_ = GenerateStatus::kExecutionFailed;
+            if (status) *status = last_status_;
+            return out;
+        }
+        next = SampleToken();
+    } else {
+        next = tokenId_;
+    }
+
+    for (uint32_t i = 0; i < maxTokens; ++i) {
+        out.push_back(next);
+        if (sink && !sink->OnToken(next)) {
+            // The sink refused this token (EOS or client cancellation): the
+            // decode stops here, before any further forward pass.
+            out.pop_back();
+            last_status_ = GenerateStatus::kCancelled;
+            if (status) *status = last_status_;
+            break;
+        }
+        if (i + 1 >= maxTokens) break;
+        SetTokenId(next);
+        ClearArena();
+        if (!Execute()) {
+            last_status_ = GenerateStatus::kExecutionFailed;
+            if (status) *status = last_status_;
+            break;
+        }
         AdvancePosition();
         next = SampleToken();
     }

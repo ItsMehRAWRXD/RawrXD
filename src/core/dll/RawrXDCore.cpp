@@ -622,16 +622,27 @@ int RawrXDCore_RunInference(
     // Generate. The runtime prefills the prompt, decodes
     // greedily, and streams tokens through the callback;
     // EOS terminates the stream and a false return from
-    // the user callback cancels it.
+    // the user callback cancels it. Both terminations are
+    // reported as MG_ERROR_CANCELLED by the runtime because
+    // the callback bridge refuses the terminating token; a
+    // cancellation is a normal end of stream, not a failure.
     TokenCallbackBridge bridge{callback, userData, eosId};
     const mg_error_t genRc = mg_context_generate(
         impl->mgContext, promptTokens.data(), promptTokens.size(),
         &mgGenCfg, &TokenCallbackBridge::Invoke, &bridge);
 
-    if (genRc != MG_SUCCESS) {
+    if (genRc != MG_SUCCESS && genRc != MG_ERROR_CANCELLED) {
         setLastError(RAWXD_ERROR_INTERNAL);
         logMessage(RAWXD_LOG_ERROR, "ModelGenie generation failed (mg_error_t=%d)",
                    static_cast<int>(genRc));
+        return bridge.delivered;
+    }
+    if (mg_context_last_generate_status(impl->mgContext) ==
+            MG_GENERATE_EXECUTION_FAILED) {
+        setLastError(RAWXD_ERROR_INTERNAL);
+        logMessage(RAWXD_LOG_ERROR,
+                   "ModelGenie generation failed at IR op %u",
+                   mg_context_last_failed_op(impl->mgContext));
         return bridge.delivered;
     }
 

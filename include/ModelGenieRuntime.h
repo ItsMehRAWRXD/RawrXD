@@ -30,8 +30,19 @@ typedef enum {
     MG_ERROR_EXECUTION_FAILED = -5,
     MG_ERROR_INVALID_STATE = -6,
     MG_ERROR_KV_CACHE_FULL = -7,
-    MG_ERROR_KV_CACHE_MISMATCH = -8
+    MG_ERROR_KV_CACHE_MISMATCH = -8,
+    MG_ERROR_CANCELLED = -9
 } mg_error_t;
+
+// Outcome of the last mg_context_generate()/mg_context_generate_text() on a
+// context (RAWRXD_STREAM_CANCEL_001). Tokens are streamed to the callback
+// while decoding runs; a false return from the callback stops the decode
+// immediately (no further forward pass) and terminates the stream.
+typedef enum {
+    MG_GENERATE_COMPLETED = 0,     // every requested token was produced
+    MG_GENERATE_CANCELLED = 1,     // the callback returned false (or the terminator)
+    MG_GENERATE_EXECUTION_FAILED = 2 // a forward pass failed
+} mg_generate_status_t;
 
 // Model configuration
 typedef struct {
@@ -131,6 +142,20 @@ MG_RUNTIME_API mg_error_t mg_context_last_tokens(
     size_t out_capacity,
     size_t* out_count
 );
+
+// Outcome of the last generate() call and, when it failed with
+// MG_GENERATE_EXECUTION_FAILED, the IR op id that failed (0 otherwise).
+MG_RUNTIME_API mg_generate_status_t mg_context_last_generate_status(
+    const mg_context_t* context);
+
+MG_RUNTIME_API uint32_t mg_context_last_failed_op(
+    const mg_context_t* context);
+
+// Forward passes (prefill + decode) executed since the context was created,
+// cumulative across calls. Exposes that a cancelled stream costs no extra
+// forward pass: the count stops advancing at the cancellation point.
+MG_RUNTIME_API uint32_t mg_context_forward_passes(
+    const mg_context_t* context);
 
 // Token text (utf-8, sentencepiece escapes already resolved), null-terminated.
 // Returns false when the id is out of range or the vocab is unavailable.

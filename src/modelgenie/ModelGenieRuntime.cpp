@@ -93,6 +93,7 @@ struct mg_context_t
     std::vector<float> logits;
     size_t position;
     std::vector<uint32_t> last_tokens;
+    IRExecutor::GenerateStatus last_status = IRExecutor::GenerateStatus::kCompleted;
 };
 
 //=============================================================================
@@ -380,6 +381,29 @@ MG_RUNTIME_API size_t mg_model_detokenize(
 //=============================================================================
 // Generation
 //=============================================================================
+// Streaming bridge (RAWRXD_STREAM_CANCEL_001): every token is delivered to the
+// client callback immediately after its logits are computed and before the
+// next forward pass runs. A false return from the callback stops the decode at
+// once, so no forward pass is issued after a cancellation. The token that
+// terminated the stream is not reported as generated.
+namespace {
+
+struct MgTokenBridge : IRExecutor::TokenSink {
+    mg_model_t* model = nullptr;
+    mg_token_callback_t callback = nullptr;
+    void* user_data = nullptr;
+
+    bool OnToken(uint32_t tokenId) override
+    {
+        if (!callback) return true;  // no client sink: nothing can cancel
+        const std::string text = model ? mg_token_text_unescaped(model, tokenId)
+                                       : std::string();
+        return callback(tokenId, text.c_str(), user_data) != false;
+    }
+};
+
+}  // namespace
+
 MG_RUNTIME_API mg_error_t mg_context_generate(
     mg_context_t* context,
     const uint32_t* prompt_tokens,
@@ -396,9 +420,15 @@ MG_RUNTIME_API mg_error_t mg_context_generate(
     }
 
     std::vector<uint32_t> prompt(prompt_tokens, prompt_tokens + prompt_token_count);
-    std::vector<uint32_t> produced = context->executor->Generate(
-        prompt, static_cast<uint32_t>(config->max_tokens));
-    if (produced.empty()) return MG_ERROR_EXECUTION_FAILED;
+    MgTokenBridge bridge;
+    bridge.model = context->model;
+    bridge.callback = callback;
+    bridge.user_data = callback_user_data;
+
+    IRExecutor::GenerateStatus status = IRExecutor::GenerateStatus::kCompleted;
+    std::vector<uint32_t> produced = context->executor->GenerateStreaming(
+        prompt, static_cast<uint32_t>(config->max_tokens), &bridge, &status);
+    context->last_status = status;
 
     const std::vector<float>* logits = context->executor->GetLogits();
     if (logits && !logits->empty()) {
@@ -407,10 +437,11 @@ MG_RUNTIME_API mg_error_t mg_context_generate(
     context->position = context->executor->Position();
     context->last_tokens = produced;
 
-    for (uint32_t id : produced) {
-        if (!callback) break;
-        const std::string text = mg_token_text_unescaped(context->model, id);
-        if (!callback(id, text.c_str(), callback_user_data)) break;
+    if (status == IRExecutor::GenerateStatus::kExecutionFailed) {
+        return MG_ERROR_EXECUTION_FAILED;
+    }
+    if (status == IRExecutor::GenerateStatus::kCancelled) {
+        return MG_ERROR_CANCELLED;
     }
     return MG_SUCCESS;
 }
@@ -510,9 +541,15 @@ MG_RUNTIME_API mg_error_t mg_context_generate_text(
         return MG_ERROR_INVALID_ARGUMENT;
     }
 
-    std::vector<uint32_t> produced = context->executor->Generate(
-        prompt, static_cast<uint32_t>(config->max_tokens));
-    if (produced.empty()) return MG_ERROR_EXECUTION_FAILED;
+    MgTokenBridge bridge;
+    bridge.model = context->model;
+    bridge.callback = callback;
+    bridge.user_data = callback_user_data;
+
+    IRExecutor::GenerateStatus status = IRExecutor::GenerateStatus::kCompleted;
+    std::vector<uint32_t> produced = context->executor->GenerateStreaming(
+        prompt, static_cast<uint32_t>(config->max_tokens), &bridge, &status);
+    context->last_status = status;
 
     const std::vector<float>* logits = context->executor->GetLogits();
     if (logits && !logits->empty()) {
@@ -521,12 +558,39 @@ MG_RUNTIME_API mg_error_t mg_context_generate_text(
     context->position = context->executor->Position();
     context->last_tokens = produced;
 
-    for (uint32_t id : produced) {
-        if (!callback) break;
-        const std::string text = mg_token_text_unescaped(context->model, id);
-        if (!callback(id, text.c_str(), callback_user_data)) break;
+    if (status == IRExecutor::GenerateStatus::kExecutionFailed) {
+        return MG_ERROR_EXECUTION_FAILED;
+    }
+    if (status == IRExecutor::GenerateStatus::kCancelled) {
+        return MG_ERROR_CANCELLED;
     }
     return MG_SUCCESS;
+}
+
+MG_RUNTIME_API mg_generate_status_t mg_context_last_generate_status(
+    const mg_context_t* context)
+{
+    if (!context) return MG_GENERATE_COMPLETED;
+    switch (context->last_status) {
+    case IRExecutor::GenerateStatus::kCancelled:
+        return MG_GENERATE_CANCELLED;
+    case IRExecutor::GenerateStatus::kExecutionFailed:
+        return MG_GENERATE_EXECUTION_FAILED;
+    default:
+        return MG_GENERATE_COMPLETED;
+    }
+}
+
+MG_RUNTIME_API uint32_t mg_context_last_failed_op(
+    const mg_context_t* context)
+{
+    return context ? context->executor->LastFailedOp() : 0;
+}
+
+MG_RUNTIME_API uint32_t mg_context_forward_passes(
+    const mg_context_t* context)
+{
+    return context ? context->executor->ForwardPasses() : 0;
 }
 
 MG_RUNTIME_API mg_error_t mg_context_last_tokens(

@@ -17,11 +17,15 @@ int main(int argc, char* argv[])
     const char* gguf = argc > 1 ? argv[1] : "F:\\rawrxd\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf";
     const char* outdir = argc > 2 ? argv[2]
         : "F:\\rawrxd\\evidence\\RAWRXD_CORE_DLL_NATIVE_E2E_001\\native_tf_current";
+    bool singlePass = false;
+    for (int i = 3; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--single") == 0) singlePass = true;
+    }
     // argv[3] is either the token list "1,185,16,..." or a prompt string.
     // A prompt string is tokenized (BOS is prepended when the vocab does not
     // emit it, matching the production DLL), while a comma/space separated list
     // of ids is used verbatim so a reference's forced sequence can be replayed
-    // exactly.
+    // exactly. "--single" (argv[3] after the list) feeds one token per pass.
 
     mg_model_config_t cfg{};
     cfg.max_seq_len = 1024;
@@ -93,36 +97,72 @@ int main(int argc, char* argv[])
     genCfg.temperature = 0.0f;
 
     size_t captured = 0;
-    for (size_t prefix = 1; prefix <= fill; ++prefix) {
+    if (singlePass) {
+        // One forward pass per token: the KV prefix grows naturally, so the
+        // logits read after each step belong to that position. O(n) instead of
+        // the O(n^2) re-prefill loop.
         mg_context_reset(ctx);
-        const mg_error_t rc = mg_context_generate(ctx, tokens.data(), prefix, &genCfg,
-                                                 nullptr, nullptr);
-        if (rc != MG_SUCCESS) {
-            std::fprintf(stderr, "generate failed at prefix %zu (rc=%d)\n", prefix, (int)rc);
-            break;
+        for (size_t pos = 0; pos < fill; ++pos) {
+            const mg_error_t rc = mg_context_generate(ctx, &tokens[pos], 1, &genCfg,
+                                                     nullptr, nullptr);
+            if (rc != MG_SUCCESS) {
+                std::fprintf(stderr, "generate failed at pos %zu (rc=%d)\n", pos, (int)rc);
+                break;
+            }
+            if (mg_context_position(ctx) != pos + 1) {
+                std::fprintf(stderr, "unexpected position %zu (wanted %zu)\n",
+                             mg_context_position(ctx), pos + 1);
+                break;
+            }
+            size_t count = 0;
+            const float* logits = mg_context_logits(ctx, &count);
+            if (!logits || count == 0) {
+                std::fprintf(stderr, "no logits at pos %zu\n", pos);
+                break;
+            }
+            char path[512];
+            std::snprintf(path, sizeof(path), "%s\\native_tf_logits_pos%zu.bin", outdir, pos);
+            FILE* f = std::fopen(path, "wb");
+            if (!f) {
+                std::fprintf(stderr, "open failed: %s\n", path);
+                break;
+            }
+            std::fwrite(logits, sizeof(float), count, f);
+            std::fclose(f);
+            ++captured;
         }
-        if (mg_context_position(ctx) != prefix) {
-            std::fprintf(stderr, "unexpected position %zu (wanted %zu)\n",
-                         mg_context_position(ctx), prefix);
-            break;
+    } else {
+        for (size_t prefix = 1; prefix <= fill; ++prefix) {
+            mg_context_reset(ctx);
+            const mg_error_t rc = mg_context_generate(ctx, tokens.data(), prefix, &genCfg,
+                                                     nullptr, nullptr);
+            if (rc != MG_SUCCESS) {
+                std::fprintf(stderr, "generate failed at prefix %zu (rc=%d)\n", prefix, (int)rc);
+                break;
+            }
+            if (mg_context_position(ctx) != prefix) {
+                std::fprintf(stderr, "unexpected position %zu (wanted %zu)\n",
+                             mg_context_position(ctx), prefix);
+                break;
+            }
+            size_t count = 0;
+            const float* logits = mg_context_logits(ctx, &count);
+            if (!logits || count == 0) {
+                std::fprintf(stderr, "no logits at prefix %zu\n", prefix);
+                break;
+            }
+            char path[512];
+            std::snprintf(path, sizeof(path), "%s\\native_tf_logits_pos%zu.bin", outdir,
+                          prefix - 1);
+            FILE* f = std::fopen(path, "wb");
+            if (!f) {
+                std::fprintf(stderr, "open failed: %s\n", path);
+                break;
+            }
+            std::fwrite(logits, sizeof(float), count, f);
+            std::fclose(f);
+            ++captured;
         }
-        size_t count = 0;
-        const float* logits = mg_context_logits(ctx, &count);
-        if (!logits || count == 0) {
-            std::fprintf(stderr, "no logits at prefix %zu\n", prefix);
-            break;
-        }
-        char path[512];
-        std::snprintf(path, sizeof(path), "%s\\native_tf_logits_pos%zu.bin", outdir,
-                      prefix - 1);
-        FILE* f = std::fopen(path, "wb");
-        if (!f) {
-            std::fprintf(stderr, "open failed: %s\n", path);
-            break;
-        }
-        std::fwrite(logits, sizeof(float), count, f);
-        std::fclose(f);
-        ++captured;
     }
     std::fprintf(stderr, "captured %zu positions into %s\n", captured, outdir);
     mg_context_free(ctx);

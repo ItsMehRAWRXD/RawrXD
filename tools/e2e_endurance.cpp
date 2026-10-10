@@ -91,9 +91,12 @@ int main(int argc, char** argv) {
     }
 
     // a prompt that does not invite an early EOS so the run exercises the
-    // requested token count rather than stopping after one sentence
+    // requested token count rather than stopping after one sentence.
+    // With the ggml-order quantized dots the model lists ~300 numbers in
+    // ~190 tokens and then emits EOS, so the range must exceed the token
+    // budget: 1..1000 needs ~640 tokens at ~0.64 tokens per number.
     const char* prompt =
-        "List the numbers from one to three hundred, separated by commas:";
+        "List the numbers from one to one thousand, separated by commas:";
     int rc = 0;
 
     if (std::strcmp(mode, "--len") == 0) {
