@@ -2,9 +2,9 @@
 // File: tests/agentic_resilience_test.cpp
 //
 // Standalone, dependency-free validation for the three new subsystems:
-//   1. AdaptiveRetryEngine  ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â retries, backoff+jitter, circuit breaker
-//   2. ConflictEngine       ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â detection, 3-way merge, resolution strategies
-//   3. DelegationManager    ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â lifecycle, quotas, messaging
+//   1. AdaptiveRetryEngine  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â retries, backoff+jitter, circuit breaker
+//   2. ConflictEngine       ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â detection, 3-way merge, resolution strategies
+//   3. DelegationManager    ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â lifecycle, quotas, messaging
 //
 // NO Qt. NO third-party. Pure C++20 + <cassert>.
 //
@@ -14,9 +14,9 @@
 //                              src\agent\delegated_agents.cpp
 // ============================================================================
 
-#include "../src/agent/adaptive_retry.hpp"
-#include "../src/agentic/conflict_resolution.hpp"
-#include "../src/agent/delegated_agents.hpp"
+#include "../../src/agent/adaptive_retry.hpp"
+#include "../../src/agentic/conflict_resolution.hpp"
+#include "../../src/agent/delegated_agents.hpp"
 
 #include <atomic>
 #include <cassert>

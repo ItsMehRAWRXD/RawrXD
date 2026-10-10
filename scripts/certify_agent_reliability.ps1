@@ -5,7 +5,7 @@
 #
 # Reproduces, from a clean build, the executable, the test log, the executable
 # hash, and the source commit, then writes a verification manifest. Every value
-# is captured from the actual run — nothing is hand-written.
+# is captured from the actual run ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â nothing is hand-written.
 #
 # Usage:
 #   pwsh -File scripts\certify_agent_reliability.ps1
@@ -53,7 +53,7 @@ if ($VerifyOnly) {
             "src/agent/delegated_agents.cpp",
             "src/agentic/conflict_resolution.hpp",
             "src/agentic/conflict_resolution.cpp",
-            "tests/agentic_resilience_test.cpp",
+            "tests/agentic_resilience/agentic_resilience_test.cpp",
             "CMakeLists.txt"
         )
         $changed = & git diff --name-only $($m.source.commit) $head -- $scope 2>$null
@@ -70,7 +70,15 @@ if ($VerifyOnly) {
         Write-Host "[verify] commit matches HEAD: $head"
     }
 
-    $exe = Join-Path $repo "build-certification" "Release" "agentic-resilience-tests.exe"
+    # Locate the built binary. The standalone project emits it at the build
+    # root; CMake single-config generators do not create a Release/ subdir.
+    $exeCandidates = @()
+    $candidate = Join-Path $repo "build-certification" "agentic-resilience-tests.exe"
+    if (Test-Path -LiteralPath $candidate) { $exeCandidates += $candidate }
+    $exeCandidates += @(Get-ChildItem -Path (Join-Path $repo "build-certification") `
+        -Filter "agentic-resilience-tests.exe" -Recurse -ErrorAction SilentlyContinue |
+        ForEach-Object { $_.FullName })
+    $exe = $exeCandidates | Select-Object -First 1
     $treeSha = (& git rev-parse "HEAD^{tree}").Trim()
     if ($treeSha -eq $m.source.source_tree_sha1) {
         Write-Host "[verify] source tree matches manifest: $treeSha  (deterministic provenance OK)"
@@ -142,7 +150,7 @@ try {
         "src/agent/delegated_agents.cpp",
         "src/agentic/conflict_resolution.hpp",
         "src/agentic/conflict_resolution.cpp",
-        "tests/agentic_resilience_test.cpp",
+        "tests/agentic_resilience/agentic_resilience_test.cpp",
         "CMakeLists.txt",
         ".github/workflows/resilience.yml",
         "scripts/certify_agent_reliability.ps1"
@@ -162,14 +170,19 @@ try {
 
     # ------------------------------------------------------------------
     # 2. Clean configure + build via CMake (same path CI uses)
+    #
+    # Uses the SELF-CONTAINED project tests/agentic_resilience with the Ninja
+    # generator. The repository root CMakeLists pulls in zlib, ggml, Vulkan and
+    # Qt detection, so building through it would make this certification depend
+    # on subsystems it does not test.
     # ------------------------------------------------------------------
     $batch = @"
 @echo off
 call "$vcvars" >nul 2>&1
 cd /d "$repo"
-cmake -B build-certification -G "Visual Studio 17 2022" -A x64 -DRAWRXD_BUILD_TESTS=ON -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF -DUSE_ZLIB_FETCHCONTENT=OFF
+cmake -B build-certification -S tests/agentic_resilience -G Ninja -DCMAKE_BUILD_TYPE=Release
 echo CONFIG_EXITCODE=%ERRORLEVEL%
-cmake --build build-certification --config Release --target agentic-resilience-tests
+cmake --build build-certification
 echo BUILD_EXITCODE=%ERRORLEVEL%
 "@
     $batchPath = Join-Path $outDir "build.bat"
@@ -292,9 +305,9 @@ echo BUILD_EXITCODE=%ERRORLEVEL%
         evidence = $evidence
         reproduction = @(
             "pwsh -File scripts\certify_agent_reliability.ps1"
-            "cmake -B build-certification -G `"Visual Studio 17 2022`" -A x64 -DRAWRXD_BUILD_TESTS=ON -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF -DUSE_ZLIB_FETCHCONTENT=OFF"
-            "cmake --build build-certification --config Release --target agentic-resilience-tests"
-            "build-certification\bin\Release\agentic-resilience-tests.exe"
+            "cmake -B build-certification -S tests/agentic_resilience -G Ninja -DCMAKE_BUILD_TYPE=Release"
+            "cmake --build build-certification"
+            "build-certification\agentic-resilience-tests.exe"
         )
     }
 

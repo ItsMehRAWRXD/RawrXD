@@ -47,7 +47,7 @@ std::string RetryPolicy::toJSON() const {
 
 // Minimal, dependency-free JSON field extraction. Handles the flat object
 // produced by RetryPolicy::toJSON(). Full JSON parsing is intentionally out of
-// scope â€” this project forbids third-party libraries.
+// scope Ã¢â‚¬â€ this project forbids third-party libraries.
 namespace {
 
 std::string jsonField(const std::string& json, const std::string& key) {
@@ -270,7 +270,7 @@ int AdaptiveRetryEngine::calculateDelay(const RetryPolicy& policy, int attempt, 
     // Cap at maxDelay
     delay = std::min(delay, static_cast<double>(policy.maxDelayMs));
     
-    // Add jitter: Â±jitterFactor * delay
+    // Add jitter: Ã‚Â±jitterFactor * delay
     if (policy.jitterFactor > 0.0) {
         std::uniform_real_distribution<double> dist(-policy.jitterFactor, policy.jitterFactor);
         double jitter = delay * dist(rng);
@@ -282,12 +282,12 @@ int AdaptiveRetryEngine::calculateDelay(const RetryPolicy& policy, int attempt, 
 
 bool AdaptiveRetryEngine::isRetryableError(const RetryPolicy& policy, const std::string& error) const {
     std::string lowerError = error;
-    std::transform(lowerError.begin(), lowerError.end(), lowerError.begin(), ::tolower);
+    std::transform(lowerError.begin(), lowerError.end(), lowerError.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
     
     // Check non-retryable patterns first (explicit deny)
     for (const auto& pattern : policy.nonRetryableErrorPatterns) {
         std::string lowerPattern = pattern;
-        std::transform(lowerPattern.begin(), lowerPattern.end(), lowerPattern.begin(), ::tolower);
+        std::transform(lowerPattern.begin(), lowerPattern.end(), lowerPattern.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
         if (lowerError.find(lowerPattern) != std::string::npos) {
             return false;
         }
@@ -297,7 +297,7 @@ bool AdaptiveRetryEngine::isRetryableError(const RetryPolicy& policy, const std:
     if (!policy.retryableErrorPatterns.empty()) {
         for (const auto& pattern : policy.retryableErrorPatterns) {
             std::string lowerPattern = pattern;
-            std::transform(lowerPattern.begin(), lowerPattern.end(), lowerPattern.begin(), ::tolower);
+            std::transform(lowerPattern.begin(), lowerPattern.end(), lowerPattern.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
             if (lowerError.find(lowerPattern) != std::string::npos) {
                 return true;
             }

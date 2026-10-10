@@ -2,8 +2,13 @@ name: Agentic Resilience (dependency-free)
 
 # Targeted workflow for the three subsystems that differentiate RawrXD from
 # competing IDEs. It is deliberately isolated from the Qt/Win32 build so it is
-# fast and reliable: it configures, compiles, and runs with no Qt6, no GPU,
-# no network access, and no Python services.
+# fast and reliable: no Qt6, no GPU, no NASM, no Python services, no network.
+#
+# It builds tests/agentic_resilience, a SELF-CONTAINED CMake project that does
+# not include the repository root CMakeLists. The root build pulls in zlib,
+# ggml, Vulkan detection and Qt probes; any of those can fail for reasons that
+# have nothing to do with these subsystems. Keeping the certification target
+# isolated means a red run here indicates a real problem in the resilience code.
 
 on:
   push:
@@ -31,39 +36,42 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      # Puts cl.exe/link.exe on PATH. This is required because the CMake
+      # "Visual Studio 17 2022" generator needs a detectable VS installation,
+      # which the GitHub runner images do not expose to CMake. Ninja + an
+      # initialized MSVC environment is the robust combination.
+      - name: Initialize MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
         with:
-          submodules: recursive
+          arch: x64
 
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v1.3
-
-      - name: Configure (CMake, tests only, no Qt)
+      - name: Configure (self-contained project, Ninja)
         shell: pwsh
         run: |
-          cmake -B build-resilience -A x64 `
-                -DRAWRXD_BUILD_TESTS=ON -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF `
-                -DUSE_ZLIB_FETCHCONTENT=OFF
+          cmake -B build-resilience -S tests/agentic_resilience `
+                -G Ninja -DCMAKE_BUILD_TYPE=Release
           if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
 
-      - name: Build agentic-resilience-tests
+      - name: Build
         shell: pwsh
         run: |
-          cmake --build build-resilience --config Release --target agentic-resilience-tests
+          cmake --build build-resilience
           if ($LASTEXITCODE -ne 0) { throw "Build failed" }
 
-      - name: Run agentic resilience tests
+      - name: Test
         shell: pwsh
         run: |
-          ctest --test-dir build-resilience -C Release -R agentic-resilience --output-on-failure
+          ctest --test-dir build-resilience --output-on-failure
           if ($LASTEXITCODE -ne 0) { throw "Tests failed" }
 
       - name: Verify no Qt dependency in the new subsystems
         shell: pwsh
         run: |
           # These modules must stay dependency-free: pure C++20 standard library.
-          # NOTE: -CaseSensitive is REQUIRED. Select-String is case-insensitive by
-          # default, which makes '#include <Q[A-Z]' match the stdlib <queue> include
-          # and fails the check on perfectly valid code.
+          # -CaseSensitive is REQUIRED: Select-String is case-insensitive by
+          # default, which makes '#include <Q[A-Z]' match the stdlib <queue>
+          # include and fails the check on valid code.
           $pattern = 'QObject|QString|QJson|QByteArray|#include <Q[A-Z]'
           $targets = @(
             "src\agent\adaptive_retry.hpp",
@@ -72,7 +80,7 @@ jobs:
             "src\agent\delegated_agents.cpp",
             "src\agentic\conflict_resolution.hpp",
             "src\agentic\conflict_resolution.cpp",
-            "tests\agentic_resilience_test.cpp"
+            "tests\agentic_resilience\agentic_resilience_test.cpp"
           )
           $found = $false
           foreach ($t in $targets) {

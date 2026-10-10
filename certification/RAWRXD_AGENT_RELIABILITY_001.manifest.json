@@ -1,6 +1,6 @@
 {
   "certification_id": "RAWRXD_AGENT_RELIABILITY_001",
-  "generated_utc": "2026-10-10T22:35:50Z",
+  "generated_utc": "2026-10-10T22:48:08Z",
   "environment": {
     "os": "Microsoft Windows NT 10.0.26200.0",
     "architecture": "AMD64",
@@ -8,17 +8,24 @@
     "compiler": "MSVC (from VS BuildTools)"
   },
   "source": {
-    "commit": "07dee937bb5738671660118775c4e30a63c78f90",
+    "commit": "7db0e113849b8175271f03e216df278ff15e6160",
     "branch": "ci/github-control-loop-001",
-    "dirty_in_scope": [],
-    "source_tree_sha1": "edfd24fb00d369ca51e60b5d69dd3b49934684e3",
+    "dirty_in_scope": [
+      "src/agent/adaptive_retry.cpp",
+      "src/agentic/conflict_resolution.cpp",
+      "tests/agentic_resilience/agentic_resilience_test.cpp",
+      "CMakeLists.txt",
+      ".github/workflows/resilience.yml",
+      "scripts/certify_agent_reliability.ps1"
+    ],
+    "source_tree_sha1": "ada097097bc3fff49515c5949311590da054bae8",
     "note": "Only files covered by this certification are checked; the workspace contains many pre-existing untracked artifacts outside this scope."
   },
   "artifact": {
     "name": "agentic-resilience-tests.exe",
-    "sha256": "45411ce23d0bc703e4f0a77317700e7d4db9825fca301d0b1ba9f7ecd700b7d2",
-    "size_bytes": 424448,
-    "path": "build-certification/Release/agentic-resilience-tests.exe",
+    "sha256": "544c2301422d65137b68103ce8fbebb6e2062f6e49eeed07c3cfaf69e284fe6f",
+    "size_bytes": 423936,
+    "path": "build-certification/agentic-resilience-tests.exe",
     "reproducibility_note": "IMPORTANT: MSVC builds are NOT bit-for-bit deterministic (timestamps and local paths are embedded), so this SHA256 will differ on every rebuild even from identical sources. It identifies the specific binary that was executed for this certification; it is NOT a reproducible-build proof. For reproducible provenance use source.source_tree_sha1, or re-run the suite and confirm the same 148/148 pass."
   },
   "results": {
@@ -70,8 +77,8 @@
   },
   "reproduction": [
     "pwsh -File scripts\\certify_agent_reliability.ps1",
-    "cmake -B build-certification -G \"Visual Studio 17 2022\" -A x64 -DRAWRXD_BUILD_TESTS=ON -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF -DUSE_ZLIB_FETCHCONTENT=OFF",
-    "cmake --build build-certification --config Release --target agentic-resilience-tests",
-    "build-certification\\bin\\Release\\agentic-resilience-tests.exe"
+    "cmake -B build-certification -S tests/agentic_resilience -G Ninja -DCMAKE_BUILD_TYPE=Release",
+    "cmake --build build-certification",
+    "build-certification\\agentic-resilience-tests.exe"
   ]
 }

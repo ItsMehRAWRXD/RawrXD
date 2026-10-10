@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ============================================================
 enable_language(ASM_MASM)
 set(CMAKE_ASM_MASM_FLAGS "/nologo /W3 /Cx /Zi")
-message(STATUS "Γ£ô MASM assembler enabled for custom ZLIB compression")
+message(STATUS "Î“Â£Ã´ MASM assembler enabled for custom ZLIB compression")
 
 # ============================================================
 # 64-BIT ARCHITECTURE ENFORCEMENT
@@ -30,7 +30,7 @@ if(MSVC)
     if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
         message(FATAL_ERROR "CRITICAL: CMAKE_SIZEOF_VOID_P must be 8 (x64), got ${CMAKE_SIZEOF_VOID_P}")
     endif()
-    message(STATUS "Γ£ô 64-bit configuration validated: pointer size = ${CMAKE_SIZEOF_VOID_P}, platform = ${CMAKE_GENERATOR_PLATFORM}")
+    message(STATUS "Î“Â£Ã´ 64-bit configuration validated: pointer size = ${CMAKE_SIZEOF_VOID_P}, platform = ${CMAKE_GENERATOR_PLATFORM}")
 endif()
 
 # Pin MSVC runtime for deterministic builds - ALWAYS use /MD (dynamic CRT)
@@ -102,7 +102,7 @@ set(RAWRXD_QT_TARGETS "")
 if(RAWRXD_BUILD_TESTS)
     enable_testing()
     include(CTest)
-    message(STATUS "Γ£ô CTest infrastructure enabled - tests will be discoverable")
+    message(STATUS "Î“Â£Ã´ CTest infrastructure enabled - tests will be discoverable")
 endif()
 
 # ZLIB Configuration - optional compression library
@@ -113,13 +113,13 @@ option(USE_ZLIB_FETCHCONTENT "Auto-download and build zlib if not found" OFF)
 find_package(ZLIB QUIET HINTS C:/zlib C:/Program\ Files/zlib "C:/Program Files (x86)/zlib" /usr/local /usr)
 
 if(ZLIB_FOUND)
-    message(STATUS "Γ£ô ZLIB found at ${ZLIB_INCLUDE_DIR} - Native compression enabled")
+    message(STATUS "Î“Â£Ã´ ZLIB found at ${ZLIB_INCLUDE_DIR} - Native compression enabled")
     set(HAVE_ZLIB 1)
     set(HAVE_COMPRESSION 1)
 elseif(USE_ZLIB_FETCHCONTENT)
     # Auto-fetch zlib if not found on system
     include(FetchContent)
-    message(STATUS "Γä╣ ZLIB not found - attempting to auto-download from GitHub...")
+    message(STATUS "Î“Ã¤â•£ ZLIB not found - attempting to auto-download from GitHub...")
     
     FetchContent_Declare(zlib
         URL https://github.com/madler/zlib/archive/refs/tags/v1.3.tar.gz
@@ -130,14 +130,14 @@ elseif(USE_ZLIB_FETCHCONTENT)
     set(ZLIB_FOUND TRUE)
     set(HAVE_ZLIB 1)
     set(HAVE_COMPRESSION 1)
-    message(STATUS "Γ£ô ZLIB auto-downloaded and built successfully")
+    message(STATUS "Î“Â£Ã´ ZLIB auto-downloaded and built successfully")
 else()
     # Auto-fetch zlib if not found on system (optional - can be disabled with FETCHCONTENT_ZLIB=OFF)
     option(FETCHCONTENT_ZLIB "Auto-download and build zlib if not found" ON)
     
     if(FETCHCONTENT_ZLIB)
         include(FetchContent)
-        message(STATUS "Γä╣ ZLIB not found - attempting to auto-download from GitHub...")
+        message(STATUS "Î“Ã¤â•£ ZLIB not found - attempting to auto-download from GitHub...")
         
         FetchContent_Declare(zlib
             URL https://github.com/madler/zlib/archive/refs/tags/v1.3.tar.gz
@@ -147,9 +147,9 @@ else()
         set(ZLIB_FOUND TRUE)
         set(HAVE_ZLIB 1)
         set(HAVE_COMPRESSION 1)
-        message(STATUS "Γ£ô ZLIB auto-downloaded and built successfully")
+        message(STATUS "Î“Â£Ã´ ZLIB auto-downloaded and built successfully")
     else()
-        message(STATUS "Γä╣ ZLIB not installed - Using built-in MASM-based compression (BrutalGzip/Deflate)")
+        message(STATUS "Î“Ã¤â•£ ZLIB not installed - Using built-in MASM-based compression (BrutalGzip/Deflate)")
         message(STATUS "  MASM Compression Engines: BrutalGzip (MASM optimized), Deflate (fallback)")
         message(STATUS "  To use native zlib compression:")
         message(STATUS "    Option 1: vcpkg install zlib:x64-windows")
@@ -1026,7 +1026,7 @@ if(MSVC)
             target_compile_options(RawrXD-Compiler PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
         endif()
         
-        message(STATUS "Γ£ô RawrXD-Compiler: CLI compiler tool enabled (output: rawrxd.exe)")
+        message(STATUS "Î“Â£Ã´ RawrXD-Compiler: CLI compiler tool enabled (output: rawrxd.exe)")
 
         # ============================================================
         # RawrXD Compiler Library: Qt-integrated compiler for IDE use
@@ -1056,7 +1056,7 @@ if(MSVC)
             AUTOMOC ON
         )
         
-        message(STATUS "Γ£ô rawrxd_compiler_qt: Qt compiler library enabled")
+        message(STATUS "Î“Â£Ã´ rawrxd_compiler_qt: Qt compiler library enabled")
         
         # Add the MASM writers
         add_subdirectory(src/masm)
@@ -2409,7 +2409,7 @@ if(RAWRXD_BUILD_TESTS)
     # as built or tested.
     # ------------------------------------------------------------------
     set(AGENTIC_RESILIENCE_SOURCES
-        tests/agentic_resilience_test.cpp
+        tests/agentic_resilience/agentic_resilience_test.cpp
         src/agent/adaptive_retry.cpp
         src/agent/delegated_agents.cpp
         src/agentic/conflict_resolution.cpp
@@ -2423,7 +2423,7 @@ if(RAWRXD_BUILD_TESTS)
 
     if(_AGENTIC_RESILIENCE_COMPLETE)
         add_executable(agentic-resilience-tests
-            tests/agentic_resilience_test.cpp
+            tests/agentic_resilience/agentic_resilience_test.cpp
             src/agent/adaptive_retry.cpp
             src/agent/delegated_agents.cpp
             src/agentic/conflict_resolution.cpp
@@ -2444,7 +2444,7 @@ if(RAWRXD_BUILD_TESTS)
     else()
         list(APPEND RAWRXD_QT_TARGETS agentic-resilience-tests)
         message(STATUS "agentic-resilience-tests EXCLUDED: sources absent from this tree "
-            "(tests/agentic_resilience_test.cpp, src/agent/adaptive_retry.cpp, "
+            "(tests/agentic_resilience/agentic_resilience_test.cpp, src/agent/adaptive_retry.cpp, "
             "src/agent/delegated_agents.cpp, src/agentic/conflict_resolution.cpp)")
     endif()
 

@@ -466,8 +466,7 @@ std::string ThreeWayMerge::mergeHunk(const DiffHunk& hunk) const {
 }
 
 bool ThreeWayMerge::linesEquivalent(const std::string& a, const std::string& b,
-                                    const std::string& filePath) const {
-    (void)filePath;
+                                     const std::string& /*filePath - reserved for language rules*/) const {
     if (!m_options.semanticAware) return a == b;
     // Semantic mode: ignore trailing whitespace differences.
     return trimCopy(a) == trimCopy(b);
@@ -547,7 +546,7 @@ MergeResult ThreeWayMerge::merge(const std::string& base,
 
 MergeResult ThreeWayMerge::mergeEdits(const std::string& baseDocument,
                                       const std::vector<Edit>& edits,
-                                      const std::string& filePath) {
+                                      const std::string& /*filePath - accepted for API symmetry*/) {
     std::lock_guard<std::mutex> lock(m_mutex);
     MergeResult result;
 
