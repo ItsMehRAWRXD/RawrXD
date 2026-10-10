@@ -2,9 +2,9 @@
 
 **Certified:** 2026-10-10
 **Status:** PASS
-**Tests:** 148 passed, 0 failed
-**Source tree (deterministic provenance):** `ada097097bc3fff49515c5949311590da054bae8`
-**Source commit:** `7db0e1138`
+**Tests:** 148 subsystem + 40 production-integration = **188 assertions, 0 failures**
+**Source tree (deterministic provenance):** `e2d00fcf71ee16bbf29dd7c182eb6b0dda1bb2ca`
+**Source commit:** `255ad8d280`
 
 ---
 
@@ -54,6 +54,25 @@ concurrency without fabricating results.
 | Concurrency | `12/12 concurrent tasks succeeded` | Parallel delegation under quota |
 | Resource quota enforcement | depth limit, sub-agent quota, capability check, zero-budget | Quotas actually block work |
 
+### Production integration (the subsystems are actually used)
+
+Isolated subsystems prove nothing about the product. These assertions prove the
+real code path uses the certified engines rather than its own implementations.
+
+| Property | Evidence |
+|---|---|
+| Swarm delegates to the certified engine | 40 assertions in `tests/agentic_resilience/hexmag_integration_test.cpp` |
+| No agent edit discarded | `merged: A_LINE1 / B_LINE2 / C_LINE3` from 3 agents (2 were dropped before) |
+| Same-line collision visible | Both `FROM_A` and `FROM_B` retained with `<<<<<<<` markers |
+| Strategy honoured | `first_wins -> 'b\nEARLY'`, `last_wins -> 'b\nLATE'` |
+| Unknown strategy refused | `ensureConflictPolicy("totally_unknown_strategy")` returns false |
+| Empty input safe | No `edits[0]` index on an empty vector |
+
+Pre-fix behaviour this replaced: `mergeEdits()` returned only
+`edits.back().newContent`, so two of three concurrent agent edits were
+discarded. `detectConflicts()` did range-overlap detection only, reported every
+conflict as `"manual"`, and had no de-duplication.
+
 ### Engineering integrity
 
 | Property | Evidence |
@@ -83,21 +102,41 @@ Stated honestly, per the project's "no mocked success" rule:
    `Performance & Benchmark Tests`, and six Vulkan-dependent component jobs
    under `Automated Unit Tests & Component Tests` - remain failing. Those
    failures are outside this certification and are **not** claimed by it.
+6. **Only the conflict engine is integrated.** The HexMag swarm now delegates
+   conflict resolution to the certified engine. The `AdaptiveRetryEngine` and
+   `DelegationManager` still have **zero production callers**: specialists retry
+   via a bare `maxRetries = 3` counter with no backoff, jitter, or circuit
+   breaker, and agent spawning has no resource quotas, depth cap, or cooperative
+   cancellation. Those remain independently certified but not yet adopted.
+7. **HexMag itself is not committed.** `src/agentic/HexMagSwarmOrchestrator.cpp`
+   is untracked in git and has two pre-existing compile errors in unrelated
+   agent-coordinator wiring (lines 588/592). Its delegation edit exists in the
+   worktree but is deliberately excluded from the commit, so the wiring is
+   proven by the integration test against the bridge rather than by a HexMag
+   build.
 
 ---
 
 ## Remote CI evidence (verified against GitHub, not just locally)
 
-Run: **`38093080886`**
-Repository: `ItsMehRAWRXD/RawrXD`
-Head SHA: **`61c45e00fffa4bef22232ffb1edda5512e9169c5`** (this commit)
-Conclusion: **`success`** (triggered via `workflow_dispatch`)
-URL: https://github.com/ItsMehRAWRXD/RawrXD/actions/runs/38093080886
+Run: **`38095379303`**
+Head SHA: **`255ad8d28094a46a785cf51b960a0a26607dcf3f`** (the production integration commit)
+Conclusion: **`success`** (triggered via **`push`**, confirming the trigger fix)
+URL: https://github.com/ItsMehRAWRXD/RawrXD/actions/runs/38095379303
 
-Run: **`38093280607`**
-Head SHA: **`f7160077026bb0367bd3bd88cce2c576ce0c8bd0`**
-Conclusion: **`success`** (triggered via **`push`**)
-URL: https://github.com/ItsMehRAWRXD/RawrXD/actions/runs/38093280607
+This run executed **both** suites:
+
+```
+1/2 Test #1: agentic-resilience ...............   Passed    0.30 sec
+2/2 Test #2: hexmag-integration ...............   Passed    0.02 sec
+100% tests passed out of 2
+OK: agentic resilience subsystems are Qt-free (pure C++20).
+```
+
+Earlier runs:
+
+Run: **`38093080886`** (via `workflow_dispatch`, head `61c45e00ff`) - success
+Run: **`38093280607`** (via **`push`**, head `f716007702`) - success
 
 Both runs executed every step: Checkout / Initialize MSVC / Configure
 (self-contained, Ninja) / Build / Test / Verify no Qt dependency.
