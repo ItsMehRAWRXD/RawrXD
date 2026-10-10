@@ -2404,26 +2404,49 @@ if(RAWRXD_BUILD_TESTS)
     #   * conflict handling (3-way merge, semantic detection, auto-resolution)
     #   * delegated agents  (lifecycle, resource quotas, cross-agent messaging)
     # They MUST build and pass without Qt6, so they stay outside the Qt guard.
+    # The target is configured only when every source is present in the tree;
+    # when they are absent the exclusion is REPORTED - never silently claimed
+    # as built or tested.
     # ------------------------------------------------------------------
-    add_executable(agentic-resilience-tests
+    set(AGENTIC_RESILIENCE_SOURCES
         tests/agentic_resilience_test.cpp
         src/agent/adaptive_retry.cpp
         src/agent/delegated_agents.cpp
         src/agentic/conflict_resolution.cpp
     )
-    target_include_directories(agentic-resilience-tests PRIVATE
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/agent
-        ${CMAKE_SOURCE_DIR}/src/agentic
-    )
-    if(MSVC)
-        target_compile_options(agentic-resilience-tests PRIVATE /std:c++20 /EHsc /W4)
+    set(_AGENTIC_RESILIENCE_COMPLETE TRUE)
+    foreach(_src ${AGENTIC_RESILIENCE_SOURCES})
+        if(NOT EXISTS "${CMAKE_SOURCE_DIR}/${_src}")
+            set(_AGENTIC_RESILIENCE_COMPLETE FALSE)
+        endif()
+    endforeach()
+
+    if(_AGENTIC_RESILIENCE_COMPLETE)
+        add_executable(agentic-resilience-tests
+            tests/agentic_resilience_test.cpp
+            src/agent/adaptive_retry.cpp
+            src/agent/delegated_agents.cpp
+            src/agentic/conflict_resolution.cpp
+        )
+        target_include_directories(agentic-resilience-tests PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/agent
+            ${CMAKE_SOURCE_DIR}/src/agentic
+        )
+        if(MSVC)
+            target_compile_options(agentic-resilience-tests PRIVATE /std:c++20 /EHsc /W4)
+        else()
+            target_compile_options(agentic-resilience-tests PRIVATE -std=c++20 -Wall -Wextra)
+            find_package(Threads REQUIRED)
+            target_link_libraries(agentic-resilience-tests PRIVATE Threads::Threads)
+        endif()
+        add_test(NAME agentic-resilience COMMAND agentic-resilience-tests)
     else()
-        target_compile_options(agentic-resilience-tests PRIVATE -std=c++20 -Wall -Wextra)
-        find_package(Threads REQUIRED)
-        target_link_libraries(agentic-resilience-tests PRIVATE Threads::Threads)
+        list(APPEND RAWRXD_QT_TARGETS agentic-resilience-tests)
+        message(STATUS "agentic-resilience-tests EXCLUDED: sources absent from this tree "
+            "(tests/agentic_resilience_test.cpp, src/agent/adaptive_retry.cpp, "
+            "src/agent/delegated_agents.cpp, src/agentic/conflict_resolution.cpp)")
     endif()
-    add_test(NAME agentic-resilience COMMAND agentic-resilience-tests)
 
     if(Qt6_FOUND)
         add_subdirectory(tests)

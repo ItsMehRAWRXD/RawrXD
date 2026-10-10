@@ -69,6 +69,14 @@ jobs:
           cd build_tests
           cmake --build . --config ${{ matrix.config }} --target quant_scalar_smoke -j4
           if ($LASTEXITCODE -ne 0) { exit 1 }
+          # agentic-resilience-tests is configured only when its sources are
+          # present in the tree; build it when the target exists so its
+          # exclusion is never silently treated as success.
+          $targets = cmake --build . --target help 2>$null
+          cmake --build . --config ${{ matrix.config }} --target agentic-resilience-tests -j4 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "agentic-resilience-tests not present in this tree (target absent)"
+          }
 
       - name: Run Native Test Suite
         shell: pwsh
@@ -84,6 +92,14 @@ jobs:
           } else {
             Write-Error "Native test executable not found at $testExe"
             exit 1
+          }
+          $resilience = "tests/${{ matrix.config }}/agentic-resilience-tests.exe"
+          if (Test-Path $resilience) {
+            & $resilience
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "agentic-resilience-tests failed"
+              exit 1
+            }
           }
 
       - name: Upload Test Results
