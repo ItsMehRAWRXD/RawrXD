@@ -49,7 +49,8 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release `
                 -DCMAKE_CXX_FLAGS_RELEASE="/O2 /Oi /Ot /Oy" `
                 -DENABLE_BENCHMARKING=ON `
-                -G "Visual Studio 17 2022" `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
 
@@ -150,7 +151,8 @@ jobs:
           cd build_concurrency
           cmake -DCMAKE_BUILD_TYPE=Release `
                 -DENABLE_THREAD_SAFETY_TESTS=ON `
-                -G "Visual Studio 17 2022" `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
           cmake --build . --config Release --target concurrency_tests -j4
@@ -211,7 +213,8 @@ jobs:
           cd build_coverage
           cmake -DCMAKE_BUILD_TYPE=Debug `
                 -DENABLE_COVERAGE=ON `
-                -G "Visual Studio 17 2022" `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
           cmake --build . --config Debug --target RUN_TESTS -j4
@@ -282,7 +285,8 @@ jobs:
           cd build_asan
           cmake -DCMAKE_BUILD_TYPE=Debug `
                 -DENABLE_ASAN=ON `
-                -G "Visual Studio 17 2022" `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
           cmake --build . --config Debug --target RUN_TESTS -j4

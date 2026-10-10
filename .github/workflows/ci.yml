@@ -51,7 +51,7 @@ jobs:
           }
 
       - name: Build Win32 IDE
-        run: .\scripts\build.ps1 -Config Release -A x64
+        run: .\scripts\build.ps1 -Config Release -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
 
       - name: Set up Python
         uses: actions/setup-python@v5

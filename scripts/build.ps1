@@ -1,6 +1,8 @@
 param(
   [string]$Config = "Release",
-  [string]$A       = "x64"
+  [string]$A       = "x64",
+  [Parameter(ValueFromRemainingArguments = $true)]
+  [string[]]$Extra = @()
 )
 
 # Clean any stale, committed build artifacts that contain a mismatched CMakeCache
@@ -19,7 +21,7 @@ if (Test-Path -LiteralPath "CMakeCache.txt") {
 New-Item -ItemType Directory -Path "build" -Force | Out-Null
 
 Write-Host ">>> Configuring CMake ..."
-cmake -S . -B build -A $A -DCMAKE_BUILD_TYPE=$Config
+cmake -S . -B build -A $A -DCMAKE_BUILD_TYPE=$Config @Extra
 if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
 
 Write-Host ">>> Building ..."

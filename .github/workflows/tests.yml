@@ -55,7 +55,7 @@ jobs:
         shell: pwsh
         run: |
           if (!(Test-Path "3rdparty/googletest")) {
-            mkdir -p 3rdparty
+            New-Item -ItemType Directory -Path 3rdparty -Force | Out-Null
             Invoke-WebRequest -Uri "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip" -OutFile googletest.zip
             Expand-Archive -Path googletest.zip -DestinationPath 3rdparty
             Rename-Item -Path "3rdparty/googletest-1.14.0" -NewName "googletest"

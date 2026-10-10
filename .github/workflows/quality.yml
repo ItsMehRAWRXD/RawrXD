@@ -32,7 +32,7 @@ jobs:
       - name: Install LLVM/Clang
         shell: pwsh
         run: |
-          choco install llvm -y --version=17.0.6
+          choco install llvm -y --allow-downgrade --force
           echo "C:\Program Files\LLVM\bin" >> $env:GITHUB_PATH
 
       - name: Install Qt
@@ -140,7 +140,8 @@ jobs:
           cd build_warnings
           cmake -DCMAKE_BUILD_TYPE=Release `
                 -DCMAKE_CXX_FLAGS="/W4 /WX" `
-                -G "Visual Studio 17 2022" `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
           
@@ -283,15 +284,16 @@ jobs:
           
           foreach ($dep in $dependencies) {
             $report += "## $($dep.name)"
-            
-            if ($dep.PSObject.Properties.Name -contains "version") {
+
+            if ($dep.ContainsKey("version")) {
               $report += "- Version: $($dep.version)"
               $report += "- Minimum: $($dep.minVersion)"
-              $report += "- Status: ✅ OK"
+              $report += "- Status: OK (>= minimum)"
             } else {
-              $pathExists = Test-Path $dep.source
-              $report += "- Source: $($dep.source)"
-              $report += "- Status: $(if ($pathExists) { '✅ Present' } else { '❌ Missing' })"
+              $src = $dep["source"]
+              $pathExists = [bool]$src -and (Test-Path -LiteralPath $src)
+              $report += "- Source: $src"
+              $report += "- Status: $(if ($pathExists) { 'Present' } else { 'Missing' })"
             }
             $report += ""
           }
@@ -311,6 +313,9 @@ jobs:
   # ============================================================
   quality-summary:
     runs-on: windows-latest
+    permissions:
+      contents: read
+      pull-requests: write
     needs: [
       clang-tidy-analysis,
       compiler-warnings,

@@ -19,8 +19,18 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
+      - name: Install Qt via aqtinstall
+        shell: pwsh
+        run: |
+          pip install aqtinstall
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
+          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+
       - name: Build Win32 IDE
-        run: .\scripts\build.ps1 -Config Release -A x64
+        run: .\scripts\build.ps1 -Config Release -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -49,4 +59,7 @@ jobs:
       - name: Kill test swarm
         if: always()
         shell: pwsh
-        run: taskkill /F /IM python.exe
+        run: |
+          Get-Process python -ErrorAction SilentlyContinue |
+            Stop-Process -Force -ErrorAction SilentlyContinue
+          Write-Host "Swarm cleanup done (no-op when no python process is running)"

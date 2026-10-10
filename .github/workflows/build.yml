@@ -24,7 +24,7 @@ on:
 
 env:
   QT_VERSION: 6.7.3
-  QT_ARCH: msvc2022_64
+  QT_ARCH: msvc2019_64
 
 jobs:
   # ============================================================
@@ -85,10 +85,10 @@ jobs:
           mkdir $BuildDir -Force
           cd $BuildDir
           
-          cmake -DCMAKE_BUILD_TYPE=${{ matrix.config }} `
-                -G "Visual Studio 17 2022" `
+          cmake -DCMAKE_BUILD_TYPE=Release `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
                 -A ${{ matrix.arch }} `
-                -DQt6_DIR="C:/Qt/${{ env.QT_VERSION }}/${{ env.QT_ARCH }}/lib/cmake/Qt6" `
                 ..
           
           if ($LASTEXITCODE -ne 0) {
@@ -165,7 +165,7 @@ jobs:
       - name: Install LLVM/Clang
         shell: pwsh
         run: |
-          choco install llvm -y --version=17.0.6
+          choco install llvm -y --allow-downgrade --force
           echo "C:\Program Files\LLVM\bin" >> $env:GITHUB_PATH
 
       - name: Install NASM
@@ -217,6 +217,7 @@ jobs:
             build-essential \
             cmake \
             nasm \
+            glslc \
             qt6-base-dev \
             qt6-tools-dev \
             libvulkan-dev \
@@ -287,7 +288,8 @@ jobs:
           cd build_arm64
           
           cmake -DCMAKE_BUILD_TYPE=Release `
-                -G "Visual Studio 17 2022" `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
                 -A ARM64 `
                 ..
 
@@ -349,6 +351,9 @@ jobs:
   # ============================================================
   build-summary:
     runs-on: windows-latest
+    permissions:
+      contents: read
+      pull-requests: write
     needs: [
       build-windows-msvc,
       build-linux-gcc,

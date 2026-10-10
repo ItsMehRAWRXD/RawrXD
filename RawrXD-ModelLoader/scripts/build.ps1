@@ -1,10 +1,12 @@
 param(
   [string]$Config = "Release",
-  [string]$A       = "x64"
+  [string]$A       = "x64",
+  [Parameter(ValueFromRemainingArguments = $true)]
+  [string[]]$Extra = @()
 )
 
 Write-Host ">>> Configuring CMake ..."
-cmake -B build -A $A -DCMAKE_BUILD_TYPE=$Config
+cmake -B build -A $A -DCMAKE_BUILD_TYPE=$Config @Extra
 if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
 
 Write-Host ">>> Building ..."
