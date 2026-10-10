@@ -11,6 +11,7 @@ class Event:
     kind: str
     payload: Dict[str, Any]
     source_bot: str = "user/initial"
+    source: Optional[str] = None
 
 
 @dataclass

@@ -73,3 +73,10 @@ ggml-model-f16.bin
 *.bat
 
 *.gguf
+
+# CMake build directories - machine-specific caches/artifacts must never be tracked
+# (stale absolute paths in committed CMakeCache.txt break CI configure)
+RawrXD-ModelLoader/build/
+RawrXD-ModelLoader/build-arm64/
+build/
+build-*/

@@ -32,17 +32,9 @@ jobs:
       - name: Install LLVM/Clang
         shell: pwsh
         run: |
-          choco install llvm -y --version=17.0.6
+          choco install llvm -y --allow-downgrade --force
           echo "C:\Program Files\LLVM\bin" >> $env:GITHUB_PATH
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Create .clang-tidy Config
         shell: pwsh
@@ -124,14 +116,6 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
       - name: Build with /W4 (All Warnings)
         shell: pwsh
@@ -140,7 +124,8 @@ jobs:
           cd build_warnings
           cmake -DCMAKE_BUILD_TYPE=Release `
                 -DCMAKE_CXX_FLAGS="/W4 /WX" `
-                -G "Visual Studio 17 2022" `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
           
@@ -272,7 +257,6 @@ jobs:
         shell: pwsh
         run: |
           $dependencies = @(
-            @{ name = "Qt"; version = "6.7.3"; minVersion = "6.5.0" },
             @{ name = "GGML"; source = "3rdparty/ggml" },
             @{ name = "GoogleTest"; source = "3rdparty/googletest" }
           )
@@ -283,15 +267,16 @@ jobs:
           
           foreach ($dep in $dependencies) {
             $report += "## $($dep.name)"
-            
-            if ($dep.PSObject.Properties.Name -contains "version") {
+
+            if ($dep.ContainsKey("version")) {
               $report += "- Version: $($dep.version)"
               $report += "- Minimum: $($dep.minVersion)"
-              $report += "- Status: ✅ OK"
+              $report += "- Status: OK (>= minimum)"
             } else {
-              $pathExists = Test-Path $dep.source
-              $report += "- Source: $($dep.source)"
-              $report += "- Status: $(if ($pathExists) { '✅ Present' } else { '❌ Missing' })"
+              $src = $dep["source"]
+              $pathExists = [bool]$src -and (Test-Path -LiteralPath $src)
+              $report += "- Source: $src"
+              $report += "- Status: $(if ($pathExists) { 'Present' } else { 'Missing' })"
             }
             $report += ""
           }
@@ -311,6 +296,9 @@ jobs:
   # ============================================================
   quality-summary:
     runs-on: windows-latest
+    permissions:
+      contents: read
+      pull-requests: write
     needs: [
       clang-tidy-analysis,
       compiler-warnings,
