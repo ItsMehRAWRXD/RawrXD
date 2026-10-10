@@ -13,6 +13,10 @@ tmp/
 *.ilk
 *.log
 
+# Certification evidence is deliberately versioned even though *.log is
+# ignored above: it is the run transcript behind a certification record.
+!certification/*.log
+
 # CMake
 CMakeCache.txt
 CMakeFiles/
@@ -73,3 +77,10 @@ ggml-model-f16.bin
 *.bat
 
 *.gguf
+
+# CMake build directories - machine-specific caches/artifacts must never be tracked
+# (stale absolute paths in committed CMakeCache.txt break CI configure)
+RawrXD-ModelLoader/build/
+RawrXD-ModelLoader/build-arm64/
+build/
+build-*/

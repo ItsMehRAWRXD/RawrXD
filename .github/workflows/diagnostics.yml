@@ -78,8 +78,6 @@ jobs:
           Write-Host "=== Relevant Environment Variables ===" -ForegroundColor Cyan
           @(
             "PATH",
-            "Qt_DIR",
-            "Qt6_DIR",
             "CMAKE_PREFIX_PATH",
             "GGML_DIR",
             "VULKAN_SDK"
@@ -150,11 +148,12 @@ jobs:
           Write-Host "Checking CMakeLists.txt for dependencies..." -ForegroundColor Cyan
           
           $cmakeContent = Get-Content CMakeLists.txt -Raw
-          
-          if ($cmakeContent -match "find_package\(Qt6") {
-            Write-Host "✓ Qt6 dependency found" -ForegroundColor Green
+
+          # Qt6 is optional in the build system and is NOT installed in CI:
+          # RawrXD is dependency-free and native.
+          if ($cmakeContent -match "find_package\(Qt6 QUIET") {
+            Write-Host "✓ Qt6 handled as optional dependency (native build)" -ForegroundColor Green
           }
-          
           if ($cmakeContent -match "GTest") {
             Write-Host "✓ Google Test dependency found" -ForegroundColor Green
           }
@@ -185,10 +184,7 @@ jobs:
         run: |
           Write-Host "Installing dependencies..." -ForegroundColor Cyan
           choco install nasm -y
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
+          # RawrXD is dependency-free and native: no Qt, no GPU SDK required.
 
       - name: CMake Configuration Dry Run
         shell: pwsh
@@ -199,7 +195,6 @@ jobs:
           cd build_diag
           
           cmake -DCMAKE_BUILD_TYPE=Release `
-                -G "Visual Studio 17 2022" `
                 -A x64 `
                 --trace-expand `
                 .. 2>&1 | Tee-Object -FilePath cmake_trace.log
@@ -286,9 +281,7 @@ jobs:
             Write-Host "✓ Google Test framework configured" -ForegroundColor Green
           }
           
-          if ($cmakeContent -match "Qt.*Test") {
-            Write-Host "✓ Qt Test framework configured" -ForegroundColor Green
-          }
+          # Qt Test is not used: the native build has no Qt dependency.
 
   # ============================================================
   # Quality Diagnostics
@@ -421,8 +414,8 @@ jobs:
           - **Platform**: Windows (windows-latest)
           - **Build System**: CMake 3.20+
           - **Compiler**: MSVC 2022
-          - **Qt Version**: 6.7.3
-          - **Test Framework**: Google Test + Qt Test
+          - **GUI framework**: none (native, dependency-free)
+          - **Test Framework**: native smoke tests
           - **Total Test Cases**: 290+
           
           ## Recommendations

@@ -40,18 +40,40 @@ def test_endpoint(path, data=None, method='POST'):
         raise
 
 
+def run_swarm_readiness_test():
+    """Verify the swarm actually has bots loaded.
+
+    Without bots the engine falls back to canned answers in run_loop.py, so a
+    green /ask or /agent would be a mocked success. This check fails the smoke
+    test on an empty swarm instead of certifying it.
+    """
+    print("Verifying swarm readiness (bots loaded)...")
+    result = test_endpoint("/health", method='GET')
+
+    bots = result.get("bots")
+    if not isinstance(bots, int) or bots < 1:
+        raise AssertionError(
+            f"Swarm has no bots loaded (health={result}); a zero-bot engine "
+            "answers from canned fallbacks - refusing to treat that as success"
+        )
+
+    print(f"✅ Swarm ready with {bots} bot(s) loaded.")
+
+
 def run_ask_test():
     """Tests the synchronous /ask endpoint."""
     print("Running synchronous Q&A test (/ask)...")
+    # Ask the swarm for something the codegen bot actually handles, so the
+    # answer comes from a real bot rather than run_loop.py's canned fallback.
     payload = {
-        "question": "What is the key benefit of the HexMag architecture?",
+        "question": "Write a small ASM parser in C++",
         "code": "class BotState: pass"
     }
     result = test_endpoint("/ask", payload)
 
     if not result.get("answer"):
         raise AssertionError(f"'/ask' response missing 'answer' field: {result}")
-    
+
     print(f"✅ /ask succeeded. Answer length: {len(result['answer'])} chars.")
     print(f"  Snippet: {result['answer'][:60]}...")
 
@@ -59,7 +81,9 @@ def run_ask_test():
 def run_agent_test():
     """Tests the streaming /agent endpoint for goal satisfaction."""
     print("Running autonomous agent test (/agent)...")
-    goal = "List the first three stable LLM models released by Google and satisfy the goal."
+    # A goal the codegen bot can satisfy, so goal.satisfied is emitted by a
+    # real bot instead of the canned fallback.
+    goal = "Generate a small ASM parser in C++ and satisfy the goal."
     payload = {"goal": goal, "max_time": 30}
     
     url = f"{SWARM_HOST}/agent"
@@ -96,7 +120,8 @@ def run_agent_test():
 if __name__ == "__main__":
     try:
         print("Starting HexMag Smoke Tests...")
-        
+
+        run_swarm_readiness_test()
         run_ask_test()
         run_agent_test()
 

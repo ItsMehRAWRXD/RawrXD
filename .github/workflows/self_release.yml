@@ -8,12 +8,22 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build agent
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64 && cmake --build build --config Release --target RawrXD-Agent
+      - name: Build native project
+        run: cmake -B build -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF && cmake --build build --config Release
       - name: Let IDE improve itself
+        shell: pwsh
         run: |
-          set RAWRXD_WISH="Improve inference speed by 10 % without quality loss"
-          build\bin\Release\RawrXD-Agent.exe
+          # The autonomous agent binary (RawrXD-Agent) is a Qt-dependent
+          # target and Qt is not part of this dependency-free project. It is
+          # excluded by the build system and this step FAILS EXPLICITLY until a
+          # native agent target exists - it never silently skips.
+          $agent = "build\bin\Release\RawrXD-Agent.exe"
+          if (-not (Test-Path $agent)) {
+            Write-Error "RawrXD-Agent.exe not built: RawrXD-Agent is a Qt target and this project is dependency-free (no Qt). A native agent target is required before self-release can run."
+            exit 1
+          }
+          $env:RAWRXD_WISH = "Improve inference speed by 10 % without quality loss"
+          & $agent
         env:
           CERT_PATH: ${{ secrets.CERT_PATH }}
           CERT_PASS: ${{ secrets.CERT_PASS }}
