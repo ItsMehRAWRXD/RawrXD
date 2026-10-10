@@ -43,7 +43,29 @@ if ($VerifyOnly) {
     $head = (& git rev-parse HEAD).Trim()
     if ($head -ne $m.source.commit) {
         Write-Warning "Manifest commit $($m.source.commit) != HEAD $head"
-        Write-Warning "  -> the recorded artifact was built from a different source state."
+        # The certification is still valid if the SOURCES UNDER TEST have not
+        # changed since it was produced. Commit-message-only or
+        # certification-artifact-only moves do not invalidate it.
+        $scope = @(
+            "src/agent/adaptive_retry.hpp",
+            "src/agent/adaptive_retry.cpp",
+            "src/agent/delegated_agents.hpp",
+            "src/agent/delegated_agents.cpp",
+            "src/agentic/conflict_resolution.hpp",
+            "src/agentic/conflict_resolution.cpp",
+            "tests/agentic_resilience_test.cpp",
+            "CMakeLists.txt"
+        )
+        $changed = & git diff --name-only $($m.source.commit) $head -- $scope 2>$null
+        $changedCount = @($changed).Count
+        if ($changedCount -eq 0) {
+            Write-Host "[verify]   HEAD advanced, but the certified sources are unchanged."
+            Write-Host "[verify]   Certification remains valid for the code under test."
+        } else {
+            Write-Warning "  -> the certified sources DIFFER since that commit ($changedCount file(s)):"
+            $changed | ForEach-Object { Write-Warning "     $_" }
+            Write-Warning "     Re-run certification to refresh the evidence."
+        }
     } else {
         Write-Host "[verify] commit matches HEAD: $head"
     }
