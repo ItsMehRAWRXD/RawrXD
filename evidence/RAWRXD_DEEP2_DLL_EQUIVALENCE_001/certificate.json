@@ -7,7 +7,7 @@
     "git_commit": "394da2823f000de986ca379fc02a727a2ace7b3b",
     "git_branch": "ci/github-control-loop-001",
     "standalone_executable": "F:\\\\rawrxd\\\\tmp_build\\\\modelgenie_ir_executor.exe",
-    "standalone_sha256": "017B84874E491B0D0ADA02BE4BF68F849C15F84D9373699621A58BA0E500749D",
+    "standalone_sha256": "B0A0DA0FE48648EEAB70E8C7F29EBB08F8544BBCD4BB7E959FBD8EFBF7C45B8A",
     "core_dll": "F:\\\\rawrxd\\\\build_cert\\\\bin\\\\Release\\\\RawrXDCore.dll",
     "core_dll_sha256": "F9D387BB99684EBDDAEC7CB56A7AEE20FE8467E2FB9400DE0C075969141EECD2",
     "model": "F:\\\\rawrxd\\\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf",
@@ -18,7 +18,24 @@
     "max_seq_len": 1024,
     "threads": 4,
     "dtype": "Q4_K_M, FP32 logits",
-    "execution_mode": "teacher-forced, greedy (sampling disabled), incremental KV decode"
+    "execution_mode": "teacher-forced, greedy (sampling disabled), incremental KV decode",
+    "source_restoration_note": "Source files were missing from the working tree and were restored from the pre-parity snapshot ModelGenieExecutor.cpp.pre_parity_packed_dot_001.bak. The restored build was re-verified: it reproduces the certified 65-position native logits BITWISE (65/65), and the saved DLL logits remain bitwise identical to it (65/65). An alternative copy at tmp_build_owns was tested and REJECTED: it produced 6 argmax differences (e.g. pos 1 185->1, pos 22 1218->9057) with cosine ~0.994-0.999. The executable hash therefore changed from 017B8487... to B0A0DA0F... as a consequence of rebuilding from the restored source.",
+    "source_git_blob_hashes": {
+      "src/modelgenie/ModelGenieExecutor.cpp": "d799b79bae8632aa85e2bce3d1a658a0874aa27a",
+      "src/modelgenie/ModelGenieExecutor.hpp": "6f9e29cbbd9f0042df941a7d82553192e3d24cfd",
+      "tools/rawrxd_modelgenie_ir_executor.cpp": "ffb08b26eca15345cef4c2cee62d4aa2f88d0250",
+      "src/deep2/modelgenie/ModelGenome.cpp": "8893f29352d7a69f3fdba818b7f48f4e2c7bafc8",
+      "src/deep2/modelgenie/ModelGenomeReader.cpp": "e43a74f04174df2cc87f41c663c862fb893010fb"
+    },
+    "executable_hash_note": "MSVC embeds a build timestamp in the PE header, so the executable SHA-256 is NOT reproducible across rebuilds. Rebuilding the identical source produced three different hashes (017B8487..., B0A0DA0F..., DCC3583A...). The AUTHORITATIVE provenance anchor is therefore the source git blob hash plus the deterministic output-artifact hash, not the executable hash alone.",
+    "authoritative_provenance": {
+      "source_git_blob_ModelGenieExecutor_cpp": "d799b79bae8632aa85e2bce3d1a658a0874aa27a",
+      "source_git_blob_ModelGenieExecutor_hpp": "6f9e29cbbd9f0042df941a7d82553192e3d24cfd",
+      "source_git_blob_executor_tool_cpp": "ffb08b26eca15345cef4c2cee62d4aa2f88d0250",
+      "output_artifact_native_65pos_sha256": "e889e229f0860cb545c76970f7d55073ebe1027beb60ea11537de46bd8998801",
+      "output_artifact_dll_65pos_sha256": "e889e229f0860cb545c76970f7d55073ebe1027beb60ea11537de46bd8998801",
+      "note": "Both native and DLL 65-position aggregate hashes are identical and stable across rebuilds."
+    }
   },
   "test_tokens": [
     1,
@@ -119,5 +136,11 @@
     "Context reuse and reset/reload lifecycle stress test",
     "RAWRXD_TEACHER_FORCED_65_001 remains PARTIAL_PASS: llama.cpp reference reproducibility discrepancy unresolved (56/65 argmax vs regenerated reference, 19/20 vs original reference)"
   ],
-  "important_distinction": "This certificate proves DLL == standalone. It does NOT prove standalone == llama.cpp. Those are separate gates."
+  "important_distinction": "This certificate proves DLL == standalone. It does NOT prove standalone == llama.cpp. Those are separate gates.",
+  "reverification_after_source_restoration": {
+    "restored_build_vs_certified_native_logits": "65/65 BITWISE IDENTICAL",
+    "dll_vs_restored_build": "65/65 BITWISE IDENTICAL",
+    "rejected_alternative_source": "tmp_build_owns copy - 6 argmax differences, not equivalent",
+    "verdict": "Certificate remains VALID"
+  }
 }
