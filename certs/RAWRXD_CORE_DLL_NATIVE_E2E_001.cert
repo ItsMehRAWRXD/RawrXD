@@ -1,7 +1,7 @@
 {
   "certificate_id": "RAWRXD_CORE_DLL_NATIVE_E2E_001",
   "model_sha256": "5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4",
-  "git_commit": "aa25af23c7f55bf091229ad6ae28f38d41665c46",
+  "git_commit": "24d5cb69603069ebe309eaa907481fddd4a414eb",
   "gates": [
     {
       "gate": "TOKENIZER_CORE_PARITY",
