@@ -58,6 +58,10 @@ jobs:
         shell: pwsh
         run: |
           # These modules must stay dependency-free: pure C++20 standard library.
+          # NOTE: -CaseSensitive is REQUIRED. Select-String is case-insensitive by
+          # default, which makes '#include <Q[A-Z]' match the stdlib <queue> include
+          # and fails the check on perfectly valid code.
+          $pattern = 'QObject|QString|QJson|QByteArray|#include <Q[A-Z]'
           $targets = @(
             "src\agent\adaptive_retry.hpp",
             "src\agent\adaptive_retry.cpp",
@@ -70,7 +74,7 @@ jobs:
           $found = $false
           foreach ($t in $targets) {
             if (Test-Path $t) {
-              $hits = Select-String -Path $t -Pattern 'QObject|QString|QJson|QByteArray|#include <Q[A-Z]' -AllMatches
+              $hits = Select-String -Path $t -Pattern $pattern -CaseSensitive -AllMatches
               if ($hits) {
                 Write-Host "Qt dependency found in ${t}:"
                 $hits | ForEach-Object { Write-Host "  $($_.LineNumber): $($_.Line)" }

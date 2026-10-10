@@ -3,8 +3,24 @@
 **Certified:** 2026-10-10
 **Status:** PASS
 **Tests:** 148 passed, 0 failed
-**Executable SHA256:** `33f239bda25cececf6d2e69739193a4ba2e583f75b54d516fa82c329db026e95`
-**Source commit:** `fce93b7e0d6ca11b9f338a544630e06eb8891d13`
+**Source tree (deterministic provenance):** `15db8d775c34e254548d81d18703959dafe78ca3`
+**Source commit:** `23e0b66192d8c9476c78def320ccfda41d16a3bd`
+
+> ### Provenance note — read this before quoting a hash
+>
+> The SHA256 of the binary that ran is recorded in
+> `RAWRXD_AGENT_RELIABILITY_001.manifest.json`, but **MSVC builds are not
+> bit-for-bit reproducible**: timestamps and local build paths are embedded, so a
+> rebuild from identical sources yields a different hash. Two independent builds
+> from the same sources were confirmed to differ.
+>
+> Therefore:
+> - Use **`source_tree_sha1`** (`15db8d77…`) as the reproducible provenance
+>   anchor — it is identical on any machine for the same content.
+> - Treat the executable SHA256 as *"this specific binary was the one executed"*,
+>   **not** as proof of a reproducible build.
+> - The authoritative outcome is the **148 passed / 0 failed** result. Re-running
+>   reproduces the counts, not the binary bytes.
 
 ---
 

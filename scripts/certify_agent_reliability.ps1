@@ -71,14 +71,26 @@ if ($VerifyOnly) {
     }
 
     $exe = Join-Path $repo "build-certification" "Release" "agentic-resilience-tests.exe"
+    $treeSha = (& git rev-parse "HEAD^{tree}").Trim()
+    if ($treeSha -eq $m.source.source_tree_sha1) {
+        Write-Host "[verify] source tree matches manifest: $treeSha  (deterministic provenance OK)"
+    } else {
+        Write-Warning "Source tree differs from the manifest."
+        Write-Warning "  manifest : $($m.source.source_tree_sha1)"
+        Write-Warning "  actual   : $treeSha"
+    }
+
     if (Test-Path -LiteralPath $exe) {
         $h = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLower()
         if ($h -eq $m.artifact.sha256) {
             Write-Host "[verify] executable SHA256 matches manifest: $h"
         } else {
-            Write-Warning "Executable SHA256 mismatch."
+            Write-Warning "Executable SHA256 differs from the manifest."
             Write-Warning "  manifest : $($m.artifact.sha256)"
             Write-Warning "  actual   : $h"
+            Write-Warning "  This is EXPECTED for a rebuilt binary: MSVC embeds timestamps and"
+            Write-Warning "  local paths, so builds are not bit-for-bit reproducible. Rely on the"
+            Write-Warning "  source tree hash above, plus the pass/fail counters, for provenance."
         }
     } else {
         Write-Warning "Executable not found; re-run certification to rebuild."
@@ -182,9 +194,15 @@ echo BUILD_EXITCODE=%ERRORLEVEL%
     if (-not $exe) { throw "Executable not found after build" }
     Log "executable    : $($exe.FullName)"
 
+    # Deterministic provenance: the git object hash of the source tree. Unlike the
+    # binary SHA256 this is identical on any machine for the same content, so it is
+    # the value to use when asking "is this the same code I tested?".
+    $treeSha = (& git rev-parse "HEAD^{tree}").Trim()
+    Log "source tree   : $treeSha"
+
     $hash = (Get-FileHash -LiteralPath $exe.FullName -Algorithm SHA256).Hash.ToLower()
     $size = $exe.Length
-    Log "sha256        : $hash"
+    Log "exec sha256   : $hash  (identifies THIS binary only - see note below)"
     Log "size          : $size bytes"
 
     # ------------------------------------------------------------------
@@ -254,6 +272,9 @@ echo BUILD_EXITCODE=%ERRORLEVEL%
             commit = $commit
             branch = $branch
             dirty_in_scope = $dirtyInScope
+            # Deterministic and machine-independent: use THIS to answer
+            # "was this the same code that was tested?".
+            source_tree_sha1 = $treeSha
             note = "Only files covered by this certification are checked; the workspace contains many pre-existing untracked artifacts outside this scope."
         }
         artifact = [ordered]@{
@@ -261,6 +282,7 @@ echo BUILD_EXITCODE=%ERRORLEVEL%
             sha256      = $hash
             size_bytes  = $size
             path        = $exe.FullName.Replace("$repo\","").Replace("\","/")
+            reproducibility_note = "IMPORTANT: MSVC builds are NOT bit-for-bit deterministic (timestamps and local paths are embedded), so this SHA256 will differ on every rebuild even from identical sources. It identifies the specific binary that was executed for this certification; it is NOT a reproducible-build proof. For reproducible provenance use source.source_tree_sha1, or re-run the suite and confirm the same 148/148 pass."
         }
         results = [ordered]@{
             tests_passed = $passed
