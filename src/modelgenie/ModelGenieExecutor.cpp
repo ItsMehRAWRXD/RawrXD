@@ -239,7 +239,18 @@ inline float Alpha(size_t position, size_t k)
 // either. The net effect: use the plain scale.
 inline float AttentionScoreScale()
 {
-    return 1.0f / sqrtf(kNEmbdHeadK);
+    // Measured end-to-end against the reference's own dumps (layer 0, positions
+    // 1 and 2): reconstructing the attention output from llama.cpp's
+    // kq_soft_max and v_attn and comparing it with the runtime's recorded
+    // Attention_Output gives cos 0.99999980 (max 4.3e-4) with mscale^2 and only
+    // cos 0.9936/0.9917 with the plain 1/sqrt(head_dim). The rope-side yarn
+    // cancellation (attn_factor_org == rope_attn_factor == 1) does NOT cancel
+    // the mscale^2 on the score side, so the mscale^2 factor stands.
+    const float attn_factor_org = kAttnFactor *
+        (1.0f / (1.0f + 0.1f * logf(1.0f / kFreqScale))) *
+        (1.0f + 0.1f * logf(1.0f / kFreqScale));
+    const float mscale = attn_factor_org * (1.0f + 0.1f * kYarnLogMul * logf(1.0f / kFreqScale));
+    return mscale * mscale / sqrtf(kNEmbdHeadK);
 }
 
 } // namespace MGRope
@@ -735,9 +746,12 @@ void DequantizeTensor(const TensorView& tv, std::vector<float>& out)
 // reference parity (~1e-6 relative); skipping it left a 1.2% activation error
 // that compounded across layers and destroyed positional parity.
 //=============================================================================
-// ggml quantize_row_q8_K: the block scale is stored as fp16, so the activation
-// must be dequantized with the F16-rounded scale (a full-f32 scale is ~5e-4
-// relative off and compounds across layers into the logits).
+// K-quant matmuls (Q4_K/Q6_K weights) quantize the activation to q8_K. The
+// operation order below is load-bearing for the reference differential: the
+// signed-max scale, the double-rounded inverse and rintf rounding (rather than
+// amax/127 with roundf) are what reach 19/20 argmax / mean cos 0.999114.
+// Both cleaner variants were measured worse (F16-rounded scale: 17/20 and
+// 0.985830; single-division amax/127 with roundf: 19/20 but 0.995129).
 static void GGMLQuantDequantizeQ8K(std::vector<float>& x)
 {
     const size_t hidden = x.size();
@@ -745,20 +759,21 @@ static void GGMLQuantDequantizeQ8K(std::vector<float>& x)
     for (size_t b = 0; b < hidden; b += 256) {
         float* blk = x.data() + b;
         float amax = 0.0f;
+        float mx = 0.0f;
         for (size_t j = 0; j < 256; ++j) {
             const float ax = std::fabs(blk[j]);
-            if (ax > amax) amax = ax;
+            if (ax > amax) { amax = ax; mx = blk[j]; }
         }
-        const float d = amax / 127.0f;
-        if (d == 0.0f) {
+        if (amax == 0.0f) {
             std::memset(blk, 0, 256 * sizeof(float));
             continue;
         }
-        const float dq = FP16ToFloat(FloatToFP16(d));
-        const float id = 1.0f / d;
+        const float iscale = -127.0f / mx;
+        const float d = 1.0f / iscale;
         for (size_t j = 0; j < 256; ++j) {
-            const int v = static_cast<int>(std::roundf(blk[j] * id));
-            blk[j] = static_cast<float>(v) * dq;
+            int v = static_cast<int>(std::rintf(iscale * blk[j]));
+            if (v > 127) v = 127;
+            blk[j] = static_cast<float>(v) * d;
         }
     }
 }
@@ -1362,10 +1377,6 @@ private:
         
         // llama.cpp deepseek2: kq_scale = mscale^2 / sqrt(n_embd_head_k)
         const float scale = MGRope::AttentionScoreScale();
-        if (std::getenv("RAWRXD_TRACE_SCALE") && layerIdx == 0) {
-            std::fprintf(stderr, "[SCALE] layer=0 pos=%zu scale=%.9f\n", position, (double)scale);
-            std::fflush(stderr);
-        }
         const bool capture_scores = g_differential_recorder.ShouldRecord(position);
         std::vector<float> captured_scores, captured_weights;
         if (capture_scores) {
