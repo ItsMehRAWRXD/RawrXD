@@ -5,6 +5,7 @@
 #include "model_trainer.h"
 #include "qtapp/settings_manager.h"
 #include "memory_space_manager.h"
+#include "agentic_workflow_bridge.h"   // Cursor-like browser + GitHub cloud tools (Qt-free)
 #include <QFile>
 #include <QTextStream>
 #include <QFileInfo>
@@ -12,6 +13,65 @@
 #include <QRegularExpression>
 #include <QJsonDocument>
 #include <QDebug>
+
+// ============================================================================
+// Workflow bridge integration (nlohmann::json <-> QJson conversion)
+// The agentic_workflow_bridge is dependency-free (nlohmann/json + WinSDK).
+// These helpers let the Qt-based AgenticExecutor dispatch Cursor-like
+// browser_testing / github_cloud tools through the same callTool() surface.
+// ============================================================================
+namespace {
+    // Convert a QJsonValue to nlohmann::json (recursive).
+    nlohmann::json qJsonToNlohmann(const QJsonValue& v)
+    {
+        switch (v.type()) {
+        case QJsonValue::Null:     return nullptr;
+        case QJsonValue::Bool:     return v.toBool();
+        case QJsonValue::Double:   return v.toDouble();
+        case QJsonValue::String:   return v.toString().toStdString();
+        case QJsonValue::Array: {
+            nlohmann::json arr = nlohmann::json::array();
+            for (const QJsonValue& e : v.toArray())
+                arr.push_back(qJsonToNlohmann(e));
+            return arr;
+        }
+        case QJsonValue::Object: {
+            nlohmann::json obj = nlohmann::json::object();
+            const QJsonObject o = v.toObject();
+            for (auto it = o.begin(); it != o.end(); ++it)
+                obj[it.key().toStdString()] = qJsonToNlohmann(it.value());
+            return obj;
+        }
+        case QJsonValue::Undefined:
+        default:
+            return nullptr;
+        }
+    }
+
+    // Convert nlohmann::json to a QJsonValue (recursive).
+    QJsonValue nlohmannToQJson(const nlohmann::json& j)
+    {
+        if (j.is_null())        return QJsonValue();
+        if (j.is_boolean())     return QJsonValue(j.get<bool>());
+        if (j.is_number_integer()) return QJsonValue(static_cast<qint64>(j.get<long long>()));
+        if (j.is_number_unsigned()) return QJsonValue(static_cast<qint64>(j.get<unsigned long long>()));
+        if (j.is_number_float()) return QJsonValue(j.get<double>());
+        if (j.is_string())      return QJsonValue(QString::fromStdString(j.get<std::string>()));
+        if (j.is_array()) {
+            QJsonArray arr;
+            for (const auto& e : j)
+                arr.append(nlohmannToQJson(e));
+            return arr;
+        }
+        if (j.is_object()) {
+            QJsonObject obj;
+            for (auto it = j.begin(); it != j.end(); ++it)
+                obj[QString::fromStdString(it.key())] = nlohmannToQJson(it.value());
+            return obj;
+        }
+        return QJsonValue();
+    }
+} // anonymous namespace
 
 AgenticExecutor::AgenticExecutor(QObject* parent)
     : QObject(parent)
@@ -572,7 +632,19 @@ QJsonArray AgenticExecutor::getAvailableTools()
     // Model tools
     tools.append(QJsonObject{{"name", "train_model"}, {"description", "Fine-tune a GGUF model with dataset"}});
     tools.append(QJsonObject{{"name", "is_training"}, {"description", "Check if model training is in progress"}});
-    
+
+    // Cursor-like workflow tools (browser testing + GitHub cloud agents)
+    for (const auto& schema : RawrXD::Workflow::workflowToolSchemas()) {
+        QJsonObject toolObj;
+        toolObj["name"] = QString::fromStdString(schema.value("name", ""));
+        toolObj["description"] = QString::fromStdString(schema.value("description", ""));
+        if (schema.contains("parameters"))
+            toolObj["parameters"] = nlohmannToQJson(schema.at("parameters")).toObject();
+        if (schema.contains("required"))
+            toolObj["required"] = nlohmannToQJson(schema.at("required")).toArray();
+        tools.append(toolObj);
+    }
+
     return tools;
 }
 
@@ -583,6 +655,16 @@ QJsonObject AgenticExecutor::callTool(const QString& toolName, const QJsonObject
     result["params"] = params;
 
     qInfo() << "[AgenticExecutor] Calling tool:" << toolName;
+
+    // Cursor-like workflow tools (browser testing + GitHub cloud agents)
+    // are handled by the dependency-free workflow bridge.
+    {
+        nlohmann::json wfResult;
+        if (RawrXD::Workflow::dispatchWorkflowTool(
+                toolName.toStdString(), qJsonToNlohmann(params), wfResult)) {
+            return nlohmannToQJson(wfResult).toObject();
+        }
+    }
 
     if (toolName == "create_directory") {
         bool success = createDirectory(params["path"].toString());
