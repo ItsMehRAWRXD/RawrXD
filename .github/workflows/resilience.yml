@@ -19,11 +19,18 @@ on:
       - feat/**
       - bugfix/**
       - hotfix/**
+      # The active recovery/CI branch does NOT match any of the prefixes above,
+      # so without this pattern a push to it produced no run at all and the
+      # certification silently went unexecuted.
+      - ci/**
   pull_request:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref && github.ref || github.run_id }}
+  # head_ref is set for pull_request events; github.ref covers branch pushes.
+  # Without this a push-triggered run used a per-run id and never superseded
+  # the previous run on the same branch.
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 permissions:
