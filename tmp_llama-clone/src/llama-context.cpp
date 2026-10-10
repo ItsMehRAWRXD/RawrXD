@@ -1,4 +1,5 @@
 #include "llama-context.h"
+#include "llama-kq-probe.h"
 
 #include "ggml.h"
 #include "llama-arch.h"
@@ -2638,6 +2639,9 @@ ggml_status llama_context::graph_compute(
     if (status != GGML_STATUS_SUCCESS) {
         LLAMA_LOG_ERROR("%s: ggml_backend_sched_graph_compute_async failed with error %d\n", __func__, status);
     }
+
+    // RAW-XD diagnostic: dump any probe-registered tensors (no-op unless RAWRXD_PROBE_DIR is set)
+    rawrxd_probe_dump_and_clear();
 
     // fprintf(stderr, "splits: %d\n", ggml_backend_sched_get_n_splits(sched));
 

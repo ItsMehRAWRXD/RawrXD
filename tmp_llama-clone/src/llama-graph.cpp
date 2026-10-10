@@ -1,4 +1,5 @@
 #include "llama-graph.h"
+#include "llama-kq-probe.h"
 
 #include "llama-impl.h"
 #include "llama-model.h"
@@ -2762,6 +2763,9 @@ ggml_tensor * llm_graph_context::build_attn_mha(
     } else {
         ggml_tensor * kq = ggml_mul_mat(ctx0, k, q);
         cb(kq, "kq", il);
+        rawrxd_probe_register(q, "q_attn", il);
+        rawrxd_probe_register(k, "k_attn", il);
+        rawrxd_probe_register(v, "v_attn", il);
 
         // note: this op tends to require high floating point range
         //       while for some models F16 is enough, for others it is not, so we default to F32 here
@@ -2794,9 +2798,17 @@ ggml_tensor * llm_graph_context::build_attn_mha(
             cb(kq, "kq_plus_kq_b", il);
         }
 
+        // NOTE: a raw (pre-softmax) kq capture is intentionally not attempted
+        // here. ggml_soft_max_ext rewrites its input in place and the CPU
+        // scheduler aliases graph buffers, so any "keep alive" node we add is
+        // either folded into or overwritten by the softmax output. The probe
+        // captures kq_soft_max (the authoritative weights) instead, which is
+        // sufficient for reference comparison.
+
         kq = ggml_soft_max_ext(ctx0, kq, kq_mask, kq_scale, hparams.f_max_alibi_bias);
         ggml_soft_max_add_sinks(kq, sinks);
         cb(kq, "kq_soft_max", il);
+        rawrxd_probe_register(kq, "kq_soft_max", il);
 
         if (!v_trans) {
             // note: avoid this branch
@@ -2806,11 +2818,13 @@ ggml_tensor * llm_graph_context::build_attn_mha(
 
         ggml_tensor * kqv = ggml_mul_mat(ctx0, v, kq);
         cb(kqv, "kqv", il);
+        rawrxd_probe_register(kqv, "kqv", il);
 
         // for MLA with the absorption optimization, we need to "decompress" from MQA back to MHA
         if (v_mla) {
             kqv = ggml_mul_mat(ctx0, v_mla, kqv);
             cb(kqv, "kqv_mla", il);
+            rawrxd_probe_register(kqv, "kqv_mla", il);
         }
 
         cur = ggml_permute(ctx0, kqv, 0, 2, 1, 3);
