@@ -66,6 +66,7 @@ static std::string DenormalizeGpt2Piece(std::string_view piece)
 #include <mutex>
 #include <new>
 #include <string>
+#include <sys/stat.h>
 #include <utility>
 #include <vector>
 
@@ -193,6 +194,38 @@ MG_RUNTIME_API size_t mg_model_max_seq_len(const mg_model_t* model)
 MG_RUNTIME_API size_t mg_model_embedding_dim(const mg_model_t* model)
 {
     return model ? model->embedding_dim : 0;
+}
+
+MG_RUNTIME_API size_t mg_model_layer_count(const mg_model_t* model)
+{
+    if (!model) return 0;
+    // The IR table is generated from the loaded model, so the block count is
+    // the authority's own fact - callers must not re-parse the GGUF for it.
+    return static_cast<size_t>(GEN::kBlockCount);
+}
+
+MG_RUNTIME_API uint64_t mg_model_file_bytes(const mg_model_t* model)
+{
+    if (!model) return 0;
+    struct _stat64 st {};
+    if (_stat64(model->gguf_path.c_str(), &st) != 0) return 0;
+    return static_cast<uint64_t>(st.st_size);
+}
+
+MG_RUNTIME_API size_t mg_context_kv_floats_per_position(const mg_context_t* context)
+{
+    if (!context || !context->executor) return 0;
+    // Per layer the authority caches: the latent, the rope part, the up-projected
+    // key part and the value. Derived from the generated config so callers never
+    // hardcode architecture sizes.
+    return static_cast<size_t>(GEN::kBlockCount) *
+           (static_cast<size_t>(GEN::ModelConfig::kKvLoraRank) +
+            static_cast<size_t>(GEN::ModelConfig::kRopeDimensionCount) +
+            static_cast<size_t>(GEN::ModelConfig::kHeadCount) *
+                (static_cast<size_t>(GEN::ModelConfig::kKeyLength) -
+                 static_cast<size_t>(GEN::ModelConfig::kRopeDimensionCount)) +
+            static_cast<size_t>(GEN::ModelConfig::kHeadCount) *
+                static_cast<size_t>(GEN::ModelConfig::kValueLength));
 }
 
 //=============================================================================

@@ -99,6 +99,15 @@ MG_RUNTIME_API uint32_t mg_model_bos_token_id(const mg_model_t* model);
 MG_RUNTIME_API size_t mg_model_max_seq_len(const mg_model_t* model);
 MG_RUNTIME_API size_t mg_model_embedding_dim(const mg_model_t* model);
 
+// Authority-reported model facts (DEEP2_RUNTIME_OWNERSHIP_001). These are the
+// single source of truth for anything describing the loaded model; clients
+// must not re-derive them from their own GGUF mappings.
+MG_RUNTIME_API size_t mg_model_layer_count(const mg_model_t* model);
+// Size of the GGUF file this session mapped, in bytes (0 when unavailable).
+MG_RUNTIME_API uint64_t mg_model_file_bytes(const mg_model_t* model);
+// Cached floats per position across all layers in the authority's KV cache.
+MG_RUNTIME_API size_t mg_context_kv_floats_per_position(const mg_context_t* context);
+
 // Context state
 MG_RUNTIME_API size_t mg_context_position(const mg_context_t* context);
 MG_RUNTIME_API void mg_context_reset(mg_context_t* context);
