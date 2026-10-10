@@ -56,23 +56,22 @@ jobs:
         working-directory: services
         run: pip install -r requirements.txt
 
-      - name: Start HexMag Test Swarm (background on port 8001)
-        working-directory: services/hexmag
-        shell: pwsh
-        run: |
-          Start-Process python -ArgumentList "hexmag_engine.py --port 8001" -NoNewWindow
-          do {
-            Start-Sleep -Seconds 1
-            $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
-          } while ($r -ne 200)
-
-      - name: Smoke-test /ask and /agent endpoints
+      # One step: the runner terminates the process tree after each step, so a
+      # background swarm started earlier is gone by the next step.
+      - name: HexMag swarm smoke test (/ask + /agent)
         working-directory: services
         shell: pwsh
-        run: python test_smoke.py
-
-      - name: Kill test swarm
-        if: always()
-        shell: pwsh
         run: |
-          Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+          Start-Process python -ArgumentList @('hexmag\hexmag_engine.py', '--port', '8001') -NoNewWindow
+          try {
+            do {
+              Start-Sleep -Seconds 1
+              $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
+            } while ($r -ne 200)
+            Write-Host "Swarm healthy on :8001"
+            python test_smoke.py
+            if ($LASTEXITCODE -ne 0) { throw "HexMag smoke tests failed" }
+          } finally {
+            Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Write-Host "Swarm cleanup done"
+          }

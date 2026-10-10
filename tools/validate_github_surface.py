@@ -118,6 +118,19 @@ def validate_workflow(ref: str) -> None:
             )
 
     def check_paths(text: str, where: str, tag: str) -> None:
+        # Step-local relative paths resolve against the step's
+        # working-directory (falling back to the job default), not the repo
+        # root; fall back to the ref's tree for non-checked-out refs.
+        wd = step.get("working-directory") or job.get("defaults", {}).get(
+            "run", {}
+        ).get("working-directory", "")
+        base = os.path.join(REPO_ROOT, wd.replace("\\", "/")) if wd else REPO_ROOT
+
+        def local_exists(p: str) -> bool:
+            if os.path.exists(os.path.join(base, p)):
+                return True
+            return ref != "HEAD" and exists(p)
+
         for tok in sorted(set(PATH_TOKEN.findall(text))):
             # Skip option strings, globs and shell builtins.
             if tok.startswith("-") or "*" in tok:
@@ -125,7 +138,7 @@ def validate_workflow(ref: str) -> None:
             p = tok.replace("\\", "/")
             while p.startswith("./"):
                 p = p[2:]
-            if not exists(p):
+            if not local_exists(p):
                 add(P1, f"{tag}: {where} references missing path '{tok}'")
 
     for name in names:

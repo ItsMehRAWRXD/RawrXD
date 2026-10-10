@@ -59,13 +59,13 @@ jobs:
           cd build_bench
           Write-Host "📊 Testing AgentCoordinator Performance"
           Write-Host "Testing cycle detection on 1000-task graph..."
-          .\bin\Release\bench_q8_0_end2end.exe
+          .\tests\Release\bench_q8_0_end2end.exe
           
           Write-Host "Testing lock contention (submitPlan critical section)..."
-          .\bin\Release\bench_q8_0_end2end.exe
+          .\tests\Release\bench_q8_0_end2end.exe
           
           Write-Host "Testing concurrent task execution..."
-          .\bin\Release\bench_q8_0_end2end.exe
+          .\tests\Release\bench_q8_0_end2end.exe
 
       - name: Run ModelTrainer Benchmarks
         shell: pwsh
@@ -73,10 +73,10 @@ jobs:
           cd build_bench
           Write-Host "📊 Testing ModelTrainer Performance"
           Write-Host "Testing tokenization throughput (1000 sequences)..."
-          .\bin\Release\bench_flash_attn.exe
+          .\tests\Release\bench_flash_attn.exe
           
           Write-Host "Testing forward pass latency..."
-          .\bin\Release\bench_flash_attn.exe
+          .\tests\Release\bench_flash_attn.exe
 
       - name: Run InferenceEngine Benchmarks
         shell: pwsh
@@ -84,10 +84,10 @@ jobs:
           cd build_bench
           Write-Host "📊 Testing InferenceEngine Performance"
           Write-Host "Testing token generation latency..."
-          .\bin\Release\bench_q8_0_end2end.exe
+          .\tests\Release\bench_q8_0_end2end.exe
           
           Write-Host "Testing cache effectiveness..."
-          .\bin\Release\bench_q8_0_end2end.exe
+          .\tests\Release\bench_q8_0_end2end.exe
 
       - name: Upload Benchmark Results
         if: always()
@@ -148,13 +148,13 @@ jobs:
         run: |
           cd build_concurrency
           Write-Host "🔄 Running Concurrent Task Submission (100 tasks, 8 threads)"
-          .\bin\Release\bench_q8_0_end2end.exe
+          .\tests\Release\bench_q8_0_end2end.exe
           
           Write-Host "🔄 Running Concurrent Task Completion (100 tasks, 8 threads)"
-          .\bin\Release\bench_q8_0_end2end.exe
+          .\tests\Release\bench_q8_0_end2end.exe
           
           Write-Host "🔄 Running Cache Contention Test (1000 status queries, 8 threads)"
-          .\bin\Release\bench_q8_0_end2end.exe
+          .\tests\Release\bench_q8_0_end2end.exe
 
       - name: Upload Concurrency Test Results
         if: always()
@@ -189,14 +189,14 @@ jobs:
         run: |
           mkdir build_coverage -Force
           cd build_coverage
-          cmake -DCMAKE_BUILD_TYPE=Debug `
+          cmake -DCMAKE_BUILD_TYPE=Release `
                 -DENABLE_COVERAGE=ON `
                 -DRAWRXD_BUILD_BENCHMARKS=ON `
                 -DENABLE_VULKAN=OFF `
                 -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
-          cmake --build . --config Debug --target bench_q8_0_end2end -j4
+          cmake --build . --config Release --target bench_q8_0_end2end -j4
 
       - name: Run Coverage Analysis
         shell: pwsh
@@ -207,7 +207,7 @@ jobs:
           OpenCppCoverage.exe `
             --sources "$(Get-Location)/src" `
             --export_type html:"$covDir" `
-            -- "$(Get-Location)/build_coverage/bin/Debug/bench_q8_0_end2end.exe"
+            -- "$(Get-Location)/build_coverage/tests/Release/bench_q8_0_end2end.exe"
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
@@ -253,14 +253,14 @@ jobs:
         run: |
           mkdir build_asan -Force
           cd build_asan
-          cmake -DCMAKE_BUILD_TYPE=Debug `
+          cmake -DCMAKE_BUILD_TYPE=Release `
                 -DENABLE_ASAN=ON `
                 -DRAWRXD_BUILD_BENCHMARKS=ON `
                 -DENABLE_VULKAN=OFF `
                 -DGGML_VULKAN=OFF `
                 -A x64 `
                 ..
-          cmake --build . --config Debug --target bench_q8_0_end2end -j4
+          cmake --build . --config Release --target bench_q8_0_end2end -j4
 
       - name: Run Memory Safety Tests
         shell: pwsh
@@ -268,7 +268,7 @@ jobs:
         run: |
           cd build_asan
           Write-Host "🔍 Running tests with AddressSanitizer enabled"
-          .\bin\Debug\bench_q8_0_end2end.exe
+          .\tests\Release\bench_q8_0_end2end.exe
           
           if ($LASTEXITCODE -ne 0) {
             Write-Warning "AddressSanitizer detected issues - see logs"
