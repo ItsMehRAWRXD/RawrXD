@@ -1,12 +1,12 @@
 **********************
 PowerShell transcript start
-Start time: 20261010185555
+Start time: 20261010185836
 Username: RAWRXD\Garrett
 RunAs User: RAWRXD\Garrett
 Configuration Name: 
 Machine: RAWRXD (Microsoft Windows NT 10.0.26200.0)
 Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.6.0_x64__8wekyb3d8bbwe\pwsh.dll -NoProfile -ExecutionPolicy Bypass -File F:\rawrxd\scripts\certify_agent_reliability.ps1
-Process ID: 8712
+Process ID: 2564
 PSVersion: 7.6.6
 PSEdition: Core
 GitCommitId: 7.6.6
@@ -18,7 +18,7 @@ SerializationVersion: 1.1.0.1
 WSManStackVersion: 3.0
 **********************
 [certify] === RAWRXD_AGENT_RELIABILITY_001 certification run ===
-[certify] source commit : 61c45e00fffa4bef22232ffb1edda5512e9169c5
+[certify] source commit : 22975efe4063e2a0e0f952ce83bf62672d58d164
 [certify] branch        : ci/github-control-loop-001
 [certify] in-scope dirty: 0 file(s)
 [certify] configuring + building...
@@ -35,7 +35,7 @@ WSManStackVersion: 3.0
 -- Looking for pthread_create in pthread
 -- Looking for pthread_create in pthread - not found
 -- Found Threads: TRUE
--- Configuring done (1.4s)
+-- Configuring done (1.6s)
 -- Generating done (0.0s)
 -- Build files have been written to: F:/rawrxd/build-certification
 CONFIG_EXITCODE=0
@@ -46,8 +46,8 @@ CONFIG_EXITCODE=0
 [5/5] Linking CXX executable agentic-resilience-tests.exe
 BUILD_EXITCODE=0
 [certify] executable    : F:\rawrxd\build-certification\agentic-resilience-tests.exe
-[certify] source tree   : 23e00929823c7101e2e6ff2947bc7a76c054cd4c
-[certify] exec sha256   : 767d98e1770d51df507149326a3752eaecd2343b48db5efd0244f1e3c40f91af  (identifies THIS binary only - see note below)
+[certify] source tree   : c0bbb62a80a747121de12529f4fcfb75a74d255c
+[certify] exec sha256   : a30b02b489161b54bb5ee9fcfe2c464b3c81bf0636ba6ed22a97b0cc55f0fd3d  (identifies THIS binary only - see note below)
 [certify] size          : 423936 bytes
 [certify] running tests...
 RawrXD Agentic Resilience Test Suite (no dependencies)\
@@ -121,8 +121,8 @@ RawrXD Agentic Resilience Test Suite (no dependencies)\
   stats: detected=1 autoResolved=1 manualRequired=0\
 
 === conflict: manual resolution of an unresolved conflict ===
-  unresolved count=1 cid='1a12807d599-3'
-  manually resolved conflict 1a12807d599-3\
+  unresolved count=1 cid='1a1280a486d-3'
+  manually resolved conflict 1a1280a486d-3\
 
 === conflict: conflict log export ===
   exported conflict log\
@@ -132,7 +132,7 @@ RawrXD Agentic Resilience Test Suite (no dependencies)\
   dependency violation correctly classified\
 
 === delegation: create, delegate, complete ===
-  task task-1a12807d59f-1 -> success in 0ms\
+  task task-1a1280a4873-1 -> success in 0ms\
   agent state after completion: completed\
 
 === delegation: max delegation depth enforced ===
@@ -194,5 +194,5 @@ ALL TESTS PASSED\
 [certify] manifest      : F:\rawrxd\build-certification\manifest.json
 **********************
 PowerShell transcript end
-End time: 20261010185604
+End time: 20261010185845
 **********************

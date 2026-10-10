@@ -1,6 +1,6 @@
 {
   "certification_id": "RAWRXD_AGENT_RELIABILITY_001",
-  "generated_utc": "2026-10-10T22:56:04Z",
+  "generated_utc": "2026-10-10T22:58:45Z",
   "environment": {
     "os": "Microsoft Windows NT 10.0.26200.0",
     "architecture": "AMD64",
@@ -8,15 +8,15 @@
     "compiler": "MSVC (from VS BuildTools)"
   },
   "source": {
-    "commit": "61c45e00fffa4bef22232ffb1edda5512e9169c5",
+    "commit": "22975efe4063e2a0e0f952ce83bf62672d58d164",
     "branch": "ci/github-control-loop-001",
     "dirty_in_scope": [],
-    "source_tree_sha1": "23e00929823c7101e2e6ff2947bc7a76c054cd4c",
+    "source_tree_sha1": "c0bbb62a80a747121de12529f4fcfb75a74d255c",
     "note": "Only files covered by this certification are checked; the workspace contains many pre-existing untracked artifacts outside this scope."
   },
   "artifact": {
     "name": "agentic-resilience-tests.exe",
-    "sha256": "767d98e1770d51df507149326a3752eaecd2343b48db5efd0244f1e3c40f91af",
+    "sha256": "a30b02b489161b54bb5ee9fcfe2c464b3c81bf0636ba6ed22a97b0cc55f0fd3d",
     "size_bytes": 423936,
     "path": "build-certification/agentic-resilience-tests.exe",
     "reproducibility_note": "IMPORTANT: MSVC builds are NOT bit-for-bit deterministic (timestamps and local paths are embedded), so this SHA256 will differ on every rebuild even from identical sources. It identifies the specific binary that was executed for this certification; it is NOT a reproducible-build proof. For reproducible provenance use source.source_tree_sha1, or re-run the suite and confirm the same 148/148 pass."

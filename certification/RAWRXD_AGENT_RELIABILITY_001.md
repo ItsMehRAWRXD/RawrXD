@@ -91,8 +91,27 @@ Stated honestly, per the project's "no mocked success" rule:
 Run: **`38093080886`**
 Repository: `ItsMehRAWRXD/RawrXD`
 Head SHA: **`61c45e00fffa4bef22232ffb1edda5512e9169c5`** (this commit)
-Conclusion: **`success`**
+Conclusion: **`success`** (triggered via `workflow_dispatch`)
 URL: https://github.com/ItsMehRAWRXD/RawrXD/actions/runs/38093080886
+
+Run: **`38093280607`**
+Head SHA: **`f7160077026bb0367bd3bd88cce2c576ce0c8bd0`**
+Conclusion: **`success`** (triggered via **`push`**)
+URL: https://github.com/ItsMehRAWRXD/RawrXD/actions/runs/38093280607
+
+Both runs executed every step: Checkout / Initialize MSVC / Configure
+(self-contained, Ninja) / Build / Test / Verify no Qt dependency.
+
+Log evidence from run `38093280607`:
+
+```
+1/1 Test #1: agentic-resilience ...............   Passed    0.26 sec
+100% tests passed out of 1
+OK: agentic resilience subsystems are Qt-free (pure C++20).
+```
+
+Run `38093080886` produced the same `Passed 0.26 sec` result for the commit
+containing the build fix.
 
 | Step | Result | Log evidence |
 |---|---|---|
@@ -122,8 +141,11 @@ The cause was in the workflow's own trigger definition, not the build:
   per-run id for branch pushes, so push-triggered runs never superseded each
   other.
 
-Both defects are fixed, and the run above was produced by `workflow_dispatch`
-on this branch to obtain immediate evidence.
+Both defects were fixed, and two runs were produced on this branch to obtain
+immediate evidence: one via `workflow_dispatch` on the commit containing the
+build fix, and a later one via `push`, which confirms the trigger correction
+works - a push event on `ci/**` now starts this workflow rather than being
+silently ignored.
 
 ---
 
