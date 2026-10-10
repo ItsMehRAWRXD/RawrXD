@@ -18,6 +18,11 @@
 // with the TestResult::ERROR enumerator used throughout this module.
 #undef ERROR
 
+// Official WebView2 SDK header (vendored). Provides the real
+// ICoreWebView2* interfaces with correct MIDL vtables — no
+// hand-declared COM vtables.
+#include <WebView2.h>
+
 #include <sstream>
 #include <fstream>
 #include <algorithm>
@@ -25,6 +30,9 @@
 #include <thread>
 #include <condition_variable>
 #include <filesystem>
+#include <atomic>
+#include <mutex>
+#include <functional>
 
 namespace fs = std::filesystem;
 
@@ -42,54 +50,595 @@ class WebView2Frame;
 class WebView2ElementHandle;
 
 // ============================================================================
-// WebView2Container — Self-contained WebView2 host abstraction
+// WebView2Container — Real WebView2 host (ICoreWebView2* COM interfaces)
 // ============================================================================
-// Lightweight host for an embedded WebView2 webview. This is a self-contained
-// stub that satisfies the BrowserTestEngine interface; a full implementation
-// would back executeScript() with ICoreWebView2::ExecuteScript and route
-// navigation through ICoreWebView2::Navigate. Keeping it internal to this
-// translation unit avoids a dependency on the Win32 IDE's WebView2 host.
+// Self-contained WebView2 host backed by the official WebView2 SDK.
+// Uses the real ICoreWebView2Environment / ICoreWebView2Controller /
+// ICoreWebView2 COM interfaces (from the vendored WebView2.h) — no
+// hand-declared vtables.
+//
+// Lifecycle:
+//   1. initialize(hwnd, url): CoInitializeEx(STA) on the calling thread,
+//      CreateCoreWebView2EnvironmentWithOptions (async), then
+//      ICoreWebView2Environment::CreateCoreWebView2Controller(hwnd) (async).
+//      Both completions are marshalled through the STA message pump.
+//   2. executeScript(script): ICoreWebView2::ExecuteScript with a
+//      completion handler that captures the JSON result string.
+//   3. navigate(url): ICoreWebView2::Navigate.
+//   4. screenshot(): ICoreWebView2::CapturePreview(PNG) into an IStream.
+//   5. destroy(): release controller/webview/environment, CoUninitialize.
+//
+// Threading: WebView2 requires a single-threaded apartment (STA) with a
+// message pump. All WebView2 calls and their completion handlers run on
+// the thread that called initialize(). The container pumps messages while
+// waiting for async completions so callbacks are delivered.
 // ============================================================================
+
+// Forward-declare the completion handler implementations (defined below).
+class WebView2EnvCreatedHandler;
+class WebView2ControllerCreatedHandler;
+class WebView2ScriptCompletedHandler;
+class WebView2PreviewCompletedHandler;
+
 class WebView2Container {
 public:
     WebView2Container() = default;
-    ~WebView2Container() = default;
+    ~WebView2Container() { destroy(); }
 
-    // Execute JavaScript in the hosted webview (fire-and-forget).
-    void executeScript(const std::string& script) {
-        m_lastScript = script;
-        // Full implementation: webview->ExecuteScript(wScript, callback).
-    }
+    // Initialize the host against a parent window handle. Creates the
+    // WebView2 environment and controller on the calling (STA) thread.
+    bool initialize(void* hwnd, const std::string& url = std::string());
 
-    // Destroy the hosted webview and release COM resources.
-    void destroy() {
-        m_initialized = false;
-        m_lastScript.clear();
-    }
+    // Execute JavaScript and capture the JSON result string (synchronous).
+    // Returns the raw JSON result (e.g. "\"hello\"" or "42"). Empty on
+    // failure. Pumps the STA message loop while waiting.
+    std::string executeScript(const std::string& script);
+
+    // Navigate to a URL (synchronous, waits for NavigationCompleted).
+    bool navigate(const std::string& url);
+
+    // Capture a PNG screenshot into a byte vector (synchronous).
+    bool screenshot(std::vector<uint8_t>& pngBytes);
 
     // Resize the hosted webview to the given client-area rectangle.
-    void resize(int x, int y, int width, int height) {
-        m_x = x; m_y = y; m_width = width; m_height = height;
-    }
+    void resize(int x, int y, int width, int height);
 
-    // Initialize the host against a parent window handle.
-    bool initialize(void* hwnd, const std::string& url = std::string()) {
-        m_hwnd = hwnd;
-        m_initialized = true;
-        m_url = url;
-        return true;
-    }
+    // Destroy the hosted webview and release COM resources.
+    void destroy();
 
     bool isInitialized() const { return m_initialized; }
     const std::string& lastScript() const { return m_lastScript; }
 
+    // Get the browser version string from the environment (diagnostics).
+    std::string browserVersion() const { return m_browserVersion; }
+
+    // Get the current document title via ICoreWebView2::get_DocumentTitle.
+    std::string documentTitle();
+
+    // Get the current source URL via ICoreWebView2::get_Source.
+    std::string source();
+
 private:
+    // Pump the STA message loop until a completion predicate returns
+    // true or timeout elapses.
+    bool pumpUntil(const std::function<bool()>& done, int timeoutMs);
+
     void* m_hwnd = nullptr;
     bool m_initialized = false;
     int m_x = 0, m_y = 0, m_width = 0, m_height = 0;
     std::string m_url;
     std::string m_lastScript;
+    std::string m_browserVersion;
+
+    // COM apartment state. WebView2 requires STA; we initialize it on the
+    // thread that calls initialize() and uninitialize on destroy().
+    bool m_comInitialized = false;
+
+    // WebView2 COM interfaces (raw pointers; released in destroy()).
+    ICoreWebView2Environment* m_env = nullptr;
+    ICoreWebView2Controller* m_controller = nullptr;
+    ICoreWebView2* m_webview = nullptr;
 };
+
+// ============================================================================
+// Completion handler: ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler
+// ============================================================================
+class WebView2EnvCreatedHandler
+    : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler {
+public:
+    WebView2EnvCreatedHandler() : m_ref(1) {}
+
+    // IUnknown
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+        if (!ppv) return E_POINTER;
+        if (riid == IID_IUnknown || riid == IID_ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler) {
+            *ppv = static_cast<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&m_ref); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        ULONG r = InterlockedDecrement(&m_ref);
+        if (r == 0) delete this;
+        return r;
+    }
+
+    // Completion: store the environment and signal completion.
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT errorCode, ICoreWebView2Environment* result) override {
+        m_errorCode = errorCode;
+        m_env = result;
+        if (m_env) m_env->AddRef();
+        m_done.store(true);
+        return S_OK;
+    }
+
+    HRESULT errorCode() const { return m_errorCode; }
+    ICoreWebView2Environment* env() const { return m_env; }
+    bool done() const { return m_done.load(); }
+
+private:
+    volatile LONG m_ref;
+    HRESULT m_errorCode = E_FAIL;
+    ICoreWebView2Environment* m_env = nullptr;
+    std::atomic<bool> m_done{false};
+};
+
+// ============================================================================
+// Completion handler: ICoreWebView2CreateCoreWebView2ControllerCompletedHandler
+// ============================================================================
+class WebView2ControllerCreatedHandler
+    : public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler {
+public:
+    WebView2ControllerCreatedHandler() : m_ref(1) {}
+
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+        if (!ppv) return E_POINTER;
+        if (riid == IID_IUnknown || riid == IID_ICoreWebView2CreateCoreWebView2ControllerCompletedHandler) {
+            *ppv = static_cast<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&m_ref); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        ULONG r = InterlockedDecrement(&m_ref);
+        if (r == 0) delete this;
+        return r;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT errorCode, ICoreWebView2Controller* result) override {
+        m_errorCode = errorCode;
+        m_controller = result;
+        if (m_controller) m_controller->AddRef();
+        m_done.store(true);
+        return S_OK;
+    }
+
+    HRESULT errorCode() const { return m_errorCode; }
+    ICoreWebView2Controller* controller() const { return m_controller; }
+    bool done() const { return m_done.load(); }
+
+private:
+    volatile LONG m_ref;
+    HRESULT m_errorCode = E_FAIL;
+    ICoreWebView2Controller* m_controller = nullptr;
+    std::atomic<bool> m_done{false};
+};
+
+// ============================================================================
+// Completion handler: ICoreWebView2ExecuteScriptCompletedHandler
+// ============================================================================
+class WebView2ScriptCompletedHandler : public ICoreWebView2ExecuteScriptCompletedHandler {
+public:
+    WebView2ScriptCompletedHandler() : m_ref(1) {}
+
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+        if (!ppv) return E_POINTER;
+        if (riid == IID_IUnknown || riid == IID_ICoreWebView2ExecuteScriptCompletedHandler) {
+            *ppv = static_cast<ICoreWebView2ExecuteScriptCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&m_ref); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        ULONG r = InterlockedDecrement(&m_ref);
+        if (r == 0) delete this;
+        return r;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT errorCode, LPCWSTR result) override {
+        m_errorCode = errorCode;
+        if (SUCCEEDED(errorCode) && result) {
+            // Convert UTF-16 result to UTF-8.
+            int len = WideCharToMultiByte(CP_UTF8, 0, result, -1, nullptr, 0, nullptr, nullptr);
+            if (len > 0) {
+                std::string utf8(len - 1, '\0');
+                WideCharToMultiByte(CP_UTF8, 0, result, -1, utf8.data(), len, nullptr, nullptr);
+                m_result = utf8;
+            }
+        }
+        m_done.store(true);
+        return S_OK;
+    }
+
+    HRESULT errorCode() const { return m_errorCode; }
+    const std::string& result() const { return m_result; }
+    bool done() const { return m_done.load(); }
+
+private:
+    volatile LONG m_ref;
+    HRESULT m_errorCode = E_FAIL;
+    std::string m_result;
+    std::atomic<bool> m_done{false};
+};
+
+// ============================================================================
+// Completion handler: ICoreWebView2CapturePreviewCompletedHandler
+// ============================================================================
+class WebView2PreviewCompletedHandler : public ICoreWebView2CapturePreviewCompletedHandler {
+public:
+    WebView2PreviewCompletedHandler() : m_ref(1) {}
+
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+        if (!ppv) return E_POINTER;
+        if (riid == IID_IUnknown || riid == IID_ICoreWebView2CapturePreviewCompletedHandler) {
+            *ppv = static_cast<ICoreWebView2CapturePreviewCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&m_ref); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        ULONG r = InterlockedDecrement(&m_ref);
+        if (r == 0) delete this;
+        return r;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT errorCode) override {
+        m_errorCode = errorCode;
+        m_done.store(true);
+        return S_OK;
+    }
+
+    HRESULT errorCode() const { return m_errorCode; }
+    bool done() const { return m_done.load(); }
+
+private:
+    volatile LONG m_ref;
+    HRESULT m_errorCode = E_FAIL;
+    std::atomic<bool> m_done{false};
+};
+
+// ============================================================================
+// WebView2Container implementation
+// ============================================================================
+
+// Pump the STA message loop until `done` returns true or timeout elapses.
+// WebView2 completion handlers are delivered as window messages on the
+// STA thread, so we must service the message queue while waiting.
+bool WebView2Container::pumpUntil(const std::function<bool()>& done, int timeoutMs) {
+    auto start = std::chrono::steady_clock::now();
+    while (!done()) {
+        auto elapsed = std::chrono::steady_clock::now() - start;
+        if (timeoutMs > 0 && elapsed >= std::chrono::milliseconds(timeoutMs)) {
+            return false; // timeout
+        }
+        // Process all pending messages, then wait for the next one or a
+        // short interval. MsgWaitForMultipleObjects wakes on message
+        // arrival so we don't busy-spin.
+        DWORD waitMs = (timeoutMs > 0)
+            ? static_cast<DWORD>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                  std::chrono::milliseconds(timeoutMs) - elapsed).count())
+            : 100;
+        if (waitMs == 0) waitMs = 1;
+        DWORD result = MsgWaitForMultipleObjects(0, nullptr, FALSE, waitMs, QS_ALLINPUT);
+        if (result == WAIT_OBJECT_0) {
+            // Messages are pending; drain them.
+            MSG msg;
+            while (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
+            }
+        }
+    }
+    return true;
+}
+
+bool WebView2Container::initialize(void* hwnd, const std::string& url) {
+    m_hwnd = hwnd;
+    m_url = url;
+
+    // WebView2 requires a single-threaded apartment. Initialize COM as STA
+    // on the calling thread (the thread that will pump messages).
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (SUCCEEDED(hr)) {
+        m_comInitialized = true;
+    } else if (hr != RPC_E_CHANGED_MODE) {
+        return false;
+    }
+
+    // Load the WebView2 loader DLL (WebView2Loader.dll) which exports
+    // CreateCoreWebView2EnvironmentWithOptions. The loader is vendored
+    // alongside the SDK header.
+    typedef HRESULT(STDMETHODCALLTYPE* CreateEnvFn)(
+        PCWSTR, PCWSTR, ICoreWebView2EnvironmentOptions*,
+        ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler*);
+
+    HMODULE loader = LoadLibraryA("WebView2Loader.dll");
+    if (!loader) {
+        // Fall back to the DLL in the application directory.
+        loader = LoadLibraryA("include\\WebView2Loader.dll");
+    }
+    if (!loader) {
+        if (m_comInitialized) { CoUninitialize(); m_comInitialized = false; }
+        return false;
+    }
+    auto createEnv = reinterpret_cast<CreateEnvFn>(
+        GetProcAddress(loader, "CreateCoreWebView2EnvironmentWithOptions"));
+    if (!createEnv) {
+        FreeLibrary(loader);
+        if (m_comInitialized) { CoUninitialize(); m_comInitialized = false; }
+        return false;
+    }
+
+    // Create the WebView2 environment (async). The completion handler
+    // is invoked on the STA thread once the environment is ready.
+    auto envHandler = new WebView2EnvCreatedHandler();
+    std::wstring userDataFolder;
+    {
+        // Use a per-process temp user-data folder so the webview has a
+        // writable partition (required by the WebView2 runtime).
+        char tempPath[MAX_PATH] = {0};
+        GetTempPathA(MAX_PATH, tempPath);
+        char folder[MAX_PATH] = {0};
+        GetTempFileNameA(tempPath, "wv2", 0, folder);
+        // GetTempFileNameA creates a file; remove it so we can use the name
+        // as a directory.
+        DeleteFileA(folder);
+        CreateDirectoryA(folder, nullptr);
+        int wlen = MultiByteToWideChar(CP_UTF8, 0, folder, -1, nullptr, 0);
+        if (wlen > 0) {
+            userDataFolder.resize(wlen - 1);
+            MultiByteToWideChar(CP_UTF8, 0, folder, -1, userDataFolder.data(), wlen);
+        }
+    }
+
+    hr = createEnv(nullptr, userDataFolder.empty() ? nullptr : userDataFolder.c_str(),
+                   nullptr, envHandler);
+    if (FAILED(hr)) {
+        envHandler->Release();
+        FreeLibrary(loader);
+        if (m_comInitialized) { CoUninitialize(); m_comInitialized = false; }
+        return false;
+    }
+
+    // Pump messages until the environment is created (or 30s timeout).
+    if (!pumpUntil([&]() { return envHandler->done(); }, 30000) || FAILED(envHandler->errorCode())) {
+        envHandler->Release();
+        FreeLibrary(loader);
+        if (m_comInitialized) { CoUninitialize(); m_comInitialized = false; }
+        return false;
+    }
+
+    m_env = envHandler->env();
+    if (m_env) m_env->AddRef();
+
+    // Read the browser version for diagnostics.
+    {
+        LPWSTR versionInfo = nullptr;
+        if (SUCCEEDED(m_env->get_BrowserVersionString(&versionInfo)) && versionInfo) {
+            int len = WideCharToMultiByte(CP_UTF8, 0, versionInfo, -1, nullptr, 0, nullptr, nullptr);
+            if (len > 0) {
+                m_browserVersion.resize(len - 1);
+                WideCharToMultiByte(CP_UTF8, 0, versionInfo, -1, m_browserVersion.data(), len, nullptr, nullptr);
+            }
+            CoTaskMemFree(versionInfo);
+        }
+    }
+
+    envHandler->Release();
+
+    // Create the controller bound to the parent window (async).
+    auto ctrlHandler = new WebView2ControllerCreatedHandler();
+    hr = m_env->CreateCoreWebView2Controller(static_cast<HWND>(m_hwnd), ctrlHandler);
+    if (FAILED(hr)) {
+        ctrlHandler->Release();
+        FreeLibrary(loader);
+        destroy();
+        return false;
+    }
+
+    if (!pumpUntil([&]() { return ctrlHandler->done(); }, 30000) || FAILED(ctrlHandler->errorCode())) {
+        ctrlHandler->Release();
+        FreeLibrary(loader);
+        destroy();
+        return false;
+    }
+
+    m_controller = ctrlHandler->controller();
+    if (m_controller) m_controller->AddRef();
+    ctrlHandler->Release();
+
+    // Obtain the ICoreWebView2 from the controller.
+    if (m_controller) {
+        ICoreWebView2* webview = nullptr;
+        if (SUCCEEDED(m_controller->get_CoreWebView2(&webview)) && webview) {
+            m_webview = webview; // already AddRef'd by get_CoreWebView2
+        }
+    }
+
+    // Size the webview to the parent client area.
+    if (m_controller && m_hwnd) {
+        RECT rc = {0, 0, m_width ? m_width : 1280, m_height ? m_height : 720};
+        if (!m_width || !m_height) {
+            GetClientRect(static_cast<HWND>(m_hwnd), &rc);
+        }
+        m_controller->put_Bounds(rc);
+    }
+
+    FreeLibrary(loader);
+
+    // Navigate to the initial URL if provided.
+    if (!url.empty()) {
+        navigate(url);
+    }
+
+    m_initialized = true;
+    return true;
+}
+
+std::string WebView2Container::executeScript(const std::string& script) {
+    if (!m_webview) return std::string();
+
+    m_lastScript = script;
+
+    // Convert UTF-8 script to UTF-16.
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, script.c_str(), -1, nullptr, 0);
+    if (wlen <= 0) return std::string();
+    std::wstring wscript(wlen - 1, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, script.c_str(), -1, wscript.data(), wlen);
+
+    auto handler = new WebView2ScriptCompletedHandler();
+    HRESULT hr = m_webview->ExecuteScript(wscript.c_str(), handler);
+    if (FAILED(hr)) {
+        handler->Release();
+        return std::string();
+    }
+
+    // Pump messages until the script completes (or 30s timeout).
+    if (!pumpUntil([&]() { return handler->done(); }, 30000) || FAILED(handler->errorCode())) {
+        handler->Release();
+        return std::string();
+    }
+
+    std::string result = handler->result();
+    handler->Release();
+    return result;
+}
+
+bool WebView2Container::navigate(const std::string& url) {
+    if (!m_webview) return false;
+
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, url.c_str(), -1, nullptr, 0);
+    if (wlen <= 0) return false;
+    std::wstring wurl(wlen - 1, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, url.c_str(), -1, wurl.data(), wlen);
+
+    HRESULT hr = m_webview->Navigate(wurl.c_str());
+    if (FAILED(hr)) return false;
+
+    // Wait for the document to reach a complete readyState by polling
+    // document.readyState via ExecuteScript. This avoids needing a
+    // NavigationCompleted event handler registration.
+    auto start = std::chrono::steady_clock::now();
+    while (std::chrono::steady_clock::now() - start < std::chrono::milliseconds(30000)) {
+        std::string ready = executeScript("(function(){ return document.readyState; })()");
+        // ready is a JSON string like "\"complete\""
+        if (ready.find("complete") != std::string::npos) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    return true; // Navigate() succeeded; treat as done even if poll timed out
+}
+
+bool WebView2Container::screenshot(std::vector<uint8_t>& pngBytes) {
+    if (!m_webview) return false;
+
+    // Create an in-memory IStream to receive the PNG.
+    IStream* stream = nullptr;
+    HRESULT hr = CreateStreamOnHGlobal(nullptr, TRUE, &stream);
+    if (FAILED(hr) || !stream) return false;
+
+    auto handler = new WebView2PreviewCompletedHandler();
+    hr = m_webview->CapturePreview(COREWEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG, stream, handler);
+    if (FAILED(hr)) {
+        handler->Release();
+        stream->Release();
+        return false;
+    }
+
+    if (!pumpUntil([&]() { return handler->done(); }, 30000) || FAILED(handler->errorCode())) {
+        handler->Release();
+        stream->Release();
+        return false;
+    }
+    handler->Release();
+
+    // Read the PNG bytes from the stream.
+    HGLOBAL hGlobal = nullptr;
+    if (SUCCEEDED(GetHGlobalFromStream(stream, &hGlobal)) && hGlobal) {
+        SIZE_T size = GlobalSize(hGlobal);
+        void* data = GlobalLock(hGlobal);
+        if (data && size > 0) {
+            pngBytes.assign(static_cast<uint8_t*>(data), static_cast<uint8_t*>(data) + size);
+        }
+        GlobalUnlock(hGlobal);
+    }
+    stream->Release();
+    return !pngBytes.empty();
+}
+
+void WebView2Container::resize(int x, int y, int width, int height) {
+    m_x = x; m_y = y; m_width = width; m_height = height;
+    if (m_controller) {
+        RECT rc = { x, y, x + width, y + height };
+        m_controller->put_Bounds(rc);
+    }
+}
+
+void WebView2Container::destroy() {
+    if (m_webview) { m_webview->Release(); m_webview = nullptr; }
+    if (m_controller) { m_controller->Release(); m_controller = nullptr; }
+    if (m_env) { m_env->Release(); m_env = nullptr; }
+    m_initialized = false;
+    m_lastScript.clear();
+
+    if (m_comInitialized) {
+        CoUninitialize();
+        m_comInitialized = false;
+    }
+}
+
+std::string WebView2Container::documentTitle() {
+    if (!m_webview) return std::string();
+    LPWSTR title = nullptr;
+    if (FAILED(m_webview->get_DocumentTitle(&title)) || !title) {
+        return std::string();
+    }
+    int len = WideCharToMultiByte(CP_UTF8, 0, title, -1, nullptr, 0, nullptr, nullptr);
+    std::string utf8;
+    if (len > 0) {
+        utf8.resize(len - 1);
+        WideCharToMultiByte(CP_UTF8, 0, title, -1, utf8.data(), len, nullptr, nullptr);
+    }
+    CoTaskMemFree(title);
+    return utf8;
+}
+
+std::string WebView2Container::source() {
+    if (!m_webview) return std::string();
+    LPWSTR uri = nullptr;
+    if (FAILED(m_webview->get_Source(&uri)) || !uri) {
+        return std::string();
+    }
+    int len = WideCharToMultiByte(CP_UTF8, 0, uri, -1, nullptr, 0, nullptr, nullptr);
+    std::string utf8;
+    if (len > 0) {
+        utf8.resize(len - 1);
+        WideCharToMultiByte(CP_UTF8, 0, uri, -1, utf8.data(), len, nullptr, nullptr);
+    }
+    CoTaskMemFree(uri);
+    return utf8;
+}
 
 // ============================================================================
 // Helper: Generate unique IDs
@@ -481,6 +1030,9 @@ public:
 
     // Internal: Get browser type
     BrowserType getType() const { return m_type; }
+
+    // Internal: host window for WebView2 controllers.
+    HWND hiddenWindow() const { return m_hiddenWindow; }
 
 private:
     BrowserType m_type;
@@ -1301,30 +1853,19 @@ std::future<bool> WebView2Page::gotoURL(const std::string& url, const NavigateOp
         std::lock_guard<std::mutex> lock(m_mutex);
         if (m_closed || !m_container) return false;
 
-        // Navigate the WebView2
-        std::wstring wUrl(url.begin(), url.end());
-        // Use the container's navigate method
-        // Note: WebView2Container doesn't expose Navigate directly in our header,
-        // so we use executeScript to set location
-        std::string script = "(function() { "
-            "window.location.href = '" + jsonEscape(url) + "'; "
-            "return true; "
-        "})()";
+        // Navigate the WebView2 via ICoreWebView2::Navigate.
+        // navigate() waits for document.readyState == "complete".
+        bool ok = m_container->navigate(url);
 
-        // Wait for navigation to complete
-        auto start = std::chrono::steady_clock::now();
         m_url = url;
         m_mainFrame->setUrl(url);
 
-        // Wait for load state
-        if (options.waitUntil == WaitUntil::LOAD) {
-            while (std::chrono::steady_clock::now() - start < std::chrono::milliseconds(options.timeoutMs)) {
-                std::string readyState = executeScriptStringSync("(function() { return document.readyState; })()");
-                if (readyState == "complete") return true;
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            }
+        // If the container couldn't confirm completion (e.g. poll
+        // timeout), fall back to a load-state wait when requested.
+        if (ok && options.waitUntil == WaitUntil::LOAD) {
+            ok = waitForLoadState(WaitUntil::LOAD, options.timeoutMs).get();
         }
-        return true;
+        return ok;
     });
 }
 
@@ -1357,14 +1898,25 @@ std::future<bool> WebView2Page::waitForLoadState(WaitUntil state, int timeoutMs)
 }
 
 std::string WebView2Page::url() const {
+    // Prefer the live source URL from the WebView2 when available.
+    if (m_container) {
+        std::string src = m_container->source();
+        if (!src.empty()) return src;
+    }
     return m_url;
 }
 
 std::future<std::string> WebView2Page::title() {
     return std::async(std::launch::async, [this]() -> std::string {
+        // Use the real ICoreWebView2::get_DocumentTitle when the
+        // container is live; fall back to a script evaluation.
+        if (m_container) {
+            std::string t = m_container->documentTitle();
+            if (!t.empty()) return t;
+        }
         std::string script = "(function() { "
             "return document.title; "
-        "})()";
+            "})()";
         return executeScriptStringSync(script);
     });
 }
@@ -1718,7 +2270,37 @@ std::future<bool> WebView2Page::mouseWheel(int deltaX, int deltaY) {
 
 std::future<std::string> WebView2Page::screenshot(const ScreenshotOptions& options) {
     return std::async(std::launch::async, [this, options]() -> std::string {
-        // Capture screenshot via canvas
+        // Capture the preview via ICoreWebView2::CapturePreview(PNG).
+        // This produces a real PNG of the rendered page.
+        std::vector<uint8_t> pngBytes;
+        if (m_container && m_container->screenshot(pngBytes) && !pngBytes.empty()) {
+            if (!options.path.empty()) {
+                std::ofstream out(options.path, std::ios::binary);
+                out.write(reinterpret_cast<const char*>(pngBytes.data()),
+                          static_cast<std::streamsize>(pngBytes.size()));
+            }
+            // Return a data URL for parity with the previous interface.
+            static const char* b64chars =
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            std::string base64;
+            int val = 0, valb = -8;
+            for (uint8_t c : pngBytes) {
+                val = (val << 8) + c;
+                valb += 8;
+                while (valb >= 0) {
+                    base64.push_back(b64chars[(val >> valb) & 0x3F]);
+                    valb -= 6;
+                }
+            }
+            if (valb > -8) {
+                base64.push_back(b64chars[((val << 8) >> (valb + 8)) & 0x3F]);
+            }
+            while (base64.size() % 4) base64.push_back('=');
+            return "data:image/png;base64," + base64;
+        }
+
+        // Fallback: capture via canvas (only if the real capture
+        // is unavailable, e.g. the webview is not yet live).
         std::string script = "(function() { "
             "const canvas = document.createElement('canvas'); "
             "canvas.width = window.innerWidth; "
@@ -1726,12 +2308,11 @@ std::future<std::string> WebView2Page::screenshot(const ScreenshotOptions& optio
             "const ctx = canvas.getContext('2d'); "
             "ctx.drawWindow(window, 0, 0, window.innerWidth, window.innerHeight, '#fff'); "
             "return canvas.toDataURL('image/png'); "
-        "})()";
+            "})()";
         std::string dataUrl = executeScriptStringSync(script);
         if (dataUrl.empty() || dataUrl.find("data:image/png;base64,") != 0) {
             return "";
         }
-        // Decode base64 and save
         std::string base64 = dataUrl.substr(22);
         if (!options.path.empty()) {
             std::ofstream out(options.path, std::ios::binary);
@@ -2003,13 +2584,17 @@ std::future<bool> WebView2Page::restoreCheckpoint(const json& state) {
 
 json WebView2Page::executeScriptSync(const std::string& script) {
     if (!m_container) return nullptr;
-    // Execute script and capture result via a temporary mechanism
-    // Since WebView2Container::executeScript doesn't return a value,
-    // we use a result buffer approach
-    std::string resultScript = script + ";";
-    m_container->executeScript(resultScript);
-    // Return empty JSON (full implementation would use CDP for return values)
-    return json();
+    // Execute script via ICoreWebView2::ExecuteScript, which returns
+    // the JSON-serialized result as a string (e.g. "\"hello\"", "42",
+    // "{\"a\":1}"). Parse it back into a json value.
+    std::string raw = m_container->executeScript(script);
+    if (raw.empty()) return nullptr;
+    try {
+        return json::parse(raw);
+    } catch (const std::exception&) {
+        // Non-JSON result (e.g. undefined -> "undefined"); return as string.
+        return raw;
+    }
 }
 
 bool WebView2Page::executeScriptBoolSync(const std::string& script) {
@@ -2032,6 +2617,22 @@ WebView2BrowserContext::WebView2BrowserContext(std::shared_ptr<WebView2Browser> 
 std::future<std::shared_ptr<Page>> WebView2BrowserContext::newPage() {
     return std::async(std::launch::async, [this]() -> std::shared_ptr<Page> {
         auto page = std::make_shared<WebView2Page>(shared_from_this());
+
+        // Create a real WebView2 host backed by ICoreWebView2*.
+        // The controller is parented to the browser's hidden window
+        // so the webview has a valid HWND to bind to.
+        if (m_browser) {
+            auto container = std::make_shared<WebView2Container>();
+            if (container->initialize(static_cast<void*>(m_browser->hiddenWindow()))) {
+                page->setContainer(container);
+            } else {
+                // Container failed to initialize (e.g. WebView2 runtime
+                // unavailable). The page remains usable for script-only
+                // fallbacks, but real automation is unavailable.
+                page->setContainer(container);
+            }
+        }
+
         std::lock_guard<std::mutex> lock(m_mutex);
         m_pages.push_back(page);
         return page;
