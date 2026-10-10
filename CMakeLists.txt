@@ -1214,6 +1214,84 @@ else()
     message(STATUS "RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE=OFF)")
 endif() # End RAWRXD_BUILD_WIN32IDE block
 
+# ============================================================================
+# Native (dependency-free, Qt-free) Win32 IDE
+# ============================================================================
+# The genuine RawrXD Win32 IDE: CreateWindow/Win32 API, D3D11/Vulkan
+# transparent rendering, embedded PowerShell terminal, GGUF model loading and
+# the native agentic bridge. None of these sources include Qt; the Qt-coupled
+# RawrXD-Win32IDE target above mixes them with Qt widgets and is excluded from
+# the dependency-free build. Enabled with -DRAWRXD_BUILD_WIN32IDE=ON.
+# ============================================================================
+if(MSVC AND RAWRXD_BUILD_WIN32IDE)
+    set(RAWRXD_NATIVE_IDE_SOURCES
+        src/win32app/main_win32.cpp
+        src/win32app/Win32IDE.cpp
+        src/win32app/Win32IDE_Sidebar.cpp
+        src/win32app/Win32IDE_VSCodeUI.cpp
+        src/win32app/Win32IDE_PowerShellPanel.cpp
+        src/win32app/Win32IDE_PowerShell.cpp
+        src/win32app/Win32IDE_Logger.cpp
+        src/win32app/Win32TerminalManager.cpp
+        src/win32app/Win32IDE_FileOps.cpp
+        src/win32app/Win32IDE_Commands.cpp
+        src/win32app/Win32IDE_Debugger.cpp
+        src/win32app/Win32IDE_AgenticBridge.cpp
+        src/win32app/Win32IDE_AgentCommands.cpp
+        src/win32app/Win32IDE_Autonomy.cpp
+        src/win32app/TransparentRenderer.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/streaming_gguf_loader.cpp
+        src/utils/ErrorReporter.cpp
+        src/utils/Diagnostics.cpp
+    )
+    set(RAWRXD_NATIVE_IDE_COMPLETE TRUE)
+    foreach(_src ${RAWRXD_NATIVE_IDE_SOURCES})
+        if(NOT EXISTS "${CMAKE_SOURCE_DIR}/${_src}")
+            set(RAWRXD_NATIVE_IDE_COMPLETE FALSE)
+            message(STATUS "RawrXD-Win32IDE-Native: missing source ${_src}")
+        endif()
+    endforeach()
+
+    if(RAWRXD_NATIVE_IDE_COMPLETE)
+        add_executable(RawrXD-Win32IDE-Native ${RAWRXD_NATIVE_IDE_SOURCES}
+            $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
+        )
+        target_include_directories(RawrXD-Win32IDE-Native PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/win32app
+            ${CMAKE_SOURCE_DIR}/src/utils
+            ${CMAKE_SOURCE_DIR}/include
+            # gguf_loader.h includes vulkan_compute.h -> vulkan/vulkan.h, so the
+            # Vulkan SDK include path is required even when GPU compute is off.
+            ${Vulkan_INCLUDE_DIRS}
+        )
+        target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE
+            NOMINMAX
+            _WIN32_WINNT=0x0A00
+            _CRT_SECURE_NO_WARNINGS
+            _MBCS
+            $<$<BOOL:${ENABLE_VULKAN}>:ENABLE_VULKAN=1>
+        )
+        target_compile_options(RawrXD-Win32IDE-Native PRIVATE
+            /EHsc $<$<CONFIG:Release>:/O2>
+        )
+        target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
+            comctl32 comdlg32 riched32 richedit shell32 user32 gdi32
+            ole32 oleaut32 uuid advapi32 d3d11 dxgi d3dcompiler
+        )
+        set_target_properties(RawrXD-Win32IDE-Native PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+            WIN32_EXECUTABLE TRUE
+        )
+        message(STATUS "RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled")
+    else()
+        list(APPEND RAWRXD_QT_TARGETS RawrXD-Win32IDE-Native)
+        message(STATUS "RawrXD-Win32IDE-Native EXCLUDED: Win32 IDE sources absent from this tree")
+    endif()
+endif()
+
 # Terminal test executable (MSVC only, placed in bin-msvc)
 if(FALSE AND MSVC AND EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/test_terminal.cpp") # Disabled until headers exist
     add_executable(test_terminal

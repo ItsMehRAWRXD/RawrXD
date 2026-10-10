@@ -5,8 +5,21 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
-#include <QByteArray>
+// The deflate/inflate codec bridge uses QByteArray. It is only needed for
+// compressed GGUF tensors, which the dependency-free native path never
+// produces; when Qt is unavailable the bridge is disabled and those paths
+// report an explicit error instead of failing to compile.
+#if defined(__has_include)
+#  if __has_include(<QtCore/QByteArray>)
+#    include <QtCore/QByteArray>
+#    define RAWRXD_HAS_QBYTEARRAY 1
+#  endif
+#else
+#  include <QByteArray>
+#  define RAWRXD_HAS_QBYTEARRAY 1
+#endif
 
+#ifdef RAWRXD_HAS_QBYTEARRAY
 // Forward declarations for codec functions
 namespace codec {
     extern QByteArray deflate(const QByteArray& in, bool* ok);
@@ -18,6 +31,7 @@ namespace brutal {
     extern QByteArray compress(const QByteArray& in);
     extern QByteArray compress(const void* data, std::size_t size);
 }
+#endif
 
 // Forward declaration for unsupported type name lookup (defined later in file)
 static std::string GetUnsupportedTypeNameByValue(uint32_t type_val);
@@ -624,17 +638,24 @@ bool GGUFLoader::DecompressData(const std::vector<uint8_t>& compressed,
             }
             
             case CompressionType::DEFLATE: {
+#ifdef RAWRXD_HAS_QBYTEARRAY
                 // Use codec::inflate from inflate_deflate_cpp.cpp
                 // This handles DEFLATE decompression
-                QByteArray input(reinterpret_cast<const char*>(compressed.data()), 
+                QByteArray input(reinterpret_cast<const char*>(compressed.data()),
                                 static_cast<int>(compressed.size()));
                 bool ok = false;
                 QByteArray output = codec::inflate(input, &ok);
                 if (!ok) return false;
-                
+
                 decompressed.resize(output.size());
                 std::memcpy(decompressed.data(), output.constData(), output.size());
                 return true;
+#else
+                std::cerr << "Compressed GGUF tensors (DEFLATE) require the Qt codec "
+                             "bridge, which is disabled in the dependency-free native "
+                             "build" << std::endl;
+                return false;
+#endif
             }
             
             case CompressionType::NONE:
@@ -661,28 +682,42 @@ bool GGUFLoader::CompressData(const std::vector<uint8_t>& raw_data,
         switch (compression_type_) {
             case CompressionType::BRUTAL_GZIP:
             case CompressionType::ZLIB: {
+#ifdef RAWRXD_HAS_QBYTEARRAY
                 // Compress using brutal::compress (MASM-optimized gzip)
-                QByteArray input(reinterpret_cast<const char*>(raw_data.data()), 
+                QByteArray input(reinterpret_cast<const char*>(raw_data.data()),
                                 static_cast<int>(raw_data.size()));
                 QByteArray output = brutal::compress(input);
                 if (output.isEmpty()) return false;
-                
+
                 compressed.resize(output.size());
                 std::memcpy(compressed.data(), output.constData(), output.size());
                 return true;
+#else
+                std::cerr << "Compressed GGUF tensors (BRUTAL_GZIP/ZLIB) require the "
+                             "Qt codec bridge, which is disabled in the "
+                             "dependency-free native build" << std::endl;
+                return false;
+#endif
             }
-            
+
             case CompressionType::DEFLATE: {
+#ifdef RAWRXD_HAS_QBYTEARRAY
                 // Compress using codec::deflate (MASM-optimized deflate)
-                QByteArray input(reinterpret_cast<const char*>(raw_data.data()), 
+                QByteArray input(reinterpret_cast<const char*>(raw_data.data()),
                                 static_cast<int>(raw_data.size()));
                 bool ok = false;
                 QByteArray output = codec::deflate(input, &ok);
                 if (!ok || output.isEmpty()) return false;
-                
+
                 compressed.resize(output.size());
                 std::memcpy(compressed.data(), output.constData(), output.size());
                 return true;
+#else
+                std::cerr << "Compressed GGUF tensors (DEFLATE) require the Qt codec "
+                             "bridge, which is disabled in the dependency-free native "
+                             "build" << std::endl;
+                return false;
+#endif
             }
             
             case CompressionType::NONE:
