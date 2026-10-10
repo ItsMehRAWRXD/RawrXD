@@ -188,7 +188,13 @@ async def agent_endpoint(req: AgentRequest) -> StreamingResponse:
 
 @app.get("/health")
 def health() -> Dict[str, Any]:
-    return {"status": "ok", "queue": len(getattr(swarm.engine, "q", []))}
+    # bots count is exposed so callers can tell a live swarm from an empty one:
+    # a zero-bot engine answers from the canned fallback in run_loop.py.
+    return {
+        "status": "ok",
+        "queue": len(getattr(swarm.engine, "q", [])),
+        "bots": len(getattr(swarm.engine, "bots", [])),
+    }
 
 
 import argparse

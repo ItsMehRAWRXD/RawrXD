@@ -30,7 +30,7 @@ target_compile_definitions(rawrxd_workflow PRIVATE
 )
 
 if(MSVC)
-    target_compile_options(rawrxd_workflow PRIVATE /EHsc /wd4530 /wd4003 /wd4319 /wd4005)
+    target_compile_options(rawrxd_workflow PRIVATE /EHsc /bigobj /wd4530 /wd4003 /wd4319 /wd4005)
     # WebView2/WinHTTP
     target_link_libraries(rawrxd_workflow PRIVATE winhttp)
 endif()

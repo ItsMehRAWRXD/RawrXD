@@ -377,9 +377,13 @@ endif()
 # rawrxd_workflow builds the Cursor-like workflow tools (browser
 # automation via WebView2, GitHub REST/cloud-agent via WinHTTP) as
 # a static library. It depends only on the vendored nlohmann/json
-# and the Windows SDK - no Qt - so it is built unconditionally,
-# including in native dependency-free builds.
-add_subdirectory(src/workflow)
+# and the Windows SDK - no Qt - so it is built in native
+# dependency-free builds. It is a WINDOWS-ONLY library (WebView2,
+# WinHTTP, windows.h), so it is gated on WIN32 to keep non-Windows
+# builds working.
+if(WIN32)
+    add_subdirectory(src/workflow)
+endif()
 
 # ============================================================
 # Advanced Orchestration Modules (Phase 1-6 Implementation)
@@ -567,6 +571,18 @@ if(MSVC)
             src/agent/action_executor.cpp
             src/agent/meta_planner.hpp
             src/agent/meta_planner.cpp
+            # ============================================================
+            # Agentic resilience subsystems (no dependencies, pure C++20)
+            #   - adaptive_retry: circuit breakers + exponential backoff+jitter
+            #   - delegated_agents: agent lifecycle, resource quotas, messaging
+            #   - conflict_resolution: 3-way merge + semantic conflict handling
+            # ============================================================
+            src/agent/adaptive_retry.hpp
+            src/agent/adaptive_retry.cpp
+            src/agent/delegated_agents.hpp
+            src/agent/delegated_agents.cpp
+            src/agentic/conflict_resolution.hpp
+            src/agentic/conflict_resolution.cpp
             # Project UI components
             src/qtapp/widgets/project_explorer.cpp
             src/qtapp/widgets/project_explorer.h
@@ -2379,9 +2395,39 @@ if(RAWRXD_BUILD_TESTS)
     message(STATUS "========================================")
     message(STATUS "Building Test Suite")
     message(STATUS "========================================")
+
+    # ------------------------------------------------------------------
+    # Qt-FREE agentic resilience tests.
+    # These cover the three dependency-free subsystems that give RawrXD its
+    # differentiation over competing IDEs:
+    #   * adaptive retries  (circuit breaker, exponential backoff + jitter)
+    #   * conflict handling (3-way merge, semantic detection, auto-resolution)
+    #   * delegated agents  (lifecycle, resource quotas, cross-agent messaging)
+    # They MUST build and pass without Qt6, so they stay outside the Qt guard.
+    # ------------------------------------------------------------------
+    add_executable(agentic-resilience-tests
+        tests/agentic_resilience_test.cpp
+        src/agent/adaptive_retry.cpp
+        src/agent/delegated_agents.cpp
+        src/agentic/conflict_resolution.cpp
+    )
+    target_include_directories(agentic-resilience-tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agent
+        ${CMAKE_SOURCE_DIR}/src/agentic
+    )
+    if(MSVC)
+        target_compile_options(agentic-resilience-tests PRIVATE /std:c++20 /EHsc /W4)
+    else()
+        target_compile_options(agentic-resilience-tests PRIVATE -std=c++20 -Wall -Wextra)
+        find_package(Threads REQUIRED)
+        target_link_libraries(agentic-resilience-tests PRIVATE Threads::Threads)
+    endif()
+    add_test(NAME agentic-resilience COMMAND agentic-resilience-tests)
+
     if(Qt6_FOUND)
         add_subdirectory(tests)
-        message(STATUS "Γ£ô Test executables configured - run 'ctest' to execute")
+        message(STATUS "Test executables configured - run 'ctest' to execute")
     else()
         list(APPEND RAWRXD_QT_TARGETS test-suite)
         message(STATUS "Qt-dependent test suite EXCLUDED (Qt6 not installed)")
