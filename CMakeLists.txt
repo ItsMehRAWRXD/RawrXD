@@ -372,6 +372,16 @@ if(NOT CUDAToolkit_FOUND AND NOT hip_FOUND AND NOT HIPCC_EXECUTABLE AND NOT Vulk
 endif()
 
 # ============================================================
+# Dependency-free Workflow Modules (Browser Testing & GitHub Cloud Agents)
+# ============================================================
+# rawrxd_workflow builds the Cursor-like workflow tools (browser
+# automation via WebView2, GitHub REST/cloud-agent via WinHTTP) as
+# a static library. It depends only on the vendored nlohmann/json
+# and the Windows SDK - no Qt - so it is built unconditionally,
+# including in native dependency-free builds.
+add_subdirectory(src/workflow)
+
+# ============================================================
 # Advanced Orchestration Modules (Phase 1-6 Implementation)
 # ============================================================
 message(STATUS "Adding advanced orchestration modules for AI-native IDE")
