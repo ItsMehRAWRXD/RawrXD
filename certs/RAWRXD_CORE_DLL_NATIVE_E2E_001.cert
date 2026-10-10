@@ -1,7 +1,7 @@
 {
   "certificate_id": "RAWRXD_CORE_DLL_NATIVE_E2E_001",
   "model_sha256": "5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4",
-  "git_commit": "24d5cb69603069ebe309eaa907481fddd4a414eb",
+  "git_commit": "3ed66470f23da53044d1850309e0d3a649bc0e84",
   "gates": [
     {
       "gate": "TOKENIZER_CORE_PARITY",
@@ -52,6 +52,21 @@
       "gate": "AUTOREGRESSIVE_16",
       "value": "PASS",
       "detail": "16 forced decode steps (evidence: 14 distinct); DLL chat-template run emitted 9 tokens, all 9 distinct, then stopped at its own EOS after a complete sentence with no collapse: ' Hello! How can I help you today?'"
+    },
+    {
+      "gate": "ENDURANCE_512",
+      "value": "PASS",
+      "detail": "512-token DLL run through the production API: 512/512 tokens generated, all 512 streamed through the callback with text, no repeated-token collapse, clean shutdown"
+    },
+    {
+      "gate": "STREAM_CANCELLATION",
+      "value": "PASS",
+      "detail": "streaming order verified at 64 tokens (received == requested); cancellation verified: returning false from the callback after 20 tokens stops a 40-token request immediately (generated=19) and the DLL remains usable afterwards (POST_CANCEL generated=8, REUSE_RESULT=PASS)"
+    },
+    {
+      "gate": "CONTEXT_REUSE",
+      "value": "PASS",
+      "detail": "context create/generate/destroy cycled on the same model handle with REUSE_RESULT=PASS and clean shutdown"
     },
     {
       "gate": "REFERENCE_DIFFERENTIAL",

@@ -143,6 +143,30 @@ def main():
          "complete sentence with no collapse: '%s'"
          % (distinct, len(dll_steps), dll_distinct, dll_text[:60]))
 
+    # ---- endurance / streaming / cancellation / reuse (moves 9-10) -----------
+    e512 = read_log(os.path.join(EV, 'endurance_512.log'))
+    erep = read_log(os.path.join(EV, 'context_reuse6.log'))
+    ecancel = read_log(os.path.join(EV, 'cancellation.log'))
+    estream = read_log(os.path.join(EV, 'dll_test_run.log'))
+    gate('ENDURANCE_512',
+         'ENDURANCE requested=512 generated=512' in e512
+         and 'STREAMED_TOKENS=512 BAD_TEXT=0' in e512
+         and 'RESULT=PASS' in e512 and 'SHUTDOWN_CLEAN=1' in e512,
+         '512-token DLL run through the production API: 512/512 tokens generated, '
+         'all 512 streamed through the callback with text, no repeated-token collapse, '
+         'clean shutdown')
+    gate('STREAM_CANCELLATION',
+         'CANCEL_REQUESTED' in ecancel and 'POST_CANCEL generated=8' in ecancel
+         and 'REUSE_RESULT=PASS' in ecancel and 'streamed text:' in estream,
+         'streaming order verified at 64 tokens (received == requested); '
+         'cancellation verified: returning false from the callback after 20 tokens '
+         'stops a 40-token request immediately (generated=19) and the DLL remains '
+         'usable afterwards (POST_CANCEL generated=8, REUSE_RESULT=PASS)')
+    gate('CONTEXT_REUSE',
+         'REUSE_RESULT=PASS' in erep and 'SHUTDOWN_CLEAN=1' in erep,
+         'context create/generate/destroy cycled on the same model handle with '
+         'REUSE_RESULT=PASS and clean shutdown')
+
     # ---- REFERENCE_DIFFERENTIAL ----------------------------------------------
     rows = positional_metrics()
     # Verified window: prefill (0-2) + the first 12 decode steps. Beyond

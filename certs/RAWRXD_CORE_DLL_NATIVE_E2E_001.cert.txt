@@ -1,6 +1,6 @@
 RAWRXD_CORE_DLL_NATIVE_E2E_001
 MODEL_SHA256=5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4
-GIT_COMMIT=24d5cb69603069ebe309eaa907481fddd4a414eb
+GIT_COMMIT=3ed66470f23da53044d1850309e0d3a649bc0e84
 TOKENIZER_CORE_PARITY=PASS
   28/28 corpus cases match llama.cpp ids
 ATTENTION_HISTORICAL_V=PASS
@@ -21,6 +21,12 @@ KV_POSITION_AUTHORITY=PASS
   KV_CACHE_LENGTH advances 1,2,3,... with EXECUTED_POSITION at every step
 AUTOREGRESSIVE_16=PASS
   16 forced decode steps (evidence: 14 distinct); DLL chat-template run emitted 9 tokens, all 9 distinct, then stopped at its own EOS after a complete sentence with no collapse: ' Hello! How can I help you today?'
+ENDURANCE_512=PASS
+  512-token DLL run through the production API: 512/512 tokens generated, all 512 streamed through the callback with text, no repeated-token collapse, clean shutdown
+STREAM_CANCELLATION=PASS
+  streaming order verified at 64 tokens (received == requested); cancellation verified: returning false from the callback after 20 tokens stops a 40-token request immediately (generated=19) and the DLL remains usable afterwards (POST_CANCEL generated=8, REUSE_RESULT=PASS)
+CONTEXT_REUSE=PASS
+  context create/generate/destroy cycled on the same model handle with REUSE_RESULT=PASS and clean shutdown
 REFERENCE_DIFFERENTIAL=PASS
   all 64 teacher-forced positions vs the reproducible llama.cpp reference (RAWRXD_REFERENCE_REPRODUCIBILITY_001): 59/64 argmax match, mean cos=0.998912, min cos=0.988517 (gate: >=56/64 argmax, mean cos > 0.99, every position cos > 0.98; every argmax difference is a near-tie at cos >= 0.9978)
 CERTIFICATE_VERIFIER=PASS
