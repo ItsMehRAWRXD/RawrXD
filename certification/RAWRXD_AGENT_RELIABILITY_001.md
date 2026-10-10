@@ -1,10 +1,10 @@
 # RAWRXD_AGENT_RELIABILITY_001 - Certification Record
 
 **Certified:** 2026-10-10
-**Status:** PASS
+**Status:** PASS (subsystems + HexMag integration); **PARTIAL** (no linkable HexMag binary)
 **Tests:** 148 subsystem + 40 production-integration = **188 assertions, 0 failures**
-**Source tree (deterministic provenance):** `e2d00fcf71ee16bbf29dd7c182eb6b0dda1bb2ca`
-**Source commit:** `255ad8d280`
+**Source tree (deterministic provenance):** `HEAD^{tree}`
+**Source commit:** see the provenance table
 
 ---
 
@@ -73,6 +73,37 @@ Pre-fix behaviour this replaced: `mergeEdits()` returned only
 discarded. `detectConflicts()` did range-overlap detection only, reported every
 conflict as `"manual"`, and had no de-duplication.
 
+### All three engines integrated into the HexMag swarm
+
+The previous revision had only the conflict engine wired. All three now have
+real production call sites in `src/agentic/HexMagSwarmOrchestrator.cpp`.
+
+| Engine | Integrated into | What it replaced | Call sites |
+|---|---|---|---|
+| `ConflictEngine` | `ConflictResolver::{detectConflicts,mergeEdits,resolveConflicts,threeWayMerge}` | range-overlap-only detection; `mergeEdits()` discarding all but the last edit | 1 (bridge) |
+| `AdaptiveRetryEngine` | `executeWithRepeatTuner()` | a bare 6-iteration loop: no backoff, no jitter, no classification, no circuit breaker | 2 |
+| `DelegationManager` | `executeParallelAgents()` | unbounded `std::async`: no quotas, no depth cap, no lifecycle ownership | 7 |
+
+`AdaptiveRetryEngine` policy registered for specialists: `hexmag_specialist`,
+6 attempts, 2s base backoff, x2 exponential, 20% jitter, circuit breaker
+tripping after 3 verified failures with a 120s timeout. Retryable patterns
+(`empty output`, `build failed`, `tests failed`, `timeout`, `temporary`) are
+distinguished from non-retryable ones (`no native model loaded`,
+`RepeatSession init failed`, `specialist reported ERROR`), and the failure
+message now reports *which* of the three outcomes occurred instead of
+collapsing them.
+
+`DelegationManager` limits per subtask: 200k tokens, 300s wall, 120s cpu, 100
+tool calls, 25 file edits, 4 subprocesses, 2 sub-agents; concurrency bounded to
+4 and delegation depth to 3. A subtask rejected by quota is reported as an
+error rather than silently launched, and `delegationCapabilities()` maps each
+`HX_SPEC_*` specialist to the capabilities it is permitted to hold, so the
+manager can refuse an under-privileged task.
+
+No mocked success: the delegation work function throws rather than returning
+success, because real execution happens in the async task and the manager only
+tracks lifecycle and quotas.
+
 ### Engineering integrity
 
 | Property | Evidence |
@@ -102,18 +133,55 @@ Stated honestly, per the project's "no mocked success" rule:
    `Performance & Benchmark Tests`, and six Vulkan-dependent component jobs
    under `Automated Unit Tests & Component Tests` - remain failing. Those
    failures are outside this certification and are **not** claimed by it.
-6. **Only the conflict engine is integrated.** The HexMag swarm now delegates
-   conflict resolution to the certified engine. The `AdaptiveRetryEngine` and
-   `DelegationManager` still have **zero production callers**: specialists retry
-   via a bare `maxRetries = 3` counter with no backoff, jitter, or circuit
-   breaker, and agent spawning has no resource quotas, depth cap, or cooperative
-   cancellation. Those remain independently certified but not yet adopted.
-7. **HexMag itself is not committed.** `src/agentic/HexMagSwarmOrchestrator.cpp`
-   is untracked in git and has two pre-existing compile errors in unrelated
-   agent-coordinator wiring (lines 588/592). Its delegation edit exists in the
-   worktree but is deliberately excluded from the commit, so the wiring is
-   proven by the integration test against the bridge rather than by a HexMag
-   build.
+6. **Only the conflict engine was integrated.** As of the previous revision, the
+   `AdaptiveRetryEngine` and `DelegationManager` had **zero production
+   callers**: specialists retried via a bare `maxRetries` counter with no
+   backoff, jitter, or circuit breaker, and agent spawning had no resource
+   quotas, depth cap, or cooperative cancellation. **This is now FIXED - see
+   "All three engines integrated" above.** The remaining gap is that HexMag
+   cannot link (next point).
+7. **HexMag compiles but does NOT link.** `HexMagSwarmOrchestrator.{hpp,cpp}`
+   are now tracked in git and compile with **zero errors** (full `cl /Zs`
+   syntax check). However `CEOAgent::`, `SubAgentManager`, `AgentOrchestrator`
+   and `RealNativeToolExecutor` have **no definitions anywhere** in the tree,
+   so there is no translation unit providing them and no linkable binary can
+   be produced. Writing those definitions here would mean inventing
+   implementations, which is forbidden, so the orchestrator is committed as a
+   compiling translation unit and deliberately **not** added to any build
+   target. Real production execution through it is therefore unproven.
+8. **Integration is not yet executed end-to-end.** All three engines have real
+   production call sites, but because HexMag cannot link (point 7), no run has
+   exercised them together through the actual swarm. The integration tests
+   verify the engines and the bridge, not a live swarm execution.
+
+---
+
+## Provenance reconciliation (read this to attribute the code)
+
+The code and this document live in **different commits**. This table maps every
+claim to the exact commit that contains it, so no reviewer has to hunt.
+
+| Claim | File | Commit |
+|---|---|---|
+| Three subsystems + 148 assertions | `src/agent/{adaptive_retry,delegated_agents}.{hpp,cpp}`, `src/agentic/conflict_resolution.{hpp,cpp}`, `tests/agentic_resilience/agentic_resilience_test.cpp` | `fce93b7e0d` |
+| HexMag bridge + 40 integration assertions | `src/agentic/hexmag_resilience_bridge.hpp`, `tests/agentic_resilience/hexmag_integration_test.cpp` | **`255ad8d280`** |
+| Standalone build + CI wiring | `tests/agentic_resilience/CMakeLists.txt`, `.github/workflows/resilience.yml` | `94ea173af7`, `61c45e00ff` |
+| `Deep2::Deep2Engine` forward-decl fix | `src/agents/CEOAgent.hpp` | `d001a75a8`, `082fa00d2` |
+| HexMag tracked + both compile errors fixed | `src/agentic/HexMagSwarmOrchestrator.hpp` | `f044efb77` |
+| Retry + delegation integration | `src/agentic/HexMagSwarmOrchestrator.cpp` | `1cb6739c1` |
+| This record | `certification/RAWRXD_AGENT_RELIABILITY_001.md` | this commit |
+
+Reproduce any attribution directly:
+
+```powershell
+git show --stat 255ad8d280        # bridge + integration test
+git show --stat 09867ef869        # this document (doc-only commit)
+git log --oneline -- src/agentic/hexmag_resilience_bridge.hpp
+```
+
+The `source_tree_sha1` at the top of this record is the tree of **`255ad8d280`**
+(the code commit), not of this document's commit. It is the deterministic anchor
+for "this is the code that was tested".
 
 ---
 
