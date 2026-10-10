@@ -79,7 +79,7 @@ int main(int argc, char** argv)
             hash = fnv1a(logits->data(), logits->size());
             char path[1024];
             std::snprintf(path, sizeof(path),
-                          "%s/native_tf_logits_pos%zu.bin", evdir.c_str(), pos);
+                          "%s/native_ar_logits_pos%zu.bin", evdir.c_str(), pos);
             FILE* f = std::fopen(path, "wb");
             if (f) {
                 std::fwrite(logits->data(), sizeof(float), logits->size(), f);

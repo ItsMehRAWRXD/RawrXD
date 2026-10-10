@@ -16,7 +16,8 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
-#include <fstream>
+#include <cstdlib>
+#include <cstring>
 #include <immintrin.h>
 #include <limits>
 #include <memory>
@@ -29,6 +30,38 @@
 #include <vector>
 #include <windows.h>
 
+// TEMP DIAGNOSTIC: process-wide vectored handler that reports the faulting
+// code/address (AVs in OpenMP worker threads are not catchable by a __try in
+// the caller). Reports and continues so the crash still surfaces.
+static DWORD g_DiagVehCode = 0;
+static void* g_DiagVehAddr = nullptr;
+static const char* g_DiagVehFile = "";
+static int g_DiagVehLine = 0;
+
+// Call with std::source_location-like args at each instrumented site.
+static inline void DiagVehMark(const char* file, int line)
+{
+    g_DiagVehFile = file;
+    g_DiagVehLine = line;
+}
+
+static LONG NTAPI DiagVeh(EXCEPTION_POINTERS* info)
+{
+    if (g_DiagVehCode == 0 && info && info->ExceptionRecord) {
+        g_DiagVehCode = info->ExceptionRecord->ExceptionCode;
+        g_DiagVehAddr = info->ExceptionRecord->ExceptionAddress;
+        std::fprintf(stderr,
+                     "[DIAG-VEH] code=0x%08X addr=%p lastMark=%s:%d\n",
+                     g_DiagVehCode, g_DiagVehAddr, g_DiagVehFile, g_DiagVehLine);
+        std::fflush(stderr);
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static struct DiagVehRegistrar {
+    DiagVehRegistrar() { AddVectoredExceptionHandler(1, DiagVeh); }
+} g_DiagVehRegistrar;
+
 // Debug helper to dump raw float tensors to disk for Python verification
 static void debug_dump_tensor(const std::string& filename, const float* data, size_t count) {
     if (!data || count == 0) return;
@@ -40,6 +73,55 @@ static void debug_dump_tensor(const std::string& filename, const float* data, si
     } else {
         std::fprintf(stderr, "[DUMP ERROR] Failed to open %s\n", filename.c_str());
     }
+}
+
+// Debug helper: print statistical summary of a tensor
+static void debug_stats_tensor(const char* name, const float* data, size_t count) {
+    if (!data || count == 0) {
+        std::fprintf(stderr, "[STATS] %s: empty\n", name);
+        return;
+    }
+    double min_val = data[0], max_val = data[0], sum = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+        const double v = (double) data[i];
+        if (v < min_val) min_val = v;
+        if (v > max_val) max_val = v;
+        sum += v;
+    }
+    double mean = sum / count;
+    double var = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+        double d = data[i] - mean;
+        var += d * d;
+    }
+    var /= count;
+    double stddev = std::sqrt(var);
+    std::fprintf(stderr, "[STATS] %s: min=%.6f max=%.6f mean=%.6f var=%.6f stddev=%.6f\n",
+                 name, min_val, max_val, mean, var, stddev);
+}
+
+// Debug helper: print softmax statistics
+static void debug_softmax_stats(const char* name, const float* weights, size_t count) {
+    if (!weights || count == 0) {
+        std::fprintf(stderr, "[SOFTMAX] %s: empty\n", name);
+        return;
+    }
+    double sum = 0.0, max_val = -INFINITY, min_val = INFINITY;
+    for (size_t i = 0; i < count; ++i) {
+        const double v = (double) weights[i];
+        sum += v;
+        if (v > max_val) max_val = v;
+        if (v < min_val) min_val = v;
+    }
+    double entropy = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+        if (weights[i] > 0 && sum > 0) {
+            double p = weights[i] / sum;
+            if (p > 0) entropy -= p * std::log(p);
+        }
+    }
+    std::fprintf(stderr, "[SOFTMAX] %s: sum=%.10f max=%.6f min=%.6f entropy=%.6f\n",
+                 name, sum, max_val, min_val, entropy);
 }
 
 // Call this inside AttentionFwd when layer_idx == 0 and position == 1
@@ -112,6 +194,13 @@ inline bool MgRomTraceEnabled()
 // RoPE mscale becomes 1.0 (i.e. cos/sin are NOT magnitude-scaled). The only
 // surviving effects are the frequency interpolation+ramp in the angle and the
 // mscale^2 factor folded into the attention score scale.
+//
+// llama.cpp applies the yarn_attn_factor adjustment (the 1/(1+0.1*ln(1/freq_scale))
+// cancellation) to *both* the rope cos/sin and kq_scale. On the rope side it nets
+// out with the rope_yarn mscale, but on the score side it leaves attn_factor_org
+// at the plain rope_attn_factor. Folding the cancellation in again here
+// previously produced kq_scale = 0.21497 instead of the reference's 0.11481
+// (verified against llama.cpp's own kq/softmax dumps across three heads).
 //=============================================================================
 namespace MGRope {
 
@@ -165,10 +254,25 @@ inline float Alpha(size_t position, size_t k)
     return theta_interp * (1.0f - ramp) + theta_extrap * ramp;
 }
 
-// The attention score scale. mscale² replaces the plain 1/sqrt(head_dim).
+// The attention score scale. mscale^2 replaces the plain 1/sqrt(head_dim).
+//
+// llama.cpp divides yarn_attn_factor by (1+0.1*ln(1/freq_scale)) and multiplies
+// the same factor back inside rope_yarn, so the rope cos/sin come out unscaled
+// (this is why the angles below match the reference at cos 1.0). The same
+// cancellation has to be applied on the score side: the graph's rope_attn_factor
+// is the already-adjusted value, so "restoring the original attn factor" leaves
+// the plain rope_attn_factor.
+//
+// Verified against a reproducible llama.cpp reference (RAWRXD_REFERENCE_
+// REPRODUCIBILITY_001): solving kq_scale from that reference's own kq/softmax
+// dumps gives 0.114721 at every head and position tested (8/8 samples, 6
+// decimals), which is exactly this formula. The previous 0.214971 overshot the
+// reference score by 1.87x.
 inline float AttentionScoreScale()
 {
-    const float attn_factor_org = kAttnFactor * (1.0f + 0.1f * logf(1.0f / kFreqScale));
+    const float attn_factor_org = kAttnFactor *
+        (1.0f / (1.0f + 0.1f * logf(1.0f / kFreqScale))) *
+        (1.0f + 0.1f * logf(1.0f / kFreqScale));
     const float mscale = attn_factor_org * (1.0f + 0.1f * kYarnLogMul * logf(1.0f / kFreqScale));
     return mscale * mscale / sqrtf(kNEmbdHeadK);
 }
@@ -506,6 +610,13 @@ uint16_t FloatToFP16(float f)
         ++out; // carries into exponent naturally
     }
     return out;
+}
+
+// Public round-trip used by the MLA KV cache to match llama.cpp's F16 cache
+// precision exactly (see MlaKVCache::WriteLatentKv).
+float MGExecF16RoundTrip(float f)
+{
+    return FP16ToFloat(FloatToFP16(f));
 }
 
 //=============================================================================
@@ -944,7 +1055,6 @@ static float* ResolveOutput(const GEN::OperationIR& op, ActivationArena& arena,
     return count ? arena.GetOrCreate(op.output.id, count) : nullptr;
 }
 
-//=============================================================================
 // Primitive Dispatcher
 //=============================================================================
 class PrimitiveDispatcher
@@ -1234,6 +1344,13 @@ private:
         }
         const float* all_k_rope_raw = kvCache->layers[layerIdx].ReadAllKRopeRaw();
         if (!all_k_rope_raw) return false;
+               // Debug dumps at layer 0, position 1: Q before RoPE and hidden state
+        if (layerIdx == 0 && position == 1) {
+            debug_dump_tensor("layer0_pos1_q_before_rope.bin", q, heads * key);
+            debug_stats_tensor("Q_before_RoPE", q, heads * key);
+            debug_dump_tensor("layer0_pos1_k_rope_raw_cached.bin", all_k_rope_raw, seq_len * rope);
+            debug_stats_tensor("K_rope_raw_cached", all_k_rope_raw, seq_len * rope);
+        }
         
         // Apply RoPE to query's positional component at current position
         std::vector<float> q_rope(heads * key);
@@ -1408,6 +1525,11 @@ private:
             debug_dump_tensor("layer0_pos1_attn_weights.bin", captured_weights.data(), heads * seq_len);
         }
         
+        // Debug: Stats for attention scores and softmax weights at layer 0, position 1
+        if (layerIdx == 0 && position == 1) {
+            debug_stats_tensor("Attention_Scores_L0P1", captured_scores.data(), heads * seq_len);
+            debug_softmax_stats("Softmax_Weights_L0P1", captured_weights.data(), heads * seq_len);
+        }
         }
         if (capture_scores) {
             DIFF_RECORD("Attention_Scores", opId, layerIdx, position, "scaled_scores",
@@ -1424,6 +1546,12 @@ private:
         
         // DIFF: Record attention output
         DIFF_RECORD("Attention_Output", opId, layerIdx, position, "output", output, {(int64_t)heads * value});
+        
+        // Debug: Dump attention output at layer 0, position 1
+        if (layerIdx == 0 && position == 1) {
+            debug_dump_tensor("layer0_pos1_attn_output.bin", output, heads * value);
+            debug_stats_tensor("Attention_Output_L0P1", output, heads * value);
+        }
         
         return true;
     }
@@ -1481,21 +1609,21 @@ private:
         }
         const size_t kSize = heads * key;  // 3072
         
-        // Prepare positional key component with RoPE for this position
-        // Apply RoPE to k_rope_raw at write position
+        // Prepare positional key component with RoPE for this position.
+        // Uses the same YaWN-interpolated angle function (MGRope::Alpha) as
+        // AttentionFwd applies for Q, so the RoPE'd k_rope stored in K_new matches
+        // the angle convention the reference (llama.cpp) uses for both Q and K.
         std::vector<float> k_rope(rope);
         if (position == 0) {
             // Position 0: RoPE is identity
             std::memcpy(k_rope.data(), k_rope_raw, rope * sizeof(float));
         } else {
-            const float base = static_cast<float>(GEN::ModelConfig::kRopeFreqBase);
             for (size_t i = 0; i < rope; i += 2) {
-                float theta = powf(base, -static_cast<float>(i) / static_cast<float>(rope));
-                float alpha = static_cast<float>(position) * theta;
-                float ca = cosf(alpha), sa = sinf(alpha);
+                const float alpha = MGRope::Alpha(position, i / 2);
+                const float ca = cosf(alpha), sa = sinf(alpha);
                 float p0 = k_rope_raw[i];
                 float p1 = k_rope_raw[i + 1];
-                k_rope[i] = p0 * ca - p1 * sa;
+                k_rope[i]     = p0 * ca - p1 * sa;
                 k_rope[i + 1] = p0 * sa + p1 * ca;
             }
         }
@@ -1520,6 +1648,12 @@ private:
             std::memcpy(output + kSize + head * value, expanded.data() + src + noRope, value * sizeof(float));
         }
         
+        // Debug: Dump K_new (full K for all heads) at layer 0, position 1
+        if (layerIdx == 0 && position == 1) {
+            debug_dump_tensor("layer0_pos1_k_new.bin", output, heads * key);
+            debug_stats_tensor("K_new", output, heads * key);
+        }
+        
         // Write kv_latent (512) and k_rope_raw (64) to KV cache if provided
         if (kvCache) {
             if (layerIdx >= kvCache->layers.size() ||
@@ -1541,6 +1675,18 @@ private:
                 std::memcpy(kv_value.data() + head * value, expanded.data() + src + noRope, value * sizeof(float));
             }
             if (!kvCache->layers[layerIdx].WriteLatentKv(kv_latent, k_rope_raw, kv_value.data(), kv_knope.data())) return false;
+            
+            // Debug: Dump cached K_new (kv_knope + k_rope) at layer 0, position 1
+            if (layerIdx == 0 && position == 1) {
+                std::vector<float> k_cached(heads * key);
+                // Reconstruct cached K: [heads * 128 knope, 64 k_rope per head]
+                for (size_t head = 0; head < heads; ++head) {
+                    std::memcpy(k_cached.data() + head * key, kv_knope.data() + head * noRope, noRope * sizeof(float));
+                    std::memcpy(k_cached.data() + head * key + noRope, k_rope_raw, rope * sizeof(float));
+                }
+                debug_dump_tensor("layer0_pos1_k_cached_after_write.bin", k_cached.data(), heads * key);
+                debug_stats_tensor("K_cached_after_write", k_cached.data(), heads * key);
+            }
         }
         
         return true;
@@ -1667,8 +1813,6 @@ IRExecutor::IRExecutor(const std::string& ggufPath, uint32_t tokenId)
         if (!romResolver_.IsValid()) {
             std::fprintf(stderr, "[IR] Failed to initialize ROM resolver\n");
         }
-        // Initialize KV cache for testing (use smaller max_seq_len to avoid OOM)
-        // Full context is 163840 but we only need a few tokens for testing
         kvCache_.Init(1024);
 }
 
@@ -1695,7 +1839,7 @@ bool IRExecutor::Execute()
         {
             const auto& op = GEN::kExecutionIRTable[i];
             opsVisited++;
-            
+
             // DIFF: Record input before execution
             if (g_differential_recorder.enabled && op.requiredPrimitive == ModelGenie::Primitive::MlaDecompressFwd) {
                 const float* input = ResolveInput(op, 0, arena_, tokenId_);
@@ -1706,14 +1850,17 @@ bool IRExecutor::Execute()
             }
             
             // Dispatch primitive - let dispatcher decide if supported
+            DiagVehMark(__FILE__, __LINE__);
             bool executed = PrimitiveDispatcher::Dispatch(op, arena_, romResolver_, tokenId_, &kvCache_, position_);
-if (executed && op.output.domain == MG::OperandDomain::Activation) {
+            DiagVehMark(__FILE__, __LINE__);
+            if (executed && op.output.domain == MG::OperandDomain::Activation) {
                 RawrXD_IR_Trace::save(op.opId, arena_.Get(op.output.id),
                                      arena_.Size(op.output.id));
             }
             
             // Capture the persistent prefix (including all earlier positions) after
             // the current position has been written into the layer's cache.
+            DiagVehMark(__FILE__, __LINE__);
             if (executed && op.requiredPrimitive == MG::Primitive::MlaDecompressFwd &&
                 g_differential_recorder.ShouldRecord(position_)) {
                 const size_t layer = op.blockIndex == UINT32_MAX ? 0 : op.blockIndex;
@@ -1764,6 +1911,8 @@ if (executed && op.output.domain == MG::OperandDomain::Activation) {
                     DIFF_RECORD(tensor_type.c_str(), op.opId, op.blockIndex, position_, "output", result, {(int64_t)n});
                 }
             }
+            
+            DiagVehMark(__FILE__, __LINE__);
             
             if (executed && op.output.domain == MG::OperandDomain::Activation) {
                 const float* result = arena_.Get(op.output.id);

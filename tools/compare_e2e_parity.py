@@ -54,7 +54,7 @@ def compare(native_dir_native, ref_dir_ref, positions):
 
 def main():
     ev = r"F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001"
-    ref = r"F:\rawrxd\evidence\NUGVERSE_ESTIMATOR_001"
+    ref = r"F:\rawrxd\evidence\RAWRXD_REFERENCE_REPRODUCIBILITY_001\ref_teacher_forced"
     native_pat = ev + r"\native_tf_logits_pos%d.bin"
     ref_pat = ref + r"\ref_logits_pos%d.bin"
 

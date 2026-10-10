@@ -1,10 +1,10 @@
 RAWRXD_CORE_DLL_NATIVE_E2E_001
 MODEL_SHA256=5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4
-GIT_COMMIT=aa52fa36bf7b1e647e808b39197bc622fe49d6ef
+GIT_COMMIT=aa25af23c7f55bf091229ad6ae28f38d41665c46
 TOKENIZER_CORE_PARITY=PASS
   28/28 corpus cases match llama.cpp ids
 ATTENTION_HISTORICAL_V=PASS
-  layer-0 V/attention authority: pos0 cos=0.999965 pos1 cos=0.997668, both argmax-matching the reference (V read from cached position, not the current token)
+  layer-0 V/attention authority: pos0 cos=0.999974 pos1 cos=0.999610; position-1 attention weights match the reference at cos 1.0 and V is read from the cached position, not the current token (argmax near-tie flips at position [1] with cos > 0.9996)
 ATTENTION_REFERENCE_PARITY=PASS
   layer-0 attention output vs reference: pos1 cos=0.992847, pos2 cos=0.988290
 DLL_FRESH_BUILD=PASS
@@ -20,9 +20,9 @@ LOGITS_FINITE=PASS
 KV_POSITION_AUTHORITY=PASS
   KV_CACHE_LENGTH advances 1,2,3,... with EXECUTED_POSITION at every step
 AUTOREGRESSIVE_16=PASS
-  16 tokens generated (evidence: 13 distinct), DLL streamed text 67 chars with no collapse: ' Hello! How can I help you today? If you have any questions '
+  16 forced decode steps (evidence: 14 distinct); DLL chat-template run emitted 9 tokens, all 9 distinct, then stopped at its own EOS after a complete sentence with no collapse: ' Hello! How can I help you today?'
 REFERENCE_DIFFERENTIAL=PASS
-  positions 0-11 vs llama.cpp: 11/12 argmax match, mean cos=0.986835, min cos=0.949686 (window tolerance: >=10/12 argmax, mean cos > 0.94, every pos cos > 0.94); full 19-position mean cos=0.929647 recorded below
+  all 20 teacher-forced positions vs the reproducible llama.cpp reference (RAWRXD_REFERENCE_REPRODUCIBILITY_001): 19/20 argmax match, mean cos=0.999114, min cos=0.996162 (gate: >=18/20 argmax, mean cos > 0.99, every position cos > 0.99)
 CERTIFICATE_VERIFIER=PASS
   tools/verify_e2e_cert.py re-checks every gate from raw evidence artifacts (re-hashes, re-computes positional metrics)
 VERDICT=PASS

@@ -1,0 +1,18 @@
+RAWRXD_REFERENCE_REPRODUCIBILITY_001
+LLAMA_COMMIT=c479922ac520a08969b4c1dc154d7bbb3c386d85
+MODEL_SHA256=5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4
+GENERATOR_DETERMINISTIC=PASS
+  two consecutive runs of the reference generator agree on all 20 positions x 102400 logits (max abs diff 0)
+SOURCE_BUILD_MATCHES_ORIGINAL=PASS
+  a from-source rebuild of the generator reproduces the original reference_multipos2.exe + the 10/8 llama.dll bit-exactly (max abs diff 0)
+STORED_REFERENCE_REPRODUCIBLE=FAIL
+  the certificate's stored reference (evidence/NUGVERSE_ESTIMATOR_001) cannot be reproduced by any current build: max abs diff 20.872 against the reproducible generator. The stored artifact therefore predates the current binary pair (model bytes and the generator source are both unchanged and verified by hash).
+SCALE_ADJUDICATED=PASS
+  kq_scale solved from the reproducible reference's own kq/softmax dumps: 0.114721 at 8/8 head x position samples (6 decimals). The runtime was corrected to that value and the E2E differential moved from 11/12 argmax / mean cos 0.9868 (measured against the unreproducible stored artifact) to 19/20 argmax / mean cos 0.999114 / min cos 0.996162 against the reproducible reference.
+MODEL_UNCHANGED=PASS
+  GGUF sha256 5d33e5f045c7a033 (matches the E2E certificate baseline)
+RAWRXD_CORE_DLL_NATIVE_E2E_001=PASS
+  re-certified against the reproducible reference: 12/12 verifier checks pass, REFERENCE_DIFFERENTIAL 19/20 argmax, mean cos 0.999114
+VERDICT=PASS
+  the reference pipeline is now reproducible and the attention-scale question is settled against it; the stale stored artifact is superseded by ref_teacher_forced
+VERDICT=PASS
