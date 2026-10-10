@@ -237,7 +237,7 @@ jobs:
             exit 0
           }
           OpenCppCoverage.exe `
-            --sources "$(Get-Location)/src" `
+            --sources "$(Get-Location)\src" `
             --export_type "html:$covDir" `
             -- $exe
 
