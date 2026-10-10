@@ -103,6 +103,14 @@ jobs:
           include_passed: true
 
   # ============================================================
+  # Component tests: FAIL EXPLICITLY by design (not silent skips)
+  # These components (voice_processor, ai_merge_resolver, semantic_diff,
+  # sandboxed_terminal, model_registry, zero_retention_manager) live in
+  # src/orchestration, src/git and src/terminal, which link Qt6. Qt is NOT
+  # part of this dependency-free project, so no native targets exist for
+  # them and these jobs fail at build time with that reason until native
+  # component tests are added. Do not silence them; replace them.
+  # ============================================================
   # Component Test: VoiceProcessor
   # ============================================================
   test-voice-processor:

@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Set
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 try:
@@ -55,6 +56,11 @@ except ImportError:
 DB_FILE = "hexmag.sqlite"
 
 
+def _sse(payload: Dict[str, Any]) -> str:
+    """Encode a payload as a Server-Sent Events data frame."""
+    return f"data: {json.dumps(payload)}\n\n"
+
+
 class AskRequest(BaseModel):
     question: str
     code: Optional[str] = None
@@ -65,6 +71,11 @@ class AskResponse(BaseModel):
     answer: str
     sources: List[str]
     meta: Dict[str, Any]
+
+
+class AgentRequest(BaseModel):
+    goal: str
+    max_time: float = 30.0
 
 
 class SwarmModel:
@@ -136,6 +147,43 @@ swarm = SwarmModel()
 @app.post("/ask", response_model=AskResponse)
 async def ask_endpoint(req: AskRequest) -> AskResponse:
     return await swarm.ask(req.question, req.code, req.timeout)
+
+
+@app.post("/agent")
+async def agent_endpoint(req: AgentRequest) -> StreamingResponse:
+    """Stream the swarm working toward a goal as Server-Sent Events.
+
+    Reuses the same ask/answer machinery as /ask and emits a terminal
+    {"kind": "goal.satisfied"} event once a bot produces an answer, or
+    {"kind": "agent.timeout"} if the goal is not satisfied in max_time.
+    """
+
+    async def event_stream():
+        t0 = time.time()
+        swarm.engine.add(
+            Event(kind="llm.question", payload={"question": req.goal}, source="API/agent")
+        )
+        yield _sse({"kind": "agent.started", "goal": req.goal})
+
+        while time.time() - t0 < req.max_time:
+            await swarm.engine.step()
+
+            for item in reversed(getattr(swarm.engine, "history", [])):
+                labels = getattr(item, "labels", set())
+                if "llm.answer" in labels:
+                    data = getattr(item, "data", {})
+                    yield _sse({
+                        "kind": "goal.satisfied",
+                        "bot": getattr(item, "bot", "swarm"),
+                        "answer": data.get("answer", ""),
+                    })
+                    return
+
+            await asyncio.sleep(0.1)
+
+        yield _sse({"kind": "agent.timeout"})
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 @app.get("/health")

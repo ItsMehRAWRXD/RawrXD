@@ -1167,7 +1167,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE AND Qt6_FOUND)
     endif()
     
     # Compiler options - MSVC only now
-    target_compile_options(RawrXD-Win32IDE PRIVATE /EHsc /O2)
+    target_compile_options(RawrXD-Win32IDE PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
     
     # Force MBCS/ANSI build to avoid Unicode string conversion issues
     target_compile_definitions(RawrXD-Win32IDE PRIVATE _MBCS)
@@ -1310,7 +1310,7 @@ endif()
 
 # Compiler flags
 if(MSVC)
-    target_compile_options(RawrXD-ModelLoader PRIVATE /O2 /EHsc)
+    target_compile_options(RawrXD-ModelLoader PRIVATE $<$<CONFIG:Release>:/O2> /EHsc)
 else()
     target_compile_options(RawrXD-ModelLoader PRIVATE -O2 -fexceptions)
 endif()
@@ -1345,7 +1345,7 @@ add_executable(rawrxd_stress
 target_link_libraries(rawrxd_stress PRIVATE wbemuuid pdh)
 set_target_properties(rawrxd_stress PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
 if(MSVC)
-    target_compile_options(model_loader_bench PRIVATE /O2 /EHsc)
+    target_compile_options(model_loader_bench PRIVATE $<$<CONFIG:Release>:/O2> /EHsc)
 else()
     target_compile_options(model_loader_bench PRIVATE -O2 -fexceptions)
 endif()
@@ -1435,7 +1435,7 @@ set_target_properties(RawrXD-SimpleIDE PROPERTIES
 
 # Enable standard exception semantics and optimization for SimpleIDE
 if(MSVC)
-    target_compile_options(RawrXD-SimpleIDE PRIVATE /EHsc /O2)
+    target_compile_options(RawrXD-SimpleIDE PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
 else()
     target_compile_options(RawrXD-SimpleIDE PRIVATE -fexceptions -O2)
 endif()
@@ -1468,7 +1468,7 @@ set_target_properties(RawrXD-Chromatic PROPERTIES
 )
 
 if(MSVC)
-    target_compile_options(RawrXD-Chromatic PRIVATE /EHsc /O2)
+    target_compile_options(RawrXD-Chromatic PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
 else()
     target_compile_options(RawrXD-Chromatic PRIVATE -fexceptions -O2)
 endif()
@@ -1924,7 +1924,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     )
 
     if(MSVC)
-        target_compile_options(RawrXD-AgenticIDE PRIVATE /EHsc /O2)
+        target_compile_options(RawrXD-AgenticIDE PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
     else()
         target_compile_options(RawrXD-AgenticIDE PRIVATE -fexceptions -O2)
     endif()
@@ -2077,7 +2077,7 @@ if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_q8_0_end2
         kernels/matmul_kernel_avx2.cc
     )
     target_include_directories(bench_q8_0_end2end PRIVATE ${CMAKE_SOURCE_DIR})
-    target_compile_options(bench_q8_0_end2end PRIVATE /arch:AVX2 /O2)
+    target_compile_options(bench_q8_0_end2end PRIVATE /arch:AVX2 $<$<CONFIG:Release>:/O2>)
     target_compile_definitions(bench_q8_0_end2end PRIVATE __AVX2__=1)
     set_target_properties(bench_q8_0_end2end PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
@@ -2092,7 +2092,7 @@ if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_att
         kernels/matmul_kernel_avx2.cc
     )
     target_include_directories(bench_flash_attn PRIVATE ${CMAKE_SOURCE_DIR})
-    target_compile_options(bench_flash_attn PRIVATE /arch:AVX2 /O2)
+    target_compile_options(bench_flash_attn PRIVATE /arch:AVX2 $<$<CONFIG:Release>:/O2>)
     target_compile_definitions(bench_flash_attn PRIVATE __AVX2__=1)
     set_target_properties(bench_flash_attn PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
@@ -2106,7 +2106,7 @@ if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_all
         kernels/matmul_kernel_avx2.cc
     )
     target_include_directories(bench_flash_all_quant PRIVATE ${CMAKE_SOURCE_DIR})
-    target_compile_options(bench_flash_all_quant PRIVATE /arch:AVX2 /O2)
+    target_compile_options(bench_flash_all_quant PRIVATE /arch:AVX2 $<$<CONFIG:Release>:/O2>)
     target_compile_definitions(bench_flash_all_quant PRIVATE __AVX2__=1)
     set_target_properties(bench_flash_all_quant PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
@@ -2135,7 +2135,7 @@ if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_asm
         add_dependencies(bench_flash_asm_puppeteer flash_attn_asm_obj)
         target_sources(bench_flash_asm_puppeteer PRIVATE ${FLASH_ASM_OBJ})
         target_include_directories(bench_flash_asm_puppeteer PRIVATE ${CMAKE_SOURCE_DIR})
-        target_compile_options(bench_flash_asm_puppeteer PRIVATE /arch:AVX2 /O2)
+        target_compile_options(bench_flash_asm_puppeteer PRIVATE /arch:AVX2 $<$<CONFIG:Release>:/O2>)
         target_compile_definitions(bench_flash_asm_puppeteer PRIVATE __AVX2__=1)
         set_target_properties(bench_flash_asm_puppeteer PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"

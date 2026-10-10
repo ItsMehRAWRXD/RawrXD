@@ -239,7 +239,6 @@ jobs:
           OpenCppCoverage.exe `
             --sources "$(Get-Location)/src" `
             --export_type "html:$covDir" `
-            --cover-children `
             -- $exe
 
       - name: Upload Coverage Report
