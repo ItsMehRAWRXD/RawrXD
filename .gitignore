@@ -13,6 +13,10 @@ tmp/
 *.ilk
 *.log
 
+# Certification evidence is deliberately versioned even though *.log is
+# ignored above: it is the run transcript behind a certification record.
+!certification/*.log
+
 # CMake
 CMakeCache.txt
 CMakeFiles/

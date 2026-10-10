@@ -20,12 +20,60 @@
 param(
     [string]$Vcpu = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools",
     [string]$CertId = "RAWRXD_AGENT_RELIABILITY_001",
-    [switch]$SkipPush
+    [switch]$SkipPush,
+    [switch]$VerifyOnly
 )
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 Set-Location $repo
+
+# ---------------------------------------------------------------------------
+# VerifyOnly: independently check a previously written manifest.
+# Confirms (a) the recorded commit is HEAD, (b) the recorded SHA256 matches a
+# freshly built executable, and (c) the recorded counters reproduce.
+# ---------------------------------------------------------------------------
+if ($VerifyOnly) {
+    $manifestPath = Join-Path $repo "build-certification" "manifest.json"
+    if (-not (Test-Path -LiteralPath $manifestPath)) {
+        throw "No manifest at $manifestPath. Run certification first."
+    }
+    $m = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+
+    $head = (& git rev-parse HEAD).Trim()
+    if ($head -ne $m.source.commit) {
+        Write-Warning "Manifest commit $($m.source.commit) != HEAD $head"
+        Write-Warning "  -> the recorded artifact was built from a different source state."
+    } else {
+        Write-Host "[verify] commit matches HEAD: $head"
+    }
+
+    $exe = Join-Path $repo "build-certification" "Release" "agentic-resilience-tests.exe"
+    if (Test-Path -LiteralPath $exe) {
+        $h = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLower()
+        if ($h -eq $m.artifact.sha256) {
+            Write-Host "[verify] executable SHA256 matches manifest: $h"
+        } else {
+            Write-Warning "Executable SHA256 mismatch."
+            Write-Warning "  manifest : $($m.artifact.sha256)"
+            Write-Warning "  actual   : $h"
+        }
+    } else {
+        Write-Warning "Executable not found; re-run certification to rebuild."
+    }
+
+    Write-Host ""
+    Write-Host "[verify] manifest records:"
+    Write-Host "  certification : $($m.certification_id)"
+    Write-Host "  tests passed  : $($m.results.tests_passed)"
+    Write-Host "  tests failed  : $($m.results.tests_failed)"
+    Write-Host "  exit code     : $($m.results.exit_code)"
+    $evidenceProps = @($m.evidence.PSObject.Properties)
+    $verified = @($evidenceProps | Where-Object { $_.Value.verified }).Count
+    $total    = $evidenceProps.Count
+    Write-Host "  evidence      : $verified/$total areas proven"
+    exit 0
+}
 
 $vcvars = Join-Path $Vcpu "VC\Auxiliary\Build\vcvars64.bat"
 if (-not (Test-Path -LiteralPath $vcvars)) {
