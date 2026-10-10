@@ -30,6 +30,21 @@ set(RESILIENCE_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/agentic_resilience_test.cpp
 )
 
+# ---------------------------------------------------------------------------
+# Production integration test.
+#
+# Tests/agentic_resilience proves the three subsystems work. This proves the
+# real HexMag swarm actually USES them (via hexmag_resilience_bridge.hpp)
+# instead of its own parallel implementations, which silently discarded
+# concurrent agent edits.
+# ---------------------------------------------------------------------------
+set(INTEGRATION_SOURCES
+    ${RESILIENCE_SOURCES}
+    ${CMAKE_CURRENT_LIST_DIR}/hexmag_integration_test.cpp
+)
+list(REMOVE_ITEM INTEGRATION_SOURCES
+    ${CMAKE_CURRENT_LIST_DIR}/agentic_resilience_test.cpp)
+
 # The test asserts on live behaviour only; warnings indicate real problems.
 if(MSVC)
     add_compile_options(/W4 /permissive- /EHsc /Zc:preprocessor)
@@ -57,6 +72,24 @@ endif()
 enable_testing()
 add_test(NAME agentic-resilience COMMAND agentic-resilience-tests)
 set_tests_properties(agentic-resilience PROPERTIES
+    TIMEOUT 300
+    PASS_REGULAR_EXPRESSION "ALL TESTS PASSED"
+    FAIL_REGULAR_EXPRESSION "SOME TESTS FAILED"
+)
+
+# Production-integration test: the swarm must delegate to the certified engines.
+add_executable(hexmag-integration-tests ${INTEGRATION_SOURCES})
+target_include_directories(hexmag-integration-tests PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/../../src
+    ${CMAKE_CURRENT_LIST_DIR}/../../src/agent
+    ${CMAKE_CURRENT_LIST_DIR}/../../src/agentic
+)
+if(NOT WIN32)
+    target_compile_options(hexmag-integration-tests PRIVATE -pthread)
+endif()
+
+add_test(NAME hexmag-integration COMMAND hexmag-integration-tests)
+set_tests_properties(hexmag-integration PROPERTIES
     TIMEOUT 300
     PASS_REGULAR_EXPRESSION "ALL TESTS PASSED"
     FAIL_REGULAR_EXPRESSION "SOME TESTS FAILED"
