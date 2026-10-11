@@ -3,8 +3,8 @@
 #include <vector>
 #include <cstdint>
 #include <memory>
+#include <string>
 // #include "brutal_gzip.h"
-#include "deflate_brutal_std.hpp"
 
 /**
  * @file compression_interface.h
