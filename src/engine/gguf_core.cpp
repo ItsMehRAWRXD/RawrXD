@@ -161,3 +161,21 @@ size_t EngineGGUFLoader::ggml_nbytes(ggml_type type, size_t n) {
     }
 }
 
+
+// File/mapped-image span of every parsed tensor, in load order. Sizes come
+// from the same ggml_nbytes() used when the tensors were built, so the span
+// always matches the bytes the loader actually mapped.
+std::vector<TensorFileSpan> EngineGGUFLoader::listTensorFileSpans() const
+{
+    std::vector<TensorFileSpan> spans;
+    spans.reserve(tensors.size());
+    for (const TensorInfo& t : tensors)
+    {
+        TensorFileSpan sp;
+        sp.name = t.name;
+        sp.fileOffset = t.offset;
+        sp.sizeBytes = static_cast<std::uint64_t>(t.size);
+        spans.push_back(std::move(sp));
+    }
+    return spans;
+}

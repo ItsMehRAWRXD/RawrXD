@@ -46,3 +46,12 @@ struct TensorInfo {
     size_t size;
     void* data;
 };
+
+// Where a tensor's bytes live in the GGUF file (and in the mapped image).
+// Used by the swarm planner to build per-layer tensor spans without
+// materialising weights.
+struct TensorFileSpan {
+    std::string name;
+    std::uint64_t fileOffset;
+    std::uint64_t sizeBytes;
+};

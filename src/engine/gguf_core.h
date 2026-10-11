@@ -14,6 +14,10 @@ public:
     void unload();
     
     TensorInfo* getTensor(const char* name);
+
+    // File/mapped-image spans of every tensor, in load order. The swarm
+    // planner partitions these per layer without touching weight bytes.
+    std::vector<TensorFileSpan> listTensorFileSpans() const;
     
     // Dequantization helpers
     static void dequantize_q4_0(float* dst, const block_q4_0* src, int n);
