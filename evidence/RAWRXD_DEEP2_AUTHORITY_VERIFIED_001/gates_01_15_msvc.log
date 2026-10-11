@@ -1,0 +1,6 @@
+MSVC (VS2022 BuildTools) x64 /std:c++20 /EHsc /O2 /W4
+cl ... /I include src\Deep2Authority.cpp src\Deep2AuthorityGates.cpp tests\test_gates.cpp
+build: clean, no warnings at /W4
+run: AUTHORITY_GATES_01_15_PASS, exit 0
+date: 2026-10-11
+drop: Deep2_Authority_Batch_01_15.zip
