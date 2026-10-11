@@ -761,12 +761,16 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     return true;
 }
 
-// Encoded bytes per element for a tensor type.
-// Encoded bytes per element for a tensor type.
-static size_t elementSizeOf(const TensorRec& t) {
+// Total encoded ELEMENT count of a tensor (not bytes-per-element: for Q4_0
+// type_size 18 / blck_size 32 truncates to 0, which made every expert-count
+// division divide by zero). A block holds blck_size elements in type_size
+// bytes, so the tensor holds (bytes / type_size) * blck_size elements.
+static size_t elemCountOf(const TensorRec& t) {
     const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
-    if (!tr) return 0;
-    return static_cast<size_t>(tr->type_size) / static_cast<size_t>(std::max<int64_t>(tr->blck_size, 1));
+    if (!tr || tr->type_size == 0 || tr->blck_size == 0) return 0;
+    const size_t ts = static_cast<size_t>(tr->type_size);
+    const size_t blk = static_cast<size_t>(tr->blck_size);
+    return (t.bytes / ts) * blk;
 }
 
 // Dequantize only the element range [base, base+count) of a tensor.
@@ -850,6 +854,10 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
 
     const TensorRec* upT = nullptr;
     const TensorRec* downT = nullptr;
+    if (std::getenv("MOE_TRACE")) {
+        std::fprintf(stderr, "[moe-enter] block=%d ids=%zu x=%zu detail='%s'\n",
+                     (int)moe.block, ids.size(), x.size(), moe.detail.c_str());
+    }
     if (!expertUpName.empty()) {
         auto it = slot_by_name_.find(expertUpName);
         if (it == slot_by_name_.end()) {
@@ -885,32 +893,18 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     }
     std::vector<float> gT, uT, dT;
     // Expert tensors are RANK-3: ne = [in, out, expert]. Requesting
-    // bytes / 4 floats is wrong for any quantized type - a Q5_0 block holds 32
-    // weights in 22 bytes, so bytes/4 under-requests by 32/22 ~ 1.45x. That
-    // left only ~1/6 of the tensor dequantized and made usableE 22 instead of
-    // the model's real expert count (128), silently skipping most experts.
-    // Derive the request from the tensor's own element count instead.
-    auto elemCount = [](const TensorRec& t) -> size_t {
-        const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
-        if (!tr) return 0;
-        const size_t blk = (size_t)tr->blck_size;
-        const size_t ts  = (size_t)tr->type_size;
-        if (blk == 0 || ts == 0) return 0;
-        // GGUF dims are ggml ne[], so the element count is their product.
-        size_t n = 1;
-        for (uint64_t d : t.dims) n *= (size_t)d;
-        return n;
-    };
     // (the full-bank dequant that used to live here is removed: it expanded
-    //  ~7.14 GiB of F32 for every MoE block on every token, which is what
+    // ~7.14 GiB of F32 for every MoE block on every token, which is what
     //  corrupted the heap. See the selected-expert path below.)
 
-    // Bytes per weight for the expert bank: quantized types are not 4 bytes,
-    // so the expert count must be derived from type_size / blck_size.
-    auto elementSize = [](const TensorRec& t) -> size_t {
+    // Total encoded ELEMENT count of the expert bank. A block holds blck_size
+    // elements in type_size bytes, so the tensor holds (bytes/type_size)*blck.
+    // (type_size / blck_size truncates to zero for Q4_0 - 18/32 - which made
+    // every expert count divide by zero.)
+    auto elemCount = [](const TensorRec& t) -> size_t {
         const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
-        if (!tr || tr->blck_size == 0) return 0;
-        return (size_t)tr->type_size / (size_t)tr->blck_size;
+        if (!tr || tr->type_size == 0 || tr->blck_size == 0) return 0;
+        return (t.bytes / (size_t)tr->type_size) * (size_t)tr->blck_size;
     };
     // The expert tensors are [in, out, expert] and each holds 128 experts at
     // 638,582,784 elements (~2.38 GiB as F32). Expanding all 128 costs ~7.14 GiB
@@ -925,14 +919,14 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const size_t dIn = (size_t)downT->dims[0], dOut = (size_t)downT->dims[1];
 
     // Number of experts actually present in each tensor.
-    // Element stride is (in * out). The tensor holds bytes/elementSize elements,
+    // Element stride is (in * out). The tensor holds elemCountOf elements,
     // so expert count = elements / elementStride.
     const size_t elemStrideG = gIn * gOut;
     const size_t elemStrideU = uIn * uOut;
     const size_t elemStrideD = dIn * dOut;
-    const size_t gExperts = std::max<size_t>(gateT->bytes / elementSizeOf(*gateT) / std::max<size_t>(elemStrideG, 1), 1);
-    const size_t uExperts = std::max<size_t>(upT->bytes   / elementSizeOf(*upT)   / std::max<size_t>(elemStrideU, 1), 1);
-    const size_t dExperts = std::max<size_t>(downT->bytes / elementSizeOf(*downT) / std::max<size_t>(elemStrideD, 1), 1);
+    const size_t gExperts = std::max<size_t>(elemCountOf(*gateT) / std::max<size_t>(elemStrideG, 1), 1);
+    const size_t uExperts = std::max<size_t>(elemCountOf(*upT)   / std::max<size_t>(elemStrideU, 1), 1);
+    const size_t dExperts = std::max<size_t>(elemCountOf(*downT) / std::max<size_t>(elemStrideD, 1), 1);
     const size_t usableE = std::min(gExperts, std::min(uExperts, dExperts));
     if (usableE == 0) { err = "moe: no expert blocks available"; return false; }
 
@@ -1153,10 +1147,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {
         const auto& in = program_[pc];
-        if (std::getenv("RR_TRACE_OPS")) {
-            std::fprintf(stderr, "  [op] pc=%zu kind=%d block=%d a='%s' b='%s' out='%s'\n",
-                         pc, (int)in.op, (int)in.block,
-                         in.aName.c_str(), in.bName.c_str(), in.outName.c_str());
+        if (std::getenv("RR_OP_TRACE")) {
+            std::fprintf(stderr, "  [loop] pc=%zu/%zu kind=%d blk=%d a='%s' b='%s' out='%s' bSlot=%d\n",
+                         pc, program_.size(), (int)in.op, (int)in.block,
+                         in.aName.c_str(), in.bName.c_str(), in.outName.c_str(), (int)in.b);
+            std::fflush(stderr);
         }
         const std::vector<float>& xi = resolveIn(in);
     switch (in.op) {
