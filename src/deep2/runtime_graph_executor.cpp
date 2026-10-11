@@ -317,24 +317,7 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
     // Non-k-quant (or non-multiple-of-256) weight: dequantise and dot.
     std::vector<float> wf;
     const size_t got = DequantPrefix(w, wf, n_in * n_out);
-    if (got < n_in * n_out) {
-        // Report the geometry, not just "short". The gap between what the file
-        // provides and what the layer needs is what distinguishes a wrong byte
-        // span from a legitimately unaligned row width.
-        char b[384];
-        std::snprintf(b, sizeof(b),
-            "linear: dequant short: name=%s type=%u dims=[%zu,%zu] want=%zu got=%zu "
-            "bytes=%zu type_size=%zu blk=%zu n_in%%blk=%zu",
-            w.name.c_str(), (unsigned)w.gguf_type,
-            w.dims.empty() ? 0 : (size_t)w.dims[0],
-            w.dims.size() > 1 ? (size_t)w.dims[1] : 0,
-            n_in * n_out, got, w.bytes,
-            (size_t)ggml_get_type_traits(w.gguf_type)->type_size,
-            (size_t)ggml_get_type_traits(w.ggml_type)->blck_size,
-            (size_t)ggml_get_type_traits(w.ggml_type)->blck_size ? n_in % (size_t)ggml_get_type_traits(w.ggml_type)->blck_size : 0);
-        err = b;
-        return false;
-    }
+    if (got < n_in * n_out) { err = "linear: dequant short"; return false; }
     wf.resize(n_in * n_out);
     y.assign(n_out, 0.0f);
     for (size_t j = 0; j < n_out; ++j) {
@@ -738,26 +721,8 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     const int32_t embSlot = slot_by_name_["token_embd.weight"];
 
-    /* DIVTRACE */
-    static const bool dumpTensors = (std::getenv("RR_DUMP_TENSORS") != nullptr);
-    static const int dumpLayer = []() {
-        const char* e = std::getenv("RR_DUMP_LAYER");
-        return e ? std::atoi(e) : 0;
-    }();
-    static const char* dumpDir = std::getenv("RR_DUMP_DIR");
-    int dumpBlock = -1;
-    auto dumpVec = [&](const char* tag, const std::vector<float>& v) {
-        if (!dumpTensors || !dumpDir) return;
-        if (dumpBlock != dumpLayer) return;
-        char path[1024];
-        std::snprintf(path, sizeof(path), "%s/t_%s_pos%zu.bin", dumpDir, tag, position);
-        FILE* f = std::fopen(path, "wb");
-        if (f) { std::fwrite(v.data(), sizeof(float), v.size(), f); std::fclose(f); }
-    };
-
     for (size_t pc = 0; pc < program_.size(); ++pc) {
         const auto& in = program_[pc];
-        if (dumpTensors) dumpBlock = in.block;
         const std::vector<float>& xi = resolveIn(in);
     switch (in.op) {
             case OpKind::EmbeddingLookup: {
@@ -806,7 +771,6 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::vector<float> y;
                 std::string e;
                 if (!OpLinear(in.b, xi, y, e)) { last_error_ = e; return false; }
-                { std::string t = "q" + std::to_string(pc); dumpVec(t.c_str(), y); }
                 arena(in.outName.empty() ? std::string("lin") : in.outName) = y;
                 hidden_ = y;
                 break;
@@ -815,8 +779,6 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::vector<float> k, v;
                 std::string e;
                 if (!OpMlaDecompress(in, xi, k, v, position, e)) { last_error_ = e; return false; }
-                { std::string tk = "mla_k" + std::to_string(pc); std::string tv = "mla_v" + std::to_string(pc);
-                  dumpVec(tk.c_str(), k); dumpVec(tv.c_str(), v); }
                 arena(in.outName.empty() ? std::string("kv") : in.outName) = hidden_;
                 arena("k") = k;
                 arena("v") = v;
@@ -829,7 +791,6 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (kv.empty()) kv = qv;
                 if (vv.empty()) vv = kv;
                 if (!OpAttention(in, qv, kv, vv, y, position, e)) { last_error_ = e; return false; }
-                dumpVec("attn", y);
                 arena("attn") = y;
                 if (!in.outName.empty()) arena(in.outName) = y;
                 hidden_ = y;
@@ -885,7 +846,6 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     y[i] = (i < resid->size() ? (*resid)[i] : 0.0f)
                          + (i < add->size() ? (*add)[i] : 0.0f);
                 hidden_ = y;
-                { std::string t = "resid" + std::to_string(pc); dumpVec(t.c_str(), y); }
                 arena(in.outName.empty() ? std::string("resid") : in.outName) = y;
                 break;
             }
@@ -941,7 +901,6 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::vector<float> y;
                 std::string e;
                 if (!OpLinear(in.b, hidden_, y, e)) { last_error_ = e; return false; }
-                dumpVec("logits", y);
                 logits_ = y;
                 break;
             }

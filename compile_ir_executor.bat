@@ -22,4 +22,5 @@ cl.exe /nologo /std:c++20 /W4 /WX- /EHsc /O2 ^
     "F:\rawrxd\src\deep2\modelgenie\ModelGenomeReader.cpp" ^
     "F:\rawrxd\src\modelgenie\ModelGenieExecutor.cpp" ^
     "F:\rawrxd\src\vulkan_compute.cpp" ^
+    "F:\rawrxd\src\deep2\quant_dot_dispatch.cpp" ^
     /link "C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib"

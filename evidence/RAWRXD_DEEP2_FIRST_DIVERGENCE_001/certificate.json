@@ -1,0 +1,49 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_FIRST_DIVERGENCE_001",
+  "date": "2026-10-11",
+  "verdict": "FAIL",
+  "method": "Used the certified modelgenie executor (which matches llama.cpp on 20/20 overlapping positions) as the ground-truth anchor, since its per-tensor differential captures are stored and llama.cpp's intermediate tensors are not. Fed identical teacher-forced ids through both the certified executor and the runtime-generated graph.",
+  "independence_note": "The certified executor and the runtime graph are separate code paths built from separate sources, so agreement between them is evidence about the runtime graph specifically. Agreement with llama.cpp itself is still required for full parity and is a separate gate.",
+  "anchor_validation": {
+    "certified_executor_argmax": [185, 185, 13, 13, 4, 15, 15, 15, 15, 15, 24, 12, 16, 15, 15, 16, 26644, 12, 185, 317, 647, 82, 1218, 101, 16, 24, 94, 26, 101],
+    "reference_argmax_first_20": [185, 185, 13, 13, 4, 15, 15, 15, 15, 15, 24, 12, 16, 15, 15, 16, 26644, 12, 185, 317],
+    "anchor_vs_reference": "20/20 identical - anchor is valid"
+  },
+  "first_divergence": {
+    "position": 0,
+    "runtime_graph_argmax_at_pos0": 42641,
+    "anchor_argmax_at_pos0": 185,
+    "tensor": "q = RmsNorm(embedding) @ blk.0.attn_q.weight",
+    "measurements": {
+      "q_cosine_runtime_vs_anchor": 0.52299011,
+      "q_L2_runtime": 109.630539,
+      "q_L2_anchor": 93.017380,
+      "best_fit_scale": "runtime_q = 0.616398 * anchor_q",
+      "residual_after_scale": 1.004569
+    },
+    "significance": "Position 0 has no positional dependence and no cross-position attention (T=1), so the defect is in the single-token forward path: embedding, the block-0 norm, the q projection, the MLA path, or the MoE/dense path."
+  },
+  "why_position_0_matters": "It removes RoPE, KV-cache indexing and causal masking from the hypothesis space. A defect that presents at position 0 cannot be a cache or position-encoding bug."
+  ,
+  "previous_fixes_still_valid": [
+    "ResidualAdd published attn_proj (fixed; logits were bit-identical across positions).",
+    "MLA score dotted across the no-rope/rope boundary (fixed).",
+    "RoPE inv_freq indexed by element rather than pair (fixed).",
+    "Publish(resid_in) ran after the attn RmsNorm (fixed; attn_norm L2 124.33/max 123.01 before, 35.38/max 5.74 after)."
+  ],
+  "remaining_open": {
+    "block_0_position_0_forward": "Unresolved. First divergence is the first projection of block 0.",
+    "candidate_causes": [
+      "The block-0 attention weight scale or the norm path applied to the embedding.",
+      "The q projection linear indexing.",
+      "The MoE/dense FFN path at block 0."
+    ],
+    "note": "The run log shows the certified path uses 300 operations per position across 27 blocks; the runtime graph emits 328 for the same model. The op sequences differ, so a tensor-by-tensor op mapping is also unverified."
+  },
+  "build": "Zero compiler diagnostics.",
+  "not_claimed": [
+    "No llama.cpp parity.",
+    "No coherent generation.",
+    "No TPS or streaming."
+  ]
+}

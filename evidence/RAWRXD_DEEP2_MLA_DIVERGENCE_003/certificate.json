@@ -1,0 +1,40 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_MLA_DIVERGENCE_003",
+  "date": "2026-10-11",
+  "verdict": "FAIL",
+  "purpose": "Localise the block-0, position-0 divergence to a specific op and characterise its magnitude error, using the certified executor's stored per-tensor captures as ground truth.",
+  "method": "Anchored on the certified modelgenie executor's --differential captures (diff_pos1), validated against llama.cpp 20/20 on overlapping positions. Captured the runtime graph's block-0 tensors with an env-gated dump (RR_DUMP_TENSORS / RR_DUMP_LAYER / RR_DUMP_DIR) and compared against the anchor. The dumped arena hooks were reverted from the working tree after use so no debug code remains.",
+  "verified": [
+    {
+      "check": "RmsNorm(embedding) reproduced from first principles",
+      "result": "bit-exact",
+      "detail": "cos(my attn_norm, certified attn_norm) = 1.00000000, L2 27.8429 vs 27.8430. The runtime graph's norm path is correct. Rules out the norm as the defect."
+    }
+  ],
+  "first_divergent_op": {
+    "op": "MlaDecompress (block 0, position 1 of a 2-token anchor run)",
+    "runtime_vs_ground_truth_cosine": -0.00211426,
+    "detail": "k(3072)||v(2048) = 5120 which exactly equals ground truth MlaDecompress_Output width, so the k/v split is correct. The magnitudes are wrong: native k body ~0.04 vs ground truth ~0.31; native rope-region ~-1.83 vs ground truth ~0.13.",
+    "interpretation": "The MLA decompress produces an uncorrelated result with the wrong magnitude. Since the norm that feeds it is bit-exact, the fault is inside the MLA projection path itself, not upstream."
+  },
+  "ordered_divergence_chain": [
+    "1. MlaDecompress (k||v) - cos -0.0021 vs ground truth. FIRST DIVERGENCE.",
+    "2. q projection - cos 0.714 vs ground truth (partially correlated; the norm is right so the projection's row indexing is suspect).",
+    "3. attention output - wrong downstream of the two above."
+  ],
+  "ground_truth_reference_values": {
+    "latent": "n=512 L2=1.8718 mean|x|=0.023089",
+    "k_rope_raw": "n=64 L2=23.5778",
+    "k_rope": "n=64 L2=23.5778 (rotation preserves L2, as expected)",
+    "note": "Ground truth k_rope differs from k_rope_raw by max 4.06, confirming RoPE is applied and is non-identity at position 1."
+  },
+  "what_is_not_claimed": [
+    "No root cause inside OpMlaDecompress (kv_a_mqa row indexing, kv_b row indexing, latent slice, or rope tail offset are all still candidates).",
+    "No llama.cpp parity.",
+    "No fix applied."
+  ],
+  "build": "Zero compiler diagnostics.",
+  "next": {
+    "method": "Dump latentFull (the kv_a_mqa output) from the runtime graph and compare it to the ground truth latent 512 and the ground truth rope 64. That isolates whether the fault is in the kv_a_mqa projection, the latent RMSNorm, or the kv_b projection - the three remaining candidates inside this op."
+  }
+}
