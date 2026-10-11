@@ -378,8 +378,8 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
         RMSNorm_AVX512(final_x, final_x, final_norm, dim, config.rms_norm_eps);
 
     std::vector<float> logits(config.vocab_size);
-    if (!ExecuteLayerMatMul("output.weight", final_x, logits.data(), dim, config.vocab_size,
-                            static_cast<uint32_t>(std::max(0, config.n_layers))))
+    if (!FBExecuteLayerMatMulBatch(loader, "output.weight", final_x,
+                                    logits.data(), dim, config.vocab_size, 1))
     {
         printf("[ForwardBatch] FATAL: output.weight StreamingMatMul failed\n");
         return {};
