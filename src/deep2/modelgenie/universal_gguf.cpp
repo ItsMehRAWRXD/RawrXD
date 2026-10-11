@@ -721,8 +721,9 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 GraphOp o;
                 o.op = Op::MlaDecompress; o.block = (int32_t)b;
                 o.a = name(Role::AttnKvAMqa);
-                o.b = name(Role::AttnKNorm) + "|attn_norm";
+                o.b = name(Role::AttnKNorm);
                 o.c = name(Role::AttnKvB);
+                o.detail = "attn_norm";   // activation operand, resolved by executor
                 o.out = "kv";
                 g.ops.push_back(o);
             }

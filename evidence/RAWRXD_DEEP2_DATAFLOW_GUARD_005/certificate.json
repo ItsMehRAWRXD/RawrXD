@@ -1,0 +1,30 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_DATAFLOW_GUARD_005",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "purpose": "Make silent graph dataflow errors loud, and use the new guarantee to enumerate the remaining ones.",
+  "why_this_matters": "The original MLA bug was silent: a graph operand referenced an activation that did not exist, and the executor quietly substituted the running hidden vector. That single silent fallback produced a latent with cosine 0.028 and every downstream block diverged. A guard that converts this class of error into an explicit failure prevents recurrence.",
+  "changes": [
+    "resolveIn now fails closed: a named operand absent from the arena is recorded in unresolved_inputs_ instead of being replaced with hidden_. ExecuteToken returns false when the list is non-empty.",
+    "MlaDecompress is explicitly exempted because its a/b/c are all weight slots by contract; its activation now rides in o.detail and is resolved by the call site.",
+    "The graph carry is now explicit: MlaDecompress sets o.detail = \"attn_norm\" so the activation is named rather than implied.",
+    "The Router handler publishes its logits into the arena under its declared output name, so the TopK that consumes router_logits resolves a real operand. Previously the Router only wrote expert_ids/expert_w and never the arena, which the new guard immediately caught."
+  ],
+  "what_the_guard_revealed": [
+    "blk.N.attn_kv_a_mqa.weight was being resolved as an activation on every layer - the a slot of an op whose slots are all weights. Fixed by the detail-based activation carry.",
+    "router_logits was consumed by TopK but never produced. Fixed by publishing the Router output.",
+    "After both fixes the guard reports no unresolved operands, and the harness returns 18/18 PASS."
+  ],
+  "remaining_defect": {
+    "symptom": "argmax is constant at token 21632 across positions 0-3 while logits vary per position, and generated text degenerates.",
+    "measured_boundary": "21632 already dominates at position 0 by a margin of roughly 16 over the runner-up tokens (22674/-16.4, 7697/-16.4, 30843/-14.3).",
+    "why_this_localizes_it": "At position 0 every layer sees T=1, so attention contributes no cross-position signal and MoE routing is driven by a single token. A defect that produces a fixed ~16-margin token at position 0 therefore cannot be attention or MoE: it must be in the final normalization, the residual stream, or the output projection. Logits varying while argmax stays fixed is the signature of a dominant direction in the hidden vector, not a ranking error.",
+    "next_step": "Dump the final-norm output at positions 0 and 3, project both onto output.weight row 21632, and compare that direction against the runner-up rows. This distinguishes a final-norm error from an output-projection row-magnitude error."
+  },
+  "build": "CMake 0 diagnostics, harness 18/18 PASS.",
+  "not_claimed": [
+    "Reference parity with llama.cpp.",
+    "Coherent generation.",
+    "Any TPS measurement."
+  ]
+}

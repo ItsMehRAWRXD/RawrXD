@@ -633,20 +633,7 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
     //      v[h]       = v                     -> value_length
     if (mla.a < 0 || mla.b < 0 || mla.c < 0) { err = "mla: missing weights"; return false; }
     const TensorRec& kvA = tensors_[(size_t)mla.a];
-    int32_t normSlot = mla.b;
-    std::string mlaActName;
-    {
-        const std::string& bn = mla.bName;
-        const size_t bar = bn.find('|');
-        if (bar != std::string::npos) {
-            mlaActName = bn.substr(bar + 1);
-            const std::string wantWeight = bn.substr(0, bar);
-            for (size_t i = 0; i < tensors_.size(); ++i) {
-                if (tensors_[i].name == wantWeight) { normSlot = (int32_t)i; break; }
-            }
-        }
-    }
-    const TensorRec& norm = tensors_[(size_t)normSlot];
+    const TensorRec& norm = tensors_[(size_t)mla.b];
     const TensorRec& kvB = tensors_[(size_t)mla.c];
 
     const size_t lora = (size_t)std::max<uint64_t>(spec_.kv_lora_rank, 1);
@@ -745,8 +732,18 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     std::unordered_map<std::string, std::vector<float>> act;
     auto arena = [&](const std::string& n) -> std::vector<float>& { return act[n]; };
     auto resolveIn = [&](const Instr& i) -> const std::vector<float>& {
-        if (!i.aName.empty() && i.aName[0] != '<' && act.count(i.aName))
-            return act[i.aName];
+        if (!i.aName.empty() && i.aName[0] != '<' && i.op != OpKind::MlaDecompress) {
+            auto it = act.find(i.aName);
+            if (it != act.end()) return it->second;
+            // FAIL CLOSED. A named graph operand that is absent from the arena is
+            // a graph-construction error, not something to paper over with the
+            // running hidden vector. Substituting hidden_ silently is exactly the
+            // class of bug that produced cosine 0.028 MLA latents: the MlaDecompress
+            // weight name was in the  slot, the lookup missed, and the op quietly
+            // consumed q. Instead, record the failure so Bind/Execute can report it.
+            unresolved_inputs_.push_back(i.aName);
+            return unresolved_;
+        }
         return hidden_;
     };
 
@@ -819,13 +816,12 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::vector<float> k, v;
                 std::string e;
                 {
-                    std::vector<float> mlaIn;
-                    std::string an;
-                    const size_t bar = in.bName.find('|');
-                    if (bar != std::string::npos) an = in.bName.substr(bar + 1);
-                    auto fit = act.find(an);
-                    if (fit != act.end()) mlaIn = fit->second;
-                    if (mlaIn.empty()) mlaIn = xi;   // declared input as fallback
+                    // The three weight slots are a (kv_a_mqa), b (latent norm),
+                    // c (kv_b). The activation this op consumes rides in `detail`
+                    // so resolveIn can find it in the arena rather than falling
+                    // back to hidden_, which is `q` by the time this op runs.
+                    const std::vector<float>& mlaIn =
+                        act.count(in.detail) ? act[in.detail] : xi;
                     if (!OpMlaDecompress(in, mlaIn, k, v, position, e)) { last_error_ = e; return false; }
                 }
                 arena(in.outName.empty() ? std::string("kv") : in.outName) = hidden_;
@@ -932,6 +928,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::Router: {
                 if (!OpRouterTopK(in, in, xi, expert_ids, expert_w)) return false;
                 ids_valid = true;
+                // Publish the router logits under the declared output name so the
+                // TopK that consumes router_logits resolves a real operand.
+                if (!in.outName.empty()) {
+                    arena(in.outName) = xi;   // publish router logits for TopK
+                }
                 break;
             }
             case OpKind::TopK:
@@ -974,6 +975,12 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     stats_.gpu_calls += gpu_calls_;
     stats_.cpu_calls += cpu_calls_;
     stats_.gpu_rows += 0;
+    if (!unresolved_inputs_.empty()) {
+        last_error_ = "graph referenced activations that were never produced: ";
+        for (size_t i = 0; i < unresolved_inputs_.size() && i < 4; ++i)
+            last_error_ += unresolved_inputs_[i] + "; ";
+        return false;
+    }
     return true;
 }
 
@@ -1020,6 +1027,14 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     if (aSlot < 0 || dtSlot < 0) { err = "ssm: model has no ssm_a / ssm_dt.bias"; return false; }
 
     std::vector<float> A, DtB, Dd;
+    if (std::getenv("SSM_TRACE")) {
+        const TensorRec& aT0 = tensors_[(size_t)aSlot];
+        std::fprintf(stderr, "[ssm] block=%d D=%zu N=%zu ssm_a name=%s dims=[%zu,%zu] aCount=%zu\n",
+                     (int)in.block, D, N, aT0.name.c_str(),
+                     aT0.dims.empty() ? 0 : (size_t)aT0.dims[0],
+                     aT0.dims.size() > 1 ? (size_t)aT0.dims[1] : 0,
+                     aT0.bytes / 4);
+    }
     if (DequantPrefix(tensors_[(size_t)aSlot], A, D) < D) { err = "ssm: ssm_a too small"; return false; }
     if (DequantPrefix(tensors_[(size_t)dtSlot], DtB, D) < D) { err = "ssm: ssm_dt.bias too small"; return false; }
     if (dSlot >= 0 && DequantPrefix(tensors_[(size_t)dSlot], Dd, D) < D) Dd.assign(D, 0.0f);
@@ -1043,3 +1058,4 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     return true;
 }
 } } }  // namespace
+
