@@ -546,30 +546,50 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     (void)topk;
     if (router.b < 0) { last_error_ = "router: no weight"; return false; }
     const TensorRec& rt = tensors_[(size_t)router.b];
-    const size_t n_exp = rt.dims.size() >= 2 ? (size_t)rt.dims[0] : 0;
-    if (n_exp == 0) { last_error_ = "router: bad shape"; return false; }
+
+    // The router maps hidden -> experts, so in GGUF's ne[] layout
+    //   dims[0] = hidden (input)      e.g. 2688
+    //   dims[1] = experts (output)    e.g.  128
+    // Reading dims[0] here made n_exp 2688 instead of 128 and the dequant
+    // request 2688*2688 floats, which no router tensor can satisfy - hence
+    // "router: dequant short".
+    if (rt.dims.size() < 2) { last_error_ = "router: bad shape"; return false; }
+    const size_t n_hidden = (size_t)rt.dims[0];
+    const size_t n_exp = (size_t)rt.dims[1];
+    if (n_exp == 0 || n_hidden == 0) { last_error_ = "router: bad shape"; return false; }
+
+    // Use the tensor's own input width rather than spec_.embd so a hidden
+    // size that differs from the embedding still routes correctly.
+    const size_t hdim = std::min(n_hidden, spec_.embd ? spec_.embd : n_hidden);
+    (void)hdim;
+
     std::vector<float> logits;
     if (rt.ggml_type == GGML_TYPE_F32) {
-        logits.assign(n_exp, 0.0f);
-        std::memcpy(logits.data(), rt.data, std::min(n_exp * 4, rt.bytes));
-        // logits are [n_exp, embd]: dot each expert row with x
-        std::vector<float> wf;
-        DequantPrefix(rt, wf, n_exp * spec_.embd);
+        logits.assign(static_cast<size_t>(n_exp), 0.0f);
+        if (!rt.data || rt.bytes < n_exp * n_hidden * sizeof(float)) {
+            last_error_ = "router: f32 weight short";
+            return false;
+        }
+        const float* wf = reinterpret_cast<const float*>(rt.data);
         for (size_t e = 0; e < n_exp; ++e) {
+            const float* row = wf + e * n_hidden;
             double acc = 0.0;
-            for (size_t i = 0; i < spec_.embd && (e * spec_.embd + i) < wf.size(); ++i)
-                acc += double(wf[e * spec_.embd + i]) * double(x[i]);
+            for (size_t i = 0; i < hdim; ++i) acc += double(row[i]) * double(x[i]);
             logits[e] = (float)acc;
         }
     } else {
         std::vector<float> wf;
-        DequantPrefix(rt, wf, n_exp * spec_.embd);
-        if (wf.size() < n_exp * spec_.embd) { last_error_ = "router: dequant short"; return false; }
+        // Request only what the tensor can actually provide: n_exp rows of
+        // n_hidden values.
+        const size_t want = n_exp * n_hidden;
+        const size_t got = DequantPrefix(rt, wf, want);
+        if (got < want) { last_error_ = "router: dequant short"; return false; }
+        logits.assign(n_exp, 0.0f);
         for (size_t e = 0; e < n_exp; ++e) {
+            const float* row = wf.data() + e * n_hidden;
             double acc = 0.0;
-            for (size_t i = 0; i < spec_.embd; ++i)
-                acc += double(wf[e * spec_.embd + i]) * double(x[i]);
-            logits.push_back((float)acc);
+            for (size_t i = 0; i < hdim; ++i) acc += double(row[i]) * double(x[i]);
+            logits[e] = (float)acc;
         }
     }
     if (spec_.expert_used == 0) { last_error_ = "router: expert_used 0"; return false; }
@@ -595,37 +615,66 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                             const std::vector<uint32_t>& ids, const std::vector<float>& w,
                             std::vector<float>& y, std::string& err) {
     y.assign(spec_.embd, 0.0f);
-    // moe.c is the gate expert-tensor slot; moe.a is the arena input
-    // ("ffn_norm") and moe.b is the arena choice vector.
-    if (moe.c < 0 || moe.c >= (int32_t)tensors_.size()) {
-        err = "moe: missing gate expert slot";
-        return false;
+    // Derived from the graph's own detail field, which names the model's real
+    // tensors. The graph emits
+    //   detail = "experts: <up>,<down>"
+    // so parsing it is authoritative: no name guessing, no anchor assumptions.
+    std::string expertUpName, expertDownName;
+    {
+        const std::string tag = "experts: ";
+        const size_t at = moe.detail.find(tag);
+        if (at != std::string::npos) {
+            std::string rest = moe.detail.substr(at + tag.size());
+            const size_t comma = rest.find(',');
+            if (comma != std::string::npos) {
+                expertUpName   = rest.substr(0, comma);
+                expertDownName = rest.substr(comma + 1);
+            } else {
+                expertUpName = rest;
+            }
+        }
     }
-    const TensorRec& gate = tensors_[(size_t)moe.c];
-    // Resolve the sibling expert tensors from the gate's name.
-    auto sibling = [&](const char* from, const char* to) -> const TensorRec* {
-        std::string n = gate.name;
-        const size_t p = n.rfind(from);
-        if (p == std::string::npos) return nullptr;
-        n.replace(p, std::strlen(from), to);
-        auto it = slot_by_name_.find(n);
-        return it == slot_by_name_.end() ? nullptr : &tensors_[(size_t)it->second];
-    };
-    const TensorRec* upT = sibling("ffn_gate_exps.weight", "ffn_up_exps.weight");
-    const TensorRec* downT = sibling("ffn_gate_exps.weight", "ffn_down_exps.weight");
-    if (!upT || !downT) { err = "moe: up/down expert tensors not found"; return false; }
+
+    const TensorRec* upT = nullptr;
+    const TensorRec* downT = nullptr;
+    if (!expertUpName.empty()) {
+        auto it = slot_by_name_.find(expertUpName);
+        if (it == slot_by_name_.end()) {
+            // Nemotron uses ffn_*_exps.weight; tolerate the alternate casing.
+            std::string alt = expertUpName;
+            const size_t pp = alt.rfind("ffn_up_exps.weight");
+            if (pp != std::string::npos) alt.replace(pp, std::strlen("ffn_up_exps.weight"),
+                                                    "ffn_up_exps.weight");
+            it = slot_by_name_.find(alt);
+        }
+        if (it != slot_by_name_.end()) upT = &tensors_[(size_t)it->second];
+    }
+    if (!expertDownName.empty()) {
+        auto it = slot_by_name_.find(expertDownName);
+        if (it != slot_by_name_.end()) downT = &tensors_[(size_t)it->second];
+    }
+    // Fall back to the anchor slot's siblings only if the detail field was absent.
+    const TensorRec* anchorT = upT;
+    if (!anchorT && moe.c >= 0 && moe.c < (int32_t)tensors_.size()) anchorT = &tensors_[(size_t)moe.c];
+    if (!anchorT) { err = "moe: expert tensors not named"; return false; }
+    if (!upT) { err = "moe: up expert tensor not found"; return false; }
+    if (!downT) { err = "moe: down expert tensor not found"; return false; }
 
     const size_t ffn = (size_t)std::max<uint64_t>(spec_.expert_ffn, 1);
     const size_t embd = spec_.embd;
-    if (gate.dims.size() < 2 || upT->dims.size() < 2 || downT->dims.size() < 2) {
+
+    // No separate gate expert on this model: the router (ffn_gate_inp) does the
+    // gating, so the up projection doubles as the gate (identity gate).
+    const TensorRec* gateT = upT;
+    if (gateT->dims.size() < 2 || upT->dims.size() < 2 || downT->dims.size() < 2) {
         err = "moe: expert tensor rank < 2";
         return false;
     }
     std::vector<float> gT, uT, dT;
-    DequantPrefix(gate, gT, gate.bytes / 4);
+    DequantPrefix(*gateT, gT, gateT->bytes / 4);
     DequantPrefix(*upT, uT, upT->bytes / 4);
     DequantPrefix(*downT, dT, downT->bytes / 4);
-    const size_t gIn = (size_t)gate.dims[0], gOut = (size_t)gate.dims[1];
+    const size_t gIn = (size_t)gateT->dims[0], gOut = (size_t)gateT->dims[1];
     const size_t uIn = (size_t)upT->dims[0], uOut = (size_t)upT->dims[1];
     const size_t dIn = (size_t)downT->dims[0], dOut = (size_t)downT->dims[1];
     // Only the experts whose full [in, out] block is present are usable.
