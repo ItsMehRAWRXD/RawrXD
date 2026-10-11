@@ -9,6 +9,9 @@
 //=============================================================================
 
 #include "ModelGenieExecutor.hpp"
+#include <algorithm>
+#include <chrono>
+#include <numeric>
 
 #include <cstdio>
 #include <cstring>
@@ -29,6 +32,8 @@ int main(int argc, char* argv[])
     std::string ggufPath = argv[1];
     std::string evidenceDir = argv[2];
     bool multitoken = false;
+    bool profile = false;
+    std::vector<double> step_ms, step_exec_ms, step_sample_ms;
     int max_tokens = 1;
     bool teacher_forced = false;
     bool differential = false;
@@ -62,7 +67,9 @@ int main(int argc, char* argv[])
                 return 2;
             }
             diff_position = p;
-        } else if (arg == "--multitoken") {
+        } else if (arg == "--profile") {
+        profile = true;
+    } else if (arg == "--multitoken") {
             multitoken = true;
             max_tokens = 16;
             uint32_t n = 0;
@@ -257,14 +264,19 @@ int main(int argc, char* argv[])
             uint32_t input_token = tokens.back();
             executor.SetTokenId(input_token);
             executor.ClearArena(); // Clear activations but keep KV cache
-            
-            std::fprintf(stderr, "\n--- Step %d (position %zu), input token: %u ---\n", 
+
+            std::fprintf(stderr, "\n--- Step %d (position %zu), input token: %u ---\n",
                          step, executor.Position(), input_token);
-            
+
+            // Per-token timing. Model weights are already resident, so this
+            // measures decode cost and nothing else.
+            const auto t_begin = std::chrono::steady_clock::now();
             bool success = executor.Execute();
-            
+            const auto t_exec_done = std::chrono::steady_clock::now();
+
             uint32_t predictedToken = executor.SampleToken();
             const std::vector<float>* logits = executor.GetLogits();
+            const auto t_end = std::chrono::steady_clock::now();
             bool logitsFinite = true;
             if (logits) {
                 for (float v : *logits) {
@@ -273,15 +285,27 @@ int main(int argc, char* argv[])
             } else {
                 logitsFinite = false;
             }
-            
+
+            if (profile) {
+                const double exec_ms =
+                    std::chrono::duration<double, std::milli>(t_exec_done - t_begin).count();
+                const double sample_ms =
+                    std::chrono::duration<double, std::milli>(t_end - t_exec_done).count();
+                const double total_ms =
+                    std::chrono::duration<double, std::milli>(t_end - t_begin).count();
+                step_ms.push_back(total_ms);
+                step_exec_ms.push_back(exec_ms);
+                step_sample_ms.push_back(sample_ms);
+            }
+
             std::fprintf(stderr, "Predicted token: %u, Logits finite: %d, Ops: %u/%u\n",
                          predictedToken, logitsFinite ? 1 : 0, executor.Dispatched(), executor.Visited());
-            
+
             if (!success || !logitsFinite) {
                 std::fprintf(stderr, "ERROR: Execution failed at step %d\n", step);
                 return 1;
             }
-            
+
             tokens.push_back(predictedToken);
             executor.AdvancePosition();
         }
@@ -290,12 +314,58 @@ int main(int argc, char* argv[])
         for (size_t i = 0; i < tokens.size(); ++i) {
             std::fprintf(stderr, "  Position %zu: token %u\n", i, tokens[i]);
         }
-        
+
         std::fprintf(stderr, "\n=============================================================================\n");
         std::fprintf(stderr, "MULTITOKEN_DECODE_TEST=PASS\n");
         std::fprintf(stderr, "TOKENS_GENERATED=%zu\n", tokens.size());
+
+        if (profile && !step_ms.empty()) {
+            // Report decode cost excluding the first step, which carries
+            // first-call costs (arena growth, page faults) that are not
+            // representative of steady-state decode.
+            std::vector<double> steady(step_ms.begin() + 1, step_ms.end());
+            if (steady.empty()) steady = step_ms;
+
+            std::vector<double> sorted = steady;
+            std::sort(sorted.begin(), sorted.end());
+            const double sum = std::accumulate(steady.begin(), steady.end(), 0.0);
+            const double mean = sum / (double)steady.size();
+            const double median = sorted[sorted.size() / 2];
+            const double mn = sorted.front();
+            const double mx = sorted.back();
+            double exec_sum = std::accumulate(step_exec_ms.begin() + 1,
+                                              step_exec_ms.end(), 0.0);
+            double sample_sum = std::accumulate(step_sample_ms.begin() + 1,
+                                                step_sample_ms.end(), 0.0);
+
+            std::fprintf(stderr, "\n");
+            std::fprintf(stderr, "=============================================================================\n");
+            std::fprintf(stderr, "RAWRXD_DEEP2_PER_TOKEN_PROFILE_001\n");
+            std::fprintf(stderr, "STEPS_TOTAL=%zu\n", step_ms.size());
+            std::fprintf(stderr, "STEPS_STEADY_STATE=%zu\n", steady.size());
+            std::fprintf(stderr, "MEAN_MS_PER_TOKEN=%.4f\n", mean);
+            std::fprintf(stderr, "MEDIAN_MS_PER_TOKEN=%.4f\n", median);
+            std::fprintf(stderr, "MIN_MS_PER_TOKEN=%.4f\n", mn);
+            std::fprintf(stderr, "MAX_MS_PER_TOKEN=%.4f\n", mx);
+            std::fprintf(stderr, "MEAN_TPS=%.2f\n", 1000.0 / mean);
+            std::fprintf(stderr, "MEAN_EXEC_MS=%.4f\n", exec_sum / (double)steady.size());
+            std::fprintf(stderr, "MEAN_SAMPLE_MS=%.4f\n", sample_sum / (double)steady.size());
+            std::fprintf(stderr, "IR_OPS_PER_TOKEN=%u\n", executor.Visited());
+            std::fprintf(stderr, "IR_OPS_SKIPPED=%u\n", executor.Skipped());
+            std::fprintf(stderr, "PER_TOKEN_OP_COST_US=%.3f\n",
+                         1000.0 * mean / (double)std::max<uint32_t>(executor.Visited(), 1));
+            std::fprintf(stderr, "\nPER_STEP_MS:");
+            for (size_t i = 0; i < step_ms.size(); ++i)
+                std::fprintf(stderr, " %.3f", step_ms[i]);
+            std::fprintf(stderr, "\n");
+            std::fprintf(stderr, "SCOPE=This profile measures the CPU decode path present in this\n");
+            std::fprintf(stderr, " build. It is not a Nemotron benchmark and makes no GPU claim;\n");
+            std::fprintf(stderr, " Vulkan is used only where RAWRXD_GPU_ROPE=1 selects it.\n");
+            std::fprintf(stderr, "=============================================================================\n");
+        }
+
         std::fprintf(stderr, "=============================================================================\n");
-        
+
         return 0;
     }
 }
