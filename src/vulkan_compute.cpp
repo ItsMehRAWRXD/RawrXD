@@ -988,6 +988,204 @@ bool VulkanCompute::EnsureRoPEPipeline(const std::string& spirv_path) {
     return true;
 }
 
+bool VulkanCompute::EnsureQuantDotPipeline(const std::string& spirv_path) {
+    if (shaders_.count("quantdot") &&
+        shaders_["quantdot"].pipeline &&
+        quant_descriptor_set_layout_ &&
+        quant_descriptor_pool_) {
+        return true;
+    }
+
+    std::vector<uint32_t> code;
+    if (!LoadSPIRVCode(spirv_path, code) || code.empty()) {
+        std::cerr << "Failed to load quant-dot SPIR-V: " << spirv_path << std::endl;
+        return false;
+    }
+
+    VkShaderModuleCreateInfo sm{};
+    sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    sm.codeSize = code.size() * sizeof(uint32_t);
+    sm.pCode = code.data();
+
+    ComputeShader cs;
+    cs.name = "quantdot";
+    cs.spirv_code = code;
+    if (vkCreateShaderModule(device_, &sm, nullptr, &cs.module) != VK_SUCCESS) {
+        std::cerr << "Failed to create quant-dot shader module" << std::endl;
+        return false;
+    }
+
+    // Three storage buffers: packed weights (0), Q8 activations (1), output (2).
+    VkDescriptorSetLayoutBinding binds[3] = {};
+    for (uint32_t i = 0; i < 3; ++i) {
+        binds[i].binding = i;
+        binds[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        binds[i].descriptorCount = 1;
+        binds[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+
+    VkDescriptorSetLayoutCreateInfo dsl{};
+    dsl.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    dsl.bindingCount = 3;
+    dsl.pBindings = binds;
+    if (vkCreateDescriptorSetLayout(device_, &dsl, nullptr, &quant_descriptor_set_layout_) != VK_SUCCESS) {
+        std::cerr << "Failed to create quant-dot descriptor set layout" << std::endl;
+        return false;
+    }
+
+    VkDescriptorPoolSize pool_size{};
+    pool_size.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    pool_size.descriptorCount = 3 * 64;
+
+    VkDescriptorPoolCreateInfo dp{};
+    dp.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    dp.maxSets = 64;
+    dp.poolSizeCount = 1;
+    dp.pPoolSizes = &pool_size;
+    if (vkCreateDescriptorPool(device_, &dp, nullptr, &quant_descriptor_pool_) != VK_SUCCESS) {
+        std::cerr << "Failed to create quant-dot descriptor pool" << std::endl;
+        return false;
+    }
+
+    // pos, n_rot-style scalars: n_out, n_in, n_blocks, kind.
+    VkPushConstantRange pc{};
+    pc.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    pc.offset = 0;
+    pc.size = sizeof(uint32_t) * 4;
+
+    VkPipelineLayoutCreateInfo pl{};
+    pl.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pl.setLayoutCount = 1;
+    pl.pSetLayouts = &quant_descriptor_set_layout_;
+    pl.pushConstantRangeCount = 1;
+    pl.pPushConstantRanges = &pc;
+    if (vkCreatePipelineLayout(device_, &pl, nullptr, &cs.layout) != VK_SUCCESS) {
+        std::cerr << "Failed to create quant-dot pipeline layout" << std::endl;
+        return false;
+    }
+
+    VkPipelineShaderStageCreateInfo stage{};
+    stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    stage.module = cs.module;
+    stage.pName = "main";
+
+    VkComputePipelineCreateInfo cp{};
+    cp.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    cp.stage = stage;
+    cp.layout = cs.layout;
+    if (vkCreateComputePipelines(device_, nullptr, 1, &cp, nullptr, &cs.pipeline) != VK_SUCCESS) {
+        std::cerr << "Failed to create quant-dot compute pipeline" << std::endl;
+        return false;
+    }
+
+    shaders_["quantdot"] = cs;
+    std::cout << "Quant-dot pipeline and permanent descriptor system initialized successfully" << std::endl;
+    return true;
+}
+
+bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
+                                    const void* q8_interleaved, size_t q8_bytes,
+                                    void* out, size_t out_bytes,
+                                    size_t n_out, size_t n_in, size_t n_blocks, int kind)
+{
+    // Validate everything up front. No silent CPU fallback: a failure is
+    // reported to the caller so it can decide what to do.
+    if (!packed || !q8_interleaved || !out) return false;
+    if (kind != 0 && kind != 1) return false;
+    if (n_out == 0 || n_in == 0 || n_blocks == 0) return false;
+    if ((n_in % 256u) != 0) return false;
+    if (n_blocks != n_in / 256u) return false;
+
+    const size_t block_bytes = (kind == 0) ? 144u : 210u;
+    const size_t need_packed = n_out * n_blocks * block_bytes;
+    const size_t need_q8 = n_blocks * 273u * sizeof(float);
+    const size_t need_out = n_out * sizeof(float);
+    if (packed_bytes < need_packed || q8_bytes < need_q8 || out_bytes < need_out) return false;
+
+    if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) return false;
+    auto it = shaders_.find("quantdot");
+    if (it == shaders_.end() || !it->second.pipeline) return false;
+
+    // Upload the inputs. AllocateBuffer owns device memory; the wrappers do
+    // the staging copies.
+    uint32_t p_idx = 0, q_idx = 0, o_idx = 0;
+    size_t p_mem = 0, q_mem = 0, o_mem = 0;
+    if (!AllocateBuffer(packed_bytes, p_idx, p_mem) ||
+        !AllocateBuffer(q8_bytes, q_idx, q_mem) ||
+        !AllocateBuffer(out_bytes, o_idx, o_mem)) {
+        std::cerr << "Quant-dot buffer allocation failed" << std::endl;
+        return false;
+    }
+
+    if (!CopyHostToBuffer(const_cast<void*>(packed), p_idx, packed_bytes) ||
+        !CopyHostToBuffer(const_cast<void*>(q8_interleaved), q_idx, q8_bytes)) {
+        std::cerr << "Quant-dot upload failed" << std::endl;
+        return false;
+    }
+
+    VkBuffer bufs[3] = {
+        allocated_buffers_[p_idx].first,
+        allocated_buffers_[q_idx].first,
+        allocated_buffers_[o_idx].first
+    };
+
+    VkDescriptorSetAllocateInfo alloc{};
+    alloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc.descriptorPool = quant_descriptor_pool_;
+    alloc.descriptorSetCount = 1;
+    alloc.pSetLayouts = &quant_descriptor_set_layout_;
+
+    VkDescriptorSet ds = VK_NULL_HANDLE;
+    if (vkAllocateDescriptorSets(device_, &alloc, &ds) != VK_SUCCESS) {
+        std::cerr << "Quant-dot descriptor allocation failed" << std::endl;
+        return false;
+    }
+
+    VkDescriptorBufferInfo infos[3];
+    VkWriteDescriptorSet writes[3];
+    const size_t sizes[3] = { packed_bytes, q8_bytes, out_bytes };
+    for (int i = 0; i < 3; ++i) {
+        infos[i] = {};
+        infos[i].buffer = bufs[i];
+        infos[i].offset = 0;
+        infos[i].range = sizes[i];
+        writes[i] = {};
+        writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet = ds;
+        writes[i].dstBinding = i;
+        writes[i].descriptorCount = 1;
+        writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writes[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device_, 3, writes, 0, nullptr);
+
+    uint32_t pc[4] = { (uint32_t)n_out, (uint32_t)n_in,
+                        (uint32_t)n_blocks, (uint32_t)kind };
+
+    bool ok = ExecuteSingleTimeCommands([&](VkCommandBuffer cmd) {
+        vkCmdPushConstants(cmd, it->second.layout, VK_SHADER_STAGE_COMPUTE_BIT,
+                           0, sizeof(pc), pc);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, it->second.pipeline);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                it->second.layout, 0, 1, &ds, 0, nullptr);
+        // One invocation per output row.
+        uint32_t groups = (uint32_t)((n_out + 0u) / 1u);
+        if (groups == 0u) groups = 1u;
+        vkCmdDispatch(cmd, groups, 1, 1);
+    });
+
+    if (ok) {
+        if (!CopyBufferToHost(o_idx, out, out_bytes)) {
+            std::cerr << "Quant-dot readback failed" << std::endl;
+            ok = false;
+        }
+    }
+
+    vkFreeDescriptorSets(device_, quant_descriptor_pool_, 1, &ds);
+    return ok;
+}
+
 bool VulkanCompute::CreateDescriptorSetLayout(uint32_t binding_count, VkDescriptorSetLayout& layout) {
     // This function is deprecated - descriptor layouts are now created in EnsureMatMulPipeline
     // Kept for backward compatibility but should not be used
@@ -1241,8 +1439,9 @@ bool VulkanCompute::DispatchMatMulAsync(uint32_t input_a_idx,
         return false;
     }
 
-    // Push Constants
-    uint32_t push_data[3] = {M, K, N};
+    // Push Constants. The shader declares its push-constant block as
+    // { m, n, k }, so the values MUST be written in that order.
+    uint32_t push_data[3] = {M, N, K};
     vkCmdPushConstants(cmd_buffer, 
                        it->second.layout, 
                        VK_SHADER_STAGE_COMPUTE_BIT, 
