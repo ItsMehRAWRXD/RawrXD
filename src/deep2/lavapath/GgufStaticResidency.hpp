@@ -24,12 +24,12 @@ enum class IntegrityVerdict : uint8_t {
 // Compute static residency frontier from a GGUF tensor directory.
 // This is a header-only pass; never reads weight payload.
 // Returns true on success, false on parse/integrity failure.
-bool GgufComputeStaticResidency(const char* path, GgufDynamicGeometry* out);
+bool GgufComputeStaticResidency(const char* path, ::Deep2::GgufDynamicGeometry* out);
 
 // Integrity gate: validates every tensor extent fits within the file
 // BEFORE any weight payload is read.
 // Returns true iff ALL_TENSOR_EXTENTS_PROVEN=1.
-bool GgufVerifyRomIntegrity(const char* path, GgufDynamicGeometry* out);
+bool GgufVerifyRomIntegrity(const char* path, ::Deep2::GgufDynamicGeometry* out);
 
 // Helper: GGML type → (block_elems, bytes_per_block)
 // Returns false if type is unknown.

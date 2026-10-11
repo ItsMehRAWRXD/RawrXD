@@ -180,7 +180,7 @@ bool GGUFTensorLoader::Open(const std::string& path) {
     Close();
     
     // RAWRXD_GGUF_ROM_INTEGRITY_001 — pre-mmap integrity gate
-    Deep2::GgufDynamicGeometry geom{};
+    ::Deep2::GgufDynamicGeometry geom{};
     if (!Deep2::GgufVerifyRomIntegrity(path.c_str(), &geom)) {
         last_error_ = "ROM integrity check failed: " + std::string(geom.reason);
         if (geom.integrityVerdict == 2) { // TRUNCATED
