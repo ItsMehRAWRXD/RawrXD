@@ -381,20 +381,64 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         return false;
     }
     const size_t H = (size_t)spec_.heads;
-    const size_t hk = (size_t)(spec_.heads_kv ? spec_.heads_kv : spec_.heads);
-    const size_t kl = (size_t)spec_.key_length;
-    const size_t vl = (size_t)spec_.value_length;
-    const size_t qPerHead = q.size() / std::max<size_t>(H, 1);
-    const size_t kPerHead = k.size() / std::max<size_t>(H, 1);
-    const size_t vPerHead = v.size() / std::max<size_t>(H, 1);
+    if (H == 0) { err = "attention: head_count 0"; return false; }
+    if (in.block < 0 || (size_t)in.block >= kv_k_.size()) {
+        err = "attention: bad block";
+        return false;
+    }
+
+    // ---- Geometry derived from the REAL tensors, not from metadata ----
+    //
+    // nemotron_h_moe declares attention.head_count=32 but no
+    // attention.head_count_kv, so the spec-level MHA default sets heads_kv=32
+    // and every derived width is wrong. The Q/K/V weight tensors are
+    // authoritative:
+    //
+    //   attn_q.weight [in, 4096]  -> qHeads = 4096 / qHeadDim
+    //   attn_k.weight [in,  256]  -> kHeads =  256 / qHeadDim
+    //   attn_v.weight [in,  256]  -> vHeads =  256 / qHeadDim
+    //
+    // qHeadDim comes from the query width over H, then k/v head counts follow.
+    // This is GQA: k/v are narrower than q because heads are grouped.
+    const size_t qWidth = q.size();
+    const size_t kWidth = k.size();
+    const size_t vWidth = v.size();
+    const size_t qPerHead = qWidth / H;
+
+    // The value head dim must match the query head dim, otherwise the output
+    // projection cannot consume the attention result. Derive kv heads from the
+    // ratio instead of trusting a metadata field the model does not ship.
+    size_t hk = (size_t)spec_.heads_kv;
+    if (hk == 0 || hk > H) hk = H;
+
+    size_t kPerHead = 0, vPerHead = 0;
+    if (qPerHead > 0) {
+        // heads implied by each tensor's width over the shared head dim
+        size_t kHeads = (kWidth * H) / qWidth;   // = kWidth / qPerHead
+        size_t vHeads = (vWidth * H) / qWidth;
+        if (kHeads >= 1 && kHeads <= H && kWidth == kHeads * qPerHead) {
+            hk = kHeads;
+            kPerHead = qPerHead;
+        }
+        if (vHeads >= 1 && vHeads <= H && vWidth == vHeads * qPerHead) {
+            vPerHead = qPerHead;
+        }
+    }
+    // Fall back to equal head counts (MHA) only when the tensor widths do not
+    // describe a consistent grouped layout.
+    if (kPerHead == 0) kPerHead = (hk == 0) ? (kWidth / H) : (kWidth / hk);
+    if (vPerHead == 0) vPerHead = (hk == 0) ? (vWidth / H) : (vWidth / hk);
     if (qPerHead == 0 || kPerHead == 0 || vPerHead == 0) {
         err = "attention: empty per-head width";
         return false;
     }
+
+    const size_t kl = (size_t)spec_.key_length;
+    const size_t vl = (size_t)spec_.value_length;
     const bool isMla = (kPerHead == kl && vPerHead == vl && kl > vl);
-    const size_t D = isMla ? qPerHead : (spec_.embd / H);
+    const size_t D = isMla ? qPerHead : qPerHead;
     if (D == 0) { err = "attention: head dim 0"; return false; }
-    const size_t qD = isMla ? qPerHead : D;      // dim of the dot product
+    const size_t qD = isMla ? qPerHead : qPerHead;
 
     // RoPE: the ROTARY slice only. In MLA that is the last qk_rope dims of q
     // and of k; in a GQA model it is the whole head. Rotating the entire head
@@ -452,8 +496,11 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     std::memcpy(V.data() + position * vW, v.data(), vW * sizeof(float));
 
     const size_t T = position + 1;
-    // Output width per head is the value width, then interleaved by head.
-    const size_t outW = vPerHead;
+    // Output width follows the QUERY heads, not the value heads: with GQA the
+    // output projection is [qWidth, embd], so each of the H query heads must
+    // contribute qPerHead values. Using vPerHead produced 32*8=256 when the
+    // projection required 32*128=4096.
+    const size_t outW = qPerHead;
     y.assign(H * outW, 0.0f);
     std::vector<float> scores(T);
     // GQA groups: consecutive query heads share one KV head.
@@ -481,9 +528,14 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         SoftmaxVec(scores);
         float* op = y.data() + h * outW;
         for (size_t t = 0; t < T; ++t) {
+            // Value for this query head comes from its KV group. The value head
+            // may be narrower than qPerHead; read only what exists and leave the
+            // remaining output lanes at zero rather than reading past the KV
+            // buffer.
             const float* vp = V.data() + t * vW + g * vPerHead;
             const float s = scores[t];
-            for (size_t d = 0; d < outW; ++d) op[d] += s * vp[d];
+            const size_t copyW = std::min(vPerHead, outW);
+            for (size_t d = 0; d < copyW; ++d) op[d] += s * vp[d];
         }
     }    return true;
 }
