@@ -202,7 +202,9 @@ def scan_conflicts(ref: str) -> None:
             continue
         # Artifact directories and log/result/evidence files legitimately
         # contain conflict markers as INTENTIONAL TEST OUTPUT (the conflict
-        # resolver tests verify that markers are emitted visibly).
+        # resolver tests verify that markers are emitted visibly). A committed
+        # merge conflict matters in source and workflow files, not in
+        # captured output.
         if path.startswith(("certification/", "evidence/", "results/")):
             continue
         if "/certification/" in path or "/evidence/" in path or "/results/" in path:
