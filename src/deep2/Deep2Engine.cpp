@@ -8,6 +8,7 @@
 // Continuation mode removed for production certification.
 // #define B3_CONTINUE_FOR_RESIDENCY_BASELINE
 
+#include "vulkan_compute.h"   // CPUInference::VulkanCompute, used via getVulkanComputeSlot()
 #include "ChatTemplate.hpp"
 #include "Deep2Engine.h"
 #include "FusedLiveController.hpp"

@@ -1,0 +1,98 @@
+{
+  "certificate_id": "RAWRXD_NEMOTRON_GGUF_EXPOSURE_001",
+  "date": "2026-10-11",
+  "verdict": "GGUF_EXPOSED_AND_VERIFIED / ARCHITECTURE_INCOMPATIBLE",
+  "what_was_done": {
+    "ollama_blob_located": "F:\\OllamaModels\\blobs\\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3",
+    "exposed_as": "F:\\models\\nemotron-3.5-lightning-30b.gguf",
+    "method": "HardLink. Same volume as the blob, so no data was copied and no additional disk space is used. Any GGUF reader, including the ModelGenie loader, can now stream the Ollama blob directly through the .gguf path.",
+    "size_bytes": 25430738944,
+    "size_gib": 23.68,
+    "blob_sha256": "5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3",
+    "gguf_sha256": "5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3",
+    "hash_match": true,
+    "verified_readable": "Opened and parsed as GGUF version 3 with 417 tensors and 49 metadata key-value pairs."
+  },
+  "model_identity_from_the_file": {
+    "general.architecture": "nemotron_h_moe",
+    "general.name": "Ga_Nvidia_Nemotron_3_5_Nano_Bf16_07292026_Vv0.1",
+    "general.file_type": 15,
+    "block_count": 53,
+    "embedding_length": 2688,
+    "vocab_size": 131072,
+    "context_length": 1048576,
+    "attention.head_count": 32,
+    "attention.key_length": 128,
+    "attention.value_length": 128,
+    "rope.dimension_count": 84,
+    "expert_count": 128,
+    "expert_used_count": 6,
+    "expert_feed_forward_length": 1856,
+    "expert_shared_count": 1,
+    "expert_shared_feed_forward_length": 3712,
+    "expert_weights_norm": true,
+    "expert_weights_scale": 2.5,
+    "nextn_predict_layers": 1,
+    "ssm.conv_kernel": 4,
+    "ssm.group_count": 8,
+    "ssm.inner_size": 4096,
+    "ssm.state_size": 128,
+    "ssm.time_step_rank": 64
+  },
+  "tensor_census": {
+    "total": 417,
+    "SSM_Mamba2": 184,
+    "attention": 81,
+    "MoE_routing_and_experts": 24,
+    "norms_and_other": 121,
+    "nextn_predict": 4,
+    "embedding_and_output": 3
+  },
+  "proof_that_this_is_a_mamba2_hybrid": {
+    "block_0_tensor_list": [
+      "blk.0.attn_norm.weight [2688]",
+      "blk.0.ssm_a [1, 64]",
+      "blk.0.ssm_conv1d.bias [6144]",
+      "blk.0.ssm_conv1d.weight [4, 6144]",
+      "blk.0.ssm_d [1, 64]",
+      "blk.0.ssm_dt.bias [64]",
+      "blk.0.ssm_in.weight [2688, 10304]",
+      "blk.0.ssm_norm.weight [512, 8]",
+      "blk.0.ssm_out.weight [4096, 2688]"
+    ],
+    "observation": "Block 0 contains NO Q, K, V, or attention output projection tensors at all. It is a pure selective-SSM block: a causal depthwise conv1d over 6144 channels, an input projection expanding 2688 to 10304, a gated SSM state of size 128 across 8 groups, and an output projection back to 2688. Attention appears only in a subset of blocks, for example blk.1 which also carries exp_probs_b and ffn_down_exps."
+  },
+  "what_ModelGenieExecutor_implements": {
+    "architecture": "DeepSeek-V2 (MLA attention plus DeepSeek MoE)",
+    "attention": "Multi-head Latent Attention: 512-rank KV latent, 64-dim shared RoPE, key length 192, value length 128, 16 heads",
+    "rope": "YaRN-interpolated, rotation_dim 64",
+    "moe": "64 routed experts plus 1 shared, top-6, expert FFN 2048, single-expert-group",
+    "blocks": 27,
+    "embedding": 2048,
+    "vocab": 102400,
+    "ssm": "none. There is no SSM, conv1d, or selective-scan code anywhere in the engine."
+  },
+  "gap_analysis": {
+    "summary": "The engine cannot load or run this model. The gap is architectural, not a matter of tuning or performance.",
+    "required_but_absent": [
+      "Mamba2 selective SSM kernels: causal conv1d with kernel 4, dt discretisation, 8-group state of size 128, state passing across tokens for recurrent decode, and A/D parameterisation.",
+      "Mamba2 gating: ssm_in expands 2688 to 10304 and ssm_norm is [512, 8], implying a grouped gated layout that has no analogue in the current engine.",
+      "A second attention configuration: 32 heads, key/value length 128, rotation_dim 84, versus the current 16 heads and 192/128 with rotation_dim 64.",
+      "A larger MoE: 128 routed experts with expert_weights_norm and expert_weights_scale 2.5, versus 64 routed experts.",
+      "Multi-token-prediction head: nextn_predict_layers with eh_proj, enorm, hnorm tensors in blk.52.",
+      "Different shapes throughout: embedding 2688 versus 2048, vocab 131072 versus 102400, 53 blocks versus 27.",
+      "Metadata-driven op selection, because SSM blocks and attention blocks have different tensor sets and currently the engine assumes every block is attention plus MoE."
+    ],
+    "consequence_for_the_tps_blueprint": "The Nemotron 30B target cannot be measured, optimised or certified on this engine. The stated baseline of 128.78 TPS and the 5x goal of 643.90 TPS are unreachable as a performance task on this codebase until a nemotron_h_moe implementation exists. The measured DeepSeek-V2-Lite figure of 0.18 TPS is unrelated to that target and must not be presented as a Nemotron baseline."
+  },
+  "what_this_certificate_does_not_claim": [
+    "No Nemotron inference was run.",
+    "No TPS measurement for Nemotron.",
+    "No numerical verification of any Nemotron tensor.",
+    "The GGUF metadata and tensor names were parsed; no weights were evaluated."
+  ],
+  "reproduction": {
+    "gguf_path": "F:\\models\\nemotron-3.5-lightning-30b.gguf",
+    "note": "The file is a hardlink to the Ollama blob. Deleting the link does not affect the blob."
+  }
+}
