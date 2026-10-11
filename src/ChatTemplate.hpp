@@ -7,8 +7,6 @@
 #include <vector>
 #include <string_view>
 #include <cstdint>
-#include <cctype>
-#include <algorithm>
 
 namespace Deep2 {
 
@@ -81,55 +79,12 @@ private:
     std::string formatMISTRAL(const std::vector<ChatMessage>& messages) const;
     std::string formatCHATML(const std::vector<ChatMessage>& messages) const;
     std::string formatGEMMA2(const std::vector<ChatMessage>& messages) const;
-      std::string formatNEMO(const std::vector<ChatMessage>& messages) const;
-      std::string formatQWEN2(const std::vector<ChatMessage>& messages) const;
-      std::string formatZEPHYR(const std::vector<ChatMessage>& messages) const;
-      std::string formatYI(const std::vector<ChatMessage>& messages) const;
-      std::string formatGeneric(const std::vector<ChatMessage>& messages) const;
-
-      // ---- Construction from model taxonomy ----
-      // Re-enters public scope: the block above is the class's private section
-      // (format helpers), and Deep2Engine calls the three methods below.
-  public:
-      // Deep2Engine calls this with (architecture, chatTemplateString, rawTemplate).
-      // The architecture is what selects the template family, so it cannot be
-      // derived from the template string alone - an empty template is legal for
-      // several families and would otherwise misclassify the model.
-      bool initFromMetadata(const std::string& architecture,
-                            const std::string& /*tokenizerModel*/,
-                            const std::string& chatTemplate,
-                            const std::string& /*bos*/,
-                            const std::string& /*eos*/);
-
-      // Name of the selected template family, e.g. "NEMO". Used in diagnostics.
-      const std::string& getTypeName() const { return templateTypeName_; }
-
-      // True when the token text marks the end of an assistant turn. Used to
-      // stop decoding without relying on a hardcoded id list, because EOS ids
-      // differ per family (Nemotron EOS is not Llama EOS).
-      bool isEndOfTurn(const std::string& tokenText) const {
-          if (tokenText.empty()) return false;   // never stop on an empty piece
-          static const char* kEnders[] = {
-              "<|end|>", "<|im_start|>", "<im_end>",
-              "<|eot_id|>", "<|endoftext|>", "</s>", "<end_of_turn>"
-          };
-          for (const char* e : kEnders) {
-              if (tokenText == e) return true;
-          }
-          return false;
-      }
-
-      static std::string lower_(std::string s) {
-          for (char& c : s) c = (char)std::tolower((unsigned char)c);
-          return s;
-      }
-
-  private:
-      // Set by initFromMetadata(); getTypeName() reports it verbatim.
-      // The members above (config_, type_) belong to the class's original
-      // private section and are not redeclared here.
-      std::string templateTypeName_ = "NEMO";
-  };
+    std::string formatNEMO(const std::vector<ChatMessage>& messages) const;
+    std::string formatQWEN2(const std::vector<ChatMessage>& messages) const;
+    std::string formatZEPHYR(const std::vector<ChatMessage>& messages) const;
+    std::string formatYI(const std::vector<ChatMessage>& messages) const;
+    std::string formatGeneric(const std::vector<ChatMessage>& messages) const;
+};
 
 } // namespace Deep2
 

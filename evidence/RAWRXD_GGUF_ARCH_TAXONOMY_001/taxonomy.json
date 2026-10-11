@@ -1,0 +1,838 @@
+{
+  "llama": {
+    "arch": "llama",
+    "count": 30,
+    "block_counts": [
+      "22",
+      "28",
+      "32",
+      "80"
+    ],
+    "embeddings": [
+      "2048",
+      "3072",
+      "4096",
+      "8192"
+    ],
+    "dtypes": {
+      "F32": 2457,
+      "Q6_K": 730,
+      "Q4_K": 4162,
+      "Q2_K": 1926,
+      "Q3_K": 960,
+      "Q5_K": 520,
+      "Q4_0": 155
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.freq_base": 500000.0,
+      "rope.dimension_count": 128
+    },
+    "role_schemas": [
+      "blk.N.attn_k.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_gate.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up.weight",
+      "output_norm.weight",
+      "rope_freqs.weight",
+      "token_embd.weight"
+    ]
+  },
+  "gptoss": {
+    "arch": "gptoss",
+    "count": 6,
+    "block_counts": [
+      "24",
+      "36"
+    ],
+    "embeddings": [
+      "2880"
+    ],
+    "dtypes": {
+      "F32": 1878,
+      "BF16": 636,
+      "T39": 468
+    },
+    "has_nextn": false,
+    "metadata": {
+      "expert_count": 32,
+      "expert_used_count": 4,
+      "rope.freq_base": 150000.0,
+      "rope.scaling.factor": 32.0,
+      "rope.scaling.original_context_length": 4096
+    },
+    "role_schemas": [
+      "blk.N.attn_k.bias",
+      "blk.N.attn_k.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_out.bias",
+      "blk.N.attn_out.weight",
+      "blk.N.attn_q.bias",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_sinks",
+      "blk.N.attn_v.bias",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down_exps.bias",
+      "blk.N.ffn_down_exps.weight",
+      "blk.N.ffn_gate_exps.bias",
+      "blk.N.ffn_gate_exps.weight",
+      "blk.N.ffn_gate_inp.bias",
+      "blk.N.ffn_gate_inp.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up_exps.bias",
+      "blk.N.ffn_up_exps.weight",
+      "output.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "deepseek4": {
+    "arch": "deepseek4",
+    "count": 2,
+    "block_counts": [
+      "43"
+    ],
+    "embeddings": [
+      "4096"
+    ],
+    "dtypes": {
+      "Q6_K": 348,
+      "F32": 1324,
+      "Q8_0": 634,
+      "T18": 154,
+      "T17": 100,
+      "BF16": 86,
+      "T26": 6,
+      "T39": 4
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.scaling.type": "yarn",
+      "rope.scaling.factor": 16.0,
+      "rope.scaling.original_context_length": 65536,
+      "rope.scaling.yarn_beta_fast": 32.0,
+      "rope.scaling.yarn_beta_slow": 1.0,
+      "rope.freq_base": 10000.0,
+      "expert_count": 256,
+      "expert_used_count": 6,
+      "expert_gating_func": 4,
+      "rope.dimension_count": 64,
+      "expert_feed_forward_length": 2048,
+      "expert_shared_count": 1,
+      "expert_weights_scale": 1.5,
+      "expert_weights_norm": true,
+      "attention.compress_rope_freq_base": 160000.0
+    },
+    "role_schemas": [
+      "blk.N.attn_compressor_ape.weight",
+      "blk.N.attn_compressor_gate.weight",
+      "blk.N.attn_compressor_kv.weight",
+      "blk.N.attn_compressor_norm.weight",
+      "blk.N.attn_kv.weight",
+      "blk.N.attn_kv_a_norm.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output_a.weight",
+      "blk.N.attn_output_b.weight",
+      "blk.N.attn_q_a.weight",
+      "blk.N.attn_q_a_norm.weight",
+      "blk.N.attn_q_b.weight",
+      "blk.N.attn_sinks.weight",
+      "blk.N.exp_probs_b.bias",
+      "blk.N.ffn_down_exps.weight",
+      "blk.N.ffn_down_shexp.weight",
+      "blk.N.ffn_gate_exps.weight",
+      "blk.N.ffn_gate_inp.weight",
+      "blk.N.ffn_gate_shexp.weight",
+      "blk.N.ffn_gate_tid2eid.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up_exps.weight",
+      "blk.N.ffn_up_shexp.weight",
+      "blk.N.hc_attn_base.weight",
+      "blk.N.hc_attn_fn.weight",
+      "blk.N.hc_attn_scale.weight",
+      "blk.N.hc_ffn_base.weight",
+      "blk.N.hc_ffn_fn.weight",
+      "blk.N.hc_ffn_scale.weight",
+      "blk.N.indexer.attn_q_b.weight",
+      "blk.N.indexer.proj.weight",
+      "blk.N.indexer_compressor_ape.weight",
+      "blk.N.indexer_compressor_gate.weight",
+      "blk.N.indexer_compressor_kv.weight",
+      "blk.N.indexer_compressor_norm.weight",
+      "output.weight",
+      "output_hc_base.weight",
+      "output_hc_fn.weight",
+      "output_hc_scale.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "deepseek2": {
+    "arch": "deepseek2",
+    "count": 1,
+    "block_counts": [
+      "27"
+    ],
+    "embeddings": [
+      "2048"
+    ],
+    "dtypes": {
+      "Q6_K": 1,
+      "Q4_0": 268,
+      "F32": 108
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.freq_base": 10000.0,
+      "expert_used_count": 6,
+      "expert_feed_forward_length": 1408,
+      "expert_count": 64,
+      "expert_shared_count": 2,
+      "expert_weights_scale": 1.0,
+      "rope.dimension_count": 64,
+      "rope.scaling.type": "yarn",
+      "rope.scaling.factor": 40.0,
+      "rope.scaling.original_context_length": 4096,
+      "rope.scaling.yarn_log_multiplier": 0.07069999724626541
+    },
+    "role_schemas": [
+      "blk.N.attn_kv_a_mqa.weight",
+      "blk.N.attn_kv_a_norm.weight",
+      "blk.N.attn_kv_b.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_down_exps.weight",
+      "blk.N.ffn_down_shexp.weight",
+      "blk.N.ffn_gate.weight",
+      "blk.N.ffn_gate_exps.weight",
+      "blk.N.ffn_gate_inp.weight",
+      "blk.N.ffn_gate_shexp.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up.weight",
+      "blk.N.ffn_up_exps.weight",
+      "blk.N.ffn_up_shexp.weight",
+      "output.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "qwen2": {
+    "arch": "qwen2",
+    "count": 2,
+    "block_counts": [
+      "28",
+      "64"
+    ],
+    "embeddings": [
+      "1536",
+      "5120"
+    ],
+    "dtypes": {
+      "Q6_K": 94,
+      "F32": 462,
+      "Q4_K": 553
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.freq_base": 1000000.0
+    },
+    "role_schemas": [
+      "blk.N.attn_k.bias",
+      "blk.N.attn_k.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.bias",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_v.bias",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_gate.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "gemma3": {
+    "arch": "gemma3",
+    "count": 2,
+    "block_counts": [
+      "34"
+    ],
+    "embeddings": [
+      "2560"
+    ],
+    "dtypes": {
+      "F16": 330,
+      "F32": 958,
+      "Q6_K": 68,
+      "Q4_K": 410
+    },
+    "has_nextn": false,
+    "metadata": {},
+    "role_schemas": [
+      "blk.N.attn_k.weight",
+      "blk.N.attn_k_norm.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_q_norm.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_gate.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up.weight",
+      "blk.N.post_attention_norm.weight",
+      "blk.N.post_ffw_norm.weight",
+      "mm.mm_input_projection.weight",
+      "mm.mm_soft_emb_norm.weight",
+      "output_norm.weight",
+      "token_embd.weight",
+      "v.blk.N.attn_k.bias",
+      "v.blk.N.attn_k.weight",
+      "v.blk.N.attn_output.bias",
+      "v.blk.N.attn_output.weight",
+      "v.blk.N.attn_q.bias",
+      "v.blk.N.attn_q.weight",
+      "v.blk.N.attn_v.bias",
+      "v.blk.N.attn_v.weight",
+      "v.blk.N.layer_norm1.bias",
+      "v.blk.N.layer_norm1.weight",
+      "v.blk.N.layer_norm2.bias",
+      "v.blk.N.layer_norm2.weight",
+      "v.blk.N.mlp.fc1.bias",
+      "v.blk.N.mlp.fc1.weight",
+      "v.blk.N.mlp.fc2.bias",
+      "v.blk.N.mlp.fc2.weight",
+      "v.patch_embedding.bias",
+      "v.patch_embedding.weight",
+      "v.position_embedding.weight",
+      "v.post_layernorm.bias",
+      "v.post_layernorm.weight"
+    ]
+  },
+  "granite": {
+    "arch": "granite",
+    "count": 1,
+    "block_counts": [
+      "40"
+    ],
+    "embeddings": [
+      "4096"
+    ],
+    "dtypes": {
+      "F32": 81,
+      "Q6_K": 41,
+      "Q4_K": 240
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.freq_base": 10000000.0,
+      "rope.dimension_count": 128
+    },
+    "role_schemas": [
+      "blk.N.attn_k.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_gate.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "qwen35": {
+    "arch": "qwen35",
+    "count": 3,
+    "block_counts": [
+      "32",
+      "65"
+    ],
+    "embeddings": [
+      "4096",
+      "5120"
+    ],
+    "dtypes": {
+      "Q4_K": 887,
+      "F32": 996,
+      "Q6_K": 127,
+      "F16": 166
+    },
+    "has_nextn": true,
+    "metadata": {
+      "rope.dimension_count": 64,
+      "rope.freq_base": 10000000.0,
+      "rope.mrope_interleaved": true,
+      "ssm.conv_kernel": 4,
+      "ssm.group_count": 16,
+      "ssm.inner_size": 6144,
+      "ssm.state_size": 128,
+      "ssm.time_step_rank": 48,
+      "ssm.v_head_reordered": true
+    },
+    "role_schemas": [
+      "blk.N.attn_gate.weight",
+      "blk.N.attn_k.weight",
+      "blk.N.attn_k_norm.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_q_norm.weight",
+      "blk.N.attn_qkv.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_gate.weight",
+      "blk.N.ffn_up.weight",
+      "blk.N.nextn.eh_proj.weight",
+      "blk.N.nextn.enorm.weight",
+      "blk.N.nextn.hnorm.weight",
+      "blk.N.nextn.shared_head_norm.weight",
+      "blk.N.post_attention_norm.weight",
+      "blk.N.ssm_a",
+      "blk.N.ssm_alpha.weight",
+      "blk.N.ssm_beta.weight",
+      "blk.N.ssm_conv1d.weight",
+      "blk.N.ssm_dt.bias",
+      "blk.N.ssm_norm.weight",
+      "blk.N.ssm_out.weight",
+      "output.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "laguna": {
+    "arch": "laguna",
+    "count": 1,
+    "block_counts": [
+      "48"
+    ],
+    "embeddings": [
+      "3072"
+    ],
+    "dtypes": {
+      "Q8_0": 386,
+      "F32": 287,
+      "Q4_K": 117,
+      "BF16": 24
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.scaling.type": "yarn",
+      "rope.scaling.factor": 32.0,
+      "rope.scaling.original_context_length": 8192,
+      "rope.scaling.yarn_attn_factor": 1.0,
+      "rope.scaling.yarn_beta_fast": 32.0,
+      "rope.scaling.yarn_beta_slow": 1.0,
+      "rope.freq_base": 500000.0,
+      "rope.freq_base_swa": 10000.0,
+      "expert_count": 256,
+      "expert_used_count": 10,
+      "expert_feed_forward_length": 1024,
+      "expert_shared_feed_forward_length": 1024,
+      "expert_weights_norm": true,
+      "expert_weights_scale": 2.5,
+      "expert_gating_func": 2,
+      "rope.dimension_count": 64,
+      "rope.dimension_count_swa": 128
+    },
+    "role_schemas": [
+      "blk.N.attn_gate.weight",
+      "blk.N.attn_k.weight",
+      "blk.N.attn_k_norm.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_q_norm.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.exp_probs_b.bias",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_down_exps.weight",
+      "blk.N.ffn_down_shexp.weight",
+      "blk.N.ffn_gate.weight",
+      "blk.N.ffn_gate_exps.weight",
+      "blk.N.ffn_gate_inp.weight",
+      "blk.N.ffn_gate_shexp.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up.weight",
+      "blk.N.ffn_up_exps.weight",
+      "blk.N.ffn_up_shexp.weight",
+      "output.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "nemotron_h_moe": {
+    "arch": "nemotron_h_moe",
+    "count": 1,
+    "block_counts": [
+      "53"
+    ],
+    "embeddings": [
+      "2688"
+    ],
+    "dtypes": {
+      "Q8_0": 26,
+      "F32": 243,
+      "Q5_0": 116,
+      "Q4_K": 31,
+      "BF16": 1
+    },
+    "has_nextn": true,
+    "metadata": {
+      "block_count": 53,
+      "context_length": 1048576,
+      "embedding_length": 2688,
+      "attention.head_count": 32,
+      "rope.freq_base": 10000.0,
+      "attention.layer_norm_rms_epsilon": 9.999999747378752e-06,
+      "attention.layer_norm_epsilon": 9.999999747378752e-06,
+      "expert_count": 128,
+      "expert_used_count": 6,
+      "expert_group_count": 1,
+      "expert_group_used_count": 1,
+      "vocab_size": 131072,
+      "rope.dimension_count": 84,
+      "ssm.conv_kernel": 4,
+      "ssm.state_size": 128,
+      "ssm.group_count": 8,
+      "ssm.inner_size": 4096,
+      "ssm.time_step_rank": 64,
+      "rope.scaling.finetuned": false,
+      "attention.key_length": 128,
+      "attention.value_length": 128,
+      "expert_feed_forward_length": 1856,
+      "expert_shared_feed_forward_length": 3712,
+      "expert_shared_count": 1,
+      "expert_weights_norm": true,
+      "expert_weights_scale": 2.5,
+      "nextn_predict_layers": 1
+    },
+    "role_schemas": [
+      "blk.N.attn_k.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.exp_probs_b.bias",
+      "blk.N.ffn_down_exps.weight",
+      "blk.N.ffn_down_shexp.weight",
+      "blk.N.ffn_gate_inp.weight",
+      "blk.N.ffn_up_exps.weight",
+      "blk.N.ffn_up_shexp.weight",
+      "blk.N.nextn.eh_proj.weight",
+      "blk.N.nextn.enorm.weight",
+      "blk.N.nextn.hnorm.weight",
+      "blk.N.nextn.shared_head_norm.weight",
+      "blk.N.post_attention_norm.weight",
+      "blk.N.ssm_a",
+      "blk.N.ssm_conv1d.bias",
+      "blk.N.ssm_conv1d.weight",
+      "blk.N.ssm_d",
+      "blk.N.ssm_dt.bias",
+      "blk.N.ssm_in.weight",
+      "blk.N.ssm_norm.weight",
+      "blk.N.ssm_out.weight",
+      "output.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "nemotron_h": {
+    "arch": "nemotron_h",
+    "count": 1,
+    "block_counts": [
+      "42"
+    ],
+    "embeddings": [
+      "3136"
+    ],
+    "dtypes": {
+      "F32": 169,
+      "Q5_0": 49,
+      "Q4_K": 33,
+      "Q6_K": 9,
+      "Q8_0": 3
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.freq_base": 10000.0,
+      "ssm.conv_kernel": 4,
+      "ssm.group_count": 8,
+      "ssm.inner_size": 7680,
+      "ssm.state_size": 128,
+      "ssm.time_step_rank": 96
+    },
+    "role_schemas": [
+      "blk.N.attn_k.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_up.weight",
+      "blk.N.ssm_a",
+      "blk.N.ssm_conv1d.bias",
+      "blk.N.ssm_conv1d.weight",
+      "blk.N.ssm_d",
+      "blk.N.ssm_dt.bias",
+      "blk.N.ssm_in.weight",
+      "blk.N.ssm_norm.weight",
+      "blk.N.ssm_out.weight",
+      "output.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "qwen35moe": {
+    "arch": "qwen35moe",
+    "count": 1,
+    "block_counts": [
+      "41"
+    ],
+    "embeddings": [
+      "2048"
+    ],
+    "dtypes": {
+      "Q6_K": 64,
+      "F32": 310,
+      "Q4_K": 379
+    },
+    "has_nextn": true,
+    "metadata": {
+      "block_count": 41,
+      "context_length": 262144,
+      "embedding_length": 2048,
+      "attention.head_count": 16,
+      "attention.head_count_kv": 2,
+      "rope.freq_base": 10000000.0,
+      "attention.layer_norm_rms_epsilon": 9.999999974752427e-07,
+      "expert_count": 256,
+      "expert_used_count": 8,
+      "attention.key_length": 256,
+      "attention.value_length": 256,
+      "expert_feed_forward_length": 512,
+      "expert_shared_feed_forward_length": 512,
+      "nextn_predict_layers": 1,
+      "ssm.conv_kernel": 4,
+      "ssm.state_size": 128,
+      "ssm.group_count": 16,
+      "ssm.time_step_rank": 32,
+      "ssm.inner_size": 4096,
+      "full_attention_interval": 4,
+      "rope.dimension_count": 64
+    },
+    "role_schemas": [
+      "blk.N.attn_gate.weight",
+      "blk.N.attn_k.weight",
+      "blk.N.attn_k_norm.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_q_norm.weight",
+      "blk.N.attn_qkv.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down_exps.weight",
+      "blk.N.ffn_down_shexp.weight",
+      "blk.N.ffn_gate_exps.weight",
+      "blk.N.ffn_gate_inp.weight",
+      "blk.N.ffn_gate_inp_shexp.weight",
+      "blk.N.ffn_gate_shexp.weight",
+      "blk.N.ffn_up_exps.weight",
+      "blk.N.ffn_up_shexp.weight",
+      "blk.N.nextn.eh_proj.weight",
+      "blk.N.nextn.enorm.weight",
+      "blk.N.nextn.hnorm.weight",
+      "blk.N.nextn.shared_head_norm.weight",
+      "blk.N.post_attention_norm.weight",
+      "blk.N.ssm_a",
+      "blk.N.ssm_alpha.weight",
+      "blk.N.ssm_beta.weight",
+      "blk.N.ssm_conv1d.weight",
+      "blk.N.ssm_dt.bias",
+      "blk.N.ssm_norm.weight",
+      "blk.N.ssm_out.weight",
+      "output.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "phi3": {
+    "arch": "phi3",
+    "count": 2,
+    "block_counts": [
+      "32"
+    ],
+    "embeddings": [
+      "3072"
+    ],
+    "dtypes": {
+      "Q4_0": 258,
+      "F32": 134,
+      "Q6_K": 2
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.scaling.original_context_length": 4096,
+      "rope.dimension_count": 96,
+      "rope.freq_base": 10000.0,
+      "rope.scaling.attn_factor": 1.190238118171692
+    },
+    "role_schemas": [
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_qkv.weight",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up.weight",
+      "output.weight",
+      "output_norm.weight",
+      "rope_factors_long.weight",
+      "rope_factors_short.weight",
+      "token_embd.weight"
+    ]
+  },
+  "qwen3": {
+    "arch": "qwen3",
+    "count": 1,
+    "block_counts": [
+      "36"
+    ],
+    "embeddings": [
+      "4096"
+    ],
+    "dtypes": {
+      "Q6_K": 19,
+      "F32": 145,
+      "Q4_K": 199,
+      "F16": 36
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.freq_base": 1000000.0
+    },
+    "role_schemas": [
+      "blk.N.attn_k.weight",
+      "blk.N.attn_k_norm.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_q_norm.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_gate.weight",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up.weight",
+      "output.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "qwen3next": {
+    "arch": "qwen3next",
+    "count": 1,
+    "block_counts": [
+      "48"
+    ],
+    "embeddings": [
+      "2048"
+    ],
+    "dtypes": {
+      "F32": 313,
+      "Q6_K": 79,
+      "Q4_K": 415
+    },
+    "has_nextn": false,
+    "metadata": {
+      "expert_count": 512,
+      "expert_feed_forward_length": 512,
+      "expert_shared_feed_forward_length": 512,
+      "expert_used_count": 10,
+      "rope.dimension_count": 64,
+      "rope.freq_base": 10000000.0,
+      "ssm.conv_kernel": 4,
+      "ssm.group_count": 16,
+      "ssm.inner_size": 4096,
+      "ssm.state_size": 128,
+      "ssm.time_step_rank": 32
+    },
+    "role_schemas": [
+      "blk.N.attn_k.weight",
+      "blk.N.attn_k_norm.weight",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_q_norm.weight",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down_exps.weight",
+      "blk.N.ffn_down_shexp.weight",
+      "blk.N.ffn_gate_exps.weight",
+      "blk.N.ffn_gate_inp.weight",
+      "blk.N.ffn_gate_inp_shexp.weight",
+      "blk.N.ffn_gate_shexp.weight",
+      "blk.N.ffn_up_exps.weight",
+      "blk.N.ffn_up_shexp.weight",
+      "blk.N.post_attention_norm.weight",
+      "blk.N.ssm_a",
+      "blk.N.ssm_ba.weight",
+      "blk.N.ssm_conv1d.weight",
+      "blk.N.ssm_dt.bias",
+      "blk.N.ssm_in.weight",
+      "blk.N.ssm_norm.weight",
+      "blk.N.ssm_out.weight",
+      "output.weight",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  },
+  "starcoder2": {
+    "arch": "starcoder2",
+    "count": 1,
+    "block_counts": [
+      "40"
+    ],
+    "embeddings": [
+      "6144"
+    ],
+    "dtypes": {
+      "Q4_0": 241,
+      "F32": 402,
+      "Q6_K": 1
+    },
+    "has_nextn": false,
+    "metadata": {
+      "rope.freq_base": 100000.0
+    },
+    "role_schemas": [
+      "blk.N.attn_k.bias",
+      "blk.N.attn_k.weight",
+      "blk.N.attn_norm.bias",
+      "blk.N.attn_norm.weight",
+      "blk.N.attn_output.bias",
+      "blk.N.attn_output.weight",
+      "blk.N.attn_q.bias",
+      "blk.N.attn_q.weight",
+      "blk.N.attn_v.bias",
+      "blk.N.attn_v.weight",
+      "blk.N.ffn_down.bias",
+      "blk.N.ffn_down.weight",
+      "blk.N.ffn_norm.bias",
+      "blk.N.ffn_norm.weight",
+      "blk.N.ffn_up.bias",
+      "blk.N.ffn_up.weight",
+      "output.weight",
+      "output_norm.bias",
+      "output_norm.weight",
+      "token_embd.weight"
+    ]
+  }
+}
