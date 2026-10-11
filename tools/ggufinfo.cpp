@@ -92,6 +92,44 @@ int main(int argc, char** argv) {
         return bad == 0 ? 0 : 1;
     }
 
+    if (mode == "--tiling") {
+        // Independent invariant: with correct block geometry the tensors must
+        // exactly tile the data region, so the last byte range must end at
+        // end-of-file. Any wrong size shows up as a gap or an overrun.
+        uint64_t last_end = 0;
+        std::string last_name;
+        uint64_t gaps = 0, overlaps = 0;
+        uint64_t prev_end = 0;
+        std::vector<const rawrxd::GgufTensor*> ordered;
+        for (const auto& kv : r.tensors()) ordered.push_back(&kv.second);
+        std::sort(ordered.begin(), ordered.end(),
+                  [](const rawrxd::GgufTensor* a, const rawrxd::GgufTensor* b) {
+                      return a->abs_offset < b->abs_offset;
+                  });
+        for (const rawrxd::GgufTensor* t : ordered) {
+            if (t->abs_offset > prev_end) ++gaps;
+            else if (t->abs_offset < prev_end) ++overlaps;
+            if (t->abs_offset + t->nbytes > last_end) {
+                last_end = t->abs_offset + t->nbytes;
+                last_name = t->name;
+            }
+            prev_end = t->abs_offset + t->nbytes;
+        }
+        printf("file_size      %llu\n", (unsigned long long)r.fileSize());
+        printf("last_tensor    %s\n", last_name.c_str());
+        printf("last_end       %llu\n", (unsigned long long)last_end);
+        printf("delta          %lld\n", (long long)(r.fileSize() - last_end));
+        printf("gaps           %llu\n", (unsigned long long)gaps);
+        printf("overlaps       %llu\n", (unsigned long long)overlaps);
+        // Allow a small delta for alignment padding of the final tensor.
+        const uint64_t slack = 32;
+        const bool ok = (r.fileSize() >= last_end) &&
+                        (r.fileSize() - last_end <= slack) &&
+                        overlaps == 0;
+        printf("VERDICT=%s\n", ok ? "PASS" : "FAIL");
+        return ok ? 0 : 1;
+    }
+
     // default: --summary
     printf("file            %s\n", path.c_str());
     printf("gguf version    %u\n", r.version());

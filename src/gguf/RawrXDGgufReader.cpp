@@ -1,78 +1,40 @@
 // RawrXDGgufReader.cpp
 // RAWRXD_GGUF_UNIVERSAL_READER_001
 #include "RawrXDGgufReader.hpp"
+#include "QuantTypeTable.hpp"   // SINGLE authority for ggml type geometry
 
 #include <algorithm>
 #include <cmath>
 
+// Deep2's QuantTypeTable is the only place tensor byte geometry is allowed to
+// come from. See src/deep2/QuantTypeTable.hpp: "Loader sizing, registry
+// geometry, diagnostics, and ABI asserts MUST consume this table - do not
+// reintroduce parallel switch statements."
+static const Deep2::QuantTypeDescriptor* GType(int32_t t) {
+    return Deep2::LookupQuantType(static_cast<uint32_t>(t));
+}
+
 namespace rawrxd {
 
 const char* GgmlTypeName(int32_t t) {
-    switch (t) {
-        case 0:  return "F32";
-        case 1:  return "F16";
-        case 2:  return "Q4_0";
-        case 3:  return "Q4_1";
-        case 6:  return "Q5_0";
-        case 7:  return "Q5_1";
-        case 8:  return "Q8_0";
-        case 9:  return "Q8_1";
-        case 10: return "Q2_K";
-        case 11: return "Q3_K";
-        case 12: return "Q4_K";
-        case 13: return "Q5_K";
-        case 14: return "Q6_K";
-        case 15: return "Q8_K";
-        case 16: return "IQ2_XXS";
-        case 17: return "IQ2_XS";
-        case 18: return "IQ3_XXS";
-        case 19: return "IQ1_S";
-        case 20: return "IQ4_NL";
-        case 21: return "IQ3_S";
-        case 22: return "IQ2_S";
-        case 23: return "IQ4_XS";
-        case 24: return "I8";
-        case 25: return "I16";
-        case 26: return "I32";
-        case 27: return "I64";
-        case 28: return "F64";
-        case 30: return "BF16";
-        case 39: return "MXFP4";
-        default: return "UNKNOWN";
-    }
+    const Deep2::QuantTypeDescriptor* d = GType(t);
+    return d ? d->name : "UNKNOWN";
 }
 
 // Bytes per element for fixed-width dtypes, or 0 for block-quantised dtypes
 // whose size depends on the element count rather than a multiple of it.
 size_t GgmlTypeSize(int32_t t) {
-    switch (t) {
-        case 0: return 4;    // F32
-        case 1: return 2;    // F16
-        case 25: return 2;   // I16
-        case 26: return 4;   // I32
-        case 27: return 8;   // I64
-        case 28: return 8;   // F64
-        case 30: return 2;   // BF16
-        default: return 0;
-    }
+    const Deep2::QuantTypeDescriptor* d = GType(t);
+    if (!d) return 0;
+    return d->isQuantized ? 0 : d->blockBytes;
 }
 
-// Bytes per block for the legacy block-quantised formats. Zero means the size
-// is not derivable and the reader refuses rather than guessing; K-quants fall
-// in that bucket because their super-block sizes are not uniform enough to
-// hard-code safely.
+// Bytes per block and elements per block, both 0 when the type is unknown.
 size_t GgmlBlockBytes(int32_t t) {
-    switch (t) {
-        case 8:  return 34;  // Q8_0 : fp16 d + int8[32]
-        case 2:  return 18;  // Q4_0 : fp16 d + int8[16]
-        case 3:  return 20;  // Q4_1 : fp16 d + fp16 m + int8[16]
-        case 6:  return 22;  // Q5_0 : fp16 d + uint8[5] + nibbles[16]
-        case 7:  return 24;  // Q5_1 : fp16 d + fp16 m + ...
-        default: return 0;
-    }
+    const Deep2::QuantTypeDescriptor* d = GType(t);
+    if (!d) return 0;
+    return d->isQuantized ? d->blockBytes : 0;
 }
-
-constexpr size_t kLegacyBlockElems = 32;
 
 const char* RoleName(Role r) {
     switch (r) {
@@ -263,25 +225,29 @@ bool GgufReader::Open(const char* path) {
         GgufTensor& t = kv.second;
         t.abs_offset = data_start_ + t.offset;
 
+        const Deep2::QuantTypeDescriptor* d = GType(t.type);
         const size_t ts = GgmlTypeSize(t.type);
-        const size_t tb = GgmlBlockBytes(t.type);
-        if (ts != 0) {
+        if (d && !d->isQuantized) {
+            // Fixed-width dtype: size is a multiple of the element count.
+            if (t.nelements() == 0) { t.nbytes = 0; continue; }
             const uint64_t ne = (uint64_t)t.nelements();
             if (ne > (uint64_t)-1 / ts) { why_ = "tensor too large"; return false; }
             t.nbytes = ne * ts;
-        } else if (tb != 0) {
-            // Legacy block format: whole 32-element blocks only.
+        } else if (d && d->isQuantized) {
+            // Block-quantised: only whole blocks are representable.
+            const uint64_t be = d->blockElements;
+            const uint64_t bb = d->blockBytes;
             const uint64_t ne = (uint64_t)t.nelements();
-            if (ne % kLegacyBlockElems != 0) {
-                why_ = "legacy block tensor not a multiple of 32";
+            if (ne == 0) { t.nbytes = 0; continue; }
+            if (ne % be != 0) {
+                why_ = "quantised tensor is not a whole number of blocks";
                 return false;
             }
-            const uint64_t blocks = ne / kLegacyBlockElems;
-            if (blocks > (uint64_t)-1 / tb) { why_ = "tensor too large"; return false; }
-            t.nbytes = blocks * tb;
+            const uint64_t blocks = ne / be;
+            if (blocks > (uint64_t)-1 / bb) { why_ = "tensor too large"; return false; }
+            t.nbytes = blocks * bb;
         } else {
-            // K-quants and unknown dtypes: size is the caller's kernel's
-            // business. Mark unknown so readRaw refuses instead of guessing.
+            // Unknown or removed type: fail closed rather than invent a size.
             t.nbytes = 0;
         }
     }

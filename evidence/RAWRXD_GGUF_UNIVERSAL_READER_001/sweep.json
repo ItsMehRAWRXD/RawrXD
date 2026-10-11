@@ -7,10 +7,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  103999401280,
         "check":  "PASS",
-        "checked":  1025,
+        "ranges_ok":  1328,
         "out_of_range":  0,
-        "unknown_size":  303,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "bluehawana__deepseek-v4-flash__iq2_m-ctx128k.gguf",
@@ -20,10 +22,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  103999401280,
         "check":  "PASS",
-        "checked":  1025,
+        "ranges_ok":  1328,
         "out_of_range":  0,
-        "unknown_size":  303,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "kiminoto__T0.0.1__latest.gguf",
@@ -33,10 +37,12 @@
         "capabilities":  "ssm=yes attention=yes moe=no",
         "bytes":  6594462816,
         "check":  "PASS",
-        "checked":  625,
+        "ranges_ok":  883,
         "out_of_range":  0,
-        "unknown_size":  258,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg__latest.gguf",
@@ -46,10 +52,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-16gb__latest.gguf",
@@ -59,10 +67,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  13793422144,
         "check":  "PASS",
-        "checked":  387,
+        "ranges_ok":  459,
         "out_of_range":  0,
-        "unknown_size":  72,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-16gb-balanced__latest.gguf",
@@ -72,10 +82,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  13793422144,
         "check":  "PASS",
-        "checked":  387,
+        "ranges_ok":  459,
         "out_of_range":  0,
-        "unknown_size":  72,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-16gb-v2__latest.gguf",
@@ -85,10 +97,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  13793422144,
         "check":  "PASS",
-        "checked":  387,
+        "ranges_ok":  459,
         "out_of_range":  0,
-        "unknown_size":  72,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-agentic__latest.gguf",
@@ -98,10 +112,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-alldrive__latest.gguf",
@@ -111,10 +127,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-comprehensive__latest.gguf",
@@ -124,10 +142,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-fast__latest.gguf",
@@ -137,10 +157,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-fast-agentic__latest.gguf",
@@ -150,10 +172,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyglocal__latest.gguf",
@@ -163,10 +187,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  25463410912,
         "check":  "PASS",
-        "checked":  161,
+        "ranges_ok":  723,
         "out_of_range":  0,
-        "unknown_size":  562,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddygnative__latest.gguf",
@@ -176,10 +202,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  25463410912,
         "check":  "PASS",
-        "checked":  161,
+        "ranges_ok":  723,
         "out_of_range":  0,
-        "unknown_size":  562,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-personalized__latest.gguf",
@@ -189,10 +217,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-personalized-agentic__latest.gguf",
@@ -202,10 +232,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-productivity-local__latest.gguf",
@@ -215,10 +247,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  25463410912,
         "check":  "PASS",
-        "checked":  161,
+        "ranges_ok":  723,
         "out_of_range":  0,
-        "unknown_size":  562,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-productivity-native__latest.gguf",
@@ -228,10 +262,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  25463410912,
         "check":  "PASS",
-        "checked":  161,
+        "ranges_ok":  723,
         "out_of_range":  0,
-        "unknown_size":  562,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-q2k-ultra-productive__latest.gguf",
@@ -241,10 +277,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  25463410912,
         "check":  "PASS",
-        "checked":  161,
+        "ranges_ok":  723,
         "out_of_range":  0,
-        "unknown_size":  562,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__bigdaddyg-q2-ultra__latest.gguf",
@@ -254,10 +292,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  25463410912,
         "check":  "PASS",
-        "checked":  161,
+        "ranges_ok":  723,
         "out_of_range":  0,
-        "unknown_size":  562,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__cheetah-speed-agentic__latest.gguf",
@@ -267,10 +307,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__cheetah-stealth__latest.gguf",
@@ -280,10 +322,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__cheetah-stealth-agentic__latest.gguf",
@@ -293,10 +337,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__cheetah-stealth-agentic-5gb__latest.gguf",
@@ -306,10 +352,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__cheetah-stealth-agentic-q5km-full__latest.gguf",
@@ -319,10 +367,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__deepseek-coder-v2__16b.gguf",
@@ -332,10 +382,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  8905109984,
         "check":  "PASS",
-        "checked":  376,
+        "ranges_ok":  377,
         "out_of_range":  0,
-        "unknown_size":  1,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__deepseek-r1__32b.gguf",
@@ -345,10 +397,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  19851335552,
         "check":  "PASS",
-        "checked":  321,
+        "ranges_ok":  771,
         "out_of_range":  0,
-        "unknown_size":  450,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__deepseek-r1__70b.gguf",
@@ -358,10 +412,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  42520395616,
         "check":  "PASS",
-        "checked":  162,
+        "ranges_ok":  724,
         "out_of_range":  0,
-        "unknown_size":  562,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__gemma3__4b.gguf",
@@ -371,10 +427,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  3338792448,
         "check":  "PASS",
-        "checked":  644,
+        "ranges_ok":  883,
         "out_of_range":  0,
-        "unknown_size":  239,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__gemma3__latest.gguf",
@@ -384,10 +442,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  3338792448,
         "check":  "PASS",
-        "checked":  644,
+        "ranges_ok":  883,
         "out_of_range":  0,
-        "unknown_size":  239,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__gpt-oss__120b.gguf",
@@ -397,10 +457,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  65369799840,
         "check":  "PASS",
-        "checked":  579,
+        "ranges_ok":  687,
         "out_of_range":  0,
-        "unknown_size":  108,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__gpt-oss__20b.gguf",
@@ -410,10 +472,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  13793422144,
         "check":  "PASS",
-        "checked":  387,
+        "ranges_ok":  459,
         "out_of_range":  0,
-        "unknown_size":  72,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__gpt-oss__latest.gguf",
@@ -423,10 +487,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  13793422144,
         "check":  "PASS",
-        "checked":  387,
+        "ranges_ok":  459,
         "out_of_range":  0,
-        "unknown_size":  72,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__granite3.3__8b.gguf",
@@ -436,10 +502,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  4942873344,
         "check":  "PASS",
-        "checked":  81,
+        "ranges_ok":  362,
         "out_of_range":  0,
-        "unknown_size":  281,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__laguna-s-2.1__Q4_K_M.gguf",
@@ -449,10 +517,12 @@
         "capabilities":  "ssm=no attention=yes moe=yes",
         "bytes":  96031829760,
         "check":  "PASS",
-        "checked":  697,
+        "ranges_ok":  814,
         "out_of_range":  0,
-        "unknown_size":  117,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__llama3.1__8b.gguf",
@@ -462,10 +532,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  4920738944,
         "check":  "PASS",
-        "checked":  66,
+        "ranges_ok":  292,
         "out_of_range":  0,
-        "unknown_size":  226,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__llama3.2__3b.gguf",
@@ -475,10 +547,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__llama3.2__latest.gguf",
@@ -488,10 +562,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__n4-tiny-oracle__latest.gguf",
@@ -501,10 +577,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  637699456,
         "check":  "PASS",
-        "checked":  200,
+        "ranges_ok":  201,
         "out_of_range":  0,
-        "unknown_size":  1,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__nemotron-3.5-lightning__30b.gguf",
@@ -514,10 +592,12 @@
         "capabilities":  "ssm=yes attention=yes moe=yes",
         "bytes":  25430738944,
         "check":  "PASS",
-        "checked":  386,
+        "ranges_ok":  417,
         "out_of_range":  0,
-        "unknown_size":  31,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__nemotron-3-nano__4b.gguf",
@@ -527,10 +607,12 @@
         "capabilities":  "ssm=yes attention=yes moe=no",
         "bytes":  2837586496,
         "check":  "PASS",
-        "checked":  221,
+        "ranges_ok":  263,
         "out_of_range":  0,
-        "unknown_size":  42,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__ornith-1.5__35b.gguf",
@@ -540,10 +622,12 @@
         "capabilities":  "ssm=yes attention=yes moe=yes",
         "bytes":  21713462848,
         "check":  "PASS",
-        "checked":  310,
+        "ranges_ok":  753,
         "out_of_range":  0,
-        "unknown_size":  443,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__phi3__mini.gguf",
@@ -553,10 +637,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2176177120,
         "check":  "PASS",
-        "checked":  196,
+        "ranges_ok":  197,
         "out_of_range":  0,
-        "unknown_size":  1,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__quantumide-security__latest.gguf",
@@ -566,10 +652,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__qwen2.5-coder__1.5b-base.gguf",
@@ -579,10 +667,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  986048512,
         "check":  "PASS",
-        "checked":  141,
+        "ranges_ok":  338,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__qwen3.8__27b.gguf",
@@ -592,10 +682,12 @@
         "capabilities":  "ssm=yes attention=yes moe=no",
         "bytes":  16810714464,
         "check":  "PASS",
-        "checked":  360,
+        "ranges_ok":  866,
         "out_of_range":  0,
-        "unknown_size":  506,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__qwen3__8b.gguf",
@@ -605,10 +697,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  5225374496,
         "check":  "PASS",
-        "checked":  181,
+        "ranges_ok":  399,
         "out_of_range":  0,
-        "unknown_size":  218,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__qwen35-40b-heretic-q8__latest.gguf",
@@ -618,10 +712,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2176177120,
         "check":  "PASS",
-        "checked":  196,
+        "ranges_ok":  197,
         "out_of_range":  0,
-        "unknown_size":  1,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__qwen3-next__80b.gguf",
@@ -631,10 +727,12 @@
         "capabilities":  "ssm=yes attention=yes moe=yes",
         "bytes":  50351320736,
         "check":  "PASS",
-        "checked":  313,
+        "ranges_ok":  807,
         "out_of_range":  0,
-        "unknown_size":  494,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__starcoder2__15b.gguf",
@@ -644,10 +742,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  9065400160,
         "check":  "PASS",
-        "checked":  643,
+        "ranges_ok":  644,
         "out_of_range":  0,
-        "unknown_size":  1,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__unlocked-125M__latest.gguf",
@@ -657,10 +757,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__unlocked-1B__latest.gguf",
@@ -670,10 +772,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__unlocked-350M__latest.gguf",
@@ -683,10 +787,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "library__unlocked-60M__latest.gguf",
@@ -696,10 +802,12 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "pdurugyan__qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2__latest.gguf",
@@ -709,10 +817,12 @@
         "capabilities":  "ssm=yes attention=yes moe=no",
         "bytes":  5629105408,
         "check":  "PASS",
-        "checked":  177,
+        "ranges_ok":  427,
         "out_of_range":  0,
-        "unknown_size":  250,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     },
     {
         "file":  "RageBait__LadySophiaNoctua__latest.gguf",
@@ -722,9 +832,11 @@
         "capabilities":  "ssm=no attention=yes moe=no",
         "bytes":  2019377376,
         "check":  "PASS",
-        "checked":  58,
+        "ranges_ok":  255,
         "out_of_range":  0,
-        "unknown_size":  197,
-        "opens":  true
+        "unknown_size":  0,
+        "tiling":  "PASS",
+        "tiling_delta":  "0",
+        "pass":  true
     }
 ]
