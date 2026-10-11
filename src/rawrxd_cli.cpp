@@ -192,7 +192,15 @@ static bool audit_is_source(const fs::path& p, std::string& lang) {
     return false;
 }
 
-static int runAutonomousAudit(const std::string& rootRaw) {
+// A verified finding handed to the (optional) Deep2-backed investigation pass.
+struct AuditFinding { std::string file; int line; std::string kind; std::string evidence; };
+
+// reason(prompt)->model text: the real Deep2/agent reasoning call, supplied by the
+// caller (main wires NativeAgent). nullptr => deep reasoning NOT_RUN (counters 0).
+static int runAutonomousAudit(const std::string& rootRaw,
+                              std::function<std::string(const std::string&)> reason = nullptr,
+                              uint64_t* modelCallsOut = nullptr,
+                              uint64_t* agentTasksOut = nullptr) {
     std::error_code ec;
     fs::path root = fs::weakly_canonical(fs::absolute(rootRaw.empty() ? "." : rootRaw), ec);
     if (!fs::exists(root)) { std::cout << "AUDIT: workspace not found: " << rootRaw << std::endl; return 1; }
@@ -271,6 +279,7 @@ static int runAutonomousAudit(const std::string& rootRaw) {
     };
     std::ostringstream findings; bool firstF = true;
     uint64_t nFindings = 0, nCrit = 0, nHigh = 0, nVerified = 0, nUnverified = 0;
+    std::vector<AuditFinding> verifiedFindings;
     // Real tool-call accounting: 2 scanners per source + 1 verification read per
     // finding + 3 toolchain probes. Never inferred from initialization.
     uint64_t nToolCalls = 2ull * sources.size() + 3ull;
@@ -281,6 +290,7 @@ static int runAutonomousAudit(const std::string& rootRaw) {
     for (const auto& s : sources) {
         for (const auto& i : s.sec) {
             const bool v = verify(s.rel, i.line); if (v) ++nVerified; else ++nUnverified;
+            if (v) verifiedFindings.push_back({s.rel, i.line, i.type, i.description});
             if (!firstF) findings << ","; firstF = false;
             findings << "{\"file\":\"" << audit_json_escape(s.rel) << "\",\"line\":" << i.line
                      << ",\"severity\":\"" << i.severity << "\",\"kind\":\"" << audit_json_escape(i.type)
@@ -289,6 +299,7 @@ static int runAutonomousAudit(const std::string& rootRaw) {
         }
         for (const auto& o : s.opt) {
             const bool v = verify(s.rel, o.line); if (v) ++nVerified; else ++nUnverified;
+            if (v) verifiedFindings.push_back({s.rel, o.line, o.type, o.description});
             if (!firstF) findings << ","; firstF = false;
             findings << "{\"file\":\"" << audit_json_escape(s.rel) << "\",\"line\":" << o.line
                      << ",\"severity\":\"info\",\"kind\":\"" << audit_json_escape(o.type)
@@ -298,6 +309,31 @@ static int runAutonomousAudit(const std::string& rootRaw) {
     }
     std::cout << "[VERIFY]   Native-tool verification: findings verified=" << nVerified
               << " unverified=" << nUnverified << " tool_calls=" << nToolCalls << std::endl;
+    // Deep2-backed investigation of the verified findings. Real model reasoning
+    // ONLY when a reason() callback is supplied (main wires NativeAgent); else
+    // NOT_RUN and both counters stay 0 (never inferred).
+    uint64_t modelCalls = 0, agentTasks = 0;
+    if (reason && !verifiedFindings.empty()) {
+        std::cout << "[DEEP2]    Reason over " << verifiedFindings.size() << " verified finding(s)..." << std::endl;
+        std::ostringstream dm;
+        dm << "# RawrXD Deep2 Autonomous Investigation\n\nReal model reasoning over verified audit findings.\n\n";
+        for (const auto& f : verifiedFindings) {
+            std::ostringstream q;
+            q << "Engineering audit finding verified at " << f.file << ":" << f.line
+              << " (" << f.kind << "): " << f.evidence
+              << ". As a senior engineer, state whether this is a real defect, its impact, and the concrete fix. Be concise.";
+            std::string conclusion = reason(q.str());
+            ++modelCalls; ++agentTasks;
+            dm << "## " << f.file << ":" << f.line << " (" << f.kind << ")\n"
+               << "- Evidence (verified at source): " << f.evidence << "\n"
+               << "### Deep2 analysis:\n" << (conclusion.empty() ? "(model produced no output)" : conclusion) << "\n";
+        }
+        audit_write_file(adir / "IDE_DEEP_INVESTIGATION.md", dm.str());
+        std::cout << "[DEEP2]    Investigation written to " << (adir / "IDE_DEEP_INVESTIGATION.md").string()
+                  << " (" << modelCalls << " inference call(s))" << std::endl;
+    }
+    if (modelCallsOut) *modelCallsOut = modelCalls;
+    if (agentTasksOut) *agentTasksOut = agentTasks;
     std::ostringstream fj; fj << "{\"milestone\":\"RAWRXD_AUTONOMOUS_AUDIT\",\"workspace\":\"" << audit_json_escape(root.string())
         << "\",\"source_files\":" << sources.size() << ",\"total_lines\":" << totalLines
         << "\",\"total_bytes\":" << totalBytes << ",\"findings\":" << nFindings
@@ -306,11 +342,11 @@ static int runAutonomousAudit(const std::string& rootRaw) {
         // Execution counters from REAL records. Deep2 model reasoning, agent tasks,
         // build/test execution and HexMag dispatch are NOT run in this pass and are
         // reported as 0 (recorded NOT_RUN), never inferred from a successful init.
-        << ",\"execution\":{\"MODEL_INFERENCE_CALLS\":0,\"AGENT_TASKS_EXECUTED\":0"
+        << ",\"execution\":{\"MODEL_INFERENCE_CALLS\":" << modelCalls << ",\"AGENT_TASKS_EXECUTED\":" << agentTasks
         << ",\"TOOL_CALLS_EXECUTED\":" << nToolCalls
         << ",\"BUILD_ATTEMPTS\":0,\"TESTS_EXECUTED\":0"
         << ",\"FINDINGS_VERIFIED\":" << nVerified << ",\"FINDINGS_UNVERIFIED\":" << nUnverified
-        << "},\"deep_reasoning\":\"NOT_RUN\",\"hexmag_dispatch\":\"NOT_RUN\""
+        << "},\"deep_reasoning\":\"" << (reason ? "PASS" : "NOT_RUN") << "\",\"hexmag_dispatch\":\"NOT_RUN\""
         << ",\"items\":[" << findings.str() << "]}";
     audit_write_file(adir / "IDE_FINDINGS.json", fj.str());
 
@@ -360,9 +396,9 @@ static int runAutonomousAudit(const std::string& rootRaw) {
     std::cout << "[EVIDENCE] Findings recorded: " << nFindings << " (critical=" << nCrit << ", high=" << nHigh << ")" << std::endl;
     std::cout << "[REPORT]   Audit written to " << (adir / "IDE_DIRECTORY_AUDIT.md").string() << std::endl;
     std::cout << "--- execution receipt (from real records, never inferred) ---" << std::endl;
-    std::cout << "  MODEL_INFERENCE_CALLS=0 AGENT_TASKS_EXECUTED=0 TOOL_CALLS_EXECUTED=" << nToolCalls << std::endl;
+    std::cout << "  MODEL_INFERENCE_CALLS=" << modelCalls << " AGENT_TASKS_EXECUTED=" << agentTasks << " TOOL_CALLS_EXECUTED=" << nToolCalls << std::endl;
     std::cout << "  BUILD_ATTEMPTS=0 TESTS_EXECUTED=0 FINDINGS_VERIFIED=" << nVerified << " FINDINGS_UNVERIFIED=" << nUnverified << std::endl;
-    std::cout << "  deep_reasoning=NOT_RUN hexmag_dispatch=NOT_RUN (next increments; not simulated)" << std::endl;
+    std::cout << "  deep_reasoning=" << (reason ? "PASS" : "NOT_RUN") << " hexmag_dispatch=NOT_RUN (next increments; not simulated)" << std::endl;
     std::cout << "AUDIT_VERDICT=" << (nCrit > 0 ? "PASS_WITH_FINDINGS" : "PASS_WITH_FINDINGS") << std::endl;
     return 0;
 }
@@ -370,9 +406,40 @@ static int runAutonomousAudit(const std::string& rootRaw) {
 using namespace std::chrono_literals;
 
 int main(int argc, char** argv) {
-    // Non-interactive autonomous audit: `rawr audit <path>` (read-only, real evidence).
+    // Non-interactive autonomous audit: `rawr audit <path> [--deep --model <gguf>]`
+    // --deep loads Deep2 (NativeAgent/CPUInferenceEngine) and reasons on each
+    // verified finding; read-only, real evidence.
     if (argc >= 2 && std::string(argv[1]) == "audit") {
-        return runAutonomousAudit(argc >= 3 ? argv[2] : ".");
+        std::string path = ".";
+        bool deep = false;
+        std::string model;
+        for (int i = 2; i < argc; ++i) {
+            std::string a = argv[i];
+            if (a == "--deep") deep = true;
+            else if (a == "--model" && i + 1 < argc) model = argv[++i];
+            else if (a.rfind("--", 0) != 0) path = a;
+        }
+        std::function<std::string(const std::string&)> reason = nullptr;
+        uint64_t calls = 0, tasks = 0;
+        if (deep && !model.empty()) {
+            std::cout << "RawrXD CLI - loading Deep2 model for --deep audit: " << model << std::endl;
+            static CPUInference::CPUInferenceEngine dEngine;
+            if (dEngine.LoadModel(model)) {
+                static RawrXD::NativeAgent dAgent(&dEngine);
+                reason = [&](const std::string& p) -> std::string {
+                    std::string cap;
+                    dAgent.SetOutputCallback([&](const std::string& t){ cap += t; std::cout << t; std::cout.flush(); });
+                    dAgent.Ask(p);
+                    return cap;
+                };
+                std::cout << "Deep2 model loaded; --deep reasoning enabled." << std::endl;
+            } else {
+                std::cout << "Deep2 model load FAILED: " << model << " -> deep reasoning = NOT_RUN" << std::endl;
+            }
+        } else if (deep) {
+            std::cout << "--deep without --model -> deep reasoning = NOT_RUN" << std::endl;
+        }
+        return runAutonomousAudit(path, reason, &calls, &tasks);
     }
     AppState state;
     std::cout << "RawrXD CLI - Non-Qt IDE mode\n";
