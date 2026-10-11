@@ -40,6 +40,36 @@ static void FBMetrics(const char* label) {
             label, cpuSec, pmc.WorkingSetSize/(1024.0*1024.0), pmc.PeakWorkingSetSize/(1024.0*1024.0));
 }
 
+// B009 output projection: actual CPU matrix-vector products for every token.
+// GetTensorRow resolves the loader's real dequantized row; no synthetic weights.
+static bool FBExecuteLayerMatMulBatch(RawrXDModelLoader* loader,
+    const std::string& name, const float* input, float* output,
+    int in_dim, int out_dim, int tokens)
+{
+    if (!loader || !input || !output || in_dim <= 0 || out_dim <= 0 || tokens <= 0)
+        return false;
+    auto it = loader->tensors.find(name);
+    if (it == loader->tensors.end()) return false;
+    const Tensor& tensor = it->second;
+    // GGUF uses innermost dimension first. Require [in_dim, out_dim].
+    if (tensor.dims.size() != 2 || tensor.dims[0] != static_cast<uint64_t>(in_dim) ||
+        tensor.dims[1] != static_cast<uint64_t>(out_dim)) return false;
+    std::vector<float> weights(static_cast<size_t>(in_dim));
+    for (int row = 0; row < out_dim; ++row) {
+        if (!loader->GetTensorRow(name.c_str(), static_cast<size_t>(row),
+                                  weights.data(), static_cast<size_t>(in_dim))) return false;
+        for (int t = 0; t < tokens; ++t) {
+            const float* x = input + static_cast<size_t>(t) * in_dim;
+            double sum = 0.0;
+            for (int k = 0; k < in_dim; ++k)
+                sum += static_cast<double>(weights[static_cast<size_t>(k)]) * x[k];
+            if (!std::isfinite(sum)) return false;
+            output[static_cast<size_t>(t) * out_dim + row] = static_cast<float>(sum);
+        }
+    }
+    return true;
+}
+
 std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& tokens, int start_pos)
 {
     if (tokens.empty())
@@ -266,7 +296,7 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
 
         // --- Output projection (B009-B batched) ---
         FBFlush("[ForwardBatch] LAYER %d: Output projection begin (B009-B batched)\n", l + 1);
-        if (!ExecuteLayerMatMulBatch(prefix + "attn_output.weight", att_out.data(), attn_final.data(), dim, dim, T, static_cast<uint32_t>(l)))
+        if (!FBExecuteLayerMatMulBatch(loader, prefix + "attn_output.weight", att_out.data(), attn_final.data(), dim, dim, T))
             return {};
         FBFlush("[ForwardBatch] LAYER %d: Output projection complete (B009-B batched)\n", l + 1);
 
