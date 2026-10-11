@@ -632,6 +632,22 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             return f == roles.end() ? std::string() : f->second;
         };
 
+        // Snapshot the BLOCK INPUT as resid_in BEFORE the first norm runs.
+        // Publish copies the CURRENT hidden vector, and RmsNorm overwrites
+        // hidden_ with the normed value. Emitting Publish after the norm (the
+        // earlier position) therefore published a normalised vector whose RMS
+        // spike compounds every block: attn_norm L2 was 124 with a single 124
+        // element after one block, and out_norm max was 20. Emitting it first
+        // publishes the true residual stream.
+        {
+            GraphOp o;
+            o.op = Op::Publish;
+            o.block = static_cast<int32_t>(b);
+            o.a = "<hidden>";
+            o.out = "resid_in";
+            g.ops.push_back(o);
+        }
+
         // attn norm
         {
             GraphOp o;
@@ -640,22 +656,6 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.a = "<hidden>";
             o.b = name(Role::AttnNorm);
             o.out = "attn_norm";
-            g.ops.push_back(o);
-        }
-
-        // Publish the BLOCK INPUT as resid_in, BEFORE any attention op runs.
-        // Publish copies the *current* hidden vector, so emitting it after the
-        // attention projection (the earlier order) published attn_proj instead:
-        // ResidualAdd then computed attn_proj + attn_proj and dropped the block
-        // input entirely. That annihilated input information every block, which
-        // is why logits came out bit-identical across positions while the
-        // embedding L2 still varied. The gate/up pair consumes this stream.
-        {
-            GraphOp o;
-            o.op = Op::Publish;
-            o.block = static_cast<int32_t>(b);
-            o.a = "<hidden>";
-            o.out = "resid_in";
             g.ops.push_back(o);
         }
 

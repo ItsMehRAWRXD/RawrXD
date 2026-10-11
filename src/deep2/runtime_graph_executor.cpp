@@ -424,7 +424,7 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     std::vector<float> scores(T);
     // GQA groups: consecutive query heads share one KV head.
     const size_t group = std::max<size_t>(H / std::max<size_t>(hk, 1), 1);
-    // MLA score = q_nopeÂ·k_nope  +  q_ropeÂ·k_rope.
+    // MLA score = q_nopeÃ‚Â·k_nope  +  q_ropeÃ‚Â·k_rope.
     //
     // Dotting the whole per-head width is WRONG for MLA: q's rope slots would
     // be multiplied by K's no-rope slots. That cross-term made every position
