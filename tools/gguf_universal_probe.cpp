@@ -43,221 +43,10 @@
 #include "ggml-cpu.h"
 #include "ggml.h"
 
+#include "gguf_reader.h"
+
 namespace fs = std::filesystem;
 using namespace std::chrono;
-
-// ----------------------------------------------------------------------------
-// Minimal GGUF reader (universal: v1/v2/v3 headers, nested metadata arrays,
-// every ggml quant type including IQ*/BF16).
-// ----------------------------------------------------------------------------
-enum GgufV : uint32_t {
-    GF_UINT8 = 0, GF_INT8 = 1, GF_UINT16 = 2, GF_INT16 = 3,
-    GF_UINT32 = 4, GF_INT32 = 5, GF_FLOAT32 = 6, GF_BOOL = 7,
-    GF_STRING = 8, GF_ARRAY = 9, GF_UINT64 = 10, GF_INT64 = 11, GF_FLOAT64 = 12,
-};
-
-struct GgufTensor {
-    std::string name;
-    std::vector<uint64_t> dims;
-    uint32_t type = 0;
-    uint64_t rel_offset = 0;
-    size_t offset = 0;   // absolute byte offset in the file
-    size_t bytes = 0;
-    ggml_type gtype = GGML_TYPE_COUNT;
-};
-
-struct GgufMeta {
-    std::string key;
-    uint32_t type = 0;
-};
-
-class GgufFile {
-public:
-    std::string path;
-    const uint8_t* base = nullptr;
-    size_t size = 0;
-    size_t pos = 0;
-    uint32_t version = 0;
-    uint64_t tensor_count = 0;
-    uint64_t kv_count = 0;
-    std::vector<GgufTensor> tensors;
-
-    bool open(const std::string& p) {
-        path = p;
-#ifdef _WIN32
-        HANDLE h = CreateFileA(p.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (h == INVALID_HANDLE_VALUE) return false;
-        LARGE_INTEGER sz{};
-        if (!GetFileSizeEx(h, &sz)) { CloseHandle(h); return false; }
-        HANDLE m = CreateFileMappingA(h, nullptr, PAGE_READONLY, 0, 0, nullptr);
-        if (!m) { CloseHandle(h); return false; }
-        base = static_cast<const uint8_t*>(
-            MapViewOfFile(m, FILE_MAP_READ, 0, 0, static_cast<SIZE_T>(sz.QuadPart)));
-        map_ = m;
-        size = static_cast<size_t>(sz.QuadPart);
-#else
-        int fd = ::open(p.c_str(), O_RDONLY);
-        if (fd < 0) return false;
-        struct stat st{};
-        if (::fstat(fd, &st) != 0) { ::close(fd); return false; }
-        base = static_cast<const uint8_t*>(
-            ::mmap(nullptr, (size_t)st.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
-        size = (size_t)st.st_size;
-#endif
-        return base != nullptr;
-    }
-
-    void close() {
-#ifdef _WIN32
-        if (base) UnmapViewOfFile(base);
-        if (map_) CloseHandle(map_);
-#else
-        if (base) ::munmap(const_cast<uint8_t*>(base), size);
-#endif
-        base = nullptr;
-    }
-
-    bool need(size_t n) const { return pos + n <= size; }
-
-    template <typename T>
-    T readLE() {
-        if (!need(sizeof(T))) { pos = size; return T{}; }
-        T v{};
-        std::memcpy(&v, base + pos, sizeof(T));
-        pos += sizeof(T);
-        return v;
-    }
-    std::string readString() {
-        uint64_t n = readLE<uint64_t>();
-        if (!need((size_t)n)) { pos = size; return {}; }
-        std::string s(reinterpret_cast<const char*>(base + pos), (size_t)n);
-        pos += (size_t)n;
-        return s;
-    }
-    bool skipValue(uint32_t type, int depth) {
-        if (depth > 16) return false;
-        if (type == GF_STRING) { readString(); return pos <= size; }
-        if (type == GF_ARRAY) {
-            uint32_t et = readLE<uint32_t>();
-            uint64_t n = readLE<uint64_t>();
-            for (uint64_t i = 0; i < n; ++i)
-                if (!skipValue(et, depth + 1)) return false;
-            return pos <= size;
-        }
-        switch (type) {
-            case GF_UINT8: case GF_INT8: case GF_BOOL: pos += 1; break;
-            case GF_UINT16: case GF_INT16: pos += 2; break;
-            case GF_UINT32: case GF_INT32: case GF_FLOAT32: pos += 4; break;
-            case GF_UINT64: case GF_INT64: case GF_FLOAT64: pos += 8; break;
-            default: return false;
-        }
-        return need(0);
-    }
-
-    // Read one metadata value (scalars and the head of arrays only).
-    bool readScalarOrArrayHead(uint32_t type, std::string& out) {
-        if (type == GF_STRING) { out = readString(); return true; }
-        if (type == GF_UINT32) { out = std::to_string(readLE<uint32_t>()); return true; }
-        if (type == GF_INT32) { out = std::to_string(readLE<int32_t>()); return true; }
-        if (type == GF_FLOAT32) { out = std::to_string(readLE<float>()); return true; }
-        if (type == GF_BOOL) { out = readLE<uint8_t>() ? "true" : "false"; return true; }
-        if (type == GF_UINT64) { out = std::to_string(readLE<uint64_t>()); return true; }
-        if (type == GF_UINT16) { out = std::to_string(readLE<uint16_t>()); return true; }
-        if (type == GF_UINT64) { out = std::to_string(readLE<uint64_t>()); return true; }
-        if (type == GF_FLOAT64) { out = std::to_string(readLE<double>()); return true; }
-        if (type == GF_ARRAY) {
-            uint32_t et = readLE<uint32_t>();
-            uint64_t n = readLE<uint64_t>();
-            out = "array<" + std::to_string(et) + ">x" + std::to_string(n);
-            // skip the payload
-            for (uint64_t i = 0; i < n; ++i)
-                if (!skipValue(et, 1)) return false;
-            return true;
-        }
-        return skipValue(type, 0);
-    }
-
-    bool parse() {
-        if (!need(24)) return false;
-        uint32_t magic = readLE<uint32_t>();
-        if (magic != 0x46554747u) return false;
-        version = readLE<uint32_t>();
-        tensor_count = readLE<uint64_t>();
-        kv_count = readLE<uint64_t>();
-        if (!kv_count) return false;
-
-        // metadata (record a few known scalars; skip everything else)
-        meta_.clear();
-        for (uint64_t i = 0; i < kv_count; ++i) {
-            std::string key = readString();
-            if (pos >= size) return false;
-            uint32_t t = readLE<uint32_t>();
-            std::string val;
-            if (!readScalarOrArrayHead(t, val)) return false;
-            meta_[key] = val;
-        }
-        // tensor directory
-        std::map<std::string, uint64_t> pending;
-        for (uint64_t i = 0; i < tensor_count; ++i) {
-            GgufTensor t;
-            t.name = readString();
-            uint32_t nd = readLE<uint32_t>();
-            if (nd == 0 || nd > 8) return false;
-            t.dims.resize(nd);
-            for (auto& d : t.dims) d = readLE<uint64_t>();
-            t.type = readLE<uint32_t>();
-            t.rel_offset = readLE<uint64_t>();
-            t.gtype = (ggml_type)t.type;
-            tensors.push_back(t);
-            (void)pending;
-        }
-        data_start_ = align32(pos);
-        // absolute offsets
-        uint64_t max_end = 0;
-        for (auto& t : tensors) {
-            // Validate the GGUF type id against this ggml build before asking
-            // it for block geometry (ggml asserts on out-of-range ids).
-            if (t.type >= (uint32_t)GGML_TYPE_COUNT) {
-                unsupported_types_.insert(t.type);
-                continue;  // size/offset unknown; recorded and reported
-            }
-            const ggml_type_traits* tr = ggml_get_type_traits(t.gtype);
-            if (!tr || tr->type_size == 0) continue;
-            const int64_t blck = tr->blck_size > 0 ? tr->blck_size : 1;
-            uint64_t count = 1;
-            for (auto d : t.dims) count *= d;
-            t.bytes = (size_t)(count * (uint64_t)tr->type_size / (uint64_t)blck);
-            t.offset = data_start_ + (size_t)t.rel_offset;
-            const uint64_t end = (uint64_t)t.offset + t.bytes;
-            if (end <= (uint64_t)size && end > max_end) max_end = end;
-        }
-        return true;
-    }
-
-    const GgufTensor* find(const std::string& name) const {
-        for (const auto& t : tensors)
-            if (t.name == name) return &t;
-        return nullptr;
-    }
-    const std::string& meta(const std::string& key) const {
-        static const std::string empty;
-        auto it = meta_.find(key);
-        return it == meta_.end() ? empty : it->second;
-    }
-
-    std::map<std::string, std::string> meta_;
-    std::set<uint32_t> unsupported_types_;
-
-private:
-    static size_t align32(size_t v) { return (v + 31u) & ~size_t(31); }
-#ifdef _WIN32
-    HANDLE map_ = nullptr;
-#else
-    int fd_ = -1;
-#endif
-    size_t data_start_ = 0;
-};
 
 // ----------------------------------------------------------------------------
 // Architecture-agnostic tensor role classification.
@@ -331,19 +120,19 @@ struct ProbeResult {
 
 static ProbeResult probe_blob(const std::string& path, bool run_compute) {
     ProbeResult r;
-    GgufFile f;
+    gguf::File f;
     if (!f.open(path)) { r.error = "cannot open"; return r; }
-    struct Closer { GgufFile* f; ~Closer() { f->close(); } } closer{&f};
-    if (!f.parse()) { r.error = "GGUF parse failed"; return r; }
+    struct Closer { gguf::File* f; ~Closer() { f->close(); } } closer{&f};
+    if (!f.ok) { r.error = f.ok ? "" : "GGUF parse failed"; return r; }
     r.parsed = true;
-    r.unsupported_types = f.unsupported_types_;
-    r.arch = f.meta("general.architecture");
+    r.unsupported_types = f.unsupported_types;
+    r.arch = f.meta_of("general.architecture");
     r.tensors = f.tensor_count;
 
     // Architecture-agnostic shape discovery: any <arch>.<field> key works.
     const std::string arch = r.arch.empty() ? std::string("") : r.arch + ".";
     auto u64meta = [&](const std::string& suffix) -> uint64_t {
-        const std::string v = f.meta(arch + suffix);
+        const std::string v = f.meta_of(arch + suffix);
         return v.empty() ? 0 : strtoull(v.c_str(), nullptr, 10);
     };
     r.dim = u64meta("embedding_length");
@@ -386,7 +175,7 @@ static ProbeResult probe_blob(const std::string& path, bool run_compute) {
     //   s    : F32 vector dequantized from this model's own smallest tensor
     //   wide : a 2-D tensor of this model whose first dim equals n
     if (run_compute) {
-        const GgufTensor* src = nullptr;
+        const gguf::Tensor* src = nullptr;
         for (const auto& t : f.tensors) {
             if (t.type >= (uint32_t)GGML_TYPE_COUNT) continue;
             const ggml_type_traits* tr = ggml_get_type_traits(t.gtype);
@@ -396,7 +185,7 @@ static ProbeResult probe_blob(const std::string& path, bool run_compute) {
         }
         if (src) {
             const int64_t n = (int64_t)src->dims[0];
-            const GgufTensor* wide = nullptr;
+            const gguf::Tensor* wide = nullptr;
             for (const auto& t : f.tensors) {
                 if (t.type >= (uint32_t)GGML_TYPE_COUNT) continue;
                 if (t.dims.size() == 2 && t.dims[0] == (uint64_t)n &&
