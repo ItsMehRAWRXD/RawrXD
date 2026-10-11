@@ -424,7 +424,13 @@ if(Qt6_FOUND)
     add_subdirectory(src/orchestration)
     add_subdirectory(src/git)
     add_subdirectory(src/terminal)
-    add_subdirectory(src/paint)
+    # Paint shell is not present in this tree; report instead of failing.
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/paint/CMakeLists.txt")
+        add_subdirectory(src/paint)
+    else()
+        list(APPEND RAWRXD_QT_TARGETS RawrXDPaint)
+        message(STATUS "RawrXDPaint EXCLUDED: src/paint not present in this tree")
+    endif()
 else()
     list(APPEND RAWRXD_QT_TARGETS RawrXDOrchestration RawrXDGit RawrXDTerminal RawrXDPaint)
     message(STATUS "Qt-dependent orchestration modules EXCLUDED (Qt6 not installed): RawrXDOrchestration, RawrXDGit, RawrXDTerminal, RawrXDPaint")
@@ -444,185 +450,190 @@ if(MSVC)
         set(CMAKE_AUTOMOC ON)
 
         # Create a simple Qt console app for now
-        add_executable(RawrXD-QtShell 
-            src/qtapp/main_qt.cpp
-            src/qtapp/MainWindow.cpp
-            src/qtapp/MainWindow.h
-            # MainWindow_AI_Integration.cpp removed - duplicate definitions merged into MainWindow.cpp
-            src/qtapp/ActivityBar.cpp
-            src/qtapp/ActivityBar.h
-            src/qtapp/ActivityBarButton.cpp
-            src/qtapp/ActivityBarButton.h
-            src/qtapp/TerminalWidget.cpp
-            src/qtapp/TerminalWidget.h
-            src/qtapp/TerminalManager.cpp
-            src/qtapp/TerminalManager.h
-            src/gguf_loader.cpp        # Native C++ loader wrapped by gguf_loader_qt
-            src/gguf_vocab_resolver.cpp  # Universal vocab size detection for all GGUF models
-            include/gguf_loader.h      # Ensure header is in sources for proper dependency tracking
-            src/qtapp/gguf_loader.hpp  # Qt wrapper header
-            src/qtapp/gguf_loader.cpp  # Qt wrapper implementation
-            src/qtapp/inference_engine.hpp
-            src/qtapp/inference_engine.cpp
-            src/qtapp/transformer_inference.hpp
-            src/qtapp/transformer_inference.cpp
-            src/qtapp/bpe_tokenizer.hpp
-            src/qtapp/bpe_tokenizer.cpp
-            src/qtapp/sentencepiece_tokenizer.hpp
-            src/qtapp/sentencepiece_tokenizer.cpp
-            src/qtapp/vocabulary_loader.hpp
-            src/qtapp/vocabulary_loader.cpp
-            src/qtapp/gguf_server.hpp
-            src/qtapp/gguf_server.cpp
-            src/qtapp/inflate_deflate_cpp.cpp
-            src/qtapp/deflate_brutal_stub.cpp
-            src/qtapp/ai_switcher.hpp
-            src/qtapp/ai_switcher.cpp
-            src/qtapp/unified_backend.hpp
-            src/qtapp/unified_backend.cpp
-            src/qtapp/widgets/layer_quant_widget.hpp
-            src/qtapp/widgets/layer_quant_widget.cpp
-            src/qtapp/streaming_inference.hpp
-            src/qtapp/streaming_inference.cpp
-            src/qtapp/model_monitor.hpp
-            src/qtapp/model_monitor.cpp
-            src/qtapp/command_palette.hpp
-            src/qtapp/command_palette.cpp
-            src/qtapp/ai_chat_panel.hpp
-            src/qtapp/ai_chat_panel.cpp
-            src/qtapp/model_memory_hotpatch.hpp
-            src/qtapp/model_memory_hotpatch.cpp
-            src/qtapp/byte_level_hotpatcher.hpp
-            src/qtapp/byte_level_hotpatcher.cpp
-            src/qtapp/gguf_server_hotpatch.hpp
-            src/qtapp/gguf_server_hotpatch.cpp
-            src/qtapp/unified_hotpatch_manager.hpp
-            src/qtapp/unified_hotpatch_manager.cpp
-            src/qtapp/proxy_hotpatcher.hpp
-            src/qtapp/proxy_hotpatcher.cpp
-            # Production-ready enterprise components
-            src/qtapp/model_queue.hpp
-            src/qtapp/model_queue.cpp
-            src/qtapp/streaming_inference_api.hpp
-            src/qtapp/streaming_inference_api.cpp
-            src/qtapp/gpu_backend.hpp
-            src/qtapp/gpu_backend.cpp
-            src/qtapp/metrics_collector.hpp
-            src/qtapp/metrics_collector.cpp
-              src/qtapp/backup_manager.hpp
-              src/qtapp/backup_manager.cpp
-              # src/qtapp/compliance_logger.hpp  # TEMPORARILY DISABLED - Windows header enum conflicts
-              # src/qtapp/compliance_logger.cpp  # MOC issue RESOLVED but case expression errors remain
-              src/qtapp/sla_manager.hpp
-              src/qtapp/sla_manager.cpp
-            # ============================================================
-            # Phase 3: Production Enhancement Components (5,280 LOC)
-            # ============================================================
-            # src/qtapp/security_manager.cpp
-            # src/qtapp/security_manager.h
-            # src/qtapp/distributed_trainer.cpp    # Temporarily disabled due to compilation issues
-            # src/qtapp/distributed_trainer.h      # Temporarily disabled due to compilation issues
-            # ENHANCED Interpretability Panel - Production Ready (1,500+ LOC)
-            src/qtapp/interpretability_panel_enhanced.hpp
-            src/qtapp/interpretability_panel_enhanced.cpp
-            include/checkpoint_manager.h
-            src/qtapp/checkpoint_manager.cpp
-            include/tokenizer_selector.h
-            src/qtapp/tokenizer_selector.cpp
-            include/ci_cd_settings.h
-            src/qtapp/ci_cd_settings.cpp
-            # Project detection and metadata management
-            src/qtapp/utils/project_detector.cpp
-            # File and directory operations
-            src/qtapp/utils/qt_file_writer.cpp
-            src/qtapp/utils/qt_directory_manager.cpp
-            src/qtapp/settings_dialog.h
-            src/qtapp/settings_dialog.cpp
-            src/qtapp/settings_manager.h
-            src/qtapp/settings_manager.cpp
-            src/qtapp/advanced_checkpoint_manager.cpp
-            src/qtapp/advanced_checkpoint_manager.h
-            src/qtapp/tokenizer_language_selector.cpp
-            src/qtapp/tokenizer_language_selector.h
-            src/qtapp/ci_pipeline_manager.cpp
-            src/qtapp/ci_pipeline_manager.h
-            src/qtapp/codec.h
-            src/qtapp/codec.cpp
-            # ============================================================
-            # Phase 4: AI Code Assistant (Code Completion with MASM Transport)
-            # ============================================================
-            src/qtapp/ai_code_assistant.h
-            src/qtapp/ai_code_assistant.cpp
-            src/qtapp/ai_code_assistant_panel.h
-            src/qtapp/ai_code_assistant_panel.cpp
-            src/agent/agentic_puppeteer.hpp
-            src/agent/agentic_puppeteer.cpp
-            src/agent/agentic_failure_detector.hpp
-            src/agent/agentic_failure_detector.cpp
-            src/agent/agentic_copilot_bridge.hpp
-            src/agent/agentic_copilot_bridge.cpp
-            # ============================================================
-            # Hot-Patching System: Real-time hallucination detection & correction
-            # ============================================================
-            # src/agent/agent_hot_patcher.cpp
-            # src/agent/gguf_proxy_server.cpp
-            # src/agent/ide_agent_bridge_hot_patching_integration.cpp
-            src/llm_adapter/QuantBackend.cpp
-            src/llm_adapter/QuantBackend.h
-            src/agent/auto_bootstrap.cpp
-            src/qtapp/widgets/masm_editor_widget.cpp
-            src/qtapp/widgets/hotpatch_panel.cpp
-            src/qtapp/widgets/layer_quant_widget.cpp
-            # src/agent/zero_touch.cpp
-            # kernels/quant_ladder_avx2.cpp  # Conflicts with ggml quantization functions
-            # src/agent/planner.cpp
-            # src/agent/self_patch.cpp
-            # src/agent/sign_binary.cpp
-            # src/agent/release_agent.cpp
-            src/agent/meta_learn.cpp
-            src/agent/hot_reload.cpp
-            src/agent/auto_update.cpp
-            src/agent/planner.cpp
-            src/agent/self_patch.cpp
-            src/agent/release_agent.cpp
-            src/agent/zero_touch.cpp
-            src/agent/sentry_integration.hpp
-            src/agent/sentry_integration.cpp
-            src/agent/code_signer.hpp
-            src/agent/code_signer.cpp
-            src/agent/telemetry_collector.hpp
-            src/agent/telemetry_collector.cpp
-            # Agent execution and planning modules
-            src/agent/action_executor.hpp
-            src/agent/action_executor.cpp
-            src/agent/meta_planner.hpp
-            src/agent/meta_planner.cpp
-            # ============================================================
-            # Agentic resilience subsystems (no dependencies, pure C++20)
-            #   - adaptive_retry: circuit breakers + exponential backoff+jitter
-            #   - delegated_agents: agent lifecycle, resource quotas, messaging
-            #   - conflict_resolution: 3-way merge + semantic conflict handling
-            # ============================================================
-            src/agent/adaptive_retry.hpp
-            src/agent/adaptive_retry.cpp
-            src/agent/delegated_agents.hpp
-            src/agent/delegated_agents.cpp
-            src/agentic/conflict_resolution.hpp
-            src/agentic/conflict_resolution.cpp
-            # Project UI components
-            src/qtapp/widgets/project_explorer.cpp
-            src/qtapp/widgets/project_explorer.h
-            # Code quality improvement modules
-            src/utils/ErrorReporter.hpp
-            src/utils/ErrorReporter.cpp
-            src/model_loader/GGUFConstants.hpp
-            src/utils/Diagnostics.hpp
-            src/utils/Diagnostics.cpp
-            # Full Utility Tool Registry with Production Readiness
-            # TODO: Fix Windows RPC macro conflicts with nlohmann::json in tool_registry.cpp
-            # include/tool_registry.hpp
-            # src/tool_registry.cpp
-        )
+                    if(EXISTS "${CMAKE_SOURCE_DIR}/MainWindow_AI_Integration.cpp")
+            add_executable(RawrXD-QtShell 
+                        src/qtapp/main_qt.cpp
+                        src/qtapp/MainWindow.cpp
+                        src/qtapp/MainWindow.h
+                        # MainWindow_AI_Integration.cpp removed - duplicate definitions merged into MainWindow.cpp
+                        src/qtapp/ActivityBar.cpp
+                        src/qtapp/ActivityBar.h
+                        src/qtapp/ActivityBarButton.cpp
+                        src/qtapp/ActivityBarButton.h
+                        src/qtapp/TerminalWidget.cpp
+                        src/qtapp/TerminalWidget.h
+                        src/qtapp/TerminalManager.cpp
+                        src/qtapp/TerminalManager.h
+                        src/gguf_loader.cpp        # Native C++ loader wrapped by gguf_loader_qt
+                        src/gguf_vocab_resolver.cpp  # Universal vocab size detection for all GGUF models
+                        include/gguf_loader.h      # Ensure header is in sources for proper dependency tracking
+                        src/qtapp/gguf_loader.hpp  # Qt wrapper header
+                        src/qtapp/gguf_loader.cpp  # Qt wrapper implementation
+                        src/qtapp/inference_engine.hpp
+                        src/qtapp/inference_engine.cpp
+                        src/qtapp/transformer_inference.hpp
+                        src/qtapp/transformer_inference.cpp
+                        src/qtapp/bpe_tokenizer.hpp
+                        src/qtapp/bpe_tokenizer.cpp
+                        src/qtapp/sentencepiece_tokenizer.hpp
+                        src/qtapp/sentencepiece_tokenizer.cpp
+                        src/qtapp/vocabulary_loader.hpp
+                        src/qtapp/vocabulary_loader.cpp
+                        src/qtapp/gguf_server.hpp
+                        src/qtapp/gguf_server.cpp
+                        src/qtapp/inflate_deflate_cpp.cpp
+                        src/qtapp/deflate_brutal_stub.cpp
+                        src/qtapp/ai_switcher.hpp
+                        src/qtapp/ai_switcher.cpp
+                        src/qtapp/unified_backend.hpp
+                        src/qtapp/unified_backend.cpp
+                        src/qtapp/widgets/layer_quant_widget.hpp
+                        src/qtapp/widgets/layer_quant_widget.cpp
+                        src/qtapp/streaming_inference.hpp
+                        src/qtapp/streaming_inference.cpp
+                        src/qtapp/model_monitor.hpp
+                        src/qtapp/model_monitor.cpp
+                        src/qtapp/command_palette.hpp
+                        src/qtapp/command_palette.cpp
+                        src/qtapp/ai_chat_panel.hpp
+                        src/qtapp/ai_chat_panel.cpp
+                        src/qtapp/model_memory_hotpatch.hpp
+                        src/qtapp/model_memory_hotpatch.cpp
+                        src/qtapp/byte_level_hotpatcher.hpp
+                        src/qtapp/byte_level_hotpatcher.cpp
+                        src/qtapp/gguf_server_hotpatch.hpp
+                        src/qtapp/gguf_server_hotpatch.cpp
+                        src/qtapp/unified_hotpatch_manager.hpp
+                        src/qtapp/unified_hotpatch_manager.cpp
+                        src/qtapp/proxy_hotpatcher.hpp
+                        src/qtapp/proxy_hotpatcher.cpp
+                        # Production-ready enterprise components
+                        src/qtapp/model_queue.hpp
+                        src/qtapp/model_queue.cpp
+                        src/qtapp/streaming_inference_api.hpp
+                        src/qtapp/streaming_inference_api.cpp
+                        src/qtapp/gpu_backend.hpp
+                        src/qtapp/gpu_backend.cpp
+                        src/qtapp/metrics_collector.hpp
+                        src/qtapp/metrics_collector.cpp
+                          src/qtapp/backup_manager.hpp
+                          src/qtapp/backup_manager.cpp
+                          # src/qtapp/compliance_logger.hpp  # TEMPORARILY DISABLED - Windows header enum conflicts
+                          # src/qtapp/compliance_logger.cpp  # MOC issue RESOLVED but case expression errors remain
+                          src/qtapp/sla_manager.hpp
+                          src/qtapp/sla_manager.cpp
+                        # ============================================================
+                        # Phase 3: Production Enhancement Components (5,280 LOC)
+                        # ============================================================
+                        # src/qtapp/security_manager.cpp
+                        # src/qtapp/security_manager.h
+                        # src/qtapp/distributed_trainer.cpp    # Temporarily disabled due to compilation issues
+                        # src/qtapp/distributed_trainer.h      # Temporarily disabled due to compilation issues
+                        # ENHANCED Interpretability Panel - Production Ready (1,500+ LOC)
+                        src/qtapp/interpretability_panel_enhanced.hpp
+                        src/qtapp/interpretability_panel_enhanced.cpp
+                        include/checkpoint_manager.h
+                        src/qtapp/checkpoint_manager.cpp
+                        include/tokenizer_selector.h
+                        src/qtapp/tokenizer_selector.cpp
+                        include/ci_cd_settings.h
+                        src/qtapp/ci_cd_settings.cpp
+                        # Project detection and metadata management
+                        src/qtapp/utils/project_detector.cpp
+                        # File and directory operations
+                        src/qtapp/utils/qt_file_writer.cpp
+                        src/qtapp/utils/qt_directory_manager.cpp
+                        src/qtapp/settings_dialog.h
+                        src/qtapp/settings_dialog.cpp
+                        src/qtapp/settings_manager.h
+                        src/qtapp/settings_manager.cpp
+                        src/qtapp/advanced_checkpoint_manager.cpp
+                        src/qtapp/advanced_checkpoint_manager.h
+                        src/qtapp/tokenizer_language_selector.cpp
+                        src/qtapp/tokenizer_language_selector.h
+                        src/qtapp/ci_pipeline_manager.cpp
+                        src/qtapp/ci_pipeline_manager.h
+                        src/qtapp/codec.h
+                        src/qtapp/codec.cpp
+                        # ============================================================
+                        # Phase 4: AI Code Assistant (Code Completion with MASM Transport)
+                        # ============================================================
+                        src/qtapp/ai_code_assistant.h
+                        src/qtapp/ai_code_assistant.cpp
+                        src/qtapp/ai_code_assistant_panel.h
+                        src/qtapp/ai_code_assistant_panel.cpp
+                        src/agent/agentic_puppeteer.hpp
+                        src/agent/agentic_puppeteer.cpp
+                        src/agent/agentic_failure_detector.hpp
+                        src/agent/agentic_failure_detector.cpp
+                        src/agent/agentic_copilot_bridge.hpp
+                        src/agent/agentic_copilot_bridge.cpp
+                        # ============================================================
+                        # Hot-Patching System: Real-time hallucination detection & correction
+                        # ============================================================
+                        # src/agent/agent_hot_patcher.cpp
+                        # src/agent/gguf_proxy_server.cpp
+                        # src/agent/ide_agent_bridge_hot_patching_integration.cpp
+                        src/llm_adapter/QuantBackend.cpp
+                        src/llm_adapter/QuantBackend.h
+                        src/agent/auto_bootstrap.cpp
+                        src/qtapp/widgets/masm_editor_widget.cpp
+                        src/qtapp/widgets/hotpatch_panel.cpp
+                        src/qtapp/widgets/layer_quant_widget.cpp
+                        # src/agent/zero_touch.cpp
+                        # kernels/quant_ladder_avx2.cpp  # Conflicts with ggml quantization functions
+                        # src/agent/planner.cpp
+                        # src/agent/self_patch.cpp
+                        # src/agent/sign_binary.cpp
+                        # src/agent/release_agent.cpp
+                        src/agent/meta_learn.cpp
+                        src/agent/hot_reload.cpp
+                        src/agent/auto_update.cpp
+                        src/agent/planner.cpp
+                        src/agent/self_patch.cpp
+                        src/agent/release_agent.cpp
+                        src/agent/zero_touch.cpp
+                        src/agent/sentry_integration.hpp
+                        src/agent/sentry_integration.cpp
+                        src/agent/code_signer.hpp
+                        src/agent/code_signer.cpp
+                        src/agent/telemetry_collector.hpp
+                        src/agent/telemetry_collector.cpp
+                        # Agent execution and planning modules
+                        src/agent/action_executor.hpp
+                        src/agent/action_executor.cpp
+                        src/agent/meta_planner.hpp
+                        src/agent/meta_planner.cpp
+                        # ============================================================
+                        # Agentic resilience subsystems (no dependencies, pure C++20)
+                        #   - adaptive_retry: circuit breakers + exponential backoff+jitter
+                        #   - delegated_agents: agent lifecycle, resource quotas, messaging
+                        #   - conflict_resolution: 3-way merge + semantic conflict handling
+                        # ============================================================
+                        src/agent/adaptive_retry.hpp
+                        src/agent/adaptive_retry.cpp
+                        src/agent/delegated_agents.hpp
+                        src/agent/delegated_agents.cpp
+                        src/agentic/conflict_resolution.hpp
+                        src/agentic/conflict_resolution.cpp
+                        # Project UI components
+                        src/qtapp/widgets/project_explorer.cpp
+                        src/qtapp/widgets/project_explorer.h
+                        # Code quality improvement modules
+                        src/utils/ErrorReporter.hpp
+                        src/utils/ErrorReporter.cpp
+                        src/model_loader/GGUFConstants.hpp
+                        src/utils/Diagnostics.hpp
+                        src/utils/Diagnostics.cpp
+                        # Full Utility Tool Registry with Production Readiness
+                        # TODO: Fix Windows RPC macro conflicts with nlohmann::json in tool_registry.cpp
+                        # include/tool_registry.hpp
+                        # src/tool_registry.cpp
+                    )
+        else()
+            list(APPEND RAWRXD_QT_TARGETS RawrXD-QtShell)
+            message(STATUS "RawrXD-QtShell EXCLUDED: sources absent from this tree (MainWindow_AI_Integration.cpp, MainWindow.cpp, src/qtapp/deflate_brutal_stub.cpp, tool_registry.cpp)")
+        endif()
         
         add_library(self_test_gate STATIC
             src/agent/self_test.cpp
@@ -665,6 +676,7 @@ if(MSVC)
         endif()
 
         # Link Qt modules including WebSockets for swarm collaboration
+        if(TARGET RawrXD-QtShell)
         target_link_libraries(RawrXD-QtShell PRIVATE
             Qt6::Core
             Qt6::Gui
@@ -679,27 +691,38 @@ if(MSVC)
             masm_compiler_qt_lib
             cpu_inference_engine
         )        # Add include directories for QtShell to access both qtapp and main source headers
+        endif()
+        if(TARGET RawrXD-QtShell)
         target_include_directories(RawrXD-QtShell PRIVATE 
             ${CMAKE_SOURCE_DIR}/src
             ${CMAKE_SOURCE_DIR}/src/qtapp
             ${CMAKE_SOURCE_DIR}/include
         )
+        endif()
         
         # Conditionally link OpenSSL if found
         if(OpenSSL_FOUND)
+            if(TARGET RawrXD-QtShell)
             target_link_libraries(RawrXD-QtShell PRIVATE OpenSSL::Crypto OpenSSL::SSL)
+            endif()
         endif()
         
         # Conditionally link ZLIB if found
         if(ZLIB_FOUND)
+            if(TARGET RawrXD-QtShell)
             target_link_libraries(RawrXD-QtShell PRIVATE ZLIB::ZLIB)
+            endif()
         endif()
         
         # Try to find Qt WebSockets (optional for swarm editing)
         find_package(Qt6 COMPONENTS WebSockets QUIET)
         if(Qt6WebSockets_FOUND)
+            if(TARGET RawrXD-QtShell)
             target_link_libraries(RawrXD-QtShell PRIVATE Qt6::WebSockets)
+            endif()
+            if(TARGET RawrXD-QtShell)
             target_compile_definitions(RawrXD-QtShell PRIVATE HAVE_QT_WEBSOCKETS=1)
+            endif()
             message(STATUS "Qt WebSockets found - swarm collaboration enabled")
         else()
             message(STATUS "Qt WebSockets not found - swarm collaboration disabled")
@@ -707,11 +730,16 @@ if(MSVC)
         
         # Link ggml if available
         if(TARGET ggml)
+            if(TARGET RawrXD-QtShell)
             target_link_libraries(RawrXD-QtShell PRIVATE ggml_interface)
+            endif()
+            if(TARGET RawrXD-QtShell)
             target_compile_definitions(RawrXD-QtShell PRIVATE HAVE_GGML=1)
+            endif()
             message(STATUS "RawrXD-QtShell: ggml quantization enabled")
         endif()
         
+        if(TARGET RawrXD-QtShell)
         target_include_directories(RawrXD-QtShell PRIVATE 
             include 
             ${CMAKE_SOURCE_DIR}/src 
@@ -721,22 +749,31 @@ if(MSVC)
             ${CMAKE_SOURCE_DIR}/src/utils
             ${CMAKE_SOURCE_DIR}/src/model_loader
         )
+        endif()
         
+        if(TARGET RawrXD-QtShell)
         set_target_properties(RawrXD-QtShell PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
             WIN32_EXECUTABLE TRUE
             AUTOMOC ON
             AUTOMOC_MOC_OPTIONS "-I${CMAKE_SOURCE_DIR}/include;-I${CMAKE_CURRENT_SOURCE_DIR}/src/qtapp"
         )
+        endif()
 
         if(MSVC)
+            if(TARGET RawrXD-QtShell)
             target_compile_options(RawrXD-QtShell PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+            endif()
         else()
+            if(TARGET RawrXD-QtShell)
             target_compile_options(RawrXD-QtShell PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+            endif()
         endif()
         
         # Automatic DLL deployment for RawrXD-QtShell
+        if(TARGET RawrXD-QtShell)
         deploy_runtime_dependencies(RawrXD-QtShell)
+        endif()
         
         # ---------- Production Feature Test: Real component testing ----------
         if(RAWRXD_BUILD_TESTS)
@@ -1025,70 +1062,92 @@ if(MSVC)
         # Supports: x86-64, x86-32, ARM64, WASM targets
         # Output: exe, dll, lib, obj, asm, ir formats
         # ============================================================
-        add_executable(RawrXD-Compiler
-            src/cli/rawrxd_cli_compiler.cpp
-        )
-        
-        target_link_libraries(RawrXD-Compiler PRIVATE 
-            Qt6::Core 
-            Qt6::Concurrent
-        )
-        
-        target_include_directories(RawrXD-Compiler PRIVATE 
-            include 
-            ${CMAKE_SOURCE_DIR}/src 
-            ${CMAKE_SOURCE_DIR}/src/compiler
-        )
-        
-        set_target_properties(RawrXD-Compiler PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-            WIN32_EXECUTABLE FALSE
-            OUTPUT_NAME "rawrxd"
-        )
-        
-        if(MSVC)
-            target_compile_options(RawrXD-Compiler PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+        if(EXISTS "${CMAKE_SOURCE_DIR}/src/cli/rawrxd_cli_compiler.cpp")
+            add_executable(RawrXD-Compiler
+                src/cli/rawrxd_cli_compiler.cpp
+            )
+            target_link_libraries(RawrXD-Compiler PRIVATE
+                Qt6::Core
+                Qt6::Widgets
+                Qt6::Network
+                Qt6::Concurrent
+            )
+            target_include_directories(RawrXD-Compiler PRIVATE
+                include
+                ${CMAKE_SOURCE_DIR}/src
+                ${CMAKE_SOURCE_DIR}/src/compiler
+            )
+            set_target_properties(RawrXD-Compiler PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+                WIN32_EXECUTABLE FALSE
+                OUTPUT_NAME "rawrxd"
+            )
+            if(MSVC)
+                target_compile_options(RawrXD-Compiler PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+            else()
+                target_compile_options(RawrXD-Compiler PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+            endif()
+            message(STATUS "RawrXD-Compiler: CLI compiler tool enabled (output: rawrxd.exe)")
         else()
-            target_compile_options(RawrXD-Compiler PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+            list(APPEND RAWRXD_QT_TARGETS RawrXD-Compiler)
+            message(STATUS "RawrXD-Compiler EXCLUDED: src/cli/rawrxd_cli_compiler.cpp absent from this tree")
         endif()
-        
-        message(STATUS "Î“Â£Ã´ RawrXD-Compiler: CLI compiler tool enabled (output: rawrxd.exe)")
 
         # ============================================================
         # RawrXD Compiler Library: Qt-integrated compiler for IDE use
         # ============================================================
-        add_library(rawrxd_compiler_qt STATIC
-            src/compiler/rawrxd_compiler_qt.cpp
-        )
-        
-        target_link_libraries(rawrxd_compiler_qt PUBLIC 
-            Qt6::Core 
-            Qt6::Widgets
-            Qt6::Concurrent
-        )
-        
-        target_include_directories(rawrxd_compiler_qt PUBLIC 
-            ${CMAKE_SOURCE_DIR}/src/compiler
-            ${CMAKE_SOURCE_DIR}/include
-        )
-        
-        if(MSVC)
-            target_compile_options(rawrxd_compiler_qt PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+        if(EXISTS "${CMAKE_SOURCE_DIR}/src/compiler/rawrxd_compiler_qt.cpp")
+            add_library(rawrxd_compiler_qt STATIC
+                src/compiler/rawrxd_compiler_qt.cpp
+            )
+            target_link_libraries(rawrxd_compiler_qt PUBLIC
+                Qt6::Core
+                Qt6::Widgets
+                Qt6::Concurrent
+            )
+            target_include_directories(rawrxd_compiler_qt PUBLIC
+                ${CMAKE_SOURCE_DIR}/src/compiler
+                ${CMAKE_SOURCE_DIR}/include
+            )
+            if(MSVC)
+                target_compile_options(rawrxd_compiler_qt PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+            else()
+                target_compile_options(rawrxd_compiler_qt PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+            endif()
+            set_target_properties(rawrxd_compiler_qt PROPERTIES AUTOMOC ON)
+            message(STATUS "rawrxd_compiler_qt: Qt compiler library enabled")
+
+            # Add the MASM writers (present in some trees only)
+            if(EXISTS "${CMAKE_SOURCE_DIR}/src/masm/CMakeLists.txt")
+                add_subdirectory(src/masm)
+                if(TARGET rawrxd_compiler_qt)
+                    target_link_libraries(rawrxd_compiler_qt PRIVATE masm_writers)
+                endif()
+                if(TARGET RawrXD-Compiler)
+                    target_link_libraries(RawrXD-Compiler PRIVATE masm_writers)
+                endif()
+            else()
+                list(APPEND RAWRXD_QT_TARGETS masm_writers)
+                message(STATUS "masm_writers EXCLUDED: src/masm/CMakeLists.txt not present in this tree")
+            endif()
         else()
-            target_compile_options(rawrxd_compiler_qt PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+            list(APPEND RAWRXD_QT_TARGETS rawrxd_compiler_qt)
+            message(STATUS "rawrxd_compiler_qt EXCLUDED: src/compiler/rawrxd_compiler_qt.cpp absent from this tree")
         endif()
         
-        set_target_properties(rawrxd_compiler_qt PROPERTIES
-            AUTOMOC ON
-        )
-        
-        message(STATUS "Î“Â£Ã´ rawrxd_compiler_qt: Qt compiler library enabled")
-        
         # Add the MASM writers
-        add_subdirectory(src/masm)
-        target_link_libraries(rawrxd_compiler_qt PRIVATE masm_writers)
-        target_link_libraries(RawrXD-Compiler PRIVATE masm_writers)
-
+        if(EXISTS "${CMAKE_SOURCE_DIR}/src/masm/CMakeLists.txt")
+            add_subdirectory(src/masm)
+            if(TARGET rawrxd_compiler_qt)
+                target_link_libraries(rawrxd_compiler_qt PRIVATE masm_writers)
+            endif()
+            if(TARGET RawrXD-Compiler)
+                target_link_libraries(RawrXD-Compiler PRIVATE masm_writers)
+            endif()
+        else()
+            list(APPEND RAWRXD_QT_TARGETS masm_writers)
+            message(STATUS "masm_writers EXCLUDED: src/masm/CMakeLists.txt not present in this tree")
+        endif()
     else()
         message(STATUS "Qt6 not found, skipping RawrXD-QtShell")
     endif()
@@ -1098,88 +1157,94 @@ endif()
 
 # Win32-based IDE (MSVC only to match Qt)
 if(MSVC AND RAWRXD_BUILD_WIN32IDE AND Qt6_FOUND)
-    add_executable(RawrXD-Win32IDE 
-        src/win32app/main_win32.cpp
-        src/win32app/Win32IDE.cpp
-        src/win32app/Win32IDE.h
-        src/win32app/Win32IDE_Sidebar.cpp
-        src/win32app/Win32IDE_VSCodeUI.cpp
-        src/win32app/Win32IDE_PowerShellPanel.cpp
-        src/win32app/Win32IDE_PowerShell.cpp
-        src/win32app/Win32IDE_Logger.cpp
-        src/win32app/TransparentRenderer.cpp
-        src/win32app/TransparentRenderer.h
-        src/win32app/Win32TerminalManager.cpp
-        src/win32app/Win32TerminalManager.h
-        src/win32app/Win32IDE_FileOps.cpp
-        src/win32app/Win32IDE_Commands.cpp
-        src/win32app/Win32IDE_Debugger.cpp
-        src/win32app/Win32IDE_AgenticBridge.h
-        src/win32app/Win32IDE_AgenticBridge.cpp
-        src/win32app/Win32IDE_AgentCommands.cpp
-        src/win32app/Win32IDE_Autonomy.h
-        src/win32app/Win32IDE_Autonomy.cpp
-        src/gguf_loader.cpp
-        src/gguf_vocab_resolver.cpp
-        src/streaming_gguf_loader.cpp
-        src/utils/ErrorReporter.cpp
-        src/utils/Diagnostics.cpp
-        # Benchmark menu integration (headers required for Q_OBJECT moc)
-        include/benchmark_menu_widget.hpp
-        include/benchmark_runner.hpp
-        src/benchmark_menu_widget.cpp
-        src/benchmark_runner.cpp
-        $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
-        $<$<BOOL:${ENABLE_COPILOT}>:src/win32app/Win32IDE_CopilotIntegration.cpp>
-        $<$<BOOL:${ENABLE_COPILOT}>:src/win32app/CopilotStreaming.cpp>
-        # Agentic navigation integration
-        src/agentic/AgenticNavigator.cpp
-        src/agentic/AgenticCopilotIntegration.cpp
-        # Qt-based IDE Main Window
-        src/ide_main_window.h
-        src/ide_main_window.cpp
-        src/autonomous_widgets.h
-        src/autonomous_widgets.cpp
-        # Model Router Components
-        # Universal Model Router Integration (Cloud AI + Local GGUF)
-        src/universal_model_router.cpp
-        src/cloud_api_client.cpp
-        src/model_interface.cpp
-        # Model Router Qt Adapter for IDE Integration
-        src/model_router_adapter.h
-        src/model_router_adapter.cpp
-        # Model Router GUI Widget
-        src/model_router_widget.h
-        src/model_router_widget.cpp
-        # Cloud Settings Dialog
-        src/cloud_settings_dialog.h
-        src/cloud_settings_dialog.cpp
-        # Metrics Dashboard
-        src/metrics_dashboard.h
-        src/metrics_dashboard.cpp
-        # Model Router Console
-        src/model_router_console.h
-        src/model_router_console.cpp
-        # Autonomous IDE Components (missing implementations for linker)
-        src/autonomous_model_manager.cpp
-        src/autonomous_feature_engine.cpp
-        src/intelligent_codebase_engine.cpp
-        src/hybrid_cloud_manager.cpp
-        src/error_recovery_system.cpp
-        src/performance_monitor.cpp
-        # Real-time completion and inference
-        src/real_time_completion_engine.cpp
-        src/qtapp/inference_engine.cpp
-        # Additional tokenizer/inference support
-        src/qtapp/bpe_tokenizer.cpp
-        src/qtapp/sentencepiece_tokenizer.cpp
-        src/qtapp/vocabulary_loader.cpp
-        src/qtapp/transformer_inference.cpp
-        src/qtapp/gguf_loader.cpp
-    )
+            if(EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/Win32IDE_CopilotIntegration.cpp")
+        add_executable(RawrXD-Win32IDE 
+                src/win32app/main_win32.cpp
+                src/win32app/Win32IDE.cpp
+                src/win32app/Win32IDE.h
+                src/win32app/Win32IDE_Sidebar.cpp
+                src/win32app/Win32IDE_VSCodeUI.cpp
+                src/win32app/Win32IDE_PowerShellPanel.cpp
+                src/win32app/Win32IDE_PowerShell.cpp
+                src/win32app/Win32IDE_Logger.cpp
+                src/win32app/TransparentRenderer.cpp
+                src/win32app/TransparentRenderer.h
+                src/win32app/Win32TerminalManager.cpp
+                src/win32app/Win32TerminalManager.h
+                src/win32app/Win32IDE_FileOps.cpp
+                src/win32app/Win32IDE_Commands.cpp
+                src/win32app/Win32IDE_Debugger.cpp
+                src/win32app/Win32IDE_AgenticBridge.h
+                src/win32app/Win32IDE_AgenticBridge.cpp
+                src/win32app/Win32IDE_AgentCommands.cpp
+                src/win32app/Win32IDE_Autonomy.h
+                src/win32app/Win32IDE_Autonomy.cpp
+                src/gguf_loader.cpp
+                src/gguf_vocab_resolver.cpp
+                src/streaming_gguf_loader.cpp
+                src/utils/ErrorReporter.cpp
+                src/utils/Diagnostics.cpp
+                # Benchmark menu integration (headers required for Q_OBJECT moc)
+                include/benchmark_menu_widget.hpp
+                include/benchmark_runner.hpp
+                src/benchmark_menu_widget.cpp
+                src/benchmark_runner.cpp
+                $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
+                $<$<BOOL:${ENABLE_COPILOT}>:src/win32app/Win32IDE_CopilotIntegration.cpp>
+                $<$<BOOL:${ENABLE_COPILOT}>:src/win32app/CopilotStreaming.cpp>
+                # Agentic navigation integration
+                src/agentic/AgenticNavigator.cpp
+                src/agentic/AgenticCopilotIntegration.cpp
+                # Qt-based IDE Main Window
+                src/ide_main_window.h
+                src/ide_main_window.cpp
+                src/autonomous_widgets.h
+                src/autonomous_widgets.cpp
+                # Model Router Components
+                # Universal Model Router Integration (Cloud AI + Local GGUF)
+                src/universal_model_router.cpp
+                src/cloud_api_client.cpp
+                src/model_interface.cpp
+                # Model Router Qt Adapter for IDE Integration
+                src/model_router_adapter.h
+                src/model_router_adapter.cpp
+                # Model Router GUI Widget
+                src/model_router_widget.h
+                src/model_router_widget.cpp
+                # Cloud Settings Dialog
+                src/cloud_settings_dialog.h
+                src/cloud_settings_dialog.cpp
+                # Metrics Dashboard
+                src/metrics_dashboard.h
+                src/metrics_dashboard.cpp
+                # Model Router Console
+                src/model_router_console.h
+                src/model_router_console.cpp
+                # Autonomous IDE Components (missing implementations for linker)
+                src/autonomous_model_manager.cpp
+                src/autonomous_feature_engine.cpp
+                src/intelligent_codebase_engine.cpp
+                src/hybrid_cloud_manager.cpp
+                src/error_recovery_system.cpp
+                src/performance_monitor.cpp
+                # Real-time completion and inference
+                src/real_time_completion_engine.cpp
+                src/qtapp/inference_engine.cpp
+                # Additional tokenizer/inference support
+                src/qtapp/bpe_tokenizer.cpp
+                src/qtapp/sentencepiece_tokenizer.cpp
+                src/qtapp/vocabulary_loader.cpp
+                src/qtapp/transformer_inference.cpp
+                src/qtapp/gguf_loader.cpp
+            )
+    else()
+        list(APPEND RAWRXD_QT_TARGETS RawrXD-Win32IDE)
+        message(STATUS "RawrXD-Win32IDE EXCLUDED: sources absent from this tree (src/win32app/Win32IDE_CopilotIntegration.cpp, src/win32app/CopilotStreaming.cpp)")
     
-    target_link_libraries(RawrXD-Win32IDE PRIVATE
-        comctl32
+            target_link_libraries(RawrXD-Win32IDE PRIVATE
+    endif()
+    if(TARGET RawrXD-Win32IDE)
+    
         d3d11
         dxgi
         dcomp
@@ -1234,6 +1299,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE AND Qt6_FOUND)
     if(ENABLE_COPILOT)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE ENABLE_COPILOT=1)
         message(STATUS "Copilot integration enabled for Win32 IDE")
+    endif()
     endif()
 else()
     list(APPEND RAWRXD_QT_TARGETS RawrXD-Win32IDE)

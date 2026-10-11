@@ -127,194 +127,394 @@ jobs:
   # them and these jobs fail at build time with that reason until native
   # component tests are added. Do not silence them; replace them.
   # ============================================================
-  # Component Test: VoiceProcessor
+
   # ============================================================
+
+  # ============================================================
+
   test-voice-processor:
     runs-on: windows-latest
-    needs: test-suite
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v1.3
-
-
-      - name: Build VoiceProcessor Tests
+      - name: Install Qt via aqtinstall
         shell: pwsh
         run: |
-          mkdir build_voice -Force
-          cd build_voice
-          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
-          cmake --build . --config Release --target voice_processor_test -j4
-          if ($LASTEXITCODE -ne 0) { exit 1 }
+          pip install aqtinstall
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 `
+            -m qtmultimedia qtsql qttools -O "$PWD\Qt"
+          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
+          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
-      - name: Run VoiceProcessor Tests
+      - name: Download Google Test
         shell: pwsh
         run: |
-          cd build_voice
-          .\bin\Release\voice_processor_test.exe --gtest_shuffle
+          if (!(Test-Path "3rdparty/googletest")) {
+            New-Item -ItemType Directory -Path 3rdparty -Force | Out-Null
+            Invoke-WebRequest -Uri "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip" -OutFile googletest.zip
+            Expand-Archive -Path googletest.zip -DestinationPath 3rdparty
+            Rename-Item -Path "3rdparty/googletest-1.14.0" -NewName "googletest"
+            Remove-Item googletest.zip
+          }
+      - name: Configure CMake (Component Tests)
+        shell: pwsh
+        run: |
+          $BuildDir = "build_voice-processor"
+          if (Test-Path $BuildDir) { Remove-Item $BuildDir -Recurse -Force }
+          mkdir $BuildDir
+          cd $BuildDir
+          cmake -DCMAKE_BUILD_TYPE=Release `
+                -DRAWRXD_BUILD_TESTS=ON `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
+                -A x64 `
+                ..
           if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Build voice_processor_test Tests
+        shell: pwsh
+        run: |
+          cmake --build build_voice-processor --config Release --target voice_processor_test -j4
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Run voice_processor_test Tests
+        shell: pwsh
+        run: |
+          $exe = "build_voice-processor/bin/Release/voice_processor_test.exe"
+          if (Test-Path $exe) {
+            & $exe
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          } else {
+            Write-Error "voice_processor_test.exe not found at $exe"
+            exit 1
+          }
 
   # ============================================================
   # Component Test: AIMergeResolver
   # ============================================================
   test-ai-merge-resolver:
     runs-on: windows-latest
-    needs: test-suite
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v1.3
-
-
-      - name: Build AIMergeResolver Tests
+      - name: Install Qt via aqtinstall
         shell: pwsh
         run: |
-          mkdir build_merge -Force
-          cd build_merge
-          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
-          cmake --build . --config Release --target ai_merge_resolver_test -j4
-          if ($LASTEXITCODE -ne 0) { exit 1 }
+          pip install aqtinstall
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 `
+            -m qtmultimedia qtsql qttools -O "$PWD\Qt"
+          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
+          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
-      - name: Run AIMergeResolver Tests
+      - name: Download Google Test
         shell: pwsh
         run: |
-          cd build_merge
-          .\bin\Release\ai_merge_resolver_test.exe --gtest_shuffle
-          if ($LASTEXITCODE -ne 0) { exit 1 }
-
-  # ============================================================
-  # Component Test: SemanticDiffAnalyzer
-  # ============================================================
-  test-semantic-diff:
-    runs-on: windows-latest
-    needs: test-suite
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v1.3
-
-
-      - name: Build SemanticDiffAnalyzer Tests
+          if (!(Test-Path "3rdparty/googletest")) {
+            New-Item -ItemType Directory -Path 3rdparty -Force | Out-Null
+            Invoke-WebRequest -Uri "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip" -OutFile googletest.zip
+            Expand-Archive -Path googletest.zip -DestinationPath 3rdparty
+            Rename-Item -Path "3rdparty/googletest-1.14.0" -NewName "googletest"
+            Remove-Item googletest.zip
+          }
+      - name: Configure CMake (Component Tests)
         shell: pwsh
         run: |
-          mkdir build_semantic -Force
-          cd build_semantic
-          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
-          cmake --build . --config Release --target semantic_diff_analyzer_test -j4
+          $BuildDir = "build_ai-merge-resolver"
+          if (Test-Path $BuildDir) { Remove-Item $BuildDir -Recurse -Force }
+          mkdir $BuildDir
+          cd $BuildDir
+          cmake -DCMAKE_BUILD_TYPE=Release `
+                -DRAWRXD_BUILD_TESTS=ON `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
+                -A x64 `
+                ..
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
-      - name: Run SemanticDiffAnalyzer Tests
+      - name: Build ai_merge_resolver_test Tests
         shell: pwsh
         run: |
-          cd build_semantic
-          .\bin\Release\semantic_diff_analyzer_test.exe --gtest_shuffle
+          cmake --build build_ai-merge-resolver --config Release --target ai_merge_resolver_test -j4
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
-  # ============================================================
-  # Component Test: ZeroRetentionManager (GDPR)
-  # ============================================================
-  test-zero-retention:
-    runs-on: windows-latest
-    needs: test-suite
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v1.3
-
-
-      - name: Build ZeroRetentionManager Tests
+      - name: Run ai_merge_resolver_test Tests
         shell: pwsh
         run: |
-          mkdir build_retention -Force
-          cd build_retention
-          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
-          cmake --build . --config Release --target zero_retention_manager_test -j4
-          if ($LASTEXITCODE -ne 0) { exit 1 }
-
-      - name: Run ZeroRetentionManager Tests
-        shell: pwsh
-        run: |
-          cd build_retention
-          .\bin\Release\zero_retention_manager_test.exe --gtest_shuffle
-          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $exe = "build_ai-merge-resolver/bin/Release/ai_merge_resolver_test.exe"
+          if (Test-Path $exe) {
+            & $exe
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          } else {
+            Write-Error "ai_merge_resolver_test.exe not found at $exe"
+            exit 1
+          }
 
   # ============================================================
   # Component Test: SandboxedTerminal
   # ============================================================
   test-sandboxed-terminal:
     runs-on: windows-latest
-    needs: test-suite
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v1.3
-
-
-      - name: Build SandboxedTerminal Tests
+      - name: Install Qt via aqtinstall
         shell: pwsh
         run: |
-          mkdir build_sandbox -Force
-          cd build_sandbox
-          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
-          cmake --build . --config Release --target sandboxed_terminal_test -j4
-          if ($LASTEXITCODE -ne 0) { exit 1 }
+          pip install aqtinstall
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 `
+            -m qtmultimedia qtsql qttools -O "$PWD\Qt"
+          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
+          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
-      - name: Run SandboxedTerminal Tests
+      - name: Download Google Test
         shell: pwsh
         run: |
-          cd build_sandbox
-          .\bin\Release\sandboxed_terminal_test.exe --gtest_shuffle
+          if (!(Test-Path "3rdparty/googletest")) {
+            New-Item -ItemType Directory -Path 3rdparty -Force | Out-Null
+            Invoke-WebRequest -Uri "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip" -OutFile googletest.zip
+            Expand-Archive -Path googletest.zip -DestinationPath 3rdparty
+            Rename-Item -Path "3rdparty/googletest-1.14.0" -NewName "googletest"
+            Remove-Item googletest.zip
+          }
+      - name: Configure CMake (Component Tests)
+        shell: pwsh
+        run: |
+          $BuildDir = "build_sandboxed-terminal"
+          if (Test-Path $BuildDir) { Remove-Item $BuildDir -Recurse -Force }
+          mkdir $BuildDir
+          cd $BuildDir
+          cmake -DCMAKE_BUILD_TYPE=Release `
+                -DRAWRXD_BUILD_TESTS=ON `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
+                -A x64 `
+                ..
           if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Build sandboxed_terminal_test Tests
+        shell: pwsh
+        run: |
+          cmake --build build_sandboxed-terminal --config Release --target sandboxed_terminal_test -j4
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Run sandboxed_terminal_test Tests
+        shell: pwsh
+        run: |
+          $exe = "build_sandboxed-terminal/bin/Release/sandboxed_terminal_test.exe"
+          if (Test-Path $exe) {
+            & $exe
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          } else {
+            Write-Error "sandboxed_terminal_test.exe not found at $exe"
+            exit 1
+          }
+
+  # ============================================================
+  # Component Test: SemanticDiffAnalyzer
+  # ============================================================
+  test-semantic-diff:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Qt via aqtinstall
+        shell: pwsh
+        run: |
+          pip install aqtinstall
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 `
+            -m qtmultimedia qtsql qttools -O "$PWD\Qt"
+          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
+          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+
+      - name: Download Google Test
+        shell: pwsh
+        run: |
+          if (!(Test-Path "3rdparty/googletest")) {
+            New-Item -ItemType Directory -Path 3rdparty -Force | Out-Null
+            Invoke-WebRequest -Uri "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip" -OutFile googletest.zip
+            Expand-Archive -Path googletest.zip -DestinationPath 3rdparty
+            Rename-Item -Path "3rdparty/googletest-1.14.0" -NewName "googletest"
+            Remove-Item googletest.zip
+          }
+      - name: Configure CMake (Component Tests)
+        shell: pwsh
+        run: |
+          $BuildDir = "build_semantic-diff"
+          if (Test-Path $BuildDir) { Remove-Item $BuildDir -Recurse -Force }
+          mkdir $BuildDir
+          cd $BuildDir
+          cmake -DCMAKE_BUILD_TYPE=Release `
+                -DRAWRXD_BUILD_TESTS=ON `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
+                -A x64 `
+                ..
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Build semantic_diff_analyzer_test Tests
+        shell: pwsh
+        run: |
+          cmake --build build_semantic-diff --config Release --target semantic_diff_analyzer_test -j4
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Run semantic_diff_analyzer_test Tests
+        shell: pwsh
+        run: |
+          $exe = "build_semantic-diff/bin/Release/semantic_diff_analyzer_test.exe"
+          if (Test-Path $exe) {
+            & $exe
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          } else {
+            Write-Error "semantic_diff_analyzer_test.exe not found at $exe"
+            exit 1
+          }
 
   # ============================================================
   # Component Test: ModelRegistry
   # ============================================================
   test-model-registry:
     runs-on: windows-latest
-    needs: test-suite
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v1.3
-
-
-      - name: Build ModelRegistry Tests
+      - name: Install Qt via aqtinstall
         shell: pwsh
         run: |
-          mkdir build_registry -Force
-          cd build_registry
-          cmake -DCMAKE_BUILD_TYPE=Release -A x64 ..
-          cmake --build . --config Release --target model_registry_test -j4
-          if ($LASTEXITCODE -ne 0) { exit 1 }
+          pip install aqtinstall
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 `
+            -m qtmultimedia qtsql qttools -O "$PWD\Qt"
+          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
+          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
-      - name: Run ModelRegistry Tests
+      - name: Download Google Test
         shell: pwsh
         run: |
-          cd build_registry
-          .\bin\Release\model_registry_test.exe --gtest_shuffle
+          if (!(Test-Path "3rdparty/googletest")) {
+            New-Item -ItemType Directory -Path 3rdparty -Force | Out-Null
+            Invoke-WebRequest -Uri "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip" -OutFile googletest.zip
+            Expand-Archive -Path googletest.zip -DestinationPath 3rdparty
+            Rename-Item -Path "3rdparty/googletest-1.14.0" -NewName "googletest"
+            Remove-Item googletest.zip
+          }
+      - name: Configure CMake (Component Tests)
+        shell: pwsh
+        run: |
+          $BuildDir = "build_model-registry"
+          if (Test-Path $BuildDir) { Remove-Item $BuildDir -Recurse -Force }
+          mkdir $BuildDir
+          cd $BuildDir
+          cmake -DCMAKE_BUILD_TYPE=Release `
+                -DRAWRXD_BUILD_TESTS=ON `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
+                -A x64 `
+                ..
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
+      - name: Build model_registry_test Tests
+        shell: pwsh
+        run: |
+          cmake --build build_model-registry --config Release --target model_registry_test -j4
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Run model_registry_test Tests
+        shell: pwsh
+        run: |
+          $exe = "build_model-registry/bin/Release/model_registry_test.exe"
+          if (Test-Path $exe) {
+            & $exe
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          } else {
+            Write-Error "model_registry_test.exe not found at $exe"
+            exit 1
+          }
+
   # ============================================================
-  # Summary & Status Check
+  # Component Test: ZeroRetentionManager
   # ============================================================
+  test-zero-retention:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Qt via aqtinstall
+        shell: pwsh
+        run: |
+          pip install aqtinstall
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 `
+            -m qtmultimedia qtsql qttools -O "$PWD\Qt"
+          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
+          echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
+          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+
+      - name: Download Google Test
+        shell: pwsh
+        run: |
+          if (!(Test-Path "3rdparty/googletest")) {
+            New-Item -ItemType Directory -Path 3rdparty -Force | Out-Null
+            Invoke-WebRequest -Uri "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip" -OutFile googletest.zip
+            Expand-Archive -Path googletest.zip -DestinationPath 3rdparty
+            Rename-Item -Path "3rdparty/googletest-1.14.0" -NewName "googletest"
+            Remove-Item googletest.zip
+          }
+      - name: Configure CMake (Component Tests)
+        shell: pwsh
+        run: |
+          $BuildDir = "build_zero-retention"
+          if (Test-Path $BuildDir) { Remove-Item $BuildDir -Recurse -Force }
+          mkdir $BuildDir
+          cd $BuildDir
+          cmake -DCMAKE_BUILD_TYPE=Release `
+                -DRAWRXD_BUILD_TESTS=ON `
+                -DENABLE_VULKAN=OFF `
+                -DGGML_VULKAN=OFF `
+                -A x64 `
+                ..
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Build zero_retention_manager_test Tests
+        shell: pwsh
+        run: |
+          cmake --build build_zero-retention --config Release --target zero_retention_manager_test -j4
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Run zero_retention_manager_test Tests
+        shell: pwsh
+        run: |
+          $exe = "build_zero-retention/bin/Release/zero_retention_manager_test.exe"
+          if (Test-Path $exe) {
+            & $exe
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          } else {
+            Write-Error "zero_retention_manager_test.exe not found at $exe"
+            exit 1
+          }
+
+  # ============================================================
+
   test-summary:
     runs-on: windows-latest
     needs: [
