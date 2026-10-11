@@ -357,14 +357,18 @@ int main(int argc, char* argv[]) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
     bool verifyDequant = false;
+    std::string tokenIdsArg;
     std::string model, prompt = "def add(a, b):\n    return a + b\n\n# Multiply two numbers\ndef multiply(a, b):";
     int tokens = 8;
     bool forceCpu = false;
+    std::string logitsJson;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         if (a == "--model" && i + 1 < argc) model = argv[++i];
         else if (a == "--tokens" && i + 1 < argc) tokens = std::atoi(argv[++i]);
         else if (a == "--force-cpu") forceCpu = true;
+        else if (a == "--dump-logits" && i + 1 < argc) logitsJson = argv[++i];
+        else if (a == "--token-ids" && i + 1 < argc) tokenIdsArg = argv[++i];
         else if (a == "--verify-dequant") verifyDequant = true;
     else if (a == "--prompt" && i + 1 < argc) prompt = argv[++i];
         else { std::printf("unknown arg %s\n", a.c_str()); return 1; }
@@ -447,6 +451,22 @@ int main(int argc, char* argv[]) {
         std::printf("  round-trip: \"%s\"\n", back.c_str());
         Check(!enc.ids.empty(), "prompt produced token ids");
         Check(back == prompt, "decode(encode(prompt)) == prompt");
+    }
+
+    if (!tokenIdsArg.empty()) {
+        std::vector<int32_t> ids;
+        const char* q = tokenIdsArg.c_str();
+        while (*q) {
+            char* end = nullptr;
+            long v = std::strtol(q, &end, 10);
+            if (end == q) { ++q; continue; }
+            ids.push_back((int32_t)v);
+            q = end;
+        }
+        if (ids.empty()) { std::fprintf(stderr, "no ids parsed\n"); return 1; }
+        enc.ids = ids;
+        enc.ok = true;
+        std::printf("using %zu explicit token ids\n", ids.size());
     }
 
     // ---- [3] chat template ------------------------------------------------
@@ -547,6 +567,25 @@ int main(int argc, char* argv[]) {
             bool tokParity = true;
             for (size_t s = 0; s < gpuT.size(); ++s)
                 if (gpuT[s] != refT[s]) tokParity = false;
+            if (!logitsJson.empty()) {
+                FILE* f = std::fopen(logitsJson.c_str(), "wb");
+                if (f) {
+                    std::fprintf(f, "{\"positions\": %zu, \"argmax\": [", gpuT.size());
+                    for (size_t s = 0; s < gpuT.size(); ++s)
+                        std::fprintf(f, "%s%u", s ? "," : "", gpuT[s]);
+                    std::fprintf(f, "], \"logits\": [");
+                    for (size_t s = 0; s < gpuL.size(); ++s) {
+                        if (s) std::fprintf(f, ",");
+                        std::fprintf(f, "[");
+                        const size_t n = std::min<size_t>(gpuL[s].size(), 8);
+                        for (size_t i = 0; i < n; ++i)
+                            std::fprintf(f, "%s%.8f", i ? "," : "", gpuL[s][i]);
+                        std::fprintf(f, "]");
+                    }
+                    std::fprintf(f, "]}\n");
+                    std::fclose(f);
+                }
+            }
             Check(tokParity, "argmax token matches at EVERY position");
 
             std::printf("  gpu tokens:");
