@@ -76,6 +76,9 @@ public:
     // Helpers
     uint8_t* ParseMetadata(uint8_t* ptr, uint64_t count);
     uint8_t* ParseTensorInfo(uint8_t* ptr, Tensor& t);
+    // Copy `dim` floats of tensor `name`, row `row`, into x (CPU float cache).
+    // Returns true when the tensor exists and the row is fully available.
+    bool GetTensorRow(const char* name, size_t row, float* x, size_t dim);
     void LoadTensorAsync(Tensor& t);
     void DequantAndUploadQ4_0(Tensor& t, void* blocks, size_t N);
     void UploadF32(Tensor& t, void* data, size_t N);

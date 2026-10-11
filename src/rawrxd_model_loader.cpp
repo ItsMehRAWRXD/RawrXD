@@ -1,4 +1,5 @@
 #include "rawrxd_model_loader.h"
+#include "gguf_loader.h"  // struct GGUFHeader (see the note in rawrxd_model_loader.h)
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
@@ -57,7 +58,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     ptr += sizeof(GGUFHeader);
     
     // Skip metadata (simple parser to just skip it)
-    ptr = ParseMetadata(ptr, hdr->kv_count);
+    ptr = ParseMetadata(ptr, hdr->metadata_kv_count);
     
     // 3. Tensor info array
     std::vector<Tensor> tensorInfos;
@@ -410,4 +411,24 @@ float* RawrXDModelLoader::GetTensor(const std::string& name) {
          for(size_t i=0; i<ne; i++) t.cpuFloatData[i] = ((float)(i%16)) * scale;
     }
     return t.cpuFloatData.data();
+}
+
+// Copy one row (dim floats) of a tensor's CPU float cache into x.
+// Returns false when the tensor is unknown, has no float cache, or the row
+// is out of range. Layout is row-major over the tensor's trailing dimension.
+bool RawrXDModelLoader::GetTensorRow(const char* name, size_t row, float* x, size_t dim)
+{
+    if (!name || !x) return false;
+    auto it = tensors.find(name);
+    if (it == tensors.end()) return false;
+    Tensor& t = it->second;
+    if (t.cpuFloatData.empty()) return false;
+    const size_t row_len = t.dims.empty() ? t.cpuFloatData.size()
+                                          : static_cast<size_t>(t.dims.back());
+    const size_t rows = t.cpuFloatData.size() / (row_len ? row_len : 1);
+    if (row_len == 0 || row >= rows) return false;
+    const size_t n = dim < row_len ? dim : row_len;
+    const float* src = t.cpuFloatData.data() + row * row_len;
+    for (size_t i = 0; i < n; ++i) x[i] = src[i];
+    return true;
 }

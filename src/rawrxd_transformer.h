@@ -35,9 +35,12 @@ private:
     VkDevice device;
     RawrXDModelLoader* loader;
     
-    // KV Cache
-    std::vector<float> kv_cache_k;
-    std::vector<float> kv_cache_v;
+// KV Cache
+std::vector<float> kv_cache_k;
+std::vector<float> kv_cache_v;
+// Absolute position recorded for each (layer, slot) pair, or -1 when empty.
+// Used by ForwardBatch to reject stale KV slots across repeated batches.
+std::vector<int> kv_cache_pos;
     
     // B015 decode carry state
     bool m_b015DecodeBypass = false;
