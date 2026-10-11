@@ -313,8 +313,13 @@ void GgufReader::layerTensors(int blockIndex, std::vector<const GgufTensor*>& ou
     out.clear();
     const std::string p = "blk." + std::to_string(blockIndex) + "." + suffix;
     for (const auto& kv : tensors_) {
-        if (kv.first.rfind(p, 0) == 0 && (kv.first.size() == p.size() ||
-                                          kv.first[p.size()] == '.'))
+        if (kv.first.rfind(p, 0) != 0) continue;
+        // With a non-empty suffix, only accept exact matches or a deeper
+        // path, so "blk.0.attn" does not also match "blk.0.attnq.weight".
+        // With an empty suffix p already ends at the separator, so every
+        // tensor of the block is accepted.
+        if (!*suffix) { out.push_back(&kv.second); continue; }
+        if (kv.first.size() == p.size() || kv.first[p.size()] == '.')
             out.push_back(&kv.second);
     }
     std::sort(out.begin(), out.end(), [](const GgufTensor* a, const GgufTensor* b) {
