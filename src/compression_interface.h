@@ -115,6 +115,9 @@ private:
     bool is_initialized_ = false;
     uint64_t total_decompressed_ = 0;
     uint64_t total_compressed_input_ = 0;
+    uint64_t total_decompressed_bytes_ = 0;
+    uint64_t compression_calls_ = 0;
+    uint64_t decompression_calls_ = 0;
 };
 
 /**
