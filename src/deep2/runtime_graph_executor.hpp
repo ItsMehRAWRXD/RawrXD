@@ -39,6 +39,8 @@ enum class OpKind : uint8_t {
     EmbeddingLookup = 0, RmsNorm, Linear, Attention, MlaDecompress,
     Router, TopK, MoEExecute, ResidualAdd, LmHead,
     SsmScan,      // Mamba2 selective scan (nemotron_h, qwen3-next)
+    Publish,      // copy an arena value to a named one (residual bookkeeping)
+    SwiGLU,       // out = silu(gate) * up, the dense-FFN activation
     Unsupported
 };
 

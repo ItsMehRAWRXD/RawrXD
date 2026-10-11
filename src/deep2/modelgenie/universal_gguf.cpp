@@ -293,6 +293,7 @@ struct Reader {
     // read the weight bytes as if they were names.
     bool ParseTensors(size_t tensor_count, std::vector<TensorRec>& out, std::string& err) {
         uint64_t max_end = 0;
+        std::vector<TensorRec> ordered;   // directory order, before offset fixup
         for (uint64_t i = 0; i < tensor_count; ++i) {
             if (!Need(4)) { err = "tensor directory truncated"; return false; }
             TensorRec t;
@@ -310,23 +311,71 @@ struct Reader {
             if (!tr || tr->blck_size == 0) {
                 // Preserve the record (so the histogram shows the type) but the
                 // caller cannot dequantise it.
+                //
+                // This used to `break`, which truncated the directory walk and
+                // dropped every remaining tensor: a model whose third tensor is
+                // an unknown type ended up with 2 tensors and failed Bind() with
+                // "missing token_embd.weight". Continuing is correct because each
+                // directory entry carries its own rel_offset, so advancing the
+                // walk does not depend on knowing this tensor's byte size.
                 t.bytes = 0;
-                out.push_back(t);
-                // Do NOT fail: a model may contain a type we cannot read yet.
-                // Continue by estimating nothing; offset advance is impossible,
-                // so we must stop here to keep the directory walk consistent.
-                break;
+                ordered.push_back(t);
+                continue;
             }
-            uint64_t blocks = (t.dims[0] + static_cast<uint64_t>(tr->blck_size) - 1)
-                              / static_cast<uint64_t>(tr->blck_size);
-            for (uint32_t d = 1; d < nd; ++d) blocks *= t.dims[d];
-            t.bytes = static_cast<size_t>(blocks * static_cast<uint64_t>(tr->type_size));
-            out.push_back(t);
+            // Byte sizes are DERIVED FROM THE FILE, not from the block table.
+            //
+            // Estimating bytes as ceil(dims[0]/blck)*prod(dims[1..])*type_size
+            // is wrong for packed expert tensors: blk.52.ffn_down_exps.weight
+            // estimates 21.7 GB against a 23.7 GB file (32x too large), and the
+            // ingest then refuses the model outright. The directory already gives
+            // every tensor its own rel_offset, so the gap to the NEXT tensor
+            // offset is the exact byte span - measured, with no block-size guess.
+            t.bytes = 0;   // provisional; fixed from offset deltas below
+            ordered.push_back(t);
+        }
+
+        // ---- Byte spans from on-disk offset deltas ----
+        // Sort by rel_offset, then each tensor's span is the gap to the next.
+        // The final tensor runs to the end of the data section, so it is bounded
+        // by the file size rather than a nonexistent successor. This is what makes
+        // the inventory exact without any per-type table.
+        const size_t data_start = (pos + (geom - 1)) & ~static_cast<size_t>(geom - 1);
+        std::vector<size_t> order(ordered.size());
+        for (size_t k = 0; k < ordered.size(); ++k) order[k] = k;
+        std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
+            return ordered[a].rel_offset < ordered[b].rel_offset;
+        });
+        const uint64_t payloadEstimate = (size > data_start) ? (size - data_start) : 0;
+        for (size_t k = 0; k < order.size(); ++k) {
+            TensorRec& t = ordered[order[k]];
+            if (k + 1 < order.size()) {
+                const uint64_t next = ordered[order[k + 1]].rel_offset;
+                t.bytes = (next > t.rel_offset) ? (size_t)(next - t.rel_offset) : 0;
+            } else {
+                t.bytes = (payloadEstimate > t.rel_offset)
+                    ? (size_t)(payloadEstimate - t.rel_offset) : 0;
+            }
             if (t.rel_offset + t.bytes > max_end) max_end = t.rel_offset + t.bytes;
         }
-        const size_t data_start = (pos + (geom - 1)) & ~static_cast<size_t>(geom - 1);
+        out = ordered;
         if (data_start + max_end > size) {
-            err = "payload exceeds file size";
+            // Name the offending tensor rather than only refusing: a wrong
+            // blck_size for a type inflates the byte estimate, and the only way
+            // to identify the type is to report the worst offender.
+            std::string worstName;
+            uint64_t worstEnd = 0;
+            for (const auto& t : out) {
+                const uint64_t e = t.rel_offset + (uint64_t)t.bytes;
+                if (e > worstEnd) {
+                    worstEnd = e;
+                    worstName = t.name + " type=" + std::to_string(t.gguf_type) +
+                                " bytes=" + std::to_string(t.bytes) +
+                                " rel=" + std::to_string(t.rel_offset);
+                }
+            }
+            err = "payload exceeds file size: data_start=" + std::to_string(data_start) +
+                  " max_end=" + std::to_string(max_end) + " file=" + std::to_string(size) +
+                  " worst=" + worstName;
             return false;
         }
         for (auto& t : out) {
@@ -689,11 +738,22 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             }
         }
 
-        // residual add
+        // residual add. The block input is published under a REAL SSA name
+        // ("resid_in") rather than the literal "<hidden>": ResidualAdd resolves
+        // its `a` operand from the arena by name, and "<hidden>" is never
+        // published, so naming it that way silently produced a zero residual
+        // (a transformer with no residuals still yields finite, deterministic,
+        // kernel-consistent logits - exactly the degenerate-output signature).
         {
             GraphOp o;
+            o.op = Op::Publish; o.block = (int32_t)b;
+            o.a = "<hidden>";
+            o.out = "resid_in";
+            g.ops.push_back(o);
+
+            o = GraphOp{};
             o.op = Op::ResidualAdd; o.block = (int32_t)b;
-            o.a = "<hidden>"; o.b = "attn_proj"; o.out = "resid1";
+            o.a = "resid_in"; o.b = "attn_proj"; o.out = "resid1";
             g.ops.push_back(o);
         }
         // ffn norm
@@ -726,7 +786,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             g.ops.push_back(o);
         } else {
             const bool hasShared = s.kind == ArchKind::DeepSeekMLA;
-            // dense ffn (or the shared expert that MLA models always keep)
+            // Dense FFN: gate/up projections, then SwiGLU, then down.
             for (Role r : {Role::FfnGate, Role::FfnUp}) {
                 GraphOp o;
                 o.op = Op::Linear; o.block = (int32_t)b;
@@ -736,8 +796,14 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             }
             {
                 GraphOp o;
+                o.op = Op::SwiGLU; o.block = (int32_t)b;
+                o.a = "gate"; o.b = "up"; o.out = "swiglu";
+                g.ops.push_back(o);
+            }
+            {
+                GraphOp o;
                 o.op = Op::Linear; o.block = (int32_t)b;
-                o.a = "gate.up"; o.b = name(Role::FfnDown); o.out = "ffn_out";
+                o.a = "swiglu"; o.b = name(Role::FfnDown); o.out = "ffn_out";
                 g.ops.push_back(o);
             }
             (void)hasShared;

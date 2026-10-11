@@ -118,6 +118,8 @@ const char* OpKindName(OpKind k) {
         case OpKind::TopK: return "TopK";
         case OpKind::MoEExecute: return "MoEExecute";
         case OpKind::ResidualAdd: return "ResidualAdd";
+        case OpKind::Publish: return "Publish";
+        case OpKind::SwiGLU: return "SwiGLU";
         case OpKind::LmHead: return "LmHead";
 
         default: return "Unsupported";
@@ -179,7 +181,10 @@ bool Executor::Bind(const Universal::IngestReport& report) {
             case Universal::Op::TopK: in.op = OpKind::TopK; break;
             case Universal::Op::MoEExecute: in.op = OpKind::MoEExecute; break;
             case Universal::Op::ResidualAdd: in.op = OpKind::ResidualAdd; break;
+            case Universal::Op::Publish: in.op = OpKind::Publish; break;
+            case Universal::Op::SwiGLU: in.op = OpKind::SwiGLU; break;
             case Universal::Op::LmHead: in.op = OpKind::LmHead; break;
+            case Universal::Op::SsmScan: in.op = OpKind::SsmScan; break;
 
             default: in.op = OpKind::Unsupported; break;
         }
@@ -328,24 +333,60 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
 bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                            const std::vector<float>& k, const std::vector<float>& v,
                            std::vector<float>& y, size_t position, std::string& err) {
+    // Attention covering BOTH families present in the zoo:
+    //
+    //   DeepSeek MLA: heads=16, q per head = 192 (128 nope + 64 rope),
+    //                 k per head = 192, v per head = 128.
+    //   GQA (llama/  : heads = H, heads_kv = hk, q per head = embd/H,
+    //   qwen/granite  k and v per head = embd/H.
+    //
+    // The MLA case is detected by the groupless K/V width matching key_length.
     if (spec_.heads == 0) { err = "attention: head_count 0"; return false; }
+    if (in.block < 0 || (size_t)in.block >= kv_k_.size()) {
+        err = "attention: bad block";
+        return false;
+    }
     const size_t H = (size_t)spec_.heads;
     const size_t hk = (size_t)(spec_.heads_kv ? spec_.heads_kv : spec_.heads);
-    const size_t D = spec_.embd / H;
-    if (D == 0 || q.size() < spec_.embd || k.size() < spec_.embd / hk * hk) {
-        // allow v of different width (MLA value length)
+    const size_t kl = (size_t)spec_.key_length;
+    const size_t vl = (size_t)spec_.value_length;
+    const size_t qPerHead = q.size() / std::max<size_t>(H, 1);
+    const size_t kPerHead = k.size() / std::max<size_t>(H, 1);
+    const size_t vPerHead = v.size() / std::max<size_t>(H, 1);
+    if (qPerHead == 0 || kPerHead == 0 || vPerHead == 0) {
+        err = "attention: empty per-head width";
+        return false;
     }
-    if (in.block < 0 || (size_t)in.block >= kv_k_.size()) { err = "attention: bad block"; return false; }
+    const bool isMla = (kPerHead == kl && vPerHead == vl && kl > vl);
+    const size_t D = isMla ? qPerHead : (spec_.embd / H);
+    if (D == 0) { err = "attention: head dim 0"; return false; }
+    const size_t qD = isMla ? qPerHead : D;      // dim of the dot product
 
-    // RoPE on q and k (standard rotate-half with freq_base^(-2i/d)).
-    auto rope = [&](std::vector<float>& t, size_t heads, size_t head_dim) {
-        if (head_dim == 0 || (head_dim % 2) != 0) return;
+    // RoPE: the ROTARY slice only. In MLA that is the last qk_rope dims of q
+    // and of k; in a GQA model it is the whole head. Rotating the entire head
+    // (the earlier behaviour) mixes positional information into the no-rope
+    // channels and corrupts the score function.
+    const size_t ropeDims = isMla ? (qD - (qD - (kl - (kl - vl)))) : D;
+    const size_t ropeOff = isMla ? (kPerHead - (kPerHead > 0 ? 0 : 0)) : 0;
+    (void)ropeDims;
+    (void)ropeOff;
+    // DeepSeek: qk_nope = key_length - value_length; the rope part follows.
+    const size_t qk_nope = isMla ? (kl - vl) : 0;
+    const size_t q_rope_dim = isMla ? (qD - qk_nope) : D;
+    const size_t k_rope_dim = isMla ? (kPerHead - qk_nope) : D;
+    const size_t ropeLen = std::min(q_rope_dim, k_rope_dim);
+    const size_t qRopeOff = isMla ? qk_nope : 0;
+    const size_t kRopeOff = isMla ? qk_nope : 0;
+
+    auto rope = [&](std::vector<float>& t, size_t heads, size_t headDim,
+                    size_t ropeLen, size_t ropeOff) {
         for (size_t h = 0; h < heads; ++h) {
-            float* p = t.data() + h * head_dim;
-            for (size_t i = 0; i < head_dim; i += 2) {
-                const double theta =
-                    (double)position *
-                    std::pow((double)spec_.rope_freq_base, -2.0 * double(i) / double(head_dim));
+            float* p = t.data() + h * headDim + ropeOff;
+            const size_t lim = std::min(ropeLen, headDim - std::min(ropeOff, headDim));
+            for (size_t i = 0; i + 1 < lim; i += 2) {
+                const double theta = (double)position *
+                    std::pow((double)spec_.rope_freq_base,
+                             -2.0 * double(i) / double(std::max<size_t>(lim, 1)));
                 const float c = (float)std::cos(theta), s = (float)std::sin(theta);
                 const float a = p[i], b = p[i + 1];
                 p[i] = a * c - b * s;
@@ -353,14 +394,15 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             }
         }
     };
-    std::vector<float> qr = q, kr = k;
-    rope(qr, H, D);
-    rope(kr, hk, k.size() / std::max<size_t>(hk, 1));
 
-    // append to this layer's KV cache
+    std::vector<float> qr = q, kr = k;
+    rope(qr, H, qPerHead, ropeLen, qRopeOff);
+    rope(kr, H, kPerHead, ropeLen, kRopeOff);
+
+    // Append to this layer's KV cache.
     auto& K = kv_k_[(size_t)in.block];
     auto& V = kv_v_[(size_t)in.block];
-    const size_t kvW = k.size();
+    const size_t kvW = kr.size();
     const size_t vW = v.size();
     if (K.size() < (position + 1) * kvW) K.resize((position + 1) * kvW, 0.0f);
     if (V.size() < (position + 1) * vW) V.resize((position + 1) * vW, 0.0f);
@@ -368,24 +410,27 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     std::memcpy(V.data() + position * vW, v.data(), vW * sizeof(float));
 
     const size_t T = position + 1;
-    const size_t vD = vW / std::max<size_t>(hk, 1);
-    y.assign(spec_.embd, 0.0f);
+    // Output width per head is the value width, then interleaved by head.
+    const size_t outW = vPerHead;
+    y.assign(H * outW, 0.0f);
     std::vector<float> scores(T);
+    // GQA groups: consecutive query heads share one KV head.
+    const size_t group = std::max<size_t>(H / std::max<size_t>(hk, 1), 1);
     for (size_t h = 0; h < H; ++h) {
-        const size_t kg = h / std::max<size_t>((H / hk) ? (H / hk) : 1, 1);
-        const float* qp = qr.data() + h * D;
+        const size_t g = isMla ? h : (h / group);
+        const float* qp = qr.data() + h * qPerHead;
         for (size_t t = 0; t < T; ++t) {
-            const float* kp = K.data() + t * kvW + kg * (kvW / hk);
+            const float* kp = K.data() + t * kvW + g * kPerHead;
             double acc = 0.0;
-            for (size_t d = 0; d < D && d < kvW / hk; ++d) acc += double(qp[d]) * double(kp[d]);
-            scores[t] = (float)(acc / std::sqrt((double)std::max<size_t>(D, 1)));
+            for (size_t d = 0; d < qD; ++d) acc += double(qp[d]) * double(kp[d]);
+            scores[t] = (float)(acc / std::sqrt((double)std::max<size_t>(qD, 1)));
         }
         SoftmaxVec(scores);
-        float* op = y.data() + h * D;
+        float* op = y.data() + h * outW;
         for (size_t t = 0; t < T; ++t) {
-            const float* vp = V.data() + t * vW + kg * vD;
+            const float* vp = V.data() + t * vW + g * vPerHead;
             const float s = scores[t];
-            for (size_t d = 0; d < D && d < vD; ++d) op[d] += s * vp[d];
+            for (size_t d = 0; d < outW; ++d) op[d] += s * vp[d];
         }
     }
     return true;
@@ -528,58 +573,99 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
 bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
                                std::vector<float>& k_out, std::vector<float>& v_out,
                                size_t position, std::string& err) {
-    // MLA: latent = x @ kv_a_mqa ; k = latent @ kv_b (lo); v = latent @ kv_b (hi)
+    // DeepSeek MLA (multi-head latent attention), per the model's own shapes:
+    //   attn_kv_a_mqa.weight : [embd, kv_lora_rank + qk_rope]
+    //   attn_kv_a_norm.weight: [kv_lora_rank]
+    //   attn_kv_b.weight     : [kv_lora_rank, heads * (qk_nope + v_head)]
+    //
+    //   1. latentFull = x @ kv_a_mqa            -> kv_lora_rank + qk_rope
+    //   2. latent     = RMSNorm(latent[:lora], attn_kv_a_norm)
+    //   3. kvb        = latent @ kv_b           -> heads * (qk_nope + v_head)
+    //   4. per head h: k_nope = kvb[h*(nope+v) .. +nope]
+    //                    v    = kvb[h*(nope+v)+nope .. +v]
+    //   5. ropePart   = latentFull[lora : lora+qk_rope]   (shared by all heads)
+    //   6. k[h]       = [k_nope | ropePart]  -> key_length
+    //      v[h]       = v                     -> value_length
     if (mla.a < 0 || mla.b < 0 || mla.c < 0) { err = "mla: missing weights"; return false; }
     const TensorRec& kvA = tensors_[(size_t)mla.a];
     const TensorRec& norm = tensors_[(size_t)mla.b];
     const TensorRec& kvB = tensors_[(size_t)mla.c];
+
     const size_t lora = (size_t)std::max<uint64_t>(spec_.kv_lora_rank, 1);
-    const size_t kl = (size_t)spec_.key_length;    // 512 = 384 rope + 128 nope
+    const size_t kl = (size_t)spec_.key_length;    // 192 = 128 nope + 64 rope
     const size_t vl = (size_t)spec_.value_length;  // 128
+    const size_t H = (size_t)std::max<uint64_t>(spec_.heads, 1);
+    const size_t rope = (lora + (kl - lora)) > lora ? (size_t)0 : 0;  // fixed below
+    (void)rope;
+
+    // Shcarved straight from the recorded tensor dims, never guessed.
+    const size_t kvA_in = kvA.dims.empty() ? 0 : (size_t)kvA.dims[0];
+    const size_t kvA_out = kvA.dims.size() > 1 ? (size_t)kvA.dims[1] : 0;
+    const size_t kvB_in = kvB.dims.empty() ? 0 : (size_t)kvB.dims[0];
+    const size_t kvB_out = kvB.dims.size() > 1 ? (size_t)kvB.dims[1] : 0;
+    const size_t nope = (kl > vl) ? (kl - vl) : kl;      // archive exact split
+    (void)nope;
+    const size_t qk_rope = (kvA_out > lora) ? (kvA_out - lora) : 0;
+    const size_t per_head = kvB_out / std::max<size_t>(H, 1);   // nope + v
+    const size_t qk_nope = (per_head > vl) ? (per_head - vl) : 0;
+    if (kvA_in == 0 || kvB_in == 0 || qk_rope == 0 || qk_nope == 0) {
+        err = "mla: tensor shapes incompatible with spec";
+        return false;
+    }
 
     std::vector<float> A, B, nw;
-    DequantPrefix(kvA, A, kvA.bytes / 4);
-    DequantPrefix(kvB, B, kvB.bytes / 4);
-    DequantPrefix(norm, nw, 65536);
-    if (A.empty() || B.empty()) { err = "mla: dequant short"; return false; }
-    const size_t aIn = (size_t)kvA.dims[0];
-    const size_t aOut = kvA.dims.size() > 1 ? (size_t)kvA.dims[1] : lora;
-    // The dequantised prefix may be smaller than the whole tensor, so only
-    // process the rows that are actually present.
-    const size_t usableA = std::min(A.size(), aIn * aOut);
-    const size_t rowsA = aIn ? (usableA / aIn) : 0;
-    if (rowsA == 0) { err = "mla: no usable rows"; return false; }
-    std::vector<float> latent(rowsA, 0.0f);
-    for (size_t j = 0; j < rowsA; ++j) {
-        double acc = 0.0;
-        const size_t lim = std::min(aIn, x.size());
-        for (size_t i = 0; i < lim; ++i)
-            acc += double(A[j * aIn + i]) * double(x[i]);
-        latent[j] = (float)acc;
+    DequantPrefix(kvA, A, kvA_in * kvA_out);
+    DequantPrefix(kvB, B, kvB_in * kvB_out);
+    DequantPrefix(norm, nw, lora);
+    if (A.size() < kvA_in * kvA_out || B.size() < kvB_in * kvB_out) {
+        err = "mla: weight dequant short";
+        return false;
     }
-    const size_t bIn = (size_t)kvB.dims[0];
-    const size_t bOut = kvB.dims.size() > 1 ? (size_t)kvB.dims[1] : 0;
-    const size_t usableB = std::min(B.size(), bIn * bOut);
-    const size_t rowsB = bIn ? (usableB / bIn) : 0;
-    if (rowsB == 0) { err = "mla: kv_b unusable"; return false; }
-    k_out.assign(kl, 0.0f);
-    v_out.assign(vl, 0.0f);
-    for (size_t j = 0; j < kl && j < rowsB; ++j) {
+
+    // 1. latentFull = x @ kv_a_mqa
+    std::vector<float> latentFull(kvA_out, 0.0f);
+    const size_t inL = std::min(kvA_in, x.size());
+    for (size_t j = 0; j < kvA_out; ++j) {
         double acc = 0.0;
-        const size_t lim = std::min(lora, std::min(bIn, latent.size()));
-        for (size_t i = 0; i < lim; ++i)
-            acc += double(B[j * bIn + i]) * double(latent[i]);
-        k_out[j] = (float)acc;
+        const float* col = A.data() + j * kvA_in;
+        for (size_t i = 0; i < inL; ++i) acc += double(col[i]) * double(x[i]);
+        latentFull[j] = (float)acc;
     }
-    // V occupies the tail of kv_b's output dimension in DeepSeek MLA.
-    for (size_t j = 0; j < vl; ++j) {
-        const size_t col = kl + j;
-        if (col >= rowsB) break;
+
+    // 2. RMSNorm the latent part ONLY. This is the step the earlier version
+    //    skipped, which left the latent unnormalised and destroyed attention.
+    std::vector<float> latent(lora, 0.0f);
+    {
+        double ss = 0.0;
+        for (size_t i = 0; i < lora; ++i) ss += double(latentFull[i]) * double(latentFull[i]);
+        const float scale = 1.0f / std::sqrt(float(ss / double(lora)) + 1e-6f);
+        for (size_t i = 0; i < lora; ++i)
+            latent[i] = latentFull[i] * (i < nw.size() ? nw[i] : 1.0f) * scale;
+    }
+
+    // 3. kvb = latent @ kv_b   (kv_b_in must be the lora rank)
+    if (kvB_in != lora) { err = "mla: kv_b input != kv_lora_rank"; return false; }
+    std::vector<float> kvb(kvB_out, 0.0f);
+    for (size_t j = 0; j < kvB_out; ++j) {
         double acc = 0.0;
-        const size_t lim = std::min(lora, std::min(bIn, latent.size()));
-        for (size_t i = 0; i < lim; ++i)
-            acc += double(B[col * bIn + i]) * double(latent[i]);
-        v_out[j] = (float)acc;
+        const float* col = B.data() + j * kvB_in;
+        for (size_t i = 0; i < lora; ++i) acc += double(col[i]) * double(latent[i]);
+        kvb[j] = (float)acc;
+    }
+
+    // 4-6. assemble per-head k and v
+    k_out.assign(H * kl, 0.0f);
+    v_out.assign(H * vl, 0.0f);
+    for (size_t h = 0; h < H; ++h) {
+        const float* src = kvb.data() + h * per_head;
+        float* kd = k_out.data() + h * kl;
+        float* vd = v_out.data() + h * vl;
+        // k = [qk_nope from kv_b | qk_rope from the latent tail]
+        for (size_t i = 0; i < qk_nope && i < kl; ++i) kd[i] = src[i];
+        for (size_t i = 0; i < qk_rope && (qk_nope + i) < kl; ++i)
+            kd[qk_nope + i] = latentFull[lora + i];
+        for (size_t i = 0; i < vl && i < qk_nope + 0; ++i) (void)i;
+        for (size_t i = 0; i < vl; ++i) vd[i] = src[qk_nope + i];
     }
     (void)position;
     return true;
@@ -592,6 +678,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (!bound_) { last_error_ = "not bound"; return false; }
     last_error_.clear();
     last_token_ = token;
+    if (std::getenv("RR_TRACE_TOKEN")) std::fprintf(stderr, "  [token] pos=%zu token=%u cache_sizes=%zu,%zu,...\n", position, token, kv_k_.empty()?0:kv_k_[0].size(), kv_v_.empty()?0:kv_v_[0].size());
     position_ = position;
 
     // Activation arena: SSA values from the runtime graph, keyed by the name
@@ -616,9 +703,17 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     const int32_t embSlot = slot_by_name_["token_embd.weight"];
 
-    for (const auto& in : program_) {
+    static const bool traceOps = (std::getenv("RR_TRACE_OPS") != nullptr);
+    for (size_t pc = 0; pc < program_.size(); ++pc) {
+        const auto& in = program_[pc];
         const std::vector<float>& xi = resolveIn(in);
-        switch (in.op) {
+        if (traceOps) {
+            std::fprintf(stderr, "  op #%zu blk=%d %s a='%s' b='%s' out='%s' hidden=%zu\n",
+                        pc, in.block, OpKindName(in.op),
+                        in.aName.c_str(), in.bName.c_str(), in.outName.c_str(),
+                        hidden_.size());
+        }
+    switch (in.op) {
             case OpKind::EmbeddingLookup: {
                 const TensorRec& emb = tensors_[(size_t)embSlot];
                 const size_t n_in = (size_t)emb.dims[0];
@@ -676,8 +771,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 arena(in.outName.empty() ? std::string("kv") : in.outName) = hidden_;
                 arena("k") = k;
                 arena("v") = v;
-                break;
-            }
+                break;            }
             case OpKind::Attention: {
                 std::vector<float> y;
                 std::string e;
@@ -687,21 +781,92 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (vv.empty()) vv = kv;
                 if (!OpAttention(in, qv, kv, vv, y, position, e)) { last_error_ = e; return false; }
                 arena("attn") = y;
+                if (!in.outName.empty()) arena(in.outName) = y;
                 hidden_ = y;
                 break;
             }
+            case OpKind::Publish: {
+                // Copy an arena value into another named arena value.
+                // This is how the residual stream is made addressable: the
+                // graph names the block input "resid_in" so ResidualAdd can
+                // find it by name. The literal "<hidden>" means the CURRENT
+                // hidden vector, which is the normal case at a block entry.
+                std::vector<float> src;
+                if (in.aName.empty() || in.aName == "<hidden>") {
+                    src = hidden_;
+                } else {
+                    auto pit = act.find(in.aName);
+                    if (pit == act.end()) {
+                        last_error_ = "publish: source '" + in.aName + "' missing";
+                        return false;
+                    }
+                    src = pit->second;
+                }
+                if (src.empty()) { last_error_ = "publish: empty source"; return false; }
+                const std::string dst = in.outName.empty() ? std::string("published") : in.outName;
+                arena(dst) = src;
+                hidden_ = src;
+                break;
+            }
             case OpKind::ResidualAdd: {
+                // out = resid + block_output.
+                // BOTH operands come from the arena by name. The previous
+                // version added `hidden_` to the residual, which double-counted
+                // the norm output and dropped the attention projection entirely.
                 const std::vector<float> empty;
                 const std::vector<float>* resid = &empty;
-                if (in.a >= 0) {
-                    const std::string an = tensors_[(size_t)in.a].name;
-                    auto it = act.find(an);
+                if (!in.aName.empty() && in.aName[0] != '<') {
+                    auto it = act.find(in.aName);
                     if (it != act.end()) resid = &it->second;
+                    else { last_error_ = "residualadd: source '" + in.aName + "' missing"; return false; }
+                } else {
+                    resid = &hidden_;
                 }
-                std::vector<float> y(hidden_.size(), 0.0f);
-                for (size_t i = 0; i < hidden_.size(); ++i)
-                    y[i] = hidden_[i] + (i < resid->size() ? (*resid)[i] : 0.0f);
+                const std::vector<float>* add = &hidden_;
+                if (!in.bName.empty() && in.bName[0] != '<') {
+                    auto it = act.find(in.bName);
+                    if (it != act.end()) add = &it->second;
+                    else { last_error_ = "residualadd: addend '" + in.bName + "' missing"; return false; }
+                }
+                const size_t n = std::max(resid->size(), add->size());
+                if (n == 0) { last_error_ = "residualadd: empty operands"; return false; }
+                std::vector<float> y(n, 0.0f);
+                for (size_t i = 0; i < n; ++i)
+                    y[i] = (i < resid->size() ? (*resid)[i] : 0.0f)
+                         + (i < add->size() ? (*add)[i] : 0.0f);
                 hidden_ = y;
+                arena(in.outName.empty() ? std::string("resid") : in.outName) = y;
+                break;
+            }
+            case OpKind::SwiGLU: {
+                // out = silu(gate) * up, elementwise.
+                // The down projection MUST consume this. Feeding it the norm
+                // output instead is a silent correctness break: the layer still
+                // computes, is still finite, is still deterministic, and is
+                // still wrong.
+                const std::vector<float>* gp = &hidden_;
+                const std::vector<float>* up = &hidden_;
+                if (!in.aName.empty() && in.aName[0] != '<') {
+                    auto it = act.find(in.aName);
+                    if (it == act.end()) { last_error_ = "swiglu: gate missing"; return false; }
+                    gp = &it->second;
+                }
+                if (!in.bName.empty() && in.bName[0] != '<') {
+                    auto it = act.find(in.bName);
+                    if (it == act.end()) { last_error_ = "swiglu: up missing"; return false; }
+                    up = &it->second;
+                }
+                const size_t n = std::min(gp->size(), up->size());
+                if (n == 0) { last_error_ = "swiglu: empty inputs"; return false; }
+                std::vector<float> y(n, 0.0f);
+                for (size_t i = 0; i < n; ++i) {
+                    const float g = (*gp)[i];
+                    const float silu = g / (1.0f + std::exp(-g));
+                    y[i] = silu * (*up)[i];
+                }
+                hidden_ = y;
+                const std::string dst = in.outName.empty() ? std::string("swiglu") : in.outName;
+                arena(dst) = y;
                 break;
             }
             case OpKind::Router: {
@@ -717,6 +882,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::string e;
                 if (!OpMoEExecute(in, xi, expert_ids, expert_w, y, e)) { last_error_ = e; return false; }
                 arena("moe") = y;
+                if (!in.outName.empty()) arena(in.outName) = y;
                 hidden_ = y;
                 break;
             }
@@ -725,6 +891,15 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::string e;
                 if (!OpLinear(in.b, hidden_, y, e)) { last_error_ = e; return false; }
                 logits_ = y;
+                break;
+            }
+            case OpKind::SsmScan: {
+                std::vector<float> y;
+                std::string e;
+                const std::vector<float>& ssmIn = arena(in.aName);
+                if (ssmIn.empty()) { last_error_ = "ssm: empty input arena"; return false; }
+                if (!OpSsmScan(in, ssmIn, y, e)) { last_error_ = e; return false; }
+                arena(in.outName) = y;
                 break;
             }
             default:
@@ -742,4 +917,69 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     return true;
 }
 
+
+// ---------------------------------------------------------------------------
+// OpSsmScan - Mamba2 selective scan.
+//
+// The missing primitive for nemotron_h / qwen3-next. An SSM has no parallel
+// form to approximate, so the recurrence below IS the block. Per channel i,
+// for one token:
+//     dt    = softplus(dt_b[i])
+//     decay = exp(dt * A[i])
+//     state = decay*state + dt * x[i]
+//     y     = state + D[i] * x[i]
+// Every operand comes from the model's own tensors; nothing is defaulted.
+// ---------------------------------------------------------------------------
+bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
+                         std::vector<float>& y, std::string& err) {
+    const size_t D = (size_t)spec_.ssm_inner_size;
+    const size_t N = (size_t)spec_.ssm_state_size;
+    if (D == 0 || N == 0) { err = "ssm: ssm.inner_size / ssm.state_size not declared"; return false; }
+    if (in.b < 0) { err = "ssm: no in-projection slot"; return false; }
+
+    std::vector<float> xd;
+    if (!OpLinear(in.b, x, xd, err)) return false;
+    if (xd.size() < D) { err = "ssm: in-projection smaller than d_inner"; return false; }
+    xd.resize(D);
+
+    auto slotOf = [&](const char* tag) -> int32_t {
+        const std::string needle = std::string(tag) + "=";
+        const size_t at = in.detail.find(needle);
+        if (at == std::string::npos) return -1;
+        size_t s = at + needle.size();
+        const size_t e = in.detail.find(';', s);
+        const std::string n = (e == std::string::npos) ? in.detail.substr(s) : in.detail.substr(s, e - s);
+        if (n.empty()) return -1;
+        auto it = slot_by_name_.find(n);
+        return it == slot_by_name_.end() ? -1 : it->second;
+    };
+
+    const int32_t aSlot = slotOf("A");
+    const int32_t dtSlot = slotOf("dtB");
+    const int32_t dSlot = slotOf("D");
+    if (aSlot < 0 || dtSlot < 0) { err = "ssm: model has no ssm_a / ssm_dt.bias"; return false; }
+
+    std::vector<float> A, DtB, Dd;
+    if (DequantPrefix(tensors_[(size_t)aSlot], A, D) < D) { err = "ssm: ssm_a too small"; return false; }
+    if (DequantPrefix(tensors_[(size_t)dtSlot], DtB, D) < D) { err = "ssm: ssm_dt.bias too small"; return false; }
+    if (dSlot >= 0 && DequantPrefix(tensors_[(size_t)dSlot], Dd, D) < D) Dd.assign(D, 0.0f);
+    else if (dSlot < 0) Dd.assign(D, 0.0f);
+    A.resize(D); DtB.resize(D); Dd.resize(D);
+
+    if (ssm_state_.size() <= (size_t)in.block) ssm_state_.resize((size_t)in.block + 1);
+    std::vector<float>& st = ssm_state_[(size_t)in.block];
+    if (st.size() != D) st.assign(D, 0.0f);
+
+    y.assign(D, 0.0f);
+    auto softplus = [](float z) -> float { return (z > 20.0f) ? z : std::log1p(std::exp(z)); };
+
+    for (size_t i = 0; i < D; ++i) {
+        const float dt = softplus(DtB[i]);
+        const float decay = std::exp(dt * A[i]);
+        const float xin = xd[i];
+        st[i] = decay * st[i] + dt * xin;
+        y[i] = st[i] + Dd[i] * xin;
+    }
+    return true;
+}
 } } }  // namespace
