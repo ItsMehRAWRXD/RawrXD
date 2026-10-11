@@ -1,1104 +1,325 @@
+// ============================================================================
+// GGUFLoader.hpp - Zero-Dependency GGUF Parser for Deep2
+// Reads GGUF format directly into Deep2 WeightTensor structures
+// No external dependencies - pure C++ implementation
+// ============================================================================
+
 #pragma once
-// ============================================================================
-// GGUFLoader.hpp — Batch 6 real no-dependency mapped GGUF v2/v3 loader
-// - Parses typed metadata
-// - Parses tensor descriptors
-// - Memory maps tensor data (no whole-model heap copy)
-// - Supports canonical -00001-of-000NN.gguf shard sets
-// - Bounds/overflow checks every read and tensor range
-// ============================================================================
-#include <algorithm>
-#include <cctype>
-#include <cerrno>
+
+#include "UniversalTensorDescriptor.hpp"
+#include "QuantTypeTable.hpp"
 #include <cstdint>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
-#include <map>
-#include <limits>
-#include <memory>
 #include <string>
-#include <unordered_map>
-#include <utility>
 #include <vector>
-#include "QuantTypeTable.hpp"
-
-#ifdef _WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#else
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
-
-// Forward declaration for LoadMetadata return type (defined at global scope below)
-struct GGUFLoadResult;
+#include <unordered_map>
+#include <memory>
+#include <algorithm>
 
 namespace Deep2 {
 
-// Make GGUFLoadResult accessible as Deep2::GGUFLoadResult
-using ::GGUFLoadResult;
+// GGUF Magic number: "GGUF" in little-endian
+constexpr uint32_t GGUF_MAGIC = 0x46554747;
+constexpr uint32_t GGUF_VERSION = 3;
+constexpr int GGUF_MAX_DIMS = 4;  // Maximum tensor dimensions supported
 
-enum class GGUFMetaType : uint32_t {
-    UINT8   = 0,
-    INT8    = 1,
-    UINT16  = 2,
-    INT16   = 3,
-    UINT32  = 4,
-    INT32   = 5,
-    FLOAT32 = 6,
-    BOOL    = 7,
-    STRING  = 8,
-    ARRAY   = 9,
-    UINT64  = 10,
-    INT64   = 11,
-    FLOAT64 = 12,
+// GGUF Value types
+enum class GGUFValueType : uint32_t {
+    UINT8   = 0, INT8 = 1, UINT16 = 2, INT16 = 3,
+    UINT32  = 4, INT32 = 5, FLOAT32 = 6, BOOL = 7,
+    STRING  = 8, ARRAY = 9, UINT64 = 10, INT64 = 11, FLOAT64 = 12
 };
 
-struct GGUFTensor {
-    std::string name;
-    GGMLType type = GGMLType::GGML_TYPE_F32;
-    std::vector<int64_t> shape;       // GGUF order: [input/row width, output rows, ...]
-    const uint8_t* data = nullptr;     // aliases mapped shard; never free directly
-    size_t sizeBytes = 0;
-    uint64_t fileOffset = 0;           // absolute file offset within shard
-    uint64_t tensorOffset = 0;         // relative to shard tensor_data
-    uint32_t shardId = 0;
-    bool mapped = false;
+// GGMLType + QuantTypeDescriptor live in QuantTypeTable.hpp (canonical IDs).
 
-    size_t numElements() const {
-        size_t n = 1;
-        for (int64_t d : shape) {
-            if (d <= 0) return 0;
-            const size_t sd = static_cast<size_t>(d);
-            if (sd != 0 && n > std::numeric_limits<size_t>::max() / sd) return 0;
-            n *= sd;
-        }
-        return n;
-    }
+// Quantization block structures — layouts MUST match ggml-common.h sizes.
+#pragma pack(push, 1)
+struct block_q4_0 { uint16_t d; uint8_t qs[16]; }; // 18 bytes, 32 elements
+struct block_q4_1 { uint16_t d; uint16_t m; uint8_t qs[16]; }; // 20 bytes
+struct block_q5_0 { uint16_t d; uint8_t qh[4]; uint8_t qs[16]; }; // 22 bytes
+struct block_q5_1 { uint16_t d; uint16_t m; uint8_t qh[4]; uint8_t qs[16]; }; // 24 bytes
+struct block_q8_0 { uint16_t d; int8_t qs[32]; }; // 34 bytes
+struct block_q8_1 { uint16_t d; uint16_t s; int8_t qs[32]; }; // 36 bytes
+// ggml-common.h layout: scales + qs FIRST, then d/dmin at end (NOT d-first).
+struct block_q2_K { uint8_t scales[16]; uint8_t qs[64]; uint16_t d; uint16_t dmin; }; // 84 bytes
+struct block_q3_K { uint8_t hmask[32]; uint8_t qs[64]; uint8_t scales[12]; uint16_t d; }; // 110 bytes
+struct block_q4_K { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qs[128]; }; // 144 bytes, 256 elements
+struct block_q5_K { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qh[32]; uint8_t qs[128]; }; // 176 bytes
+struct block_q6_K { uint8_t ql[128]; uint8_t qh[64]; int8_t scales[16]; uint16_t d; }; // 210 bytes
+struct block_q8_K { float d; int8_t qs[256]; int16_t bsums[16]; }; // 292 bytes
+// IQ / modern formats (canonical ggml sizes)
+struct block_iq2_xxs { uint16_t d; uint8_t qs[64]; }; // 66 bytes (== ggml uint16 qs[32])
+struct block_iq2_xs  { uint16_t d; uint8_t qs[64]; uint8_t scales[8]; }; // 74 bytes
+struct block_iq2_s   { uint16_t d; uint8_t qs[64]; uint8_t qh[8]; uint8_t scales[8]; }; // 82 bytes
+struct block_iq3_xxs { uint16_t d; uint8_t qs[96]; }; // 98 bytes
+struct block_iq3_s   { uint16_t d; uint8_t qs[64]; uint8_t qh[8]; uint8_t signs[32]; uint8_t scales[4]; }; // 110
+struct block_iq1_s   { uint16_t d; uint8_t qs[32]; uint16_t qh[8]; }; // 50 bytes, 256 elems
+struct block_iq1_m   { uint8_t qs[32]; uint8_t qh[16]; uint8_t scales[8]; }; // 56 bytes
+struct block_iq4_nl  { uint16_t d; uint8_t qs[16]; }; // 18 bytes, 32 elems (NOT 132/256)
+struct block_iq4_xs  {
+    uint16_t d;
+    union {
+        struct { uint16_t scales_h; uint8_t scales_l[4]; };
+        uint8_t scales[6]; // legacy kernel access (same 6 bytes)
+    };
+    uint8_t qs[128];
+}; // 136 bytes
+struct block_tq1_0   { uint8_t qs[48]; uint8_t qh[4]; uint16_t d; }; // 54 bytes
+struct block_tq2_0   { uint8_t qs[64]; uint16_t d; }; // 66 bytes
+struct block_mxfp4   { uint8_t e; uint8_t qs[16]; }; // 17 bytes, 32 elems
+struct block_nvfp4   { uint8_t d[4]; uint8_t qs[32]; }; // 36 bytes, 64 elems
+struct block_q1_0    { uint16_t d; uint8_t qs[16]; }; // 18 bytes, 128 elems
+struct block_bf16    { uint16_t bits; }; // 2 bytes, 1 elem
+#pragma pack(pop)
+
+static_assert(sizeof(block_q4_0) == 18, "q4_0");
+static_assert(sizeof(block_q4_1) == 20, "q4_1");
+static_assert(sizeof(block_q5_0) == 22, "q5_0");
+static_assert(sizeof(block_q5_1) == 24, "q5_1");
+static_assert(sizeof(block_q8_0) == 34, "q8_0");
+static_assert(sizeof(block_q8_1) == 36, "q8_1");
+static_assert(sizeof(block_q2_K) == 84, "q2_K");
+static_assert(sizeof(block_q3_K) == 110, "q3_K");
+static_assert(sizeof(block_q4_K) == 144, "q4_K");
+static_assert(sizeof(block_q5_K) == 176, "q5_K");
+static_assert(sizeof(block_q6_K) == 210, "q6_K");
+static_assert(sizeof(block_q8_K) == 292, "q8_K MUST be 292 not 29");
+static_assert(sizeof(block_iq2_xxs) == 66, "iq2_xxs");
+static_assert(sizeof(block_iq2_xs) == 74, "iq2_xs");
+static_assert(sizeof(block_iq2_s) == 82, "iq2_s");
+static_assert(sizeof(block_iq3_xxs) == 98, "iq3_xxs");
+static_assert(sizeof(block_iq3_s) == 110, "iq3_s");
+static_assert(sizeof(block_iq1_s) == 50, "iq1_s MUST be 50 not 34");
+static_assert(sizeof(block_iq1_m) == 56, "iq1_m");
+static_assert(sizeof(block_iq4_nl) == 18, "iq4_nl MUST be 18 not 132");
+static_assert(sizeof(block_iq4_xs) == 136, "iq4_xs");
+static_assert(sizeof(block_tq1_0) == 54, "tq1_0");
+static_assert(sizeof(block_tq2_0) == 66, "tq2_0");
+static_assert(sizeof(block_mxfp4) == 17, "mxfp4");
+static_assert(sizeof(block_nvfp4) == 36, "nvfp4");
+static_assert(sizeof(block_q1_0) == 18, "q1_0");
+
+// Block sizes (elements per block) — prefer QuantTypeTable; kept for call sites.
+constexpr size_t QK4_0 = 32;
+constexpr size_t QK4_1 = 32;
+constexpr size_t QK5_0 = 32;
+constexpr size_t QK5_1 = 32;
+constexpr size_t QK8_0 = 32;
+constexpr size_t QK8_1 = 32;
+constexpr size_t QK_K  = 256;
+constexpr size_t QK4_NL = 32;
+
+// Q4_K_M block (DEPRECATED — use block_q4_K from GGUF spec, 144 bytes)
+// Kept for backward compatibility with legacy test code only.
+// New code should use block_q4_K directly.
+struct alignas(32) Q4_K_M_Block {
+    uint16_t scales[32];
+    uint16_t mins[32];
+    uint8_t  weights[128];
 };
 
-class GGUFLoader {
-public:
-    GGUFLoader() = default;
-    ~GGUFLoader() { close(); }
-
-    GGUFLoader(const GGUFLoader&) = delete;
-    GGUFLoader& operator=(const GGUFLoader&) = delete;
-
-    bool load(const std::string& path) {
-        close();
-        error_.clear();
-        if (path.empty()) return fail("empty GGUF path");
-
-        std::string shardPrefix;
-        uint32_t fileShardIndex = 0;
-        uint32_t fileShardCount = 0;
-
-        if (parseCanonicalShardName(path, shardPrefix, fileShardIndex, fileShardCount) &&
-            fileShardCount > 1) {
-            shardCount_ = fileShardCount;
-            for (uint32_t i = 1; i <= fileShardCount; ++i) {
-                const std::string shardPath =
-                    shardPrefix + fiveDigits(i) + "-of-" + fiveDigits(fileShardCount) + ".gguf";
-                if (!loadOneShard(shardPath, i - 1)) {
-                    close();
-                    return false;
-                }
-            }
-            path_ = shardPrefix + fiveDigits(1) + "-of-" + fiveDigits(fileShardCount) + ".gguf";
-        } else {
-            shardCount_ = 1;
-            if (!loadOneShard(path, 0)) {
-                close();
-                return false;
-            }
-            path_ = path;
-
-            const int64_t declaredSplit = getMetaInt("split.count", 1);
-            if (declaredSplit > 1) {
-                const std::string saved = error_.empty()
-                    ? "GGUF declares multiple shards but filename is not canonical -00001-of-000NN.gguf"
-                    : error_;
-                close();
-                error_ = saved;
-                return false;
-            }
-        }
-
-        const int64_t declaredCount = getMetaInt("split.count", static_cast<int64_t>(shardCount_));
-        if (declaredCount > 0 && static_cast<uint64_t>(declaredCount) != shardCount_) {
-            const std::string saved = "split.count does not match mapped shard set";
-            close();
-            error_ = saved;
-            return false;
-        }
-
-        if (tensors_.empty()) {
-            const std::string saved = "GGUF contained no tensors";
-            close();
-            error_ = saved;
-            return false;
-        }
-
-        loaded_ = true;
-        return true;
-    }
-
-     void close() {
-        tensors_.clear();
-        metaInt_.clear();
-        metaFloat_.clear();
-        metaString_.clear();
-        metaArrays_.clear();
-        maps_.clear();
-        path_.clear();
-        loaded_ = false;
-        version_ = 0;
-        shardCount_ = 0;
-        totalMappedBytes_ = 0;
-        tensorCountHeader_ = 0;
-        metadataCountHeader_ = 0;
-    }
-
-    /**
-     * LoadMetadata — metadata-only load (no tensor data population).
-     * Returns a GGUFLoadResult with rawKv, metadata, and header counts populated.
-     * This is the sovereign authority seal entry point.
-     * Implementation is below (requires complete GGUFLoadResult type).
-     */
-    static GGUFLoadResult LoadMetadata(const char* filepath);
-
-
-    bool loaded() const { return loaded_; }
-    uint32_t version() const { return version_; }
-    uint32_t shardCount() const { return shardCount_; }
-    uint64_t mappedBytes() const { return totalMappedBytes_; }
-    uint64_t tensorCountHeader() const { return tensorCountHeader_; }
-    uint64_t metadataCountHeader() const { return metadataCountHeader_; }
-    const std::string& path() const { return path_; }
-    const std::string& error() const { return error_; }
-
-    bool hasTensor(const std::string& name) const {
-        return tensors_.find(name) != tensors_.end();
-    }
-
-    GGUFTensor* getTensor(const std::string& name) {
-        auto it = tensors_.find(name);
-        return it == tensors_.end() ? nullptr : &it->second;
-    }
-
-    const GGUFTensor* getTensor(const std::string& name) const {
-        auto it = tensors_.find(name);
-        return it == tensors_.end() ? nullptr : &it->second;
-    }
-
-    std::vector<std::string> listTensors() const {
-        std::vector<std::string> names;
-        names.reserve(tensors_.size());
-        for (const auto& kv : tensors_) names.push_back(kv.first);
-        std::sort(names.begin(), names.end());
-        return names;
-    }
-
-    size_t tensorCount() const { return tensors_.size(); }
-
-    bool setMetaInt(const std::string& key, int64_t value) {
-        metaInt_[key] = value;
-        return true;
-    }
-
-    bool setMetaFloat(const std::string& key, double value) {
-        metaFloat_[key] = value;
-        return true;
-    }
-
-    int64_t getMetaInt(const std::string& key, int64_t def = 0) const {
-        auto i = metaInt_.find(key);
-        if (i != metaInt_.end()) return i->second;
-        auto f = metaFloat_.find(key);
-        if (f != metaFloat_.end()) return static_cast<int64_t>(f->second);
-        return def;
-    }
-
-    double getMetaFloat(const std::string& key, double def = 0.0) const {
-        auto f = metaFloat_.find(key);
-        if (f != metaFloat_.end()) return f->second;
-        auto i = metaInt_.find(key);
-        if (i != metaInt_.end()) return static_cast<double>(i->second);
-        return def;
-    }
-
-    std::string getMetaString(const std::string& key,
-                              const std::string& def = {}) const {
-        auto it = metaString_.find(key);
-        return it == metaString_.end() ? def : it->second;
-    }
-
-    bool hasMeta(const std::string& key) const {
-        return metaInt_.count(key) || metaFloat_.count(key) ||
-               metaString_.count(key) || metaArrays_.count(key);
-    }
-
-    // Serialize all metadata to string-keyed map (for rawKv in LoadMetadata)
-    std::map<std::string,std::string> getMetaAllStrings() const {
-        std::map<std::string,std::string> out;
-        for (const auto& kv : metaInt_)
-            out[kv.first] = std::to_string(kv.second);
-        for (const auto& kv : metaFloat_) {
-            char buf[64];
-            std::snprintf(buf, sizeof(buf), "%g", kv.second);
-            out[kv.first] = buf;
-        }
-        for (const auto& kv : metaString_)
-            out[kv.first] = kv.second;
-        return out;
-    }
-
-    // Materializes only when requested. Large tokenizer token arrays therefore
-    // stay mmap-backed during ordinary model loading.
-    bool getMetaStringArray(const std::string& key,
-                            std::vector<std::string>& out) const {
-        out.clear();
-        auto it = metaArrays_.find(key);
-        if (it == metaArrays_.end()) return false;
-        const MetaArrayView& a = it->second;
-        if (a.elementType != static_cast<uint32_t>(GGUFMetaType::STRING))
-            return false;
-
-        const uint8_t* p = a.data;
-        out.reserve(static_cast<size_t>(a.count));
-        for (uint64_t i = 0; i < a.count; ++i) {
-            std::string s;
-            if (!readStringBounded(p, a.end, s, kMaxStringBytes))
-                return false;
-            out.emplace_back(std::move(s));
-        }
-        return true;
-    }
-
-    bool getMetaFloatArray(const std::string& key,
-                           std::vector<float>& out) const {
-        out.clear();
-        auto it = metaArrays_.find(key);
-        if (it == metaArrays_.end()) return false;
-        const MetaArrayView& a = it->second;
-        const uint8_t* p = a.data;
-        out.reserve(static_cast<size_t>(a.count));
-
-        for (uint64_t i = 0; i < a.count; ++i) {
-            float v = 0.0f;
-            switch (static_cast<GGUFMetaType>(a.elementType)) {
-                case GGUFMetaType::FLOAT32: {
-                    if (!readPod(p,a.end,v)) return false;
-                    break;
-                }
-                case GGUFMetaType::FLOAT64: {
-                    double d = 0.0;
-                    if (!readPod(p,a.end,d)) return false;
-                    v = static_cast<float>(d);
-                    break;
-                }
-                default:
-                    out.clear();
-                    return false;
-            }
-            out.push_back(v);
-        }
-        return true;
-    }
-
-    bool getMetaInt32Array(const std::string& key,
-                           std::vector<int32_t>& out) const {
-        out.clear();
-        auto it = metaArrays_.find(key);
-        if (it == metaArrays_.end()) return false;
-        const MetaArrayView& a = it->second;
-        const uint8_t* p = a.data;
-        out.reserve(static_cast<size_t>(a.count));
-
-        for (uint64_t i = 0; i < a.count; ++i) {
-            int64_t v = 0;
-            switch (static_cast<GGUFMetaType>(a.elementType)) {
-                case GGUFMetaType::UINT8: {
-                    uint8_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
-                }
-                case GGUFMetaType::INT8: {
-                    int8_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
-                }
-                case GGUFMetaType::UINT16: {
-                    uint16_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
-                }
-                case GGUFMetaType::INT16: {
-                    int16_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
-                }
-                case GGUFMetaType::UINT32: {
-                    uint32_t x = 0; if (!readPod(p,a.end,x)) return false;
-                    if (x > static_cast<uint32_t>(std::numeric_limits<int32_t>::max()))
-                        return false;
-                    v=x; break;
-                }
-                case GGUFMetaType::INT32: {
-                    int32_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
-                }
-                case GGUFMetaType::UINT64: {
-                    uint64_t x = 0; if (!readPod(p,a.end,x)) return false;
-                    if (x > static_cast<uint64_t>(std::numeric_limits<int32_t>::max()))
-                        return false;
-                    v=static_cast<int64_t>(x); break;
-                }
-                case GGUFMetaType::INT64: {
-                    int64_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
-                }
-                default:
-                    out.clear();
-                    return false;
-            }
-
-            if (v < std::numeric_limits<int32_t>::min() ||
-                v > std::numeric_limits<int32_t>::max()) {
-                out.clear();
-                return false;
-            }
-            out.push_back(static_cast<int32_t>(v));
-        }
-        return true;
-    }
-
-private:
-    static constexpr uint32_t kMagic = 0x46554747u; // bytes: G G U F
-    static constexpr uint64_t kDefaultAlignment = 32;
-    static constexpr uint64_t kMaxMetadata = 4ull * 1024ull * 1024ull;
-    static constexpr uint64_t kMaxTensors = 16ull * 1024ull * 1024ull;
-    static constexpr uint64_t kMaxStringBytes = 1ull << 30;
-    static constexpr uint32_t kMaxDims = 8;
-    static constexpr uint32_t kMaxArrayDepth = 8;
-
-    struct MappedFile {
-        std::string path;
-        const uint8_t* data = nullptr;
-        size_t size = 0;
-#ifdef _WIN32
-        HANDLE file = INVALID_HANDLE_VALUE;
-        HANDLE mapping = nullptr;
-#else
-        int fd = -1;
-#endif
-
-        ~MappedFile() { close(); }
-
-        MappedFile(const MappedFile&) = delete;
-        MappedFile& operator=(const MappedFile&) = delete;
-        MappedFile() = default;
-
-        bool openReadOnly(const std::string& p, std::string& err) {
-            close();
-            path = p;
-#ifdef _WIN32
-            file = CreateFileA(p.c_str(), GENERIC_READ,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                               nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-            if (file == INVALID_HANDLE_VALUE) {
-                err = "CreateFileA failed for " + p;
-                return false;
-            }
-            LARGE_INTEGER li{};
-            if (!GetFileSizeEx(file, &li) || li.QuadPart <= 0 ||
-                static_cast<unsigned long long>(li.QuadPart) >
-                    static_cast<unsigned long long>(std::numeric_limits<size_t>::max())) {
-                err = "invalid GGUF file size: " + p;
-                close();
-                return false;
-            }
-            size = static_cast<size_t>(li.QuadPart);
-            mapping = CreateFileMappingA(file, nullptr, PAGE_READONLY, 0, 0, nullptr);
-            if (!mapping) {
-                err = "CreateFileMappingA failed for " + p;
-                close();
-                return false;
-            }
-            data = static_cast<const uint8_t*>(
-                MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0));
-            if (!data) {
-                err = "MapViewOfFile failed for " + p;
-                close();
-                return false;
-            }
-#else
-            fd = ::open(p.c_str(), O_RDONLY);
-            if (fd < 0) {
-                err = "open failed for " + p;
-                return false;
-            }
-            struct stat st{};
-            if (fstat(fd, &st) != 0 || st.st_size <= 0 ||
-                static_cast<uint64_t>(st.st_size) >
-                    static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
-                err = "invalid GGUF file size: " + p;
-                close();
-                return false;
-            }
-            size = static_cast<size_t>(st.st_size);
-            void* view = mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
-            if (view == MAP_FAILED) {
-                err = "mmap failed for " + p;
-                close();
-                return false;
-            }
-            data = static_cast<const uint8_t*>(view);
-#endif
-            return true;
-        }
-
-        void close() {
-#ifdef _WIN32
-            if (data) UnmapViewOfFile(data);
-            data = nullptr;
-            if (mapping) CloseHandle(mapping);
-            mapping = nullptr;
-            if (file != INVALID_HANDLE_VALUE) CloseHandle(file);
-            file = INVALID_HANDLE_VALUE;
-#else
-            if (data && size) munmap(const_cast<uint8_t*>(data), size);
-            data = nullptr;
-            if (fd >= 0) ::close(fd);
-            fd = -1;
-#endif
-            size = 0;
-            path.clear();
-        }
-    };
-
-    struct MetaArrayView {
-        uint32_t elementType = 0;
-        uint64_t count = 0;
-        const uint8_t* data = nullptr;
-        const uint8_t* end = nullptr;
-    };
-
-    struct PendingTensor {
-        std::string name;
-        GGMLType type = GGMLType::GGML_TYPE_F32;
-        std::vector<int64_t> shape;
-        uint64_t relativeOffset = 0;
-    };
-
-    static bool mulOverflow(size_t a, size_t b, size_t& out) {
-        if (a != 0 && b > std::numeric_limits<size_t>::max() / a)
-            return true;
-        out = a * b;
-        return false;
-    }
-
-    static bool addOverflow(uint64_t a, uint64_t b, uint64_t& out) {
-        if (b > std::numeric_limits<uint64_t>::max() - a)
-            return true;
-        out = a + b;
-        return false;
-    }
-
-    template <typename T>
-    static bool readPod(const uint8_t*& p, const uint8_t* end, T& out) {
-        if (!p || !end || p > end ||
-            static_cast<size_t>(end - p) < sizeof(T))
-            return false;
-        std::memcpy(&out, p, sizeof(T));
-        p += sizeof(T);
-        return true;
-    }
-
-    static bool readStringBounded(const uint8_t*& p, const uint8_t* end,
-                                  std::string& out, uint64_t maxLen) {
-        uint64_t len = 0;
-        if (!readPod(p, end, len)) return false;
-        if (len > maxLen || len > static_cast<uint64_t>(end - p))
-            return false;
-        out.assign(reinterpret_cast<const char*>(p),
-                   static_cast<size_t>(len));
-        p += static_cast<size_t>(len);
-        return true;
-    }
-
-    static uint64_t alignUp(uint64_t v, uint64_t alignment) {
-        if (alignment == 0) return 0;
-        const uint64_t rem = v % alignment;
-        if (rem == 0) return v;
-        const uint64_t add = alignment - rem;
-        if (v > std::numeric_limits<uint64_t>::max() - add) return 0;
-        return v + add;
-    }
-
-    static bool typeGeometry(uint32_t type, size_t& blockElems, size_t& blockBytes) {
-        switch (type) {
-            case 0:  blockElems = 1;   blockBytes = 4;   return true; // F32
-            case 1:  blockElems = 1;   blockBytes = 2;   return true; // F16
-            case 2:  blockElems = 32;  blockBytes = 18;  return true; // Q4_0
-            case 3:  blockElems = 32;  blockBytes = 20;  return true; // Q4_1
-            case 6:  blockElems = 32;  blockBytes = 22;  return true; // Q5_0
-            case 7:  blockElems = 32;  blockBytes = 24;  return true; // Q5_1
-            case 8:  blockElems = 32;  blockBytes = 34;  return true; // Q8_0
-            case 10: blockElems = 256; blockBytes = 84;  return true; // Q2_K
-            case 11: blockElems = 256; blockBytes = 110; return true; // Q3_K
-            case 12: blockElems = 256; blockBytes = 144; return true; // Q4_K
-            case 13: blockElems = 256; blockBytes = 176; return true; // Q5_K
-            case 14: blockElems = 256; blockBytes = 210; return true; // Q6_K
-            case 15: blockElems = 256; blockBytes = 292; return true; // Q8_K
-            case 24: blockElems = 1;   blockBytes = 1;   return true; // I8
-            case 25: blockElems = 1;   blockBytes = 2;   return true; // I16
-            case 26: blockElems = 1;   blockBytes = 4;   return true; // I32
-            case 27: blockElems = 1;   blockBytes = 8;   return true; // I64
-            case 28: blockElems = 1;   blockBytes = 8;   return true; // F64
-            case 30: blockElems = 1;   blockBytes = 2;   return true; // BF16
-            default: blockElems = blockBytes = 0; return false;
-        }
-    }
-
-    static bool tensorByteSize(const PendingTensor& t, size_t& out) {
-        out = 0;
-        if (t.shape.empty()) return false;
-
-        size_t blockElems = 0, blockBytes = 0;
-        if (!typeGeometry(static_cast<uint32_t>(t.type), blockElems, blockBytes))
-            return false;
-
-        if (t.shape[0] <= 0) return false;
-        const size_t rowElems = static_cast<size_t>(t.shape[0]);
-        if (blockElems > 1 && (rowElems % blockElems) != 0)
-            return false;
-
-        const size_t blocksPerRow =
-            (rowElems + blockElems - 1) / blockElems;
-
-        size_t rowBytes = 0;
-        if (mulOverflow(blocksPerRow, blockBytes, rowBytes)) return false;
-
-        size_t rows = 1;
-        for (size_t d = 1; d < t.shape.size(); ++d) {
-            if (t.shape[d] <= 0) return false;
-            size_t next = 0;
-            if (mulOverflow(rows, static_cast<size_t>(t.shape[d]), next))
-                return false;
-            rows = next;
-        }
-        return !mulOverflow(rowBytes, rows, out);
-    }
-
-    bool skipValue(uint32_t type, const uint8_t*& p,
-                   const uint8_t* end, uint32_t depth) const {
-        if (depth > kMaxArrayDepth) return false;
-        switch (static_cast<GGUFMetaType>(type)) {
-            case GGUFMetaType::UINT8:
-            case GGUFMetaType::INT8:
-            case GGUFMetaType::BOOL: {
-                uint8_t x{};
-                return readPod(p, end, x);
-            }
-            case GGUFMetaType::UINT16:
-            case GGUFMetaType::INT16: {
-                uint16_t x{};
-                return readPod(p, end, x);
-            }
-            case GGUFMetaType::UINT32:
-            case GGUFMetaType::INT32:
-            case GGUFMetaType::FLOAT32: {
-                uint32_t x{};
-                return readPod(p, end, x);
-            }
-            case GGUFMetaType::UINT64:
-            case GGUFMetaType::INT64:
-            case GGUFMetaType::FLOAT64: {
-                uint64_t x{};
-                return readPod(p, end, x);
-            }
-            case GGUFMetaType::STRING: {
-                std::string s;
-                return readStringBounded(p, end, s, kMaxStringBytes);
-            }
-            case GGUFMetaType::ARRAY: {
-                uint32_t elementType = 0;
-                uint64_t count = 0;
-                if (!readPod(p, end, elementType) ||
-                    !readPod(p, end, count) ||
-                    count > kMaxMetadata * 1024ull)
-                    return false;
-                for (uint64_t i = 0; i < count; ++i) {
-                    if (!skipValue(elementType, p, end, depth + 1))
-                        return false;
-                }
-                return true;
-            }
-            default:
-                return false;
-        }
-    }
-
-    bool parseMetadataValue(const std::string& key, uint32_t type,
-                            const uint8_t*& p, const uint8_t* end,
-                            uint64_t& localAlignment) {
-        switch (static_cast<GGUFMetaType>(type)) {
-            case GGUFMetaType::UINT8: {
-                uint8_t v{}; if (!readPod(p,end,v)) return false;
-                metaInt_.emplace(key, static_cast<int64_t>(v)); break;
-            }
-            case GGUFMetaType::INT8: {
-                int8_t v{}; if (!readPod(p,end,v)) return false;
-                metaInt_.emplace(key, static_cast<int64_t>(v)); break;
-            }
-            case GGUFMetaType::UINT16: {
-                uint16_t v{}; if (!readPod(p,end,v)) return false;
-                metaInt_.emplace(key, static_cast<int64_t>(v)); break;
-            }
-            case GGUFMetaType::INT16: {
-                int16_t v{}; if (!readPod(p,end,v)) return false;
-                metaInt_.emplace(key, static_cast<int64_t>(v)); break;
-            }
-            case GGUFMetaType::UINT32: {
-                uint32_t v{}; if (!readPod(p,end,v)) return false;
-                metaInt_.emplace(key, static_cast<int64_t>(v));
-                if (key == "general.alignment") localAlignment = v;
-                break;
-            }
-            case GGUFMetaType::INT32: {
-                int32_t v{}; if (!readPod(p,end,v)) return false;
-                metaInt_.emplace(key, static_cast<int64_t>(v)); break;
-            }
-            case GGUFMetaType::FLOAT32: {
-                float v{}; if (!readPod(p,end,v)) return false;
-                metaFloat_.emplace(key, static_cast<double>(v)); break;
-            }
-            case GGUFMetaType::BOOL: {
-                uint8_t v{}; if (!readPod(p,end,v) || v > 1) return false;
-                metaInt_.emplace(key, static_cast<int64_t>(v)); break;
-            }
-            case GGUFMetaType::STRING: {
-                std::string v;
-                if (!readStringBounded(p,end,v,kMaxStringBytes)) return false;
-                metaString_.emplace(key, std::move(v));
-                break;
-            }
-            case GGUFMetaType::UINT64: {
-                uint64_t v{}; if (!readPod(p,end,v)) return false;
-                if (v <= static_cast<uint64_t>(std::numeric_limits<int64_t>::max()))
-                    metaInt_.emplace(key, static_cast<int64_t>(v));
-                else
-                    metaFloat_.emplace(key, static_cast<double>(v));
-                break;
-            }
-            case GGUFMetaType::INT64: {
-                int64_t v{}; if (!readPod(p,end,v)) return false;
-                metaInt_.emplace(key, v); break;
-            }
-            case GGUFMetaType::FLOAT64: {
-                double v{}; if (!readPod(p,end,v)) return false;
-                metaFloat_.emplace(key, v); break;
-            }
-            case GGUFMetaType::ARRAY: {
-                uint32_t elementType = 0;
-                uint64_t count = 0;
-                if (!readPod(p,end,elementType) || !readPod(p,end,count) ||
-                    count > kMaxMetadata * 1024ull)
-                    return false;
-
-                MetaArrayView view;
-                view.elementType = elementType;
-                view.count = count;
-                view.data = p;
-                view.end = end;
-
-                const uint8_t* q = p;
-                for (uint64_t i = 0; i < count; ++i) {
-                    if (!skipValue(elementType, q, end, 1)) return false;
-                }
-                p = q;
-                metaArrays_.emplace(key, view);
-                break;
-            }
-            default:
-                return false;
-        }
-        return true;
-    }
-
-    bool loadOneShard(const std::string& path, uint32_t shardId) {
-        auto mf = std::make_unique<MappedFile>();
-        if (!mf->openReadOnly(path, error_)) return false;
-
-        const uint8_t* p = mf->data;
-        const uint8_t* end = mf->data + mf->size;
-
-        uint32_t magic = 0, version = 0;
-        uint64_t tensorCount = 0, metadataCount = 0;
-        if (!readPod(p,end,magic) || !readPod(p,end,version) ||
-            !readPod(p,end,tensorCount) || !readPod(p,end,metadataCount)) {
-            return fail("truncated GGUF header: " + path);
-        }
-        if (magic != kMagic) return fail("bad GGUF magic: " + path);
-        if (version != 2 && version != 3)
-            return fail("unsupported GGUF version (expected v2/v3): " + path);
-        if (tensorCount > kMaxTensors || metadataCount > kMaxMetadata)
-            return fail("unreasonable GGUF table counts: " + path);
-
-        if (version_ == 0) version_ = version;
-        if (version_ != version) return fail("mixed GGUF versions across shards");
-
-        // Store header counts for metadata-only queries (LoadMetadata)
-        if (shardId == 0) {
-            tensorCountHeader_ = tensorCount;
-            metadataCountHeader_ = metadataCount;
-        }
-
-        uint64_t localAlignment = kDefaultAlignment;
-
-        for (uint64_t i = 0; i < metadataCount; ++i) {
-            std::string key;
-            uint32_t type = 0;
-            if (!readStringBounded(p,end,key,65535) ||
-                !readPod(p,end,type) ||
-                !parseMetadataValue(key,type,p,end,localAlignment)) {
-                return fail("invalid GGUF metadata entry in " + path);
-            }
-        }
-
-        if (localAlignment < 8 || (localAlignment & (localAlignment - 1)) != 0)
-            return fail("general.alignment must be a power-of-two >= 8");
-
-        std::vector<PendingTensor> pending;
-        pending.reserve(static_cast<size_t>(tensorCount));
-
-        for (uint64_t i = 0; i < tensorCount; ++i) {
-            PendingTensor t;
-            uint32_t dims = 0;
-            uint32_t type = 0;
-            if (!readStringBounded(p,end,t.name,64) ||
-                !readPod(p,end,dims) || dims == 0 || dims > kMaxDims) {
-                return fail("invalid GGUF tensor descriptor in " + path);
-            }
-
-            t.shape.resize(dims);
-            for (uint32_t d = 0; d < dims; ++d) {
-                uint64_t ne = 0;
-                if (!readPod(p,end,ne) || ne == 0 ||
-                    ne > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
-                    return fail("invalid GGUF tensor dimension in " + path);
-                }
-                t.shape[d] = static_cast<int64_t>(ne);
-            }
-
-            if (!readPod(p,end,type) || !readPod(p,end,t.relativeOffset))
-                return fail("truncated GGUF tensor descriptor in " + path);
-            t.type = static_cast<GGMLType>(type);
-
-            if ((t.relativeOffset % localAlignment) != 0)
-                return fail("unaligned GGUF tensor offset in " + path);
-
-            size_t bytes = 0;
-            if (!tensorByteSize(t, bytes))
-                return fail("unsupported/malformed GGML tensor type or shape: " + t.name);
-
-            pending.emplace_back(std::move(t));
-        }
-
-        const uint64_t tableEnd =
-            static_cast<uint64_t>(p - mf->data);
-        const uint64_t dataStart = alignUp(tableEnd, localAlignment);
-        if (dataStart == 0 || dataStart > mf->size)
-            return fail("invalid GGUF tensor_data offset in " + path);
-
-        for (const PendingTensor& pt : pending) {
-            size_t bytes = 0;
-            if (!tensorByteSize(pt, bytes))
-                return fail("failed tensor byte-size validation");
-
-            uint64_t abs = 0;
-            if (addOverflow(dataStart, pt.relativeOffset, abs) ||
-                abs > mf->size ||
-                bytes > static_cast<size_t>(mf->size - static_cast<size_t>(abs))) {
-                return fail("GGUF tensor range outside mapped shard: " + pt.name);
-            }
-
-            if (tensors_.find(pt.name) != tensors_.end())
-                return fail("duplicate tensor name across GGUF shards: " + pt.name);
-
-            GGUFTensor t;
-            t.name = pt.name;
-            t.type = pt.type;
-            t.shape = pt.shape;
-            t.data = mf->data + static_cast<size_t>(abs);
-            t.sizeBytes = bytes;
-            t.fileOffset = abs;
-            t.tensorOffset = pt.relativeOffset;
-            t.shardId = shardId;
-            t.mapped = true;
-            tensors_.emplace(t.name, std::move(t));
-        }
-
-        if (totalMappedBytes_ >
-            std::numeric_limits<uint64_t>::max() - static_cast<uint64_t>(mf->size))
-            return fail("mapped-byte counter overflow");
-        totalMappedBytes_ += static_cast<uint64_t>(mf->size);
-        maps_.emplace_back(std::move(mf));
-        return true;
-    }
-
-    bool fail(const std::string& msg) {
-        error_ = msg;
-        return false;
-    }
-
-    static bool allDigits(const std::string& s, size_t off, size_t n) {
-        if (off + n > s.size()) return false;
-        for (size_t i = 0; i < n; ++i) {
-            if (!std::isdigit(static_cast<unsigned char>(s[off+i])))
-                return false;
-        }
-        return true;
-    }
-
-    static uint32_t parse5(const std::string& s, size_t off) {
-        uint32_t v = 0;
-        for (size_t i = 0; i < 5; ++i)
-            v = v * 10u + static_cast<uint32_t>(s[off+i] - '0');
-        return v;
-    }
-
-    static bool parseCanonicalShardName(const std::string& path,
-                                        std::string& prefix,
-                                        uint32_t& index,
-                                        uint32_t& count) {
-        prefix.clear();
-        index = count = 0;
-        if (path.size() < 20) return false;
-
-        std::string ext = path.substr(path.size() - 5);
-        for (char& c : ext) c = static_cast<char>(
-            std::tolower(static_cast<unsigned char>(c)));
-        if (ext != ".gguf") return false;
-
-        const size_t segStart = path.size() - 5 - 15;
-        const std::string seg = path.substr(segStart, 15);
-        if (seg.size() != 15 || seg[0] != '-' ||
-            seg.substr(6,4) != "-of-" ||
-            !allDigits(seg,1,5) || !allDigits(seg,10,5))
-            return false;
-
-        index = parse5(seg,1);
-        count = parse5(seg,10);
-        if (index == 0 || count == 0 || index > count) return false;
-
-        prefix = path.substr(0, segStart + 1); // keep dash before shard index
-        return true;
-    }
-
-    static std::string fiveDigits(uint32_t v) {
-        char buf[16]{};
-        std::snprintf(buf, sizeof(buf), "%05u", v);
-        return std::string(buf);
-    }
-
-        bool loaded_ = false;
-        uint32_t version_ = 0;
-        uint32_t shardCount_ = 0;
-        uint64_t totalMappedBytes_ = 0;
-        uint64_t tensorCountHeader_ = 0;   // GGUF header tensor count
-        uint64_t metadataCountHeader_ = 0; // GGUF header metadata count
-    std::string path_;
-    std::string error_;
-
-    std::vector<std::unique_ptr<MappedFile>> maps_;
-    std::unordered_map<std::string, GGUFTensor> tensors_;
-    std::unordered_map<std::string, int64_t> metaInt_;
-    std::unordered_map<std::string, double> metaFloat_;
-    std::unordered_map<std::string, std::string> metaString_;
-    std::unordered_map<std::string, MetaArrayView> metaArrays_;
-};
-
-} // namespace Deep2
-
-// ============================================================================
-// Extended types for ModelOpenCompat.hpp and Deep2Engine.cpp compatibility
-// ============================================================================
-namespace Deep2 {
-
+// Tensor info from GGUF
 struct TensorInfo {
     std::string name;
+    GGMLType type = GGMLType::GGML_TYPE_F32;
     std::vector<uint64_t> dimensions;
-    uint32_t type = 0;
     uint64_t offset = 0;
     uint64_t size = 0;
-    uint64_t dataOffset = 0;
+    void* data = nullptr;
+
+    size_t GetNumElements() const {
+        if (dimensions.empty()) return 0;
+        size_t n = 1;
+        for (auto d : dimensions) n *= d;
+        return n;
+    }
+
+    size_t GetNumBlocks() const {
+        size_t elemsPerBlock = GetElemsPerBlock();
+        if (elemsPerBlock == 0) return 0;
+        return (GetNumElements() + elemsPerBlock - 1) / elemsPerBlock;
+    }
+
+    bool IsQuantized() const {
+        return QuantTypeIsQuantized(static_cast<uint32_t>(type));
+    }
+
+    // Authoritative: QuantTypeTable. Returns 0 for unknown → fail-closed (no silent {4,1}).
+    size_t GetBlockSize() const {
+        return QuantTypeBlockBytes(static_cast<uint32_t>(type));
+    }
+
+    size_t GetElemsPerBlock() const {
+        return QuantTypeBlockElements(static_cast<uint32_t>(type));
+    }
 };
 
+// Model metadata from GGUF
 struct ModelMetadata {
+    std::string name;          // general.name (empty if absent)
+    std::string architecture;
     uint32_t vocabSize = 0;
     uint32_t hiddenSize = 0;
     uint32_t numLayers = 0;
     uint32_t numHeads = 0;
     uint32_t numKeyValueHeads = 0;
     uint32_t intermediateSize = 0;
+    float rmsNormEps = 0.0f;   // 0 = unset (no silent default authority)
+    uint32_t maxPositionEmbeddings = 0;
+    float ropeTheta = 0.0f;    // 0 = unset (no silent default authority)
+    
+    // MoE metadata (real, parsed from GGUF)
+    uint32_t numExperts = 0;
+    uint32_t numExpertsPerToken = 0;  // top-k
+    uint32_t numSharedExperts = 0;
+    uint32_t moeIntermediateSize = 0;
+    float ropeScaling = 1.0f;
+
+    // MLA / DeepSeek2 metadata (real, parsed from GGUF)
+    uint32_t leadingDenseBlockCount = 0;
+    uint32_t qLoraRank = 0;
+    uint32_t kvLoraRank = 0;
     uint32_t keyLength = 0;
+    uint32_t valueLength = 0;
+    uint32_t keyLengthMla = 0;
+    uint32_t valueLengthMla = 0;
+    uint32_t ropeDimensionCount = 0;
+
+    // Tokenizer vocabulary (extracted from tokenizer.ggml.tokens)
     std::vector<std::string> vocab;
-    std::string architecture;
-    std::string name;        // general.name from GGUF metadata
-    std::string chatTemplate; // tokenizer.chat_template from GGUF metadata
-    std::string bosToken;     // tokenizer.bos_token or tokenizer.ggml.bos_token
-    std::string eosToken;     // tokenizer.eos_token or tokenizer.ggml.eos_token
+    
+    // Chat template for instruction-tuned models (e.g. Llama-3, Qwen, etc.)
+    std::string chatTemplate;
+    std::string bosToken = "<s>";
+    std::string eosToken = "</s>";
+    std::string unkToken = "<unk>";
+
+    void Print() const {
+        printf("[GGUF] Architecture: %s\n", architecture.c_str());
+        printf("[GGUF] Vocab: %u, Hidden: %u, Layers: %u, Heads: %u\n",
+               vocabSize, hiddenSize, numLayers, numHeads);
+        printf("[GGUF] KV Heads: %u, Intermediate: %u\n",
+               numKeyValueHeads, intermediateSize);
+        if (numExperts > 0) {
+            printf("[GGUF] MoE: experts=%u topK=%u shared=%u moeInter=%u\n",
+                   numExperts, numExpertsPerToken, numSharedExperts,
+                   moeIntermediateSize);
+        }
+        if (qLoraRank > 0 || kvLoraRank > 0) {
+            printf("[GGUF] MLA: qLoraRank=%u kvLoraRank=%u keyLength=%u valueLength=%u\n",
+                   qLoraRank, kvLoraRank, keyLength, valueLength);
+            printf("[GGUF] MLA: keyLengthMla=%u valueLengthMla=%u ropeDim=%u\n",
+                   keyLengthMla, valueLengthMla, ropeDimensionCount);
+        }
+        if (leadingDenseBlockCount > 0) {
+            printf("[GGUF] Leading dense blocks: %u\n", leadingDenseBlockCount);
+        }
+    }
 };
 
-} // namespace Deep2
+// Loading options
+struct GGUFLoadOptions {
+    bool mmap = true;
+    bool verifyChecksum = false;
+    size_t maxMemoryMB = 0;
+    bool loadTensors = true;
+    bool verbose = false;
+};
 
-// GGUFLoadResult defined at global scope (not in namespace Deep2)
-// The forward declaration + using-alias above (in namespace Deep2) makes it accessible as Deep2::GGUFLoadResult
-
+// Loading result
 struct GGUFLoadResult {
     bool success = false;
-    bool ok = false;  // alias for compatibility
-    int mmapBound = 0;
-    uint32_t shardCount = 0;
-    uint64_t totalSize = 0;
-    uint64_t dataOffset = 0;
-    std::shared_ptr<Deep2::GGUFLoader> loader;
-    Deep2::ModelMetadata metadata;
-    std::vector<Deep2::TensorInfo> tensors;
-    std::string error;
-    std::unique_ptr<void, void(*)(void*)> mmapKeep{nullptr, [](void*){}};
-    // Sovereign authority fields
-    std::map<std::string,std::string> rawKv; // all GGUF metadata as string KV pairs
+    char error[256] = {0};
+    ModelMetadata metadata;
+    std::vector<TensorInfo> tensors;
+    std::unordered_map<std::string, std::string> rawKv; // exact KV as parsed
     uint32_t ggufVersion = 0;
     uint64_t tensorCountHeader = 0;
     uint64_t metadataCountHeader = 0;
+    size_t totalSize = 0;
+    double loadTimeMs = 0.0;
+    uint64_t dataOffset = 0;  // Absolute byte offset to tensor data section in file
+    int mmapBound = 0;        /* 1 = tensor .data is MapView, not VirtualAlloc */
+    std::shared_ptr<void> mmapKeep; /* keeps mapping alive; Unmap on last ref */
+
+    const TensorInfo* GetTensor(const char* name) const {
+        for (const auto& t : tensors) {
+            if (t.name == name) return &t;
+        }
+        return nullptr;
+    }
+
+    TensorInfo* GetTensor(const char* name) {
+        for (auto& t : tensors) {
+            if (t.name == name) return &t;
+        }
+        return nullptr;
+    }
+
+    int GetTensorIndex(const char* name) const {
+        for (size_t i = 0; i < tensors.size(); ++i) {
+            if (tensors[i].name == name) return (int)i;
+        }
+        return -1;
+    }
 };
 
-// Implementation of GGUFLoader::LoadMetadata (requires complete GGUFLoadResult)
-namespace Deep2 {
-inline GGUFLoadResult GGUFLoader::LoadMetadata(const char* filepath) {
-    GGUFLoadResult result;
-    if (!filepath || !filepath[0]) {
-        result.error = "empty GGUF path";
-        return result;
-    }
+// ============================================================================
+// GGUFLoader - Zero-dependency GGUF parser
+// ============================================================================
+class GGUFLoader {
+public:
+    static GGUFLoadResult Load(const char* filepath, const GGUFLoadOptions& options);
+    static GGUFLoadResult LoadMetadata(const char* filepath);
+    static int ConvertType(GGMLType ggmlType);
+    static const char* GetTypeName(GGMLType type);
+    static RawrXD::QuantType ConvertGGMLType(GGMLType ggmlType);
+    static size_t CalculateTensorSize(const TensorInfo& tensor);
+    static bool ValidateFile(const char* filepath, char* error = nullptr);
 
-    auto loader = std::make_shared<GGUFLoader>();
-    if (!loader->load(std::string(filepath))) {
-        result.success = false;
-        result.ok = false;
-        result.error = loader->error();
-        return result;
-    }
+    // Hardened version with page fault fixes
+    static GGUFLoadResult LoadHardened(const char* filepath, const GGUFLoadOptions& options);
 
-    result.success = true;
-    result.ok = true;
-    result.mmapBound = loader->mappedBytes() > 0 ? 1 : 0;
-    result.shardCount = loader->shardCount();
-    result.ggufVersion = loader->version();
-    result.tensorCountHeader = loader->tensorCountHeader();
-    result.metadataCountHeader = loader->metadataCountHeader();
-    result.totalSize = loader->mappedBytes();
-    result.loader = std::move(loader);
+    // Public parsing entry points for IOCP-based streaming loaders
+    static bool ParseHeader(FILE* fp, uint64_t& tensorCount, uint64_t& kvCount);
+    static bool ParseHeader(FILE* fp, uint32_t& version, uint64_t& tensorCount,
+                            uint64_t& kvCount);
+    static bool ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& metadata,
+                                std::unordered_map<std::string, std::string>& rawMeta);
+    static bool ParseTensors(FILE* fp, uint64_t tensorCount,
+                             std::vector<TensorInfo>& tensors,
+                             uint64_t& dataOffset, bool verbose);
 
-    // Populate rawKv from all metadata key-value pairs
-    auto rawStrings = result.loader->getMetaAllStrings();
-    result.rawKv = std::move(rawStrings);
+    // Release VirtualAlloc / aligned tensor buffers owned by GGUFLoadResult.
+    static void FreeTensorData(void* data);
 
-    // Populate structured metadata
-    auto& meta = result.metadata;
-    meta.architecture = result.loader->getMetaString("general.architecture", "unknown");
-    meta.name = result.loader->getMetaString("general.name", "");
-    meta.vocabSize = static_cast<uint32_t>(result.loader->getMetaInt(
-        "tokenizer.ggml.vocab_size",
-        result.loader->getMetaInt("llama.vocab_size", 0)));
-    meta.numLayers = static_cast<uint32_t>(result.loader->getMetaInt("llama.block_count", 0));
-    meta.numHeads = static_cast<uint32_t>(result.loader->getMetaInt("llama.attention.head_count", 0));
-    meta.numKeyValueHeads = static_cast<uint32_t>(result.loader->getMetaInt("llama.attention.head_count_kv", meta.numHeads));
-    meta.intermediateSize = static_cast<uint32_t>(result.loader->getMetaInt("llama.feed_forward_length", 0));
-    meta.keyLength = static_cast<uint32_t>(result.loader->getMetaInt("llama.attention.key_length", 0));
-    meta.chatTemplate = result.loader->getMetaString("tokenizer.chat_template", "");
+private:
+    static bool LoadTensorData(FILE* fp, std::vector<TensorInfo>& tensors,
+                               uint64_t dataOffset, uint64_t fileSize);
 
-    // Populate tensor descriptors
-    auto tensorNames = result.loader->listTensors();
-    result.tensors.reserve(tensorNames.size());
-    for (const auto& name : tensorNames) {
-        const auto* gt = result.loader->getTensor(name);
-        if (gt) {
-            TensorInfo ti;
-            ti.name = name;
-            ti.dimensions.reserve(gt->shape.size());
-            for (int64_t d : gt->shape)
-                ti.dimensions.push_back(static_cast<uint64_t>(d));
-            ti.type = static_cast<uint32_t>(gt->type);
-            ti.offset = gt->tensorOffset;
-            ti.size = gt->sizeBytes;
-            ti.dataOffset = gt->fileOffset;
-            result.tensors.push_back(std::move(ti));
-        }
-    }
+    // Extended validation returning file size and data offset (for diagnostics)
+    static bool ValidateFile(const char* filepath, uint64_t& outFileSize, uint64_t& outDataOffset);
 
-    return result;
-}
+    static std::string ReadString(FILE* fp);
+    static uint64_t ReadUint64(FILE* fp);
+    static uint32_t ReadUint32(FILE* fp);
+    static int32_t ReadInt32(FILE* fp);
+    static float ReadFloat32(FILE* fp);
+    static uint16_t ReadUint16(FILE* fp);
+    static int16_t ReadInt16(FILE* fp);
+    static uint8_t ReadUint8(FILE* fp);
+    static int8_t ReadInt8(FILE* fp);
+    static double ReadFloat64(FILE* fp);
+    static bool ReadBool(FILE* fp);
+};
+
+// Forward declaration
+class Deep2Engine;
+
+// Integration helpers
+int LoadGGUFIntoEngine(const char* filepath, Deep2Engine& engine, bool verbose = false);
+int LoadGGUFTensor(const char* filepath, const char* tensorName, Deep2Engine& engine);
 
 } // namespace Deep2
-
-inline bool load_gguf(const std::string& path, void* out) {
-    if (!out) return false;
-    auto* result = static_cast<GGUFLoadResult*>(out);
-    *result = {};
-
-    auto loader = std::make_shared<Deep2::GGUFLoader>();
-    if (!loader->load(path)) {
-        result->error = loader->error();
-        return false;
-    }
-
-    result->success = true;
-    result->ok = true;
-    result->mmapBound = 1;
-    result->shardCount = loader->shardCount();
-    result->loader = std::move(loader);
-
-    // Populate metadata from GGUF metadata
-    auto& meta = result->metadata;
-    meta.vocabSize = static_cast<uint32_t>(result->loader->getMetaInt("tokenizer.ggml.vocab_size", 
-                                                                   result->loader->getMetaInt("llama.vocab_size", 0)));
-    meta.hiddenSize = static_cast<uint32_t>(result->loader->getMetaInt("llama.embedding_length", 0));
-    meta.numLayers = static_cast<uint32_t>(result->loader->getMetaInt("llama.block_count", 0));
-    meta.numHeads = static_cast<uint32_t>(result->loader->getMetaInt("llama.attention.head_count", 0));
-    meta.numKeyValueHeads = static_cast<uint32_t>(result->loader->getMetaInt("llama.attention.head_count_kv", meta.numHeads));
-    meta.intermediateSize = static_cast<uint32_t>(result->loader->getMetaInt("llama.feed_forward_length", 0));
-    meta.keyLength = static_cast<uint32_t>(result->loader->getMetaInt("llama.attention.key_length", 0));
-    meta.architecture = result->loader->getMetaString("general.architecture", "unknown");
-
-    // Load vocab
-    std::vector<std::string> tokens;
-    if (result->loader->getMetaStringArray("tokenizer.ggml.tokens", tokens)) {
-        meta.vocab = std::move(tokens);
-        if (meta.vocabSize == 0) meta.vocabSize = static_cast<uint32_t>(meta.vocab.size());
-    }
-
-    // Populate tensors
-    auto& tensors = result->tensors;
-    auto tensorNames = result->loader->listTensors();
-    tensors.reserve(tensorNames.size());
-    for (const auto& name : tensorNames) {
-        const auto* gt = result->loader->getTensor(name);
-        if (gt) {
-            Deep2::TensorInfo ti;
-            ti.name = name;
-            ti.dimensions.reserve(gt->shape.size());
-            for (int64_t d : gt->shape) {
-                ti.dimensions.push_back(static_cast<uint64_t>(d));
-            }
-            ti.type = static_cast<uint32_t>(gt->type);
-            ti.offset = gt->tensorOffset;
-            ti.size = gt->sizeBytes;
-            ti.dataOffset = gt->fileOffset;
-            tensors.push_back(std::move(ti));
-        }
-    }
-
-    return true;
-}

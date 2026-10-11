@@ -31,8 +31,8 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
 #include <mutex>
+#include <functional>
 #include <fstream>
 
 namespace RawrXD {
@@ -49,12 +49,11 @@ namespace LicenseFeature {
     constexpr uint64_t UnlimitedContext   = 0x00000020;
     constexpr uint64_t FlashAttention     = 0x00000040;
     constexpr uint64_t MultiGPU           = 0x00000080;
-    constexpr uint64_t Tuner              = 0x00000100;
 
     // Combined masks for tier checks
     constexpr uint64_t CommunityFeatures  = 0;
-    constexpr uint64_t ProFeatures        = AVX512Premium | GPUQuant4Bit | FlashAttention | Tuner;  // 0x14A
-    constexpr uint64_t EnterpriseAll      = 0x000001FF;
+    constexpr uint64_t ProFeatures        = DualEngine800B | AVX512Premium | FlashAttention;
+    constexpr uint64_t EnterpriseAll      = 0x000000FF;
 }
 
 // ============================================================================
@@ -70,8 +69,7 @@ enum class EnterpriseFeature : uint64_t {
     UnlimitedContext  = 0x20,
     FlashAttention    = 0x40,
     MultiGPU          = 0x80,
-    Tuner             = 0x100,
-    All               = 0x1FF
+    All               = 0xFF
 };
 
 inline EnterpriseFeature operator|(EnterpriseFeature a, EnterpriseFeature b) {
@@ -99,13 +97,12 @@ enum class LicenseState : uint32_t {
     Expired             = 4,
     HardwareMismatch    = 5,
     Tampered            = 6,
-    ValidPro            = 7,
 };
 
 // ============================================================================
 // License Change Callback
 // ============================================================================
-using LicenseChangeCallback = void(*)(LicenseState oldState, LicenseState newState);
+using LicenseChangeCallback = std::function<void(LicenseState oldState, LicenseState newState)>;
 
 // ============================================================================
 // ASM Extern Declarations
@@ -160,11 +157,6 @@ extern "C" {
     
     /// Cleanup license subsystem
     void Enterprise_Shutdown();
-    
-    /// [Dev / License Creator] Unlock all enterprise features on this machine.
-    /// Only active when RAWRXD_ENTERPRISE_DEV=1. Brute-forces a valid license_hash.
-    /// Returns: 1 if unlocked, 0 if env not set or failed.
-    int64_t Enterprise_DevUnlock();
     
     /// Integration hook: check if enterprise engines should register
     /// Returns: 1 if enterprise features available, 0 if community
@@ -330,17 +322,6 @@ public:
     /// Get license edition string ("Community", "Enterprise", "Trial").
     const char* GetEditionName() const;
 
-    /// Get remaining trial time in seconds (0 if not trial or expired).
-    uint64_t GetTrialRemainingSeconds() const;
-
-    /// Azure AD configuration status (enterprise.json)
-    bool IsAzureADConfigured() const;
-    std::string GetAzureADAuthority() const;
-    std::string GetAzureADClientId() const;
-
-    /// Last stored license path (Windows registry, if available)
-    std::string GetStoredLicensePath() const;
-
     /// Get maximum model size allowed by current license tier (GB)
     uint64_t GetMaxModelSizeGB() const;
 
@@ -381,16 +362,8 @@ private:
     mutable std::mutex m_mutex;
     LicenseState m_lastState = LicenseState::Invalid;
     std::vector<LicenseChangeCallback> m_callbacks;
-    uint64_t m_trialStartUs = 0;
-    uint64_t m_lastTelemetryUpdateUs = 0;
-    bool m_aadConfigured = false;
-    std::string m_aadAuthority;
-    std::string m_aadClientId;
-    std::string m_aadJwksUrl;
-    std::string m_lastLicensePath;
 
     void notifyStateChange(LicenseState oldState, LicenseState newState);
-    void updateTelemetry(LicenseState state, const char* action);
 };
 
 } // namespace RawrXD
