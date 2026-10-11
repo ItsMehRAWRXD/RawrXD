@@ -1307,6 +1307,58 @@ else()
 endif() # End RAWRXD_BUILD_WIN32IDE block
 
 # ============================================================================
+# Deep2 per-token performance profiler (native, dependency-free)
+# ============================================================================
+# First move of the 5x throughput program (128.78 -> 643.90 TPS on Nemotron
+# 30B MoE): profile the real per-token decode path before optimizing. Reports
+# per-phase ms/token, weight bandwidth, dominant phase. No Qt, no external deps.
+# gguf_loader.h pulls in vulkan_compute.h, so the Vulkan SDK include path is
+# required (it is discovered here, not hardcoded).
+find_package(Vulkan QUIET)
+# The repo's include/ ships a vulkan/vulkan.h STUB (no vk* entry points), which
+# FindVulkan is happy to resolve. Point the target at the real SDK instead:
+# VULKAN_SDK (set by the SDK installer) wins over the discovered stub path.
+set(_rawrxd_vk_sdk_inc "$ENV{VULKAN_SDK}/Include")
+if(NOT EXISTS "${_rawrxd_vk_sdk_inc}/vulkan/vulkan.h")
+    set(_rawrxd_vk_sdk_inc "${Vulkan_INCLUDE_DIRS}")
+endif()
+if(NOT EXISTS "${_rawrxd_vk_sdk_inc}/vulkan/vulkan.h")
+    set(_rawrxd_vk_sdk_inc "")
+endif()
+message(STATUS "profiler gate: Vulkan_FOUND=${Vulkan_FOUND} vulkan_include='${_rawrxd_vk_sdk_inc}'")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_token_profiler.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_token_profiler
+        tools/deep2_token_profiler.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(deep2_token_profiler PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${_rawrxd_vk_sdk_inc}
+    )
+    # The GGUF loader chain includes vulkan_compute.h -> vulkan/vulkan.h, which
+    # comes from the real Vulkan SDK (see _rawrxd_vk_sdk_inc above) - ggml itself
+    # is linked through ggml_interface and needs no extra include path.
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_token_profiler PRIVATE ggml_interface)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_token_profiler PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_token_profiler PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_token_profiler PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_token_profiler enabled (ggml + Vulkan SDK)")
+else()
+    message(STATUS "deep2_token_profiler EXCLUDED: profiler source or Vulkan SDK not available")
+endif()
+
+# ============================================================================
 # Native (dependency-free, Qt-free) Win32 IDE
 # ============================================================================
 # The genuine RawrXD Win32 IDE: CreateWindow/Win32 API, D3D11/Vulkan
