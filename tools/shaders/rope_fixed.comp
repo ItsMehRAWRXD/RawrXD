@@ -1,0 +1,99 @@
+#version 450
+
+// Deep2 RoPE with YaRN interpolation.
+//
+// Matches MGRope::Alpha() and the K_pe application in ModelGenieExecutor.cpp:
+//   theta_extrap = pos * pow(freq_base, -2k / n_rot)
+//   theta_interp = freq_scale * theta_extrap
+//   ramp         = rope_yarn_ramp(k)
+//   alpha        = theta_interp * (1 - ramp) + theta_extrap * ramp
+//   out[2k]      = x[2k]   * cos(alpha) - x[2k+1] * sin(alpha)
+//   out[2k+1]    = x[2k]   * sin(alpha) + x[2k+1] * cos(alpha)
+//
+// k is the pair index (i0/2 in ggml), not the element index. Dimensions beyond
+// n_rot are passed through unchanged, so a single pass covers the whole vector.
+
+layout(local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer InBuf {
+    float in_data[];
+};
+
+layout(std430, binding = 1) writeonly buffer OutBuf {
+    float out_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint pos;          // token position
+    uint n_rot;        // number of dimensions actually rotated (must be even)
+    uint dim;          // full vector length
+    uint u_freq_base;  // float bits
+    uint u_freq_scale; // float bits
+    uint u_n_ctx_orig; // float bits
+    uint u_beta_fast;  // float bits
+    uint u_beta_slow;  // float bits
+};
+
+float F(uint bits) { return uintBitsToFloat(bits); }
+
+// llama.cpp: n_rot * log(n_ctx_orig / (beta * 2*pi)) / (2 * log(freq_base))
+float corr_dim(float beta, float freq_base, float n_rot, float n_ctx_orig) {
+    const float PI = 3.14159265358979323846;
+    return n_rot * log(n_ctx_orig / (beta * 2.0 * PI)) / (2.0 * log(freq_base));
+}
+
+void main() {
+    uint i0 = gl_GlobalInvocationID.x * 2u;
+    if (i0 + 1u >= dim) {
+        // Odd trailing element: copy verbatim.
+        if (i0 < dim) out_data[i0] = in_data[i0];
+        return;
+    }
+
+    // Outside the rotated range: copy the pair unchanged.
+    if (i0 >= n_rot) {
+        out_data[i0]      = in_data[i0];
+        out_data[i0 + 1u] = in_data[i0 + 1u];
+        return;
+    }
+
+    float freq_base   = F(u_freq_base);
+    float freq_scale  = F(u_freq_scale);
+    float n_ctx_orig  = F(u_n_ctx_orig);
+    float beta_fast   = F(u_beta_fast);
+    float beta_slow   = F(u_beta_slow);
+
+    uint k = i0 / 2u;
+
+    // corr_dim bounds: low = max(0, floor(corr_dim(beta_fast))),
+    //                  high = min(n_rot-1, ceil(corr_dim(beta_slow)))
+    float low_f = max(floor(corr_dim(beta_fast, freq_base, float(n_rot), n_ctx_orig)), 0.0);
+    float high_f = min(ceil(corr_dim(beta_slow, freq_base, float(n_rot), n_ctx_orig)),
+                       float(n_rot) - 1.0);
+
+    // rope_yarn_ramp
+    float span = high_f - low_f;
+    float denom = (span > 0.001) ? span : 0.001;
+    float y = (float(k) - low_f) / denom;
+    float ramp;
+    if (y <= 0.0)      ramp = 1.0;
+    else if (y >= 1.0) ramp = 0.0;
+    else               ramp = 1.0 - y;
+
+    float theta_extrap = float(pos) * pow(freq_base, -2.0 * float(k) / float(n_rot));
+    float theta_interp = freq_scale * theta_extrap;
+    float alpha = theta_interp * (1.0 - ramp) + theta_extrap * ramp;
+
+    // rope_yarn also scales cos/sin by mscale. In the Deep2 configuration
+    // attn_factor_org == rope_attn_factor == 1, so mscale == 1 and no
+    // magnitude scaling is applied, matching the CPU path.
+
+    float c = cos(alpha);
+    float s = sin(alpha);
+
+    float x0 = in_data[i0];
+    float x1 = in_data[i0 + 1u];
+
+    out_data[i0]      = x0 * c - x1 * s;
+    out_data[i0 + 1u] = x0 * s + x1 * c;
+}

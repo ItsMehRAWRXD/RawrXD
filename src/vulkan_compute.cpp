@@ -892,6 +892,102 @@ bool VulkanCompute::EnsureMatMulPipeline(const std::string& spirv_path) {
     return true;
 }
 
+bool VulkanCompute::EnsureRoPEPipeline(const std::string& spirv_path) {
+    if (shaders_.count("rope") &&
+        shaders_["rope"].pipeline &&
+        rope_descriptor_set_layout_ &&
+        rope_descriptor_pool_) {
+        return true;   // already initialised
+    }
+
+    // Load SPIR-V.
+    std::vector<uint32_t> code;
+    if (!LoadSPIRVCode(spirv_path, code) || code.empty()) {
+        std::cerr << "Failed to load RoPE SPIR-V: " << spirv_path << std::endl;
+        return false;
+    }
+
+    VkShaderModuleCreateInfo sm{};
+    sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    sm.codeSize = code.size() * sizeof(uint32_t);
+    sm.pCode = code.data();
+
+    ComputeShader cs;
+    cs.name = "rope";
+    cs.spirv_code = code;
+    if (vkCreateShaderModule(device_, &sm, nullptr, &cs.module) != VK_SUCCESS) {
+        std::cerr << "Failed to create RoPE shader module" << std::endl;
+        return false;
+    }
+
+    // Two storage buffers: input (0) and output (1).
+    VkDescriptorSetLayoutBinding binds[2] = {};
+    for (uint32_t i = 0; i < 2; ++i) {
+        binds[i].binding = i;
+        binds[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        binds[i].descriptorCount = 1;
+        binds[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+
+    VkDescriptorSetLayoutCreateInfo dsl{};
+    dsl.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    dsl.bindingCount = 2;
+    dsl.pBindings = binds;
+    if (vkCreateDescriptorSetLayout(device_, &dsl, nullptr, &rope_descriptor_set_layout_) != VK_SUCCESS) {
+        std::cerr << "Failed to create RoPE descriptor set layout" << std::endl;
+        return false;
+    }
+
+    VkDescriptorPoolSize pool_size{};
+    pool_size.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    pool_size.descriptorCount = 2 * 64;   // headroom for many dispatches
+
+    VkDescriptorPoolCreateInfo dp{};
+    dp.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    dp.maxSets = 64;
+    dp.poolSizeCount = 1;
+    dp.pPoolSizes = &pool_size;
+    if (vkCreateDescriptorPool(device_, &dp, nullptr, &rope_descriptor_pool_) != VK_SUCCESS) {
+        std::cerr << "Failed to create RoPE descriptor pool" << std::endl;
+        return false;
+    }
+
+    VkPushConstantRange pc{};
+    pc.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    pc.offset = 0;
+    pc.size = sizeof(uint32_t) * 8;   // pos, n_rot, dim + 5 float bit patterns
+
+    VkPipelineLayoutCreateInfo pl{};
+    pl.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pl.setLayoutCount = 1;
+    pl.pSetLayouts = &rope_descriptor_set_layout_;
+    pl.pushConstantRangeCount = 1;
+    pl.pPushConstantRanges = &pc;
+    if (vkCreatePipelineLayout(device_, &pl, nullptr, &cs.layout) != VK_SUCCESS) {
+        std::cerr << "Failed to create RoPE pipeline layout" << std::endl;
+        return false;
+    }
+
+    VkPipelineShaderStageCreateInfo stage{};
+    stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    stage.module = cs.module;
+    stage.pName = "main";
+
+    VkComputePipelineCreateInfo cp{};
+    cp.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    cp.stage = stage;
+    cp.layout = cs.layout;
+    if (vkCreateComputePipelines(device_, nullptr, 1, &cp, nullptr, &cs.pipeline) != VK_SUCCESS) {
+        std::cerr << "Failed to create RoPE compute pipeline" << std::endl;
+        return false;
+    }
+
+    shaders_["rope"] = cs;
+    std::cout << "RoPE pipeline and permanent descriptor system initialized successfully" << std::endl;
+    return true;
+}
+
 bool VulkanCompute::CreateDescriptorSetLayout(uint32_t binding_count, VkDescriptorSetLayout& layout) {
     // This function is deprecated - descriptor layouts are now created in EnsureMatMulPipeline
     // Kept for backward compatibility but should not be used
@@ -1237,9 +1333,123 @@ bool VulkanCompute::ExecuteAttention(const float* queries, const float* keys, co
 }
 
 bool VulkanCompute::ExecuteRoPE(float* embeddings, uint32_t dim, uint32_t seq_pos, uint32_t rotation_dim) {
-    // Placeholder for RoPE implementation
-    std::cout << "Executing RoPE: Dim=" << dim << ", SeqPos=" << seq_pos << std::endl;
-    return true;
+    // Real GPU RoPE with YaRN interpolation, matching MGRope::Alpha() in
+    // ModelGenieExecutor.cpp. Replaces a placeholder that performed no work.
+    //
+    // Parameters default to the DeepSeek-V2-Lite Chat configuration so the
+    // kernel reproduces the certified CPU path without extra host plumbing.
+    if (!embeddings || dim == 0) return false;
+
+    // Deep2 rope.scaling values (see MGRope in ModelGenieExecutor.cpp).
+    const float kFreqBase  = 10000.0f;   // rope.scaling.freq_base
+    const float kFreqScale = 0.025f;     // rope.scaling.factor
+    const float kNCtxOrig  = 4096.0f;    // rope.scaling.original_context_length
+    const float kBetaFast  = 32.0f;      // yarn.beta_fast
+    const float kBetaSlow  = 1.0f;       // yarn.beta_slow
+    // yarn_log_multiplier is not needed: in this configuration
+    // attn_factor_org == rope_attn_factor == 1, so mscale == 1 and the
+    // cos/sin pair requires no magnitude scaling.
+
+    // Rotation dim must be even; fall back to CPU semantics if it is not.
+    uint32_t n_rot = (rotation_dim ? rotation_dim : dim) & ~1u;
+    if (n_rot > dim) n_rot = dim & ~1u;
+
+    // Ensure the RoPE pipeline exists.
+    if (!EnsureRoPEPipeline(kRoPEShaderPath)) {
+        std::cerr << "RoPE pipeline unavailable at " << kRoPEShaderPath << std::endl;
+        return false;
+    }
+    auto it = shaders_.find("rope");
+    if (it == shaders_.end() || !it->second.pipeline || !rope_descriptor_pool_) return false;
+
+    const size_t bytes = (size_t)dim * sizeof(float);
+
+    // Device buffers. Upload the vector, dispatch, read it back in place.
+    // This is a host round-trip; a future integration can keep the vector
+    // resident and avoid it.
+    uint32_t in_idx = 0, out_idx = 0;
+    size_t in_bytes = 0, out_bytes = 0;
+    if (!AllocateBuffer(bytes, in_idx, in_bytes) ||
+        !AllocateBuffer(bytes, out_idx, out_bytes)) {
+        std::cerr << "RoPE buffer allocation failed" << std::endl;
+        return false;
+    }
+
+    if (!CopyHostToBuffer(embeddings, in_idx, bytes)) {
+        std::cerr << "RoPE upload failed" << std::endl;
+        return false;
+    }
+
+    // Descriptor set for this dispatch.
+    VkDescriptorSetAllocateInfo alloc{};
+    alloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc.descriptorPool = rope_descriptor_pool_;
+    alloc.descriptorSetCount = 1;
+    alloc.pSetLayouts = &rope_descriptor_set_layout_;
+
+    VkDescriptorSet ds = VK_NULL_HANDLE;
+    if (vkAllocateDescriptorSets(device_, &alloc, &ds) != VK_SUCCESS) {
+        std::cerr << "RoPE descriptor allocation failed" << std::endl;
+        return false;
+    }
+
+    VkBuffer bufs[2] = { allocated_buffers_[in_idx].first, allocated_buffers_[out_idx].first };
+    VkDescriptorBufferInfo infos[2];
+    VkWriteDescriptorSet writes[2];
+    for (int i = 0; i < 2; ++i) {
+        infos[i] = {};
+        infos[i].buffer = bufs[i];
+        infos[i].offset = 0;
+        infos[i].range = bytes;
+        writes[i] = {};
+        writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet = ds;
+        writes[i].dstBinding = i;
+        writes[i].descriptorCount = 1;
+        writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writes[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device_, 2, writes, 0, nullptr);
+
+    auto fb = [](float f) { uint32_t u; std::memcpy(&u, &f, 4); return u; };
+
+    // Push constants. Floats cross the boundary as their bit patterns because
+    // push-constant ranges are only guaranteed to be 4-byte aligned scalars.
+    struct {
+        uint32_t pos, n_rot, dim;
+        uint32_t u_freq_base, u_freq_scale, u_n_ctx_orig;
+        uint32_t u_beta_fast, u_beta_slow;
+    } pc;
+    pc.pos = seq_pos;
+    pc.n_rot = n_rot;
+    pc.dim = dim;
+    pc.u_freq_base = fb(kFreqBase);
+    pc.u_freq_scale = fb(kFreqScale);
+    pc.u_n_ctx_orig = fb(kNCtxOrig);
+    pc.u_beta_fast = fb(kBetaFast);
+    pc.u_beta_slow = fb(kBetaSlow);
+
+    bool ok = ExecuteSingleTimeCommands([&](VkCommandBuffer cmd) {
+        vkCmdPushConstants(cmd, it->second.layout, VK_SHADER_STAGE_COMPUTE_BIT,
+                           0, sizeof(pc), &pc);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, it->second.pipeline);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                it->second.layout, 0, 1, &ds, 0, nullptr);
+        // One invocation per pair; the shader also handles the odd tail.
+        uint32_t pairs = (dim + 1u) / 2u;
+        uint32_t groups = (pairs + 15u) / 16u;
+        vkCmdDispatch(cmd, groups, 1, 1);
+    });
+
+    if (ok) {
+        if (!CopyBufferToHost(out_idx, embeddings, bytes)) {
+            std::cerr << "RoPE readback failed" << std::endl;
+            ok = false;
+        }
+    }
+
+    vkFreeDescriptorSets(device_, rope_descriptor_pool_, 1, &ds);
+    return ok;
 }
 
 bool VulkanCompute::ExecuteRMSNorm(float* data, uint32_t size, float epsilon) {

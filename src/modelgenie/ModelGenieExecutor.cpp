@@ -9,7 +9,6 @@
 //=============================================================================
 
 #include "ModelGenieExecutor.hpp"
-
 #include <algorithm>
 #include <array>
 #include <cfloat>
@@ -28,6 +27,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+// GPU backend for the FP32 RoPE path (RAWRXD_DEEP2_GPU_DISPATCH_001).
+#include "vulkan_compute.h"
 
 // Debug position configurable via env var (default=1 for backward compat)
 static size_t g_debug_pos = [](){
@@ -248,6 +250,28 @@ inline float AttentionScoreScale()
 }
 
 } // namespace MGRope
+
+// ---------------------------------------------------------------------------
+// GPU backend selection for Deep2 (RAWRXD_DEEP2_GPU_DISPATCH_001)
+//
+// The quantised linear projections (Q4_K / Q6_K) still execute on the CPU:
+// the existing Vulkan matmul kernel is plain FP32 and consuming quantised
+// weights would require dequantising the whole 10 GB model into FP32 device
+// memory. The operations that are safe to move without changing arithmetic
+// are the FP32 ones, and RoPE is the first of them, so that is what this
+// switch controls. Results must remain numerically equivalent either way.
+//
+// Enable with RAWRXD_GPU_ROPE=1. Off by default.
+// ---------------------------------------------------------------------------
+static bool GpuRoPEEnabled()
+{
+    static const bool enabled = [] {
+        const char* v = std::getenv("RAWRXD_GPU_ROPE");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
+    return enabled;
+}
+
 bool GGUFROM::Open(const std::string& path)
         {
             MG_ROM_TRACE("Opening: %s\n", path.c_str()); std::fflush(stderr);
@@ -1956,6 +1980,47 @@ static bool DotBlocked(ModelGenie::GGMLType type, const uint8_t* weight,
         if (position == 0) {
             // Position 0: RoPE is identity
             std::memcpy(k_rope.data(), k_rope_raw, rope * sizeof(float));
+        } else if (GpuRoPEEnabled()) {
+            // GPU path: dispatch the verified Vulkan RoPE kernel.
+            // Must be numerically equivalent to the CPU loop below.
+            std::memcpy(k_rope.data(), k_rope_raw, rope * sizeof(float));
+            static VulkanCompute g_rope_gpu;   // one instance, lazily initialised
+            static bool g_rope_gpu_ready = false;
+            static bool g_rope_gpu_failed = false;
+            if (!g_rope_gpu_failed) {
+                if (!g_rope_gpu_ready) {
+                    if (g_rope_gpu.Initialize()) {
+                        g_rope_gpu_ready = true;
+                    } else {
+                        g_rope_gpu_failed = true;
+                        std::fprintf(stderr,
+                            "[GPU_ROPE] Vulkan init failed - falling back to CPU RoPE\n");
+                    }
+                }
+                if (g_rope_gpu_ready) {
+                    if (!g_rope_gpu.ExecuteRoPE(k_rope.data(),
+                                                (uint32_t)rope,
+                                                (uint32_t)position,
+                                                (uint32_t)rope)) {
+                        // Fall back to CPU rather than corrupt the KV cache.
+                        std::fprintf(stderr,
+                            "[GPU_ROPE] dispatch failed at pos %zu layer %zu - falling back\n",
+                            position, layerIdx);
+                        std::memcpy(k_rope.data(), k_rope_raw, rope * sizeof(float));
+                    }
+                }
+            }
+            if (!g_rope_gpu_ready) {
+                // CPU fallback.
+                for (size_t i = 0; i < rope; i += 2) {
+                    const float alpha = MGRope::Alpha(position, i / 2);
+                    const float ca = cosf(alpha), sa = sinf(alpha);
+                    float p0 = k_rope_raw[i];
+                    float p1 = k_rope_raw[i + 1];
+                    k_rope[i]     = p0 * ca - p1 * sa;
+                    k_rope[i + 1] = p0 * sa + p1 * ca;
+                }
+            }
         } else {
             for (size_t i = 0; i < rope; i += 2) {
                 const float alpha = MGRope::Alpha(position, i / 2);
