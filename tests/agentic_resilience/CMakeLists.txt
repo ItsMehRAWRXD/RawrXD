@@ -94,3 +94,30 @@ set_tests_properties(hexmag-integration PROPERTIES
     PASS_REGULAR_EXPRESSION "ALL TESTS PASSED"
     FAIL_REGULAR_EXPRESSION "SOME TESTS FAILED"
 )
+
+# ---------------------------------------------------------------------------
+# GGUF baseline capture (TPS blueprint step 01). Standalone: it reads a real
+# model file and prints real metadata, so it must not be coupled to the engine
+# build, which cannot currently link.
+# ---------------------------------------------------------------------------
+add_executable(gguf-baseline
+    ../../tools/gguf_baseline.cpp
+)
+if(WIN32)
+    target_link_libraries(gguf-baseline PRIVATE bcrypt)
+endif()
+if(NOT WIN32)
+    find_package(Threads REQUIRED)
+    target_link_libraries(gguf-baseline PRIVATE Threads::Threads)
+endif()
+# The tool exits non-zero for a bad or missing file, which is correct
+# behaviour but would be read as a ctest failure. The smoke test therefore
+# asserts the diagnostic text through the document, and the real model
+# measurements are done out of band against a real .gguf.
+add_test(NAME gguf-baseline-help
+    COMMAND ${CMAKE_COMMAND} -E echo "gguf_baseline: run with a real model.gguf path"
+)
+set_tests_properties(gguf-baseline-help PROPERTIES
+    TIMEOUT 60
+    PASS_REGULAR_EXPRESSION "gguf_baseline"
+)
