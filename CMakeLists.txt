@@ -1307,6 +1307,34 @@ else()
 endif() # End RAWRXD_BUILD_WIN32IDE block
 
 # ============================================================================
+# Universal GGUF probe (model-agnostic Deep2 integration)
+# ============================================================================
+# Discovers every model installed in the local ollama store, parses each blob
+# architecturally (any arch, any ggml quant, any tensor layout) and runs a real
+# ggml op on the model's own weights - so Deep2 works regardless of model.
+find_package(Vulkan QUIET)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/gguf_universal_probe.cpp")
+    add_executable(gguf_universal_probe tools/gguf_universal_probe.cpp)
+    target_include_directories(gguf_universal_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        $ENV{VULKAN_SDK}/Include
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(gguf_universal_probe PRIVATE ggml_interface)
+    endif()
+    if(MSVC)
+        target_compile_options(gguf_universal_probe PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(gguf_universal_probe PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(gguf_universal_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "gguf_universal_probe enabled (any-model GGUF integration)")
+endif()
+
+# ============================================================================
 # Deep2 per-token performance profiler (native, dependency-free)
 # ============================================================================
 # First move of the 5x throughput program (128.78 -> 643.90 TPS on Nemotron
