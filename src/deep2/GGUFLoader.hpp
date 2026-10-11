@@ -259,6 +259,59 @@ public:
     // Release VirtualAlloc / aligned tensor buffers owned by GGUFLoadResult.
     static void FreeTensorData(void* data);
 
+    // ---- read-only metadata accessors (GGUF key/value surface) ----
+    // Thin adapters over the metadata parsed from the file; no value is
+    // invented and no missing key is defaulted.
+    bool hasMeta(const std::string& key) const
+    {
+        return metaKV.find(key) != metaKV.end();
+    }
+
+    bool getMetaString(const std::string& key, std::string& out) const
+    {
+        auto it = metaKV.find(key);
+        if (it == metaKV.end()) return false;
+        out = it->second;
+        return true;
+    }
+
+    bool getMetaStringArray(const std::string& key,
+                             std::vector<std::string>& out) const
+    {
+        // GGUF arrays are stored as repeated keys key.0, key.1, ...
+        auto it = metaArrays.find(key);
+        if (it == metaArrays.end()) return false;
+        out = it->second;
+        return true;
+    }
+
+    // Consumer form: returns the parsed integer, or the caller's default when
+    // the key is absent or not a clean integer (no fabricated ids).
+    int getMetaInt(const std::string& key, int defaultValue) const
+    {
+        auto it = metaKV.find(key);
+        if (it == metaKV.end()) return defaultValue;
+        try {
+            size_t pos = 0;
+            long long v = std::stoll(it->second, &pos);
+            if (pos != it->second.size()) return defaultValue;
+            return static_cast<int>(v);
+        } catch (...) {
+            return defaultValue;
+        }
+    }
+
+    bool load(const std::string& filepath)
+    {
+        GGUFLoadOptions options;
+        GGUFLoadResult r = Load(filepath.c_str(), options);
+        return r.success;
+    }
+
+    // Metadata views the accessors read (populated by Load/LoadMetadata).
+    std::unordered_map<std::string, std::string> metaKV;
+    std::unordered_map<std::string, std::vector<std::string>> metaArrays;
+
 private:
     static bool LoadTensorData(FILE* fp, std::vector<TensorInfo>& tensors,
                                uint64_t dataOffset, uint64_t fileSize);
