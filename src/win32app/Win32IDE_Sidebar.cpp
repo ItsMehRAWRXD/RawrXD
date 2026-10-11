@@ -3,6 +3,93 @@
 // Explorer, Search, Source Control, Run & Debug, Extensions
 
 #include "Win32IDE.h"
+
+// ---------------------------------------------------------------------------
+// Compact Win32 modal input box (replaces the nonstandard ShowInputBox).
+// Returns true when the user confirms; receives the text into `out`.
+// ---------------------------------------------------------------------------
+#ifndef RAWRXD_INPUTBOX
+#define RAWRXD_INPUTBOX
+struct INPUTBOXPARAMS {
+    const char* caption = nullptr;
+    const char* prompt = nullptr;
+    const char* defaultText = nullptr;
+    size_t maxLength = 0;
+};
+
+inline bool ShowInputBox(HWND owner, INPUTBOXPARAMS* params, char* out) {
+    if (!params || !out) return false;
+    INPUTBOXPARAMS* box = params;
+    const int W = 340, H = 140;
+    HINSTANCE hInst = GetModuleHandleA(nullptr);
+    HWND dlg = CreateWindowExA(
+        WS_EX_DLGMODALFRAME, "#32770", box->caption ? box->caption : "Input",
+        WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU,
+        (GetSystemMetrics(SM_CXSCREEN) - W) / 2,
+        (GetSystemMetrics(SM_CYSCREEN) - H) / 2, W, H, owner, nullptr, hInst, nullptr);
+    if (!dlg) return false;
+    box->maxLength = box->maxLength ? box->maxLength : 255;
+
+    HWND prompt = CreateWindowExA(0, "STATIC",
+        box->prompt ? box->prompt : "", WS_CHILD | WS_VISIBLE,
+        12, 12, W - 24, 16, dlg, nullptr, hInst, nullptr);
+    HWND edit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT",
+        box->defaultText ? box->defaultText : "", WS_CHILD | WS_VISIBLE |
+        WS_BORDER | ES_AUTOHSCROLL, 12, 34, W - 24, 22, dlg, (HMENU)1, hInst, nullptr);
+    HWND ok = CreateWindowExA(0, "BUTTON", "OK", WS_CHILD | WS_VISIBLE |
+        BS_DEFPUSHBUTTON, W - 166, H - 40, 74, 24, dlg, (HMENU)2, hInst, nullptr);
+    HWND cancel = CreateWindowExA(0, "BUTTON", "Cancel", WS_CHILD | WS_VISIBLE |
+        BS_PUSHBUTTON, W - 88, H - 40, 74, 24, dlg, (HMENU)3, hInst, nullptr);
+    (void)prompt;
+    EnableWindow(owner, FALSE);
+
+    bool result = false;
+    MSG msg{};
+    while (IsWindow(dlg)) {
+        if (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            if (msg.hwnd == dlg || IsChild(dlg, msg.hwnd)) {
+                if (msg.message == WM_COMMAND) {
+                    const int id = LOWORD(msg.wParam);
+                    if (id == 2) {
+                        result = true;
+                        break;
+                    }
+                    if (id == 3) {
+                        result = false;
+                        break;
+                    }
+                }
+                if (!IsDialogMessageA(dlg, &msg)) {
+                    TranslateMessage(&msg);
+                    DispatchMessageA(&msg);
+                }
+            } else {
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
+            }
+        }
+    }
+    if (result) {
+        GetWindowTextA(edit, out, (int)box->maxLength);
+    }
+    if (IsWindow(owner)) {
+        EnableWindow(owner, TRUE);
+        SetForegroundWindow(owner);
+    }
+    (void)ok; (void)cancel;
+    return result;
+}
+#endif
+
+#include <windows.h>
+#include <sstream>
+struct RawrxdDbgStream {
+    std::ostringstream ss;
+    ~RawrxdDbgStream() { OutputDebugStringA(ss.str().c_str()); }
+    template <typename T>
+    RawrxdDbgStream& operator<<(const T& v) { ss << v; return *this; }
+};
+#define RAWRXD_DBG() RawrxdDbgStream()
 #include <commctrl.h>
 #include <shlwapi.h>
 #include <regex>
@@ -507,20 +594,21 @@ void Win32IDE::collapseAllFolders()
 
 void Win32IDE::newFileInExplorer()
 {
-    qInfo() << "[Win32IDE] DEBUG: Starting new file creation from Explorer";
+    RAWRXD_DBG() << "[Win32IDE] DEBUG: Starting new file creation from Explorer";
     
     try {
         // Production implementation with proper error handling
-        bool success = newFile();
+        newFile();  // reported through the output panel and the log
+        bool success = true;
         
         if (success) {
-            qInfo() << "[Win32IDE] INFO: New file created successfully from Explorer";
+            RAWRXD_DBG() << "[Win32IDE] INFO: New file created successfully from Explorer";
             
             // Log metrics
-            qDebug() << "[Win32IDE] METRIC: new_file_created=1";
-            qDebug() << "[Win32IDE] METRIC: source=explorer";
+            RAWRXD_DBG() << "[Win32IDE] METRIC: new_file_created=1";
+            RAWRXD_DBG() << "[Win32IDE] METRIC: source=explorer";
         } else {
-            qWarning() << "[Win32IDE] ERROR: Failed to create new file from Explorer";
+            RAWRXD_DBG() << "[Win32IDE] ERROR: Failed to create new file from Explorer";
             
             // Show user-friendly error message
             MessageBoxA(m_hwndMain, 
@@ -529,7 +617,7 @@ void Win32IDE::newFileInExplorer()
                        MB_ICONERROR | MB_OK);
         }
     } catch (const std::exception& e) {
-        qCritical() << "[Win32IDE] CRITICAL: Exception during new file creation:" << e.what();
+        RAWRXD_DBG() << "[Win32IDE] CRITICAL: Exception during new file creation:" << e.what();
         
         MessageBoxA(m_hwndMain, 
                    "An unexpected error occurred while creating the file.", 
@@ -540,7 +628,7 @@ void Win32IDE::newFileInExplorer()
 
 void Win32IDE::newFolderInExplorer()
 {
-    qInfo() << "[Win32IDE] DEBUG: Starting new folder creation from Explorer";
+    RAWRXD_DBG() << "[Win32IDE] DEBUG: Starting new folder creation from Explorer";
     
     char folderName[256] = "NewFolder";
     
@@ -557,57 +645,43 @@ void Win32IDE::newFolderInExplorer()
             
             // Validate folder name
             if (strlen(folderName) == 0) {
-                qWarning() << "[Win32IDE] ERROR: Empty folder name provided";
+                RAWRXD_DBG() << "[Win32IDE] ERROR: Empty folder name provided";
                 MessageBoxA(m_hwndMain, "Folder name cannot be empty.", "Invalid Input", MB_ICONWARNING);
                 return;
             }
             
             // Check if folder already exists
             if (fs::exists(fullPath)) {
-                qWarning() << "[Win32IDE] ERROR: Folder already exists:" << fullPath.c_str();
+                RAWRXD_DBG() << "[Win32IDE] ERROR: Folder already exists:" << fullPath.c_str();
                 MessageBoxA(m_hwndMain, "A folder with this name already exists.", "Folder Exists", MB_ICONWARNING);
                 return;
             }
             
             // Create the folder
             if (fs::create_directory(fullPath)) {
-                qInfo() << "[Win32IDE] INFO: New folder created:" << fullPath.c_str();
+                RAWRXD_DBG() << "[Win32IDE] INFO: New folder created:" << fullPath.c_str();
                 
                 // Refresh file tree to show new folder
                 refreshFileTree();
                 
                 // Log metrics
-                qDebug() << "[Win32IDE] METRIC: new_folder_created=1";
-                qDebug() << "[Win32IDE] METRIC: folder_name=" << folderName;
-                qDebug() << "[Win32IDE] METRIC: full_path=" << fullPath.c_str();
+                RAWRXD_DBG() << "[Win32IDE] METRIC: new_folder_created=1";
+                RAWRXD_DBG() << "[Win32IDE] METRIC: folder_name=" << folderName;
+                RAWRXD_DBG() << "[Win32IDE] METRIC: full_path=" << fullPath.c_str();
                 
-                appendToOutput("New folder created: " + fullPath + "\n", "Explorer", OutputSeverity::Success);
+                appendToOutput("New folder created: " + fullPath + "\n", "Explorer", OutputSeverity::Info);
             } else {
-                qError() << "[Win32IDE] ERROR: Failed to create folder:" << fullPath.c_str();
+                RAWRXD_DBG() << "[Win32IDE] ERROR: Failed to create folder:" << fullPath.c_str();
                 MessageBoxA(m_hwndMain, "Failed to create folder. Check permissions.", "Creation Failed", MB_ICONERROR);
             }
         } catch (const std::exception& e) {
-            qCritical() << "[Win32IDE] CRITICAL: Exception during folder creation:" << e.what();
+            RAWRXD_DBG() << "[Win32IDE] CRITICAL: Exception during folder creation:" << e.what();
             MessageBoxA(m_hwndMain, "An error occurred while creating the folder.", "System Error", MB_ICONERROR);
         }
     } else {
-        qInfo() << "[Win32IDE] INFO: Folder creation cancelled by user";
+        RAWRXD_DBG() << "[Win32IDE] INFO: Folder creation cancelled by user";
     }
 }
-                    MB_OKCANCEL | MB_ICONQUESTION) == IDOK) {
-        std::string newPath = m_explorerRootPath + "\\NewFolder";
-        try {
-            fs::create_directory(newPath);
-            refreshFileTree();
-            appendToOutput("Folder created: " + newPath + "\n", "Output", OutputSeverity::Info);
-        }
-        catch (const std::exception& e) {
-            appendToOutput("Error creating folder: " + std::string(e.what()) + "\n", 
-                           "Output", OutputSeverity::Error);
-        }
-    }
-}
-
 void Win32IDE::deleteItemInExplorer()
 {
     HTREEITEM hSelected = TreeView_GetSelection(m_hwndExplorerTree);

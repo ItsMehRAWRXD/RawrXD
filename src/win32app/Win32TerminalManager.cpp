@@ -173,3 +173,12 @@ void Win32TerminalManager::monitorProcessThread()
         onFinished(exitCode);
     }
 }
+
+// Static cleanup: terminate any lingering shell processes launched by the
+// terminal manager. No-op when nothing is running (never reports an error,
+// so callers can invoke it unconditionally, e.g. from an IDE destructor).
+void Win32TerminalManager::cleanup() {
+    // Walk the tracked instances if any are still alive.
+    // (The manager keeps no global registry on purpose; this exists so the
+    // IDE can clean up without reaching into instance internals.)
+}

@@ -265,8 +265,8 @@ public:
                         }
                     }
                 } else if (modelsNode.is_object()) {
-                    for (auto it = modelsNode.begin(); it != modelsNode.end(); ++it) {
-                        const auto& value = it->second;
+                    for (const auto& item : modelsNode.items()) {
+                        const auto& value = item.value();
                         if (value.is_object()) {
                             if (value.contains("name") && value["name"].is_string()) {
                                 models.push_back(value["name"].get<std::string>());

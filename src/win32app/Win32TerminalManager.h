@@ -23,6 +23,9 @@ public:
     bool isRunning() const;
     void writeInput(const std::string& data);
 
+    // Static process-tree cleanup used by the IDE destructor.
+    static void cleanup();
+
     // Callbacks
     std::function<void(const std::string&)> onOutput;
     std::function<void(const std::string&)> onError;

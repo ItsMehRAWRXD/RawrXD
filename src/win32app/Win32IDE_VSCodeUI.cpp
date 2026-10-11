@@ -6,7 +6,15 @@
 #include <richedit.h>
 #include <sstream>
 #include <iomanip>
-#include <QDebug>
+#include <windows.h>
+#include <sstream>
+struct RawrxdDbgStream {
+    std::ostringstream ss;
+    ~RawrxdDbgStream() { OutputDebugStringA(ss.str().c_str()); }
+    template <typename T>
+    RawrxdDbgStream& operator<<(const T& v) { ss << v; return *this; }
+};
+#define RAWRXD_DBG() RawrxdDbgStream()
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available
 #ifndef GET_X_LPARAM
@@ -304,8 +312,8 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
 {
     if (message.empty()) return;
     
-    qInfo() << "=== SEND MESSAGE CLICKED ===";
-    qInfo() << "[sendCopilotMessage] Message: " << message.c_str();
+    RAWRXD_DBG() << "=== SEND MESSAGE CLICKED ===";
+    RAWRXD_DBG() << "[sendCopilotMessage] Message: " << message.c_str();
     
     // Add user message to history
     m_chatHistory.push_back({"user", message});
@@ -314,13 +322,13 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
     std::string response;
     
     if (isModelLoaded()) {
-        qInfo() << "[sendCopilotMessage] Model is loaded, calling generateResponse...";
+        RAWRXD_DBG() << "[sendCopilotMessage] Model is loaded, calling generateResponse...";
         // Use the loaded GGUF model for inference
         response = generateResponse(message);
-        qInfo() << "[sendCopilotMessage] Inference response: " << response.c_str();
+        RAWRXD_DBG() << "[sendCopilotMessage] Inference response: " << response.c_str();
     } else {
         // No model loaded - prompt user to load one
-        qWarning() << "[sendCopilotMessage] No model loaded!";
+        RAWRXD_DBG() << "[sendCopilotMessage] No model loaded!";
         response = "⚠️ No AI model loaded.\r\n\r\n"
                    "To use AI assistance, please load a GGUF model:\r\n"
                    "1. Open the File Explorer (Activity Bar → Explorer icon)\r\n"
@@ -335,8 +343,8 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
     }
     
     m_chatHistory.push_back({"assistant", response});
-    qInfo() << "[sendCopilotMessage] Added response to history, updating UI...";
-    qInfo() << "=== SEND MESSAGE END ===";
+    RAWRXD_DBG() << "[sendCopilotMessage] Added response to history, updating UI...";
+    RAWRXD_DBG() << "=== SEND MESSAGE END ===";
     
     // Update display
     updateSecondarySidebarContent();

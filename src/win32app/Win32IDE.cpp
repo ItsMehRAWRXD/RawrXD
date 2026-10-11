@@ -1,11 +1,3 @@
-Win32IDE::~Win32IDE() {
-    if (m_nativeEngine) {
-        delete static_cast<CPUInference::CPUInferenceEngine*>(m_nativeEngine);
-        m_nativeEngine = nullptr;
-    }
-    // Resource cleanup
-    Win32TerminalManager::cleanup();
-}
 #include "Win32IDE.h"
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
@@ -24,8 +16,54 @@ Win32IDE::~Win32IDE() {
 #include <sstream>
 #include <ctime>
 #include <winhttp.h>
+#include <unordered_map>
+#include <mutex>
+#include <array>
+#include <nlohmann/json.hpp>
+
+// ---------------------------------------------------------------------------
+// TEMPORARY engine-state slots (see certification note)
+// ---------------------------------------------------------------------------
+// Win32IDE.h currently declares neither m_nativeEngine nor
+// m_nativeEngineLoaded, and the header is write-locked in this workspace
+// session (an external process holds it). These slots provide exactly the
+// per-instance state Win32IDE.cpp uses - constructed in the ctor, released
+// in the dtor - without modifying the header. Move them back into
+// Win32IDE.h as private members once the file is writable.
+namespace {
+struct NativeEngineSlot {
+    void* engine = nullptr;
+    bool loaded = false;
+};
+std::mutex g_nativeEngineSlotsMu;
+std::unordered_map<const Win32IDE*, NativeEngineSlot> g_nativeEngineSlots;
+
+NativeEngineSlot& nativeEngineSlot(const Win32IDE* self) {
+    std::lock_guard<std::mutex> lock(g_nativeEngineSlotsMu);
+    return g_nativeEngineSlots[self];
+}
+}  // namespace
+
+// The .cpp references the members directly; route them through the slots.
+#define m_nativeEngine     (nativeEngineSlot(this).engine)
+#define m_nativeEngineLoaded (nativeEngineSlot(this).loaded)
+// ---------------------------------------------------------------------------
 
 #pragma comment(lib, "winhttp.lib")
+
+
+Win32IDE::~Win32IDE() {
+    if (m_nativeEngine) {
+        delete static_cast<CPUInference::CPUInferenceEngine*>(m_nativeEngine);
+        m_nativeEngine = nullptr;
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_nativeEngineSlotsMu);
+        g_nativeEngineSlots.erase(this);
+    }
+    // Resource cleanup
+    Win32TerminalManager::cleanup();
+}
 
 #pragma comment(lib, "comdlg32.lib")
 #pragma comment(lib, "comctl32.lib")
@@ -203,6 +241,20 @@ Win32IDE::~Win32IDE() {
 #define IDC_CMDPAL_CONTAINER 1500
 #define IDC_CMDPAL_INPUT 1501
 #define IDC_CMDPAL_LIST 1502
+
+// Run a command line and return its stdout (dependency-free;
+// used by the module-management helpers). Empty on failure.
+static std::string ExecCmd(const char* cmd) {
+    std::string out;
+    std::array<char, 512> buf{};
+    FILE* pipe = _popen(cmd, "r");
+    if (!pipe) return out;
+    while (fgets(buf.data(), (int)buf.size(), pipe)) {
+        out += buf.data();
+    }
+    _pclose(pipe);
+    return out;
+}
 
 Win32IDE::Win32IDE(HINSTANCE hInstance)
         : m_hInstance(hInstance), m_hwndMain(nullptr), m_hwndEditor(nullptr),
@@ -1772,6 +1824,9 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
         return;
     }
 
+void Win32IDE::createMenuBar(HWND hwnd)
+{
+
     // File menu
     HMENU hFileMenu = CreatePopupMenu();
     AppendMenuA(hFileMenu, MF_STRING, IDM_FILE_NEW, "&New");
@@ -2025,7 +2080,7 @@ void Win32IDE::updateTitleBarText()
 void Win32IDE::createEditor(HWND hwnd)
 {
 
-    m_hwndEditor = CreateWindowExA(WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
+    m_hwndEditor = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
                                   WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN,
                                   0, 0, 0, 0, hwnd, (HMENU)IDC_EDITOR, m_hInstance, nullptr);
     if (!m_hwndEditor) {
@@ -2079,7 +2134,7 @@ void Win32IDE::createTerminal(HWND hwnd)
 
 int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, const std::string& name)
 {
-    HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
+    HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
                                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
                                 0, 0, 0, 0, m_hwndMain, nullptr, m_hInstance, nullptr);
 
@@ -2813,7 +2868,7 @@ void Win32IDE::createOutputTabs()
         TCITEMA tie{}; tie.mask = TCIF_TEXT; tie.pszText = const_cast<char*>(defs[i].text);
         TabCtrl_InsertItem(m_hwndOutputTabs, i, &tie);
 
-        HWND hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
+        HWND hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
             WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
             0, tabBarHeight, client.right, m_outputTabHeight - tabBarHeight,
             m_hwndMain, (HMENU)(INT_PTR)defs[i].id, m_hInstance, nullptr);
@@ -5212,9 +5267,9 @@ bool Win32IDE::initializeInference()
     // Connect Native Engine to Model
     if (m_nativeEngine && !m_loadedModelPath.empty()) {
         RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
-        if (!engine->isModelLoaded()) {
+        if (!engine->IsModelLoaded()) {
             appendToOutput("Loading model into Native Engine: " + m_loadedModelPath, "Output", OutputSeverity::Info);
-            if (engine->loadModel(m_loadedModelPath)) {
+            if (engine->LoadModel(m_loadedModelPath)) {
                 m_nativeEngineLoaded = true;
                 appendToOutput("✅ Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
             } else {
@@ -5346,11 +5401,11 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
     if (m_nativeEngine && m_nativeEngineLoaded) {
         RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
         // If engine doesn't have a model loaded, try to load current one
-        if (!engine->isModelLoaded() && !m_loadedModelPath.empty()) {
-            engine->loadModel(m_loadedModelPath);
+        if (!engine->IsModelLoaded() && !m_loadedModelPath.empty()) {
+            engine->LoadModel(m_loadedModelPath);
         }
         
-        if (engine->isModelLoaded()) {
+        if (engine->IsModelLoaded()) {
             return engine->infer(prompt);
         } else {
              return "Error: No model loaded in Native CPU Engine.";

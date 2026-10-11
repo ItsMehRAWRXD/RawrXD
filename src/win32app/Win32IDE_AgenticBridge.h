@@ -12,6 +12,10 @@
 #include <functional>
 #include <memory>
 #include "../native_agent.hpp"
+// The engine header declares the engine inside
+// namespace RawrXD::CPUInference; expose the short form used here.
+#include "../cpu_inference_engine.h"
+namespace CPUInference = RawrXD::CPUInference;
 
 // Forward declaration
 class Win32IDE;
