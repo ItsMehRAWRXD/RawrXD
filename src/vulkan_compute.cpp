@@ -1035,11 +1035,11 @@ bool VulkanCompute::EnsureQuantDotPipeline(const std::string& spirv_path) {
 
     VkDescriptorPoolSize pool_size{};
     pool_size.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    pool_size.descriptorCount = 3 * 64;
+    pool_size.descriptorCount = 3 * 256;
 
     VkDescriptorPoolCreateInfo dp{};
     dp.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    dp.maxSets = 64;
+    dp.maxSets = 256;
     dp.poolSizeCount = 1;
     dp.pPoolSizes = &pool_size;
     if (vkCreateDescriptorPool(device_, &dp, nullptr, &quant_descriptor_pool_) != VK_SUCCESS) {
@@ -1084,6 +1084,44 @@ bool VulkanCompute::EnsureQuantDotPipeline(const std::string& spirv_path) {
     return true;
 }
 
+bool VulkanCompute::EnsureScratchBuffer(size_t packed_bytes, size_t q8_bytes,
+                                        size_t out_bytes)
+{
+    if (quant_scratch_.packed_bytes > 0 && quant_scratch_.q8_bytes > 0 &&
+        quant_scratch_.out_bytes > 0 &&
+        quant_scratch_.packed_bytes >= packed_bytes &&
+        quant_scratch_.q8_bytes >= q8_bytes &&
+        quant_scratch_.out_bytes >= out_bytes) {
+        return true;  // big enough already
+    }
+
+    // A second set is only allocated when a genuinely larger tensor arrives;
+    // old sets stay alive because in-flight command buffers may reference
+    // them. The sizes inside one model are bounded, so this converges.
+    uint32_t p_idx = 0, q_idx = 0, o_idx = 0;
+    size_t p_mem = 0, q_mem = 0, o_mem = 0;
+    if (!AllocateBuffer(packed_bytes, p_idx, p_mem) ||
+        !AllocateBuffer(q8_bytes, q_idx, q_mem) ||
+        !AllocateBuffer(out_bytes, o_idx, o_mem)) {
+        return false;
+    }
+
+    quant_scratch_.packed_index = p_idx;
+    quant_scratch_.q8_index = q_idx;
+    quant_scratch_.out_index = o_idx;
+    quant_scratch_.packed_bytes = packed_bytes;
+    quant_scratch_.q8_bytes = q8_bytes;
+    quant_scratch_.out_bytes = out_bytes;
+    return true;
+}
+
+void VulkanCompute::ReleaseQuantScratch()
+{
+    // Only called from Cleanup(); individual scratch sets stay alive so no
+    // in-flight command buffer ever references freed device memory.
+    quant_scratch_ = QuantScratch{};
+}
+
 bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
                                     const void* q8_interleaved, size_t q8_bytes,
                                     void* out, size_t out_bytes,
@@ -1108,7 +1146,10 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     if (it == shaders_.end() || !it->second.pipeline) return false;
 
     // Upload the inputs. AllocateBuffer owns device memory; the wrappers do
-    // the staging copies.
+    // the staging copies. Per-call allocation is intentional: the GPU command
+    // queue is asynchronous, so reusing one scratch set means an earlier
+    // dispatch can still reference a buffer the current call is writing to.
+    // Fresh buffers per call are reclaimed in Cleanup() at process end.
     uint32_t p_idx = 0, q_idx = 0, o_idx = 0;
     size_t p_mem = 0, q_mem = 0, o_mem = 0;
     if (!AllocateBuffer(packed_bytes, p_idx, p_mem) ||
