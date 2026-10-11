@@ -1,0 +1,195 @@
+#version 450
+
+// Native quantised dot product: Q4_K x Q8_K and Q6_K x Q8_K.
+//
+// Decodes the GGML block layout inside the shader, applies the fp16 block
+// scales, accumulates the integer products in the same eight-lane grouping the
+// reference uses, and writes one output row per invocation.
+//
+// Block layouts (ggml):
+//   Q4_K (144 bytes) : uint16 d, uint16 dmin, uint8 scales[12], uint8 qs[128]
+//   Q6_K (210 bytes) : uint8 ql[128], uint8 qh[64], int8 scales[16], uint16 d
+//   Q8_K (per 256)   : float d, int8 qs[256], int16 bsums[16]
+//
+// Push constants carry the dimensions and the kind selector.
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Packed {
+    uint packed_u32[];      // weight bytes, interpreted as u32 words
+};
+
+// Q8_K data is interleaved into a single runtime-sized array, because a
+// std430 block may only have an unsized array as its LAST member. Per block:
+//   [0]      d      (float)
+//   [1..256] qs     (256 floats, quantised activation values)
+//   [257..272] bsums (16 floats, block sums)
+// So each block occupies 273 floats.
+layout(std430, binding = 1) readonly buffer Q8 {
+    float q8_data[];
+};
+
+const uint Q8_STRIDE = 273u;
+const uint Q8_OFF_D = 0u;
+const uint Q8_OFF_QS = 1u;
+const uint Q8_OFF_BSUMS = 257u;
+
+layout(std430, binding = 2) writeonly buffer Out {
+    float out_rows[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint n_out;      // rows
+    uint n_in;       // input dimension
+    uint n_blocks;   // n_in / 256
+    uint kind;       // 0 = Q4_K, 1 = Q6_K
+};
+
+// Q4_K / Q6_K block sizes in bytes.
+const uint Q4K_BYTES = 144u;
+const uint Q6K_BYTES = 210u;
+
+// Read one byte from the packed buffer, which is addressed as u32 words.
+uint pack_byte(uint idx) {
+    uint word = packed_u32[idx >> 2u];
+    uint shift = (idx & 3u) * 8u;
+    return (word >> shift) & 0xFFu;
+}
+
+// Read a little-endian uint16 from the packed buffer.
+uint pack_u16(uint idx) {
+    return pack_byte(idx) | (pack_byte(idx + 1u) << 8u);
+}
+
+// Signed byte from the packed buffer (used for the Q6_K scales array).
+int pack_i8(uint idx) {
+    uint b = pack_byte(idx);
+    return (b < 128u) ? int(b) : int(b) - 256;
+}
+
+// fp16 (IEEE binary16) bits to fp32.
+float half_to_float(uint h) {
+    uint sign = (h & 0x8000u) << 16;
+    uint exp  = (h >> 10) & 31u;
+    uint frac = h & 1023u;
+
+    if (exp == 0u) {
+        if (frac == 0u) return uintBitsToFloat(sign);
+        // Subnormal: normalise the mantissa.
+        uint m = frac;
+        int e = -14;
+        while ((m & 1024u) == 0u) { m <<= 1; --e; }
+        m &= 1023u;
+        return uintBitsToFloat(sign | (uint(e + 127) << 23) | (m << 13));
+    }
+    if (exp == 31u) {
+        return uintBitsToFloat(sign | 0x7f800000u | (frac << 13));
+    }
+    return uintBitsToFloat(sign | ((exp + 112u) << 23) | (frac << 13));
+}
+
+// ggml Q4_K scales are 6-bit values packed 4-per-byte-ish in 12 bytes.
+void q4_scale_min(uint base, uint group, out int scale, out int minv) {
+    // base is the byte offset of scales[12] within the block.
+    uint s_group     = pack_byte(base + group);
+    uint s_group_p4  = pack_byte(base + group + 4u);
+    if (group < 4u) {
+        scale = int(s_group & 63u);
+        minv  = int(s_group_p4 & 63u);
+    } else {
+        uint s_group_m4 = pack_byte(base + group - 4u);
+        scale = int((s_group_p4 & 15u) | ((s_group_m4 >> 6u) << 4u));
+        minv  = int((s_group_p4 >> 4u) | ((s_group >> 6u) << 4u));
+    }
+}
+
+void main() {
+    int act[256];
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= n_out) return;
+
+    uint block_bytes = (kind == 0u) ? Q4K_BYTES : Q6K_BYTES;
+    uint row_base = row * block_bytes * n_blocks;
+
+    float sums[8];
+    for (int i = 0; i < 8; ++i) sums[i] = 0.0;
+    float sumf = 0.0;
+
+    for (uint b = 0u; b < n_blocks; ++b) {
+        uint base = row_base + b * block_bytes;
+
+                {
+            uint q8_base = b * Q8_STRIDE;
+            for (uint i = 0u; i < 256u; ++i) {
+                act[i] = int(q8_data[q8_base + Q8_OFF_QS + i]);
+            }
+        }
+
+        if (kind == 0u) {
+            // ---- Q4_K ----
+            uint d_bits   = pack_u16(base + 0u);
+            uint dmin_bits= pack_u16(base + 2u);
+            uint scales_off = base + 4u;
+
+            int lanes[8];
+            for (int i = 0; i < 8; ++i) lanes[i] = 0;
+            int min_sum = 0;
+
+            for (uint group = 0u; group < 8u; ++group) {
+                int scale, minv;
+                q4_scale_min(scales_off, group, scale, minv);
+
+                uint q_off = scales_off + 12u + (group / 2u) * 32u;
+                bool high = (group & 1u) != 0u;
+
+                for (uint i = 0u; i < 32u; ++i) {
+                    uint qb = pack_byte(q_off + i);
+                    int weight = high ? int(qb >> 4u) : int(qb & 15u);
+                    int a = act[group * 32u + i];
+                    lanes[i & 7u] += scale * weight * a;
+                }
+
+                min_sum += minv * (int(q8_data[b * Q8_STRIDE + Q8_OFF_BSUMS + 2u * group]) +
+                                   int(q8_data[b * Q8_STRIDE + Q8_OFF_BSUMS + 2u * group + 1u]));
+            }
+
+            float d    = half_to_float(d_bits) * q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            float dmin = half_to_float(dmin_bits) * q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            for (int i = 0; i < 8; ++i) sums[i] += d * float(lanes[i]);
+            sumf -= dmin * float(min_sum);
+
+        } else {
+            // ---- Q6_K ----
+            uint ql_off = base + 0u;
+            uint qh_off = base + 128u;
+            uint sc_off = base + 192u;
+
+            int lanes[8];
+            for (int i = 0; i < 8; ++i) lanes[i] = 0;
+
+            for (uint group = 0u; group < 8u; ++group) {
+                uint hlf = group / 4u;
+                uint part  = group % 4u;
+                uint shift4 = (part >= 2u) ? 4u : 0u;
+                uint loff = hlf * 64u + (part & 1u) * 32u;
+                uint hoff = hlf * 32u;
+                uint qhoff = 2u * part;
+
+                for (uint i = 0u; i < 32u; ++i) {
+                    int low4  = int((pack_byte(ql_off + loff + i) >> shift4) & 15u);
+                    int high2 = int((pack_byte(qh_off + hoff + i) >> qhoff) & 3u);
+                    int quant = (low4 | (high2 << 4)) - 32;
+                    int a = act[group * 32u + i];
+                    int scale = int(pack_i8(sc_off + group * 2u + i / 16u));
+                    lanes[i & 7u] += scale * quant * a;
+                }
+            }
+
+            float d = half_to_float(pack_u16(base + 208u)) * q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            for (int i = 0; i < 8; ++i) sums[i] += d * float(lanes[i]);
+        }
+    }
+
+    for (int i = 0; i < 8; ++i) sumf += sums[i];
+    out_rows[row] = sumf;
+}
