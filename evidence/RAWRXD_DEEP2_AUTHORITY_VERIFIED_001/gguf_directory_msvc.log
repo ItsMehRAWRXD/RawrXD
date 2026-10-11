@@ -1,0 +1,7 @@
+MSVC (VS2022 BuildTools) x64 /std:c++20 /EHsc /O2 /W4
+cl ... /I include src\GGUFDirectoryAuthority.cpp tests\test_directory.cpp
+build: clean, no warnings at /W4
+run: GGUF_DIRECTORY_AUTHORITY_PASS, exit 0
+date: 2026-10-11
+note: the drop README's build command omits the tests/ path; corrected locally
+drop: Deep2_Batch_16_30.zip
