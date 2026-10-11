@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/common_types.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -86,4 +87,28 @@ public:
     void UploadViaStaging(void* data, size_t size, VkBuffer dstBuffer);
     uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     int64_t CalculateVRAMUsage();
+
+    // ---- window / prefetch / compute-range + engine-facing surface ----
+    // Map a byte window of the loaded GGUF image (read-only view, bounds-checked).
+    void* MapWindow(uint64_t offset, size_t size);
+    bool markComputeRangeInUse(uint64_t offset, uint64_t size);
+    void unmarkComputeRangeInUse(uint64_t offset, uint64_t size);
+    bool ComputeMappingCovers(uint64_t offset, uint64_t size) const;
+    bool HasActivePrefetchMapping() const { return prefetchActive_; }
+    void* MapPrefetchWindow(uint64_t offset, size_t size);
+    void UnmapPrefetchWindow();
+    void UnmapWindow();
+    void recordSwarmPinBackoffCycle() { ++swarmPinBackoffCycles_; }
+    uint64_t swarmPinBackoffCycles() const { return swarmPinBackoffCycles_; }
+    uint64_t swarmPinBackoffCycles_ = 0;
+    void* prefetchView_ = nullptr;
+    bool prefetchActive_ = false;
+    struct InUseRange { uint64_t begin; uint64_t end; };
+    std::vector<InUseRange> inUseRanges_;
+    uint64_t GetFileSizeBytes() const { return fileSize; }
+    bool load(const char* path);
+    EngineTensorInfo* getTensor(const std::string& name);
+    std::unordered_map<std::string, std::string> metadata;
+    std::unordered_map<std::string, EngineTensorInfo> engineTensorCache_;
+    void invalidateEngineCache() { engineTensorCache_.clear(); }
 };
