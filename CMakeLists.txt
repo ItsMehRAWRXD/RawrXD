@@ -252,19 +252,9 @@ if(RAWRXD_BUILD_CLI)
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
         src/asm/rawr_cpu_features.asm
-        src/cli/rawrxd_cli_link_shims.cpp
         src/res/Resource.rc
-        src/rawrxd_link_stubs.cpp
         # Core inference components for dual GPU testing
-        src/rawrxd_inference.cpp
-        src/rawrxd_model_loader.cpp
-        src/rawrxd_tokenizer.cpp
-        src/rawrxd_transformer.cpp
-        src/rawrxd_sampler.cpp
-        src/gguf_loader.cpp
-        src/gguf_vocab_resolver.cpp
         src/core/swarm_scheduler.cpp
-        src/core/link_stubs.cpp
         src/core/gguf_swarm_plan_builder.cpp
         src/core/inference_witness.cpp
         src/core/execution_governor.cpp
@@ -350,7 +340,6 @@ if(RAWRXD_BUILD_CLI)
         src/core/enterprise_licensev2_impl.cpp
         src/deep2/FabricTensorTable.cpp
         src/utils/Diagnostics.cpp
-        src/cli/rawrxd_deep_stubs.cpp
         rguf_source/RGUFWriter.cpp
         rguf_source/RGUFLoader.cpp
         rguf_source/RGUFPlatform.cpp
