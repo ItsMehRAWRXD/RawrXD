@@ -43,7 +43,7 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
 
     // Initialize Native Engine
     LOG_INFO("Creating Native CPU Inference Engine...");
-    m_nativeEngine = std::make_unique<CPUInference::CPUInferenceEngine>();
+    m_nativeEngine = std::make_unique<RawrXD::CPUInferenceEngine>();
     
     // Try to load model immediately if we have a guess, or just init the engine structure
     // We assume the engine manages its own "empty" state if no model is loaded yet.

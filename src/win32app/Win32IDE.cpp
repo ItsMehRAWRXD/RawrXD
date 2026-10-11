@@ -1,11 +1,10 @@
-Win32IDE::~Win32IDE() {
-    if (m_nativeEngine) {
-        delete static_cast<CPUInference::CPUInferenceEngine*>(m_nativeEngine);
-        m_nativeEngine = nullptr;
-    }
-    // Resource cleanup
-    Win32TerminalManager::cleanup();
-}
+// Win32IDE.cpp - RawrXD Win32 IDE shell
+//
+// NOTE: the destructor used to be emitted here, ABOVE the #include block, so
+// Win32IDE/RawrXD::CPUInferenceEngine/Win32TerminalManager were all undeclared
+// at that point and every consumer of this translation unit failed to compile.
+// It now lives with the other Win32IDE member definitions, below the includes.
+
 #include "Win32IDE.h"
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
@@ -273,7 +272,7 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
 
     // Initialize Native Fallback Engine
     try {
-        m_nativeEngine = new CPUInference::CPUInferenceEngine();
+        m_nativeEngine = new RawrXD::CPUInferenceEngine();
         m_nativeEngineLoaded = true;
     } catch (...) {
         m_nativeEngine = nullptr;
@@ -1769,8 +1768,17 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     SendMessage(m_hwndStatusBar, SB_SETTEXT, 1364, (LPARAM)"");
     SendMessage(m_hwndStatusBar, SB_SETTEXT, 1365, (LPARAM)"");
     SendMessage(m_hwndStatusBar, SB_SETTEXT, 1366, (LPARAM)"");
+}
+
+void Win32IDE::createMenuBar(HWND hwnd)
+{
+    LOG_INFO("createMenuBar() called");
+    m_hMenu = CreateMenu();
+    if (!m_hMenu) {
+        LOG_ERROR("Failed to create menu bar");
         return;
     }
+    LOG_DEBUG("Menu bar created, populating menu items...");
 
     // File menu
     HMENU hFileMenu = CreatePopupMenu();
@@ -5855,11 +5863,21 @@ void Win32IDE::onModelSelectionChanged() {
 void Win32IDE::onMaxTokensChanged(int newValue) {
     m_currentMaxTokens = newValue;
     m_inferenceConfig.maxTokens = newValue;
-    
+
     // Update label
     if (m_hwndMaxTokensLabel) {
         SetWindowTextA(m_hwndMaxTokensLabel, std::to_string(newValue).c_str());
     }
 
+}
+
+Win32IDE::~Win32IDE() {
+    if (m_nativeEngine) {
+        delete static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
+        m_nativeEngine = nullptr;
+    }
+    m_nativeEngineLoaded = false;
+    // Resource cleanup
+    Win32TerminalManager::cleanup();
 }
 

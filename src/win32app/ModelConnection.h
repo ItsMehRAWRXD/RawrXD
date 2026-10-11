@@ -265,8 +265,10 @@ public:
                         }
                     }
                 } else if (modelsNode.is_object()) {
+                    // nlohmann json iterators expose key()/value(); there is no
+                    // it->second member (that is a std::map idiom).
                     for (auto it = modelsNode.begin(); it != modelsNode.end(); ++it) {
-                        const auto& value = it->second;
+                        const auto& value = it.value();
                         if (value.is_object()) {
                             if (value.contains("name") && value["name"].is_string()) {
                                 models.push_back(value["name"].get<std::string>());

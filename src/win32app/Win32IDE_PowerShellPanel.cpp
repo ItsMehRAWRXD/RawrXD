@@ -32,7 +32,7 @@ void Win32IDE::createPowerShellPanel() {
     // Create main PowerShell panel container
     m_hwndPowerShellPanel = CreateWindowEx(
         WS_EX_CLIENTEDGE,
-        L"STATIC", L"PowerShell Console",
+        "STATIC", "PowerShell Console",
         WS_CHILD | WS_VISIBLE | WS_BORDER,
         0, 0, 800, m_powerShellPanelHeight,
         m_hwndMain,
@@ -46,17 +46,17 @@ void Win32IDE::createPowerShellPanel() {
     }
     
     // Store IDE pointer for callbacks
-    SetProp(m_hwndPowerShellPanel, L"IDE_PTR", this);
+    SetProp(m_hwndPowerShellPanel, "IDE_PTR", this);
     
     // Create toolbar
     createPowerShellToolbar();
     
     // Create output area (rich edit for colored text)
-    LoadLibrary(L"Riched20.dll");
+    LoadLibrary("Riched20.dll");
     
     m_hwndPowerShellOutput = CreateWindowEx(
         WS_EX_CLIENTEDGE,
-        L"RichEdit20A", L"",
+        "RichEdit20A", "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
         5, 35, 790, m_powerShellPanelHeight - 95,
         m_hwndPowerShellPanel,
@@ -69,7 +69,7 @@ void Win32IDE::createPowerShellPanel() {
     HFONT hFont = CreateFont(
         16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas"
+        CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas"
     );
     SendMessage(m_hwndPowerShellOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
     
@@ -79,7 +79,7 @@ void Win32IDE::createPowerShellPanel() {
     // Create input area
     m_hwndPowerShellInput = CreateWindowEx(
         WS_EX_CLIENTEDGE,
-        L"EDIT", L"",
+        "EDIT", "",
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
         5, m_powerShellPanelHeight - 55, 690, 25,
         m_hwndPowerShellPanel,
@@ -91,13 +91,13 @@ void Win32IDE::createPowerShellPanel() {
     SendMessage(m_hwndPowerShellInput, WM_SETFONT, (WPARAM)hFont, TRUE);
     
     // Subclass input for custom handling (Enter key, history navigation)
-    SetProp(m_hwndPowerShellInput, L"IDE_PTR", this);
+    SetProp(m_hwndPowerShellInput, "IDE_PTR", this);
     WNDPROC oldProc = (WNDPROC)SetWindowLongPtr(m_hwndPowerShellInput, GWLP_WNDPROC, (LONG_PTR)PowerShellInputProc);
-    SetProp(m_hwndPowerShellInput, L"OLDPROC", (HANDLE)oldProc);
+    SetProp(m_hwndPowerShellInput, "OLDPROC", (HANDLE)oldProc);
     
     // Create Execute button
     m_hwndPSBtnExecute = CreateWindowEx(
-        0, L"BUTTON", L"Execute",
+        0, "BUTTON", "Execute",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         700, m_powerShellPanelHeight - 55, 90, 25,
         m_hwndPowerShellPanel,
@@ -109,7 +109,7 @@ void Win32IDE::createPowerShellPanel() {
     
     // Create status bar
     m_hwndPowerShellStatusBar = CreateWindowEx(
-        0, L"STATIC", L"PowerShell Status: Ready",
+        0, "STATIC", "PowerShell Status: Ready",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
         5, m_powerShellPanelHeight - 25, 790, 20,
         m_hwndPowerShellPanel,
@@ -121,7 +121,7 @@ void Win32IDE::createPowerShellPanel() {
     HFONT hSmallFont = CreateFont(
         12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI"
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI"
     );
     SendMessage(m_hwndPowerShellStatusBar, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
     
@@ -157,7 +157,7 @@ void Win32IDE::createPowerShellToolbar() {
     int btnSpacing = 5;
     
     m_hwndPSBtnClear = CreateWindowEx(
-        0, L"BUTTON", L"Clear",
+        0, "BUTTON", "Clear",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
@@ -167,7 +167,7 @@ void Win32IDE::createPowerShellToolbar() {
     btnX += btnWidth + btnSpacing;
     
     m_hwndPSBtnStop = CreateWindowEx(
-        0, L"BUTTON", L"Stop",
+        0, "BUTTON", "Stop",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
@@ -177,7 +177,7 @@ void Win32IDE::createPowerShellToolbar() {
     btnX += btnWidth + btnSpacing;
     
     m_hwndPSBtnHistory = CreateWindowEx(
-        0, L"BUTTON", L"History",
+        0, "BUTTON", "History",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
@@ -187,7 +187,7 @@ void Win32IDE::createPowerShellToolbar() {
     btnX += btnWidth + btnSpacing;
     
     m_hwndPSBtnRestart = CreateWindowEx(
-        0, L"BUTTON", L"Restart",
+        0, "BUTTON", "Restart",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
@@ -197,7 +197,7 @@ void Win32IDE::createPowerShellToolbar() {
     btnX += btnWidth + btnSpacing;
     
     m_hwndPSBtnLoadRawrXD = CreateWindowEx(
-        0, L"BUTTON", L"Load RawrXD",
+        0, "BUTTON", "Load RawrXD",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, 120, btnHeight,
         m_hwndPowerShellPanel,
@@ -346,7 +346,7 @@ void Win32IDE::executePowerShellInput() {
     }
     
     // Clear input
-    SetWindowText(m_hwndPowerShellInput, L"");
+    SetWindowText(m_hwndPowerShellInput, "");
     
     // Add to history
     addPowerShellHistory(command);
@@ -384,7 +384,7 @@ void Win32IDE::stopPowerShellExecution() {
 
 void Win32IDE::clearPowerShellConsole() {
     if (m_hwndPowerShellOutput) {
-        SetWindowText(m_hwndPowerShellOutput, L"");
+        SetWindowText(m_hwndPowerShellOutput, "");
         appendPowerShellOutput(getPowerShellPrompt(), RGB(0, 255, 0));
     }
 }
@@ -461,7 +461,7 @@ void Win32IDE::navigatePowerShellHistoryDown() {
         SendMessage(m_hwndPowerShellInput, EM_SETSEL, 0, -1);
     } else if (m_powerShellHistoryIndex == static_cast<int>(m_powerShellCommandHistory.size()) - 1) {
         m_powerShellHistoryIndex++;
-        SetWindowText(m_hwndPowerShellInput, L"");
+        SetWindowText(m_hwndPowerShellInput, "");
     }
 }
 
@@ -615,7 +615,7 @@ void Win32IDE::quickInference() {
         
         // Focus the input
         SetFocus(m_hwndPowerShellInput);
-        SetWindowText(m_hwndPowerShellInput, L"Invoke-PoshLLMInference -Prompt '' -MaxTokens 100");
+        SetWindowText(m_hwndPowerShellInput, "Invoke-PoshLLMInference -Prompt '' -MaxTokens 100");
         
         // Position cursor before second quote
         SendMessage(m_hwndPowerShellInput, EM_SETSEL, 36, 36);
@@ -642,7 +642,7 @@ void Win32IDE::scrollPowerShellOutputToBottom() {
 // ============================================================================
 
 LRESULT CALLBACK Win32IDE::PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    Win32IDE* ide = (Win32IDE*)GetProp(hwnd, L"IDE_PTR");
+    Win32IDE* ide = (Win32IDE*)GetProp(hwnd, "IDE_PTR");
     
     switch (uMsg) {
         case WM_COMMAND: {
@@ -676,8 +676,8 @@ LRESULT CALLBACK Win32IDE::PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wPar
 }
 
 LRESULT CALLBACK Win32IDE::PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    Win32IDE* ide = (Win32IDE*)GetProp(hwnd, L"IDE_PTR");
-    WNDPROC oldProc = (WNDPROC)GetProp(hwnd, L"OLDPROC");
+    Win32IDE* ide = (Win32IDE*)GetProp(hwnd, "IDE_PTR");
+    WNDPROC oldProc = (WNDPROC)GetProp(hwnd, "OLDPROC");
     
     switch (uMsg) {
         case WM_KEYDOWN: {

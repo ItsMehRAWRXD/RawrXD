@@ -4,9 +4,9 @@
 #include "Win32IDE.h"
 #include <commctrl.h>
 #include <richedit.h>
-#include <sstream>
-#include <iomanip>
-#include <QDebug>
+#include <sstream>   
+#include <iomanip>   
+#include "QtLogCompat.h"
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available
 #ifndef GET_X_LPARAM

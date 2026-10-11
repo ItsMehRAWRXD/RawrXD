@@ -17,7 +17,7 @@ class NativeAgent {
 public:
     using OutputCallback = std::function<void(const std::string&)>;
 
-    NativeAgent(CPUInference::CPUInferenceEngine* engine) : m_engine(engine) {}
+    NativeAgent(RawrXD::CPUInferenceEngine* engine) : m_engine(engine) {}
 
     void SetOutputCallback(OutputCallback cb) { m_callback = cb; }
     void SetDeepThink(bool enabled) { m_deepThink = enabled; }
@@ -103,7 +103,7 @@ public:
     }
 
 private:
-    CPUInference::CPUInferenceEngine* m_engine;
+    RawrXD::CPUInferenceEngine* m_engine;
     OutputCallback m_callback;
     bool m_deepThink = false;
     bool m_deepResearch = false;

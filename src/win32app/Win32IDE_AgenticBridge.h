@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include "../native_agent.hpp"
+#include "../cpu_inference_engine.h"
 
 // Forward declaration
 class Win32IDE;
@@ -65,7 +66,7 @@ public:
 
 private:
    // Native Integration
-    std::unique_ptr<CPUInference::CPUInferenceEngine> m_nativeEngine;
+    std::unique_ptr<RawrXD::CPUInferenceEngine> m_nativeEngine;
     std::unique_ptr<RawrXD::NativeAgent> m_nativeAgent;
 
     // PowerShell process management

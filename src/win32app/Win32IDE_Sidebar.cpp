@@ -4,11 +4,12 @@
 
 #include "Win32IDE.h"
 #include <commctrl.h>
-#include <shlwapi.h>
-#include <regex>
+#include <shlwapi.h> 
+#include <regex>     
 #include <filesystem>
-#include <fstream>
-#include <sstream>
+#include <fstream>   
+#include <sstream>   
+#include "QtLogCompat.h"
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available
 #ifndef GET_X_LPARAM
@@ -22,6 +23,202 @@
 #pragma comment(lib, "shlwapi.lib")
 
 namespace fs = std::filesystem;
+
+// ---------------------------------------------------------------------------
+// Modal single-line text prompt (real Win32, no Qt, no fabricated INPUTBOXPARAMS
+// API - see the repair note in newFolderInExplorer()).
+//
+// The previous code called ShowInputBox(m_hwnd, &params, buf) with an
+// INPUTBOXPARAMS struct; neither the type nor the function exists anywhere in
+// this tree or in the Win32 SDK, so the call could never have compiled. This is
+// a genuine replacement: a WS_POPUP owner-drawn dialog driven by a nested
+// message loop, with the owner disabled so it behaves modally.
+// ---------------------------------------------------------------------------
+namespace {
+
+constexpr wchar_t PROMPT_CLASS_NAME[] = L"RawrXDPromptClass";
+
+struct PromptState {
+    HWND owner = nullptr;
+    HWND self = nullptr;
+    HWND edit = nullptr;
+    HWND okButton = nullptr;
+    HWND cancelButton = nullptr;
+    HWND promptLabel = nullptr;
+    std::string title;
+    std::string prompt;
+    std::string initial;
+    bool confirmed = false;
+};
+
+BOOL PromptRegisterClass(HINSTANCE hInst)
+{
+    static bool registered = false;
+    if (registered) return TRUE;
+
+    WNDCLASSEXW wc = {};
+    wc.cbSize = sizeof(wc);
+    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.lpfnWndProc = [](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) -> LRESULT {
+        PromptState* st = reinterpret_cast<PromptState*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+
+        switch (msg) {
+        case WM_CREATE: {
+            auto* cs = reinterpret_cast<CREATESTRUCTW*>(lParam);
+            st = static_cast<PromptState*>(cs->lpCreateParams);
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(st));
+            if (!st) return -1;
+            st->self = hwnd;
+
+            HINSTANCE hInstance = reinterpret_cast<HINSTANCE>(GetWindowLongPtrW(hwnd, GWLP_HINSTANCE));
+
+            const int padding = 12;
+            const int labelHeight = 18;
+            const int editHeight = 24;
+            const int buttonHeight = 24;
+            const int buttonWidth = 80;
+            const int clientWidth = 380;
+            const int clientHeight = padding + labelHeight + 6 + editHeight + 12 + buttonHeight + padding;
+
+            RECT desired = { 0, 0, clientWidth, clientHeight };
+            AdjustWindowRectEx(&desired, WS_POPUP | WS_CAPTION | WS_SYSMENU, FALSE, WS_EX_DLGMODALFRAME);
+            const int windowWidth = desired.right - desired.left;
+            const int windowHeight = desired.bottom - desired.top;
+
+            RECT ownerRect = { 0, 0, 0, 0 };
+            if (st->owner && IsWindow(st->owner)) GetWindowRect(st->owner, &ownerRect);
+            const int originX = ownerRect.left + ((ownerRect.right - ownerRect.left) - windowWidth) / 2;
+            const int originY = ownerRect.top + ((ownerRect.bottom - ownerRect.top) - windowHeight) / 2;
+            SetWindowPos(hwnd, st->owner, originX, originY, windowWidth, windowHeight, SWP_NOZORDER);
+
+            SetWindowTextW(hwnd, std::wstring(st->title.begin(), st->title.end()).c_str());
+
+            st->promptLabel = CreateWindowExW(0, L"STATIC",
+                std::wstring(st->prompt.begin(), st->prompt.end()).c_str(),
+                WS_CHILD | WS_VISIBLE, padding, padding,
+                clientWidth - 2 * padding, labelHeight, hwnd, nullptr, hInstance, nullptr);
+
+            st->edit = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT",
+                std::wstring(st->initial.begin(), st->initial.end()).c_str(),
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL,
+                padding, padding + labelHeight + 6,
+                clientWidth - 2 * padding, editHeight, hwnd, nullptr, hInstance, nullptr);
+
+            const int buttonY = padding + labelHeight + 6 + editHeight + 12;
+            st->okButton = CreateWindowExW(0, L"BUTTON", L"OK",
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON,
+                clientWidth - 2 * buttonWidth - 12 - padding, buttonY,
+                buttonWidth, buttonHeight, hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDOK)),
+                hInstance, nullptr);
+
+            st->cancelButton = CreateWindowExW(0, L"BUTTON", L"Cancel",
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+                clientWidth - buttonWidth - padding, buttonY,
+                buttonWidth, buttonHeight, hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDCANCEL)),
+                hInstance, nullptr);
+
+            SendMessageW(st->edit, EM_SETSEL, 0, -1);
+            SetFocus(st->edit);
+            return 0;
+        }
+
+        case WM_COMMAND:
+            if (!st) break;
+            if (LOWORD(wParam) == IDOK) {
+                wchar_t buffer[512] = {};
+                GetWindowTextW(st->edit, buffer, static_cast<int>(std::size(buffer)));
+                // Narrow back to the ANSI/multibyte charset this IDE uses.
+                const int needed = WideCharToMultiByte(CP_ACP, 0, buffer, -1, nullptr, 0, nullptr, nullptr);
+                if (needed > 0) {
+                    std::string text(static_cast<size_t>(needed - 1), '\0');
+                    WideCharToMultiByte(CP_ACP, 0, buffer, -1, text.data(), needed, nullptr, nullptr);
+                    st->initial = text;
+                } else {
+                    st->initial.clear();
+                }
+                st->confirmed = true;
+                DestroyWindow(hwnd);
+                return 0;
+            }
+            if (LOWORD(wParam) == IDCANCEL) {
+                st->confirmed = false;
+                DestroyWindow(hwnd);
+                return 0;
+            }
+            break;
+
+        case WM_CLOSE:
+            if (st) st->confirmed = false;
+            DestroyWindow(hwnd);
+            return 0;
+
+        default:
+            break;
+        }
+        return DefWindowProcW(hwnd, msg, wParam, lParam);
+    };
+    wc.hInstance = hInst;
+    wc.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
+    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1);
+    wc.lpszClassName = PROMPT_CLASS_NAME;
+
+    registered = (RegisterClassExW(&wc) != 0) || GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
+    return registered ? TRUE : FALSE;
+}
+
+// Returns true (and fills `out`) when the user confirms, false on cancel.
+bool PromptText(HWND owner, const std::string& title, const std::string& prompt,
+                const std::string& initial, std::string& out)
+{
+    HINSTANCE hInstance = GetModuleHandleW(nullptr);
+    if (!PromptRegisterClass(hInstance)) return false;
+
+    PromptState state;
+    state.owner = owner;
+    state.title = title;
+    state.prompt = prompt;
+    state.initial = initial;
+
+    HWND dialog = CreateWindowExW(WS_EX_DLGMODALFRAME, PROMPT_CLASS_NAME, L"",
+                                  WS_POPUP | WS_CAPTION | WS_SYSMENU,
+                                  CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
+                                  owner, nullptr, hInstance, &state);
+    if (!dialog) return false;
+
+    ShowWindow(dialog, SW_SHOW);
+    UpdateWindow(dialog);
+
+    // Modal behaviour: disable the owner and pump a nested message loop.
+    HWND previousOwner = owner;
+    if (previousOwner) EnableWindow(previousOwner, FALSE);
+
+    MSG msg;
+    BOOL running = TRUE;
+    while (running && IsWindow(dialog)) {
+        if (GetMessageW(&msg, nullptr, 0, 0) <= 0) {
+            running = FALSE;
+            break;
+        }
+        if (!IsDialogMessageW(dialog, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+    }
+
+    if (previousOwner) {
+        EnableWindow(previousOwner, TRUE);
+        SetActiveWindow(previousOwner);
+    }
+
+    if (state.confirmed) {
+        out = state.initial;
+        return true;
+    }
+    return false;
+}
+
+} // namespace
 
 // Activity Bar constants
 constexpr int ACTIVITY_BAR_WIDTH = 48;
@@ -541,70 +738,51 @@ void Win32IDE::newFileInExplorer()
 void Win32IDE::newFolderInExplorer()
 {
     qInfo() << "[Win32IDE] DEBUG: Starting new folder creation from Explorer";
-    
+
     char folderName[256] = "NewFolder";
-    
-    // Production-ready input dialog with validation
-    INPUTBOXPARAMS params = {};
-    params.caption = "Create New Folder";
-    params.prompt = "Enter folder name:";
-    params.defaultText = folderName;
-    params.maxLength = sizeof(folderName) - 1;
-    
-    if (ShowInputBox(m_hwndMain, &params, folderName)) {
-        try {
-            std::string fullPath = m_explorerRootPath + "\\" + folderName;
-            
-            // Validate folder name
-            if (strlen(folderName) == 0) {
-                qWarning() << "[Win32IDE] ERROR: Empty folder name provided";
-                MessageBoxA(m_hwndMain, "Folder name cannot be empty.", "Invalid Input", MB_ICONWARNING);
-                return;
-            }
-            
-            // Check if folder already exists
-            if (fs::exists(fullPath)) {
-                qWarning() << "[Win32IDE] ERROR: Folder already exists:" << fullPath.c_str();
-                MessageBoxA(m_hwndMain, "A folder with this name already exists.", "Folder Exists", MB_ICONWARNING);
-                return;
-            }
-            
-            // Create the folder
-            if (fs::create_directory(fullPath)) {
-                qInfo() << "[Win32IDE] INFO: New folder created:" << fullPath.c_str();
-                
-                // Refresh file tree to show new folder
-                refreshFileTree();
-                
-                // Log metrics
-                qDebug() << "[Win32IDE] METRIC: new_folder_created=1";
-                qDebug() << "[Win32IDE] METRIC: folder_name=" << folderName;
-                qDebug() << "[Win32IDE] METRIC: full_path=" << fullPath.c_str();
-                
-                appendToOutput("New folder created: " + fullPath + "\n", "Explorer", OutputSeverity::Success);
-            } else {
-                qError() << "[Win32IDE] ERROR: Failed to create folder:" << fullPath.c_str();
-                MessageBoxA(m_hwndMain, "Failed to create folder. Check permissions.", "Creation Failed", MB_ICONERROR);
-            }
-        } catch (const std::exception& e) {
-            qCritical() << "[Win32IDE] CRITICAL: Exception during folder creation:" << e.what();
-            MessageBoxA(m_hwndMain, "An error occurred while creating the folder.", "System Error", MB_ICONERROR);
-        }
-    } else {
+
+    if (!PromptText(m_hwndMain, "Create New Folder", "Enter folder name:",
+                    std::string(folderName), folderName)) {
         qInfo() << "[Win32IDE] INFO: Folder creation cancelled by user";
+        return;
     }
-}
-                    MB_OKCANCEL | MB_ICONQUESTION) == IDOK) {
-        std::string newPath = m_explorerRootPath + "\\NewFolder";
-        try {
-            fs::create_directory(newPath);
+
+    try {
+        std::string fullPath = m_explorerRootPath + "\\" + folderName;
+
+        // Validate folder name
+        if (folderName[0] == '\0') {
+            qWarning() << "[Win32IDE] ERROR: Empty folder name provided";
+            MessageBoxA(m_hwndMain, "Folder name cannot be empty.", "Invalid Input", MB_ICONWARNING);
+            return;
+        }
+
+        // Check if folder already exists
+        if (fs::exists(fullPath)) {
+            qWarning() << "[Win32IDE] ERROR: Folder already exists:" << fullPath.c_str();
+            MessageBoxA(m_hwndMain, "A folder with this name already exists.", "Folder Exists", MB_ICONWARNING);
+            return;
+        }
+
+        // Create the folder
+        if (fs::create_directory(fullPath)) {
+            qInfo() << "[Win32IDE] INFO: New folder created:" << fullPath.c_str();
+
+            // Refresh file tree to show new folder
             refreshFileTree();
-            appendToOutput("Folder created: " + newPath + "\n", "Output", OutputSeverity::Info);
+
+            // Log metrics
+            qDebug() << "[Win32IDE] METRIC: new_folder_created=1";
+            qDebug() << "[Win32IDE] METRIC: source=explorer";
+
+            appendToOutput("New folder created: " + fullPath + "\n", "Explorer", OutputSeverity::Info);
+        } else {
+            qError() << "[Win32IDE] ERROR: Failed to create folder:" << fullPath.c_str();
+            MessageBoxA(m_hwndMain, "Failed to create folder. Check permissions.", "Creation Failed", MB_ICONERROR);
         }
-        catch (const std::exception& e) {
-            appendToOutput("Error creating folder: " + std::string(e.what()) + "\n", 
-                           "Output", OutputSeverity::Error);
-        }
+    } catch (const std::exception& e) {
+        qCritical() << "[Win32IDE] CRITICAL: Exception during folder creation:" << e.what();
+        MessageBoxA(m_hwndMain, "An error occurred while creating the folder.", "System Error", MB_ICONERROR);
     }
 }
 

@@ -205,6 +205,55 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         program_.push_back(in);
     }
 
+    // ---- 2b. env-gated execution-graph provenance dump (no semantics change) ----
+    // RR_GRAPH_TRACE=1 prints every compiled instruction (block, kind, operands,
+    // published output) and resolves each named operand to its producing op, so
+    // producer/consumer defects (e.g. a residual addend that no op publishes)
+    // are visible before inference. Purely diagnostic; never alters execution.
+    if (std::getenv("RR_GRAPH_TRACE")) {
+        auto kindName = [&](OpKind k) -> const char* {
+            switch (k) {
+                case OpKind::EmbeddingLookup: return "Embed";
+                case OpKind::RmsNorm:         return "RmsNorm";
+                case OpKind::Linear:          return "Linear";
+                case OpKind::Attention:       return "Attention";
+                case OpKind::MlaDecompress:   return "MlaDec";
+                case OpKind::Router:          return "Router";
+                case OpKind::TopK:            return "TopK";
+                case OpKind::MoEExecute:      return "MoE";
+                case OpKind::ResidualAdd:     return "ResidualAdd";
+                case OpKind::Publish:         return "Publish";
+                case OpKind::SwiGLU:          return "SwiGLU";
+                case OpKind::LmHead:          return "LmHead";
+                case OpKind::SsmScan:         return "SsmScan";
+                default:                      return "Other";
+            }
+        };
+        std::unordered_map<std::string, int> producer;
+        for (size_t i = 0; i < program_.size(); ++i) {
+            const auto& in = program_[i];
+            if (!in.outName.empty()) producer.emplace(in.outName, (int)i);
+        }
+        std::fprintf(stderr, "[graph] %zu ops; producer map resolve:\n", program_.size());
+        for (size_t i = 0; i < program_.size(); ++i) {
+            const auto& in = program_[i];
+            char pa[48] = "-", pb[48] = "-";
+            if (!in.aName.empty() && in.aName[0] != '<') {
+                auto it = producer.find(in.aName);
+                if (it != producer.end()) std::snprintf(pa, sizeof(pa), "=op%d", it->second);
+            }
+            if (!in.bName.empty() && in.bName[0] != '<') {
+                auto bBar = in.bName.find('|');
+                std::string bKey = (bBar == std::string::npos) ? in.bName : in.bName.substr(0, bBar);
+                auto it = producer.find(bKey);
+                if (it != producer.end()) std::snprintf(pb, sizeof(pb), "=op%d", it->second);
+            }
+            std::fprintf(stderr, "[op%-4d blk%-3d %-11s a=%-16s%-8s b=%-26s%-8s out=%s]\n",
+                         (int)i, (int)in.block, kindName(in.op),
+                         in.aName.c_str(), pa, in.bName.c_str(), pb, in.outName.c_str());
+        }
+    }
+
     // ---- 3. bind kernels, fail-closed ----
     stats_.ops_total = program_.size();
     for (const auto& in : program_) {
@@ -273,7 +322,14 @@ bool Executor::OpRmsNorm(const Instr& in, const std::vector<float>& x,
 
 bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                         std::vector<float>& y, std::string& err) {
-    if (wslot < 0) { err = "linear: no weight"; return false; }
+    if (wslot < 0) {
+        err = "linear: no weight";
+        if (std::getenv("LINEAR_TRACE")) {
+            std::fprintf(stderr, "[linear] missing weight: slot=%d x=%zu\n",
+                         (int)wslot, x.size());
+        }
+        return false;
+    }
     const TensorRec& w = tensors_[(size_t)wslot];
     if (!w.data || w.dims.size() < 2) { err = "linear: bad weight"; return false; }
     const size_t n_in = (size_t)w.dims[0];
@@ -285,8 +341,7 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         const int kind = (w.ggml_type == GGML_TYPE_Q4_K) ? 0 : 1;
         const size_t rb = (n_in / 256) * (size_t)(kind == 0 ? 144 : 210);
         if (w.bytes < rb * n_out) { err = "linear: weight bytes short"; return false; }
-        const ggml_type_traits* tr = ggml_get_type_traits(w.ggml_type);
-        // The independent reference decodes ONE packed row at a time. It must
+        const ggml_type_traits* tr = ggml_get_type_traits(w.ggml_type);        // The independent reference decodes ONE packed row at a time. It must
         // not materialise a dequantised [n_out, n_in] float matrix: for a
         // 102400-row output projection that is 4x the encoded size and, when
         // indexed as rows, walks far past the buffer that was actually filled.
@@ -334,6 +389,12 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
             blk[257] = (float)bsum;
         }
         y.assign(n_out, 0.0f);
+        if (std::getenv("QUANT_TRACE")) {
+            std::fprintf(stderr, "[quant] w=%s kind=%d n_in=%zu n_out=%zu n_blk=%zu rb=%zu wbytes=%zu need=%zu\n",
+                         w.name.c_str(), kind, n_in, n_out, n_blk, rb, w.bytes,
+                         rb * n_out);
+            std::fflush(stderr);
+        }
         const bool gpu = QuantDot::DotBlocked(kind, w.data, w.bytes,
                                               x.data(), n_in, y.data(), n_out, cpu,
                                               q8.data(), q8.size() * sizeof(float));
@@ -341,10 +402,59 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         return true;
     }
 
+    // Legacy quantized types (Q8_0, Q5_0, Q4_0, Q4_1, Q5_1, Q3_K, Q2_K,
+    // Q5_K, Q8_K): dot ONE ROW AT A TIME. Materialising a dequantised
+    // [n_out, n_in] matrix would need 1.4 GB of F32 for the language-model
+    // head (2688 x 131072). Each output row is a contiguous run of blocks
+    // in the packed buffer, so one row is dequantised at a time.
+    //
+    // GGML ne order: dims[0] is the contiguous (input) dimension and
+    // dims[1] the row count, so row j starts at j * blocks_per_row * ts.
+    if ((w.ggml_type == GGML_TYPE_Q8_0 || w.ggml_type == GGML_TYPE_Q5_0 ||
+         w.ggml_type == GGML_TYPE_Q4_0 || w.ggml_type == GGML_TYPE_Q4_1 ||
+         w.ggml_type == GGML_TYPE_Q5_1 || w.ggml_type == GGML_TYPE_Q3_K ||
+         w.ggml_type == GGML_TYPE_Q2_K || w.ggml_type == GGML_TYPE_Q5_K ||
+         w.ggml_type == GGML_TYPE_Q8_K) && n_in > 0 && n_out > 0) {
+        const ggml_type_traits* tr = ggml_get_type_traits(w.ggml_type);
+        if (!tr || !tr->to_float || tr->blck_size == 0 || tr->type_size == 0) {
+            err = "linear: no dequantizer for this type";
+            return false;
+        }
+        const size_t blk = (size_t)tr->blck_size;
+        const size_t ts = (size_t)tr->type_size;
+        if (n_in % blk != 0) { err = "linear: n_in not a multiple of the block size"; return false; }
+        const size_t blocks_per_row = n_in / blk;
+        const size_t row_bytes = blocks_per_row * ts;
+        if (w.bytes < row_bytes * n_out) { err = "linear: weight bytes short"; return false; }
+
+        std::vector<float> rw(n_in, 0.0f);
+        y.assign(n_out, 0.0f);
+        for (size_t j = 0; j < n_out; ++j) {
+            const uint8_t* row = reinterpret_cast<const uint8_t*>(w.data) + j * row_bytes;
+            tr->to_float(row, rw.data(), (int)n_in);
+            double acc = 0.0;
+            for (size_t i = 0; i < n_in; ++i) acc += double(rw[i]) * double(x[i]);
+            y[j] = (float)acc;
+        }
+        ++cpu_calls_;
+        return true;
+    }
+
     // Non-k-quant (or non-multiple-of-256) weight: dequantise and dot.
     std::vector<float> wf;
     const size_t got = DequantPrefix(w, wf, n_in * n_out);
-    if (got < n_in * n_out) { err = "linear: dequant short"; return false; }
+    if (got < n_in * n_out) {
+        if (std::getenv("LINEAR_TRACE")) {
+            std::fprintf(stderr, "[linear] dequant short: weight=%s type=%d dims=[%zu,%zu] "
+                                 "bytes=%zu blck=%zu n_in*n_out=%zu got=%zu\n",
+                         w.name.c_str(), (int)w.ggml_type, (size_t)w.dims[0],
+                         w.dims.size() > 1 ? (size_t)w.dims[1] : 0,
+                         w.bytes, (size_t)ggml_blck_size(w.ggml_type),
+                         n_in * n_out, got);
+        }
+        err = "linear: dequant short";
+        return false;
+    }
     wf.resize(n_in * n_out);
     y.assign(n_out, 0.0f);
     for (size_t j = 0; j < n_out; ++j) {
@@ -374,20 +484,74 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         return false;
     }
     const size_t H = (size_t)spec_.heads;
-    const size_t hk = (size_t)(spec_.heads_kv ? spec_.heads_kv : spec_.heads);
-    const size_t kl = (size_t)spec_.key_length;
-    const size_t vl = (size_t)spec_.value_length;
-    const size_t qPerHead = q.size() / std::max<size_t>(H, 1);
-    const size_t kPerHead = k.size() / std::max<size_t>(H, 1);
-    const size_t vPerHead = v.size() / std::max<size_t>(H, 1);
+    if (H == 0) { err = "attention: head_count 0"; return false; }
+    // Input geometry dump before any arithmetic touches them. This is the
+    // instrumentation that locates the faulting access: if a buffer length or
+    // per-head width is inconsistent, the fault follows from it directly.
+    if (std::getenv("ATTN_TRACE")) {
+        std::fprintf(stderr, "[attn] block=%d pos=%zu q=%zu k=%zu v=%zu H=%zu hk=%zu kl=%zu vl=%zu kvcache=%zu,%zu\n",
+                     (int)in.block, position, q.size(), k.size(), v.size(),
+                     H, (size_t)spec_.heads_kv, (size_t)spec_.key_length,
+                     (size_t)spec_.value_length,
+                     kv_k_[in.block].size(), kv_v_[in.block].size());
+    }
+    if (in.block < 0 || (size_t)in.block >= kv_k_.size()) {
+        err = "attention: bad block";
+        return false;
+    }
+
+    // ---- Geometry derived from the REAL tensors, not from metadata ----
+    //
+    // nemotron_h_moe declares attention.head_count=32 but no
+    // attention.head_count_kv, so the spec-level MHA default sets heads_kv=32
+    // and every derived width is wrong. The Q/K/V weight tensors are
+    // authoritative:
+    //
+    //   attn_q.weight [in, 4096]  -> qHeads = 4096 / qHeadDim
+    //   attn_k.weight [in,  256]  -> kHeads =  256 / qHeadDim
+    //   attn_v.weight [in,  256]  -> vHeads =  256 / qHeadDim
+    //
+    // qHeadDim comes from the query width over H, then k/v head counts follow.
+    // This is GQA: k/v are narrower than q because heads are grouped.
+    const size_t qWidth = q.size();
+    const size_t kWidth = k.size();
+    const size_t vWidth = v.size();
+    const size_t qPerHead = qWidth / H;
+
+    // The value head dim must match the query head dim, otherwise the output
+    // projection cannot consume the attention result. Derive kv heads from the
+    // ratio instead of trusting a metadata field the model does not ship.
+    size_t hk = (size_t)spec_.heads_kv;
+    if (hk == 0 || hk > H) hk = H;
+
+    size_t kPerHead = 0, vPerHead = 0;
+    if (qPerHead > 0) {
+        // heads implied by each tensor's width over the shared head dim
+        size_t kHeads = (kWidth * H) / qWidth;   // = kWidth / qPerHead
+        size_t vHeads = (vWidth * H) / qWidth;
+        if (kHeads >= 1 && kHeads <= H && kWidth == kHeads * qPerHead) {
+            hk = kHeads;
+            kPerHead = qPerHead;
+        }
+        if (vHeads >= 1 && vHeads <= H && vWidth == vHeads * qPerHead) {
+            vPerHead = qPerHead;
+        }
+    }
+    // Fall back to equal head counts (MHA) only when the tensor widths do not
+    // describe a consistent grouped layout.
+    if (kPerHead == 0) kPerHead = (hk == 0) ? (kWidth / H) : (kWidth / hk);
+    if (vPerHead == 0) vPerHead = (hk == 0) ? (vWidth / H) : (vWidth / hk);
     if (qPerHead == 0 || kPerHead == 0 || vPerHead == 0) {
         err = "attention: empty per-head width";
         return false;
     }
+
+    const size_t kl = (size_t)spec_.key_length;
+    const size_t vl = (size_t)spec_.value_length;
     const bool isMla = (kPerHead == kl && vPerHead == vl && kl > vl);
-    const size_t D = isMla ? qPerHead : (spec_.embd / H);
+    const size_t D = isMla ? qPerHead : qPerHead;
     if (D == 0) { err = "attention: head dim 0"; return false; }
-    const size_t qD = isMla ? qPerHead : D;      // dim of the dot product
+    const size_t qD = isMla ? qPerHead : qPerHead;
 
     // RoPE: the ROTARY slice only. In MLA that is the last qk_rope dims of q
     // and of k; in a GQA model it is the whole head. Rotating the entire head
@@ -430,9 +594,46 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         }
     };
 
+    // ---- Geometry validation (fail closed on inconsistency) ----
+    // The Q/K/V widths must agree with the head counts actually in use. An
+    // inconsistency here is exactly what previously walked 31*128 bytes into a
+    // 256-element K buffer.
+    if (H == 0 || hk == 0 || qPerHead == 0 || kPerHead == 0 || vPerHead == 0) {
+        err = "attention: degenerate head geometry";
+        return false;
+    }
+    if (H % hk != 0) {
+        err = "attention: H not divisible by hk (H=" + std::to_string(H) +
+              " hk=" + std::to_string(hk) + ")";
+        return false;
+    }
+    if (qWidth != H * qPerHead) {
+        err = "attention: q size mismatch (" + std::to_string(qWidth) +
+              " != " + std::to_string(H * qPerHead) + ")";
+        return false;
+    }
+    if (kWidth != hk * kPerHead) {
+        err = "attention: k size mismatch (" + std::to_string(kWidth) +
+              " != " + std::to_string(hk * kPerHead) + ")";
+        return false;
+    }
+    if (vWidth != hk * vPerHead) {
+        err = "attention: v size mismatch (" + std::to_string(vWidth) +
+              " != " + std::to_string(hk * vPerHead) + ")";
+        return false;
+    }
+    if (std::getenv("ATTN_TRACE")) {
+        std::fprintf(stderr,
+                     "[attn-geom] block=%d GQA: H=%zu hk=%zu group=%zu qPerHead=%zu kPerHead=%zu vPerHead=%zu\n",
+                     (int)in.block, H, hk, H / hk, qPerHead, kPerHead, vPerHead);
+    }
+
     std::vector<float> qr = q, kr = k;
+    // RoPE is applied to the QUERY heads and to the KV heads. The KV call must
+    // iterate hk, not H: with H=32 and a 256-element K buffer, looping 32 heads
+    // at stride kPerHead reads 31*128 bytes past the end.
     rope(qr, H, qPerHead, ropeLen, qRopeOff);
-    rope(kr, H, kPerHead, ropeLen, kRopeOff);
+    rope(kr, hk, kPerHead, ropeLen, kRopeOff);
 
     // Append to this layer's KV cache.
     auto& K = kv_k_[(size_t)in.block];
@@ -445,13 +646,16 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     std::memcpy(V.data() + position * vW, v.data(), vW * sizeof(float));
 
     const size_t T = position + 1;
-    // Output width per head is the value width, then interleaved by head.
-    const size_t outW = vPerHead;
+    // Output width follows the QUERY heads, not the value heads: with GQA the
+    // output projection is [qWidth, embd], so each of the H query heads must
+    // contribute qPerHead values. Using vPerHead produced 32*8=256 when the
+    // projection required 32*128=4096.
+    const size_t outW = qPerHead;
     y.assign(H * outW, 0.0f);
     std::vector<float> scores(T);
     // GQA groups: consecutive query heads share one KV head.
     const size_t group = std::max<size_t>(H / std::max<size_t>(hk, 1), 1);
-    // MLA score = q_nopeÃ‚Â·k_nope  +  q_ropeÃ‚Â·k_rope.
+    // MLA score = q_nopeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_nope  +  q_ropeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_rope.
     //
     // Dotting the whole per-head width is WRONG for MLA: q's rope slots would
     // be multiplied by K's no-rope slots. That cross-term made every position
@@ -474,9 +678,14 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         SoftmaxVec(scores);
         float* op = y.data() + h * outW;
         for (size_t t = 0; t < T; ++t) {
+            // Value for this query head comes from its KV group. The value head
+            // may be narrower than qPerHead; read only what exists and leave the
+            // remaining output lanes at zero rather than reading past the KV
+            // buffer.
             const float* vp = V.data() + t * vW + g * vPerHead;
             const float s = scores[t];
-            for (size_t d = 0; d < outW; ++d) op[d] += s * vp[d];
+            const size_t copyW = std::min(vPerHead, outW);
+            for (size_t d = 0; d < copyW; ++d) op[d] += s * vp[d];
         }
     }    return true;
 }
@@ -487,30 +696,50 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     (void)topk;
     if (router.b < 0) { last_error_ = "router: no weight"; return false; }
     const TensorRec& rt = tensors_[(size_t)router.b];
-    const size_t n_exp = rt.dims.size() >= 2 ? (size_t)rt.dims[0] : 0;
-    if (n_exp == 0) { last_error_ = "router: bad shape"; return false; }
+
+    // The router maps hidden -> experts, so in GGUF's ne[] layout
+    //   dims[0] = hidden (input)      e.g. 2688
+    //   dims[1] = experts (output)    e.g.  128
+    // Reading dims[0] here made n_exp 2688 instead of 128 and the dequant
+    // request 2688*2688 floats, which no router tensor can satisfy - hence
+    // "router: dequant short".
+    if (rt.dims.size() < 2) { last_error_ = "router: bad shape"; return false; }
+    const size_t n_hidden = (size_t)rt.dims[0];
+    const size_t n_exp = (size_t)rt.dims[1];
+    if (n_exp == 0 || n_hidden == 0) { last_error_ = "router: bad shape"; return false; }
+
+    // Use the tensor's own input width rather than spec_.embd so a hidden
+    // size that differs from the embedding still routes correctly.
+    const size_t hdim = std::min(n_hidden, spec_.embd ? spec_.embd : n_hidden);
+    (void)hdim;
+
     std::vector<float> logits;
     if (rt.ggml_type == GGML_TYPE_F32) {
-        logits.assign(n_exp, 0.0f);
-        std::memcpy(logits.data(), rt.data, std::min(n_exp * 4, rt.bytes));
-        // logits are [n_exp, embd]: dot each expert row with x
-        std::vector<float> wf;
-        DequantPrefix(rt, wf, n_exp * spec_.embd);
+        logits.assign(static_cast<size_t>(n_exp), 0.0f);
+        if (!rt.data || rt.bytes < n_exp * n_hidden * sizeof(float)) {
+            last_error_ = "router: f32 weight short";
+            return false;
+        }
+        const float* wf = reinterpret_cast<const float*>(rt.data);
         for (size_t e = 0; e < n_exp; ++e) {
+            const float* row = wf + e * n_hidden;
             double acc = 0.0;
-            for (size_t i = 0; i < spec_.embd && (e * spec_.embd + i) < wf.size(); ++i)
-                acc += double(wf[e * spec_.embd + i]) * double(x[i]);
+            for (size_t i = 0; i < hdim; ++i) acc += double(row[i]) * double(x[i]);
             logits[e] = (float)acc;
         }
     } else {
         std::vector<float> wf;
-        DequantPrefix(rt, wf, n_exp * spec_.embd);
-        if (wf.size() < n_exp * spec_.embd) { last_error_ = "router: dequant short"; return false; }
+        // Request only what the tensor can actually provide: n_exp rows of
+        // n_hidden values.
+        const size_t want = n_exp * n_hidden;
+        const size_t got = DequantPrefix(rt, wf, want);
+        if (got < want) { last_error_ = "router: dequant short"; return false; }
+        logits.assign(n_exp, 0.0f);
         for (size_t e = 0; e < n_exp; ++e) {
+            const float* row = wf.data() + e * n_hidden;
             double acc = 0.0;
-            for (size_t i = 0; i < spec_.embd; ++i)
-                acc += double(wf[e * spec_.embd + i]) * double(x[i]);
-            logits.push_back((float)acc);
+            for (size_t i = 0; i < hdim; ++i) acc += double(row[i]) * double(x[i]);
+            logits[e] = (float)acc;
         }
     }
     if (spec_.expert_used == 0) { last_error_ = "router: expert_used 0"; return false; }
@@ -532,86 +761,244 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     return true;
 }
 
+// Total encoded ELEMENT count of a tensor (not bytes-per-element: for Q4_0
+// type_size 18 / blck_size 32 truncates to 0, which made every expert-count
+// division divide by zero). A block holds blck_size elements in type_size
+// bytes, so the tensor holds (bytes / type_size) * blck_size elements.
+static size_t elemCountOf(const TensorRec& t) {
+    const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
+    if (!tr || tr->type_size == 0 || tr->blck_size == 0) return 0;
+    const size_t ts = static_cast<size_t>(tr->type_size);
+    const size_t blk = static_cast<size_t>(tr->blck_size);
+    return (t.bytes / ts) * blk;
+}
+
+// Dequantize only the element range [base, base+count) of a tensor.
+//
+// Expert tensors are rank-3 [in, out, expert]; an expert is a contiguous slice
+// of (in * out) elements at expertIndex * in * out. DequantPrefix() spans whole
+// tensors only, so this walks just the blocks covering the requested range.
+static bool DequantRange(const TensorRec& t, size_t base, size_t count, std::vector<float>& out) {
+    const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
+    if (!tr || count == 0) return false;
+
+    const int64_t blk = std::max<int64_t>(tr->blck_size, 1);
+    const size_t ts   = static_cast<size_t>(tr->type_size);
+    if (ts == 0) return false;
+
+    out.assign(count, 0.0f);
+
+    // Number of complete blocks available in the encoded data.
+    const size_t totalBlocks = t.bytes / ts;
+    const size_t firstBlock  = base / static_cast<size_t>(blk);
+    const size_t lastBlock   = (base + count + blk - 1) / static_cast<size_t>(blk);
+    if (firstBlock >= totalBlocks) return false;
+    const size_t upto = std::min(lastBlock, totalBlocks);
+    if (upto <= firstBlock) return false;
+
+    // Read only the needed blocks into a compact buffer.
+    const size_t blockCount = upto - firstBlock;
+    std::vector<uint8_t> encoded(ts * blockCount);
+    std::memcpy(encoded.data(), t.data + firstBlock * ts, encoded.size());
+
+    // Decode block-by-block; the first/last blocks clip to the range.
+    for (size_t b = 0; b < blockCount; ++b) {
+        const size_t elemStart = (firstBlock + b) * static_cast<size_t>(blk);
+        const size_t elemEnd   = elemStart + static_cast<size_t>(blk);
+        const size_t clipFrom  = std::max(elemStart, base);
+        const size_t clipTo    = std::min(elemEnd, base + count);
+        if (clipTo <= clipFrom) continue;
+
+        // Decode this block into a scratch buffer (never in place; that aliases
+        // the encoded input and is undefined), then copy the clipped part. The
+        // scratch is one block wide, so this stays bounded.
+        const uint8_t* blockPtr = encoded.data() + b * ts;
+        std::vector<float> scratch(static_cast<size_t>(blk), 0.0f);
+        if (tr->to_float) {
+            tr->to_float(blockPtr, scratch.data(), static_cast<int64_t>(blk));
+        } else {
+            // Raw-loadable types (F32/F16/BF16) need no conversion.
+            std::memcpy(scratch.data(), blockPtr,
+                        std::min(ts, scratch.size() * sizeof(float)));
+        }
+        for (size_t i = clipFrom; i < clipTo; ++i) {
+            out[i - base] = scratch[i - elemStart];
+        }
+    }
+    return true;
+}
+
 bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                             const std::vector<uint32_t>& ids, const std::vector<float>& w,
                             std::vector<float>& y, std::string& err) {
     y.assign(spec_.embd, 0.0f);
-    // moe.c is the gate expert-tensor slot; moe.a is the arena input
-    // ("ffn_norm") and moe.b is the arena choice vector.
-    if (moe.c < 0 || moe.c >= (int32_t)tensors_.size()) {
-        err = "moe: missing gate expert slot";
-        return false;
+    // Derived from the graph's own detail field, which names the model's real
+    // tensors. The graph emits
+    //   detail = "experts: <up>,<down>"
+    // so parsing it is authoritative: no name guessing, no anchor assumptions.
+    std::string expertUpName, expertDownName;
+    {
+        const std::string tag = "experts: ";
+        const size_t at = moe.detail.find(tag);
+        if (at != std::string::npos) {
+            std::string rest = moe.detail.substr(at + tag.size());
+            const size_t comma = rest.find(',');
+            if (comma != std::string::npos) {
+                expertUpName   = rest.substr(0, comma);
+                expertDownName = rest.substr(comma + 1);
+            } else {
+                expertUpName = rest;
+            }
+        }
     }
-    const TensorRec& gate = tensors_[(size_t)moe.c];
-    // Resolve the sibling expert tensors from the gate's name.
-    auto sibling = [&](const char* from, const char* to) -> const TensorRec* {
-        std::string n = gate.name;
-        const size_t p = n.rfind(from);
-        if (p == std::string::npos) return nullptr;
-        n.replace(p, std::strlen(from), to);
-        auto it = slot_by_name_.find(n);
-        return it == slot_by_name_.end() ? nullptr : &tensors_[(size_t)it->second];
-    };
-    const TensorRec* upT = sibling("ffn_gate_exps.weight", "ffn_up_exps.weight");
-    const TensorRec* downT = sibling("ffn_gate_exps.weight", "ffn_down_exps.weight");
-    if (!upT || !downT) { err = "moe: up/down expert tensors not found"; return false; }
+
+    const TensorRec* upT = nullptr;
+    const TensorRec* downT = nullptr;
+    if (std::getenv("MOE_TRACE")) {
+        std::fprintf(stderr, "[moe-enter] block=%d ids=%zu x=%zu detail='%s'\n",
+                     (int)moe.block, ids.size(), x.size(), moe.detail.c_str());
+    }
+    if (!expertUpName.empty()) {
+        auto it = slot_by_name_.find(expertUpName);
+        if (it == slot_by_name_.end()) {
+            // Nemotron uses ffn_*_exps.weight; tolerate the alternate casing.
+            std::string alt = expertUpName;
+            const size_t pp = alt.rfind("ffn_up_exps.weight");
+            if (pp != std::string::npos) alt.replace(pp, std::strlen("ffn_up_exps.weight"),
+                                                    "ffn_up_exps.weight");
+            it = slot_by_name_.find(alt);
+        }
+        if (it != slot_by_name_.end()) upT = &tensors_[(size_t)it->second];
+    }
+    if (!expertDownName.empty()) {
+        auto it = slot_by_name_.find(expertDownName);
+        if (it != slot_by_name_.end()) downT = &tensors_[(size_t)it->second];
+    }
+    // Fall back to the anchor slot's siblings only if the detail field was absent.
+    const TensorRec* anchorT = upT;
+    if (!anchorT && moe.c >= 0 && moe.c < (int32_t)tensors_.size()) anchorT = &tensors_[(size_t)moe.c];
+    if (!anchorT) { err = "moe: expert tensors not named"; return false; }
+    if (!upT) { err = "moe: up expert tensor not found"; return false; }
+    if (!downT) { err = "moe: down expert tensor not found"; return false; }
 
     const size_t ffn = (size_t)std::max<uint64_t>(spec_.expert_ffn, 1);
     const size_t embd = spec_.embd;
-    if (gate.dims.size() < 2 || upT->dims.size() < 2 || downT->dims.size() < 2) {
+
+    // No separate gate expert on this model: the router (ffn_gate_inp) does the
+    // gating, so the up projection doubles as the gate (identity gate).
+    const TensorRec* gateT = upT;
+    if (gateT->dims.size() < 2 || upT->dims.size() < 2 || downT->dims.size() < 2) {
         err = "moe: expert tensor rank < 2";
         return false;
     }
     std::vector<float> gT, uT, dT;
-    DequantPrefix(gate, gT, gate.bytes / 4);
-    DequantPrefix(*upT, uT, upT->bytes / 4);
-    DequantPrefix(*downT, dT, downT->bytes / 4);
-    const size_t gIn = (size_t)gate.dims[0], gOut = (size_t)gate.dims[1];
-    const size_t uIn = (size_t)upT->dims[0], uOut = (size_t)upT->dims[1];
+    // Expert tensors are RANK-3: ne = [in, out, expert]. Requesting
+    // (the full-bank dequant that used to live here is removed: it expanded
+    // ~7.14 GiB of F32 for every MoE block on every token, which is what
+    //  corrupted the heap. See the selected-expert path below.)
+
+    // Total encoded ELEMENT count of the expert bank. A block holds blck_size
+    // elements in type_size bytes, so the tensor holds (bytes/type_size)*blck.
+    // (type_size / blck_size truncates to zero for Q4_0 - 18/32 - which made
+    // every expert count divide by zero.)
+    auto elemCount = [](const TensorRec& t) -> size_t {
+        const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
+        if (!tr || tr->type_size == 0 || tr->blck_size == 0) return 0;
+        return (t.bytes / (size_t)tr->type_size) * (size_t)tr->blck_size;
+    };
+    // The expert tensors are [in, out, expert] and each holds 128 experts at
+    // 638,582,784 elements (~2.38 GiB as F32). Expanding all 128 costs ~7.14 GiB
+    // across gate/up/down for a token that uses only expert_used of them - and
+    // that allocation is what corrupted the heap.
+    //
+    // Only the experts the router selected are dequantized now, one expert at a
+    // time. The expert stride is (in * out) elements, so an expert slice is a
+    // contiguous window that DequantPrefix can read directly.
+    const size_t gIn = (size_t)gateT->dims[0], gOut = (size_t)gateT->dims[1];
+    const size_t uIn = (size_t)upT->dims[0],   uOut = (size_t)upT->dims[1];
     const size_t dIn = (size_t)downT->dims[0], dOut = (size_t)downT->dims[1];
-    // Only the experts whose full [in, out] block is present are usable.
-    const size_t gE = gT.size() / (gIn * gOut);
-    const size_t uE = uT.size() / (uIn * uOut);
-    const size_t dE = dT.size() / (dIn * dOut);
-    const size_t usableE = std::min(gE, std::min(uE, dE));
-    if (usableE == 0) { err = "moe: no dequantised expert blocks available"; return false; }
+
+    // Number of experts actually present in each tensor.
+    // Element stride is (in * out). The tensor holds elemCountOf elements,
+    // so expert count = elements / elementStride.
+    const size_t elemStrideG = gIn * gOut;
+    const size_t elemStrideU = uIn * uOut;
+    const size_t elemStrideD = dIn * dOut;
+    const size_t gExperts = std::max<size_t>(elemCountOf(*gateT) / std::max<size_t>(elemStrideG, 1), 1);
+    const size_t uExperts = std::max<size_t>(elemCountOf(*upT)   / std::max<size_t>(elemStrideU, 1), 1);
+    const size_t dExperts = std::max<size_t>(elemCountOf(*downT) / std::max<size_t>(elemStrideD, 1), 1);
+    const size_t usableE = std::min(gExperts, std::min(uExperts, dExperts));
+    if (usableE == 0) { err = "moe: no expert blocks available"; return false; }
+
+    if (std::getenv("MOE_TRACE")) {
+        std::fprintf(stderr, "[moe] gate=%s up=%s down=%s\n", gateT->name.c_str(), upT->name.c_str(), downT->name.c_str());
+        std::fprintf(stderr, "[moe] gate [n,m] = %zu,%zu  up = %zu,%zu  down = %zu,%zu\n",
+                     gIn, gOut, uIn, uOut, dIn, dOut);
+        std::fprintf(stderr, "[moe] experts present: gate=%zu up=%zu down=%zu, selected=%zu\n",
+                     gExperts, uExperts, dExperts, ids.size());
+    }
+
+    // Validate every selected expert before computing anything.
+    for (size_t e = 0; e < ids.size() && e < w.size(); ++e) {
+        if ((size_t)ids[e] >= usableE) { err = "moe: selected expert out of range"; return false; }
+    }
 
     std::vector<float> g(ffn), u(ffn), h(ffn);
+    std::vector<float> gSlice, uSlice, dSlice;
+    size_t expertsProcessed = 0;
+
     for (size_t e = 0; e < ids.size() && e < w.size(); ++e) {
-        const uint32_t ex = ids[e];
-        if ((size_t)ex >= usableE) continue;
+        const size_t ex = (size_t)ids[e];
+        if (ex >= usableE) continue;
+
+        // Dequantize only this expert's slice.
+        gSlice.clear(); uSlice.clear(); dSlice.clear();
+
+        const size_t gBase = ex * elemStrideG;
+        const size_t uBase = ex * elemStrideU;
+        const size_t dBase = ex * elemStrideD;
+        if (!DequantRange(*gateT, gBase, elemStrideG, gSlice) ||
+            !DequantRange(*upT,   uBase, elemStrideU, uSlice) ||
+            !DequantRange(*downT, dBase, elemStrideD, dSlice)) {
+            err = "moe: expert slice dequant failed (block=" + std::to_string(moe.block) +
+                  " expert=" + std::to_string(ex) + ")";
+            return false;
+        }
+
         std::fill(g.begin(), g.end(), 0.0f);
         std::fill(u.begin(), u.end(), 0.0f);
-        const float* gp = gT.data() + (size_t)ex * (gIn * gOut);
-        const float* up = uT.data() + (size_t)ex * (uIn * uOut);
+
         const size_t glen = std::min(ffn, gOut);
         const size_t ulen = std::min(ffn, uOut);
         for (size_t j = 0; j < glen; ++j) {
             double acc = 0.0;
             const size_t lim = std::min(gIn, x.size());
-            for (size_t i = 0; i < lim; ++i) acc += double(gp[j * gIn + i]) * double(x[i]);
+            for (size_t i = 0; i < lim; ++i) acc += double(gSlice[j * gIn + i]) * double(x[i]);
             g[j] = (float)acc;
         }
         for (size_t j = 0; j < ulen; ++j) {
             double acc = 0.0;
             const size_t lim = std::min(uIn, x.size());
-            for (size_t i = 0; i < lim; ++i) acc += double(up[j * uIn + i]) * double(x[i]);
+            for (size_t i = 0; i < lim; ++i) acc += double(uSlice[j * uIn + i]) * double(x[i]);
             u[j] = (float)acc;
         }
-        // SwiGLU: silu(gate) * up
+        // SwiGLU: silu(gate) * up   (gate==up when the model has no gate expert)
         for (size_t j = 0; j < ffn; ++j) {
             const float s = 1.0f / (1.0f + std::exp(-g[j]));
             h[j] = g[j] * s * u[j];
         }
-        const float* dp = dT.data() + (size_t)ex * (dIn * dOut);
+
         const size_t olen = std::min(embd, dOut);
         for (size_t i = 0; i < olen; ++i) {
             double acc = 0.0;
             const size_t lim = std::min(dIn, ffn);
-            for (size_t j = 0; j < lim; ++j) acc += double(dp[i * dIn + j]) * double(h[j]);
+            for (size_t j = 0; j < lim; ++j) acc += double(dSlice[i * dIn + j]) * double(h[j]);
             y[i] += w[e] * (float)acc;
         }
+        ++expertsProcessed;
     }
+
+    if (expertsProcessed == 0) { err = "moe: no expert was processed"; return false; }
     return true;
 }
 
@@ -760,8 +1147,20 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {
         const auto& in = program_[pc];
+        if (std::getenv("RR_OP_TRACE")) {
+            std::fprintf(stderr, "  [loop] pc=%zu/%zu kind=%d blk=%d a='%s' b='%s' out='%s' bSlot=%d\n",
+                         pc, program_.size(), (int)in.op, (int)in.block,
+                         in.aName.c_str(), in.bName.c_str(), in.outName.c_str(), (int)in.b);
+            std::fflush(stderr);
+        }
         const std::vector<float>& xi = resolveIn(in);
     switch (in.op) {
+            if (std::getenv("RR_OP_TRACE")) {
+                std::fprintf(stderr, "  [op] %-16s blk=%3d a='%s' b='%s' out='%s' bSlot=%d\n",
+                             OpKindName(in.op), in.block, in.aName.c_str(),
+                             in.bName.c_str(), in.outName.c_str(), (int)in.b);
+                std::fflush(stderr);
+            }
             case OpKind::EmbeddingLookup: {
                 const TensorRec& emb = tensors_[(size_t)embSlot];
                 const size_t n_in = (size_t)emb.dims[0];
@@ -787,7 +1186,17 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     rowView.data = src;
                     rowView.bytes = row_stride;
                     rowView.dims[1] = 1;                 // exactly one row
+                    if (std::getenv("RR_TRACE_TOKEN")) {
+                        std::fprintf(stderr, "  [emb] token=%u n_in=%zu vocab=%zu row_stride=%zu bytes=%zu type=%d dims=[%zu,%zu]\n",
+                                     token, n_in, vocab, row_stride, row_stride,
+                                     (int)rowView.ggml_type, (size_t)rowView.dims[0],
+                                     rowView.dims.size() > 1 ? (size_t)rowView.dims[1] : 0);
+                    }
                     DequantPrefix(rowView, hidden_, n_in);
+                    if (std::getenv("RR_TRACE_TOKEN")) {
+                        std::fprintf(stderr, "  [emb] dequant got=%zu want=%zu type_size_needed\n",
+                                     hidden_.size(), n_in);
+                    }
                     if (hidden_.size() < n_in) {
                         last_error_ = "embedding: dequant short";
                         return false;
@@ -805,6 +1214,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 break;
             }
             case OpKind::Linear: {
+                if (std::getenv("LINEAR_TRACE")) {
+                    std::fprintf(stderr, "[exec] Linear block=%d bName='%s' bSlot=%d aName='%s' outName='%s' xi=%zu\n",
+                                 (int)in.block, in.bName.c_str(), (int)in.b,
+                                 in.aName.c_str(), in.outName.c_str(), xi.size());
+                }
                 std::vector<float> y;
                 std::string e;
                 if (!OpLinear(in.b, xi, y, e)) { last_error_ = e; return false; }
@@ -831,7 +1245,16 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::Attention: {
                 std::vector<float> y;
                 std::string e;
+                if (std::getenv("ATTN_TRACE")) {
+                    std::fprintf(stderr, "[attn-enter] block=%d pos=%zu aName='%s' hidden_=%zu\n",
+                                 (int)in.block, position, in.aName.c_str(), hidden_.size());
+                }
                 std::vector<float> qv = arena("q"), kv = arena("k"), vv = arena("v");
+                if (std::getenv("ATTN_TRACE")) {
+                    std::fprintf(stderr, "[attn-inputs] qv=%zu kv=%zu vv=%zu kvcache=%zu,%zu\n",
+                                 qv.size(), kv.size(), vv.size(),
+                                 kv_k_[in.block].size(), kv_v_[in.block].size());
+                }
                 if (qv.empty()) qv = hidden_;
                 if (kv.empty()) kv = qv;
                 if (vv.empty()) vv = kv;
@@ -950,7 +1373,17 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::LmHead: {
                 std::vector<float> y;
                 std::string e;
+                if (std::getenv("RR_TRACE_TOKEN")) {
+                    std::fprintf(stderr, "  [lmhead] entering LmHead with slots=%zu hidden=%zu\n",
+                                 program_.size(), hidden_.size());
+                    std::fflush(stderr);
+                }
                 if (!OpLinear(in.b, hidden_, y, e)) { last_error_ = e; return false; }
+                if (std::getenv("RR_TRACE_TOKEN")) {
+                    std::fprintf(stderr, "  [lmhead] OK logits=%zu top=%.4f\n", y.size(),
+                                 y.empty() ? 0.0f : *std::max_element(y.begin(), y.end()));
+                    std::fflush(stderr);
+                }
                 logits_ = y;
                 break;
             }
@@ -964,9 +1397,37 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 break;
             }
             default:
+                if (std::getenv("SSM_TRACE")) {
+                    std::fprintf(stderr, "[exec] unhandled op=%d bName=%s bSlot=%d aName=%s outName=%s\n",
+                                 (int)in.op, in.bName.c_str(), (int)in.b,
+                                 in.aName.c_str(), in.outName.c_str());
+                }
                 last_error_ = "unhandled op";
                 return false;
         }   // switch over program_ ops
+
+        // ---- env-gated first-non-finite tracer (no semantics change) ----
+        // RR_CHECK_FINITE=1 aborts at the FIRST op whose FP32 output is NaN/Inf,
+        // reporting block/pc/op/name/index/value so the real numerical defect is
+        // localised instead of its downstream logits symptom. Diagnostic only.
+        if (std::getenv("RR_CHECK_FINITE")) {
+            auto chk = [&](const char* tag, const std::vector<float>& v) {
+                for (size_t i = 0; i < v.size(); ++i) {
+                    if (!std::isfinite(v[i])) {
+                        std::fprintf(stderr,
+                            "[FIRST_NONFINITE] block=%d pc=%d op=%d name=%s(%s) index=%zu value=%g size=%zu\n",
+                            (int)in.block, (int)pc, (int)in.op, in.outName.c_str(), tag, i, v[i], v.size());
+                        std::fflush(stderr);
+                        std::abort();
+                    }
+                }
+            };
+            chk("hidden", hidden_);
+            if (!in.outName.empty() && in.outName[0] != '<') {
+                auto it = act.find(in.outName);
+                if (it != act.end()) chk("arena", it->second);
+            }
+        }
     }
 
     if (logits_.empty()) { last_error_ = "no logits produced"; return false; }
@@ -1027,19 +1488,32 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     if (aSlot < 0 || dtSlot < 0) { err = "ssm: model has no ssm_a / ssm_dt.bias"; return false; }
 
     std::vector<float> A, DtB, Dd;
+    if (aSlot < 0 || dtSlot < 0) { err = "ssm: model has no ssm_a / ssm_dt.bias"; return false; }
+
+    // Mamba2 scale/decay tensors are far smaller than d_inner and BROADCAST
+    // across head groups rather than providing one value per channel.
+    //
+    // Measured on the real Nemotron-3.5-Lightning-30B:
+    //     D (ssm.inner_size)  = 4096
+    //     N (ssm.state_size)  = 128
+    //     blk.0.ssm_a         = [1, 64]   -> 64 elements
+    //
+    // Requiring D distinct values here reported "ssm_a too small" on a perfectly
+    // valid tensor, which blocked every Mamba2 block. Load what each tensor
+    // actually provides and index modulo its length, which is the broadcast the
+    // architecture specifies.
+    DequantPrefix(tensors_[(size_t)aSlot], A, D);
+    DequantPrefix(tensors_[(size_t)dtSlot], DtB, D);
+    if (dSlot >= 0) DequantPrefix(tensors_[(size_t)dSlot], Dd, D);
+
+    if (A.empty()) { err = "ssm: ssm_a dequantized to nothing"; return false; }
+    if (DtB.empty()) { err = "ssm: ssm_dt.bias dequantized to nothing"; return false; }
+    if (Dd.empty()) Dd.assign(D, 0.0f);
+
     if (std::getenv("SSM_TRACE")) {
-        const TensorRec& aT0 = tensors_[(size_t)aSlot];
-        std::fprintf(stderr, "[ssm] block=%d D=%zu N=%zu ssm_a name=%s dims=[%zu,%zu] aCount=%zu\n",
-                     (int)in.block, D, N, aT0.name.c_str(),
-                     aT0.dims.empty() ? 0 : (size_t)aT0.dims[0],
-                     aT0.dims.size() > 1 ? (size_t)aT0.dims[1] : 0,
-                     aT0.bytes / 4);
+        std::fprintf(stderr, "[ssm] block=%d D=%zu aElems=%zu dtElems=%zu dElems=%zu\n",
+                     (int)in.block, D, A.size(), DtB.size(), Dd.size());
     }
-    if (DequantPrefix(tensors_[(size_t)aSlot], A, D) < D) { err = "ssm: ssm_a too small"; return false; }
-    if (DequantPrefix(tensors_[(size_t)dtSlot], DtB, D) < D) { err = "ssm: ssm_dt.bias too small"; return false; }
-    if (dSlot >= 0 && DequantPrefix(tensors_[(size_t)dSlot], Dd, D) < D) Dd.assign(D, 0.0f);
-    else if (dSlot < 0) Dd.assign(D, 0.0f);
-    A.resize(D); DtB.resize(D); Dd.resize(D);
 
     if (ssm_state_.size() <= (size_t)in.block) ssm_state_.resize((size_t)in.block + 1);
     std::vector<float>& st = ssm_state_[(size_t)in.block];
@@ -1049,13 +1523,14 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     auto softplus = [](float z) -> float { return (z > 20.0f) ? z : std::log1p(std::exp(z)); };
 
     for (size_t i = 0; i < D; ++i) {
-        const float dt = softplus(DtB[i]);
-        const float decay = std::exp(dt * A[i]);
+        const float dt = softplus(DtB[i % DtB.size()]);
+        const float decay = std::exp(dt * A[i % A.size()]);
         const float xin = xd[i];
         st[i] = decay * st[i] + dt * xin;
-        y[i] = st[i] + Dd[i] * xin;
+        y[i] = st[i] + Dd[i % Dd.size()] * xin;
     }
     return true;
 }
 } } }  // namespace
+
 

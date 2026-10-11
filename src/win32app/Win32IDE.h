@@ -23,6 +23,7 @@
 #include "TransparentRenderer.h"
 #include "gguf_loader.h"
 #include "streaming_gguf_loader.h"
+#include "cpu_inference_engine.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Autonomy.h"
 
@@ -732,6 +733,11 @@ private:
     std::vector<TensorInfo> m_modelTensors;
     bool m_useStreamingLoader; // preference to use streaming loader to minimize memory
     bool m_useVulkanRenderer; // preference to use Vulkan renderer if enabled
+
+    // Native CPU inference fallback engine (see Win32IDE.cpp constructor).
+    // Raw-owning pointer, released in the destructor.
+    RawrXD::CPUInferenceEngine* m_nativeEngine = nullptr;
+    bool m_nativeEngineLoaded = false;
     
     // AI Inference State
     InferenceConfig m_inferenceConfig;
