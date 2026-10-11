@@ -98,6 +98,39 @@ public:
 
     // Model loading
     bool LoadModel(const std::string& model_path);
+    // Run a single synchronous prompt through the engine
+    // (used by the native IDE's analysis commands).
+    // Single synchronous prompt through the engine, used by the native
+    // IDE's analysis commands. Defined inline so the IDE target does not
+    // need the engine translation unit.
+    std::string infer(const std::string& prompt) {
+        std::string result;
+        if (!m_modelLoaded) {
+            return "Model not loaded";
+        }
+        try {
+            const std::vector<int> tokens = Tokenize(prompt);
+            const int max_new = 128;
+            std::vector<int> out_tokens;
+            out_tokens.reserve(max_new);
+            int32_t last = tokens.empty() ? 1 : tokens.back();
+            for (int i = 0; i < max_new; ++i) {
+                const std::vector<float> logits = Eval(std::vector<int>{last});
+                if (logits.empty()) break;
+                size_t best = 0;
+                for (size_t j = 1; j < logits.size(); ++j)
+                    if (logits[j] > logits[best]) best = j;
+                const int32_t id = static_cast<int32_t>(best);
+                if (id == 0 || id == 2) break;
+                out_tokens.push_back(id);
+                last = id;
+            }
+            result = Detokenize(out_tokens);
+        } catch (const std::exception& e) {
+            result = std::string("inference error: ") + e.what();
+        }
+        return result;
+    }
     bool LoadWeights(const std::unordered_map<std::string, Tensor>& tensors);
     bool IsModelLoaded() const { return m_modelLoaded; }
     
@@ -252,6 +285,10 @@ private:
     FTitan_Initialize fnTitan_Initialize = nullptr;
     FTitan_LoadModel fnTitan_LoadModel = nullptr;
     FTitan_RunInferenceStep fnTitan_RunInferenceStep = nullptr;
+
+    // Head geometry derived from the model's real Q/K projections.
+    int m_headDim = 0;
+    int m_kvDim = 0;
 
     // Execution State
     int m_currentPos = 0;

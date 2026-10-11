@@ -1182,6 +1182,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE AND Qt6_FOUND)
                 src/gguf_loader.cpp
                 src/gguf_vocab_resolver.cpp
                 src/streaming_gguf_loader.cpp
+        src/cpu_inference_engine_impl.cpp
                 src/utils/ErrorReporter.cpp
                 src/utils/Diagnostics.cpp
                 # Benchmark menu integration (headers required for Q_OBJECT moc)
@@ -1331,10 +1332,13 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_AgenticBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
         src/win32app/Win32IDE_Autonomy.cpp
+        src/win32app/Win32IDE_lifecycle.cpp
         src/win32app/TransparentRenderer.cpp
         src/gguf_loader.cpp
+        src/GGUFLoader.cpp
         src/gguf_vocab_resolver.cpp
         src/streaming_gguf_loader.cpp
+        src/cpu_inference_engine_impl.cpp
         src/utils/ErrorReporter.cpp
         src/utils/Diagnostics.cpp
     )
@@ -1351,14 +1355,23 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
         )
         target_include_directories(RawrXD-Win32IDE-Native PRIVATE
+            # Qt-free overlay FIRST: it carries a guarded gguf_loader.h so this
+            # dependency-free target never needs QtCore/QByteArray.
+            ${CMAKE_SOURCE_DIR}/src/win32app-qtfree
+            # include/ before src/: src/renderer.h (the RawrXD render-command
+            # header) would otherwise shadow include/renderer.h (IRenderer),
+            # which the win32app sources include as "renderer.h".
+            ${CMAKE_SOURCE_DIR}/include
             ${CMAKE_SOURCE_DIR}/src
             ${CMAKE_SOURCE_DIR}/src/win32app
             ${CMAKE_SOURCE_DIR}/src/utils
-            ${CMAKE_SOURCE_DIR}/include
-            # gguf_loader.h includes vulkan_compute.h -> vulkan/vulkan.h, so the
-            # Vulkan SDK include path is required even when GPU compute is off.
-            ${Vulkan_INCLUDE_DIRS}
+            # gguf_loader.h / vulkan_compute.h pull in vulkan/vulkan.h: use the
+            # real SDK (the repo's include/vulkan/vulkan.h is a stub).
+            $ENV{VULKAN_SDK}/Include
         )
+        if(TARGET ggml_interface)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE ggml_interface)
+        endif()
         target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE
             NOMINMAX
             _WIN32_WINNT=0x0A00
@@ -1370,8 +1383,9 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             /EHsc $<$<CONFIG:Release>:/O2>
         )
         target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
-            comctl32 comdlg32 riched32 richedit shell32 user32 gdi32
+            comctl32 comdlg32 shell32 user32 gdi32
             ole32 oleaut32 uuid advapi32 d3d11 dxgi d3dcompiler
+            d2d1 dwrite dxguid dwmapi dcomp
         )
         set_target_properties(RawrXD-Win32IDE-Native PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
