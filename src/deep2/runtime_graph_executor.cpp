@@ -273,7 +273,14 @@ bool Executor::OpRmsNorm(const Instr& in, const std::vector<float>& x,
 
 bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                         std::vector<float>& y, std::string& err) {
-    if (wslot < 0) { err = "linear: no weight"; return false; }
+    if (wslot < 0) {
+        err = "linear: no weight";
+        if (std::getenv("LINEAR_TRACE")) {
+            std::fprintf(stderr, "[linear] missing weight: slot=%d x=%zu\n",
+                         (int)wslot, x.size());
+        }
+        return false;
+    }
     const TensorRec& w = tensors_[(size_t)wslot];
     if (!w.data || w.dims.size() < 2) { err = "linear: bad weight"; return false; }
     const size_t n_in = (size_t)w.dims[0];
@@ -451,7 +458,7 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     std::vector<float> scores(T);
     // GQA groups: consecutive query heads share one KV head.
     const size_t group = std::max<size_t>(H / std::max<size_t>(hk, 1), 1);
-    // MLA score = q_nopeÃ‚Â·k_nope  +  q_ropeÃ‚Â·k_rope.
+    // MLA score = q_nopeÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_nope  +  q_ropeÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_rope.
     //
     // Dotting the whole per-head width is WRONG for MLA: q's rope slots would
     // be multiplied by K's no-rope slots. That cross-term made every position
@@ -805,6 +812,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 break;
             }
             case OpKind::Linear: {
+                if (std::getenv("LINEAR_TRACE")) {
+                    std::fprintf(stderr, "[exec] Linear block=%d bName='%s' bSlot=%d aName='%s' outName='%s' xi=%zu\n",
+                                 (int)in.block, in.bName.c_str(), (int)in.b,
+                                 in.aName.c_str(), in.outName.c_str(), xi.size());
+                }
                 std::vector<float> y;
                 std::string e;
                 if (!OpLinear(in.b, xi, y, e)) { last_error_ = e; return false; }

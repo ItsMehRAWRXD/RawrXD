@@ -541,14 +541,20 @@ void DetectArch(ModelSpec& s, const std::vector<TensorRec>& tensors) {
     if (a == "nemotron_h" || a == "nemotron_h_moe") { s.kind = ArchKind::SsmHybrid; return; }
     if (a == "qwen3next") { s.kind = ArchKind::Qwen3Next; return; }
 
-    // SSM-driven hybrids may expose the same decoder graph plus ssm_* tensors.
+    // SSM-driven hybrids also expose the standard decoder tensors (attention on
+    // some blocks, MoE elsewhere) alongside the ssm_* set, so this only records
+    // the family. BuildGraph emits the matching per-block primitives.
+    //
+    // The previous branch returned here after pushing "Deep2 has no SSM scan
+    // primitive yet". That note is stale: Op::SsmScan and Executor::OpSsmScan
+    // now exist, so the SSM graph is built and executed.
     if (hasAny(".ssm_in.weight")) {
-        s.kind = (s.expert_count > 0) ? ArchKind::SsmHybrid : ArchKind::SsmHybrid;
-        s.notes.push_back("ssm tensors present; Deep2 has no SSM scan primitive yet");
-        return;
+        s.kind = ArchKind::SsmHybrid;
+    } else if (s.expert_count > 0) {
+        s.kind = ArchKind::MoeOnly;
+    } else {
+        s.kind = ArchKind::LlamaLike;
     }
-    if (s.expert_count > 0) { s.kind = ArchKind::MoeOnly; return; }
-    s.kind = ArchKind::LlamaLike;
 }
 
 void FillSpec(ModelSpec& s, const std::map<std::string, std::string>& m) {
@@ -660,18 +666,17 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         }
 
         // ---- Mamba2 selective scan (nemotron_h, qwen3-next) ----
-        // The SSM is the ONLY missing primitive for these families. It is not
-        // an optimisation of an attention kernel: SSMs have no attention-style
-        // parallel form to fall back to, so the block either has a real scan or
-        // the model cannot run. The scan consumes the model's own SSM tensors,
-        // so no data is invented here.
-        if (s.kind == ArchKind::SsmHybrid || s.kind == ArchKind::Qwen3Next) {
+        // Iterate over decoder blocks: some blocks carry the Mamba2 mixer
+        // (blkN.ssm_in.weight and friends), the rest are attention. Emitting an
+        // SSM scan for a block with no SSM tensors produced an op with an empty
+        // weight name, which then failed at runtime as "linear: no weight".
+        if (const std::string ssmIn = name(Role::SsmIn); !ssmIn.empty()) {
             GraphOp o;
             o.op = Op::SsmScan;
             o.block = (int32_t)b;
             o.a = "attn_norm";              // input to the scan
-            o.b = name(Role::SsmIn);         // in projection
-            o.c = name(Role::SsmConv1dW);    // causal depthwise conv weights
+            o.b = ssmIn;                    // in projection
+            o.c = name(Role::SsmConv1dW);   // causal depthwise conv weights
             o.out = "ssm_out";
             // Companion SSM tensors, resolved by role at bind time.
             o.detail = "A=" + name(Role::SsmA) +
@@ -682,12 +687,35 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                        ";proj=" + name(Role::SsmOut);
             g.ops.push_back(o);
 
+            // The output projection consumes the SSM scan result. If the model
+            // carries no ssm_out weight the Linear would be emitted with an
+            // empty weight name, which fails at bind time as "linear: no
+            // weight" — the exact symptom of an unbound SsmOut role. Fail
+            // closed HERE, at graph construction, where the block and role
+            // are still known, instead of surfacing a slot index at runtime.
+            const std::string ssmOut = name(Role::SsmOut);
+            if (ssmOut.empty()) {
+                if (std::getenv("ROLE_TRACE")) {
+                    std::fprintf(stderr,
+                                 "[graph] block %u: ssm_in present (%s) but "
+                                 "ssm_out missing — refusing to emit the "
+                                 "output projection\n",
+                                 (unsigned)b, ssmIn.c_str());
+                }
+                continue;
+            }
+
             GraphOp p;
             p.op = Op::Linear;
             p.block = (int32_t)b;
             p.a = "ssm_out";
-            p.b = name(Role::SsmOut);
-            p.out = "ssm_proj";
+            p.b = ssmOut;
+            // Written under attn_proj, not ssm_proj: the block's residual
+            // add below consumes attn_proj for every mixer kind (attention
+            // or SSM). A block with an SSM mixer has no attention output
+            // projection, so naming the result ssm_proj left the residual
+            // add reading an arena entry that never existed.
+            p.out = "attn_proj";
             g.ops.push_back(p);
         }
 
@@ -699,13 +727,26 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 o.a = "attn_norm"; o.b = name(Role::AttnQ); o.out = "q";
                 g.ops.push_back(o);
             }
-            // kv_a_mqa -> (norm) -> kv_b -> MlaDecompress
+            // kv_a_mqa -> (latent norm) -> kv_b -> MlaDecompress.
+            //
+            // Slot convention, matching OpMlaDecompress:
+            //   a = attn_kv_a_mqa weight
+            //   b = attn_kv_a_norm weight
+            //   c = attn_kv_b weight
+            // The activation this op consumes is carried in o.b so the
+            // executor can resolve it from the arena. resolveIn only resolves
+            // real arena names, and `a` is a weight name here, so leaving the
+            // activation implicit made resolveIn fall back to the running
+            // hidden vector - which at this point is `q` (3072 wide) rather
+            // than attn_norm (2048). That produced a latent with cosine 0.028
+            // against ground truth, and every later block diverged.
             {
                 GraphOp o;
                 o.op = Op::MlaDecompress; o.block = (int32_t)b;
                 o.a = name(Role::AttnKvAMqa);
                 o.b = name(Role::AttnKNorm);
                 o.c = name(Role::AttnKvB);
+                o.detail = "attn_norm";   // activation operand, resolved by executor
                 o.out = "kv";
                 g.ops.push_back(o);
             }
@@ -733,40 +774,70 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.detail = "fused qkv -> attention core (split internally)";
             g.ops.push_back(o);
         } else {
+            // Attention path. SSM-bearing blocks have no attn_q/k/v tensors, so
+            // emitting these unconditionally produced a Linear op with an empty
+            // weight name; the executor then failed with "linear: no weight".
+            // Only emit when the block really has attention projections.
+            const std::string attnQ = name(Role::AttnQ);
+            const std::string attnK = name(Role::AttnK);
+            const std::string attnV = name(Role::AttnV);
             for (Role r : {Role::AttnQ, Role::AttnK, Role::AttnV}) {
+                const std::string w = name(r);
+                if (w.empty()) continue;
                 GraphOp o;
                 o.op = Op::Linear; o.block = (int32_t)b;
-                o.a = "attn_norm"; o.b = name(r);
+                o.a = "attn_norm"; o.b = w;
                 o.out = (r == Role::AttnQ) ? "q" : (r == Role::AttnK) ? "k" : "v";
                 g.ops.push_back(o);
             }
-            {
+            if (!attnQ.empty() || !attnK.empty() || !attnV.empty()) {
                 GraphOp o;
                 o.op = Op::Attention; o.block = (int32_t)b;
                 o.a = "q"; o.b = "k,v"; o.out = "attn_out";
                 g.ops.push_back(o);
             }
             {
-                GraphOp o;
-                o.op = Op::Linear; o.block = (int32_t)b;
-                o.a = "attn_out"; o.b = name(Role::AttnOutput); o.out = "attn_proj";
-                g.ops.push_back(o);
+                const std::string attnOutW = name(Role::AttnOutput);
+                if (!attnOutW.empty()) {
+                    GraphOp o;
+                    o.op = Op::Linear; o.block = (int32_t)b;
+                    o.a = "attn_out"; o.b = attnOutW; o.out = "attn_proj";
+                    g.ops.push_back(o);
+                }
             }
         }
 
-        // Residual add. resid_in was published above, before the attention
-        // ops, so it holds the block input.
+        // Residual add. resid_in was published above, before the mixer ops, so
+        // it holds the block input.
+        //
+        // The addend is the SSM or attention projection result. Both write
+        // "attn_proj": the block's SSM path writes its result there precisely
+        // so this code has a single canonical name to read.
         {
             GraphOp o = GraphOp{};
             o.op = Op::ResidualAdd; o.block = (int32_t)b;
             o.a = "resid_in"; o.b = "attn_proj"; o.out = "resid1";
             g.ops.push_back(o);
         }
-        // ffn norm
+        // ffn norm — or, on a Mamba2/SSM block, the ssm norm. Nemotron-H names
+        // the pre-FFN norm "ffn_norm" on attention blocks and "ssm_norm" on
+        // Mamba2 blocks; emitting with an empty weight name left the norm
+        // unbound (rmsnorm: no weight slot). Fall back to ssm_norm.
         {
+            // The pre-norm weight for this block. Attention/MoE blocks use
+            // ffn_norm (a.k.a. post_attention_norm); Mamba2 blocks use
+            // ssm_norm. ssm_norm is emitted only when present.
+            const std::string ffnNormW = name(Role::FfnNorm);
+            const std::string ssmNormW = name(Role::SsmNorm);
+            std::string preNorm;
+            if (!ffnNormW.empty())          preNorm = ffnNormW;
+            else if (!ssmNormW.empty())     preNorm = ssmNormW;
+
+            if (preNorm.empty()) continue;   // no pre-norm in this block
+
             GraphOp o;
             o.op = Op::RmsNorm; o.block = (int32_t)b;
-            o.a = "resid1"; o.b = name(Role::FfnNorm); o.out = "ffn_norm";
+            o.a = "resid1"; o.b = preNorm; o.out = "ffn_norm";
             g.ops.push_back(o);
         }
 
@@ -774,6 +845,18 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         // dense before MoE begins, so a block with no router must get the dense
         // FFN path, not a Router/TopK/MoE triple that cannot bind.
         const bool hasRouter = !name(Role::RouterGate).empty();
+        // A block with no FFN tensors at all (pure Mamba2 block in
+        // nemotron_h) must not emit gate/up/down Linears: those arrive at the
+        // executor with an empty weight name and fail "linear: no weight".
+        // The second residual, if emitted, must add the FFN output or a
+        // no-op addend.
+        const bool hasFfn =
+            !name(Role::FfnGate).empty() || !name(Role::FfnUp).empty() ||
+            !name(Role::FfnDown).empty() || hasRouter ||
+            !name(Role::ExpFfnGate).empty();
+
+        if (!hasFfn) continue;
+
         if (hasRouter && s.expert_count > 0) {
             GraphOp o;
             o.op = Op::Router; o.block = (int32_t)b;
