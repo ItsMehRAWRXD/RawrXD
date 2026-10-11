@@ -193,7 +193,12 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         in.bName = g.b;
         in.outName = g.out;
         in.a = nameSlot(g.a);
-        in.b = nameSlot(g.b);
+        // b may carry "<weight>|<activation>": strip the tail before resolving
+        // the weight slot so the pipe does not break the tensor lookup.
+        std::string bWeight = g.b;
+        const size_t bBar = bWeight.find('|');
+        if (bBar != std::string::npos) bWeight = bWeight.substr(0, bBar);
+        in.b = nameSlot(bWeight);
         in.c = nameSlot(g.c);
         in.out = nameSlot(g.out);
         in.detail = g.detail;
@@ -307,9 +312,31 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                 }
                 return (float)acc;
             };
+// Build the Q8_K activation in the interleaved layout (per 256 values:
+        // d, qs[256], bsums[16] = 273 floats) so the GPU kernel and the CPU
+        // reference dot against an identical activation. Without this the
+        // parity gate compares quantised-vs-float and measures activation error.
+        const size_t n_blk = n_in / 256;
+        std::vector<float> q8(n_blk * 273, 0.0f);
+        for (size_t b = 0; b < n_blk; ++b) {
+            float mx = 0.0f;
+            for (size_t i = 0; i < 256; ++i) mx = std::max(mx, std::fabs(x[b * 256 + i]));
+            const float d = mx / 127.0f;
+            const float inv = d > 0.0f ? 1.0f / d : 0.0f;
+            float* blk = q8.data() + b * 273;
+            blk[0] = d;
+            int32_t bsum = 0;
+            for (size_t i = 0; i < 256; ++i) {
+                const int32_t v = (int32_t)std::lround(x[b * 256 + i] * inv);
+                blk[1 + i] = (float)v;
+                bsum += v;
+            }
+            blk[257] = (float)bsum;
+        }
         y.assign(n_out, 0.0f);
         const bool gpu = QuantDot::DotBlocked(kind, w.data, w.bytes,
-                                              x.data(), n_in, y.data(), n_out, cpu);
+                                              x.data(), n_in, y.data(), n_out, cpu,
+                                              q8.data(), q8.size() * sizeof(float));
         if (gpu) { ++gpu_calls_; } else { ++cpu_calls_; }
         return true;
     }
@@ -705,8 +732,18 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     std::unordered_map<std::string, std::vector<float>> act;
     auto arena = [&](const std::string& n) -> std::vector<float>& { return act[n]; };
     auto resolveIn = [&](const Instr& i) -> const std::vector<float>& {
-        if (!i.aName.empty() && i.aName[0] != '<' && act.count(i.aName))
-            return act[i.aName];
+        if (!i.aName.empty() && i.aName[0] != '<' && i.op != OpKind::MlaDecompress) {
+            auto it = act.find(i.aName);
+            if (it != act.end()) return it->second;
+            // FAIL CLOSED. A named graph operand that is absent from the arena is
+            // a graph-construction error, not something to paper over with the
+            // running hidden vector. Substituting hidden_ silently is exactly the
+            // class of bug that produced cosine 0.028 MLA latents: the MlaDecompress
+            // weight name was in the  slot, the lookup missed, and the op quietly
+            // consumed q. Instead, record the failure so Bind/Execute can report it.
+            unresolved_inputs_.push_back(i.aName);
+            return unresolved_;
+        }
         return hidden_;
     };
 
@@ -778,7 +815,15 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::MlaDecompress: {
                 std::vector<float> k, v;
                 std::string e;
-                if (!OpMlaDecompress(in, xi, k, v, position, e)) { last_error_ = e; return false; }
+                {
+                    // The three weight slots are a (kv_a_mqa), b (latent norm),
+                    // c (kv_b). The activation this op consumes rides in `detail`
+                    // so resolveIn can find it in the arena rather than falling
+                    // back to hidden_, which is `q` by the time this op runs.
+                    const std::vector<float>& mlaIn =
+                        act.count(in.detail) ? act[in.detail] : xi;
+                    if (!OpMlaDecompress(in, mlaIn, k, v, position, e)) { last_error_ = e; return false; }
+                }
                 arena(in.outName.empty() ? std::string("kv") : in.outName) = hidden_;
                 arena("k") = k;
                 arena("v") = v;
@@ -883,6 +928,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::Router: {
                 if (!OpRouterTopK(in, in, xi, expert_ids, expert_w)) return false;
                 ids_valid = true;
+                // Publish the router logits under the declared output name so the
+                // TopK that consumes router_logits resolves a real operand.
+                if (!in.outName.empty()) {
+                    arena(in.outName) = xi;   // publish router logits for TopK
+                }
                 break;
             }
             case OpKind::TopK:
@@ -914,6 +964,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 break;
             }
             default:
+                if (std::getenv("SSM_TRACE")) {
+                    std::fprintf(stderr, "[exec] unhandled op=%d bName=%s bSlot=%d aName=%s outName=%s\n",
+                                 (int)in.op, in.bName.c_str(), (int)in.b,
+                                 in.aName.c_str(), in.outName.c_str());
+                }
                 last_error_ = "unhandled op";
                 return false;
         }   // switch over program_ ops
@@ -925,6 +980,12 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     stats_.gpu_calls += gpu_calls_;
     stats_.cpu_calls += cpu_calls_;
     stats_.gpu_rows += 0;
+    if (!unresolved_inputs_.empty()) {
+        last_error_ = "graph referenced activations that were never produced: ";
+        for (size_t i = 0; i < unresolved_inputs_.size() && i < 4; ++i)
+            last_error_ += unresolved_inputs_[i] + "; ";
+        return false;
+    }
     return true;
 }
 
@@ -971,11 +1032,32 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     if (aSlot < 0 || dtSlot < 0) { err = "ssm: model has no ssm_a / ssm_dt.bias"; return false; }
 
     std::vector<float> A, DtB, Dd;
-    if (DequantPrefix(tensors_[(size_t)aSlot], A, D) < D) { err = "ssm: ssm_a too small"; return false; }
-    if (DequantPrefix(tensors_[(size_t)dtSlot], DtB, D) < D) { err = "ssm: ssm_dt.bias too small"; return false; }
-    if (dSlot >= 0 && DequantPrefix(tensors_[(size_t)dSlot], Dd, D) < D) Dd.assign(D, 0.0f);
-    else if (dSlot < 0) Dd.assign(D, 0.0f);
-    A.resize(D); DtB.resize(D); Dd.resize(D);
+    if (aSlot < 0 || dtSlot < 0) { err = "ssm: model has no ssm_a / ssm_dt.bias"; return false; }
+
+    // Mamba2 scale/decay tensors are far smaller than d_inner and BROADCAST
+    // across head groups rather than providing one value per channel.
+    //
+    // Measured on the real Nemotron-3.5-Lightning-30B:
+    //     D (ssm.inner_size)  = 4096
+    //     N (ssm.state_size)  = 128
+    //     blk.0.ssm_a         = [1, 64]   -> 64 elements
+    //
+    // Requiring D distinct values here reported "ssm_a too small" on a perfectly
+    // valid tensor, which blocked every Mamba2 block. Load what each tensor
+    // actually provides and index modulo its length, which is the broadcast the
+    // architecture specifies.
+    DequantPrefix(tensors_[(size_t)aSlot], A, D);
+    DequantPrefix(tensors_[(size_t)dtSlot], DtB, D);
+    if (dSlot >= 0) DequantPrefix(tensors_[(size_t)dSlot], Dd, D);
+
+    if (A.empty()) { err = "ssm: ssm_a dequantized to nothing"; return false; }
+    if (DtB.empty()) { err = "ssm: ssm_dt.bias dequantized to nothing"; return false; }
+    if (Dd.empty()) Dd.assign(D, 0.0f);
+
+    if (std::getenv("SSM_TRACE")) {
+        std::fprintf(stderr, "[ssm] block=%d D=%zu aElems=%zu dtElems=%zu dElems=%zu\n",
+                     (int)in.block, D, A.size(), DtB.size(), Dd.size());
+    }
 
     if (ssm_state_.size() <= (size_t)in.block) ssm_state_.resize((size_t)in.block + 1);
     std::vector<float>& st = ssm_state_[(size_t)in.block];
@@ -985,12 +1067,13 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     auto softplus = [](float z) -> float { return (z > 20.0f) ? z : std::log1p(std::exp(z)); };
 
     for (size_t i = 0; i < D; ++i) {
-        const float dt = softplus(DtB[i]);
-        const float decay = std::exp(dt * A[i]);
+        const float dt = softplus(DtB[i % DtB.size()]);
+        const float decay = std::exp(dt * A[i % A.size()]);
         const float xin = xd[i];
         st[i] = decay * st[i] + dt * xin;
-        y[i] = st[i] + Dd[i] * xin;
+        y[i] = st[i] + Dd[i % Dd.size()] * xin;
     }
     return true;
 }
 } } }  // namespace
+
