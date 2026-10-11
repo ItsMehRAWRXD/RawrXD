@@ -1,81 +1,70 @@
-// UTC instrumentation provider - implementation.
 #include "utc_provider.h"
-
-#include <atomic>
-#include <cstdint>
+#include <chrono>
+#include <algorithm>
+#include <cstdio>
+#include <mutex>
 
 namespace utc {
-
 namespace {
-
-constexpr size_t kRingCapacity = 256;
-
 struct Ring {
-    std::atomic<uint64_t> sequence{0};
-    std::atomic<uint64_t> next{0};
-    EventRecord slots[kRingCapacity];
+    std::mutex lock;
+    std::uint64_t count = 0;
+    std::array<EventRecord, kRingCapacity> slots{};
 };
 
-Ring& ring()
-{
-    static Ring r;
-    return r;
+Ring& ring() noexcept {
+    static Ring instance;
+    return instance;
 }
 
-// Monotonic tick source (real time, not a compile-time constant).
-uint64_t NowTick()
-{
-    return static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::steady_clock::now().time_since_epoch())
-            .count());
+std::uint64_t steady_tick() noexcept {
+    using namespace std::chrono;
+    return static_cast<std::uint64_t>(duration_cast<nanoseconds>(
+        steady_clock::now().time_since_epoch()).count());
 }
 
-}  // namespace
+template <std::size_t N>
+void copy_text(std::array<char, N>& out, const char* value) noexcept {
+    std::snprintf(out.data(), out.size(), "%s", value ? value : "");
+}
+} // namespace
 
-std::atomic<uint64_t> g_Counter_Inference{0};
+std::atomic<std::uint64_t> g_Counter_Inference{0};
 
-uint64_t LogEvent(const char* event, const char* detail)
-{
+std::uint64_t LogEvent(const char* event, const char* detail) noexcept {
     if (!event) return 0;
-    Ring& r = ring();
-    const uint64_t seq = r.sequence.fetch_add(1, std::memory_order_relaxed) + 1;
-    const uint64_t idx = r.next.fetch_add(1, std::memory_order_relaxed) % kRingCapacity;
-    r.slots[idx].sequence = seq;
-    r.slots[idx].tick = NowTick();
-    r.slots[idx].event = event;
-    r.slots[idx].detail = detail;
-    return seq;
+    auto& r = ring();
+    std::lock_guard<std::mutex> guard(r.lock);
+    const auto sequence = ++r.count;
+    auto& slot = r.slots[(sequence - 1) % kRingCapacity];
+    slot.sequence = sequence;
+    slot.tick = steady_tick();
+    copy_text(slot.event, event);
+    copy_text(slot.detail, detail);
+    return sequence;
 }
 
-uint64_t EventCount()
-{
-    return ring().sequence.load(std::memory_order_relaxed);
+std::uint64_t EventCount() noexcept {
+    auto& r = ring();
+    std::lock_guard<std::mutex> guard(r.lock);
+    return r.count;
 }
 
-size_t RecentEvents(EventRecord* out, size_t capacity)
-{
-    if (!out || capacity == 0) return 0;
-    Ring& r = ring();
-    const uint64_t total = r.sequence.load(std::memory_order_relaxed);
-    const uint64_t available = total < static_cast<uint64_t>(kRingCapacity)
-                                   ? total
-                                   : static_cast<uint64_t>(kRingCapacity);
-    const uint64_t n = available < capacity ? available : capacity;
-    for (uint64_t i = 0; i < n; ++i) {
-        // Newest last: walk backwards from the write cursor.
-        const uint64_t back = n - 1 - i;
-        const uint64_t idx =
-            (r.next.load(std::memory_order_relaxed) + kRingCapacity - 1 - back) %
-            kRingCapacity;
-        out[i] = r.slots[idx];
+std::size_t RecentEvents(EventRecord* out, std::size_t capacity) noexcept {
+    if (!out || !capacity) return 0;
+    auto& r = ring();
+    std::lock_guard<std::mutex> guard(r.lock);
+    const auto n = static_cast<std::size_t>(
+        std::min<std::uint64_t>(r.count, std::min(capacity, kRingCapacity)));
+    const auto first = r.count - n + 1;
+    for (std::size_t i = 0; i < n; ++i) {
+        const auto sequence = first + i;
+        out[i] = r.slots[(sequence - 1) % kRingCapacity];
     }
-    return static_cast<size_t>(n);
+    return n;
 }
 
-uint64_t ReadCounter(const std::atomic<uint64_t>* counter)
-{
+std::uint64_t ReadCounter(const std::atomic<std::uint64_t>* counter) noexcept {
     return counter ? counter->load(std::memory_order_relaxed) : 0;
 }
-
-}  // namespace utc
+} // namespace utc
