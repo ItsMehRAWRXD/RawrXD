@@ -1,396 +1,455 @@
 // ============================================================================
-// enterprise_license.h — C++20 Bridge to MASM Enterprise License System (v2)
+// enterprise_license.h — Enterprise License System v2: 4-Tier, 55+ Features
 // ============================================================================
-// Provides extern "C" declarations for ASM-exported license functions,
-// a Singleton C++20 wrapper with RAII LicenseGuard, and feature enum class.
-//
-// ASM Sources:
-//   src/asm/RawrXD_EnterpriseLicense.asm — Core license logic
-//   src/asm/RawrXD_License_Shield.asm    — Anti-tamper & kernel decrypt (v2)
+// Supersedes the Phase 22 manifest (8 features) with a comprehensive
+// enterprise licensing system covering all IDE subsystems.
 //
 // Architecture:
-//   EnterpriseLicense::Instance().Initialize()
-//    ├─ Shield_InitializeDefense()        [ASM] — 5-layer anti-tamper
-//    └─ Enterprise_InitLicenseSystem()    [ASM]
-//        ├─ CryptoAPI provider init
-//        ├─ RSA public key import
-//        ├─ Shield_GenerateHWID()         [ASM]
-//        ├─ Registry license load
-//        └─ Enterprise_ValidateLicense()  [ASM]
-//             ├─ Magic / version / expiry
-//             ├─ Hardware fingerprint (MurmurHash3)
-//             └─ RSA-4096 signature verify
+//   EnterpriseLicenseV2::Instance()
+//    ├─ LicenseTierV2        (Community / Professional / Enterprise / Sovereign)
+//    ├─ FeatureID             (55+ enumerated features)
+//    ├─ LicenseKeyV2          (signed key with HWID binding)
+//    ├─ FeatureManifestV2     (compile-time feature definitions)
+//    └─ AuditTrailV2          (enforcement audit logging)
 //
-//   Engine registration gate:
-//    StreamingEngineRegistry::registerBuiltinEngines()
-//     └─ if (EnterpriseLicense::isFeatureEnabled(LicenseFeature::DualEngine800B))
-//            registerDualEngine800B()
+// 4 License Tiers:
+//   Community    — Free: 6 features (basic GGUF loading, CPU inference)
+//   Professional — Paid: 21 features (hotpatching, multi-model, quant)
+//   Enterprise   — Full: 42 features (800B, agentic, sharding, telemetry)
+//   Sovereign    — Gov:  55+ features (air-gap, HSM, FIPS, tamper detection)
+//
+// PATTERN:   No exceptions. Returns bool/status codes.
+// THREADING: Singleton with std::mutex. Thread-safe.
+// RULE:      NO SOURCE FILE IS TO BE SIMPLIFIED
 // ============================================================================
 
 #pragma once
 
 #include <cstdint>
-#include <string>
-#include <vector>
+#include <cstring>
 #include <mutex>
-#include <fstream>
 
-namespace RawrXD {
-
-// ============================================================================
-// Feature Bitmasks (must match RawrXD_Common.inc)
-// ============================================================================
-namespace LicenseFeature {
-    constexpr uint64_t DualEngine800B     = 0x00000001;
-    constexpr uint64_t AVX512Premium      = 0x00000002;
-    constexpr uint64_t DistributedSwarm   = 0x00000004;
-    constexpr uint64_t GPUQuant4Bit       = 0x00000008;
-    constexpr uint64_t EnterpriseSupport  = 0x00000010;
-    constexpr uint64_t UnlimitedContext   = 0x00000020;
-    constexpr uint64_t FlashAttention     = 0x00000040;
-    constexpr uint64_t MultiGPU           = 0x00000080;
-    constexpr uint64_t Tuner              = 0x00000100;
-
-    // Combined masks for tier checks
-    constexpr uint64_t CommunityFeatures  = 0;
-    constexpr uint64_t ProFeatures        = AVX512Premium | GPUQuant4Bit | FlashAttention | Tuner;  // 0x14A
-    constexpr uint64_t EnterpriseAll      = 0x000001FF;
-}
+namespace RawrXD::License {
 
 // ============================================================================
-// EnterpriseFeature enum class (type-safe, composable with operator|)
+// License Tier — 4-tier classification
 // ============================================================================
-enum class EnterpriseFeature : uint64_t {
-    None              = 0x00,
-    DualEngine800B    = 0x01,
-    AVX512Premium     = 0x02,
-    DistributedSwarm  = 0x04,
-    GPUQuant4Bit      = 0x08,
-    EnterpriseSupport = 0x10,
-    UnlimitedContext  = 0x20,
-    FlashAttention    = 0x40,
-    MultiGPU          = 0x80,
-    Tuner             = 0x100,
-    All               = 0x1FF
-};
-
-inline EnterpriseFeature operator|(EnterpriseFeature a, EnterpriseFeature b) {
-    return static_cast<EnterpriseFeature>(
-        static_cast<uint64_t>(a) | static_cast<uint64_t>(b));
-}
-
-inline EnterpriseFeature operator&(EnterpriseFeature a, EnterpriseFeature b) {
-    return static_cast<EnterpriseFeature>(
-        static_cast<uint64_t>(a) & static_cast<uint64_t>(b));
-}
-
-inline bool HasFlag(EnterpriseFeature set, EnterpriseFeature flag) {
-    return (static_cast<uint64_t>(set) & static_cast<uint64_t>(flag)) != 0;
-}
-
-// ============================================================================
-// License States (must match RawrXD_Common.inc)
-// ============================================================================
-enum class LicenseState : uint32_t {
-    Invalid             = 0,
-    ValidTrial          = 1,
-    ValidEnterprise     = 2,
-    ValidOEM            = 3,
-    Expired             = 4,
-    HardwareMismatch    = 5,
-    Tampered            = 6,
-    ValidPro            = 7,
+enum class LicenseTierV2 : uint32_t {
+    Community    = 0,   // Free — basic features only
+    Professional = 1,   // Paid — hotpatching, multi-model, quant tiers
+    Enterprise   = 2,   // Full — 800B, agentic, sharding, observability
+    Sovereign    = 3,   // Gov  — air-gap, HSM, FIPS, classified network
+    COUNT        = 4
 };
 
 // ============================================================================
-// License Change Callback
+// Feature ID — enumerated features (55+ total)
 // ============================================================================
-using LicenseChangeCallback = void(*)(LicenseState oldState, LicenseState newState);
+// Organized by tier. Each tier includes all features from lower tiers.
+// Use uint64_t pairs (lo/hi) for bitmask storage (supports up to 128 features).
+enum class FeatureID : uint32_t {
+    // ── Community Tier (0–5) ─────────────────────────────────────
+    BasicGGUFLoading        = 0,
+    Q4Quantization          = 1,    // Q4_0 / Q4_1
+    CPUInference            = 2,
+    BasicChatUI             = 3,
+    ConfigFileSupport       = 4,
+    SingleModelSession      = 5,
+
+    // ── Professional Tier (6–26) ─────────────────────────────────
+    MemoryHotpatching       = 6,
+    ByteLevelHotpatching    = 7,
+    ServerHotpatching       = 8,
+    UnifiedHotpatchManager  = 9,
+    Q5Q8F16Quantization     = 10,
+    MultiModelLoading       = 11,
+    CUDABackend             = 12,
+    AdvancedSettingsPanel   = 13,
+    PromptTemplates         = 14,
+    TokenStreaming           = 15,
+    InferenceStatistics     = 16,
+    KVCacheManagement       = 17,
+    ModelComparison         = 18,
+    BatchProcessing         = 19,
+    CustomStopSequences     = 20,
+    GrammarConstrainedGen   = 21,
+    LoRAAdapterSupport      = 22,
+    ResponseCaching         = 23,
+    PromptLibrary           = 24,
+    ExportImportSessions    = 25,
+    HIPBackend              = 26,
+
+    // ── Enterprise Tier (27–52) ──────────────────────────────────
+    DualEngine800B          = 27,
+    AgenticFailureDetect    = 28,
+    AgenticPuppeteer        = 29,
+    AgenticSelfCorrection   = 30,
+    ProxyHotpatching        = 31,
+    ServerSidePatching      = 32,
+    SchematicStudioIDE      = 33,
+    WiringOracleDebug       = 34,
+    FlashAttention          = 35,
+    SpeculativeDecoding     = 36,
+    ModelSharding           = 37,
+    TensorParallel          = 38,
+    PipelineParallel        = 39,
+    ContinuousBatching      = 40,
+    GPTQQuantization        = 41,
+    AWQQuantization         = 42,
+    CustomQuantSchemes      = 43,
+    MultiGPULoadBalance     = 44,
+    DynamicBatchSizing      = 45,
+    PriorityQueuing         = 46,
+    RateLimitingEngine      = 47,
+    AuditLogging            = 48,
+    APIKeyManagement        = 49,
+    ModelSigningVerify      = 50,
+    RBAC                    = 51,
+    ObservabilityDashboard  = 52,
+    AVX512Acceleration      = 53,
+    RawrTunerIDE            = 54,
+
+    // ── Sovereign Tier (55–64) ───────────────────────────────────
+    AirGappedDeploy         = 55,
+    HSMIntegration          = 56,
+    FIPS140_2Compliance     = 57,
+    CustomSecurityPolicies  = 58,
+    SovereignKeyMgmt        = 59,
+    ClassifiedNetwork       = 60,
+    ImmutableAuditLogs      = 61,
+    KubernetesSupport       = 62,
+    TamperDetection         = 63,
+    SecureBootChain         = 64,
+
+    // Sentinel
+    COUNT                   = 65
+};
 
 // ============================================================================
-// ASM Extern Declarations
+// Feature Bitmask — dual uint64_t for 128-bit capacity
+// ============================================================================
+struct FeatureMask {
+    uint64_t lo;    // Features 0–63
+    uint64_t hi;    // Features 64–127
+
+    constexpr FeatureMask() : lo(0), hi(0) {}
+    constexpr FeatureMask(uint64_t l, uint64_t h) : lo(l), hi(h) {}
+
+    constexpr void set(uint32_t bit) {
+        if (bit < 64) lo |= (1ULL << bit);
+        else          hi |= (1ULL << (bit - 64));
+    }
+
+    constexpr bool test(uint32_t bit) const {
+        if (bit < 64) return (lo & (1ULL << bit)) != 0;
+        else          return (hi & (1ULL << (bit - 64))) != 0;
+    }
+
+    constexpr void clear(uint32_t bit) {
+        if (bit < 64) lo &= ~(1ULL << bit);
+        else          hi &= ~(1ULL << (bit - 64));
+    }
+
+    constexpr FeatureMask operator|(const FeatureMask& o) const {
+        return { lo | o.lo, hi | o.hi };
+    }
+
+    constexpr FeatureMask operator&(const FeatureMask& o) const {
+        return { lo & o.lo, hi & o.hi };
+    }
+
+    constexpr bool operator==(const FeatureMask& o) const {
+        return lo == o.lo && hi == o.hi;
+    }
+
+    constexpr bool operator!=(const FeatureMask& o) const {
+        return lo != o.lo || hi != o.hi;
+    }
+
+    constexpr bool empty() const { return lo == 0 && hi == 0; }
+
+    uint32_t popcount() const {
+        uint32_t count = 0;
+        uint64_t v = lo;
+        while (v) { count++; v &= v - 1; }
+        v = hi;
+        while (v) { count++; v &= v - 1; }
+        return count;
+    }
+};
+
+// ============================================================================
+// Tier Mask Presets — which features each tier unlocks
+// ============================================================================
+namespace TierPresets {
+
+    // Community: bits 0–5
+    constexpr FeatureMask Community() {
+        FeatureMask m;
+        for (uint32_t i = 0; i <= 5; ++i) m.set(i);
+        return m;
+    }
+
+    // Professional: bits 0–26
+    constexpr FeatureMask Professional() {
+        FeatureMask m;
+        for (uint32_t i = 0; i <= 26; ++i) m.set(i);
+        return m;
+    }
+
+    // Enterprise: bits 0–54
+    constexpr FeatureMask Enterprise() {
+        FeatureMask m;
+        for (uint32_t i = 0; i <= 54; ++i) m.set(i);
+        return m;
+    }
+
+    // Sovereign: bits 0–64
+    constexpr FeatureMask Sovereign() {
+        FeatureMask m;
+        for (uint32_t i = 0; i <= 64; ++i) m.set(i);
+        return m;
+    }
+
+    // Get preset for tier
+    inline FeatureMask forTier(LicenseTierV2 tier) {
+        switch (tier) {
+            case LicenseTierV2::Community:    return Community();
+            case LicenseTierV2::Professional: return Professional();
+            case LicenseTierV2::Enterprise:   return Enterprise();
+            case LicenseTierV2::Sovereign:    return Sovereign();
+            default:                          return Community();
+        }
+    }
+}
+
+// ============================================================================
+// Feature Definition — describes one licenseable feature
+// ============================================================================
+struct FeatureDefV2 {
+    FeatureID       id;
+    const char*     name;
+    const char*     description;
+    LicenseTierV2   minTier;        // Minimum tier required
+    bool            implemented;    // Has real code behind the gate
+    bool            wiredToUI;      // Connected to Win32 menu/panel
+    bool            tested;         // Has test coverage
+    const char*     sourceFile;     // Primary implementation file
+    const char*     phase;          // Phase identifier
+};
+
+// ============================================================================
+// License Key V2 — signed binary key format
 // ============================================================================
 #pragma pack(push, 1)
-
-extern "C" {
-    // --- RawrXD_EnterpriseLicense.asm ---
-    
-    /// Initialize the license subsystem (crypto, registry, validation)
-    /// Returns: 0 = success, NTSTATUS error code otherwise
-    int64_t Enterprise_InitLicenseSystem();
-    
-    /// Full cryptographic license validation
-    /// Returns: 0 = valid, NTSTATUS error code otherwise
-    int64_t Enterprise_ValidateLicense();
-    
-    /// Check if a specific feature is enabled
-    /// @param featureMask  Feature bitmask to check
-    /// Returns: 1 if enabled, 0 if disabled
-    int32_t Enterprise_CheckFeature(uint64_t featureMask);
-    
-    /// Attempt to unlock 800B Dual-Engine (includes integrity check)
-    /// Returns: 1 if unlocked, 0 if denied
-    int32_t Enterprise_Unlock800BDualEngine();
-    
-    /// Install a new license from memory
-    /// @param pLicense    Pointer to license blob
-    /// @param cbLicense   Size of license blob
-    /// @param pSignature  Pointer to RSA signature (512 bytes)
-    /// Returns: 0 = success, NTSTATUS error code otherwise
-    int64_t Enterprise_InstallLicense(const void* pLicense, uint64_t cbLicense,
-                                       const void* pSignature);
-    
-    /// Get current license state enum
-    /// Returns: LicenseState value
-    int32_t Enterprise_GetLicenseStatus();
-    
-    /// Get human-readable feature string
-    /// @param pBuffer  Output buffer
-    /// @param cbBuffer Buffer size
-    /// Returns: Number of bytes written
-    int64_t Enterprise_GetFeatureString(char* pBuffer, uint64_t cbBuffer);
-    
-    /// Generate 64-bit hardware fingerprint
-    /// Returns: 64-bit HWID hash
-    uint64_t Enterprise_GenerateHardwareHash();
-    
-    /// Runtime integrity check (anti-tamper)
-    /// Returns: 1 if clean, 0 if tampered
-    int32_t Enterprise_RuntimeIntegrityCheck();
-    
-    /// Cleanup license subsystem
-    void Enterprise_Shutdown();
-    
-    /// [Dev / License Creator] Unlock all enterprise features on this machine.
-    /// Only active when RAWRXD_ENTERPRISE_DEV=1. Brute-forces a valid license_hash.
-    /// Returns: 1 if unlocked, 0 if env not set or failed.
-    int64_t Enterprise_DevUnlock();
-    
-    /// Integration hook: check if enterprise engines should register
-    /// Returns: 1 if enterprise features available, 0 if community
-    int32_t Titan_CheckEnterpriseUnlock();
-    
-    /// Integration hook: check allocation budget
-    /// @param requestedSize  Requested allocation in bytes
-    /// Returns: 1 if approved, 0 if over community limit
-    int32_t Streaming_CheckEnterpriseBudget(uint64_t requestedSize);
-
-    // --- RawrXD_License_Shield.asm (v2) ---
-    
-    /// Direct PEB anti-debug check (bypasses API hooks)
-    /// Returns: 1 if debugger detected, 0 if clean
-    int32_t IsDebuggerPresent_Native();
-    
-    /// RDTSC timing-based debugger detection
-    /// Returns: 1 if timing clean, 0 if debugger detected
-    int32_t Shield_TimingCheck();
-    
-    /// Generate hardware ID fingerprint
-    /// Returns: 64-bit HWID
-    uint64_t Shield_GenerateHWID();
-    
-    /// Verify .text section integrity
-    /// Returns: 1 if clean, 0 if tampered
-    int32_t Shield_VerifyIntegrity();
-    
-    /// AES-NI decrypt the 800B kernel entry shim (v1 — simplified)
-    /// @param pKey  Pointer to 256-bit AES key
-    /// Returns: Pointer to decrypted shim, or NULL
-    void* Shield_AES_DecryptShim(const void* pKey);
-    
-    /// Full 800B kernel unlock with layered defense
-    /// @param pKey   License-derived 256-bit AES key
-    /// @param pHWID  Expected HWID buffer
-    /// Returns: Pointer to decrypted kernel entry, or NULL
-    void* Unlock_800B_Kernel(const void* pKey, const void* pHWID);
-
-    /// [v2] Master defense initialization — chains all 5 layers
-    /// Returns: 1 if all layers pass, 0 if tamper detected
-    int32_t Shield_InitializeDefense();
-
-    /// [v2] Heap flags anti-debug check
-    /// Returns: 1 if clean, 0 if debugger via heap flags
-    int32_t Shield_CheckHeapFlags();
-
-    /// [v2] Kernel debugger detection via NtQuerySystemInformation
-    /// Returns: 1 if no kernel debugger, 0 if detected
-    int32_t Shield_CheckKernelDebug();
-
-    /// [v2] Full MurmurHash3 64-bit hash
-    /// @param pData  Data pointer
-    /// @param len    Data length
-    /// @param seed   64-bit seed
-    /// Returns: 64-bit hash
-    uint64_t Shield_MurmurHash3_x64(const void* pData, uint64_t len, uint64_t seed);
-
-    /// [v2] AES-NI decrypt with CPUID validation + 14-round AES-256
-    /// @param pKey  Pointer to 256-bit AES key (32 bytes)
-    /// Returns: Pointer to decrypted shim, or NULL if no AES-NI
-    void* Shield_DecryptKernelEntry(const void* pKey);
-
-    // --- Global flags (set by ASM, read by C++) ---
-    extern int32_t  g_800B_Unlocked;
-    extern uint64_t g_EnterpriseFeatures;
-
-    // --- C-link callback exports (called from C++, usable from ASM) ---
-    void EnterpriseLog(const char* message);
-    void EnterpriseStateChanged(uint32_t oldState, uint32_t newState);
-}
-
+struct LicenseKeyV2 {
+    uint32_t    magic;              // 0x5258444C ("RXDL")
+    uint16_t    version;            // Key format version (2)
+    uint16_t    reserved;
+    uint64_t    hwid;               // Hardware ID (MurmurHash3)
+    FeatureMask features;           // Enabled feature bitmask
+    uint32_t    tier;               // LicenseTierV2
+    uint32_t    issueDate;          // Unix timestamp
+    uint32_t    expiryDate;         // Unix timestamp (0 = perpetual)
+    uint32_t    maxModelGB;         // Max model size in GB
+    uint32_t    maxContextTokens;   // Max context window
+    uint8_t     signature[32];      // SHA-256 HMAC signature
+    uint8_t     padding[12];        // Align to 96 bytes
+};
 #pragma pack(pop)
 
+static_assert(sizeof(LicenseKeyV2) == 96, "LicenseKeyV2 must be 96 bytes");
+
 // ============================================================================
-// LicenseGuard — RAII scope guard for feature-gated code paths
+// Audit Entry — enforcement event record
 // ============================================================================
-// Usage:
-//   LicenseGuard guard(EnterpriseFeature::DualEngine800B);
-//   if (guard) { /* licensed code */ }
-//
-class LicenseGuard {
-public:
-    explicit LicenseGuard(EnterpriseFeature required);
-    ~LicenseGuard() = default;
-
-    // Non-copyable, non-movable
-    LicenseGuard(const LicenseGuard&) = delete;
-    LicenseGuard& operator=(const LicenseGuard&) = delete;
-
-    /// Returns true if all required features are licensed
-    explicit operator bool() const noexcept { return m_granted; }
-    bool isGranted() const noexcept { return m_granted; }
-
-private:
-    bool m_granted;
-    EnterpriseFeature m_required;
+struct LicenseAuditEntry {
+    uint64_t    timestamp;          // Performance counter ticks
+    FeatureID   feature;            // Which feature was checked
+    bool        granted;            // Was access granted?
+    const char* caller;             // __FUNCTION__ of the caller
+    const char* detail;             // Additional context
 };
 
 // ============================================================================
-// C++ Singleton Wrapper Class (v2)
+// License Result — non-exception return type
 // ============================================================================
-// Thread-safe C++20 Singleton interface around the ASM license system.
-// Used by StreamingEngineRegistry, Win32IDE, and API Server.
+struct LicenseResult {
+    bool        success;
+    const char* detail;
+    int         errorCode;
 
-class EnterpriseLicense {
-public:
-    /// Get the singleton instance (thread-safe, lazy init)
-    static EnterpriseLicense& Instance();
-
-    // Non-copyable, non-movable
-    EnterpriseLicense(const EnterpriseLicense&) = delete;
-    EnterpriseLicense& operator=(const EnterpriseLicense&) = delete;
-
-    /// Initialize the license system. Call once at startup.
-    /// Runs Shield_InitializeDefense() first, then Enterprise_InitLicenseSystem().
-    /// Returns true on success (even if no license — community mode).
-    bool Initialize();
-    
-    /// Shutdown and release all resources. Call at process exit.
-    void Shutdown();
-    
-    /// Check if a specific feature is enabled (EnterpriseFeature enum).
-    bool HasFeature(EnterpriseFeature feature) const;
-
-    /// Check if a specific feature bitmask is enabled (raw uint64).
-    bool HasFeatureMask(uint64_t featureMask) const;
-    
-    /// Check if 800B Dual-Engine is unlocked (includes integrity).
-    bool Is800BUnlocked() const;
-    
-    /// Check if any enterprise features are active.
-    bool IsEnterprise() const;
-    
-    /// Get current license state.
-    LicenseState GetState() const;
-    
-    /// Get human-readable feature string for UI display.
-    std::string GetFeatureString() const;
-    
-    /// Get current machine's hardware fingerprint.
-    uint64_t GetHardwareHash() const;
-    
-    /// Install a new license from raw memory.
-    bool InstallLicense(const void* licenseBlob, size_t blobSize,
-                        const void* signature);
-
-    /// Install a license from a file (.rawrlic format: blob + 512-byte RSA sig)
-    bool InstallLicenseFromFile(const std::wstring& path);
-
-    /// Install a license from a file (narrow string overload)
-    bool InstallLicenseFromFile(const std::string& path);
-    
-    /// Re-validate the current license.
-    bool Revalidate();
-    
-    /// Check if a given allocation size is within the license budget.
-    bool CheckAllocationBudget(uint64_t requestedBytes) const;
-    
-    /// Get the active feature bitmask (for diagnostics).
-    uint64_t GetFeatureMask() const;
-    
-    /// Get license edition string ("Community", "Enterprise", "Trial").
-    const char* GetEditionName() const;
-
-    /// Get remaining trial time in seconds (0 if not trial or expired).
-    uint64_t GetTrialRemainingSeconds() const;
-
-    /// Azure AD configuration status (enterprise.json)
-    bool IsAzureADConfigured() const;
-    std::string GetAzureADAuthority() const;
-    std::string GetAzureADClientId() const;
-
-    /// Last stored license path (Windows registry, if available)
-    std::string GetStoredLicensePath() const;
-
-    /// Get maximum model size allowed by current license tier (GB)
-    uint64_t GetMaxModelSizeGB() const;
-
-    /// Get maximum context length allowed by current license tier (tokens)
-    uint64_t GetMaxContextLength() const;
-
-    /// Get shield defense state bitmask (5 bits, one per layer)
-    uint32_t GetShieldState() const;
-
-    /// Register a callback for license state changes
-    void OnLicenseChange(LicenseChangeCallback callback);
-
-    // ========================================================================
-    // Static compatibility shims (legacy API — delegates to Instance())
-    // These maintain backward compatibility with existing callsites in
-    // streaming_engine_registry.cpp and other modules.
-    // ========================================================================
-    static bool initialize()                           { return Instance().Initialize(); }
-    static void shutdown()                             { Instance().Shutdown(); }
-    static bool isFeatureEnabled(uint64_t mask)        { return Instance().HasFeatureMask(mask); }
-    static bool is800BUnlocked()                       { return Instance().Is800BUnlocked(); }
-    static bool isEnterprise()                         { return Instance().IsEnterprise(); }
-    static LicenseState getState()                     { return Instance().GetState(); }
-    static std::string getFeatureString()              { return Instance().GetFeatureString(); }
-    static uint64_t getHardwareHash()                  { return Instance().GetHardwareHash(); }
-    static bool installLicense(const void* b, size_t s, const void* sig) 
-                                                       { return Instance().InstallLicense(b, s, sig); }
-    static bool revalidate()                           { return Instance().Revalidate(); }
-    static bool checkAllocationBudget(uint64_t bytes)  { return Instance().CheckAllocationBudget(bytes); }
-    static uint64_t getFeatureMask()                   { return Instance().GetFeatureMask(); }
-    static const char* getEditionName()                { return Instance().GetEditionName(); }
-
-private:
-    EnterpriseLicense() = default;
-    ~EnterpriseLicense() = default;
-
-    bool m_initialized = false;
-    mutable std::mutex m_mutex;
-    LicenseState m_lastState = LicenseState::Invalid;
-    std::vector<LicenseChangeCallback> m_callbacks;
-    uint64_t m_trialStartUs = 0;
-    uint64_t m_lastTelemetryUpdateUs = 0;
-    bool m_aadConfigured = false;
-    std::string m_aadAuthority;
-    std::string m_aadClientId;
-    std::string m_aadJwksUrl;
-    std::string m_lastLicensePath;
-
-    void notifyStateChange(LicenseState oldState, LicenseState newState);
-    void updateTelemetry(LicenseState state, const char* action);
+    static LicenseResult ok(const char* msg = "OK") {
+        return { true, msg, 0 };
+    }
+    static LicenseResult error(const char* msg, int code = -1) {
+        return { false, msg, code };
+    }
 };
 
-} // namespace RawrXD
+// ============================================================================
+// Tier Limits — resource caps per tier
+// ============================================================================
+namespace TierLimits {
+    struct Limits {
+        uint32_t maxModelGB;
+        uint32_t maxContextTokens;
+        uint64_t maxMemoryBudget;
+        uint32_t maxConcurrentModels;
+    };
+
+    constexpr Limits Community    = {   70,   32000, 4ULL * 1024 * 1024 * 1024,  1 };
+    constexpr Limits Professional = {  400,  128000, 32ULL * 1024 * 1024 * 1024, 4 };
+    constexpr Limits Enterprise   = {  800,  200000, UINT64_MAX,                 16 };
+    constexpr Limits Sovereign    = { 2000,  500000, UINT64_MAX,                 64 };
+
+    inline const Limits& forTier(LicenseTierV2 tier) {
+        switch (tier) {
+            case LicenseTierV2::Professional: return Professional;
+            case LicenseTierV2::Enterprise:   return Enterprise;
+            case LicenseTierV2::Sovereign:    return Sovereign;
+            default:                          return Community;
+        }
+    }
+}
+
+// ============================================================================
+// Convenience Helpers
+// ============================================================================
+
+/// Get human-readable tier name
+inline const char* tierName(LicenseTierV2 tier) {
+    switch (tier) {
+        case LicenseTierV2::Community:    return "Community";
+        case LicenseTierV2::Professional: return "Professional";
+        case LicenseTierV2::Enterprise:   return "Enterprise";
+        case LicenseTierV2::Sovereign:    return "Sovereign";
+        default:                          return "Unknown";
+    }
+}
+
+/// Get human-readable feature name
+const char* featureName(FeatureID id);
+
+/// Get total feature count
+constexpr uint32_t TOTAL_FEATURES = static_cast<uint32_t>(FeatureID::COUNT);
+
+// ============================================================================
+// Feature Manifest — compile-time table of all 55+ features
+// ============================================================================
+extern const FeatureDefV2 g_FeatureManifest[TOTAL_FEATURES];
+
+// ============================================================================
+// Enterprise License V2 — Singleton runtime manager
+// ============================================================================
+class EnterpriseLicenseV2 {
+public:
+    static EnterpriseLicenseV2& Instance();
+
+    // Non-copyable
+    EnterpriseLicenseV2(const EnterpriseLicenseV2&) = delete;
+    EnterpriseLicenseV2& operator=(const EnterpriseLicenseV2&) = delete;
+
+    // ── Lifecycle ──
+    LicenseResult initialize();
+    void shutdown();
+    bool isInitialized() const { return m_initialized; }
+
+    // ── Feature Queries ──
+    bool isFeatureEnabled(FeatureID id) const;
+    bool isFeatureLicensed(FeatureID id) const;
+    bool isFeatureImplemented(FeatureID id) const;
+    bool gate(FeatureID id, const char* caller = nullptr);
+
+    // ── Tier Queries ──
+    LicenseTierV2 currentTier() const;
+    const TierLimits::Limits& currentLimits() const;
+    FeatureMask currentMask() const;
+    uint32_t enabledFeatureCount() const;
+
+    // ── Key Operations ──
+    LicenseResult loadKeyFromFile(const char* path);
+    LicenseResult loadKeyFromRegistry();
+    LicenseResult saveKeyToRegistry(const LicenseKeyV2& key);
+    LicenseResult loadKeyFromMemory(const void* data, size_t size);
+    LicenseResult validateKey(const LicenseKeyV2& key) const;
+
+    // ── Azure AD ──
+    LicenseResult requestAzureADLicense(const char* tenantId, const char* clientId);
+
+    /// Create a new license key (requires signing secret)
+    LicenseResult createKey(LicenseTierV2 tier, uint32_t durationDays,
+                            const char* signingSecret, LicenseKeyV2* outKey) const;
+
+    // ── HWID ──
+    uint64_t getHardwareID() const;
+    void getHardwareIDHex(char* buf, size_t bufLen) const;
+
+    // ── Dev Unlock ──
+    LicenseResult devUnlock();
+
+    // ── Audit Trail ──
+    static constexpr size_t MAX_AUDIT_ENTRIES = 4096;
+    size_t getAuditEntryCount() const;
+    const LicenseAuditEntry* getAuditEntries() const;
+    void clearAuditTrail();
+
+    // ── Manifest Queries ──
+    const FeatureDefV2& getFeatureDef(FeatureID id) const;
+    uint32_t countByTier(LicenseTierV2 tier) const;
+    uint32_t countImplemented() const;
+    uint32_t countWiredToUI() const;
+    uint32_t countTested() const;
+
+    // ── Callbacks ──
+    using LicenseChangeCallback = void(*)(LicenseTierV2 oldTier, LicenseTierV2 newTier);
+    void onLicenseChange(LicenseChangeCallback cb);
+
+private:
+    EnterpriseLicenseV2() = default;
+    ~EnterpriseLicenseV2() = default;
+
+    void recordAudit(FeatureID id, bool granted, const char* caller, const char* detail);
+    LicenseResult computeHWID();
+    void signKey(LicenseKeyV2& key, const char* secret) const;
+    bool verifySignature(const LicenseKeyV2& key) const;
+
+    mutable std::mutex  m_mutex;
+    bool                m_initialized = false;
+    LicenseTierV2       m_tier = LicenseTierV2::Community;
+    FeatureMask         m_enabledFeatures;
+    LicenseKeyV2        m_currentKey{};
+    uint64_t            m_hwid = 0;
+
+    // Audit ring buffer
+    LicenseAuditEntry   m_auditTrail[MAX_AUDIT_ENTRIES]{};
+    size_t              m_auditCount = 0;
+    size_t              m_auditHead = 0;
+
+    // Callbacks
+    static constexpr size_t MAX_CALLBACKS = 16;
+    LicenseChangeCallback m_callbacks[MAX_CALLBACKS]{};
+    size_t              m_callbackCount = 0;
+};
+
+// ============================================================================
+// Convenience Macros — gate code paths by feature
+// ============================================================================
+#define LICENSE_GATE(feature) \
+    if (!RawrXD::License::EnterpriseLicenseV2::Instance().gate( \
+        RawrXD::License::FeatureID::feature, __FUNCTION__)) return
+
+#define LICENSE_GATE_BOOL(feature) \
+    if (!RawrXD::License::EnterpriseLicenseV2::Instance().gate( \
+        RawrXD::License::FeatureID::feature, __FUNCTION__)) return false
+
+#define LICENSE_GATE_NULL(feature) \
+    if (!RawrXD::License::EnterpriseLicenseV2::Instance().gate( \
+        RawrXD::License::FeatureID::feature, __FUNCTION__)) return nullptr
+
+#define LICENSE_GATE_STR(feature) \
+    if (!RawrXD::License::EnterpriseLicenseV2::Instance().gate( \
+        RawrXD::License::FeatureID::feature, __FUNCTION__)) \
+        return std::string("[License] Feature requires upgrade")
+
+} // namespace RawrXD::License
