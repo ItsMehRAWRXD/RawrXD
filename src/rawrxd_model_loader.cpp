@@ -432,3 +432,74 @@ bool RawrXDModelLoader::GetTensorRow(const char* name, size_t row, float* x, siz
     for (size_t i = 0; i < n; ++i) x[i] = src[i];
     return true;
 }
+
+// Map a byte window of the loaded GGUF image. The loader keeps the whole
+// file mapped; a window is a read-only view into that image, validated
+// against the image size so out-of-file requests fail instead of
+// aliasing unrelated bytes.
+void* RawrXDModelLoader::MapWindow(uint64_t offset, size_t size)
+{
+    if (fileSize == 0 || !mappedView) return nullptr;
+    if (offset > fileSize) return nullptr;
+    if (size > fileSize - offset) return nullptr;
+    return reinterpret_cast<void*>(
+        reinterpret_cast<uintptr_t>(mappedView) + static_cast<uintptr_t>(offset));
+}
+
+// ---- Swarm scheduler window / prefetch / compute-range API ----
+bool RawrXDModelLoader::markComputeRangeInUse(uint64_t offset, uint64_t size)
+{
+    if (size == 0) return false;
+    const uint64_t end = offset + size;
+    if (end < offset) return false;  // overflow
+    for (const InUseRange& r : inUseRanges_) {
+        if (offset < r.end && r.begin < end) return false;  // overlap
+    }
+    inUseRanges_.push_back({offset, end});
+    return true;
+}
+
+void RawrXDModelLoader::unmarkComputeRangeInUse(uint64_t offset, uint64_t size)
+{
+    const uint64_t end = offset + size;
+    for (size_t i = 0; i < inUseRanges_.size(); ++i) {
+        if (inUseRanges_[i].begin == offset && inUseRanges_[i].end == end) {
+            inUseRanges_.erase(inUseRanges_.begin() + i);
+            return;
+        }
+    }
+}
+
+bool RawrXDModelLoader::ComputeMappingCovers(uint64_t offset, uint64_t size) const
+{
+    if (fileSize == 0 || !mappedView || size == 0) return false;
+    const uint64_t end = offset + size;
+    if (end < offset) return false;
+    return offset < fileSize && end <= fileSize;
+}
+
+void* RawrXDModelLoader::MapPrefetchWindow(uint64_t offset, size_t size)
+{
+    if (prefetchActive_) return nullptr;  // one prefetch window at a time
+    if (fileSize == 0 || !mappedView) return nullptr;
+    if (offset > fileSize) return nullptr;
+    if (size > fileSize - offset) return nullptr;
+    void* p = reinterpret_cast<void*>(
+        reinterpret_cast<uintptr_t>(mappedView) + static_cast<uintptr_t>(offset));
+    prefetchView_ = p;
+    prefetchActive_ = true;
+    return p;
+}
+
+void RawrXDModelLoader::UnmapPrefetchWindow()
+{
+    // The image stays mapped by the loader; this only releases the lease.
+    prefetchView_ = nullptr;
+    prefetchActive_ = false;
+}
+
+void RawrXDModelLoader::UnmapWindow()
+{
+    // Primary windows are views into the loader-owned image; releasing the
+    // lease must not unmap the image other consumers still hold.
+}

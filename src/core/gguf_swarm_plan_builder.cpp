@@ -1,4 +1,5 @@
 #include "gguf_swarm_plan_builder.hpp"
+#include "engine/common_types.h"  // TensorFileSpan
 
 #include <algorithm>
 #include <cctype>
