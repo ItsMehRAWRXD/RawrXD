@@ -1,0 +1,56 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_FIRST_DIVERGENCE_002",
+  "date": "2026-10-11",
+  "verdict": "FAIL",
+  "harness_sha256": "AE408319539AA3142069A214E4CDD12093065BCCA3EB6446E9D9FC501AC831C4",
+  "purpose": "Refine RAWRXD_DEEP2_FIRST_DIVERGENCE_001 to tensor-level detail using the certified executor's stored per-tensor captures as ground truth.",
+  "anchor": {
+    "method": "Certified modelgenie executor's --differential captures (diff_pos1). Validated: its argmax sequence matches the llama.cpp reference 20/20 on the overlapping positions.",
+    "op_sequence_reconciled": {
+      "block_0_dense": [
+        "RMSNorm (attn_norm)",
+        "MlaDecompress (kv_latent, k_rope_raw, k_rope, expanded_KV, cache write)",
+        "Linear (q only - kv_a is inside MlaDecompress)",
+        "Attention_Q_RoPE",
+        "Attention (scores, softmax weights, per-head V reconstructed)",
+        "MLA_PRE_WO",
+        "Attention_Output",
+        "Output (residual)"
+      ],
+      "block_1_plus_moe": "same attention sequence plus MoE_TopK and MoE_Output"
+    },
+    "note": "The runtime graph emits 328 ops for this model where the certified engine uses 300, so the op sequences differ. The mapping above is now established explicitly, which is what enables the tensor-level comparison."
+  },
+  "localised_defect": {
+    "position": 0,
+    "first_divergent_tensor": "block 0 q projection output",
+    "q_cosine_runtime_vs_ground_truth": 0.71451217,
+    "q_l2_runtime": 98.733985,
+    "q_l2_ground_truth": 93.017382,
+    "best_fit_scale": 0.758424,
+    "residual_after_scale": 0.74262,
+    "storage_order": "[head][dim] is correct (cos 0.7145 vs -0.0552 for [dim][head])",
+    "per_head_cosines": [0.583490, 0.820461, 0.906014, 0.853995, 0.454026, 0.955031],
+    "interpretation": "Storage order is right but values are wrong with large per-head variance. Heads range from 0.45 to 0.96. This rules out a global scale error and points at the weight-row indexing inside the linear projection, or the norm that feeds it."
+  },
+  "norm_check": {
+    "certified_attn_norm": "varies elementwise against the embedding (ratio mean 7.83, std 4.74), confirming the learned weight is applied.",
+    "my_norm_vs_certified": "my computed norm gives L2 45.25 where certified gives 27.84 - a large constant difference. A constant offset means one path applies the weight and the other does not, or uses a different epsilon.",
+    "model_metadata_read": {
+      "deepseek2.attention.layer_norm_rms_epsilon": 1e-06,
+      "deepseek2.rope.scaling.yarn_log_multiplier": 0.07069999724626541,
+      "note": "llama.cpp computes mscale = 0.8 * 0.0707 * ln(40) + 1 = 1.2078, so mscale^2 = 1.4588, not 1.5896. The model's own yarn_log_multiplier is 0.0707, not the value assumed in the earlier constant."
+    }
+  },
+  "blocked_on": "Reading raw tensor bytes from this GGUF by byte offset produced fp16 NaN (off by a constant), so a from-scratch projection check could not be completed. The certified captures carry correct values; raw-offset reads do not. Resolving the offset convention is required for any further first-principles check.",
+  "what_was_definitely_established": [
+    "First divergence is at position 0, block 0, q projection - not later layers, not position-dependent code.",
+    "Runtime q storage order is [head][dim], matching ground truth.",
+    "The error is per-head and uneven, not a global scale."
+  ],
+  "build": "Zero compiler diagnostics.",
+  "not_claimed": [
+    "No llama.cpp parity.",
+    "No root cause."
+  ]
+}
