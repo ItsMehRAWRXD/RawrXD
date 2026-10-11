@@ -121,6 +121,9 @@ namespace Deep2
         WeightTensor moeSharedDown;        // [hiddenDim, sharedIntermediate]
 
         // SSM / Mamba (State Space Model) — hybrid architecture support
+    WeightTensor ssmIn;        // [hiddenDim, ssmStateDim] — SSM input projection (Q4_K)
+    WeightTensor ssmD;         // [ssmStateDim] — SSM decay/step matrix D (F32)
+    WeightTensor ssmConv1dBias; // [hiddenDim*2] — causal conv1d bias (F32)
         WeightTensor ssmA;      // [ssmStateDim] — SSM state transition parameters (F32)
         WeightTensor ssmAlpha;  // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
         WeightTensor ssmBeta;   // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
