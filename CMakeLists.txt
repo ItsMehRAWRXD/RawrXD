@@ -10299,6 +10299,7 @@ if(TARGET rawrxd_runtime)
     target_link_libraries(rawrxd PRIVATE rawrxd_runtime)
 else()
     target_sources(rawrxd PRIVATE
+    src/core/utc_provider.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
