@@ -1,0 +1,148 @@
+{
+  "certificate_id": "RAWRXD_GGUF_UNIVERSAL_READER_001",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "what": "A dependency-free generic GGUF reader that opens and validates any GGUF file regardless of which architecture produced it. This is the foundation Deep2 lacked: it previously hardcoded DeepSeek-V2 shapes and a pre-generated op table, so it could not read a model outside that one family.",
+  "files_parsed": 56,
+  "architectures": 16,
+  "tensors_parsed": 26829,
+  "tensor_ranges_validated": 13688,
+  "tensors_out_of_range": 0,
+  "tensors_with_unknown_size": 13141,
+  "bytes_traversed": 871007240160,
+  "per_architecture": {
+    "llama": {
+      "files": 30,
+      "tensors": 10910,
+      "ok": 30
+    },
+    "gptoss": {
+      "files": 6,
+      "tensors": 2982,
+      "ok": 6
+    },
+    "qwen35": {
+      "files": 3,
+      "tensors": 2176,
+      "ok": 3
+    },
+    "deepseek4": {
+      "files": 2,
+      "tensors": 2656,
+      "ok": 2
+    },
+    "qwen2": {
+      "files": 2,
+      "tensors": 1109,
+      "ok": 2
+    },
+    "gemma3": {
+      "files": 2,
+      "tensors": 1766,
+      "ok": 2
+    },
+    "phi3": {
+      "files": 2,
+      "tensors": 394,
+      "ok": 2
+    },
+    "deepseek2": {
+      "files": 1,
+      "tensors": 377,
+      "ok": 1
+    },
+    "granite": {
+      "files": 1,
+      "tensors": 362,
+      "ok": 1
+    },
+    "laguna": {
+      "files": 1,
+      "tensors": 814,
+      "ok": 1
+    },
+    "nemotron_h_moe": {
+      "files": 1,
+      "tensors": 417,
+      "ok": 1
+    },
+    "nemotron_h": {
+      "files": 1,
+      "tensors": 263,
+      "ok": 1
+    },
+    "qwen35moe": {
+      "files": 1,
+      "tensors": 753,
+      "ok": 1
+    },
+    "qwen3": {
+      "files": 1,
+      "tensors": 399,
+      "ok": 1
+    },
+    "qwen3next": {
+      "files": 1,
+      "tensors": 807,
+      "ok": 1
+    },
+    "starcoder2": {
+      "files": 1,
+      "tensors": 644,
+      "ok": 1
+    }
+  },
+  "bugs_found_and_fixed": [
+    "32-bit file positioning: fseek/ftell use long, which is 32-bit on Windows, so any file above 2 GiB failed to open. Both probes above 900 MiB crashed with 0xC0000005 and the largest (25.4 GB) could not be measured. Fixed with _fseeki64/_ftelli64.",
+    "Iterator mixing across containers in blockIndices(): out.erase() was called with an iterator into a different vector, which is undefined behaviour. It produced a block count of 551009065816 for a 28-block model and crashed the caller.",
+    "Block-quantised sizes computed as nelements * type_size: Q8_0 was treated as 3 bytes per element. Q8_0 is block-quantised at 34 bytes per 32 elements, so five files including every expert-MoE model falsely reported tensors past end of file. Fixed with real block arithmetic for the legacy formats."
+  ],
+  "dtype_handling": {
+    "exact": [
+      "F32",
+      "F16",
+      "BF16",
+      "Q8_0",
+      "Q4_0",
+      "Q4_1",
+      "Q5_0",
+      "Q5_1"
+    ],
+    "fixed_width": [
+      "I16",
+      "I32",
+      "I64",
+      "F64"
+    ],
+    "size_unknown_deliberately": "K-quants (Q2_K..Q6_K, Q8_K) and exotic types. The reader marks these unknown rather than guessing, so readRaw refuses instead of mis-reading, and the sweep counts them as unknown_size rather than validating them.",
+    "readF32_support": "F32, F16 and BF16 only. Quantised decoding is left to the kernel that owns the format, for example the Q4_K/Q6_K kernel in RAWRXD_DEEP2_GPU_QUANT_DOT_001. The tool reports readF32 does not decode Q5_0 rather than returning zeros silently."
+  },
+  "architecture_taxonomy": {
+    "source": "F:\\rawrxd\\evidence\\RAWRXD_GGUF_ARCH_TAXONOMY_001\\taxonomy.json",
+    "distinct_architectures": 16,
+    "notable_findings": [
+      "qwen35 and qwen3next are also SSM-plus-MoE hybrids, so Mamba2 work is not Nemotron-specific.",
+      "gptoss uses ggml type 39 (MXFP4) for a large share of expert weights; this is outside the documented ggml type list and is reported as non-standard rather than mis-read.",
+      "deepseek4 has 256 experts with expert_weights_norm and expert_weights_scale 1.5, versus deepseek2 with 64 experts and scale 1.0.",
+      "nemotron_h (42 blocks, inner 7680, heads 96) matches the geometry the pre-existing untracked NemotronHGeometry.hpp targets, which is a different model from the nemotron_h_moe 53-block blob.",
+      "deepseek2 (27 blocks, 2048 embedding) is the family the existing ModelGenieExecutor implements, and appears once in this store as deepseek-coder-v2 16b."
+    ]
+  },
+  "what_this_does_not_establish": [
+    "No model is executed. The reader opens, parses, validates offsets and reads tensor metadata, and nothing more.",
+    "No logits, tokens, TPS or parity result for any of these 56 models.",
+    "K-quant tensors have unvalidated byte ranges, which is 13,141 of 26,829 tensors in this store.",
+    "Supporting the file format is not the same as implementing an architecture. Inference still requires a per-architecture block plan, and sixteen of those do not exist yet."
+  ],
+  "next_steps": [
+    "Add exact K-quant super-block sizes so the remaining 13,141 tensors can be range-validated.",
+    "Extend readF32 to decode the K-quant and legacy block formats so arbitrary tensors can be materialised.",
+    "Build per-architecture block plans on top of the reader, starting with the ones that share a family: llama, qwen2 and starcoder2 are all plain transformer-MLP; gemma3 and granite are close; deepseek2 and deepseek4 share MLA and MoE; nemotron_h, nemotron_h_moe, qwen35, qwen35moe and qwen3next share SSM-plus-MoE; gptoss and laguna are expert-MoE with non-standard dtypes."
+  ],
+  "reproduction": {
+    "reader": "include/RawrXDGgufReader.hpp, src/gguf/RawrXDGgufReader.cpp",
+    "cli": "tools/ggufinfo.cpp, built by tools/build_ggufinfo.bat",
+    "sweep": "tools/run_gguf_sweep.ps1",
+    "blob_exposure": "tools/expose_ollama_blobs.ps1, tools/build_gguf_manifest.ps1, output at F:\\models\\gguf"
+  }
+}
