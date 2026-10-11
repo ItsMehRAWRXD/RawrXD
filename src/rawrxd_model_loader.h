@@ -111,4 +111,7 @@ public:
     std::unordered_map<std::string, std::string> metadata;
     std::unordered_map<std::string, EngineTensorInfo> engineTensorCache_;
     void invalidateEngineCache() { engineTensorCache_.clear(); }
+
+    // File/mapped-image spans of every parsed tensor, in load order.
+    std::vector<TensorFileSpan> listTensorFileSpans() const;
 };
