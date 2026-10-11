@@ -38,7 +38,7 @@ struct block_q8_0 {
     int8_t qs[32];      // 32 8-bit weights
 };
 
-struct TensorInfo {
+struct EngineTensorInfo {
     std::string name;
     std::vector<uint64_t> dims;
     ggml_type type;

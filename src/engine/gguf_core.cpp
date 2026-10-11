@@ -31,7 +31,7 @@ void EngineGGUFLoader::unload() {
     if (hFile != INVALID_HANDLE_VALUE) { CloseHandle(hFile); hFile = INVALID_HANDLE_VALUE; }
 }
 
-TensorInfo* EngineGGUFLoader::getTensor(const char* name) {
+EngineTensorInfo* EngineGGUFLoader::getTensor(const char* name) {
     auto it = tensorMap.find(name);
     if (it != tensorMap.end()) return &tensors[it->second];
     return nullptr;
@@ -111,7 +111,7 @@ bool EngineGGUFLoader::parse() {
     // Parse tensor info
     tensors.reserve(n_tensors);
     for (uint64_t i = 0; i < n_tensors; i++) {
-        TensorInfo t;
+        EngineTensorInfo t;
         t.name = readString(ptr);
         uint32_t n_dims = *(uint32_t*)ptr; ptr += 4;
         t.dims.resize(n_dims);
@@ -169,7 +169,7 @@ std::vector<TensorFileSpan> EngineGGUFLoader::listTensorFileSpans() const
 {
     std::vector<TensorFileSpan> spans;
     spans.reserve(tensors.size());
-    for (const TensorInfo& t : tensors)
+    for (const EngineTensorInfo& t : tensors)
     {
         TensorFileSpan sp;
         sp.name = t.name;

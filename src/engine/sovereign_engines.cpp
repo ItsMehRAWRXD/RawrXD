@@ -15,9 +15,9 @@
 // Forward-pass helpers — shared by Engine800B and SovereignSmall
 // ---------------------------------------------------------------------------
 
-// Dequantize a TensorInfo's raw data to float32.
+// Dequantize a EngineTensorInfo's raw data to float32.
 // Supports Q4_0, Q8_0, F16, and raw F32 based on tensor type.
-static void dequant_tensor(const TensorInfo* t, float* dst, size_t max_floats) {
+static void dequant_tensor(const EngineTensorInfo* t, float* dst, size_t max_floats) {
     if (!t || !t->data || max_floats == 0) return;
     size_t n_elements = 1;
     for (auto d : t->dims) n_elements *= d;
@@ -85,7 +85,7 @@ static void rms_norm(float* data, size_t n, float eps = 1e-5f) {
 
 // Run a single linear transform layer: weights × activations + GeLU + residual
 static void run_layer_forward(float* activations, size_t act_size,
-                              const TensorInfo* weight_tensor) {
+                              const EngineTensorInfo* weight_tensor) {
     if (!weight_tensor || !weight_tensor->data || weight_tensor->size == 0)
         return;
 
@@ -167,7 +167,7 @@ public:
         }
         // Fallback: infer from token_embd.weight tensor shape
         if (embed_dim == 0) {
-            TensorInfo* embd = m_loader->getTensor("token_embd.weight");
+            EngineTensorInfo* embd = m_loader->getTensor("token_embd.weight");
             if (embd && embd->dims.size() >= 2) {
                 embed_dim = (size_t)embd->dims[embd->dims.size() - 1];
             }
@@ -186,7 +186,7 @@ public:
         // ---- Byte-level tokenization + embedding ----
         std::vector<float> activations(embed_dim, 0.0f);
 
-        TensorInfo* embd_tensor = m_loader->getTensor("token_embd.weight");
+        EngineTensorInfo* embd_tensor = m_loader->getTensor("token_embd.weight");
         if (embd_tensor && embd_tensor->data && embd_tensor->dims.size() >= 2) {
             // Use real token embedding table
             size_t vocab = (size_t)embd_tensor->dims[0];
@@ -231,7 +231,7 @@ public:
         }
 
         // ---- Apply output normalization if available ----
-        TensorInfo* out_norm = m_loader->getTensor("output_norm.weight");
+        EngineTensorInfo* out_norm = m_loader->getTensor("output_norm.weight");
         if (out_norm && out_norm->data) {
             std::vector<float> norm_weights(embed_dim);
             dequant_tensor(out_norm, norm_weights.data(), embed_dim);
@@ -245,7 +245,7 @@ public:
         }
 
         // ---- Output projection if available ----
-        TensorInfo* out_proj = m_loader->getTensor("output.weight");
+        EngineTensorInfo* out_proj = m_loader->getTensor("output.weight");
         if (out_proj && out_proj->data && out_proj->dims.size() >= 2) {
             size_t out_vocab = (size_t)out_proj->dims[0];
             size_t proj_dim = (size_t)out_proj->dims[1];
@@ -368,7 +368,7 @@ public:
             embed_dim = (size_t)std::stoull(it->second);
         }
         if (embed_dim == 0) {
-            TensorInfo* embd = m_loader->getTensor("token_embd.weight");
+            EngineTensorInfo* embd = m_loader->getTensor("token_embd.weight");
             if (embd && embd->dims.size() >= 2) {
                 embed_dim = (size_t)embd->dims[embd->dims.size() - 1];
             }
@@ -386,7 +386,7 @@ public:
         // ---- Byte-level tokenization + embedding ----
         std::vector<float> activations(embed_dim, 0.0f);
 
-        TensorInfo* embd_tensor = m_loader->getTensor("token_embd.weight");
+        EngineTensorInfo* embd_tensor = m_loader->getTensor("token_embd.weight");
         if (embd_tensor && embd_tensor->data && embd_tensor->dims.size() >= 2) {
             size_t vocab = (size_t)embd_tensor->dims[0];
             size_t emb_d = (size_t)embd_tensor->dims[1];
@@ -427,7 +427,7 @@ public:
         }
 
         // ---- Output normalization ----
-        TensorInfo* out_norm = m_loader->getTensor("output_norm.weight");
+        EngineTensorInfo* out_norm = m_loader->getTensor("output_norm.weight");
         if (out_norm && out_norm->data) {
             std::vector<float> norm_w(embed_dim);
             dequant_tensor(out_norm, norm_w.data(), embed_dim);
@@ -438,7 +438,7 @@ public:
         }
 
         // ---- Output projection ----
-        TensorInfo* out_proj = m_loader->getTensor("output.weight");
+        EngineTensorInfo* out_proj = m_loader->getTensor("output.weight");
         if (out_proj && out_proj->data && out_proj->dims.size() >= 2) {
             size_t out_vocab = (size_t)out_proj->dims[0];
             size_t proj_dim = (size_t)out_proj->dims[1];
