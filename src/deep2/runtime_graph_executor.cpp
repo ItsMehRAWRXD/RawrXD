@@ -292,8 +292,7 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         const int kind = (w.ggml_type == GGML_TYPE_Q4_K) ? 0 : 1;
         const size_t rb = (n_in / 256) * (size_t)(kind == 0 ? 144 : 210);
         if (w.bytes < rb * n_out) { err = "linear: weight bytes short"; return false; }
-        const ggml_type_traits* tr = ggml_get_type_traits(w.ggml_type);
-        // The independent reference decodes ONE packed row at a time. It must
+        const ggml_type_traits* tr = ggml_get_type_traits(w.ggml_type);        // The independent reference decodes ONE packed row at a time. It must
         // not materialise a dequantised [n_out, n_in] float matrix: for a
         // 102400-row output projection that is 4x the encoded size and, when
         // indexed as rows, walks far past the buffer that was actually filled.
@@ -341,10 +340,54 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
             blk[257] = (float)bsum;
         }
         y.assign(n_out, 0.0f);
+        if (std::getenv("QUANT_TRACE")) {
+            std::fprintf(stderr, "[quant] w=%s kind=%d n_in=%zu n_out=%zu n_blk=%zu rb=%zu wbytes=%zu need=%zu\n",
+                         w.name.c_str(), kind, n_in, n_out, n_blk, rb, w.bytes,
+                         rb * n_out);
+            std::fflush(stderr);
+        }
         const bool gpu = QuantDot::DotBlocked(kind, w.data, w.bytes,
                                               x.data(), n_in, y.data(), n_out, cpu,
                                               q8.data(), q8.size() * sizeof(float));
         if (gpu) { ++gpu_calls_; } else { ++cpu_calls_; }
+        return true;
+    }
+
+    // Legacy quantized types (Q8_0, Q5_0, Q4_0, Q4_1, Q5_1, Q3_K, Q2_K,
+    // Q5_K, Q8_K): dot ONE ROW AT A TIME. Materialising a dequantised
+    // [n_out, n_in] matrix would need 1.4 GB of F32 for the language-model
+    // head (2688 x 131072). Each output row is a contiguous run of blocks
+    // in the packed buffer, so one row is dequantised at a time.
+    //
+    // GGML ne order: dims[0] is the contiguous (input) dimension and
+    // dims[1] the row count, so row j starts at j * blocks_per_row * ts.
+    if ((w.ggml_type == GGML_TYPE_Q8_0 || w.ggml_type == GGML_TYPE_Q5_0 ||
+         w.ggml_type == GGML_TYPE_Q4_0 || w.ggml_type == GGML_TYPE_Q4_1 ||
+         w.ggml_type == GGML_TYPE_Q5_1 || w.ggml_type == GGML_TYPE_Q3_K ||
+         w.ggml_type == GGML_TYPE_Q2_K || w.ggml_type == GGML_TYPE_Q5_K ||
+         w.ggml_type == GGML_TYPE_Q8_K) && n_in > 0 && n_out > 0) {
+        const ggml_type_traits* tr = ggml_get_type_traits(w.ggml_type);
+        if (!tr || !tr->to_float || tr->blck_size == 0 || tr->type_size == 0) {
+            err = "linear: no dequantizer for this type";
+            return false;
+        }
+        const size_t blk = (size_t)tr->blck_size;
+        const size_t ts = (size_t)tr->type_size;
+        if (n_in % blk != 0) { err = "linear: n_in not a multiple of the block size"; return false; }
+        const size_t blocks_per_row = n_in / blk;
+        const size_t row_bytes = blocks_per_row * ts;
+        if (w.bytes < row_bytes * n_out) { err = "linear: weight bytes short"; return false; }
+
+        std::vector<float> rw(n_in, 0.0f);
+        y.assign(n_out, 0.0f);
+        for (size_t j = 0; j < n_out; ++j) {
+            const uint8_t* row = reinterpret_cast<const uint8_t*>(w.data) + j * row_bytes;
+            tr->to_float(row, rw.data(), (int)n_in);
+            double acc = 0.0;
+            for (size_t i = 0; i < n_in; ++i) acc += double(rw[i]) * double(x[i]);
+            y[j] = (float)acc;
+        }
+        ++cpu_calls_;
         return true;
     }
 
@@ -1014,6 +1057,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {
         const auto& in = program_[pc];
+        if (std::getenv("RR_TRACE_OPS")) {
+            std::fprintf(stderr, "  [op] pc=%zu kind=%d block=%d a='%s' b='%s' out='%s'\n",
+                         pc, (int)in.op, (int)in.block,
+                         in.aName.c_str(), in.bName.c_str(), in.outName.c_str());
+        }
         const std::vector<float>& xi = resolveIn(in);
     switch (in.op) {
             case OpKind::EmbeddingLookup: {
