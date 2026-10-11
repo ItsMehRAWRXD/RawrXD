@@ -175,6 +175,7 @@ GGUFTensorLoader& GGUFTensorLoader::operator=(GGUFTensorLoader&& other) noexcept
 // If failed, model is quarantined and load is denied.
 #include "deep2/lavapath/GgufDynamicGeometry.hpp"
 #include "deep2/lavapath/GgufStaticResidency.hpp"
+#include "deep2/lavapath/ResidencyPlan.generated.hpp"
 
 bool GGUFTensorLoader::Open(const std::string& path) {
     Close();
@@ -192,7 +193,7 @@ bool GGUFTensorLoader::Open(const std::string& path) {
     }
     
     // Store static residency plan for runtime use
-    if (!Deep2::GenerateResidencyPlan(geom, residency_plan_)) {
+    if (!::Deep2::GenerateResidencyPlan(geom, residency_plan_)) {
         last_error_ = "Failed to generate residency plan from GGUF geometry";
         return false;
     }

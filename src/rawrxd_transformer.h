@@ -45,5 +45,10 @@ std::vector<int> kv_cache_pos;
     // B015 decode carry state
     bool m_b015DecodeBypass = false;
     bool m_b015CarryWarm = false;
+
+public:
+    bool ExecuteLayerMatMulBatch(const std::string& name, const float* input,
+                                 float* output, int in_dim, int out_dim,
+                                 int tokens, int layer);
 };
 

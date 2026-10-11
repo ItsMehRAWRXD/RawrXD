@@ -391,3 +391,18 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
 
     return logits;
 }
+
+// Batch projection used by the transformer and its tests. Delegates to
+// FBExecuteLayerMatMulBatch - the single CPU matmul implementation that
+// reads real weight rows through the loader - so there is exactly one
+// execution path for batched projections.
+bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& name,
+                                                const float* input,
+                                                float* output, int in_dim,
+                                                int out_dim, int tokens,
+                                                int layer)
+{
+    (void)layer;
+    return FBExecuteLayerMatMulBatch(loader, name, input, output, in_dim,
+                                      out_dim, tokens);
+}
