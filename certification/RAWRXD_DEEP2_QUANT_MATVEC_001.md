@@ -89,3 +89,61 @@ Resolve the `0x7fb0` NaN scale by testing whether non-finite block positions
 are stable across tensor rows (data property) or migrate with row choice
 (alignment bug). That single test discriminates the two causes and is the
 blocker for trusting the dequantizer on this file.
+
+## Non-finite scale census - the discriminating test
+
+The reviewer's first diagnostic was run: inspect scale validity at the same
+block indices across multiple rows.
+
+```
+non-finite scale census (512 rows x 84 blocks)
+  rows containing any NaN scale : 479 / 512
+  total NaN scales              : 1363
+  NaN scale positions           : blk0(12) blk1(18) blk2(15) blk3(15) ...
+  VERDICT: NaN positions VARY between rows -> ADDRESSING fault.
+```
+
+That verdict is NOT reliable and is recorded as such. Randomly distributed NaN
+scales would also produce varying positions, so this test does not actually
+discriminate the two causes. It was worth running and it was worth saying so.
+
+### Data-section base sweep (measured, not assumed)
+
+Sweeping the base +-64 bytes, counting non-finite Q5_0 scales at 4096 blocks:
+
+```
+base+0  : 129 / 4096      base+5  :  20 / 4096
+base-16 :  33 / 4096      best    : -61 with 20 / 4096
+NOT RESOLVED: no base in [-64,+64] yields all-finite scales.
+```
+
+No byte offset produces zero non-finite scales. If the fault were a simple
+mis-based data section, the correct base would read all-finite. It does not.
+
+### The address arithmetic is independently confirmed
+
+131072 rows x 84 blocks/row x 22 bytes = 242,221,056 bytes, which matches the
+tensor byte span reported from the GGUF directory exactly. So the row count,
+block stride and element width are all correct - the tensor occupies precisely
+the region being read.
+
+### What this leaves
+
+The scales being read are real scale bytes (the byte span is exact), and about
+3% of them decode to IEEE NaN/Inf (0x7fb0 observed: exponent 0x1F with a
+non-zero mantissa). Random 2-byte pairs form NaN/Inf patterns only ~0.003% of
+the time, so 3% is roughly ten times too high for pure noise, yet no offset
+corrects it.
+
+The cause is NOT resolved. The single decisive test outstanding is the
+reviewer's third one: compare against an independently parsed GGML reference.
+Without it, "the file has NaN scales" and "my block layout is subtly wrong"
+indistinguishable from inside this tool alone.
+
+### What is still solid
+
+Two independently written dequantizers agree bit-for-bit on 2688 real
+dequantized weights (0 mismatches, max abs diff 0). That is evidence the
+implementation matches its own specification, and it is not evidence of parity
+with GGML - which is why the reference comparison is called out as the next
+step rather than skipped.

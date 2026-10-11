@@ -402,6 +402,83 @@ int wmain(int argc, wchar_t** argv) {
         }
     }
 
+    // ---- Decisive diagnostic: where do non-finite scales occur? ----
+    // If the SAME block index is non-finite in every row, the tensor's bytes
+    // contain NaN scales (a data property). If the non-finite positions MIGRATE
+    // between rows, the block boundaries are wrong, i.e. an addressing/stride
+    // fault rather than corrupt weights. These two causes are otherwise
+    // indistinguishable, and guessing which one it is would be the wrong move.
+    {
+        std::vector<size_t> perBlockBad(blocksPerRow, 0);
+        size_t rowsScanned = 0, rowsWithAnyNaN = 0, totalNaN = 0;
+        const size_t scanRows = std::min<size_t>(rowCount, 512);
+        for (size_t row = 0; row < scanRows; ++row) {
+            const uint8_t* rowp = p + row * rowBytes;
+            bool anyNaN = false;
+            for (size_t bIdx = 0; bIdx < blocksPerRow; ++bIdx) {
+                const float d = q5_0Scale(rowp + bIdx * Q5_0_BS);
+                if (!std::isfinite(d)) { ++perBlockBad[bIdx]; ++totalNaN; anyNaN = true; }
+            }
+            if (anyNaN) ++rowsWithAnyNaN;
+            ++rowsScanned;
+        }
+        std::printf("\nnon-finite scale census (%zu rows x %zu blocks)\n",
+                    rowsScanned, blocksPerRow);
+        std::printf("  rows containing any NaN scale : %zu / %zu\n", rowsWithAnyNaN, rowsScanned);
+        std::printf("  total NaN scales              : %zu\n", totalNaN);
+        std::printf("  NaN scale positions           : ");
+        size_t shown = 0;
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            if (perBlockBad[b] > 0) {
+                std::printf("blk%zu(%zu) ", b, perBlockBad[b]);
+                if (++shown >= 12) { std::printf("..."); break; }
+            }
+        }
+        if (shown == 0) std::printf("none");
+        std::printf("\n");
+        if (rowsWithAnyNaN == rowsScanned && totalNaN > 0) {
+            std::printf("  VERDICT: every row has a NaN at the SAME block index -> DATA property.\n");
+        } else if (totalNaN > 0) {
+            std::printf("  VERDICT: NaN positions VARY between rows -> ADDRESSING fault.\n");
+        } else {
+            std::printf("  VERDICT: no NaN scales are present in the first block of each row.\n");
+        }
+
+        // ---- Empirically locate the correct data-section start ----
+        // The verdict is an addressing fault, so the data-section base is off by
+        // some number of bytes. Rather than guess, sweep candidate bases and
+        // count non-finite Q5_0 scales at each. The correct base is the one with
+        // genuinely none: a Q5_0 scale is a positive half, so any base that
+        // reads real scales produces no NaN at all. This is measured, not
+        // derived from a table.
+        const size_t censusBlocks = 4096;
+        std::printf("\ndata-section base sweep (each base reads %zu Q5_0 scales)\n", censusBlocks);
+        {
+            long bestDelta = 0; size_t bestNaN = static_cast<size_t>(-1);
+            for (long delta = -64; delta <= 64; ++delta) {
+                const long long cand = static_cast<long long>(dataStart + chosen->offset) + delta;
+                if (cand < 0 || static_cast<uint64_t>(cand) + censusBlocks * Q5_0_BS > size) continue;
+                const uint8_t* q = base + cand;
+                size_t nanCount = 0;
+                for (size_t b = 0; b < censusBlocks; ++b) {
+                    if (!std::isfinite(q5_0Scale(q + b * Q5_0_BS))) ++nanCount;
+                }
+                if (nanCount < bestNaN) { bestNaN = nanCount; bestDelta = delta; }
+                if (delta >= -16 && delta <= 16) {
+                    std::printf("  base%+ld : non-finite scales %zu / %zu\n", delta, nanCount, censusBlocks);
+                }
+            }
+            std::printf("  best base delta = %+ld with %zu non-finite of %zu\n",
+                        bestDelta, bestNaN, censusBlocks);
+            if (bestNaN == 0) {
+                std::printf("  RESOLVED: correct data-section base is dataStart%+ld.\n", bestDelta);
+            } else {
+                std::printf("  NOT RESOLVED: no base in [-64,+64] yields all-finite scales.\n");
+                std::printf("  The fault is likely the 22-byte Q5_0 stride, not the base.\n");
+            }
+        }
+    }
+
     std::printf("\nmatvec on real weights\n");
     std::printf("  input elements : %zu\n", rowLen);
     std::printf("  weight[0..3]   : %g %g %g %g\n",
