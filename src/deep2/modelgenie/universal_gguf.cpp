@@ -632,6 +632,22 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             return f == roles.end() ? std::string() : f->second;
         };
 
+        // Snapshot the BLOCK INPUT as resid_in BEFORE the first norm runs.
+        // Publish copies the CURRENT hidden vector, and RmsNorm overwrites
+        // hidden_ with the normed value. Emitting Publish after the norm (the
+        // earlier position) therefore published a normalised vector whose RMS
+        // spike compounds every block: attn_norm L2 was 124 with a single 124
+        // element after one block, and out_norm max was 20. Emitting it first
+        // publishes the true residual stream.
+        {
+            GraphOp o;
+            o.op = Op::Publish;
+            o.block = static_cast<int32_t>(b);
+            o.a = "<hidden>";
+            o.out = "resid_in";
+            g.ops.push_back(o);
+        }
+
         // attn norm
         {
             GraphOp o;
@@ -738,20 +754,10 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             }
         }
 
-        // residual add. The block input is published under a REAL SSA name
-        // ("resid_in") rather than the literal "<hidden>": ResidualAdd resolves
-        // its `a` operand from the arena by name, and "<hidden>" is never
-        // published, so naming it that way silently produced a zero residual
-        // (a transformer with no residuals still yields finite, deterministic,
-        // kernel-consistent logits - exactly the degenerate-output signature).
+        // Residual add. resid_in was published above, before the attention
+        // ops, so it holds the block input.
         {
-            GraphOp o;
-            o.op = Op::Publish; o.block = (int32_t)b;
-            o.a = "<hidden>";
-            o.out = "resid_in";
-            g.ops.push_back(o);
-
-            o = GraphOp{};
+            GraphOp o = GraphOp{};
             o.op = Op::ResidualAdd; o.block = (int32_t)b;
             o.a = "resid_in"; o.b = "attn_proj"; o.out = "resid1";
             g.ops.push_back(o);

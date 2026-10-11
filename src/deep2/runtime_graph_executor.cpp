@@ -317,7 +317,24 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
     // Non-k-quant (or non-multiple-of-256) weight: dequantise and dot.
     std::vector<float> wf;
     const size_t got = DequantPrefix(w, wf, n_in * n_out);
-    if (got < n_in * n_out) { err = "linear: dequant short"; return false; }
+    if (got < n_in * n_out) {
+        // Report the geometry, not just "short". The gap between what the file
+        // provides and what the layer needs is what distinguishes a wrong byte
+        // span from a legitimately unaligned row width.
+        char b[384];
+        std::snprintf(b, sizeof(b),
+            "linear: dequant short: name=%s type=%u dims=[%zu,%zu] want=%zu got=%zu "
+            "bytes=%zu type_size=%zu blk=%zu n_in%%blk=%zu",
+            w.name.c_str(), (unsigned)w.gguf_type,
+            w.dims.empty() ? 0 : (size_t)w.dims[0],
+            w.dims.size() > 1 ? (size_t)w.dims[1] : 0,
+            n_in * n_out, got, w.bytes,
+            (size_t)ggml_get_type_traits(w.gguf_type)->type_size,
+            (size_t)ggml_get_type_traits(w.ggml_type)->blck_size,
+            (size_t)ggml_get_type_traits(w.ggml_type)->blck_size ? n_in % (size_t)ggml_get_type_traits(w.ggml_type)->blck_size : 0);
+        err = b;
+        return false;
+    }
     wf.resize(n_in * n_out);
     y.assign(n_out, 0.0f);
     for (size_t j = 0; j < n_out; ++j) {
@@ -380,13 +397,21 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
 
     auto rope = [&](std::vector<float>& t, size_t heads, size_t headDim,
                     size_t ropeLen, size_t ropeOff) {
+        // RoPE rotates consecutive pairs (p[2k], p[2k+1]). The inv_freq MUST be
+        // indexed by the PAIR index k, not the element index: using i makes
+        // every pair rotate at a different rate than the reference and silently
+        // destroys positional information. rope_len counts ELEMENTS, so the
+        // number of pairs is rope_len/2 and freq_k = base^(-2k / n_pairs).
+        const size_t nPairs = ropeLen / 2;
+        if (nPairs == 0) return;
         for (size_t h = 0; h < heads; ++h) {
             float* p = t.data() + h * headDim + ropeOff;
             const size_t lim = std::min(ropeLen, headDim - std::min(ropeOff, headDim));
             for (size_t i = 0; i + 1 < lim; i += 2) {
+                const size_t k = i / 2;
                 const double theta = (double)position *
                     std::pow((double)spec_.rope_freq_base,
-                             -2.0 * double(i) / double(std::max<size_t>(lim, 1)));
+                             -2.0 * double(k) / double(nPairs));
                 const float c = (float)std::cos(theta), s = (float)std::sin(theta);
                 const float a = p[i], b = p[i + 1];
                 p[i] = a * c - b * s;
@@ -416,13 +441,24 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     std::vector<float> scores(T);
     // GQA groups: consecutive query heads share one KV head.
     const size_t group = std::max<size_t>(H / std::max<size_t>(hk, 1), 1);
+    // MLA score = q_nopeÃ‚Â·k_nope  +  q_ropeÃ‚Â·k_rope.
+    //
+    // Dotting the whole per-head width is WRONG for MLA: q's rope slots would
+    // be multiplied by K's no-rope slots. That cross-term made every position
+    // produce bit-identical logits, because the context contribution cancelled
+    // while the embedding-path contribution survived - the degenerate-output
+    // signature. In a GQA model there is no split and the whole head is dotted.
+    const size_t nopeD = isMla ? qk_nope : qD;
     for (size_t h = 0; h < H; ++h) {
         const size_t g = isMla ? h : (h / group);
         const float* qp = qr.data() + h * qPerHead;
+        const float* qrope = qp + qRopeOff;
         for (size_t t = 0; t < T; ++t) {
             const float* kp = K.data() + t * kvW + g * kPerHead;
+            const float* krope = kp + kRopeOff;
             double acc = 0.0;
-            for (size_t d = 0; d < qD; ++d) acc += double(qp[d]) * double(kp[d]);
+            for (size_t d = 0; d < nopeD; ++d) acc += double(qp[d]) * double(kp[d]);
+            for (size_t i = 0; i < ropeLen; ++i) acc += double(qrope[i]) * double(krope[i]);
             scores[t] = (float)(acc / std::sqrt((double)std::max<size_t>(qD, 1)));
         }
         SoftmaxVec(scores);
@@ -432,8 +468,7 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             const float s = scores[t];
             for (size_t d = 0; d < outW; ++d) op[d] += s * vp[d];
         }
-    }
-    return true;
+    }    return true;
 }
 
 bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
@@ -703,16 +738,27 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     const int32_t embSlot = slot_by_name_["token_embd.weight"];
 
-    static const bool traceOps = (std::getenv("RR_TRACE_OPS") != nullptr);
+    /* DIVTRACE */
+    static const bool dumpTensors = (std::getenv("RR_DUMP_TENSORS") != nullptr);
+    static const int dumpLayer = []() {
+        const char* e = std::getenv("RR_DUMP_LAYER");
+        return e ? std::atoi(e) : 0;
+    }();
+    static const char* dumpDir = std::getenv("RR_DUMP_DIR");
+    int dumpBlock = -1;
+    auto dumpVec = [&](const char* tag, const std::vector<float>& v) {
+        if (!dumpTensors || !dumpDir) return;
+        if (dumpBlock != dumpLayer) return;
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/t_%s_pos%zu.bin", dumpDir, tag, position);
+        FILE* f = std::fopen(path, "wb");
+        if (f) { std::fwrite(v.data(), sizeof(float), v.size(), f); std::fclose(f); }
+    };
+
     for (size_t pc = 0; pc < program_.size(); ++pc) {
         const auto& in = program_[pc];
+        if (dumpTensors) dumpBlock = in.block;
         const std::vector<float>& xi = resolveIn(in);
-        if (traceOps) {
-            std::fprintf(stderr, "  op #%zu blk=%d %s a='%s' b='%s' out='%s' hidden=%zu\n",
-                        pc, in.block, OpKindName(in.op),
-                        in.aName.c_str(), in.bName.c_str(), in.outName.c_str(),
-                        hidden_.size());
-        }
     switch (in.op) {
             case OpKind::EmbeddingLookup: {
                 const TensorRec& emb = tensors_[(size_t)embSlot];
@@ -760,6 +806,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::vector<float> y;
                 std::string e;
                 if (!OpLinear(in.b, xi, y, e)) { last_error_ = e; return false; }
+                { std::string t = "q" + std::to_string(pc); dumpVec(t.c_str(), y); }
                 arena(in.outName.empty() ? std::string("lin") : in.outName) = y;
                 hidden_ = y;
                 break;
@@ -768,6 +815,8 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::vector<float> k, v;
                 std::string e;
                 if (!OpMlaDecompress(in, xi, k, v, position, e)) { last_error_ = e; return false; }
+                { std::string tk = "mla_k" + std::to_string(pc); std::string tv = "mla_v" + std::to_string(pc);
+                  dumpVec(tk.c_str(), k); dumpVec(tv.c_str(), v); }
                 arena(in.outName.empty() ? std::string("kv") : in.outName) = hidden_;
                 arena("k") = k;
                 arena("v") = v;
@@ -780,6 +829,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (kv.empty()) kv = qv;
                 if (vv.empty()) vv = kv;
                 if (!OpAttention(in, qv, kv, vv, y, position, e)) { last_error_ = e; return false; }
+                dumpVec("attn", y);
                 arena("attn") = y;
                 if (!in.outName.empty()) arena(in.outName) = y;
                 hidden_ = y;
@@ -835,6 +885,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     y[i] = (i < resid->size() ? (*resid)[i] : 0.0f)
                          + (i < add->size() ? (*add)[i] : 0.0f);
                 hidden_ = y;
+                { std::string t = "resid" + std::to_string(pc); dumpVec(t.c_str(), y); }
                 arena(in.outName.empty() ? std::string("resid") : in.outName) = y;
                 break;
             }
@@ -890,6 +941,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::vector<float> y;
                 std::string e;
                 if (!OpLinear(in.b, hidden_, y, e)) { last_error_ = e; return false; }
+                dumpVec("logits", y);
                 logits_ = y;
                 break;
             }
