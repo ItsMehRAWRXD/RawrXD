@@ -64,12 +64,21 @@ static const char* typeName(uint32_t t) {
 }
 
 // Size in bytes of one scalar of a GGUF type (string/array handled specially).
+//
+// BOOL is 1 BYTE, not 4. This is the llama.cpp/gguf encoding: a GGUF bool is
+// stored as int8_t. Treating it as 4 bytes inflates every bool array by 3/4 and
+// desynchronises the reader at the next key. gemma-4-31B's
+// gemma4.attention.sliding_window_pattern is 60 bools = 72 bytes total
+// (4 type + 8 count + 60 x 1); reading it as 252 bytes is what broke Gemma.
 static size_t scalarSize(uint32_t t) {
     switch (t) {
-        case 0: case 1: return 1;
-        case 2: case 3: return 2;
-        case 4: case 5: case 6: case 7: return 4;
-        case 10: case 11: case 12: return 8;
+        case GGUF_UINT8: case GGUF_INT8:
+        case GGUF_BOOL:   return 1;   // BOOL is int8_t in GGUF
+        case GGUF_UINT16: case GGUF_INT16: return 2;
+        case GGUF_UINT32: case GGUF_INT32:
+        case GGUF_FLOAT32: return 4;
+        case GGUF_UINT64: case GGUF_INT64:
+        case GGUF_FLOAT64: return 8;
         default: return 0; // string/array: variable
     }
 }
