@@ -31,6 +31,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -272,11 +273,34 @@ int wmain(int argc, wchar_t** argv) {
 
     // ---- 3. Metadata ----
     Meta meta;
+    std::string lastGoodKey;
+    size_t lastGoodEnd = 0;
+    // Diagnostic trace of the metadata/directory boundary. Each pair records the
+    // byte offset BEFORE and AFTER its value, so a desynchronised reader shows
+    // up immediately as an offset that fails to advance or a value span that
+    // does not match the gap to the next pair. This localises the Gemma 4
+    // "833 declared / 0 parsed" failure instead of leaving it a mystery.
     for (uint64_t i = 0; i < kvCount && !r.eof(); ++i) {
+        const size_t posBefore = r.pos;
         std::string key = r.readString();
         if (r.eof()) break;
         uint32_t type = r.readLE<uint32_t>();
+        const size_t posBeforeValue = r.pos;
         readValue(r, type, meta, key);
+        lastGoodKey = key;
+        lastGoodEnd = r.pos;
+        if (std::getenv("GGUF_TRACE")) {
+            std::fprintf(stderr,
+                "[kv %llu] offset=%zu->%zu key='%s' type=%u(%s) valueSpan=%zu\n",
+                static_cast<unsigned long long>(i),
+                posBefore, r.pos, key.c_str(), type, typeName(type),
+                r.pos - posBeforeValue);
+        }
+    }
+    if (std::getenv("GGUF_TRACE")) {
+        std::fprintf(stderr, "[kv done] %llu pairs, metadata ends at offset %zu, tensorCount=%llu\n",
+                    static_cast<unsigned long long>(kvCount), r.pos,
+                    static_cast<unsigned long long>(tensorCount));
     }
 
     std::printf("\n--- metadata (%zu keys parsed) ---\n",
@@ -427,11 +451,22 @@ int wmain(int argc, wchar_t** argv) {
     if (counted == 0 && tensorCount > 0) {
         std::printf("\nPARSE FAILURE: tensorCount=%llu in header but 0 directory entries parsed.\n",
                     static_cast<unsigned long long>(tensorCount));
-        std::printf("  metadata consumed %llu bytes (%zu keys), then the reader desynced.\n",
+        std::printf("  metadata consumed %llu bytes (%zu keys) before the reader desynced.\n",
                     static_cast<unsigned long long>(r.pos),
                     meta.strings.size() + meta.uints.size());
-        std::printf("  Everything below this line is NOT a measurement and is suppressed.\n");
-        std::printf("  Most likely cause: an unhandled metadata value type in readValue().\n");
+        if (!lastGoodKey.empty()) {
+            std::printf("  LAST GOOD PAIR  : %s (ended at offset %zu)\n",
+                        lastGoodKey.c_str(), lastGoodEnd);
+            std::printf("  NEXT BYTES THERE: ");
+            for (int b = 0; b < 16 && (lastGoodEnd + b) < size; ++b) {
+                std::printf("%02x ", base[lastGoodEnd + b]);
+            }
+            std::printf("\n");
+            std::printf("  A string key needs 8 length bytes; if the above is not a plausible\n"
+                        "  u64 length the preceding array VALUE was mis-sized.\n");
+        }
+        std::printf("\n  DO NOT INFER THIS MODEL HAS ZERO TENSORS.\n");
+        std::printf("  Fix: record the exact value length of the array at LAST GOOD PAIR.\n");
         std::printf("\nbaseline NOT captured.\n");
         return 3;
     }
