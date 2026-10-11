@@ -1,4 +1,6 @@
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include "chromatic_window.h"
 #include <chrono>
 #include <cmath>

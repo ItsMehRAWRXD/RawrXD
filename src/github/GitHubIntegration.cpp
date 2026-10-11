@@ -272,8 +272,12 @@ static HttpResponse winHttpRequest(const std::string& method, const std::string&
                     // Trim
                     while (!value.empty() && (value.front() == L' ' || value.front() == L'\t')) value.erase(value.begin());
                     while (!value.empty() && (value.back() == L' ' || value.back() == L'\r' || value.back() == L'\n')) value.pop_back();
-                    std::string keyStr(key.begin(), key.end());
-                    std::string valueStr(value.begin(), value.end());
+                    std::string keyStr;
+                    keyStr.reserve(key.size());
+                    for (wchar_t wc : key) keyStr.push_back(static_cast<char>(wc));
+                    std::string valueStr;
+                    valueStr.reserve(value.size());
+                    for (wchar_t wc : value) valueStr.push_back(static_cast<char>(wc));
                     response.headers[keyStr] = valueStr;
                 }
             }
@@ -2006,7 +2010,7 @@ std::string CloudAgent::generateBranchName(const CloudAgentTask& task) {
     bool lastWasDash = false;
     for (char c : desc) {
         if (isalnum((unsigned char)c)) {
-            kebab += tolower((unsigned char)c);
+            kebab += static_cast<char>(tolower(static_cast<unsigned char>(c)));
             lastWasDash = false;
         } else if (!lastWasDash) {
             kebab += '-';
@@ -2116,7 +2120,7 @@ bool CloudAgent::runLinter(const std::string& localPath) {
     return true;  // No linter found - assume success
 }
 
-std::string CloudAgent::callLLM(const std::string& prompt, const json& context) {
+std::string CloudAgent::callLLM(const std::string& /*prompt*/, const json& /*context*/) {
     // In a full implementation, this would call the configured LLM endpoint
     // For now, return a placeholder
     return "LLM response placeholder";
@@ -2148,7 +2152,7 @@ json CloudAgent::planTask(const CloudAgentTask& task) {
     return plan;
 }
 
-json CloudAgent::executeStep(const std::string& step, const json& context) {
+json CloudAgent::executeStep(const std::string& step, const json& /*context*/) {
     // In a full implementation, this would execute the step using the LLM
     // and the available tools (file edit, command execution, etc.)
     json result;
@@ -2391,7 +2395,7 @@ void CodeReviewAgent::setPerformanceRules(const json& rules) {
     m_performanceRules = rules;
 }
 
-json CodeReviewAgent::analyzeCode(const std::string& code, const std::string& language, const std::string& context) {
+json CodeReviewAgent::analyzeCode(const std::string& code, const std::string& language, const std::string& /*context*/) {
     // In a full implementation, this would call the LLM to analyze the code
     // For now, perform basic pattern matching
     json analysis;
@@ -2437,7 +2441,7 @@ json CodeReviewAgent::analyzeCode(const std::string& code, const std::string& la
     return analysis;
 }
 
-std::vector<ReviewComment> CodeReviewAgent::generateComments(const json& analysis, const std::string& diff) {
+std::vector<ReviewComment> CodeReviewAgent::generateComments(const json& analysis, const std::string& /*diff*/) {
     std::vector<ReviewComment> comments;
     if (!analysis.contains("issues") || !analysis["issues"].is_array()) {
         return comments;

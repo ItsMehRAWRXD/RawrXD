@@ -33,6 +33,8 @@
 #include <atomic>
 #include <mutex>
 #include <functional>
+#include <future>
+#include <queue>
 
 namespace fs = std::filesystem;
 
@@ -58,20 +60,23 @@ class WebView2ElementHandle;
 // hand-declared vtables.
 //
 // Lifecycle:
-//   1. initialize(hwnd, url): CoInitializeEx(STA) on the calling thread,
-//      CreateCoreWebView2EnvironmentWithOptions (async), then
-//      ICoreWebView2Environment::CreateCoreWebView2Controller(hwnd) (async).
-//      Both completions are marshalled through the STA message pump.
+//   1. initialize(hwnd, url): CreateCoreWebView2EnvironmentWithOptions
+//      (async), then ICoreWebView2Environment::CreateCoreWebView2Controller
+//      (async). Both completions are marshalled through the STA
+//      message pump.
 //   2. executeScript(script): ICoreWebView2::ExecuteScript with a
 //      completion handler that captures the JSON result string.
 //   3. navigate(url): ICoreWebView2::Navigate.
 //   4. screenshot(): ICoreWebView2::CapturePreview(PNG) into an IStream.
-//   5. destroy(): release controller/webview/environment, CoUninitialize.
+//   5. destroy(): release controller/webview/environment.
 //
 // Threading: WebView2 requires a single-threaded apartment (STA) with a
-// message pump. All WebView2 calls and their completion handlers run on
-// the thread that called initialize(). The container pumps messages while
-// waiting for async completions so callbacks are delivered.
+// message pump. The browser owns a dedicated STA thread
+// (WebView2Browser::staThreadProc) that calls CoInitializeEx(STA) once
+// and runs a message loop for the browser's lifetime. The container
+// marshals every WebView2 call (and its completion handler) to that
+// thread via the STA dispatcher set by the browser. The container does
+// not own the COM apartment.
 // ============================================================================
 
 // Forward-declare the completion handler implementations (defined below).
@@ -103,6 +108,14 @@ public:
     // Resize the hosted webview to the given client-area rectangle.
     void resize(int x, int y, int width, int height);
 
+public:
+    // Set a dispatcher that runs a task on the STA thread that
+    // owns the WebView2 message pump and waits for completion.
+    // All WebView2 COM calls must be marshalled to that thread.
+    void setStaDispatcher(std::function<void(std::function<void()>)> dispatcher) {
+        m_staDispatcher = std::move(dispatcher);
+    }
+
     // Destroy the hosted webview and release COM resources.
     void destroy();
 
@@ -123,6 +136,18 @@ private:
     // true or timeout elapses.
     bool pumpUntil(const std::function<bool()>& done, int timeoutMs);
 
+    // Run a WebView2 COM call on the STA thread (if a dispatcher
+    // is set) and wait for it to complete. Without a dispatcher,
+    // the call runs inline (only valid when already on the STA
+    // thread).
+    void runOnStaThread(const std::function<void()>& task) {
+        if (m_staDispatcher) {
+            m_staDispatcher(task);
+        } else {
+            task();
+        }
+    }
+
     void* m_hwnd = nullptr;
     bool m_initialized = false;
     int m_x = 0, m_y = 0, m_width = 0, m_height = 0;
@@ -130,9 +155,9 @@ private:
     std::string m_lastScript;
     std::string m_browserVersion;
 
-    // COM apartment state. WebView2 requires STA; we initialize it on the
-    // thread that calls initialize() and uninitialize on destroy().
-    bool m_comInitialized = false;
+    // STA dispatcher (set by the browser) that marshals WebView2
+    // COM calls to the dedicated STA thread.
+    std::function<void(std::function<void()>)> m_staDispatcher;
 
     // WebView2 COM interfaces (raw pointers; released in destroy()).
     ICoreWebView2Environment* m_env = nullptr;
@@ -357,15 +382,13 @@ bool WebView2Container::pumpUntil(const std::function<bool()>& done, int timeout
 bool WebView2Container::initialize(void* hwnd, const std::string& url) {
     m_hwnd = hwnd;
     m_url = url;
+    fprintf(stderr, "[WV2] initialize enter\n");
 
-    // WebView2 requires a single-threaded apartment. Initialize COM as STA
-    // on the calling thread (the thread that will pump messages).
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-    if (SUCCEEDED(hr)) {
-        m_comInitialized = true;
-    } else if (hr != RPC_E_CHANGED_MODE) {
-        return false;
-    }
+    // The container always runs on the browser's dedicated
+    // STA thread (see WebView2Browser::staThreadProc), which
+    // has already called CoInitializeEx(COINIT_APARTMENTTHREADED).
+    // Do NOT re-initialize COM here; the STA thread owns the
+    // apartment for the browser's lifetime.
 
     // Load the WebView2 loader DLL (WebView2Loader.dll) which exports
     // CreateCoreWebView2EnvironmentWithOptions. The loader is vendored
@@ -380,14 +403,12 @@ bool WebView2Container::initialize(void* hwnd, const std::string& url) {
         loader = LoadLibraryA("include\\WebView2Loader.dll");
     }
     if (!loader) {
-        if (m_comInitialized) { CoUninitialize(); m_comInitialized = false; }
         return false;
     }
     auto createEnv = reinterpret_cast<CreateEnvFn>(
         GetProcAddress(loader, "CreateCoreWebView2EnvironmentWithOptions"));
     if (!createEnv) {
         FreeLibrary(loader);
-        if (m_comInitialized) { CoUninitialize(); m_comInitialized = false; }
         return false;
     }
 
@@ -413,22 +434,25 @@ bool WebView2Container::initialize(void* hwnd, const std::string& url) {
         }
     }
 
-    hr = createEnv(nullptr, userDataFolder.empty() ? nullptr : userDataFolder.c_str(),
-                   nullptr, envHandler);
+    HRESULT hr = createEnv(nullptr, userDataFolder.empty() ? nullptr : userDataFolder.c_str(),
+                           nullptr, envHandler);
+    fprintf(stderr, "[WV2] createEnv called\n");
     if (FAILED(hr)) {
         envHandler->Release();
         FreeLibrary(loader);
-        if (m_comInitialized) { CoUninitialize(); m_comInitialized = false; }
+        fprintf(stderr, "[WV2] createEnv failed\n");
         return false;
     }
 
     // Pump messages until the environment is created (or 30s timeout).
+    fprintf(stderr, "[WV2] pumping for env\n");
     if (!pumpUntil([&]() { return envHandler->done(); }, 30000) || FAILED(envHandler->errorCode())) {
         envHandler->Release();
         FreeLibrary(loader);
-        if (m_comInitialized) { CoUninitialize(); m_comInitialized = false; }
+        fprintf(stderr, "[WV2] env pump failed\n");
         return false;
     }
+    fprintf(stderr, "[WV2] env created\n");
 
     m_env = envHandler->env();
     if (m_env) m_env->AddRef();
@@ -508,21 +532,19 @@ std::string WebView2Container::executeScript(const std::string& script) {
     std::wstring wscript(wlen - 1, L'\0');
     MultiByteToWideChar(CP_UTF8, 0, script.c_str(), -1, wscript.data(), wlen);
 
-    auto handler = new WebView2ScriptCompletedHandler();
-    HRESULT hr = m_webview->ExecuteScript(wscript.c_str(), handler);
-    if (FAILED(hr)) {
+    std::string result;
+    // ExecuteScript and its completion handler must run on the
+    // STA thread that owns the WebView2 message pump.
+    runOnStaThread([&]() {
+        auto handler = new WebView2ScriptCompletedHandler();
+        HRESULT hr = m_webview->ExecuteScript(wscript.c_str(), handler);
+        if (SUCCEEDED(hr) &&
+            pumpUntil([&]() { return handler->done(); }, 30000) &&
+            SUCCEEDED(handler->errorCode())) {
+            result = handler->result();
+        }
         handler->Release();
-        return std::string();
-    }
-
-    // Pump messages until the script completes (or 30s timeout).
-    if (!pumpUntil([&]() { return handler->done(); }, 30000) || FAILED(handler->errorCode())) {
-        handler->Release();
-        return std::string();
-    }
-
-    std::string result = handler->result();
-    handler->Release();
+    });
     return result;
 }
 
@@ -534,12 +556,15 @@ bool WebView2Container::navigate(const std::string& url) {
     std::wstring wurl(wlen - 1, L'\0');
     MultiByteToWideChar(CP_UTF8, 0, url.c_str(), -1, wurl.data(), wlen);
 
-    HRESULT hr = m_webview->Navigate(wurl.c_str());
-    if (FAILED(hr)) return false;
+    bool navOk = false;
+    runOnStaThread([&]() {
+        HRESULT hr = m_webview->Navigate(wurl.c_str());
+        navOk = SUCCEEDED(hr);
+    });
+    if (!navOk) return false;
 
     // Wait for the document to reach a complete readyState by polling
-    // document.readyState via ExecuteScript. This avoids needing a
-    // NavigationCompleted event handler registration.
+    // document.readyState via ExecuteScript.
     auto start = std::chrono::steady_clock::now();
     while (std::chrono::steady_clock::now() - start < std::chrono::milliseconds(30000)) {
         std::string ready = executeScript("(function(){ return document.readyState; })()");
@@ -553,25 +578,29 @@ bool WebView2Container::navigate(const std::string& url) {
 bool WebView2Container::screenshot(std::vector<uint8_t>& pngBytes) {
     if (!m_webview) return false;
 
-    // Create an in-memory IStream to receive the PNG.
+    bool captured = false;
+    // CapturePreview and its completion handler must run on the
+    // STA thread. The IStream is created on the calling thread
+    // (it is thread-safe) and filled by the STA-thread capture.
     IStream* stream = nullptr;
-    HRESULT hr = CreateStreamOnHGlobal(nullptr, TRUE, &stream);
-    if (FAILED(hr) || !stream) return false;
-
-    auto handler = new WebView2PreviewCompletedHandler();
-    hr = m_webview->CapturePreview(COREWEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG, stream, handler);
-    if (FAILED(hr)) {
+    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream)) || !stream) {
+        return false;
+    }
+    runOnStaThread([&]() {
+        auto handler = new WebView2PreviewCompletedHandler();
+        HRESULT hr = m_webview->CapturePreview(COREWEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG, stream, handler);
+        if (SUCCEEDED(hr) &&
+            pumpUntil([&]() { return handler->done(); }, 30000) &&
+            SUCCEEDED(handler->errorCode())) {
+            captured = true;
+        }
         handler->Release();
+    });
+
+    if (!captured) {
         stream->Release();
         return false;
     }
-
-    if (!pumpUntil([&]() { return handler->done(); }, 30000) || FAILED(handler->errorCode())) {
-        handler->Release();
-        stream->Release();
-        return false;
-    }
-    handler->Release();
 
     // Read the PNG bytes from the stream.
     HGLOBAL hGlobal = nullptr;
@@ -591,52 +620,54 @@ void WebView2Container::resize(int x, int y, int width, int height) {
     m_x = x; m_y = y; m_width = width; m_height = height;
     if (m_controller) {
         RECT rc = { x, y, x + width, y + height };
-        m_controller->put_Bounds(rc);
+        runOnStaThread([&]() { m_controller->put_Bounds(rc); });
     }
 }
 
 void WebView2Container::destroy() {
-    if (m_webview) { m_webview->Release(); m_webview = nullptr; }
-    if (m_controller) { m_controller->Release(); m_controller = nullptr; }
-    if (m_env) { m_env->Release(); m_env = nullptr; }
+    // Release COM objects on the STA thread (they were created there).
+    runOnStaThread([&]() {
+        if (m_webview) { m_webview->Release(); m_webview = nullptr; }
+        if (m_controller) { m_controller->Release(); m_controller = nullptr; }
+        if (m_env) { m_env->Release(); m_env = nullptr; }
+    });
     m_initialized = false;
     m_lastScript.clear();
-
-    if (m_comInitialized) {
-        CoUninitialize();
-        m_comInitialized = false;
-    }
+    // COM is owned by the browser's STA thread (staThreadProc),
+    // not by the container. Do not CoUninitialize here.
 }
 
 std::string WebView2Container::documentTitle() {
     if (!m_webview) return std::string();
-    LPWSTR title = nullptr;
-    if (FAILED(m_webview->get_DocumentTitle(&title)) || !title) {
-        return std::string();
-    }
-    int len = WideCharToMultiByte(CP_UTF8, 0, title, -1, nullptr, 0, nullptr, nullptr);
     std::string utf8;
-    if (len > 0) {
-        utf8.resize(len - 1);
-        WideCharToMultiByte(CP_UTF8, 0, title, -1, utf8.data(), len, nullptr, nullptr);
-    }
-    CoTaskMemFree(title);
+    runOnStaThread([&]() {
+        LPWSTR title = nullptr;
+        if (SUCCEEDED(m_webview->get_DocumentTitle(&title)) && title) {
+            int len = WideCharToMultiByte(CP_UTF8, 0, title, -1, nullptr, 0, nullptr, nullptr);
+            if (len > 0) {
+                utf8.resize(len - 1);
+                WideCharToMultiByte(CP_UTF8, 0, title, -1, utf8.data(), len, nullptr, nullptr);
+            }
+            CoTaskMemFree(title);
+        }
+    });
     return utf8;
 }
 
 std::string WebView2Container::source() {
     if (!m_webview) return std::string();
-    LPWSTR uri = nullptr;
-    if (FAILED(m_webview->get_Source(&uri)) || !uri) {
-        return std::string();
-    }
-    int len = WideCharToMultiByte(CP_UTF8, 0, uri, -1, nullptr, 0, nullptr, nullptr);
     std::string utf8;
-    if (len > 0) {
-        utf8.resize(len - 1);
-        WideCharToMultiByte(CP_UTF8, 0, uri, -1, utf8.data(), len, nullptr, nullptr);
-    }
-    CoTaskMemFree(uri);
+    runOnStaThread([&]() {
+        LPWSTR uri = nullptr;
+        if (SUCCEEDED(m_webview->get_Source(&uri)) && uri) {
+            int len = WideCharToMultiByte(CP_UTF8, 0, uri, -1, nullptr, 0, nullptr, nullptr);
+            if (len > 0) {
+                utf8.resize(len - 1);
+                WideCharToMultiByte(CP_UTF8, 0, uri, -1, utf8.data(), len, nullptr, nullptr);
+            }
+            CoTaskMemFree(uri);
+        }
+    });
     return utf8;
 }
 
@@ -644,8 +675,6 @@ std::string WebView2Container::source() {
 // Helper: Generate unique IDs
 // ============================================================================
 static std::atomic<uint64_t> g_nextId{1};
-static uint64_t nextId() { return g_nextId.fetch_add(1); }
-
 // ============================================================================
 // Helper: JSON escape
 // ============================================================================
@@ -1034,7 +1063,48 @@ public:
     // Internal: host window for WebView2 controllers.
     HWND hiddenWindow() const { return m_hiddenWindow; }
 
+    // Internal: run a task on the dedicated STA thread and wait
+    // for completion. WebView2 requires all calls (and their
+    // completion handlers) to be marshalled to the STA thread
+    // that owns the message pump.
+    //
+    // The task is wrapped in a shared_ptr so the queued
+    // std::function<void()> remains copy-constructible
+    // (std::function requires copyability; packaged_task is
+    // move-only and cannot be stored directly).
+    template<typename F>
+    auto runOnStaThread(F&& fn) -> decltype(fn()) {
+        using Ret = decltype(fn());
+        auto promise = std::make_shared<std::promise<Ret>>();
+        auto fut = promise->get_future();
+        // Copy the callable into a shared_ptr so the queued
+        // lambda is copyable.
+        auto fnPtr = std::make_shared<std::decay_t<F>>(std::forward<F>(fn));
+        {
+            std::lock_guard<std::mutex> lock(m_staMutex);
+            m_staTasks.push([promise, fnPtr]() {
+                try {
+                    if constexpr (std::is_void_v<Ret>) {
+                        (*fnPtr)();
+                        promise->set_value();
+                    } else {
+                        promise->set_value((*fnPtr)());
+                    }
+                } catch (...) {
+                    promise->set_exception(std::current_exception());
+                }
+            });
+        }
+        SetEvent(m_staWakeEvent);
+        return fut.get();
+    }
+
 private:
+    // Dedicated STA thread entry point. Creates the hidden window
+    // and runs a message loop for the browser's lifetime. All
+    // WebView2 calls are posted here via m_staTasks.
+    void staThreadProc();
+
     BrowserType m_type;
     json m_options;
     std::vector<std::shared_ptr<WebView2BrowserContext>> m_contexts;
@@ -1046,6 +1116,14 @@ private:
     // Hidden window for WebView2 host
     HWND m_hiddenWindow = nullptr;
     static LRESULT CALLBACK hiddenWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+    // Dedicated STA thread + message pump.
+    std::thread m_staThread;
+    std::mutex m_staMutex;
+    std::queue<std::function<void()>> m_staTasks;
+    HANDLE m_staWakeEvent = nullptr;   // manual-reset event
+    HANDLE m_staExitEvent = nullptr;   // manual-reset event
+    std::atomic<bool> m_staRunning{false};
 };
 
 // ============================================================================
@@ -1342,7 +1420,7 @@ std::future<bool> WebView2ElementHandle::scrollIntoViewIfNeeded() {
     });
 }
 
-std::future<bool> WebView2ElementHandle::check(const ClickOptions& options) {
+std::future<bool> WebView2ElementHandle::check(const ClickOptions& /*options*/) {
     return std::async(std::launch::async, [this]() -> bool {
         std::string script = "(function() { "
             "const el = document.querySelector('" + jsonEscape(m_selector) + "'); "
@@ -1355,7 +1433,7 @@ std::future<bool> WebView2ElementHandle::check(const ClickOptions& options) {
     });
 }
 
-std::future<bool> WebView2ElementHandle::uncheck(const ClickOptions& options) {
+std::future<bool> WebView2ElementHandle::uncheck(const ClickOptions& /*options*/) {
     return std::async(std::launch::async, [this]() -> bool {
         std::string script = "(function() { "
             "const el = document.querySelector('" + jsonEscape(m_selector) + "'); "
@@ -2116,7 +2194,7 @@ std::future<bool> WebView2Page::selectOption(const std::string& selector, const 
     });
 }
 
-std::future<bool> WebView2Page::check(const std::string& selector, const ClickOptions& options) {
+std::future<bool> WebView2Page::check(const std::string& selector, const ClickOptions& /*options*/) {
     return std::async(std::launch::async, [this, selector]() -> bool {
         std::string script = "(function() { "
             "const el = document.querySelector('" + jsonEscape(selector) + "'); "
@@ -2129,7 +2207,7 @@ std::future<bool> WebView2Page::check(const std::string& selector, const ClickOp
     });
 }
 
-std::future<bool> WebView2Page::uncheck(const std::string& selector, const ClickOptions& options) {
+std::future<bool> WebView2Page::uncheck(const std::string& selector, const ClickOptions& /*options*/) {
     return std::async(std::launch::async, [this, selector]() -> bool {
         std::string script = "(function() { "
             "const el = document.querySelector('" + jsonEscape(selector) + "'); "
@@ -2458,7 +2536,7 @@ std::future<bool> WebView2Page::setCookie(const json& cookie) {
     });
 }
 
-std::future<bool> WebView2Page::deleteCookie(const std::string& name, const std::string& url) {
+std::future<bool> WebView2Page::deleteCookie(const std::string& name, const std::string& /*url*/) {
     return std::async(std::launch::async, [this, name]() -> bool {
         std::string script = "(function() { "
             "document.cookie = '" + jsonEscape(name) + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; "
@@ -2468,7 +2546,7 @@ std::future<bool> WebView2Page::deleteCookie(const std::string& name, const std:
     });
 }
 
-std::future<json> WebView2Page::localStorage(const std::string& origin) {
+std::future<json> WebView2Page::localStorage(const std::string& /*origin*/) {
     return std::async(std::launch::async, [this]() -> json {
         std::string script = "(function() { "
             "const result = {}; "
@@ -2482,7 +2560,7 @@ std::future<json> WebView2Page::localStorage(const std::string& origin) {
     });
 }
 
-std::future<json> WebView2Page::sessionStorage(const std::string& origin) {
+std::future<json> WebView2Page::sessionStorage(const std::string& /*origin*/) {
     return std::async(std::launch::async, [this]() -> json {
         std::string script = "(function() { "
             "const result = {}; "
@@ -2619,18 +2697,26 @@ std::future<std::shared_ptr<Page>> WebView2BrowserContext::newPage() {
         auto page = std::make_shared<WebView2Page>(shared_from_this());
 
         // Create a real WebView2 host backed by ICoreWebView2*.
-        // The controller is parented to the browser's hidden window
-        // so the webview has a valid HWND to bind to.
+        // WebView2 requires the environment + controller to be
+        // created on the STA thread that owns the message pump,
+        // so the container initialization is marshalled to the
+        // browser's dedicated STA thread. The container's STA
+        // dispatcher is set so all subsequent WebView2 COM calls
+        // (ExecuteScript, Navigate, CapturePreview, ...) are also
+        // marshalled to that thread.
         if (m_browser) {
             auto container = std::make_shared<WebView2Container>();
-            if (container->initialize(static_cast<void*>(m_browser->hiddenWindow()))) {
-                page->setContainer(container);
-            } else {
-                // Container failed to initialize (e.g. WebView2 runtime
-                // unavailable). The page remains usable for script-only
-                // fallbacks, but real automation is unavailable.
-                page->setContainer(container);
-            }
+            // Marshal all container WebView2 calls to the STA thread.
+            container->setStaDispatcher([browser = m_browser](std::function<void()> task) {
+                browser->runOnStaThread(std::move(task));
+            });
+            HWND host = m_browser->hiddenWindow();
+            bool ok = m_browser->runOnStaThread([&]() -> bool {
+                return container->initialize(static_cast<void*>(host));
+            });
+            page->setContainer(container);
+            (void)ok; // container is attached regardless; real
+                      // automation is available only if ok.
         }
 
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -2648,7 +2734,7 @@ std::vector<std::shared_ptr<Page>> WebView2BrowserContext::pages() {
     return result;
 }
 
-std::future<std::shared_ptr<Page>> WebView2BrowserContext::newPage(const PageOptions& options) {
+std::future<std::shared_ptr<Page>> WebView2BrowserContext::newPage(const PageOptions& /*options*/) {
     return newPage();
 }
 
@@ -2787,6 +2873,15 @@ WebView2Browser::WebView2Browser(BrowserType type, const json& options)
 }
 
 WebView2Browser::~WebView2Browser() {
+    // Signal the STA thread to exit and join it.
+    if (m_staRunning) {
+        if (m_staExitEvent) SetEvent(m_staExitEvent);
+        if (m_staWakeEvent) SetEvent(m_staWakeEvent);
+        if (m_staThread.joinable()) m_staThread.join();
+        m_staRunning = false;
+    }
+    if (m_staWakeEvent) { CloseHandle(m_staWakeEvent); m_staWakeEvent = nullptr; }
+    if (m_staExitEvent) { CloseHandle(m_staExitEvent); m_staExitEvent = nullptr; }
     if (m_hiddenWindow) {
         DestroyWindow(m_hiddenWindow);
         m_hiddenWindow = nullptr;
@@ -2798,9 +2893,55 @@ LRESULT CALLBACK WebView2Browser::hiddenWindowProc(HWND hwnd, UINT msg, WPARAM w
 }
 
 bool WebView2Browser::launch() {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
 
-    // Create a hidden window for WebView2 hosting
+        if (m_staRunning) {
+            // Already launched.
+            return m_connected;
+        }
+
+        // Start the dedicated STA thread. It creates the hidden
+        // window and runs a message loop for the browser's
+        // lifetime. All WebView2 calls are marshalled to this
+        // thread.
+        m_staWakeEvent = CreateEventA(nullptr, TRUE, FALSE, nullptr);
+        m_staExitEvent = CreateEventA(nullptr, TRUE, FALSE, nullptr);
+        m_staRunning = true;
+        m_staThread = std::thread(&WebView2Browser::staThreadProc, this);
+    }
+
+    // Wait for the hidden window to be created on the STA
+    // thread. staThreadProc signals m_connected (under m_mutex)
+    // once the window exists. Do NOT hold m_mutex while
+    // waiting, or the STA thread cannot set m_connected.
+    auto start = std::chrono::steady_clock::now();
+    for (;;) {
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            if (m_connected) break;
+        }
+        if (std::chrono::steady_clock::now() - start > std::chrono::milliseconds(10000)) {
+            return false;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    // Create default context
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_defaultContext = std::make_shared<WebView2BrowserContext>(shared_from_this(), BrowserContextOptions());
+        m_contexts.push_back(m_defaultContext);
+    }
+
+    return true;
+}
+
+void WebView2Browser::staThreadProc() {
+    // WebView2 requires a single-threaded apartment.
+    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
+    // Create the hidden host window on this (STA) thread.
     WNDCLASSA wc = {};
     wc.lpfnWndProc = hiddenWindowProc;
     wc.hInstance = GetModuleHandle(nullptr);
@@ -2811,18 +2952,60 @@ bool WebView2Browser::launch() {
         WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1280, 720,
         nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 
-    if (!m_hiddenWindow) {
-        return false;
+    if (m_hiddenWindow) {
+        ShowWindow(m_hiddenWindow, SW_HIDE);
     }
 
-    ShowWindow(m_hiddenWindow, SW_HIDE);
+    // Signal that the window is ready.
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_connected = (m_hiddenWindow != nullptr);
+    }
 
-    // Create default context
-    m_defaultContext = std::make_shared<WebView2BrowserContext>(shared_from_this(), BrowserContextOptions());
-    m_contexts.push_back(m_defaultContext);
-    m_connected = true;
+    // Message loop for the browser's lifetime. Service posted
+    // tasks and window messages. Exit when m_staExitEvent is
+    // signaled.
+    HANDLE waitHandles[2] = { m_staWakeEvent, m_staExitEvent };
+    bool running = true;
+    while (running) {
+        // Drain any posted tasks first.
+        for (;;) {
+            std::function<void()> task;
+            {
+                std::lock_guard<std::mutex> lock(m_staMutex);
+                if (m_staTasks.empty()) break;
+                task = std::move(m_staTasks.front());
+                m_staTasks.pop();
+            }
+            if (task) task();
+        }
 
-    return true;
+        // Wait for a wake signal, an exit signal, or a window
+        // message. MsgWaitForMultipleObjects wakes on message
+        // arrival so the loop stays responsive.
+        DWORD r = MsgWaitForMultipleObjects(2, waitHandles, FALSE, 100, QS_ALLINPUT);
+        if (r == WAIT_OBJECT_0) {
+            // Wake event: tasks were posted (drained above).
+            ResetEvent(m_staWakeEvent);
+        } else if (r == WAIT_OBJECT_0 + 1) {
+            // Exit event.
+            running = false;
+        } else if (r == WAIT_OBJECT_0 + 2) {
+            // Window messages pending; drain them.
+            MSG msg;
+            while (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
+            }
+        }
+    }
+
+    // Cleanup.
+    if (m_hiddenWindow) {
+        DestroyWindow(m_hiddenWindow);
+        m_hiddenWindow = nullptr;
+    }
+    CoUninitialize();
 }
 
 std::future<std::shared_ptr<BrowserContext>> WebView2Browser::newContext(const BrowserContextOptions& options) {
@@ -2860,6 +3043,13 @@ std::future<bool> WebView2Browser::close() {
         m_contexts.clear();
         m_defaultContext.reset();
         m_connected = false;
+        // Signal the STA thread to exit and join it.
+        if (m_staRunning) {
+            if (m_staExitEvent) SetEvent(m_staExitEvent);
+            if (m_staWakeEvent) SetEvent(m_staWakeEvent);
+            if (m_staThread.joinable()) m_staThread.join();
+            m_staRunning = false;
+        }
         if (m_hiddenWindow) {
             DestroyWindow(m_hiddenWindow);
             m_hiddenWindow = nullptr;
@@ -3010,7 +3200,7 @@ std::future<SuiteExecutionResult> TestRunnerImpl::runSuite(const TestSuite& suit
         // Create browser context for the suite
         auto browser = m_playwright->launch(BrowserType::WEBVIEW2, json()).get();
         if (!browser) {
-            result.errors = suite.tests.size();
+            result.errors = static_cast<int>(suite.tests.size());
             result.totalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - start);
             return result;
@@ -3364,7 +3554,7 @@ std::string BrowserTestAgentImpl::buildTestPrompt(const BrowserTestTask& task) {
     return prompt.str();
 }
 
-std::vector<TestStep> BrowserTestAgentImpl::parseTestSteps(const std::string& agentResponse) {
+std::vector<TestStep> BrowserTestAgentImpl::parseTestSteps(const std::string& /*agentResponse*/) {
     std::vector<TestStep> steps;
     // In a full implementation, this would parse the LLM response
     // and convert it to executable test steps

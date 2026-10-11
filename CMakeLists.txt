@@ -2146,6 +2146,12 @@ message(STATUS "RawrXD-ModelLoader configured successfully with Clang C++20")
 # Stub test to verify WinMain can be reached at all (Windows-only source)
 if(WIN32)
     add_executable(stub_test WIN32 src/stub_main.cpp)
+    # std::ofstream can throw; without /EHsc MSVC warns C4530 under /W4 /WX.
+    if(MSVC)
+        target_compile_options(stub_test PRIVATE /EHsc)
+    else()
+        target_compile_options(stub_test PRIVATE -fexceptions)
+    endif()
 endif()
 
 # Qt-dependent target: test_ide_main (requires Qt6)
@@ -2404,6 +2410,13 @@ set_target_properties(quant_scalar_smoke PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
     AUTOMOC OFF
 )
+# The smoke test uses try/catch around the quant kernels; without /EHsc MSVC
+# warns C4530 (and /W4 /WX turns it into an error).
+if(MSVC)
+    target_compile_options(quant_scalar_smoke PRIVATE /EHsc)
+else()
+    target_compile_options(quant_scalar_smoke PRIVATE -fexceptions)
+endif()
 
 # Qt-dependent target: quant_correctness_tests (requires Qt6)
 if(Qt6_FOUND)

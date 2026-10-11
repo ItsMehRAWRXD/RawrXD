@@ -38,7 +38,7 @@ static std::vector<uint8_t> quantize_generic_bits(const std::vector<float>& in, 
     return out;
 }
 
-static float unpack_at(const uint8_t* data, int n, int idx, int bits, float scale) {
+static float unpack_at(const uint8_t* data, int /*n*/, int idx, int bits, float scale) {
     int bitPos = idx * bits;
     int byteIdx = bitPos / 8;
     int off = bitPos % 8;
