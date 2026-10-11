@@ -205,6 +205,55 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         program_.push_back(in);
     }
 
+    // ---- 2b. env-gated execution-graph provenance dump (no semantics change) ----
+    // RR_GRAPH_TRACE=1 prints every compiled instruction (block, kind, operands,
+    // published output) and resolves each named operand to its producing op, so
+    // producer/consumer defects (e.g. a residual addend that no op publishes)
+    // are visible before inference. Purely diagnostic; never alters execution.
+    if (std::getenv("RR_GRAPH_TRACE")) {
+        auto kindName = [&](OpKind k) -> const char* {
+            switch (k) {
+                case OpKind::EmbeddingLookup: return "Embed";
+                case OpKind::RmsNorm:         return "RmsNorm";
+                case OpKind::Linear:          return "Linear";
+                case OpKind::Attention:       return "Attention";
+                case OpKind::MlaDecompress:   return "MlaDec";
+                case OpKind::Router:          return "Router";
+                case OpKind::TopK:            return "TopK";
+                case OpKind::MoEExecute:      return "MoE";
+                case OpKind::ResidualAdd:     return "ResidualAdd";
+                case OpKind::Publish:         return "Publish";
+                case OpKind::SwiGLU:          return "SwiGLU";
+                case OpKind::LmHead:          return "LmHead";
+                case OpKind::SsmScan:         return "SsmScan";
+                default:                      return "Other";
+            }
+        };
+        std::unordered_map<std::string, int> producer;
+        for (size_t i = 0; i < program_.size(); ++i) {
+            const auto& in = program_[i];
+            if (!in.outName.empty()) producer.emplace(in.outName, (int)i);
+        }
+        std::fprintf(stderr, "[graph] %zu ops; producer map resolve:\n", program_.size());
+        for (size_t i = 0; i < program_.size(); ++i) {
+            const auto& in = program_[i];
+            char pa[48] = "-", pb[48] = "-";
+            if (!in.aName.empty() && in.aName[0] != '<') {
+                auto it = producer.find(in.aName);
+                if (it != producer.end()) std::snprintf(pa, sizeof(pa), "=op%d", it->second);
+            }
+            if (!in.bName.empty() && in.bName[0] != '<') {
+                auto bBar = in.bName.find('|');
+                std::string bKey = (bBar == std::string::npos) ? in.bName : in.bName.substr(0, bBar);
+                auto it = producer.find(bKey);
+                if (it != producer.end()) std::snprintf(pb, sizeof(pb), "=op%d", it->second);
+            }
+            std::fprintf(stderr, "[op%-4d blk%-3d %-11s a=%-16s%-8s b=%-26s%-8s out=%s]\n",
+                         (int)i, (int)in.block, kindName(in.op),
+                         in.aName.c_str(), pa, in.bName.c_str(), pb, in.outName.c_str());
+        }
+    }
+
     // ---- 3. bind kernels, fail-closed ----
     stats_.ops_total = program_.size();
     for (const auto& in : program_) {
@@ -340,6 +389,12 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
             blk[257] = (float)bsum;
         }
         y.assign(n_out, 0.0f);
+        if (std::getenv("QUANT_TRACE")) {
+            std::fprintf(stderr, "[quant] w=%s kind=%d n_in=%zu n_out=%zu n_blk=%zu rb=%zu wbytes=%zu need=%zu\n",
+                         w.name.c_str(), kind, n_in, n_out, n_blk, rb, w.bytes,
+                         rb * n_out);
+            std::fflush(stderr);
+        }
         const bool gpu = QuantDot::DotBlocked(kind, w.data, w.bytes,
                                               x.data(), n_in, y.data(), n_out, cpu,
                                               q8.data(), q8.size() * sizeof(float));
@@ -430,6 +485,16 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     }
     const size_t H = (size_t)spec_.heads;
     if (H == 0) { err = "attention: head_count 0"; return false; }
+    // Input geometry dump before any arithmetic touches them. This is the
+    // instrumentation that locates the faulting access: if a buffer length or
+    // per-head width is inconsistent, the fault follows from it directly.
+    if (std::getenv("ATTN_TRACE")) {
+        std::fprintf(stderr, "[attn] block=%d pos=%zu q=%zu k=%zu v=%zu H=%zu hk=%zu kl=%zu vl=%zu kvcache=%zu,%zu\n",
+                     (int)in.block, position, q.size(), k.size(), v.size(),
+                     H, (size_t)spec_.heads_kv, (size_t)spec_.key_length,
+                     (size_t)spec_.value_length,
+                     kv_k_[in.block].size(), kv_v_[in.block].size());
+    }
     if (in.block < 0 || (size_t)in.block >= kv_k_.size()) {
         err = "attention: bad block";
         return false;
@@ -529,9 +594,46 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         }
     };
 
+    // ---- Geometry validation (fail closed on inconsistency) ----
+    // The Q/K/V widths must agree with the head counts actually in use. An
+    // inconsistency here is exactly what previously walked 31*128 bytes into a
+    // 256-element K buffer.
+    if (H == 0 || hk == 0 || qPerHead == 0 || kPerHead == 0 || vPerHead == 0) {
+        err = "attention: degenerate head geometry";
+        return false;
+    }
+    if (H % hk != 0) {
+        err = "attention: H not divisible by hk (H=" + std::to_string(H) +
+              " hk=" + std::to_string(hk) + ")";
+        return false;
+    }
+    if (qWidth != H * qPerHead) {
+        err = "attention: q size mismatch (" + std::to_string(qWidth) +
+              " != " + std::to_string(H * qPerHead) + ")";
+        return false;
+    }
+    if (kWidth != hk * kPerHead) {
+        err = "attention: k size mismatch (" + std::to_string(kWidth) +
+              " != " + std::to_string(hk * kPerHead) + ")";
+        return false;
+    }
+    if (vWidth != hk * vPerHead) {
+        err = "attention: v size mismatch (" + std::to_string(vWidth) +
+              " != " + std::to_string(hk * vPerHead) + ")";
+        return false;
+    }
+    if (std::getenv("ATTN_TRACE")) {
+        std::fprintf(stderr,
+                     "[attn-geom] block=%d GQA: H=%zu hk=%zu group=%zu qPerHead=%zu kPerHead=%zu vPerHead=%zu\n",
+                     (int)in.block, H, hk, H / hk, qPerHead, kPerHead, vPerHead);
+    }
+
     std::vector<float> qr = q, kr = k;
+    // RoPE is applied to the QUERY heads and to the KV heads. The KV call must
+    // iterate hk, not H: with H=32 and a 256-element K buffer, looping 32 heads
+    // at stride kPerHead reads 31*128 bytes past the end.
     rope(qr, H, qPerHead, ropeLen, qRopeOff);
-    rope(kr, H, kPerHead, ropeLen, kRopeOff);
+    rope(kr, hk, kPerHead, ropeLen, kRopeOff);
 
     // Append to this layer's KV cache.
     auto& K = kv_k_[(size_t)in.block];
@@ -1051,8 +1153,19 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {
         const auto& in = program_[pc];
+        if (std::getenv("RR_TRACE_OPS")) {
+            std::fprintf(stderr, "  [op] pc=%zu kind=%d block=%d a='%s' b='%s' out='%s'\n",
+                         pc, (int)in.op, (int)in.block,
+                         in.aName.c_str(), in.bName.c_str(), in.outName.c_str());
+        }
         const std::vector<float>& xi = resolveIn(in);
     switch (in.op) {
+            if (std::getenv("RR_OP_TRACE")) {
+                std::fprintf(stderr, "  [op] %-16s blk=%3d a='%s' b='%s' out='%s' bSlot=%d\n",
+                             OpKindName(in.op), in.block, in.aName.c_str(),
+                             in.bName.c_str(), in.outName.c_str(), (int)in.b);
+                std::fflush(stderr);
+            }
             case OpKind::EmbeddingLookup: {
                 const TensorRec& emb = tensors_[(size_t)embSlot];
                 const size_t n_in = (size_t)emb.dims[0];
@@ -1137,7 +1250,16 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::Attention: {
                 std::vector<float> y;
                 std::string e;
+                if (std::getenv("ATTN_TRACE")) {
+                    std::fprintf(stderr, "[attn-enter] block=%d pos=%zu aName='%s' hidden_=%zu\n",
+                                 (int)in.block, position, in.aName.c_str(), hidden_.size());
+                }
                 std::vector<float> qv = arena("q"), kv = arena("k"), vv = arena("v");
+                if (std::getenv("ATTN_TRACE")) {
+                    std::fprintf(stderr, "[attn-inputs] qv=%zu kv=%zu vv=%zu kvcache=%zu,%zu\n",
+                                 qv.size(), kv.size(), vv.size(),
+                                 kv_k_[in.block].size(), kv_v_[in.block].size());
+                }
                 if (qv.empty()) qv = hidden_;
                 if (kv.empty()) kv = qv;
                 if (vv.empty()) vv = kv;
@@ -1256,7 +1378,17 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::LmHead: {
                 std::vector<float> y;
                 std::string e;
+                if (std::getenv("RR_TRACE_TOKEN")) {
+                    std::fprintf(stderr, "  [lmhead] entering LmHead with slots=%zu hidden=%zu\n",
+                                 program_.size(), hidden_.size());
+                    std::fflush(stderr);
+                }
                 if (!OpLinear(in.b, hidden_, y, e)) { last_error_ = e; return false; }
+                if (std::getenv("RR_TRACE_TOKEN")) {
+                    std::fprintf(stderr, "  [lmhead] OK logits=%zu top=%.4f\n", y.size(),
+                                 y.empty() ? 0.0f : *std::max_element(y.begin(), y.end()));
+                    std::fflush(stderr);
+                }
                 logits_ = y;
                 break;
             }
@@ -1278,6 +1410,29 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 last_error_ = "unhandled op";
                 return false;
         }   // switch over program_ ops
+
+        // ---- env-gated first-non-finite tracer (no semantics change) ----
+        // RR_CHECK_FINITE=1 aborts at the FIRST op whose FP32 output is NaN/Inf,
+        // reporting block/pc/op/name/index/value so the real numerical defect is
+        // localised instead of its downstream logits symptom. Diagnostic only.
+        if (std::getenv("RR_CHECK_FINITE")) {
+            auto chk = [&](const char* tag, const std::vector<float>& v) {
+                for (size_t i = 0; i < v.size(); ++i) {
+                    if (!std::isfinite(v[i])) {
+                        std::fprintf(stderr,
+                            "[FIRST_NONFINITE] block=%d pc=%d op=%d name=%s(%s) index=%zu value=%g size=%zu\n",
+                            (int)in.block, (int)pc, (int)in.op, in.outName.c_str(), tag, i, v[i], v.size());
+                        std::fflush(stderr);
+                        std::abort();
+                    }
+                }
+            };
+            chk("hidden", hidden_);
+            if (!in.outName.empty() && in.outName[0] != '<') {
+                auto it = act.find(in.outName);
+                if (it != act.end()) chk("arena", it->second);
+            }
+        }
     }
 
     if (logits_.empty()) { last_error_ = "no logits produced"; return false; }

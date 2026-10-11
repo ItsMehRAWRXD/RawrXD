@@ -64,13 +64,26 @@ bool DotBlocked(int kind,
         return false;
     }
 
+    // The interleaved Q8_K activation the reference CpuDot consumes. The GPU
+    // path AND the CPU reference must consume the SAME quantised activation, so
+    // both read q8_interleaved - never the raw float x. (Layout: per 256 values
+    // d, qs[256], bsums[16] = 273 floats.)
+    const size_t n_blocks = n_in / 256;
+    const size_t need_q8 = n_blocks * 273 * sizeof(float);
+    const bool q8ok = q8_interleaved && q8_bytes >= need_q8;
+
     // The caller wants the CPU path (parity harness).
     if (g_force_cpu) {
+        if (!q8ok) {
+            g_receipt.used_gpu = false;
+            g_receipt.fallback_reason = "force_cpu: q8 activation missing";
+            return false;
+        }
         for (size_t j = 0; j < n_out; ++j) {
             const uint8_t* row =
-                static_cast<const uint8_t*>(wBytes) + j * (n_in / 256) *
+                static_cast<const uint8_t*>(wBytes) + j * n_blocks *
                 (kind == 0 ? 144u : 210u);
-            y[j] = cpu(row, x, j);
+            y[j] = cpu(row, q8_interleaved, j);
         }
     g_receipt.used_gpu = false;
         g_receipt.cpu_rows = n_out;
@@ -80,8 +93,7 @@ bool DotBlocked(int kind,
 
     // GPU path. The packed kernel is proven; a dispatch failure is reported.
     VulkanCompute& gpu = Gpu();
-    const size_t n_blocks = n_in / 256;
-    const bool gpuOk = q8_interleaved && q8_bytes >= n_blocks * 273 * sizeof(float)
+    const bool gpuOk = q8ok
         ? gpu.ExecuteQuantDot(wBytes, wBytesCount,
                               q8_interleaved, q8_bytes,
                               y, n_out * sizeof(float),
@@ -94,11 +106,16 @@ bool DotBlocked(int kind,
     }
 
     // GPU unavailable: use the CPU fallback so the caller still gets real math.
+    if (!q8ok) {
+        g_receipt.used_gpu = false;
+        g_receipt.fallback_reason = "cpu fallback: q8 activation missing";
+        return false;
+    }
     for (size_t j = 0; j < n_out; ++j) {
         const uint8_t* row =
-            static_cast<const uint8_t*>(wBytes) + j * (n_in / 256) *
+            static_cast<const uint8_t*>(wBytes) + j * n_blocks *
             (kind == 0 ? 144u : 210u);
-        y[j] = cpu(row, x, j);
+        y[j] = cpu(row, q8_interleaved, j);
     }
     g_receipt.used_gpu = false;
     g_receipt.cpu_rows = n_out;
