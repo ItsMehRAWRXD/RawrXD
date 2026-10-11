@@ -1,5 +1,5 @@
 #include "streaming_gguf_loader.h"
-#include "model_loader/GGUFConstants.hpp"
+#include "../model_loader/GGUFConstants.hpp"
 #include "utils/Diagnostics.hpp"
 #include <algorithm>
 #include <cstring>
