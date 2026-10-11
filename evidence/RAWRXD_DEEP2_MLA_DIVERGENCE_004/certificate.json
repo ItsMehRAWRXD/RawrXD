@@ -1,0 +1,27 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_MLA_DIVERGENCE_004",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "purpose": "Fix the first divergent operation (MlaDecompress) and record the next defect that limits output quality.",
+  "root_cause_found": "MlaDecompress silently received the wrong activation. The graph emitted its kv_a_mqa WEIGHT name in the `a` slot, which is a weight slot for this op. resolveIn could not resolve a weight name in the activation arena, so it fell back to the running hidden vector - which by that point was `q` (3072 wide) rather than attn_norm (2048). Measured proof: dumped the op's input and got n=3072 L2=98.73 where attn_norm is n=2048 L2=27.84. The latent produced from it had cosine 0.028 against ground truth, and every downstream block diverged.",
+  "fix_applied": [
+    "universal_gguf.cpp: the MlaDecompress b slot now carries \"<weight>|<activation>\" so the activation the op needs is explicit.",
+    "runtime_graph_executor.cpp: nameSlot strips the pipe tail before resolving the weight slot, OpMlaDecompress splits the pipe to find the real latent-norm weight, and the dispatch resolves the activation from the arena instead of falling back to hidden_.",
+    "Reconstructed src/deep2/quant_dot_dispatch.{hpp,cpp}, which had been lost from the working tree. Honest dispatch: GPU-first through VulkanCompute::ExecuteQuantDot, CPU fallback through the caller's CpuDot, with a Receipt reporting which path actually ran.",
+    "OpLinear now builds a real Q8_K activation in the interleaved layout (d, qs[256], bsums[16] per block) so the GPU kernel and the CPU reference dot against an identical activation. Without this the parity gate measures activation quantisation error rather than kernel equivalence."
+  ],
+  "verified_after_fix": {
+    "mla_input_resolved": "arena_hit=1, mlaIn=2048 (was 3072)",
+    "harness_gates": "18/18 PASS",
+    "cmake_build": "0 diagnostics"
+  },
+  "remaining_defect": {
+    "symptom": "argmax is constant across positions (21632 at positions 0-3) and generated text degenerates into repeats ('Carth Carth...'). Real English appears, so signal is now reaching the output.",
+    "next_candidate": "Because argmax is constant while logits clearly vary per position, the most likely cause is the attention output not depending on the token, or a later MoE/residual defect. Next step is to dump per-position attention output and MoE output and find the first that stops varying with position."
+  },
+  "not_claimed": [
+    "Reference parity with llama.cpp.",
+    "Coherent generation.",
+    "Any TPS measurement."
+  ]
+}

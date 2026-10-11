@@ -541,14 +541,20 @@ void DetectArch(ModelSpec& s, const std::vector<TensorRec>& tensors) {
     if (a == "nemotron_h" || a == "nemotron_h_moe") { s.kind = ArchKind::SsmHybrid; return; }
     if (a == "qwen3next") { s.kind = ArchKind::Qwen3Next; return; }
 
-    // SSM-driven hybrids may expose the same decoder graph plus ssm_* tensors.
+    // SSM-driven hybrids also expose the standard decoder tensors (attention on
+    // some blocks, MoE elsewhere) alongside the ssm_* set, so this only records
+    // the family. BuildGraph emits the matching per-block primitives.
+    //
+    // The previous branch returned here after pushing "Deep2 has no SSM scan
+    // primitive yet". That note is stale: Op::SsmScan and Executor::OpSsmScan
+    // now exist, so the SSM graph is built and executed.
     if (hasAny(".ssm_in.weight")) {
-        s.kind = (s.expert_count > 0) ? ArchKind::SsmHybrid : ArchKind::SsmHybrid;
-        s.notes.push_back("ssm tensors present; Deep2 has no SSM scan primitive yet");
-        return;
+        s.kind = ArchKind::SsmHybrid;
+    } else if (s.expert_count > 0) {
+        s.kind = ArchKind::MoeOnly;
+    } else {
+        s.kind = ArchKind::LlamaLike;
     }
-    if (s.expert_count > 0) { s.kind = ArchKind::MoeOnly; return; }
-    s.kind = ArchKind::LlamaLike;
 }
 
 void FillSpec(ModelSpec& s, const std::map<std::string, std::string>& m) {
@@ -660,18 +666,17 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         }
 
         // ---- Mamba2 selective scan (nemotron_h, qwen3-next) ----
-        // The SSM is the ONLY missing primitive for these families. It is not
-        // an optimisation of an attention kernel: SSMs have no attention-style
-        // parallel form to fall back to, so the block either has a real scan or
-        // the model cannot run. The scan consumes the model's own SSM tensors,
-        // so no data is invented here.
-        if (s.kind == ArchKind::SsmHybrid || s.kind == ArchKind::Qwen3Next) {
+        // Iterate over decoder blocks: some blocks carry the Mamba2 mixer
+        // (blkN.ssm_in.weight and friends), the rest are attention. Emitting an
+        // SSM scan for a block with no SSM tensors produced an op with an empty
+        // weight name, which then failed at runtime as "linear: no weight".
+        if (const std::string ssmIn = name(Role::SsmIn); !ssmIn.empty()) {
             GraphOp o;
             o.op = Op::SsmScan;
             o.block = (int32_t)b;
             o.a = "attn_norm";              // input to the scan
-            o.b = name(Role::SsmIn);         // in projection
-            o.c = name(Role::SsmConv1dW);    // causal depthwise conv weights
+            o.b = ssmIn;                    // in projection
+            o.c = name(Role::SsmConv1dW);   // causal depthwise conv weights
             o.out = "ssm_out";
             // Companion SSM tensors, resolved by role at bind time.
             o.detail = "A=" + name(Role::SsmA) +
@@ -699,12 +704,24 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 o.a = "attn_norm"; o.b = name(Role::AttnQ); o.out = "q";
                 g.ops.push_back(o);
             }
-            // kv_a_mqa -> (norm) -> kv_b -> MlaDecompress
+            // kv_a_mqa -> (latent norm) -> kv_b -> MlaDecompress.
+            //
+            // Slot convention, matching OpMlaDecompress:
+            //   a = attn_kv_a_mqa weight
+            //   b = attn_kv_a_norm weight
+            //   c = attn_kv_b weight
+            // The activation this op consumes is carried in o.b so the
+            // executor can resolve it from the arena. resolveIn only resolves
+            // real arena names, and `a` is a weight name here, so leaving the
+            // activation implicit made resolveIn fall back to the running
+            // hidden vector - which at this point is `q` (3072 wide) rather
+            // than attn_norm (2048). That produced a latent with cosine 0.028
+            // against ground truth, and every later block diverged.
             {
                 GraphOp o;
                 o.op = Op::MlaDecompress; o.block = (int32_t)b;
                 o.a = name(Role::AttnKvAMqa);
-                o.b = name(Role::AttnKNorm);
+                o.b = name(Role::AttnKNorm) + "|attn_norm";
                 o.c = name(Role::AttnKvB);
                 o.out = "kv";
                 g.ops.push_back(o);

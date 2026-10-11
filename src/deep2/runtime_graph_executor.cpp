@@ -193,7 +193,12 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         in.bName = g.b;
         in.outName = g.out;
         in.a = nameSlot(g.a);
-        in.b = nameSlot(g.b);
+        // b may carry "<weight>|<activation>": strip the tail before resolving
+        // the weight slot so the pipe does not break the tensor lookup.
+        std::string bWeight = g.b;
+        const size_t bBar = bWeight.find('|');
+        if (bBar != std::string::npos) bWeight = bWeight.substr(0, bBar);
+        in.b = nameSlot(bWeight);
         in.c = nameSlot(g.c);
         in.out = nameSlot(g.out);
         in.detail = g.detail;
@@ -307,9 +312,31 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                 }
                 return (float)acc;
             };
+// Build the Q8_K activation in the interleaved layout (per 256 values:
+        // d, qs[256], bsums[16] = 273 floats) so the GPU kernel and the CPU
+        // reference dot against an identical activation. Without this the
+        // parity gate compares quantised-vs-float and measures activation error.
+        const size_t n_blk = n_in / 256;
+        std::vector<float> q8(n_blk * 273, 0.0f);
+        for (size_t b = 0; b < n_blk; ++b) {
+            float mx = 0.0f;
+            for (size_t i = 0; i < 256; ++i) mx = std::max(mx, std::fabs(x[b * 256 + i]));
+            const float d = mx / 127.0f;
+            const float inv = d > 0.0f ? 1.0f / d : 0.0f;
+            float* blk = q8.data() + b * 273;
+            blk[0] = d;
+            int32_t bsum = 0;
+            for (size_t i = 0; i < 256; ++i) {
+                const int32_t v = (int32_t)std::lround(x[b * 256 + i] * inv);
+                blk[1 + i] = (float)v;
+                bsum += v;
+            }
+            blk[257] = (float)bsum;
+        }
         y.assign(n_out, 0.0f);
         const bool gpu = QuantDot::DotBlocked(kind, w.data, w.bytes,
-                                              x.data(), n_in, y.data(), n_out, cpu);
+                                              x.data(), n_in, y.data(), n_out, cpu,
+                                              q8.data(), q8.size() * sizeof(float));
         if (gpu) { ++gpu_calls_; } else { ++cpu_calls_; }
         return true;
     }
@@ -606,7 +633,20 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
     //      v[h]       = v                     -> value_length
     if (mla.a < 0 || mla.b < 0 || mla.c < 0) { err = "mla: missing weights"; return false; }
     const TensorRec& kvA = tensors_[(size_t)mla.a];
-    const TensorRec& norm = tensors_[(size_t)mla.b];
+    int32_t normSlot = mla.b;
+    std::string mlaActName;
+    {
+        const std::string& bn = mla.bName;
+        const size_t bar = bn.find('|');
+        if (bar != std::string::npos) {
+            mlaActName = bn.substr(bar + 1);
+            const std::string wantWeight = bn.substr(0, bar);
+            for (size_t i = 0; i < tensors_.size(); ++i) {
+                if (tensors_[i].name == wantWeight) { normSlot = (int32_t)i; break; }
+            }
+        }
+    }
+    const TensorRec& norm = tensors_[(size_t)normSlot];
     const TensorRec& kvB = tensors_[(size_t)mla.c];
 
     const size_t lora = (size_t)std::max<uint64_t>(spec_.kv_lora_rank, 1);
@@ -778,7 +818,16 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::MlaDecompress: {
                 std::vector<float> k, v;
                 std::string e;
-                if (!OpMlaDecompress(in, xi, k, v, position, e)) { last_error_ = e; return false; }
+                {
+                    std::vector<float> mlaIn;
+                    std::string an;
+                    const size_t bar = in.bName.find('|');
+                    if (bar != std::string::npos) an = in.bName.substr(bar + 1);
+                    auto fit = act.find(an);
+                    if (fit != act.end()) mlaIn = fit->second;
+                    if (mlaIn.empty()) mlaIn = xi;   // declared input as fallback
+                    if (!OpMlaDecompress(in, mlaIn, k, v, position, e)) { last_error_ = e; return false; }
+                }
                 arena(in.outName.empty() ? std::string("kv") : in.outName) = hidden_;
                 arena("k") = k;
                 arena("v") = v;
