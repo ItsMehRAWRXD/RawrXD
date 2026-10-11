@@ -1040,6 +1040,11 @@ bool VulkanCompute::EnsureQuantDotPipeline(const std::string& spirv_path) {
     VkDescriptorPoolCreateInfo dp{};
     dp.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     dp.maxSets = 256;
+    // FREE_DESCRIPTOR_SET_BIT is required for vkFreeDescriptorSets to be
+    // legal. Without it every vkFreeDescriptorSets call is undefined
+    // behaviour: the driver ignores it, the sets leak, and the pool runs
+    // dry after maxSets allocations (the crash at ~op 51).
+    dp.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     dp.poolSizeCount = 1;
     dp.pPoolSizes = &pool_size;
     if (vkCreateDescriptorPool(device_, &dp, nullptr, &quant_descriptor_pool_) != VK_SUCCESS) {
@@ -1145,25 +1150,47 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     auto it = shaders_.find("quantdot");
     if (it == shaders_.end() || !it->second.pipeline) return false;
 
-    // Upload the inputs. AllocateBuffer owns device memory; the wrappers do
-    // the staging copies. Per-call allocation is intentional: the GPU command
-    // queue is asynchronous, so reusing one scratch set means an earlier
-    // dispatch can still reference a buffer the current call is writing to.
-    // Fresh buffers per call are reclaimed in Cleanup() at process end.
+    // Upload the inputs. The QuantDot path is fully synchronous
+    // (ExecuteSingleTimeCommands waits on a fence; CopyBufferToHost is
+    // synchronous), so by the time this returns no pending GPU work references
+    // these buffers. Reuse ONE persistent 3-buffer scratch set (packed, q8,
+    // out) instead of allocating per call: the old per-call allocation grew
+    // allocated_buffers_ without bound (GPU OOM on sustained/autoregressive
+    // generation) and added a per-dispatch alloc/map/free cost. Each slot grows
+    // to the largest size seen and is then reused; a realloc only happens when a
+    // call needs a bigger buffer, which is bounded.
+    auto ensureScratch = [&](int slot, size_t bytes, uint32_t& idx) -> bool {
+        if (qd_scratch_idx_[slot] != 0xFFFFFFFFu && qd_scratch_cap_[slot] >= bytes) {
+            idx = qd_scratch_idx_[slot];
+            return true;
+        }
+        uint32_t ni = 0;
+        size_t nm = 0;
+        if (!AllocateBuffer(bytes, ni, nm)) return false;
+        qd_scratch_idx_[slot] = ni;
+        qd_scratch_cap_[slot] = bytes;
+        idx = ni;
+        return true;
+    };
     uint32_t p_idx = 0, q_idx = 0, o_idx = 0;
-    size_t p_mem = 0, q_mem = 0, o_mem = 0;
-    if (!AllocateBuffer(packed_bytes, p_idx, p_mem) ||
-        !AllocateBuffer(q8_bytes, q_idx, q_mem) ||
-        !AllocateBuffer(out_bytes, o_idx, o_mem)) {
+    if (!ensureScratch(0, packed_bytes, p_idx) ||
+        !ensureScratch(1, q8_bytes, q_idx) ||
+        !ensureScratch(2, out_bytes, o_idx)) {
         std::cerr << "Quant-dot buffer allocation failed" << std::endl;
         return false;
     }
 
+    if (std::getenv("QUANT_DBG")) {
+        std::cerr << "[qdot] enter packed=" << packed_bytes << " q8=" << q8_bytes
+                  << " out=" << out_bytes << " n_out=" << n_out << " n_in=" << n_in
+                  << " n_blocks=" << n_blocks << std::endl;
+    }
     if (!CopyHostToBuffer(const_cast<void*>(packed), p_idx, packed_bytes) ||
         !CopyHostToBuffer(const_cast<void*>(q8_interleaved), q_idx, q8_bytes)) {
         std::cerr << "Quant-dot upload failed" << std::endl;
         return false;
     }
+    if (std::getenv("QUANT_DBG")) std::cerr << "[qdot] uploaded p_idx=" << p_idx << " q_idx=" << q_idx << std::endl;
 
     VkBuffer bufs[3] = {
         allocated_buffers_[p_idx].first,
@@ -1179,8 +1206,19 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
 
     VkDescriptorSet ds = VK_NULL_HANDLE;
     if (vkAllocateDescriptorSets(device_, &alloc, &ds) != VK_SUCCESS) {
-        std::cerr << "Quant-dot descriptor allocation failed" << std::endl;
+        ++quant_sets_failed_;
+        std::cerr << "Quant-dot descriptor allocation failed (allocated=" << quant_sets_allocated_
+                  << " in_flight=" << quant_sets_in_flight_
+                  << " reclaimed=" << quant_sets_reclaimed_
+                  << " peak=" << quant_sets_peak_
+                  << " maxSets=256)" << std::endl;
         return false;
+    }
+    ++quant_sets_allocated_;
+    ++quant_sets_in_flight_;
+    if (quant_sets_in_flight_ > quant_sets_peak_) quant_sets_peak_ = quant_sets_in_flight_;
+    if (std::getenv("QUANT_DBG")) {
+        std::cerr << "[qdot] descriptor allocated ds=" << ds << " count=" << quant_sets_allocated_ << std::endl;
     }
 
     VkDescriptorBufferInfo infos[3];
@@ -1200,13 +1238,15 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
         writes[i].pBufferInfo = &infos[i];
     }
     vkUpdateDescriptorSets(device_, 3, writes, 0, nullptr);
+    if (std::getenv("QUANT_DBG")) std::cerr << "[qdot] descriptors updated" << std::endl;
 
     uint32_t pc[4] = { (uint32_t)n_out, (uint32_t)n_in,
                         (uint32_t)n_blocks, (uint32_t)kind };
 
     bool ok = ExecuteSingleTimeCommands([&](VkCommandBuffer cmd) {
+        if (std::getenv("QUANT_DBG")) std::cerr << "[qdot] recording dispatch" << std::endl;
         vkCmdPushConstants(cmd, it->second.layout, VK_SHADER_STAGE_COMPUTE_BIT,
-                           0, sizeof(pc), pc);
+                            0, sizeof(pc), pc);
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, it->second.pipeline);
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
                                 it->second.layout, 0, 1, &ds, 0, nullptr);
@@ -1222,8 +1262,17 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
             ok = false;
         }
     }
+    if (std::getenv("QUANT_DBG")) {
+        std::cerr << "[qdot] dispatch complete ok=" << (int)ok
+                  << " fence/submit done" << std::endl;
+    }
 
+    // Safe to reclaim here: ExecuteSingleTimeCommands submitted with a fence
+    // and waited for it, and CopyBufferToHost is likewise synchronous, so no
+    // pending GPU work references this set any more.
     vkFreeDescriptorSets(device_, quant_descriptor_pool_, 1, &ds);
+    if (quant_sets_in_flight_ > 0) --quant_sets_in_flight_;
+    ++quant_sets_reclaimed_;
     return ok;
 }
 
