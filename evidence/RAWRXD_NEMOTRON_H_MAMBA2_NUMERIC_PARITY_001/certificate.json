@@ -1,0 +1,123 @@
+{
+  "certificate_id": "RAWRXD_NEMOTRON_H_MAMBA2_NUMERIC_PARITY_001",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "what_was_proven": "A Nemotron-H Mamba2 SSM implementation produces outputs and persistent state that match ggml's ggml_ssm_conv and ggml_ssm_scan to floating-point precision. ggml is llama.cpp's independently maintained reference, and it is linked in as a static library rather than reimplemented, so this is genuine independent parity rather than a self-comparison.",
+  "reference": {
+    "implementation": "ggml_ssm_conv + ggml_ssm_scan",
+    "library": "F:\\rawrxd\\build_ggml_profiler\\src\\Release\\ggml.lib",
+    "threads": 1,
+    "note": "The same finite inputs are fed to both paths from a single shared Stage object, so any difference is attributable to the arithmetic, not to differing inputs."
+  },
+  "geometry": {
+    "source": "RAWRXD_NEMOTRON_GEOMETRY_001, derived from the GGUF",
+    "d_inner": 4096,
+    "heads": 64,
+    "head_dim": 64,
+    "d_state": 128,
+    "groups": 8,
+    "group_state": 1024,
+    "conv_dim": 6144,
+    "conv_k": 4,
+    "ssm_in_rows": 10304,
+    "hidden": 2688
+  },
+  "layouts_that_matter": {
+    "ssm_in_projection": {
+      "rows": 10304,
+      "z": "[0,4096)",
+      "x": "[4096,8192)",
+      "B": "[8192,9216)",
+      "C": "[9216,10240)",
+      "dt": "[10240,10304)"
+    },
+    "conv_io": {
+      "input": "channel-major: conv_x[channel * (d_conv-1+n_t) + window]",
+      "output": "token-major:    conv_out[token * d_inner + channel]",
+      "note": "The input and output have different layouts. ggml's sx is {d_conv-1+n_t, d_inner} while its dst is {d_inner, n_t}. Assuming both were the same was a real bug found by this test."
+    },
+    "conv_segments": "x[0,4096) B[4096,5120) C[5120,6144), total 6144",
+    "B_and_C_per_group": "B and C are {d_state=128, n_group=8}. Within one group there are 128 elements, not group_state=1024. Using group_state as the per-group stride caused a buffer overflow that crashed ggml, and was also caught by this test.",
+    "dt_source": "dt comes from the ssm_in projection at offset 10240, NOT from the conv output. The conv output contains only x, B and C."
+  },
+  "tolerances_declared_before_inspection": {
+    "cosine_min": 0.999999,
+    "relative_rmse_max": 0.0001,
+    "bitwise_required": false
+  },
+  "results": {
+    "n_t_1": {
+      "conv_cosine": 1.0,
+      "conv_max_abs": 0.0,
+      "y_cosine": 1.0,
+      "y_rel_rmse": 2.84e-07,
+      "state_cosine": 1.0,
+      "state_rel_rmse": 1.75e-07,
+      "verdict": "PASS"
+    },
+    "n_t_2": {
+      "conv_cosine": 1.0,
+      "conv_max_abs": 0.0,
+      "y_cosine": 1.0,
+      "y_rel_rmse": 2.71e-07,
+      "state_cosine": 1.0,
+      "state_rel_rmse": 1.83e-07,
+      "verdict": "PASS"
+    },
+    "n_t_8": {
+      "conv_cosine": 1.0,
+      "conv_max_abs": 0.0,
+      "y_cosine": 1.0,
+      "y_rel_rmse": 2.5e-07,
+      "state_cosine": 1.0,
+      "state_rel_rmse": 1.1e-07,
+      "verdict": "PASS"
+    },
+    "n_t_16": {
+      "conv_cosine": 1.0,
+      "conv_max_abs": 0.0,
+      "y_cosine": 1.0,
+      "y_rel_rmse": 2.5e-07,
+      "state_cosine": 1.0,
+      "state_rel_rmse": 1.46e-07,
+      "verdict": "PASS"
+    },
+    "n_t_64": {
+      "conv_cosine": 1.0,
+      "conv_max_abs": 0.0,
+      "y_cosine": 1.0,
+      "y_rel_rmse": 2.5e-07,
+      "state_cosine": 1.0,
+      "state_rel_rmse": 5.79e-08,
+      "verdict": "PASS"
+    },
+    "conv_is_bitwise_identical": true,
+    "persistent_state": "Verified by splitting the sequence into two chunks and continuing each path from its OWN final state. At n_t=16 split 8+8, chunk1 y cosine 1.000000000000 rel 2.50e-07, chunk2 y cosine 1.000000000000 rel 2.70e-07, chunk2 state cosine 1.000000000000 rel 1.76e-07."
+  },
+  "bugs_found_by_this_test": [
+    "Per-group stride for B and C used group_state (1024) instead of d_state (128), overflowing the ggml tensor and crashing the process with 0xC0000005.",
+    "ssm_in projection offsets were applied to the conv output. The conv output only contains x, B and C, and dt is not part of it.",
+    "ggml conv input and output were assumed to share a layout. The input is channel-major and the output is token-major."
+  ],
+  "scope": {
+    "covers": "causal conv1d and selective SSM scan for one Nemotron-H SSM block, plus the grouped RMS norm, z gate and output projection in the implementation under test.",
+    "does_not_cover": [
+      "Real GGUF weights. The test uses deterministic synthetic inputs; no tensor values from the model were read.",
+      "The attention and MoE blocks. This is the SSM arm only.",
+      "Full hybrid decode across 53 blocks.",
+      "Any TPS measurement.",
+      "GPU execution. Both paths run on the CPU."
+    ]
+  },
+  "next": [
+    "Run the same comparison against real GGUF tensor values for one SSM layer.",
+    "Implement and verify the Nemotron-H attention block (32 heads, head dim 128, rope dim 84).",
+    "Implement and verify the 128-expert MoE with expert_weights_norm and expert_weights_scale 2.5.",
+    "Then hybrid dispatch and full-model generation."
+  ],
+  "reproduction": {
+    "harness": "tools/nemotron_mamba2_parity.cpp",
+    "build": "tools/build_nemotron_mamba2.bat",
+    "usage": "nemotron_mamba2_parity.exe <n_t>   (n_t from 1 to 64)"
+  }
+}
