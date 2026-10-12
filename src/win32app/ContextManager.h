@@ -20,7 +20,7 @@ public:
     static size_t countTokens(const std::string& text)
     {
         // Method 1: Word-based estimation (most common)
-        // Average: 1 token = 1.3 words, 1 word ≈ 4.7 chars
+        // Average: 1 token = 1.3 words, 1 word  4.7 chars
 
         size_t charCount = text.length();
         size_t wordCount = 0;

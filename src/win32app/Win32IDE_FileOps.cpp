@@ -45,7 +45,7 @@ void Win32IDE::openFileDialog() {
             // Add safety check to prevent crashes on corrupted/invalid files
             try {
                 if (loadGGUFModel(filePath)) {
-                    std::string message = "✅ Model loaded: " + filePath + "\n\n" + getModelInfo();
+                    std::string message = " Model loaded: " + filePath + "\n\n" + getModelInfo();
                     appendToOutput(message, "Output", OutputSeverity::Info);
                     MessageBoxA(m_hwndMain, "Model loaded successfully! Check Output panel and Copilot Chat for agentic features.", "Model Loaded", MB_OK | MB_ICONINFORMATION);
                     LOG_INFO("GGUF model loaded successfully");

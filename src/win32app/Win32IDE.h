@@ -2,6 +2,19 @@
 
 #include <windows.h>
 
+// ---------------------------------------------------------------------------
+// Document tab strip (VS Code style). IDC_DOC_TABS identifies the control in
+// WM_COMMAND/WM_NOTIFY; DOC_TAB_HEIGHT is the tab bar height used by the window
+// layout so the editor is positioned below it. Declared here because both the
+// lifecycle TU (which owns the WindowProc) and the main TU create/reference it.
+// ---------------------------------------------------------------------------
+#ifndef IDC_DOC_TABS
+#define IDC_DOC_TABS 1030
+#endif
+#ifndef DOC_TAB_HEIGHT
+#define DOC_TAB_HEIGHT 26
+#endif
+
 // Undefine Windows macros that conflict with our code
 #ifdef ERROR
 #undef ERROR
@@ -220,6 +233,10 @@ private:
     void newFile();
     void openFile();
     void openFileDialog();
+    // Loads a file by path into the editor and registers it as the active
+    // document. Used by the document tabs (which must switch buffers without
+    // showing the open dialog). Returns false if the file cannot be read.
+    bool loadFileIntoEditor(const std::string& path);
     void openRecentFile(int index);
     bool saveFile();
     bool saveFileAs();
@@ -470,6 +487,14 @@ private:
     void appendToOutput(const std::string& text, const std::string& tabName = "General", OutputSeverity severity = OutputSeverity::Info);
     void clearOutput(const std::string& tabName = "General");
     void formatOutput(const std::string& text, COLORREF color, const std::string& tabName = "");
+
+    // Document tabs (VS Code style editor tabs)
+    void createDocumentTabs();
+    void addDocumentTab(const std::string& path);
+    void removeDocumentTab(int index);
+    void switchDocumentTab(int index);
+    void updateDocumentTabs();
+    int findDocumentTab(const std::string& path) const;
 
     // Enhanced clipboard
     void copyWithFormatting();
@@ -774,6 +799,12 @@ private:
     HWND m_hwndBtnMicrosoft;
     HWND m_hwndBtnSettings;
     std::string m_lastTitleBarText;
+
+    // Document tabs (VS Code style). m_openDocuments holds the file path of every
+    // open editor buffer; an empty entry is the scratch "Untitled" buffer.
+    HWND m_hwndDocTabs = nullptr;
+    std::vector<std::string> m_openDocuments;
+    int m_activeDocument = -1;
 
     // Per-pane terminal managers replace the previous single manager
     std::string m_currentFile;

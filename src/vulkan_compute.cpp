@@ -1,4 +1,10 @@
-#include "vulkan_compute.h"
+// Path-qualified for the same reason quant_dot_dispatch.cpp qualifies its
+// include: a bare "vulkan_compute.h" resolves to the THIS file's directory
+// first and then to whatever comes first on the include path, and
+// src/deep2/vulkan_compute.h defines a DIFFERENT class (Deep2::VulkanCompute)
+// that silently shadows the device-level ::VulkanCompute implemented here.
+// Qualifying the path pins the header to include/vulkan_compute.h.
+#include "include/vulkan_compute.h"
 #include <vulkan/vulkan.h>
 #include <iostream>
 #include <algorithm>

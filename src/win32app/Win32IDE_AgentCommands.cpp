@@ -20,7 +20,7 @@ void Win32IDE::initializeAgenticBridge() {
             
             // Also send to Copilot Chat if available
             if (m_hwndCopilotChatOutput) {
-                std::string formatted = "🤖 " + title + "\n" + content + "\n\n";
+                std::string formatted = " " + title + "\n" + content + "\n\n";
                 SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, -1, -1);
                 SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)formatted.c_str());
             }
@@ -29,10 +29,10 @@ void Win32IDE::initializeAgenticBridge() {
         // Initialize with default framework path
         if (m_agenticBridge->Initialize("", "bigdaddyg-personalized-agentic:latest")) {
             LOG_INFO("Agentic Bridge initialized successfully");
-            appendToOutput("✅ Agentic Framework initialized\n", "Output", OutputSeverity::Info);
+            appendToOutput(" Agentic Framework initialized\n", "Output", OutputSeverity::Info);
         } else {
             LOG_ERROR("Failed to initialize Agentic Bridge");
-            appendToOutput("❌ Failed to initialize Agentic Framework\n", "Errors", OutputSeverity::Error);
+            appendToOutput(" Failed to initialize Agentic Framework\n", "Errors", OutputSeverity::Error);
             MessageBoxA(m_hwndMain, 
                 "Failed to initialize Agentic Framework.\nMake sure Agentic-Framework.ps1 is in the Powershield folder.", 
                 "Agent Error", MB_OK | MB_ICONERROR);
@@ -86,7 +86,7 @@ void Win32IDE::onAgentStartLoop() {
     std::string promptStr(prompt);
     
     // Start agent loop in background thread
-    appendToOutput("🚀 Starting Agent Loop: " + promptStr + "\n", "Output", OutputSeverity::Info);
+    appendToOutput(" Starting Agent Loop: " + promptStr + "\n", "Output", OutputSeverity::Info);
     
     std::thread([this, promptStr]() {
         if (m_agenticBridge->StartAgentLoop(promptStr, 10)) {
@@ -121,7 +121,7 @@ void Win32IDE::onAgentExecuteCommand() {
         }
         
         std::string command(input);
-        appendToOutput("⚡ Executing Agent Command: " + command + "\n", "Output", OutputSeverity::Info);
+        appendToOutput(" Executing Agent Command: " + command + "\n", "Output", OutputSeverity::Info);
         
         // Execute in background
         std::thread([this, command]() {
@@ -207,7 +207,7 @@ void Win32IDE::onAgentConfigureModel() {
 
     HWND hwndCombo = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-        10, 35, dlgWidth - 40, 140, hwndDlg, (HMENU)1001, m_hInstance, nullptr);
+        10, 35, dlgWidth - 40, 140, hwndDlg, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1001)), m_hInstance, nullptr);
 
     int selectedIndex = 0;
     for (size_t i = 0; i < availableModels.size(); ++i) {
@@ -259,7 +259,7 @@ void Win32IDE::onAgentConfigureModel() {
 
     if (accepted && !selectedModel.empty()) {
         m_agenticBridge->SetModel(selectedModel);
-        appendToOutput("✅ Agent model set to: " + selectedModel + "\n", "Output", OutputSeverity::Info);
+        appendToOutput(" Agent model set to: " + selectedModel + "\n", "Output", OutputSeverity::Info);
         MessageBoxA(m_hwndMain, ("Model updated to: " + selectedModel).c_str(), "Agent Model", MB_OK | MB_ICONINFORMATION);
     }
 }
@@ -283,7 +283,7 @@ void Win32IDE::onAgentViewTools() {
     toolsList << "Available Agent Tools:\n\n";
     
     for (const auto& tool : tools) {
-        toolsList << "• " << tool << "\n";
+        toolsList << " " << tool << "\n";
     }
     
     toolsList << "\nThese tools can be invoked by the agent to perform tasks.\n";
@@ -320,7 +320,7 @@ void Win32IDE::onAgentStop() {
     
     if (m_agenticBridge->IsAgentLoopRunning()) {
         m_agenticBridge->StopAgentLoop();
-        appendToOutput("🛑 Agent loop stopped\n", "Output", OutputSeverity::Warning);
+        appendToOutput(" Agent loop stopped\n", "Output", OutputSeverity::Warning);
         MessageBoxA(m_hwndMain, "Agent loop stopped", "Agent", MB_OK | MB_ICONINFORMATION);
     } else {
         MessageBoxA(m_hwndMain, "No agent loop is currently running", "Agent", MB_OK | MB_ICONINFORMATION);

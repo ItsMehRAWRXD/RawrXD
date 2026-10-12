@@ -129,9 +129,9 @@ void Win32IDE::createPowerShellPanel() {
     initializePowerShellPanel();
     
     // Show welcome message
-    appendPowerShellOutput("═══════════════════════════════════════════════════════════════\n", RGB(0, 255, 255));
+    appendPowerShellOutput("\n", RGB(0, 255, 255));
     appendPowerShellOutput("  RawrXD Integrated PowerShell Console\n", RGB(255, 255, 0));
-    appendPowerShellOutput("═══════════════════════════════════════════════════════════════\n", RGB(0, 255, 255));
+    appendPowerShellOutput("\n", RGB(0, 255, 255));
     appendPowerShellOutput("\n", RGB(200, 200, 200));
     
     std::string version = getPowerShellVersion();

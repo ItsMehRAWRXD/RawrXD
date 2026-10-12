@@ -76,10 +76,10 @@ int main(int argc, char* argv[]) {
         for (const auto& result : results) {
             if (result.passed) {
                 passed++;
-                std::cout << "✓ " << result.testName << " (" << result.durationMs << "ms)\n";
+                std::cout << " " << result.testName << " (" << result.durationMs << "ms)\n";
             } else {
                 failed++;
-                std::cout << "✗ " << result.testName << " - " << result.errorMessage << "\n";
+                std::cout << " " << result.testName << " - " << result.errorMessage << "\n";
             }
         }
         

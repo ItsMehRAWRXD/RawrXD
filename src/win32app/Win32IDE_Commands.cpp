@@ -359,16 +359,16 @@ void Win32IDE::handleHelpCommand(int commandId) {
             MessageBoxA(m_hwndMain, 
                        "RawrXD IDE v2.0\n\n"
                        "Features:\n"
-                       "• Advanced File Operations (9 features)\n"
-                       "• Centralized Menu Commands (25+ features)\n"
-                       "• Theme & Customization\n"
-                       "• Code Snippets\n"
-                       "• Integrated PowerShell Help\n"
-                       "• Performance Profiling\n"
-                       "• Module Management\n"
-                       "• Non-Modal Floating Panel\n"
-                       "• Recent Files Support\n"
-                       "• Auto-save & Recovery\n\n"
+                       " Advanced File Operations (9 features)\n"
+                       " Centralized Menu Commands (25+ features)\n"
+                       " Theme & Customization\n"
+                       " Code Snippets\n"
+                       " Integrated PowerShell Help\n"
+                       " Performance Profiling\n"
+                       " Module Management\n"
+                       " Non-Modal Floating Panel\n"
+                       " Recent Files Support\n"
+                       " Auto-save & Recovery\n\n"
                        "Built with Win32 API & C++17",
                        "About RawrXD IDE", 
                        MB_OK | MB_ICONINFORMATION);

@@ -1464,6 +1464,45 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
         set_target_properties(rawrxd_deep2_engine PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
+        # Parity/generation probe. Built alongside the engine because it is the
+        # only surface that produces the receipts the GPU milestone is gated on
+        # (gpu_calls, PARITY_VERDICT, and the LINE_TRACE weight-geometry dump).
+        # It is expected to fail to link until the engine's own out-of-class
+        # members exist, so it is guarded explicitly rather than pulled in by
+        # an aggregating target that would then break a working build.
+        if(EXISTS ${CMAKE_SOURCE_DIR}/tools/deep2_runtime_dispatch.cpp)
+            add_executable(deep2_runtime_dispatch
+                ${CMAKE_SOURCE_DIR}/tools/deep2_runtime_dispatch.cpp
+                ${CMAKE_SOURCE_DIR}/src/deep2/runtime_graph_executor.cpp
+                ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie/universal_gguf.cpp
+                ${CMAKE_SOURCE_DIR}/src/deep2/quant_dot_dispatch.cpp
+                ${CMAKE_SOURCE_DIR}/src/vulkan_compute.cpp
+            )
+            target_include_directories(deep2_runtime_dispatch PRIVATE
+                ${CMAKE_SOURCE_DIR}
+                # include/ MUST precede src/deep2 here. src/vulkan_compute.cpp
+                # includes a bare "vulkan_compute.h", and src/deep2/vulkan_compute.h
+                # defines a DIFFERENT class (Deep2::VulkanCompute). With src/deep2
+                # first, src/vulkan_compute.cpp's global ::VulkanCompute methods fail
+                # to compile and this target cannot link its GPU entry point.
+                # (Note this is the opposite ordering to rawrxd_deep2_engine, which
+                # needs Deep2's own headers to win; the two targets are intentionally
+                # given different paths rather than sharing one ambiguous order.)
+                ${CMAKE_SOURCE_DIR}/include
+                ${CMAKE_SOURCE_DIR}/src
+                ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+                ${CMAKE_SOURCE_DIR}/src/deep2
+                ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+            )
+            target_link_libraries(deep2_runtime_dispatch PRIVATE ggml)
+            target_compile_options(deep2_runtime_dispatch PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+            target_compile_definitions(deep2_runtime_dispatch PRIVATE
+                NOMINMAX _CRT_SECURE_NO_WARNINGS
+            )
+            set_target_properties(deep2_runtime_dispatch PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+            )
+        endif()
         message(STATUS "rawrxd_deep2_engine enabled (link inventory target)")
     endif()
 else()

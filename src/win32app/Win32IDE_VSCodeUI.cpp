@@ -109,7 +109,7 @@ void Win32IDE::createActivityBarUI(HWND hwndParent)
         0, "STATIC", "",
         WS_CHILD | WS_VISIBLE | SS_OWNERDRAW,
         0, 0, ACTIVITY_BAR_WIDTH, 600,
-        hwndParent, (HMENU)IDC_ACTIVITY_BAR, m_hInstance, nullptr);
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_ACTIVITY_BAR)), m_hInstance, nullptr);
     
     // Set the background color
     SetClassLongPtr(m_hwndActivityBar, GCLP_HBRBACKGROUND, (LONG_PTR)m_actBarBackgroundBrush);
@@ -127,7 +127,7 @@ void Win32IDE::createActivityBarUI(HWND hwndParent)
             0, "BUTTON", buttonLabels[i],
             WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
             0, yPos, ACTIVITY_BAR_WIDTH, buttonHeight,
-            m_hwndActivityBar, (HMENU)(IDC_ACTBAR_EXPLORER + i), m_hInstance, nullptr);
+            m_hwndActivityBar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_ACTBAR_EXPLORER + i)), m_hInstance, nullptr);
         
         // Store IDE pointer for button subclass
         SetWindowLongPtr(m_activityBarButtons[i], GWLP_USERDATA, (LONG_PTR)this);
@@ -221,42 +221,42 @@ void Win32IDE::createSecondarySidebar(HWND hwndParent)
         WS_EX_CLIENTEDGE, "STATIC", "",
         WS_CHILD | WS_VISIBLE,
         0, 0, m_secondarySidebarWidth, 600,
-        hwndParent, (HMENU)IDC_SECONDARY_SIDEBAR, m_hInstance, nullptr);
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SECONDARY_SIDEBAR)), m_hInstance, nullptr);
     
     // Header label
     m_hwndSecondarySidebarHeader = CreateWindowExA(
         0, "STATIC", " GitHub Copilot Chat",
         WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE,
         0, 0, m_secondarySidebarWidth, 28,
-        m_hwndSecondarySidebar, (HMENU)IDC_SECONDARY_SIDEBAR_HEADER, m_hInstance, nullptr);
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SECONDARY_SIDEBAR_HEADER)), m_hInstance, nullptr);
     
     // Chat output area (read-only rich edit for formatted messages)
     m_hwndCopilotChatOutput = CreateWindowExA(
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
         5, 32, m_secondarySidebarWidth - 10, 450,
-        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_COPILOT_CHAT_OUTPUT)), m_hInstance, nullptr);
     
     // Chat input area
     m_hwndCopilotChatInput = CreateWindowExA(
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VSCROLL,
         5, 490, m_secondarySidebarWidth - 10, 60,
-        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_INPUT, m_hInstance, nullptr);
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_COPILOT_CHAT_INPUT)), m_hInstance, nullptr);
     
     // Send button
     m_hwndCopilotSendBtn = CreateWindowExA(
         0, "BUTTON", "Send",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         5, 555, 80, 28,
-        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_SEND_BTN, m_hInstance, nullptr);
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_COPILOT_SEND_BTN)), m_hInstance, nullptr);
     
     // Clear button
     m_hwndCopilotClearBtn = CreateWindowExA(
         0, "BUTTON", "Clear",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         90, 555, 80, 28,
-        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_COPILOT_CLEAR_BTN)), m_hInstance, nullptr);
     
     // Set initial message
     SetWindowTextA(m_hwndCopilotChatOutput, 
@@ -321,17 +321,17 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
     } else {
         // No model loaded - prompt user to load one
         qWarning() << "[sendCopilotMessage] No model loaded!";
-        response = "⚠️ No AI model loaded.\r\n\r\n"
+        response = " No AI model loaded.\r\n\r\n"
                    "To use AI assistance, please load a GGUF model:\r\n"
-                   "1. Open the File Explorer (Activity Bar → Explorer icon)\r\n"
+                   "1. Open the File Explorer (Activity Bar  Explorer icon)\r\n"
                    "2. Navigate to a folder containing .gguf files\r\n"
                    "3. Double-click a model file to load it\r\n\r\n"
                    "Supported models: LLaMA, Mistral, Phi, Qwen, and other GGUF-compatible models.\r\n\r\n"
                    "Once loaded, I can help with:\r\n"
-                   "• Code explanation and analysis\r\n"
-                   "• Bug fixing suggestions\r\n"
-                   "• Code generation\r\n"
-                   "• Programming questions";
+                   " Code explanation and analysis\r\n"
+                   " Bug fixing suggestions\r\n"
+                   " Code generation\r\n"
+                   " Programming questions";
     }
     
     m_chatHistory.push_back({"assistant", response});
@@ -397,14 +397,14 @@ void Win32IDE::createPanel(HWND hwndParent)
         0, "STATIC", "",
         WS_CHILD | WS_VISIBLE,
         0, 0, 800, m_panelHeight,
-        hwndParent, (HMENU)IDC_PANEL_CONTAINER, m_hInstance, nullptr);
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_CONTAINER)), m_hInstance, nullptr);
     
     // Create tab control for panel views
     m_hwndPanelTabs = CreateWindowExA(
         0, WC_TABCONTROLA, "",
         WS_CHILD | WS_VISIBLE | TCS_TABS | TCS_FOCUSNEVER,
         0, 0, 400, 24,
-        m_hwndPanelContainer, (HMENU)IDC_PANEL_TABS, m_hInstance, nullptr);
+        m_hwndPanelContainer, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_TABS)), m_hInstance, nullptr);
     
     // Add tabs: Terminal, Output, Problems, Debug Console
     TCITEMA tie = { TCIF_TEXT };
@@ -422,45 +422,45 @@ void Win32IDE::createPanel(HWND hwndParent)
         0, "STATIC", "",
         WS_CHILD | WS_VISIBLE,
         400, 0, 200, 24,
-        m_hwndPanelContainer, (HMENU)IDC_PANEL_TOOLBAR, m_hInstance, nullptr);
+        m_hwndPanelContainer, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_TOOLBAR)), m_hInstance, nullptr);
     
     // Toolbar buttons
     m_hwndPanelNewTerminalBtn = CreateWindowExA(
         0, "BUTTON", "+",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         0, 0, 24, 22,
-        m_hwndPanelToolbar, (HMENU)IDC_PANEL_BTN_NEW_TERMINAL, m_hInstance, nullptr);
+        m_hwndPanelToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_BTN_NEW_TERMINAL)), m_hInstance, nullptr);
     
     m_hwndPanelSplitTerminalBtn = CreateWindowExA(
         0, "BUTTON", "||",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         26, 0, 24, 22,
-        m_hwndPanelToolbar, (HMENU)IDC_PANEL_BTN_SPLIT_TERMINAL, m_hInstance, nullptr);
+        m_hwndPanelToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_BTN_SPLIT_TERMINAL)), m_hInstance, nullptr);
     
     m_hwndPanelKillTerminalBtn = CreateWindowExA(
         0, "BUTTON", "X",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         52, 0, 24, 22,
-        m_hwndPanelToolbar, (HMENU)IDC_PANEL_BTN_KILL_TERMINAL, m_hInstance, nullptr);
+        m_hwndPanelToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_BTN_KILL_TERMINAL)), m_hInstance, nullptr);
     
     m_hwndPanelMaximizeBtn = CreateWindowExA(
         0, "BUTTON", "^",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         130, 0, 24, 22,
-        m_hwndPanelToolbar, (HMENU)IDC_PANEL_BTN_MAXIMIZE, m_hInstance, nullptr);
+        m_hwndPanelToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_BTN_MAXIMIZE)), m_hInstance, nullptr);
     
     m_hwndPanelCloseBtn = CreateWindowExA(
         0, "BUTTON", "x",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         156, 0, 24, 22,
-        m_hwndPanelToolbar, (HMENU)IDC_PANEL_BTN_CLOSE, m_hInstance, nullptr);
+        m_hwndPanelToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_BTN_CLOSE)), m_hInstance, nullptr);
     
     // Create Problems list view
     m_hwndProblemsListView = CreateWindowExA(
         WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
         WS_CHILD | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS,
         0, 26, 800, m_panelHeight - 26,
-        m_hwndPanelContainer, (HMENU)IDC_PANEL_PROBLEMS_LIST, m_hInstance, nullptr);
+        m_hwndPanelContainer, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_PROBLEMS_LIST)), m_hInstance, nullptr);
     
     // Add columns to Problems list
     LVCOLUMNA lvc = { 0 };
@@ -696,7 +696,7 @@ void Win32IDE::createEnhancedStatusBar(HWND hwndParent)
         0, STATUSCLASSNAMEA, "",
         WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
         0, 0, 0, 0,
-        hwndParent, (HMENU)IDC_STATUS_BAR, m_hInstance, nullptr);
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_STATUS_BAR)), m_hInstance, nullptr);
     
     // Set up parts - 12 parts for all status items
     // [Remote][Branch][Sync][Errors][Warnings] ... [Line:Col][Spaces][Encoding][EOL][Language][Copilot]
@@ -726,7 +726,7 @@ void Win32IDE::updateEnhancedStatusBar()
     // Part 2: Sync status (ahead/behind)
     std::ostringstream syncOss;
     if (m_statusBarInfo.syncAhead > 0 || m_statusBarInfo.syncBehind > 0) {
-        syncOss << m_statusBarInfo.syncAhead << "↑ " << m_statusBarInfo.syncBehind << "↓";
+        syncOss << m_statusBarInfo.syncAhead << " " << m_statusBarInfo.syncBehind << "";
     }
     SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 2, (LPARAM)syncOss.str().c_str());
     
@@ -765,7 +765,7 @@ void Win32IDE::updateEnhancedStatusBar()
     // Part 11: Copilot status
     std::string copilotText = m_statusBarInfo.copilotActive ? "Copilot" : "Copilot (off)";
     if (m_statusBarInfo.copilotSuggestions > 0) {
-        copilotText += " ▼";  // Indicates suggestions available
+        copilotText += " ";  // Indicates suggestions available
     }
     SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 11, (LPARAM)copilotText.c_str());
 }

@@ -595,7 +595,7 @@ void Win32IDE::createExplorerView(HWND hwndParent)
         WS_EX_CLIENTEDGE, WC_TREEVIEWA, "",
         WS_CHILD | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS,
         0, 30, SIDEBAR_DEFAULT_WIDTH, 570,
-        hwndParent, (HMENU)IDC_EXPLORER_TREE, m_hInstance, nullptr
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_EXPLORER_TREE)), m_hInstance, nullptr
     );
     if (!m_hwndExplorerTree) {
         appendToOutput("Failed to create Explorer TreeView\n", "Output", OutputSeverity::Error);
@@ -934,7 +934,7 @@ void Win32IDE::createSearchView(HWND hwndParent)
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | ES_AUTOHSCROLL,
         5, 10, SIDEBAR_DEFAULT_WIDTH - 10, 25,
-        hwndParent, (HMENU)IDC_SEARCH_INPUT, m_hInstance, nullptr
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SEARCH_INPUT)), m_hInstance, nullptr
     );
 
     // Options panel
@@ -946,32 +946,32 @@ void Win32IDE::createSearchView(HWND hwndParent)
     );
 
     CreateWindowExA(0, "BUTTON", "Regex", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-                    5, 5, 70, 20, m_hwndSearchOptions, (HMENU)IDC_SEARCH_REGEX, m_hInstance, nullptr);
+                    5, 5, 70, 20, m_hwndSearchOptions, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SEARCH_REGEX)), m_hInstance, nullptr);
     CreateWindowExA(0, "BUTTON", "Case", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-                    80, 5, 70, 20, m_hwndSearchOptions, (HMENU)IDC_SEARCH_CASE, m_hInstance, nullptr);
+                    80, 5, 70, 20, m_hwndSearchOptions, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SEARCH_CASE)), m_hInstance, nullptr);
     CreateWindowExA(0, "BUTTON", "Whole", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-                    155, 5, 70, 20, m_hwndSearchOptions, (HMENU)IDC_SEARCH_WHOLE_WORD, m_hInstance, nullptr);
+                    155, 5, 70, 20, m_hwndSearchOptions, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SEARCH_WHOLE_WORD)), m_hInstance, nullptr);
 
     CreateWindowExA(0, "STATIC", "Include:", WS_CHILD | WS_VISIBLE,
                     5, 30, 50, 20, m_hwndSearchOptions, nullptr, m_hInstance, nullptr);
     m_hwndIncludePattern = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "*.ps1,*.cpp",
                                            WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
                                            60, 28, 160, 20, m_hwndSearchOptions, 
-                                           (HMENU)IDC_SEARCH_INCLUDE, m_hInstance, nullptr);
+                                           reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SEARCH_INCLUDE)), m_hInstance, nullptr);
 
     CreateWindowExA(0, "STATIC", "Exclude:", WS_CHILD | WS_VISIBLE,
                     5, 55, 50, 20, m_hwndSearchOptions, nullptr, m_hInstance, nullptr);
     m_hwndExcludePattern = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "node_modules,bin",
                                            WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
                                            60, 53, 160, 20, m_hwndSearchOptions, 
-                                           (HMENU)IDC_SEARCH_EXCLUDE, m_hInstance, nullptr);
+                                           reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SEARCH_EXCLUDE)), m_hInstance, nullptr);
 
     // Results listbox
     m_hwndSearchResults = CreateWindowExA(
         WS_EX_CLIENTEDGE, "LISTBOX", "",
         WS_CHILD | LBS_NOTIFY | WS_VSCROLL,
         5, 125, SIDEBAR_DEFAULT_WIDTH - 10, 470,
-        hwndParent, (HMENU)IDC_SEARCH_RESULTS, m_hInstance, nullptr
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SEARCH_RESULTS)), m_hInstance, nullptr
     );
 
     m_searchInProgress = false;
@@ -1150,7 +1150,7 @@ void Win32IDE::createSourceControlView(HWND hwndParent)
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL,
         5, 40, SIDEBAR_DEFAULT_WIDTH - 10, 60,
-        hwndParent, (HMENU)IDC_SCM_MESSAGE, m_hInstance, nullptr
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SCM_MESSAGE)), m_hInstance, nullptr
     );
 
     // File list (ListView for changed files)
@@ -1158,7 +1158,7 @@ void Win32IDE::createSourceControlView(HWND hwndParent)
         WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
         WS_CHILD | LVS_REPORT | LVS_SINGLESEL | WS_VSCROLL,
         5, 105, SIDEBAR_DEFAULT_WIDTH - 10, 490,
-        hwndParent, (HMENU)IDC_SCM_FILE_LIST, m_hInstance, nullptr
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_SCM_FILE_LIST)), m_hInstance, nullptr
     );
 
     // Setup columns
@@ -1294,16 +1294,16 @@ void Win32IDE::createRunDebugView(HWND hwndParent)
     );
 
     CreateWindowExA(0, "BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                    5, 5, 50, 25, m_hwndDebugToolbar, (HMENU)IDC_DEBUG_START, m_hInstance, nullptr);
+                    5, 5, 50, 25, m_hwndDebugToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_DEBUG_START)), m_hInstance, nullptr);
     CreateWindowExA(0, "BUTTON", "Stop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                    60, 5, 50, 25, m_hwndDebugToolbar, (HMENU)IDC_DEBUG_STOP, m_hInstance, nullptr);
+                    60, 5, 50, 25, m_hwndDebugToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_DEBUG_STOP)), m_hInstance, nullptr);
 
     // Configuration dropdown
     m_hwndDebugConfigs = CreateWindowExA(
         0, "COMBOBOX", "",
         WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL,
         5, 40, SIDEBAR_DEFAULT_WIDTH - 10, 100,
-        hwndParent, (HMENU)IDC_DEBUG_CONFIGS, m_hInstance, nullptr
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_DEBUG_CONFIGS)), m_hInstance, nullptr
     );
 
     SendMessageA(m_hwndDebugConfigs, CB_ADDSTRING, 0, (LPARAM)"PowerShell Script");
@@ -1318,7 +1318,7 @@ void Win32IDE::createRunDebugView(HWND hwndParent)
         WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
         WS_CHILD | LVS_REPORT | WS_VSCROLL,
         5, 145, SIDEBAR_DEFAULT_WIDTH - 10, 450,
-        hwndParent, (HMENU)IDC_DEBUG_VARIABLES, m_hInstance, nullptr
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_DEBUG_VARIABLES)), m_hInstance, nullptr
     );
 
     LVCOLUMNA col = {};
@@ -1422,7 +1422,7 @@ void Win32IDE::createExtensionsView(HWND hwndParent)
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | ES_AUTOHSCROLL,
         5, 10, SIDEBAR_DEFAULT_WIDTH - 10, 25,
-        hwndParent, (HMENU)IDC_EXT_SEARCH, m_hInstance, nullptr
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_EXT_SEARCH)), m_hInstance, nullptr
     );
 
     // Extensions list
@@ -1430,7 +1430,7 @@ void Win32IDE::createExtensionsView(HWND hwndParent)
         WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
         WS_CHILD | LVS_REPORT | LVS_SINGLESEL | WS_VSCROLL,
         5, 40, SIDEBAR_DEFAULT_WIDTH - 10, 555,
-        hwndParent, (HMENU)IDC_EXT_LIST, m_hInstance, nullptr
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_EXT_LIST)), m_hInstance, nullptr
     );
 
     // Setup columns

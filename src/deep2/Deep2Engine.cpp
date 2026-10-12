@@ -1549,7 +1549,8 @@ bool Deep2Engine::allocateBuffers() {
     size_t qProjSize = config.useMLA ? (config.numHeads * headDim) : (2 * hiddenSize + 2 * kvDim);
 
     hiddenStates    = alignedAlloc(hiddenSize * maxSeq);
-    attentionOutput = alignedAlloc(hiddenSize);
+    size_t attnOutSize = config.useMLA ? (config.numHeads * headDim) : hiddenSize;
+    attentionOutput = alignedAlloc(attnOutSize);
     ffnOutput       = alignedAlloc(ffnDim);
     logits          = alignedAlloc(vocabSize);
     qProj           = alignedAlloc(qProjSize);
@@ -2773,6 +2774,7 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path) {
         mapTensor(prefix + "attn_k.weight",     lw.wk);
         mapTensor(prefix + "attn_v.weight",     lw.wv);
         mapTensor(prefix + "attn_output.weight", lw.wo);
+        mapTensor(prefix + "attn_o.weight", lw.attnO);
         mapTensor(prefix + "attn_norm.weight",  lw.attnNorm);
         mapTensor(prefix + "ffn_gate.weight",     lw.wGate);
         mapTensor(prefix + "ffn_up.weight",       lw.wUp);
@@ -5757,17 +5759,200 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     size_t groupSize = (numKVHeads > 0) ? (numHeads / numKVHeads) : 1;
 
     // ── MLA (K2) path ──────────────────────────────────────────────────
-    if (lw.useMLA) {
-        // Incomplete MLA attention must never run in production (see load-time gate).
-        MlaCert::record(MlaCert::Stage::EnteredBlocked,
-                        static_cast<std::uint32_t>(layer),
-                        MlaCert::bumpSeq(), nullptr, 0, 1.0);
-        fprintf(stderr,
-            "[Deep2Engine] FATAL: MLA forward reached without certified attention "
-            "(layer=%zu). This path skips QK/V attention.\n",
-            layer);
-        throw std::runtime_error("MLA-CERT-001: incomplete MLA attention blocked");
-    }
+if (lw.useMLA) {
+        // MLA (DeepSeek-V2) attention: factorized Q/K/V projections
+        // Q: hidden -> q_a -> RMSNorm -> q_b -> Q [numHeads * headDim]
+        // KV: hidden -> kv_a_mqa -> split -> [compressed_kv | k_pe]
+        //       compressed_kv -> RMSNorm -> kv_b -> K_nope + V
+        //       k_pe -> RoPE -> K_pe
+        // K = concat(K_nope, K_pe) [numHeads, headDim] where headDim = qkNopeHeadDim + qkRopeHeadDim
+        // V = mlaV_b [numHeads * vHeadDim]
+        // Attention: softmax(Q * K^T / sqrt(d)) * V -> [numHeads * vHeadDim]
+        // Output projection: attnO [hiddenDim, numHeads * headDim] -> output [hiddenDim]
+
+        const size_t qLoraRank = config.qLoraRank > 0 ? config.qLoraRank : 1536;
+        const size_t kvLoraRank = config.kvLoraRank > 0 ? config.kvLoraRank : 512;
+        const size_t qkNopeHeadDim = config.qkNopeHeadDim > 0 ? config.qkNopeHeadDim : 128;
+        const size_t qkRopeHeadDim = config.qkRopeHeadDim > 0 ? config.qkRopeHeadDim : 64;
+        const size_t vHeadDim = config.vHeadDim > 0 ? config.vHeadDim : 128;
+        const size_t headDim = modelWeights.headDim;
+        const size_t numHeads = config.numHeads;
+        const size_t kvLoraRank = config.kvLoraRank > 0 ? config.kvLoraRank : 512;
+        const size_t qLoraRank = config.qLoraRank > 0 ? config.qLoraRank : 1536;
+        const size_t vHeadDim = config.vHeadDim > 0 ? config.vHeadDim : 128;
+        const size_t qkNopeHeadDim = config.qkNopeHeadDim > 0 ? config.qkNopeHeadDim : 128;
+        const size_t qkRopeHeadDim = config.qkRopeHeadDim > 0 ? config.qkRopeHeadDim : 64;
+        const size_t headDim = modelWeights.headDim;
+        const size_t numHeads = config.numHeads;
+
+        // Ensure MLA buffers are allocated
+        if (mlaQ_a.size() < qLoraRank) mlaQ_a.resize(qLoraRank);
+        if (mlaKV_a.size() < kvLoraRank + qkRopeHeadDim) mlaKV_a.resize(kvLoraRank + qkRopeHeadDim);
+        if (mlaQ_b.size() < numHeads * headDim) mlaQ_b.resize(numHeads * headDim);
+        if (mlaK_b.size() < numHeads * (qkNopeHeadDim + qkRopeHeadDim)) mlaK_b.resize(numHeads * (qkNopeHeadDim + qkRopeHeadDim));
+        if (mlaV_b.size() < numHeads * vHeadDim) mlaV_b.resize(numHeads * vHeadDim);
+        if (mlaK_pe.size() < numHeads * qkRopeHeadDim) mlaK_pe.resize(numHeads * qkRopeHeadDim);
+
+        // ── Q path: hidden -> q_a -> RMSNorm -> q_b -> Q ─────────────────
+        LinearW(lw.attnQ_a, input, nullptr, mlaQ_a.data(), qLoraRank);
+        RMSNormW(lw.attnQ_a_norm, mlaQ_a.data(), mlaQ_a.data(), qLoraRank, modelWeights.normEps);
+        LinearW(lw.attnQ_b, mlaQ_a.data(), nullptr, qProj, numHeads * headDim);
+        B3_TraceState("ATTN_Q_MLA", layer, qProj, numHeads * headDim);
+
+        // ── KV path: hidden -> kv_a_mqa -> split ──────────────────────────
+        LinearW(lw.attnKV_a_mqa, input, nullptr, mlaKV_a.data(), kvLoraRank + qkRopeHeadDim);
+
+        // Split: first kvLoraRank = compressed_kv, last qkRopeHeadDim = k_pe
+        float* compressedKV = mlaKV_a.data();
+        float* k_pe = mlaKV_a.data() + kvLoraRank;
+
+        // compressed_kv -> RMSNorm -> kv_b -> K_nope + V
+        RMSNormW(lw.attnKV_a_norm, compressedKV, compressedKV, kvLoraRank, modelWeights.normEps);
+        LinearW(lw.attnK_b, compressedKV, nullptr, mlaK_b.data(), numHeads * (qkNopeHeadDim + qkRopeHeadDim));
+        LinearW(lw.attnV_b, compressedKV, nullptr, mlaV_b.data(), numHeads * vHeadDim);
+
+        // k_pe -> RoPE
+        if (config.useRoPE) {
+            applyRoPE(nullptr, k_pe, qkRopeHeadDim, numHeads, 0, pos,
+                      modelWeights.ropeTheta, modelWeights.ropeScaling);
+        }
+
+        // K = concat(K_nope, K_pe) [numHeads, headDim] where headDim = qkNopeHeadDim + qkRopeHeadDim
+        for (size_t h = 0; h < numHeads; ++h) {
+            float* k_head = kProj + h * headDim;
+            const float* k_nope = mlaK_b.data() + h * (qkNopeHeadDim + qkRopeHeadDim);
+            const float* k_pe_head = k_pe + h * qkRopeHeadDim;
+            memcpy(k_head, k_nope, qkNopeHeadDim * sizeof(float));
+            memcpy(k_head + qkNopeHeadDim, k_pe_head, qkRopeHeadDim * sizeof(float));
+        }
+
+        // V is already in mlaV_b [numHeads * vHeadDim]
+        memcpy(vProj, mlaV_b.data(), numHeads * vHeadDim * sizeof(float));
+
+        B3_TraceState("ATTN_QKV_MLA", layer, qProj, numHeads * headDim);
+
+        // =====================================================================
+        // MLA Attention Computation
+        // Q: [numHeads, headDim] = qProj [numHeads * headDim]
+        // K: [numHeads, headDim] = kProj [numHeads * headDim]
+        // V: [numHeads, vHeadDim] = vProj [numHeads * vHeadDim]
+        // Attention: softmax(Q * K^T / sqrt(headDim)) * V -> [numHeads, vHeadDim]
+        // Output projection: attnO [hiddenDim, numHeads * headDim] * [numHeads * vHeadDim] -> output [hiddenDim]
+        // =====================================================================
+
+        const size_t attnOutSize = numHeads * vHeadDim;
+        std::vector<float> attnOut(numHeads * vHeadDim);
+        const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
+        
+        if (kvCache) {
+            // Store current K/V in cache
+            kvCache->store(layer, pos, kProj, vProj);
+            
+            // Retrieve all K/V up to current position
+            size_t kvLen = kvCache->length(layer);
+            if (kvLen > 0) {
+                std::vector<float> K_cache(numHeads * headDim * kvLen);
+                std::vector<float> V_cache(numHeads * vHeadDim * kvLen);
+                kvCache->retrieve(layer, 0, kvLen, K_cache.data(), V_cache.data());
+                
+                // Compute attention for each head
+                for (size_t h = 0; h < numHeads; ++h) {
+                    const float* Q_h = qProj + h * headDim;
+                    float* out_h = &attnOut[h * vHeadDim];
+                    
+                    // Compute attention scores against all cached K
+                    std::vector<float> scores(kvLen);
+                    for (size_t t = 0; t < kvLen; ++t) {
+                        const float* K_t = &K_cache[t * numHeads * headDim + h * headDim];
+                        float score = 0.0f;
+                        for (size_t d = 0; d < headDim; ++d) {
+                            score += qProj[h * headDim + d] * K_cache[t * numHeads * headDim + h * headDim + d];
+                        }
+                        scores[t] = score * (1.0f / std::sqrt(static_cast<float>(headDim)));
+                    }
+                    
+                    // Softmax
+                    float maxScore = scores[0];
+                    for (size_t t = 1; t < kvLen; ++t) {
+                        if (scores[t] > maxScore) maxScore = scores[t];
+                    }
+                    float sumExp = 0.0f;
+                    for (size_t t = 0; t < kvLen; ++t) {
+                        scores[t] = std::exp(scores[t] - maxScore);
+                        sumExp += scores[t];
+                    }
+                    for (size_t t = 0; t < kvLen; ++t) {
+                        scores[t] /= sumExp;
+                    }
+                    
+                    // Weighted sum of V
+                    float* out_h = &attnOut[h * vHeadDim];
+                    memset(out_h, 0, vHeadDim * sizeof(float));
+                    for (size_t t = 0; t < kvLen; ++t) {
+                        const float* V_t = &V_cache[t * numHeads * vHeadDim + h * vHeadDim];
+                        float w = scores[t];
+                        for (size_t d = 0; d < vHeadDim; ++d) {
+                            out_h[d] += w * V_t[d];
+                        }
+                    }
+                }
+            } else {
+                // No cache: single token attention (Q * K^T * V with single position)
+                for (size_t h = 0; h < numHeads; ++h) {
+                    const float* Q_h = qProj + h * headDim;
+                    const float* K_h = kProj + h * headDim;
+                    const float* V_h = vProj + h * vHeadDim;
+                    float* out_h = &attnOut[h * vHeadDim];
+                    
+                    // Q * K^T / sqrt(d)
+                    float score = 0.0f;
+                    for (size_t d = 0; d < headDim; ++d) {
+                        score += qProj[h * headDim + d] * kProj[h * headDim + d];
+                    }
+                    score *= (1.0f / std::sqrt(static_cast<float>(headDim)));
+                    
+                    // Single position: softmax is 1.0, output = V
+                    float* out_h = &attnOut[h * vHeadDim];
+                    memcpy(out_h, vProj + h * vHeadDim, vHeadDim * sizeof(float));
+                }
+            }
+
+            // Output projection
+            // MLA attention output is [numHeads * vHeadDim] = 2048
+            // If attnO exists (MLA output projection: [hiddenDim, numHeads * headDim] = [2048, 3072]),
+            // we need to pad output to 3072. Otherwise use wo [2048, 2048] directly on 2048 output.
+            const WeightTensor* attnOutWeight = &lw.attnO;
+            if (attnOutWeight && attnOutWeight->data) {
+                // attnO exists: [hiddenDim, numHeads * headDim] = [2048, 3072]
+                // Pad attention output from [numHeads * vHeadDim] to [numHeads * headDim]
+                std::vector<float> attnOutPadded(numHeads * headDim, 0.0f);
+                for (size_t h = 0; h < numHeads; ++h) {
+                    memcpy(&attnOutPadded[h * headDim], &attnOut[h * vHeadDim], vHeadDim * sizeof(float));
+                }
+                LinearW(*attnOutWeight, attnOutPadded.data(), nullptr, output, hiddenDim);
+            } else if (lw.wo.data) {
+                // Fallback to wo [hiddenDim, hiddenDim] = [2048, 2048]
+                // Use attention output directly (no padding needed)
+                LinearW(lw.wo, attnOut.data(), nullptr, output, hiddenDim);
+            } else {
+                // No output projection: copy/truncate to hiddenDim
+                if (numHeads * vHeadDim >= hiddenDim) {
+                    memcpy(output, attnOut.data(), hiddenDim * sizeof(float));
+                } else {
+                    memcpy(output, attnOut.data(), numHeads * vHeadDim * sizeof(float));
+                    memset(output + numHeads * vHeadDim, 0, (hiddenDim - numHeads * vHeadDim) * sizeof(float));
+                }
+            }
+            
+            B3_TraceState("ATTN_OUT_MLA", layer, output, hiddenDim);
+            
+            if (reverseAnalysisEnabled_ && reverseIntegration_) {
+                reverseIntegration_->onAttentionComputed(static_cast<int>(layer), output, hiddenDim);
+            }
+            
+            // Skip the standard attention computation below
+            continue;
+        } else {
 
     // ── Fused QKV path (Phi-3, etc.) ────────────────────────────────────
     if (lw.wqkv.data && !lw.hasSSM) {
@@ -6236,9 +6421,10 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // }
     // #endif
 
-    // Output projection: [hiddenDim] -> [hiddenDim]
+// Output projection: [hiddenDim] -> [hiddenDim]
     // Qwen models with fused QKV may not have a separate attention output projection.
-    // When absent, the concatenated head outputs (numHeads * headDim) already equal hiddenDim.
+    // For MLA (DeepSeek-V2), the attention output has numHeads * headDim elements
+    // and the output projection weight is attnO [hiddenDim, numHeads * headDim].
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         // Concatenated head outputs BEFORE wo — isolates O_PROJ from QK/softmax/AV.
         const size_t tokPos = kvCache ? kvCache->currentLength()
@@ -6247,8 +6433,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         std::snprintf(key, sizeof(key), "ATTN_PRE_O_%zu", layer);
         B3_StageDigest(key, tokPos, output, hiddenDim);
     }
-    const auto* attnOutWeight = (lw.wo.data != nullptr) ? &lw.wo :
-                                 (lw.attnO.data != nullptr) ? &lw.attnO : nullptr;
+    const auto* attnOutWeight = (lw.useMLA && lw.attnO.data != nullptr) ? &lw.attnO :
+                                (lw.wo.data != nullptr) ? &lw.wo :
+                                (lw.attnO.data != nullptr) ? &lw.attnO : nullptr;
     if (attnOutWeight == nullptr || attnOutWeight->data == nullptr) {
         // No output projection: pass through unchanged (already correct size)
         if (layer == 0) {

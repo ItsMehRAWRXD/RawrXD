@@ -122,7 +122,7 @@ private:
             
             m_results.push_back({name, true, "", durationMs});
             m_testsPassed++;
-            LOG_INFO("✓ PASSED: " + name + " (" + std::to_string(durationMs) + "ms)");
+            LOG_INFO(" PASSED: " + name + " (" + std::to_string(durationMs) + "ms)");
         } catch (const std::exception& e) {
             auto end = std::chrono::high_resolution_clock::now();
             double durationMs = std::chrono::duration<double, std::milli>(end - start).count();
@@ -130,14 +130,14 @@ private:
             std::string error = std::string(e.what());
             m_results.push_back({name, false, error, durationMs});
             m_testsFailed++;
-            LOG_ERROR("✗ FAILED: " + name + " - " + error);
+            LOG_ERROR(" FAILED: " + name + " - " + error);
         } catch (...) {
             auto end = std::chrono::high_resolution_clock::now();
             double durationMs = std::chrono::duration<double, std::milli>(end - start).count();
             
             m_results.push_back({name, false, "Unknown exception", durationMs});
             m_testsFailed++;
-            LOG_ERROR("✗ FAILED: " + name + " - Unknown exception");
+            LOG_ERROR(" FAILED: " + name + " - Unknown exception");
         }
         m_testsRun++;
     }

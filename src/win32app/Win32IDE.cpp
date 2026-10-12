@@ -2003,7 +2003,7 @@ void Win32IDE::createTitleBarControls()
     DWORD buttonStyle = WS_CHILD | WS_VISIBLE | BS_FLAT;
     auto createButton = [&](HWND& target, int controlId, const char* caption) {
         target = CreateWindowExA(0, "BUTTON", caption, buttonStyle,
-                                 0, 0, 32, 24, m_hwndToolbar, (HMENU)controlId, m_hInstance, nullptr);
+                                 0, 0, 32, 24, m_hwndToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(controlId)), m_hInstance, nullptr);
     };
 
     createButton(m_hwndBtnGitHub, IDC_BTN_GITHUB, "GH");
@@ -2106,7 +2106,9 @@ void Win32IDE::updateTitleBarText()
         projectFolder = "Workspace";
     }
 
-    std::string composed = fileName + "  •  " + projectFolder;
+    // ASCII separator: the target builds with _MBCS and uses SetWindowTextA, so
+    // a UTF-8 bullet (U+2022) renders as mojibake here.
+    std::string composed = fileName + "  -  " + projectFolder;
     if (composed != m_lastTitleBarText) {
         SetWindowTextA(m_hwndTitleLabel, composed.c_str());
         m_lastTitleBarText = composed;
@@ -2396,10 +2398,40 @@ void Win32IDE::newFile()
     appendToOutput("New file created successfully\n", "Output", OutputSeverity::Info);
 }
 
+bool Win32IDE::loadFileIntoEditor(const std::string& path)
+{
+    if (path.empty() || !m_hwndEditor) return false;
+
+    try {
+        std::ifstream file(path);
+        if (!file) {
+            appendToOutput("Failed to open file: " + path + "\n", "Errors", OutputSeverity::Error);
+            return false;
+        }
+
+        std::string content((std::istreambuf_iterator<char>(file)),
+                             std::istreambuf_iterator<char>());
+        SetWindowTextA(m_hwndEditor, content.c_str());
+        m_currentFile = path;
+        m_fileModified = false;
+        setCurrentDirectoryFromFile(m_currentFile);
+        updateTitleBarText();
+        SendMessageA(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File opened");
+        updateMenuEnableStates();
+        syncEditorToGpuSurface();
+        appendToOutput("File opened successfully (" + std::to_string(content.size()) + " bytes)\n",
+                       "Output", OutputSeverity::Info);
+        return true;
+    } catch (const std::exception& e) {
+        appendToOutput("Exception opening file: " + std::string(e.what()) + "\n", "Errors",
+                       OutputSeverity::Error);
+        return false;
+    }
+}
+
 void Win32IDE::openFile()
 {
-    appendToOutput("File > Open clicked\n", "Output", OutputSeverity::Info);
-    if (m_fileModified) {
+    appendToOutput("File > Open clicked\n", "Output", OutputSeverity::Info);    if (m_fileModified) {
         int result = MessageBoxA(m_hwndMain, "File has been modified. Save changes?", "Save", MB_YESNOCANCEL);
         if (result == IDCANCEL) {
             appendToOutput("File > Open cancelled by user\n", "Output", OutputSeverity::Info);
@@ -2436,6 +2468,7 @@ void Win32IDE::openFile()
                 m_currentFile = szFile;
                 m_fileModified = false;
                 setCurrentDirectoryFromFile(m_currentFile);
+                addDocumentTab(m_currentFile);
                 updateTitleBarText();
                 SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"File opened");
                 updateMenuEnableStates();
@@ -3567,7 +3600,10 @@ void Win32IDE::toggleFloatingPanel()
 #define IDC_BTN_FIND_NEXT 5030
 #define IDC_BTN_REPLACE 5031
 #define IDC_BTN_REPLACE_ALL 5032
-#define IDC_BTN_CLOSE 5033
+// Renamed from IDC_BTN_CLOSE, which collides with the toolbar's IDC_BTN_CLOSE
+// (1021). A macro redefinition makes the last definition win, so both buttons
+// would have shared one command ID and WM_COMMAND could not tell them apart.
+#define IDC_BTN_FIND_CLOSE 5033
 
 void Win32IDE::showFindDialog()
 {
@@ -3602,7 +3638,7 @@ void Win32IDE::showFindDialog()
         CreateWindowExA(0, "BUTTON", "Find Next", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
             10, 80, 90, 28, hwndDlg, (HMENU)IDC_BTN_FIND_NEXT, m_hInstance, nullptr);
         CreateWindowExA(0, "BUTTON", "Close", WS_CHILD | WS_VISIBLE,
-            110, 80, 90, 28, hwndDlg, (HMENU)IDC_BTN_CLOSE, m_hInstance, nullptr);
+            110, 80, 90, 28, hwndDlg, (HMENU)IDC_BTN_FIND_CLOSE, m_hInstance, nullptr);
     }
     
     ShowWindow(m_hwndFindDialog, SW_SHOW);
@@ -3647,7 +3683,7 @@ void Win32IDE::showReplaceDialog()
     CreateWindowExA(0, "BUTTON", "Replace All", WS_CHILD | WS_VISIBLE,
         210, 110, 90, 28, hwndDlg, (HMENU)IDC_BTN_REPLACE_ALL, m_hInstance, nullptr);
     CreateWindowExA(0, "BUTTON", "Close", WS_CHILD | WS_VISIBLE,
-        310, 110, 70, 28, hwndDlg, (HMENU)IDC_BTN_CLOSE, m_hInstance, nullptr);
+        310, 110, 70, 28, hwndDlg, (HMENU)IDC_BTN_FIND_CLOSE, m_hInstance, nullptr);
     
     ShowWindow(m_hwndReplaceDialog, SW_SHOW);
 }
@@ -3862,7 +3898,7 @@ INT_PTR CALLBACK Win32IDE::FindDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam
                 pThis->findNext();
             }
             return TRUE;
-        case IDC_BTN_CLOSE:
+        case IDC_BTN_FIND_CLOSE:
         case IDCANCEL:
             DestroyWindow(hwndDlg);
             pThis->m_hwndFindDialog = nullptr;
@@ -3927,7 +3963,7 @@ INT_PTR CALLBACK Win32IDE::ReplaceDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
                 pThis->m_searchUseRegex = IsDlgButtonChecked(hwndDlg, IDC_USE_REGEX) == BST_CHECKED;
                 pThis->replaceAll();
                 return TRUE;
-            case IDC_BTN_CLOSE:
+            case IDC_BTN_FIND_CLOSE:
             case IDCANCEL:
                 DestroyWindow(hwndDlg);
                 pThis->m_hwndReplaceDialog = nullptr;
@@ -4280,7 +4316,7 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
             initializeInference();
             
             // Notify user in chat
-            std::string msg = "✅ Model loaded and ready for inference!\r\n\r\n"
+            std::string msg = " Model loaded and ready for inference!\r\n\r\n"
                              "You can now ask questions in the chat panel.\r\n"
                              "Try: 'hello', 'model info', 'explain code', etc.";
             appendCopilotResponse(msg);
@@ -4308,7 +4344,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         // Attempt to open and parse the GGUF file (streaming - no full data load)
         appendToOutput("[1/5] Opening file...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->Open(filepath)) {
-            std::string error = "❌ Failed to open GGUF file: " + filepath + "\nCheck if file exists and is readable.";
+            std::string error = " Failed to open GGUF file: " + filepath + "\nCheck if file exists and is readable.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             return false;
@@ -4316,7 +4352,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
 
         appendToOutput("[2/5] Parsing header...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->ParseHeader()) {
-            std::string error = "❌ Failed to parse GGUF header from: " + filepath + "\nFile may be corrupted or not a valid GGUF.";
+            std::string error = " Failed to parse GGUF header from: " + filepath + "\nFile may be corrupted or not a valid GGUF.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
@@ -4325,7 +4361,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
 
         appendToOutput("[3/5] Parsing metadata...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->ParseMetadata()) {
-            std::string error = "❌ Failed to parse GGUF metadata from: " + filepath + "\nFile structure may be invalid.";
+            std::string error = " Failed to parse GGUF metadata from: " + filepath + "\nFile structure may be invalid.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
@@ -4335,7 +4371,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         // Build tensor index (reads tensor offsets but NOT data)
         appendToOutput("[4/5] Building tensor index (may take 10-30 seconds for large files)...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->BuildTensorIndex()) {
-            std::string error = "❌ Failed to build tensor index from: " + filepath + "\nFile may be too large or corrupted.";
+            std::string error = " Failed to build tensor index from: " + filepath + "\nFile may be too large or corrupted.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
@@ -4345,18 +4381,18 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         // Pre-load embedding zone for inference preparation
         appendToOutput("[5/5] Pre-loading embedding zone...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->LoadZone("embedding")) {
-            std::string warning = "⚠️  Warning: Could not pre-load embedding zone (non-critical)";
+            std::string warning = "  Warning: Could not pre-load embedding zone (non-critical)";
             appendToOutput(warning, "Output", OutputSeverity::Warning);
         }
     }
     catch (const std::exception& e) {
-        std::string error = "❌ Exception loading GGUF file:\n" + std::string(e.what()) + "\n\nFile: " + filepath;
+        std::string error = " Exception loading GGUF file:\n" + std::string(e.what()) + "\n\nFile: " + filepath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
         ErrorReporter::report(error, m_hwndMain);
         return false;
     }
     catch (...) {
-        std::string error = "❌ Unknown exception loading GGUF file: " + filepath;
+        std::string error = " Unknown exception loading GGUF file: " + filepath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
         ErrorReporter::report(error, m_hwndMain);
         return false;
@@ -4369,7 +4405,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
 
     // Log success with memory savings information
     size_t currentMemory = m_ggufLoader->GetCurrentMemoryUsage();
-    std::string info = "✅ Model loaded successfully (STREAMING MODE)!\n";
+    std::string info = " Model loaded successfully (STREAMING MODE)!\n";
     info += "File: " + filepath + "\n";
     info += "Tensors: " + std::to_string(m_modelTensors.size()) + "\n";
     info += "Layers: " + std::to_string(m_currentModelMetadata.layer_count) + "\n";
@@ -4400,13 +4436,13 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         ShowWindow(m_hwndSecondarySidebar, SW_SHOW);
         
         // Send agentic welcome message to Copilot
-        std::string welcomeMsg = "🤖 AI Model Loaded!\r\n\r\n";
+        std::string welcomeMsg = " AI Model Loaded!\r\n\r\n";
         welcomeMsg += "I'm now ready to assist you with:\r\n";
-        welcomeMsg += "• Code analysis and review\r\n";
-        welcomeMsg += "• GGUF model exploration\r\n";
-        welcomeMsg += "• Tensor inspection and debugging\r\n";
-        welcomeMsg += "• PowerShell automation\r\n";
-        welcomeMsg += "• File operations\r\n\r\n";
+        welcomeMsg += " Code analysis and review\r\n";
+        welcomeMsg += " GGUF model exploration\r\n";
+        welcomeMsg += " Tensor inspection and debugging\r\n";
+        welcomeMsg += " PowerShell automation\r\n";
+        welcomeMsg += " File operations\r\n\r\n";
         welcomeMsg += "Model: " + filepath + "\r\n";
         welcomeMsg += "Tensors: " + std::to_string(m_modelTensors.size()) + "\r\n";
         welcomeMsg += "Memory: " + std::to_string(currentMemory / 1024 / 1024) + " MB\r\n\r\n";
@@ -4424,9 +4460,9 @@ std::string Win32IDE::getModelInfo() const
         return "No model loaded";
     }
 
-    std::string info = "═══════════════════════════════════════════\n";
+    std::string info = "\n";
     info += "GGUF Model Information (STREAMING MODE)\n";
-    info += "═══════════════════════════════════════════\n\n";
+    info += "\n\n";
     
     info += "File: " + m_loadedModelPath + "\n";
     info += "Tensors: " + std::to_string(m_modelTensors.size()) + "\n";
@@ -4440,22 +4476,22 @@ std::string Win32IDE::getModelInfo() const
     size_t currentMemory = m_ggufLoader->GetCurrentMemoryUsage();
     auto loadedZones = m_ggufLoader->GetLoadedZones();
     
-    info += "📊 Memory Status:\n";
+    info += " Memory Status:\n";
     info += "  Current RAM: " + std::to_string(currentMemory / 1024 / 1024) + " MB\n";
     info += "  Max Per Zone: ~400 MB\n";
     info += "  Total Capacity: ~500 MB (92x reduction from full load!)\n";
     info += "  Loaded Zones: " + std::to_string(loadedZones.size()) + "\n\n";
     
     if (!loadedZones.empty()) {
-        info += "🎯 Active Zones:\n";
+        info += " Active Zones:\n";
         for (const auto& zone : loadedZones) {
-            info += "   ✓ " + zone + "\n";
+            info += "    " + zone + "\n";
         }
         info += "\n";
     }
 
     info += "Tensor Details (first 10):\n";
-    info += "──────────────────────────────────────────\n";
+    info += "\n";
     
     for (size_t i = 0; i < m_modelTensors.size() && i < 10; ++i) {
         const auto& tensor = m_modelTensors[i];
@@ -4468,7 +4504,7 @@ std::string Win32IDE::getModelInfo() const
         info += "... and " + std::to_string(m_modelTensors.size() - 10) + " more tensors\n";
     }
 
-    info += "\n💡 Tip: Zones load on-demand during inference for optimal performance!\n";
+    info += "\n Tip: Zones load on-demand during inference for optimal performance!\n";
 
     return info;
 }
@@ -4751,7 +4787,7 @@ void Win32IDE::onFileExplorerDoubleClick()
 void Win32IDE::loadModelFromExplorer(const std::string& filePath)
 {
     if (loadGGUFModel(filePath)) {
-        std::string message = "✅ Model loaded from File Explorer:\n" + filePath + "\n\n" + getModelInfo();
+        std::string message = " Model loaded from File Explorer:\n" + filePath + "\n\n" + getModelInfo();
         appendToOutput(message, "Output", OutputSeverity::Info);
         
         // Update status bar
@@ -4763,7 +4799,7 @@ void Win32IDE::loadModelFromExplorer(const std::string& filePath)
         
         SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)("Model: " + filename).c_str());
     } else {
-        appendToOutput("❌ Failed to load model: " + filePath, "Errors", OutputSeverity::Error);
+        appendToOutput(" Failed to load model: " + filePath, "Errors", OutputSeverity::Error);
     }
 }
 
@@ -4899,7 +4935,10 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
         }
     }
 
+    // The native inference engine was not initialised for this session; report
+    // it instead of falling off the end of a non-void function.
     std::string response = "Error: Local model loaded but Native Inference Engine not initialized.\n";
+    return response;
 }
 
 void Win32IDE::toggleChatMode()
@@ -4908,7 +4947,7 @@ void Win32IDE::toggleChatMode()
     
     if (m_chatMode) {
         // Entering chat mode
-        std::string status = "🤖 Chat Mode ON - Model: ";
+        std::string status = " Chat Mode ON - Model: ";
         status += m_loadedModelPath.empty() ? "None" : m_loadedModelPath.substr(m_loadedModelPath.find_last_of("\\/") + 1);
         
         appendToOutput(status, "Output", OutputSeverity::Info);
@@ -4922,7 +4961,7 @@ void Win32IDE::toggleChatMode()
         appendChatMessage("System", "Commands: /exit-chat to return to terminal mode");
     } else {
         // Exiting chat mode
-        appendToOutput("🔧 Chat Mode OFF - Returned to terminal mode", "Output", OutputSeverity::Info);
+        appendToOutput(" Chat Mode OFF - Returned to terminal mode", "Output", OutputSeverity::Info);
         SendMessage(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)"Terminal Mode");
         appendChatMessage("System", "Chat mode deactivated. Returned to terminal mode.");
     }
@@ -5260,10 +5299,10 @@ void Win32IDE::showCommitDialog()
         10, 35, 470, 100, hwndDlg, nullptr, m_hInstance, nullptr);
     
     HWND hwndCommitBtn = CreateWindowExA(0, "BUTTON", "Commit", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-        10, 145, 100, 30, hwndDlg, (HMENU)1, m_hInstance, nullptr);
+        10, 145, 100, 30, hwndDlg, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1)), m_hInstance, nullptr);
     
     HWND hwndCancelBtn = CreateWindowExA(0, "BUTTON", "Cancel", WS_CHILD | WS_VISIBLE,
-        120, 145, 100, 30, hwndDlg, (HMENU)2, m_hInstance, nullptr);
+        120, 145, 100, 30, hwndDlg, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(2)), m_hInstance, nullptr);
     
     SetFocus(m_hwndCommitDialog);
 }
@@ -5304,9 +5343,9 @@ bool Win32IDE::initializeInference()
             appendToOutput("Loading model into Native Engine: " + m_loadedModelPath, "Output", OutputSeverity::Info);
             if (engine->LoadModel(m_loadedModelPath)) {
                 m_nativeEngineLoaded = true;
-                appendToOutput("✅ Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
+                appendToOutput(" Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
             } else {
-                 appendToOutput("❌ Native Engine Model Load Failed.", "Errors", OutputSeverity::Error);
+                 appendToOutput(" Native Engine Model Load Failed.", "Errors", OutputSeverity::Error);
                  // Don't fail completely if we have Ollama fallback, but for "no simulation" we adhere to native.
             }
         }
@@ -5324,7 +5363,7 @@ bool Win32IDE::initializeInference()
         m_inferenceConfig.maxTokens = std::min(512, (int)m_currentModelMetadata.context_length / 4);
     }
     
-    appendToOutput("✅ Inference initialized for model: " + m_loadedModelPath, "Output", OutputSeverity::Info);
+    appendToOutput(" Inference initialized for model: " + m_loadedModelPath, "Output", OutputSeverity::Info);
     return true;
 }
 
@@ -5611,13 +5650,13 @@ void Win32IDE::showAbout()
         "Version: 1.0.0\n"
         "Build: " __DATE__ " " __TIME__ "\n\n"
         "Features:\n"
-        "• Native Win32 UI\n"
-        "• GGUF Model Support\n"
-        "• PowerShell Integration\n"
-        "• Git Integration\n"
-        "• AI Chat via Ollama\n"
-        "• Syntax Highlighting\n"
-        "• Multi-Terminal Support\n\n"
+        " Native Win32 UI\n"
+        " GGUF Model Support\n"
+        " PowerShell Integration\n"
+        " Git Integration\n"
+        " AI Chat via Ollama\n"
+        " Syntax Highlighting\n"
+        " Multi-Terminal Support\n\n"
         "GitHub: ItsMehRAWRXD/RawrXD";
     
     MessageBoxA(m_hwndMain, aboutText.c_str(), "About RawrXD IDE", MB_OK | MB_ICONINFORMATION);

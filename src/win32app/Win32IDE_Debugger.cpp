@@ -63,7 +63,7 @@ void Win32IDE::createDebuggerUI()
 
     // Create toolbar buttons
     HWND btnContinue = CreateWindowExA(
-        0, "BUTTON", "▶ Continue",
+        0, "BUTTON", " Continue",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         5, 5, 80, 22,
         m_hwndDebuggerToolbar,
@@ -73,7 +73,7 @@ void Win32IDE::createDebuggerUI()
     );
 
     HWND btnStepOver = CreateWindowExA(
-        0, "BUTTON", "⟿ Step Over",
+        0, "BUTTON", " Step Over",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         90, 5, 80, 22,
         m_hwndDebuggerToolbar,
@@ -83,7 +83,7 @@ void Win32IDE::createDebuggerUI()
     );
 
     HWND btnStepInto = CreateWindowExA(
-        0, "BUTTON", "↓ Step Into",
+        0, "BUTTON", " Step Into",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         175, 5, 80, 22,
         m_hwndDebuggerToolbar,
@@ -93,7 +93,7 @@ void Win32IDE::createDebuggerUI()
     );
 
     HWND btnStepOut = CreateWindowExA(
-        0, "BUTTON", "↑ Step Out",
+        0, "BUTTON", " Step Out",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         260, 5, 75, 22,
         m_hwndDebuggerToolbar,
@@ -103,7 +103,7 @@ void Win32IDE::createDebuggerUI()
     );
 
     HWND btnStop = CreateWindowExA(
-        0, "BUTTON", "■ Stop",
+        0, "BUTTON", " Stop",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         340, 5, 55, 22,
         m_hwndDebuggerToolbar,
@@ -286,9 +286,9 @@ void Win32IDE::attachDebugger()
     m_debuggerAttached = true;
     m_debuggerPaused = false;
     
-    std::string status = "✅ Debugger Attached | Ready to debug";
+    std::string status = " Debugger Attached | Ready to debug";
     SetWindowTextA(m_hwndDebuggerStatus, status.c_str());
-    appendToOutput("🔍 Debugger attached successfully", "Output", OutputSeverity::Info);
+    appendToOutput(" Debugger attached successfully", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::detachDebugger()
@@ -300,9 +300,9 @@ void Win32IDE::detachDebugger()
     m_callStack.clear();
     m_localVariables.clear();
     
-    std::string status = "⏹ Debugger Detached";
+    std::string status = " Debugger Detached";
     SetWindowTextA(m_hwndDebuggerStatus, status.c_str());
-    appendToOutput("🔍 Debugger detached", "Output", OutputSeverity::Info);
+    appendToOutput(" Debugger detached", "Output", OutputSeverity::Info);
     
     updateDebuggerUI();
 }
@@ -312,8 +312,8 @@ void Win32IDE::pauseExecution()
     if (!m_debuggerAttached || m_debuggerPaused) return;
 
     m_debuggerPaused = true;
-    SetWindowTextA(m_hwndDebuggerStatus, "⏸ Debugger Paused - Execution halted");
-    appendToOutput("⏸ Execution paused by debugger", "Output", OutputSeverity::Info);
+    SetWindowTextA(m_hwndDebuggerStatus, " Debugger Paused - Execution halted");
+    appendToOutput(" Execution paused by debugger", "Output", OutputSeverity::Info);
     
     updateVariables();
     updateCallStack();
@@ -325,8 +325,8 @@ void Win32IDE::resumeExecution()
     if (!m_debuggerAttached || !m_debuggerPaused) return;
 
     m_debuggerPaused = false;
-    SetWindowTextA(m_hwndDebuggerStatus, "▶ Debugger Running");
-    appendToOutput("▶ Execution resumed", "Output", OutputSeverity::Info);
+    SetWindowTextA(m_hwndDebuggerStatus, " Debugger Running");
+    appendToOutput(" Execution resumed", "Output", OutputSeverity::Info);
     
     updateDebuggerUI();
 }
@@ -336,7 +336,7 @@ void Win32IDE::stepOverExecution()
     if (!m_debuggerAttached) return;
 
     m_debuggerPaused = true;
-    appendToOutput("⟿ Step Over executed", "Output", OutputSeverity::Debug);
+    appendToOutput(" Step Over executed", "Output", OutputSeverity::Debug);
     updateVariables();
     updateCallStack();
     updateDebuggerUI();
@@ -347,7 +347,7 @@ void Win32IDE::stepIntoExecution()
     if (!m_debuggerAttached) return;
 
     m_debuggerPaused = true;
-    appendToOutput("↓ Step Into executed", "Output", OutputSeverity::Debug);
+    appendToOutput(" Step Into executed", "Output", OutputSeverity::Debug);
     updateVariables();
     updateCallStack();
     updateDebuggerUI();
@@ -358,7 +358,7 @@ void Win32IDE::stepOutExecution()
     if (!m_debuggerAttached) return;
 
     m_debuggerPaused = true;
-    appendToOutput("↑ Step Out executed", "Output", OutputSeverity::Debug);
+    appendToOutput(" Step Out executed", "Output", OutputSeverity::Debug);
     updateVariables();
     updateCallStack();
     updateDebuggerUI();
@@ -369,14 +369,14 @@ void Win32IDE::stopDebugger()
     if (!m_debuggerAttached) return;
 
     detachDebugger();
-    SetWindowTextA(m_hwndDebuggerStatus, "⏹ Debugger Stopped");
+    SetWindowTextA(m_hwndDebuggerStatus, " Debugger Stopped");
 }
 
 void Win32IDE::restartDebugger()
 {
     stopDebugger();
     attachDebugger();
-    SetWindowTextA(m_hwndDebuggerStatus, "🔄 Debugger Restarted");
+    SetWindowTextA(m_hwndDebuggerStatus, " Debugger Restarted");
 }
 
 // ============================================================================
@@ -405,7 +405,7 @@ void Win32IDE::addBreakpoint(const std::string& file, int line)
     m_breakpoints.push_back(bp);
     updateBreakpointList();
 
-    std::string msg = "🔴 Breakpoint added at " + file + ":" + std::to_string(line);
+    std::string msg = " Breakpoint added at " + file + ":" + std::to_string(line);
     appendToOutput(msg, "Output", OutputSeverity::Debug);
 }
 
@@ -418,7 +418,7 @@ void Win32IDE::removeBreakpoint(const std::string& file, int line)
         m_breakpoints.erase(it);
         updateBreakpointList();
         
-        std::string msg = "⚪ Breakpoint removed from " + file + ":" + std::to_string(line);
+        std::string msg = " Breakpoint removed from " + file + ":" + std::to_string(line);
         appendToOutput(msg, "Output", OutputSeverity::Debug);
     }
 }
@@ -440,7 +440,7 @@ void Win32IDE::clearAllBreakpoints()
 {
     m_breakpoints.clear();
     updateBreakpointList();
-    appendToOutput("🗑 All breakpoints cleared", "Output", OutputSeverity::Info);
+    appendToOutput(" All breakpoints cleared", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::updateBreakpointList()
@@ -487,7 +487,7 @@ void Win32IDE::addWatchExpression(const std::string& expression)
     m_watchList.push_back(item);
     updateWatchList();
 
-    std::string msg = "👁 Watch added: " + expression;
+    std::string msg = " Watch added: " + expression;
     appendToOutput(msg, "Output", OutputSeverity::Debug);
 }
 
@@ -500,7 +500,7 @@ void Win32IDE::removeWatchExpression(const std::string& expression)
         m_watchList.erase(it);
         updateWatchList();
         
-        std::string msg = "👁 Watch removed: " + expression;
+        std::string msg = " Watch removed: " + expression;
         appendToOutput(msg, "Output", OutputSeverity::Debug);
     }
 }
@@ -640,7 +640,7 @@ void Win32IDE::onDebuggerBreakpoint(const std::string& file, int line)
     m_debuggerCurrentFile = file;
     m_debuggerCurrentLine = line;
 
-    std::string msg = "🔴 Breakpoint hit at " + file + ":" + std::to_string(line);
+    std::string msg = " Breakpoint hit at " + file + ":" + std::to_string(line);
     appendToOutput(msg, "Output", OutputSeverity::Warning);
     
     highlightDebuggerLine(file, line);
@@ -649,13 +649,13 @@ void Win32IDE::onDebuggerBreakpoint(const std::string& file, int line)
 void Win32IDE::onDebuggerException(const std::string& message)
 {
     pauseExecution();
-    std::string msg = "⚠️ Exception: " + message;
+    std::string msg = " Exception: " + message;
     appendToOutput(msg, "Output", OutputSeverity::Error);
 }
 
 void Win32IDE::onDebuggerOutput(const std::string& text)
 {
-    appendToOutput("📤 " + text, "Output", OutputSeverity::Debug);
+    appendToOutput(" " + text, "Output", OutputSeverity::Debug);
 }
 
 void Win32IDE::onDebuggerContinued()
@@ -743,7 +743,7 @@ void Win32IDE::debuggerSetVariable(const std::string& name, const std::string& v
         it->value = value;
         updateVariables();
         
-        std::string msg = "✏️ Set " + name + " = " + value;
+        std::string msg = " Set " + name + " = " + value;
         appendToOutput(msg, "Output", OutputSeverity::Info);
     }
 }
@@ -757,7 +757,7 @@ void Win32IDE::debuggerInspectMemory(uint64_t address, size_t bytes)
 
 void Win32IDE::debuggerEvaluateExpression(const std::string& expression)
 {
-    std::string msg = "📐 Evaluate: " + expression + " = <value>";
+    std::string msg = " Evaluate: " + expression + " = <value>";
     appendToOutput(msg, "Output", OutputSeverity::Debug);
 }
 
