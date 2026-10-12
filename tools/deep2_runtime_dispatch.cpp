@@ -781,16 +781,17 @@ int main(int argc, char* argv[])
             return 0.5f * (float)((double)(seed % 20001u) / 10000.0 - 1.0);
         };
 
-        // kinds 0/1 are the k-quants (256 values per block); kinds 2/3 are the
+        // kinds 0/1 are the k-quants (256 values per block); kinds 2/3/4 are the
         // legacy types the executor can now dispatch on the GPU (32 values per
         // block). Every kind is probed against ggml's OWN dequantiser.
-        static const ggml_type kKindType[4] = { GGML_TYPE_Q4_K, GGML_TYPE_Q6_K,
-                                                GGML_TYPE_Q5_0, GGML_TYPE_Q8_0 };
-        static const char* kKindName[4] = { "Q4_K", "Q6_K", "Q5_0", "Q8_0" };
-        static const size_t kKindBlock[4] = { 144u, 210u, 22u, 34u };
+        static const ggml_type kKindType[5] = { GGML_TYPE_Q4_K, GGML_TYPE_Q6_K,
+                                                GGML_TYPE_Q5_0, GGML_TYPE_Q8_0,
+                                                GGML_TYPE_Q4_0 };
+        static const char* kKindName[5] = { "Q4_K", "Q6_K", "Q5_0", "Q8_0", "Q4_0" };
+        static const size_t kKindBlock[5] = { 144u, 210u, 22u, 34u, 18u };
 
         int probed = 0;
-        for (int wantKind = 0; wantKind <= 3; ++wantKind)
+        for (int wantKind = 0; wantKind <= 4; ++wantKind)
         {
             const ggml_type wantType = kKindType[wantKind];
             const ggml_type_traits* tr = ggml_get_type_traits(wantType);
@@ -852,10 +853,11 @@ int main(int argc, char* argv[])
                 {
                     std::printf("  [FAIL] %s GPU dispatch on %s\n", kname, t.name.c_str());
                     switch (wantKind) {
-                    case 0: Check(false, "Q4_K kernel dispatches on GPU"); break;
-                    case 1: Check(false, "Q6_K kernel dispatches on GPU"); break;
-                    case 2: Check(false, "Q5_0 kernel dispatches on GPU"); break;
-                    default: Check(false, "Q8_0 kernel dispatches on GPU"); break;
+                case 0: Check(false, "Q4_K kernel dispatches on GPU"); break;
+                case 1: Check(false, "Q6_K kernel dispatches on GPU"); break;
+                case 2: Check(false, "Q5_0 kernel dispatches on GPU"); break;
+                case 3: Check(false, "Q8_0 kernel dispatches on GPU"); break;
+                default: Check(false, "Q4_0 kernel dispatches on GPU"); break;
                     }
                     continue;
                 }
@@ -889,7 +891,8 @@ int main(int argc, char* argv[])
                 case 0: Check(worst <= 1e-5, "Q4_K GPU kernel matches independent reference"); break;
                 case 1: Check(worst <= 1e-5, "Q6_K GPU kernel matches independent reference"); break;
                 case 2: Check(worst <= 1e-5, "Q5_0 GPU kernel matches independent reference"); break;
-                default: Check(worst <= 1e-5, "Q8_0 GPU kernel matches independent reference"); break;
+                case 3: Check(worst <= 1e-5, "Q8_0 GPU kernel matches independent reference"); break;
+                default: Check(worst <= 1e-5, "Q4_0 GPU kernel matches independent reference"); break;
                 }
 
                 // Batched-dispatch gate: the SAME dot queued into a batch must

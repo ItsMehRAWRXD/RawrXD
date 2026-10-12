@@ -62,10 +62,11 @@ inline void BuildInterleavedQ8(const float* x, size_t n_in, std::vector<float>& 
 // Packed row stride for a kind / n_in pair.
 inline size_t QuantRowBytes(int kind, size_t n_in) {
     switch (kind) {
-    case 0: return (n_in / 256u) * 144u;   // Q4_K
-    case 1: return (n_in / 256u) * 210u;   // Q6_K
-    case 2: return ((n_in + 31u) / 32u) * 22u;  // Q5_0
-    default: return ((n_in + 31u) / 32u) * 34u; // Q8_0
+    case 0: return (n_in / 256u) * 144u;               // Q4_K
+    case 1: return (n_in / 256u) * 210u;               // Q6_K
+    case 2: return ((n_in + 31u) / 32u) * 22u;         // Q5_0
+    case 3: return ((n_in + 31u) / 32u) * 34u;         // Q8_0
+    default: return ((n_in + 31u) / 32u) * 18u;        // Q4_0
     }
 }
 
@@ -77,6 +78,7 @@ inline int QuantKindOf(ggml_type t) {
     case GGML_TYPE_Q6_K: return 1;
     case GGML_TYPE_Q5_0: return 2;
     case GGML_TYPE_Q8_0: return 3;
+    case GGML_TYPE_Q4_0: return 4;
     default: return -1;
     }
 }
@@ -85,9 +87,9 @@ inline int QuantKindOf(ggml_type t) {
 // activation, exactly as the shader does: ggml block decoders, fp16 scales,
 // integer MACs, super-block activation scale applied once per super-block.
 inline float RowDotInterleavedQ8(int kind, const uint8_t* row, const float* q8v, size_t n_in) {
-    if (kind == 2 || kind == 3) {
-        // ---- legacy Q5_0 / Q8_0 (32 values per block) ----
-        const size_t lb_bytes = (kind == 2) ? 22u : 34u;
+    if (kind >= 2) {
+        // ---- legacy Q5_0 / Q8_0 / Q4_0 (32 values per block) ----
+        const size_t lb_bytes = (kind == 2) ? 22u : ((kind == 3) ? 34u : 18u);
         const size_t n_sb = (n_in + 255u) / 256u;
         double acc = 0.0;
         for (size_t b = 0; b < n_sb; ++b) {
@@ -114,12 +116,26 @@ inline float RowDotInterleavedQ8(int kind, const uint8_t* row, const float* q8v,
                         dotp += (w1 - 16) * (int32_t)q8v[b * kQ8Stride + 1 + a0 + j + 16u];
                     }
                     acc += (double)dw * (double)dq * (double)dotp;
-                } else {
+                } else if (kind == 3) {
                     uint16_t hb;
                     std::memcpy(&hb, blk, 2);
                     const float dw = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hb));
                     for (size_t i = 0; i < 32u; ++i)
                         dotp += (int32_t)(int8_t)blk[2 + i] * (int32_t)q8v[b * kQ8Stride + 1 + a0 + i];
+                    acc += (double)dw * (double)dq * (double)dotp;
+                } else {
+                    // Q4_0: fp16 d, 16 nibble bytes; low nibble -> element j,
+                    // high nibble -> element j+16, minus 8.
+                    uint16_t hb;
+                    std::memcpy(&hb, blk, 2);
+                    const float dw = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hb));
+                    for (size_t j = 0; j < 16u; ++j) {
+                        const uint32_t qsb = blk[2 + j];
+                        const int w0 = (int)(qsb & 0x0Fu) - 8;
+                        const int w1 = (int)(qsb >> 4) - 8;
+                        dotp += w0 * (int32_t)q8v[b * kQ8Stride + 1 + a0 + j];
+                        dotp += w1 * (int32_t)q8v[b * kQ8Stride + 1 + a0 + j + 16u];
+                    }
                     acc += (double)dw * (double)dq * (double)dotp;
                 }
             }
@@ -1943,6 +1959,12 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     }
 
     // ---- routing-weighted accumulation ---------------------------------------
+    for (size_t e = 0; e < nSel; ++e)
+    {
+        if ((size_t)ids[e] >= usableE) continue;
+        for (size_t i = 0; i < olen; ++i)
+            y[i] += w[e] * dyAll[e * embd + i];
+    }
     if (std::getenv("MOE_TRACE")) {
         double ys = 0.0;
         for (size_t i = 0; i < olen && i < 4096; ++i) ys += y[i];
@@ -1950,12 +1972,6 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                      y.empty() ? 0.0 : y[0], y.empty() ? 0.0 : y[1], y.empty() ? 0.0 : y[2],
                      y.empty() ? 0.0 : y[3], ys);
         std::fflush(stderr);
-    }
-    for (size_t e = 0; e < nSel; ++e)
-    {
-        if ((size_t)ids[e] >= usableE) continue;
-        for (size_t i = 0; i < olen; ++i)
-            y[i] += w[e] * dyAll[e * embd + i];
     }
 
     if (expertsProcessed == 0) { err = "moe: no expert was processed"; return false; }

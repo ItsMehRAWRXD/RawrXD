@@ -1145,11 +1145,11 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     // Validate everything up front. No silent CPU fallback: a failure is
     // reported to the caller so it can decide what to do.
     if (!packed || !q8_interleaved || !out) return false;
-    if (kind < 0 || kind > 3) return false;
+    if (kind < 0 || kind > 4) return false;
     if (n_out == 0 || n_in == 0 || n_blocks == 0) return false;
 
     // Kinds 0/1 are the k-quants (one 256-value super-block per block); kinds
-    // 2/3 are legacy types (32 values per block, eight per super-block). For
+    // 2/3/4 are legacy types (32 values per block, eight per super-block). For
     // the legacy kinds the LAST activation super-block may be PARTIAL:
     // n_in need not divide 256 (e.g. 2688 = 10*256 + 128), so the activation
     // carries ceil(n_in/256) super-blocks and the shader decodes only the
@@ -1158,7 +1158,7 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     size_t block_bytes = 0, need_packed = 0, need_q8 = 0;
     if (legacy) {
         if ((n_in % 32u) != 0) return false;
-        block_bytes = (kind == 2) ? 22u : 34u;   // Q5_0 / Q8_0
+        block_bytes = (kind == 2) ? 22u : ((kind == 3) ? 34u : 18u);  // Q5_0 / Q8_0 / Q4_0
         const size_t n_sb = (n_in + 255u) / 256u;
         need_packed = n_out * ((n_in + 31u) / 32u) * block_bytes;
         need_q8 = n_sb * 273u * sizeof(float);
@@ -1431,11 +1431,11 @@ namespace {
 bool QuantDotGeometry(int kind, size_t n_in, size_t n_out, size_t n_blocks,
                       size_t& block_bytes, size_t& need_packed, size_t& need_q8,
                       size_t& n_sb) {
-    if (kind < 0 || kind > 3) return false;
+    if (kind < 0 || kind > 4) return false;
     if (n_out == 0 || n_in == 0) return false;
     if (kind >= 2) {
         if ((n_in % 32u) != 0) return false;
-        block_bytes = (kind == 2) ? 22u : 34u;   // Q5_0 / Q8_0
+        block_bytes = (kind == 2) ? 22u : ((kind == 3) ? 34u : 18u);  // Q5_0 / Q8_0 / Q4_0
         n_sb = (n_in + 255u) / 256u;
         need_packed = n_out * ((n_in + 31u) / 32u) * block_bytes;
         need_q8 = n_sb * 273u * sizeof(float);

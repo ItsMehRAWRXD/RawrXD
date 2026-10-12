@@ -46,7 +46,8 @@ size_t RowBytesForKind(int kind, size_t n_in)
     case 0: return (n_in / 256u) * 144u;               // Q4_K
     case 1: return (n_in / 256u) * 210u;               // Q6_K
     case 2: return ((n_in + 31u) / 32u) * 22u;         // Q5_0
-    default: return ((n_in + 31u) / 32u) * 34u;        // Q8_0
+    case 3: return ((n_in + 31u) / 32u) * 34u;         // Q8_0
+    default: return ((n_in + 31u) / 32u) * 18u;        // Q4_0
     }
 }
 
@@ -64,7 +65,8 @@ struct QueuedDot {
     int kind;
     const void* packed;
     size_t packed_bytes;
-    const void* q8;
+    std::vector<float> q8_storage;   // OWNED copy of the activation bytes
+    const void* q8;                  // points into q8_storage (never dangling)
     size_t q8_bytes;
     void* out;
     size_t out_bytes;
@@ -198,8 +200,8 @@ bool DotBlocked(int kind,
 {
     g_receipt = Receipt{};
 
-    // kind: 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0.
-    if (kind < 0 || kind > 3) {
+    // kind: 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0.
+    if (kind < 0 || kind > 4) {
         g_receipt.fallback_reason = "unsupported kind";
         return false;
     }
@@ -220,8 +222,8 @@ bool DotBlocked(int kind,
         g_receipt.fallback_reason = "legacy kind with n_in not a multiple of 32";
         return false;
     }
-    const size_t row_bytes = legacy ? ((n_in + 31u) / 32u) * (size_t)(kind == 2 ? 22u : 34u)
-                                   : (n_in / 256u) * (size_t)(kind == 0 ? 144u : 210u);
+    const size_t row_bytes = legacy ? RowBytesForKind(kind, n_in)
+                                   : (kind == 0 ? (n_in / 256u) * 144u : (n_in / 256u) * 210u);
     const size_t n_sb = legacy ? (n_in + 255u) / 256u : (n_in / 256u);
 
     // ---- batched (deferred) mode -------------------------------------------
@@ -240,14 +242,23 @@ bool DotBlocked(int kind,
         qd.kind = kind;
         qd.packed = wBytes;
         qd.packed_bytes = wBytesCount;
-        qd.q8 = q8_interleaved;
+        // OWN the activation bytes: the caller's buffer may a per-expert local
+        // that does not outlive the loop iteration (the MoE down-phase does
+        // exactly that), and the dot only executes at EndBatch.
+        if (q8_bytes % sizeof(float) != 0) {
+            g_receipt.fallback_reason = "batch queue with a misaligned activation buffer";
+            return false;
+        }
+        qd.q8_storage.resize(q8_bytes / sizeof(float));
+        std::memcpy(qd.q8_storage.data(), q8_interleaved, q8_bytes);
+        qd.q8 = qd.q8_storage.data();
         qd.q8_bytes = q8_bytes;
         qd.out = y;
         qd.out_bytes = n_out * sizeof(float);
         qd.n_out = n_out;
         qd.n_in = n_in;
         qd.cpu = cpu;
-        g_queued.push_back(qd);
+        g_queued.push_back(std::move(qd));
         g_receipt.used_gpu = true;
         g_receipt.queued = true;
         g_receipt.gpu_rows = n_out;
