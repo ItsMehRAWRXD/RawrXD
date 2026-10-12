@@ -189,6 +189,52 @@ const BackendStats& BackendCounters() {
     return g_backend;
 }
 
+bool DotF16(const void* wBytes, size_t wBytesCount,
+            const float* x, size_t n_in,
+            float* y, size_t n_out,
+            const CpuDot& cpu,
+            bool force_cpu)
+{
+    g_receipt = Receipt{};
+    if (!wBytes || !x || !y || n_in == 0 || n_out == 0) {
+        g_receipt.fallback_reason = "bad arguments";
+        return false;
+    }
+    if (!cpu) {
+        g_receipt.fallback_reason = "no CPU fallback supplied";
+        return false;
+    }
+    // The kernel reads fp16 weights as uint32 word pairs.
+    if ((n_in % 2u) != 0 || reinterpret_cast<uintptr_t>(wBytes) % 4u != 0) {
+        g_receipt.fallback_reason = "f16: n_in odd or weight bytes misaligned";
+        return false;
+    }
+    if (wBytesCount < n_out * n_in * sizeof(uint16_t)) {
+        g_receipt.fallback_reason = "f16: weight bytes short";
+        return false;
+    }
+    if (!g_force_cpu && !force_cpu) {
+        std::lock_guard<std::mutex> lk(g_gpu_mutex);
+        if (Gpu().ExecuteF16Dot(wBytes, wBytesCount, x, n_in, y,
+                                n_out * sizeof(float), n_out)) {
+            g_receipt.used_gpu = true;
+            g_receipt.gpu_rows = n_out;
+            return true;
+        }
+    }
+    // CPU fallback: the caller decodes one packed fp16 row at a time (ggml's
+    // own conversion) and dots it against the same raw activation.
+    const size_t row_bytes = n_in * sizeof(uint16_t);
+    for (size_t j = 0; j < n_out; ++j) {
+        const uint8_t* row = static_cast<const uint8_t*>(wBytes) + j * row_bytes;
+        y[j] = cpu(row, nullptr, j);
+    }
+    g_receipt.used_gpu = false;
+    g_receipt.cpu_rows = n_out;
+    g_receipt.fallback_reason = (force_cpu || g_force_cpu) ? "force_cpu" : "f16 dot: gpu unavailable";
+    return false;
+}
+
 bool DotBlocked(int kind,
                 const void* wBytes, size_t wBytesCount,
                 const float* x, size_t n_in,

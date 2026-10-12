@@ -972,6 +972,114 @@ int main(int argc, char* argv[])
         }
     }
 
+    // ---- [4b] isolated FP16 kernel parity ----------------------------------
+    // FP16 projections (qwen3's blk.N.attn_v.weight) used to run on the CPU;
+    // the F16 GEMV kernel closes that. Same contract as [4]: the kernel's dot
+    // against an independent ggml-fp16 reference.
+    {
+        int f16Probed = 0;
+        for (const TensorRec& t : rep.tensors)
+        {
+            if (t.ggml_type != GGML_TYPE_F16)
+                continue;
+            const size_t n_in = t.dims.empty() ? 0 : t.dims[0];
+            const size_t n_out = t.dims.size() > 1 ? t.dims[1] : 0;
+            if (!n_in || !n_out || (n_in % 2u) != 0)
+                continue;
+            if (t.bytes < n_out * n_in * sizeof(uint16_t))
+                continue;
+            if (reinterpret_cast<uintptr_t>(t.data) % 4u != 0)
+                continue;
+            std::vector<float> x(n_in, 0.0f);
+            uint32_t seed = 0x9e3779b9u;
+            for (size_t i = 0; i < n_in; ++i)
+            {
+                seed ^= seed << 13; seed ^= seed >> 17; seed ^= seed << 5;
+                x[i] = 0.5f * (float)((double)(seed % 20001u) / 10000.0 - 1.0);
+            }
+            // Isolation pattern: an activation that is 1 on EVEN indices and 0
+            // on ODD isolates which half of each fp16 word the kernel reads.
+            std::vector<float> xEven(n_in, 0.0f);
+            for (size_t i = 0; i < n_in; i += 2u) xEven[i] = 1.0f;
+            std::vector<float> rw(n_in, 0.0f);
+            const ggml_type_traits* tr = ggml_get_type_traits(GGML_TYPE_F16);
+            const size_t row_bytes = n_in * sizeof(uint16_t);
+            auto evenReference = [&](size_t j) {
+                const uint8_t* row = reinterpret_cast<const uint8_t*>(t.data) + j * row_bytes;
+                tr->to_float(row, rw.data(), (int)n_in);
+                double acc = 0.0;
+                for (size_t i = 0; i < n_in; i += 2u) acc += double(rw[i]);
+                return acc;
+            };
+            QuantDot::CpuDot cpu = [&](const uint8_t* row, const void*, size_t) -> float {
+                double acc = 0.0;
+                for (size_t i = 0; i < n_in; ++i)
+                {
+                    uint16_t hb;
+                    std::memcpy(&hb, row + i * 2u, 2);
+                    acc += double(ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hb))) * double(x[i]);
+                }
+                return (float)acc;
+            };
+            {
+                std::vector<float> yEven(n_out, 0.0f);
+                const bool okEven = QuantDot::DotF16(t.data, t.bytes, xEven.data(), n_in,
+                                                      yEven.data(), n_out, cpu, false);
+                double evenWorst = 0.0, evenSum = 0.0;
+                for (size_t j = 0; j < n_out; ++j)
+                {
+                    const double acc = evenReference(j);
+                    evenWorst = std::max(evenWorst, std::fabs(okEven ? double(yEven[j]) : 0.0) - acc);
+                    if (j < 3)
+                        std::printf("    even j=%zu kernel=%.7g reference=%.7g\n", j,
+                                    okEven ? (double)yEven[j] : 0.0, acc);
+                    evenSum += okEven ? double(yEven[j]) : 0.0;
+                }
+                std::printf("    even-activation max_abs=%.3g kernel_sum=%.6g\n", evenWorst, evenSum);
+            }
+            std::vector<float> y(n_out, 0.0f);
+            const bool ok = QuantDot::DotF16(t.data, t.bytes, x.data(), n_in, y.data(), n_out,
+                                             cpu, false);
+            if (!ok)
+            {
+                std::printf("  [FAIL] F16 GPU dispatch on %s\n", t.name.c_str());
+                Check(false, "F16 GPU kernel dispatches");
+                break;
+            }
+            // Independent reference: ggml's own dequantiser row by row, raw
+            // activation, double accumulation. (tr/row_bytes already declared
+            // for the even-activation isolation block above.)
+            double worst = 0.0;
+            for (size_t j = 0; j < n_out; ++j)
+            {
+                const uint8_t* row = reinterpret_cast<const uint8_t*>(t.data) + j * row_bytes;
+                tr->to_float(row, rw.data(), (int)n_in);
+                double acc = 0.0;
+                for (size_t i = 0; i < n_in; ++i)
+                    acc += double(rw[i]) * double(x[i]);
+                worst = std::max(worst, std::fabs(double(y[j]) - acc));
+            }
+            std::printf("  F16 on %s: n_out=%zu max_abs_vs_reference=%.3g\n", t.name.c_str(), n_out, worst);
+            if (worst > 1e-5) {
+                for (size_t j = 0; j < 4 && j < n_out; ++j) {
+                    const uint8_t* row = reinterpret_cast<const uint8_t*>(t.data) + j * row_bytes;
+                    tr->to_float(row, rw.data(), (int)n_in);
+                    double acc = 0.0;
+                    for (size_t i = 0; i < n_in; ++i) acc += double(rw[i]) * double(x[i]);
+                    std::printf("    j=%zu kernel=%.7g reference=%.7g\n", j, (double)y[j], acc);
+                }
+            }
+            Check(worst <= 1e-5, "F16 GPU kernel matches independent reference");
+            ++f16Probed;
+            break;   // one probe is the certification contract
+        }
+        if (f16Probed == 0)
+        {
+            std::printf("  (no FP16 matmul tensor in this model; gate N/A)\n");
+            Skip("F16 kernel parity", "no FP16 matmul tensor in this model");
+        }
+    }
+
     // ---- [5] per-position parity + generation -------------------------------
     std::printf("\n--- [5] per-position parity (GPU vs independent reference) ---\n");
     // The reference re-runs the identical runtime graph with every quantised
@@ -1254,10 +1362,13 @@ int main(int argc, char* argv[])
                             }
                         }
                     }
-                    std::printf("  pos=%-3zu cos=%.7f max_abs=%.3e rel=%.3e gpu_argmax=%-6u ref_argmax=%-6u "
-                                "first_material_op='%s'(blk %d) delta=%.3e\n",
-                                (size_t)step, cos, mx, rel, gpuT.back(), refT.back(), first_op.c_str(), first_blk,
-                                first_delta);
+                    std::printf("  pos=%-3zu cos=%.7f max_abs=%.3e rel=%.3e rmse=%.3e "
+                                 "gpu_argmax=%-6u ref_argmax=%-6u "
+                                 "first_material_op='%s'(blk %d) delta=%.3e\n",
+                                 (size_t)step, cos, mx, rel,
+                                 std::sqrt(sq / double(std::max<size_t>(n, 1))),
+                                 gpuT.back(), refT.back(), first_op.c_str(), first_blk,
+                                 first_delta);
                     if (cos < kNetCos)
                         std::printf("  ^ pos %zu BELOW the 0.998 cosine gate\n", (size_t)step);
                 }
@@ -1272,7 +1383,7 @@ int main(int argc, char* argv[])
             Check(finiteOk, "logits finite at every position");
 
             // Numerical parity across positions.
-            double worstCos = 1.0, worstRel = 0.0, worstAbs = 0.0;
+            double worstCos = 1.0, worstRel = 0.0, worstAbs = 0.0, worstRmse = 0.0;
             for (size_t s = 0; s < gpuL.size(); ++s)
             {
                 const size_t n = std::min(gpuL[s].size(), refL[s].size());
@@ -1294,9 +1405,10 @@ int main(int argc, char* argv[])
                 worstCos = std::min(worstCos, cos);
                 worstRel = std::max(worstRel, rel);
                 worstAbs = std::max(worstAbs, mx);
+                worstRmse = std::max(worstRmse, std::sqrt(sq / double(std::max<size_t>(n, 1))));
             }
-            std::printf("  positions=%zu  worst cosine=%.10f  worst rel=%.3e  worst max_abs=%.3e\n", gpuL.size(),
-                        worstCos, worstRel, worstAbs);
+            std::printf("  positions=%zu  worst cosine=%.10f  worst rel=%.3e  worst max_abs=%.3e  worst rmse=%.3e\n",
+                        gpuL.size(), worstCos, worstRel, worstAbs, worstRmse);
             // ---- network-level parity thresholds --------------------------------
             // DERIVATION (all measurements on this model, this build):
             //

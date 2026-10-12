@@ -55,6 +55,18 @@ bool DotBlocked(int kind,
                 size_t q8_bytes = 0,
                 bool force_cpu = false);
 
+// FP16-weight dot (RAWRXD_DEEP2_F16_QUANT_DOT_CLOSURE). Several model families
+// carry FP16 projections (qwen3: blk.N.attn_v.weight) among otherwise
+// quantised weights. The GPU kernel dots the raw fp16 weights against the raw
+// float activation with no quantisation; the CPU fallback decodes with ggml's
+// own fp16 path, so the two agree to fp32 rounding. Same receipt contract as
+// DotBlocked.
+bool DotF16(const void* wBytes, size_t wBytesCount,
+            const float* x, size_t n_in,
+            float* y, size_t n_out,
+            const CpuDot& cpu,
+            bool force_cpu = false);
+
 // ---------------------------------------------------------------------------
 // Batched dispatch (RAWRXD_DEEP2_LEGACY_QUANT_GPU_001).
 //

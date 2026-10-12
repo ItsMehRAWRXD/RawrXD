@@ -1743,6 +1743,242 @@ bool VulkanCompute::EndQuantDotBatch() {
     return true;
 }
 
+namespace {
+const char* kF16DotShaderPath = "tools/shaders/fp16_gemv.spv";
+}  // namespace
+
+bool VulkanCompute::EnsureF16DotPipeline() {
+    if (shaders_.count("fp16gemv") && shaders_["fp16gemv"].pipeline &&
+        shaders_["fp16gemv"].layout) {
+        return true;
+    }
+    std::vector<uint32_t> code;
+    if (!LoadSPIRVCode(kF16DotShaderPath, code) || code.empty()) {
+        std::cerr << "Failed to load fp16-gemv SPIR-V: " << kF16DotShaderPath << std::endl;
+        return false;
+    }
+    VkShaderModuleCreateInfo sm{};
+    sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    sm.codeSize = code.size() * sizeof(uint32_t);
+    sm.pCode = code.data();
+
+    ComputeShader cs;
+    cs.name = "fp16gemv";
+    cs.spirv_code = code;
+    if (vkCreateShaderModule(device_, &sm, nullptr, &cs.module) != VK_SUCCESS) {
+        std::cerr << "Failed to create fp16-gemv shader module" << std::endl;
+        return false;
+    }
+    // Reuses the quant-dot descriptor set layout: both are three storage
+    // buffers (input, weights, output). A separate pipeline layout carries the
+    // same 16-byte push-constant range.
+    if (!quant_descriptor_set_layout_) {
+        std::cerr << "fp16-gemv needs the quant-dot descriptor layout" << std::endl;
+        return false;
+    }
+    VkPushConstantRange pc{};
+    pc.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    pc.offset = 0;
+    pc.size = sizeof(uint32_t) * 4;
+    VkPipelineLayoutCreateInfo pl{};
+    pl.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pl.setLayoutCount = 1;
+    pl.pSetLayouts = &quant_descriptor_set_layout_;
+    pl.pushConstantRangeCount = 1;
+    pl.pPushConstantRanges = &pc;
+    if (vkCreatePipelineLayout(device_, &pl, nullptr, &cs.layout) != VK_SUCCESS) {
+        std::cerr << "Failed to create fp16-gemv pipeline layout" << std::endl;
+        return false;
+    }
+    VkPipelineShaderStageCreateInfo stage{};
+    stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    stage.module = cs.module;
+    stage.pName = "main";
+    VkComputePipelineCreateInfo cp{};
+    cp.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    cp.stage = stage;
+    cp.layout = cs.layout;
+    if (vkCreateComputePipelines(device_, nullptr, 1, &cp, nullptr, &cs.pipeline) != VK_SUCCESS) {
+        std::cerr << "Failed to create fp16-gemv pipeline" << std::endl;
+        return false;
+    }
+    shaders_["fp16gemv"] = cs;
+    return true;
+}
+
+bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
+                                  const float* x, size_t n_in,
+                                  void* out, size_t out_bytes,
+                                  size_t n_out) {
+    const bool trace = (std::getenv("RR_F16_TRACE") != nullptr);
+#define F16_FAIL(msg) do { if (trace) { std::cerr << "[f16-trace] " << msg << std::endl; } return false; } while (0)
+    if (!packed || !x || !out) F16_FAIL("null argument");
+    if (n_out == 0 || n_in == 0 || (n_in % 2u) != 0) F16_FAIL("n_in odd/zero");
+    if (reinterpret_cast<uintptr_t>(packed) % 4u != 0) F16_FAIL("weight misaligned");
+    const size_t need_packed = n_out * n_in * sizeof(uint16_t);
+    const size_t need_x = n_in * sizeof(float);
+    if (packed_bytes < need_packed || out_bytes < n_out * sizeof(float)) F16_FAIL("sizes short");
+    if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) F16_FAIL("quant pipeline");
+    if (!EnsureF16DotPipeline()) F16_FAIL("fp16 pipeline");
+    if (!EnsureQuantFastPath()) F16_FAIL("fast path");
+#undef F16_FAIL
+
+    // Weight bytes are uploaded once and cached (kind -2 marks the F16 cache
+    // entry; the fingerprint still guards the pointer/bytes/size identity).
+    QuantWeight* w = EnsureQuantWeight(packed, packed_bytes, /*kind=*/-2);
+    if (!w) return false;
+
+    // Device-side activation (scratch) and output (scratch).
+    QuantScratch* xbuf = AcquireQuantScratch(need_x);
+    if (!xbuf) {
+        std::cerr << "fp16 dot activation buffer acquire failed" << std::endl;
+        return false;
+    }
+    QuantScratch* obuf = AcquireQuantScratch(n_out * sizeof(float));
+    if (!obuf) {
+        std::cerr << "fp16 dot output buffer acquire failed" << std::endl;
+        ReleaseQuantScratch(xbuf);
+        return false;
+    }
+
+    if (!EnsureHostVisible(need_x, upload_staging_, upload_staging_mem_,
+                           upload_staging_size_, upload_staging_mapped_)) {
+        ReleaseQuantScratch(obuf);
+        ReleaseQuantScratch(xbuf);
+        return false;
+    }
+    std::memcpy(upload_staging_mapped_, x, need_x);
+    gpu_counters_.upload_bytes += need_x;
+    if (!EnsureHostVisible(n_out * sizeof(float), readback_buffer_, readback_memory_,
+                           readback_size_, readback_mapped_)) {
+        ReleaseQuantScratch(obuf);
+        ReleaseQuantScratch(xbuf);
+        return false;
+    }
+
+    VkDescriptorSet ds = quant_ds_ring_[quant_ds_ring_next_];
+    quant_ds_ring_next_ = (quant_ds_ring_next_ + 1) % quant_ds_ring_.size();
+    ++gpu_counters_.descriptor_reuses;
+    ++gpu_counters_.descriptor_sets_in_flight;
+    if (gpu_counters_.descriptor_sets_in_flight > gpu_counters_.descriptor_sets_peak)
+        gpu_counters_.descriptor_sets_peak = gpu_counters_.descriptor_sets_in_flight;
+    struct InFlightGuard {
+        GpuCounters& c;
+        ~InFlightGuard() { if (c.descriptor_sets_in_flight > 0) --c.descriptor_sets_in_flight; }
+    } in_flight_guard{gpu_counters_};
+
+    VkDescriptorBufferInfo infos[3];
+    VkWriteDescriptorSet writes[3];
+    const VkBuffer bufs[3] = { xbuf->buffer, w->buffer, obuf->buffer };
+    const size_t sizes[3] = { need_x, packed_bytes, n_out * sizeof(float) };
+    for (int i = 0; i < 3; ++i) {
+        infos[i] = {};
+        infos[i].buffer = bufs[i];
+        infos[i].range = sizes[i];
+        writes[i] = {};
+        writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet = ds;
+        writes[i].dstBinding = i;
+        writes[i].descriptorCount = 1;
+        writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writes[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device_, 3, writes, 0, nullptr);
+
+    if (vkResetFences(device_, 1, &quant_fence_) != VK_SUCCESS || vkResetCommandBuffer(quant_cmd_, 0) != VK_SUCCESS) {
+        std::cerr << "fp16 dot reset failed" << std::endl;
+        ReleaseQuantScratch(obuf);
+        ReleaseQuantScratch(xbuf);
+        return false;
+    }
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if (vkBeginCommandBuffer(quant_cmd_, &begin_info) != VK_SUCCESS) {
+        std::cerr << "fp16 dot command buffer begin failed" << std::endl;
+        ReleaseQuantScratch(obuf);
+        ReleaseQuantScratch(xbuf);
+        return false;
+    }
+
+    VkBufferCopy up_region{};
+    up_region.size = need_x;
+    vkCmdCopyBuffer(quant_cmd_, upload_staging_, xbuf->buffer, 1, &up_region);
+    VkBufferMemoryBarrier up_barrier{};
+    up_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    up_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    up_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    up_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    up_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    up_barrier.buffer = xbuf->buffer;
+    up_barrier.size = need_x;
+    vkCmdPipelineBarrier(quant_cmd_, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
+                         0, nullptr, 1, &up_barrier, 0, nullptr);
+
+    auto it = shaders_.find("fp16gemv");
+    if (it == shaders_.end() || !it->second.pipeline) {
+        ReleaseQuantScratch(obuf);
+        ReleaseQuantScratch(xbuf);
+        return false;
+    }
+    uint32_t pc[4] = { (uint32_t)n_out, (uint32_t)n_in, 0u, 0u };
+    vkCmdPushConstants(quant_cmd_, it->second.layout, VK_SHADER_STAGE_COMPUTE_BIT,
+                       0, sizeof(pc), pc);
+    vkCmdBindPipeline(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE, it->second.pipeline);
+    vkCmdBindDescriptorSets(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE,
+                            it->second.layout, 0, 1, &ds, 0, nullptr);
+    uint32_t groups = (uint32_t)n_out;
+    if (groups == 0u) groups = 1u;
+    vkCmdDispatch(quant_cmd_, groups, 1, 1);
+
+    VkBufferMemoryBarrier down_barrier{};
+    down_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    down_barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    down_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    down_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    down_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    down_barrier.buffer = obuf->buffer;
+    down_barrier.size = n_out * sizeof(float);
+    vkCmdPipelineBarrier(quant_cmd_, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                         VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                         0, nullptr, 1, &down_barrier, 0, nullptr);
+    VkBufferCopy down_region{};
+    down_region.size = n_out * sizeof(float);
+    vkCmdCopyBuffer(quant_cmd_, obuf->buffer, readback_buffer_, 1, &down_region);
+
+    if (vkEndCommandBuffer(quant_cmd_) != VK_SUCCESS) {
+        std::cerr << "fp16 dot command buffer end failed" << std::endl;
+        ReleaseQuantScratch(obuf);
+        ReleaseQuantScratch(xbuf);
+        return false;
+    }
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &quant_cmd_;
+    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS) {
+        std::cerr << "fp16 dot queue submit failed" << std::endl;
+        ReleaseQuantScratch(obuf);
+        ReleaseQuantScratch(xbuf);
+        return false;
+    }
+    ++gpu_counters_.submits;
+    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+        std::cerr << "fp16 dot fence wait failed" << std::endl;
+        ReleaseQuantScratch(obuf);
+        ReleaseQuantScratch(xbuf);
+        return false;
+    }
+    ++gpu_counters_.waits;
+    gpu_counters_.download_bytes += n_out * sizeof(float);
+    std::memcpy(out, readback_mapped_, n_out * sizeof(float));
+    ReleaseQuantScratch(obuf);
+    ReleaseQuantScratch(xbuf);
+    return true;
+}
+
 // ---------------------------------------------------------------------------
 // Quant-dot fast path helpers.
 // ---------------------------------------------------------------------------

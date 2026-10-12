@@ -134,11 +134,22 @@ int main(int argc, char* argv[])
     std::printf("REJECTED_SHAPES=%zu\n", rejected);
     std::printf("FIRST_REJECTION_REASON=%s\n", first_reason.empty() ? "<none>" : first_reason.c_str());
 
-    // Per-tensor legs detail for the legacy types (Q4_0/Q4_1/Q5_0/Q5_1/Q8_0).
+    // Per-tensor detail for the legacy quant types (Q4_0/Q4_1/Q5_0/Q5_1/Q8_0)
+    // and for F16/F32 matmul tensors: the latter are the remaining CPU-path
+    // population on models like qwen3 (36 F16 tensors).
     for (const TensorRec& t : rep.tensors) {
         size_t blck = 0, ts = 0;
-        if (!LegacyGeometry(t.ggml_type, blck, ts))
+        const bool isLegacyQuant = LegacyGeometry(t.ggml_type, blck, ts);
+        if (!isLegacyQuant && t.ggml_type != GGML_TYPE_F16 && t.ggml_type != GGML_TYPE_F32)
             continue;
+        if (!isLegacyQuant) {
+            if (t.dims.size() < 2)
+                continue;
+            std::printf("  %-44s %-5s dims=[%zu,%zu] bytes=%zu%s\n", t.name.c_str(), TypeName(t.gguf_type),
+                        (size_t)t.dims[0], (size_t)t.dims[1], t.bytes,
+                        (t.ggml_type == GGML_TYPE_F16 ? "  (F16 matmul: CPU path today)" : ""));
+            continue;
+        }
         if (t.dims.size() < 2) {
             std::printf("  %-44s %-5s 1-D\n", t.name.c_str(), TypeName(t.gguf_type));
             continue;

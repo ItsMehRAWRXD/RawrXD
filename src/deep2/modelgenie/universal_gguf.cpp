@@ -582,6 +582,13 @@ void FillSpec(ModelSpec& s, const std::map<std::string, std::string>& m) {
     pick("attention.head_count_kv", s.heads_kv);
     pick("rope.dimension_count", s.rope_dim);
     pick("rope.freq_base", s.rope_freq_base);
+    // llama.cpp's default when the key is absent (llama-model.cpp:
+    // rope_freq_base_train = 10000.0, only replaced when the GGUF declares
+    // one). A missing key must NOT leave 0 behind: pow(0, -2k/n) is +inf and
+    // position*inf is NaN, which NaN-poisons every rotated dimension from pair
+    // 1 onward while the model still "runs". Certified by the bigdaddyg
+    // productivity blob (80 blocks, no rope.freq_base, dead NaN output).
+    if (!(s.rope_freq_base > 0.0)) s.rope_freq_base = 10000.0;
     // RoPE scaling. The type decides whether the angles are interpolated at
     // all; an absent type is plain RoPE. These are the model's OWN numbers and
     // are never substituted with llama.cpp defaults, because a wrong factor

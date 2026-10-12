@@ -836,6 +836,60 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         }
     }
 
+    // FP16 2-D weights (RAWRXD_DEEP2_F16_QUANT_DOT_CLOSURE): models such as
+    // qwen3 carry blk.N.attn_v.weight in fp16 among otherwise k-quantised
+    // weights. Before the F16 GEMV kernel these were the ONLY matmuls left on
+    // the CPU (216 CPU calls on a 3-token qwen3:8b certification), which broke
+    // the GPU-only gate for the whole family. The kernel dots raw fp16 weights
+    // against the raw float activation; the CPU fallback below decodes with
+    // ggml's own fp16 conversion so the two agree to fp32 rounding.
+    if (w.ggml_type == GGML_TYPE_F16 && n_in > 0 && n_out > 0 && (n_in % 2u) == 0 &&
+        (reinterpret_cast<uintptr_t>(w.data) % 4u) == 0) {
+        const size_t row_bytes = n_in * sizeof(uint16_t);
+        if (w.bytes < row_bytes * n_out) {
+            if (std::getenv("LINEAR_TRACE")) {
+                std::fprintf(stderr, "[linear-short-f16] w=%s dims=[%zu,%zu] bytes=%zu need=%zu\n",
+                             w.name.c_str(), (size_t)w.dims[0],
+                             w.dims.size() > 1 ? (size_t)w.dims[1] : 0, w.bytes, row_bytes * n_out);
+                std::fflush(stderr);
+            }
+            err = "linear: weight bytes short";
+            return false;
+        }
+        // Row-decoding fallback shared by every row; the dequantiser is ggml's
+        // own fp16 converter, identical to what DequantPrefix would produce.
+        std::vector<float> rw(n_in, 0.0f);
+        QuantDot::CpuDot cpu = [&](const uint8_t* row, const void*, size_t) -> float {
+            double acc = 0.0;
+            for (size_t i = 0; i < n_in; ++i) {
+                uint16_t hb;
+                std::memcpy(&hb, row + i * 2u, 2);
+                rw[i] = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hb));
+            }
+            for (size_t i = 0; i < n_in; ++i) acc += double(rw[i]) * double(x[i]);
+            return (float)acc;
+        };
+        y.assign(n_out, 0.0f);
+        if (std::getenv("QUANT_TRACE")) {
+            std::fprintf(stderr, "[quant-f16] w=%s n_in=%zu n_out=%zu wbytes=%zu\n",
+                         w.name.c_str(), n_in, n_out, w.bytes);
+            std::fflush(stderr);
+        }
+        const bool ok = QuantDot::DotF16(w.data, w.bytes, x.data(), n_in, y.data(), n_out,
+                                         cpu, force_cpu_);
+        if (ok) {
+            ++gpu_calls_;
+        } else {
+            ++cpu_calls_;
+            const QuantDot::Receipt& rcpt = QuantDot::LastReceipt();
+            if (cpu_fallback_reason_.empty() && rcpt.fallback_reason) {
+                cpu_fallback_reason_ = std::string(rcpt.fallback_reason) +
+                    " (weight=" + w.name + ")";
+            }
+        }
+        return true;
+    }
+
     // Legacy quantized types (Q8_0, Q5_0, Q4_0, Q4_1, Q5_1, Q3_K, Q2_K,
     // Q5_K, Q8_K): dot ONE ROW AT A TIME. Materialising a dequantised
     // [n_out, n_in] matrix would need 1.4 GB of F32 for the language-model
@@ -920,7 +974,11 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
 // RoPE angle and attention score scale (reference-derived)
 // ---------------------------------------------------------------------------
 double Executor::RopeAngle(size_t position, size_t pair, size_t nDims, bool yarn) const {
-    const double base = (double)spec_.rope_freq_base;
+    // A model may omit rope.freq_base entirely (llama.cpp falls back to 10000).
+    // pow(0, -2k/n) is +inf, and position * inf is NaN at position 0 - the rope
+    // then NaNs every pair >= 1 while the forward still completes.
+    const double base = (spec_.rope_freq_base > 0.0) ? (double)spec_.rope_freq_base
+                                                     : 10000.0;
     // ggml: theta_scale = powf(freq_base, -2/n_dims); theta_extrap(pair k) =
     // position * theta_scale^k = position * base^(-2k/n_dims).
     const double theta_extrap =
@@ -1672,6 +1730,14 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     // the gate (single-tensor SwiGLU); that fallback is now the ONLY case where
     // upT is used for the gate.
     if (!gateT) gateT = upT;
+    // DeepSeek-Coder-V2 (and every dual-bank MoE file) ships ffn_gate_exps and
+    // ffn_up_exps as two SEPARATE rank-3 banks: the reference computes
+    //   h = silu(x @ gate_exps[e]) * (x @ up_exps[e]);   y += w[e] * (h @ down[e])
+    // Setting gate := up computes silu(u)*u instead of silu(g)*u - a different
+    // function, certified here as the "same direction, wrong magnitude" routed
+    // expert error (blk01 ffn_moe_out cosine 0.67 with the router, the expert
+    // ids and the input state all matching the reference).
+    const bool have_gate = (gateT->name != upT->name);
     if (gateT->dims.size() < 2 || upT->dims.size() < 2 || downT->dims.size() < 2) {
         err = "moe: expert tensor rank < 2";
         return false;
@@ -1775,6 +1841,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const size_t q8upBytes = upGpuShape ? q8up.size() * sizeof(float) : 0u;
 
     std::vector<float> uAll(nSel * ffn, 0.0f);
+    std::vector<float> gAll(have_gate ? nSel * ffn : 0, 0.0f);
     std::vector<float> hAll(nSel * ffn, 0.0f);
     std::vector<float> dyAll(nSel * embd, 0.0f);
     std::vector<uint8_t> upDone(nSel, 0);
@@ -1837,6 +1904,49 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         }
     }
 
+    // ---- phase 1b: the gate projection of every selected expert --------------
+    // Runs after the up phase so the up SwiGLU inputs are all ready, and mirrors
+    // it exactly: the same batching decision, the same CPU fallback, the same
+    // interleaved Q8 of the SAME activation (x@gate and x@up take the same x).
+    std::vector<uint8_t> gateDone(nSel, 0);
+    if (have_gate) {
+        const int gKind = QuantKindOf(gateT->ggml_type);
+        const bool gGpuShape = (gKind >= 0) && (gIn % (gKind >= 2 ? 32u : 256u)) == 0 &&
+                               (gIn <= x.size());
+        const size_t gRowBytes = gGpuShape ? QuantRowBytes(gKind, gIn) : 0u;
+        const bool batchGate = !force_cpu_ && !noMoeBatch && nSel >= 2 && QuantDot::BeginBatch();
+        size_t queuedGate = 0;
+        for (size_t e = 0; e < nSel; ++e) {
+            const size_t ex = (size_t)ids[e];
+            if (ex >= usableE || !gGpuShape) continue;
+            float* out = &gAll[e * ffn];
+            const uint8_t* packed = reinterpret_cast<const uint8_t*>(gateT->data) +
+                                    ex * glen * gRowBytes;
+            QuantDot::CpuDot cpu = [&](const uint8_t* row, const void* q8_act, size_t) -> float {
+                return RowDotInterleavedQ8(gKind, row, static_cast<const float*>(q8_act), gIn);
+            };
+            if (batchGate) {
+                const bool queued = QuantDot::DotBlocked(gKind, packed, gRowBytes * glen, x.data(),
+                                                         gIn, out, glen, cpu, q8up.data(),
+                                                         q8upBytes, false);
+                if (queued) { gateDone[e] = 1; ++queuedGate; }
+            } else {
+                const bool ok = QuantDot::DotBlocked(gKind, packed, gRowBytes * glen, x.data(),
+                                                     gIn, out, glen, cpu, q8up.data(),
+                                                     q8upBytes, force_cpu_);
+                if (ok) gateDone[e] = 1;
+                account(ok, gateT->name.c_str(), ex);
+            }
+        }
+        if (batchGate) {
+            if (QuantDot::EndBatch()) {
+                gpu_calls_ += queuedGate;
+            } else {
+                cpu_calls_ += queuedGate;
+            }
+        }
+    }
+
     // ---- per-expert SwiGLU (all up-dots are complete now) --------------------
     if (std::getenv("MOE_TRACE")) {
         double us = 0.0, ds = 0.0;
@@ -1861,9 +1971,13 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         {
             // GPU/force-CPU path already produced this expert's up projection.
             for (size_t j = 0; j < ulen; ++j) u[j] = uAll[e * ffn + j];
-            // No separate gate expert on this model: the router does the gating,
-            // so the up projection doubles as the gate (identity gate).
-            for (size_t j = 0; j < glen; ++j) g[j] = uAll[e * ffn + j];
+            // The gate comes from its OWN bank when the model has one. Identity
+            // gate (gate := up) is reserved for single-tensor SwiGLU models.
+            if (!have_gate) {
+                for (size_t j = 0; j < glen; ++j) g[j] = uAll[e * ffn + j];
+            } else if (gateDone[e]) {
+                for (size_t j = 0; j < glen; ++j) g[j] = gAll[e * ffn + j];
+            }
         }
         else
         {
@@ -1882,7 +1996,26 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                 for (size_t i = 0; i < lim; ++i) acc += double(uSlice[j * uIn + i]) * double(x[i]);
                 u[j] = (float)acc;
             }
-            std::copy(u.begin(), u.begin() + (std::ptrdiff_t)glen, g.begin());
+            if (!have_gate) {
+                std::copy(u.begin(), u.begin() + (std::ptrdiff_t)glen, g.begin());
+            }
+        }
+        if (have_gate && !gateDone[e]) {
+            // CPU path for the gate bank: same per-expert dequant + double dot.
+            std::vector<float> gSlice;
+            if (!DequantRange(*gateT, ex * elemStrideG, elemStrideG, gSlice))
+            {
+                err = "moe: gate expert slice dequant failed (block=" + std::to_string(moe.block) +
+                      " expert=" + std::to_string(ex) + ")";
+                return false;
+            }
+            const size_t lim = std::min(gIn, x.size());
+            for (size_t j = 0; j < glen; ++j)
+            {
+                double acc = 0.0;
+                for (size_t i = 0; i < lim; ++i) acc += double(gSlice[j * gIn + i]) * double(x[i]);
+                g[j] = (float)acc;
+            }
         }
 
         // SwiGLU: silu(gate) * up, into this expert's own h slot.

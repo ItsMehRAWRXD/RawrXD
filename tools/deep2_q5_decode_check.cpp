@@ -11,6 +11,7 @@
 //   deep2_q5_decode_check.exe --model <gguf> --tensor <name> [--row N]
 // ============================================================================
 #include <cmath>
+#include <limits>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -23,6 +24,34 @@ using namespace RawrXD::Deep2::Universal;
 
 static uint16_t rd16(const uint8_t* p) {
     return (uint16_t)(p[0] | (p[1] << 8));
+}
+
+// ---------------------------------------------------------------------------
+// F16 decode check: ggml's fp16 converter vs the shader's half_to_float model,
+// replicated bit for bit on the host. If these differ, the KERNEL's decode is
+// wrong; if they match, the GPU plumbing (buffers/barriers/geometry) is.
+// ---------------------------------------------------------------------------
+static uint32_t rd32(const uint8_t* p) {
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+}
+
+// The shader's half_to_float, replicated exactly.
+static float ShaderHalfToFloat(uint32_t u) {
+    uint32_t sign = (u >> 15) & 1u;
+    int exp = (int)((u >> 10) & 0x1Fu);
+    uint32_t frac = u & 0x3FFu;   // binary16 has a TEN-bit mantissa
+    float f;
+    if (exp == 0) {
+        if (frac == 0u) f = 0.0f;
+        else f = (float)frac * (1.0f / 16777216.0f);
+    } else if (exp == 31) {
+        f = (frac == 0u) ? std::numeric_limits<float>::infinity() : std::numeric_limits<float>::quiet_NaN();
+    } else {
+        uint32_t e = (uint32_t)(exp - 15 + 127);
+        uint32_t bits = (e << 23) | (frac << 13);
+        std::memcpy(&f, &bits, 4);
+    }
+    return sign == 1u ? -f : f;
 }
 
 int main(int argc, char* argv[])
@@ -46,6 +75,41 @@ int main(int argc, char* argv[])
         if (t.name == tensor) { found = &t; break; }
     }
     if (!found) { std::printf("tensor not found: %s\n", tensor.c_str()); return 1; }
+    if (found->ggml_type == GGML_TYPE_F16) {
+        if (found->dims.size() < 2) { std::printf("tensor not 2-D\n"); return 1; }
+        const size_t n_in = (size_t)found->dims[0];
+        const size_t n_out = (size_t)found->dims[1];
+        if (row >= n_out) { std::printf("row %zu out of range (n_out=%zu)\n", row, n_out); return 1; }
+        const size_t row_bytes = n_in * 2u;
+        const uint8_t* base = reinterpret_cast<const uint8_t*>(found->data) + row * row_bytes;
+        std::printf("F16 tensor=%s dims=[%zu,%zu] row=%zu row_bytes=%zu bytes=%zu align4=%d\n",
+                    tensor.c_str(), n_in, n_out, row, row_bytes, found->bytes,
+                    (int)(reinterpret_cast<uintptr_t>(base) % 4u == 0u));
+        size_t bad = 0;
+        double worst = 0.0;
+        for (size_t i = 0; i < n_in; ++i) {
+            uint16_t hb;
+            std::memcpy(&hb, base + i * 2u, 2);
+            const float ref = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hb));
+            // Shader model: row r's element i lives in word
+            // (r * n_in * 2 + 2*i) / 4 (4-aligned by construction), low half
+            // for even i, high half for odd i.
+            const uint32_t byte_off = (uint32_t)(row * row_bytes + i * 2u);
+            const uint32_t word_idx = byte_off >> 2;
+            const uint32_t word = rd32(reinterpret_cast<const uint8_t*>(found->data) + word_idx * 4u);
+            const uint32_t half = (i % 2u) == 0u ? (word & 0xFFFFu) : (word >> 16);
+            const float mine = ShaderHalfToFloat(half);
+            const double d = std::fabs((double)ref - (double)mine);
+            if (d > worst) worst = d;
+            if (d != 0.0 && ++bad <= 8) {
+                std::printf("  mismatch i=%zu half16=0x%04X ggml=%.7g shader=%.7g (word_idx=%u half=%s)\n",
+                            i, hb, ref, mine, word_idx,
+                            (i % 2u) == 0u ? "low" : "high");
+            }
+        }
+        std::printf("F16 decode: mismatches=%zu worst_abs=%.6g (elements=%zu)\n", bad, worst, n_in);
+        return bad == 0 ? 0 : 1;
+    }
     if (found->ggml_type != GGML_TYPE_Q5_0) {
         std::printf("tensor %s is not Q5_0 (type=%d)\n", tensor.c_str(), (int)found->ggml_type);
         return 1;
